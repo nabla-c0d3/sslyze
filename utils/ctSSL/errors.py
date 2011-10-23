@@ -6,7 +6,7 @@
 # Author:       alban
 #
 # Copyright:    2011 Alban Diquet
-# Licence:      Licensed under the terms of the MIT License
+# License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
 

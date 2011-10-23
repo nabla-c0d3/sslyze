@@ -5,7 +5,19 @@
 # Author:       alban
 #
 # Copyright:    2011 SSLyze developers (http://code.google.com/sslyze)
-# Licence:      Licensed under the terms of the GPLv2 License
+#
+#   SSLyze is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   SSLyze is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
 
@@ -18,7 +30,9 @@ class FailedSSLHandshake(Exception):
 
 
 def load_client_certificate(ctx, shared_state):
-
+    """
+    Loads the client certificate from the shared state object, to the SSL_CTX.
+    """
     if shared_state['certform'] is 'DER':
         ctx.use_certificate_file(shared_state['cert'], constants.SSL_FILETYPE_DER)
     else:
@@ -32,7 +46,11 @@ def load_client_certificate(ctx, shared_state):
     ctx.check_private_key()
     return
 
+
 def do_ssl_handshake(ssl):
+    """
+    Tries to perform a SSL handshake, and raise FailedSSLHandshake if it failed.
+    """
 
     try:
         ssl.do_client_handshake()
@@ -89,7 +107,7 @@ def do_ssl_handshake(ssl):
 
 def get_http_server_response(ssl, host):
     """
-    Helper function to recover the server answer to an HTTP GET after connection has been established.
+    Recovers the server's response to an HTTP GET.
     Returns the HTTP Response Status Code if there is one.
     """
     # Some websites require the User-Agent header

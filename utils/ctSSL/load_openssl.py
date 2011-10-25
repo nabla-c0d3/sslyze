@@ -50,7 +50,19 @@ elif os.name == 'posix':
         libcrypto_0_9_8 = 'libeay32'
         libssl_0_9_8 = 'ssleay32'
 
-    else: # Any Linux
+    elif sys.platform == 'linux2': # Any Linux
+        libcrypto_1_0_0 = 'libcrypto.so.1.0.0'
+        libssl_1_0_0 = 'libssl.so.1.0.0'
+        libcrypto_0_9_8 = 'libcrypto.so.0.9.8'
+        libssl_0_9_8 = 'libssl.so.0.9.8'
+
+    elif sys.platform.startswith('freebsd'):
+        libcrypto_1_0_0 = 'libcrypto.so.7'
+        libssl_1_0_0 = 'libssl.so.7'
+        libcrypto_0_9_8 = 'libcrypto.so.6'
+        libssl_0_9_8 = 'libssl.so.6'
+
+    else: # ?
         libcrypto_1_0_0 = 'libcrypto.so.1.0.0'
         libssl_1_0_0 = 'libssl.so.1.0.0'
         libcrypto_0_9_8 = 'libcrypto.so.0.9.8'

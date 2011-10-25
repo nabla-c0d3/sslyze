@@ -56,15 +56,15 @@ elif os.name == 'posix':
         libcrypto_0_9_8 = 'libcrypto.so.0.9.8'
         libssl_0_9_8 = 'libssl.so.0.9.8'
 
-    elif sys.platform == 'freebsd8':
+    elif sys.platform.startswith('freebsd'):
         libcrypto_1_0_0 = 'libcrypto.so.7'
         libssl_1_0_0 = 'libssl.so.7'
         libcrypto_0_9_8 = 'libcrypto.so.6'
         libssl_0_9_8 = 'libssl.so.6'
 
-    else: 
-        libcrypto_1_0_0 = 'libcrypto.so'
-        libssl_1_0_0 = 'libssl.so'
+    else: # Any other UNIX
+        libcrypto_0_9_8 = 'libcrypto.so'
+        libssl_0_9_8 = 'libssl.so'
 
 else:
     raise ctSSLInitError('OS not supported!')

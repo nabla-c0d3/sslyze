@@ -58,7 +58,7 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
                 (result_reneg, result_secure) = \
                     _test_renegotiation(target, self._shared_state)
                 formatted_results.append('      {0:<35} {1}'.format(
-                    'Client Initiated Renegotiation:',
+                    'Client-initiated Renegotiations:',
                     result_reneg))
                 formatted_results.append('      {0:<35} {1}'.format(
                     'Secure Renegotiation: ',
@@ -101,27 +101,27 @@ def _test_renegotiation(target, shared_state):
 
         try: # Let's try to renegotiate
             ssl.renegotiate()
-            result_reneg = 'Enabled'
+            result_reneg = 'Honored'
 
         except errors.ctSSLUnexpectedEOF as e:
-            result_reneg = 'Disabled'
+            result_reneg = 'Rejected'
 
         except socket.error as e:
             if 'connection was forcibly closed' in str(e.args):
-                result_reneg = 'Disabled'
+                result_reneg = 'Rejected'
             elif 'reset by peer' in str(e.args):
-                result_reneg = 'Disabled'
+                result_reneg = 'Rejected'
             else:
                 raise e
 
         except socket.timeout as e:
-            result_reneg = 'Disabled (timeout)'
+            result_reneg = 'Rejected (timeout)'
 
         except errors.SSLError as e:
             if 'handshake failure' in str(e.args):
-                result_reneg = 'Disabled'
+                result_reneg = 'Rejected'
             elif 'no renegotiation' in str(e.args):
-                result_reneg = 'Disabled'
+                result_reneg = 'Rejected'
             else:
                 raise e
 

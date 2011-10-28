@@ -24,6 +24,8 @@ def ctSSL_initialize(multithreading=False):
     Should always be called before any other ctSSL function.
     """
     # Initialize multithreading
+    multithreading=False    # TODO: Clean start. Disabled for now, causes issues
+                            # Might not be required ?
     if multithreading:
         openSSL_threading_init()
         openSSL_threading = True
@@ -52,6 +54,7 @@ def ctSSL_cleanup():
         libcrypto.ERR_remove_state()
         libcrypto.CRYPTO_set_id_callback(None)
         libcrypto.CRYPTO_set_locking_callback(None)
+        openSSL_crypto_lock_list = []
 
 
 
@@ -75,11 +78,14 @@ def openSSL_threading_id_callback():
 
 
 # Keep a reference of the CFUNC objects to prevent garbage collection
-CRYPTOLOCKINGCALLBACK = CFUNCTYPE(None, c_int, c_int, c_char_p, c_int,use_errno=True, use_last_error=True)
-openSSL_threading_locking_callback_cfunc = CRYPTOLOCKINGCALLBACK(openSSL_threading_locking_callback)
+CRYPTOLOCKINGCALLBACK = CFUNCTYPE(None, c_int, c_int, c_char_p,
+                                    c_int,use_errno=True, use_last_error=True)
+openSSL_threading_locking_callback_cfunc = \
+    CRYPTOLOCKINGCALLBACK(openSSL_threading_locking_callback)
 
-CRYPTOIDCALLBACK = CFUNCTYPE(restype=c_ulong, use_errno=True, use_last_error=True)
-openSSL_threading_id_callback_cfunc = CRYPTOIDCALLBACK(openSSL_threading_id_callback)
+CRYPTOIDCALLBACK = CFUNCTYPE(restype=c_ulong,use_errno=True,use_last_error=True)
+openSSL_threading_id_callback_cfunc = \
+    CRYPTOIDCALLBACK(openSSL_threading_id_callback)
 
 
 def openSSL_threading_init():
@@ -91,8 +97,8 @@ def openSSL_threading_init():
 
     libcrypto.CRYPTO_num_locks.argtypes = []
     libcrypto.CRYPTO_num_locks.restype = c_int
-    CRYPTO_NUM_LOCKS = int(libcrypto.CRYPTO_num_locks())
-    for id in xrange(CRYPTO_NUM_LOCKS):
+    OPENSSL_CRYPTO_NUM_LOCKS = int(libcrypto.CRYPTO_num_locks())
+    for id in xrange(OPENSSL_CRYPTO_NUM_LOCKS):
         new_lock = thread.allocate_lock()
         openSSL_crypto_lock_list.append(new_lock)
 

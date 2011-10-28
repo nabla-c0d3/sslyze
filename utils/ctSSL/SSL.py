@@ -45,12 +45,6 @@ class SSL:
     Forms a BIO pair with _internal_bio.
     """
 
-    _socket = None
-    _ssl_ctx = None
-    _ssl_struct_p = None
-    _internal_bio = None
-    _network_bio = None
-
     def __init__(self, ssl_ctx, socket):
         """
         Create a new SSL instance.
@@ -64,8 +58,9 @@ class SSL:
         """
         self._socket = socket # The python socket handles network transmission
         self._ssl_ctx = ssl_ctx
-
         self._ssl_struct_p = libssl.SSL_new(ssl_ctx.get_ssl_ctx_struct_p())
+        self._internal_bio = None
+        self._network_bio = None
 
         # Create a BIO pair to handle SSL operations
         (internal_bio, network_bio) = BIO.BIO.new_bio_pair()
@@ -136,9 +131,11 @@ class SSL:
         be connected to the server (using socket.connect()), when
         do_client_handshake() gets called.
 
-        @raise ctSSL.errors.ctSSLUnexpectedEOF: If an unexpected EOF is received while
-        performing the handshake, meaning the connection was closed by the peer.
-        @raise ctSSL.errors.SSLError: OpenSSL returned an error at the SSL level.
+        @raise ctSSL.errors.ctSSLUnexpectedEOF: If an unexpected EOF is received
+        while performing the handshake, meaning the connection was closed by the
+        peer.
+        @raise ctSSL.errors.SSLError: OpenSSL returned an error at the SSL
+        level.
         @raise socket.timeout:
         @raise socket.error:
         """
@@ -157,7 +154,8 @@ class SSL:
         @raise ctSSL.errors.ctSSLUnexpectedEOF: If an unexpected EOF is received
         while performing the handshake, meaning the connection was closed
         by the peer.
-        @raise ctSSL.errors.SSLError: OpenSSL returned an error at the SSL level.
+        @raise ctSSL.errors.SSLError: OpenSSL returned an error at the SSL
+        level.
         @raise socket.timeout:
         @raise socket.error:
 

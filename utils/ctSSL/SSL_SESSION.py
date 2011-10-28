@@ -22,7 +22,6 @@ class SSL_SESSION:
     @ivar _ssl_session_struct_p: Pointer to the SSL_SESSION C struct that
     corresponds to that SSL_SESSION object.
     """
-    _ssl_session_struct_p = None
 
     def __init__(self, ssl_session_struct):
         """

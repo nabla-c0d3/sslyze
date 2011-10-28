@@ -34,8 +34,6 @@ class SSL_CTX:
     @ivar _pem_passwd_cb: Callback function used for password protected client
     certificates.
     """
-    _ssl_ctx_struct_p = None
-    _pem_passwd_cb = None
 
     def __init__(self, ssl_version='sslv23'):
         """
@@ -60,6 +58,7 @@ class SSL_CTX:
             raise ctSSLError('Incorrect SSL version. Could not create SSL_CTX.')
 
         self._ssl_ctx_struct_p = libssl.SSL_CTX_new(ssl_version)
+        self._pem_passwd_cb = None
 
 
     def __del__(self):

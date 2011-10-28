@@ -34,8 +34,6 @@ class BIO:
     @type _implicit_free: boolean
     @ivar _implicit_free: Tells whether the BIO struct has to be manually freed.
     """
-    _bio_struct_p = None
-    _implicit_free = None
 
     def __init__(self, bio_struct_p):
         """

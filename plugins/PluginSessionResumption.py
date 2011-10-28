@@ -65,7 +65,6 @@ class PluginSessionResumption(PluginBase.PluginBase):
         return result
 
 
-
     def _command_resum_rate(self, target):
         """
         Performs 100 session resumptions with the server in order to estimate
@@ -73,8 +72,9 @@ class PluginSessionResumption(PluginBase.PluginBase):
         """
         # Create a thread pool and process the jobs
         NB_THREADS = 50
+        NB_RESUM = 100
         thread_pool = ThreadPool()
-        for i in xrange(100):
+        for i in xrange(NB_RESUM):
             thread_pool.add_job((
                 _test_resumption_with_session_id,
                 (target, ('sslv3'), self._shared_state)))
@@ -88,7 +88,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
                 sucessful_resumptions += 1
 
         result_string = str(sucessful_resumptions) + \
-            ' resumptions successful out of 100 attempts.'
+            ' resumptions successful out of' + NB_RESUM + ' attempts.'
 
         error_list = []
         for failed_job in thread_pool.get_error():

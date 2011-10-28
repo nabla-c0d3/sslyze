@@ -219,5 +219,5 @@ def errcheck_get_error_if_null(result, func, arguments):
 
 def errcheck_get_error_if_eq0(result, func, arguments):
     if result == 0:
-        raise errors.get_openssl_error()
+        raise get_openssl_error()
     return result

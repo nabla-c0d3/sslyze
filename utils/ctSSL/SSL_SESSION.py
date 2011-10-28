@@ -12,7 +12,7 @@
 from ctypes import create_string_buffer, sizeof
 from ctypes import c_int, c_void_p
 from load_openssl import libssl, libcrypto
-
+import BIO
 
 class SSL_SESSION:
     """
@@ -62,14 +62,14 @@ class SSL_SESSION:
         @return: The text description of the SSL session.
         """
         # Print the session description to a BIO
-        mem_bio_p = libcrypto.BIO_new(libcrypto.BIO_s_mem())
-        libssl.SSL_SESSION_print(mem_bio_p, self._ssl_session_struct_p)
+        mem_bio = BIO.BIOFactory.new_mem()
+        libssl.SSL_SESSION_print(
+            mem_bio.get_bio_struct_p(),
+            self._ssl_session_struct_p)
 
         # Extract the description from the BIO
-        session_str = create_string_buffer(4096)
-        libcrypto.BIO_read(mem_bio_p, session_str, sizeof(session_str))
-        libcrypto.BIO_free(mem_bio_p)
-        return session_str.value
+        session_str = mem_bio.read(4096)
+        return session_str
 
 
 # == CTYPE INIT ==

@@ -1,6 +1,7 @@
 #-------------------------------------------------------------------------------
 # Name:         BIO.py
 # Purpose:      Wrapper around the OpenSSL C functions BIO_xxx().
+#               Meant to be internal to ctSSL.
 #
 # Author:       alban
 #
@@ -12,7 +13,7 @@
 from ctypes import create_string_buffer, sizeof, memmove, byref
 from ctypes import c_char_p, c_void_p, c_int, c_long
 from load_openssl import libcrypto
-from errors import get_openssl_error, BIOError
+from errors import get_openssl_error, BIOError, errcheck_get_error_if_null
 
 # INTERNAL BIO CONSTANTS
 BIO_C_DO_STATE_MACHINE = 101 # BIO_do_connect()
@@ -22,6 +23,49 @@ BIO_FLAGS_READ = 0x1
 BIO_FLAGS_WRITE = 0x2
 BIO_FLAGS_IO_SPECIAL = 0x04
 BIO_FLAGS_RETRY = 0x8
+
+class BIOFactory:
+
+    @classmethod
+    def new_mem(self):
+        """
+        Create a new memory BIO.
+
+        @rtype: ctSSL.BIO.BIO
+        @return: The new memory BIO.
+        """
+        bio_struct_p = libcrypto.BIO_new(libcrypto.BIO_s_mem())
+        return BIO(bio_struct_p)
+
+
+
+    @classmethod
+    def new_bio_pair(self):
+        """
+        Create a new BIO pair.
+
+        @rtype: (ctSSL.BIO.BIO, ctSSL.BIO.BIO)
+        @return: A tuple of BIOs that form a BIO pair.
+        """
+        bio1_p = c_void_p(0)
+        bio2_p = c_void_p(0)
+        libcrypto.BIO_new_bio_pair(byref(bio1_p), 0, byref(bio2_p), 0);
+        return (BIO(bio1_p), BIO(bio2_p))
+
+
+    @classmethod
+    def new_connect(self, name):
+        """
+        Create a new connect BIO with the given hostname.
+
+        @type name: str
+        @param name: Hostname the BIO should connect to.
+
+        @rtype: ctSSL.BIO.BIO
+        @return: The new connect BIO.
+        """
+        bio_struct_p = libcrypto.BIO_new_connect(host + ':' + str(port))
+        return BIO(bio_struct_p)
 
 
 class BIO:
@@ -38,7 +82,7 @@ class BIO:
     def __init__(self, bio_struct_p):
         """
         Create a new BIO instance.
-        Should not be called directly. Use new_bio_pair() or new_connect().
+        Should not be called directly. Use BIOFactory.
 
         @type bio_struct_p: ctypes.c_void_p
         @param bio_struct_p: Pointer to the OpenSSL BIO C struct.
@@ -61,37 +105,6 @@ class BIO:
     def require_manual_free(self):
         """BIO has to be explicitely freed by calling BIO_free()."""
         self._implicit_free = False
-
-
-    @classmethod
-    def new_bio_pair(self):
-        """
-        Create a new BIO pair.
-        Directly calls OpenSSL's BIO_new_bio_pair().
-
-        @rtype: (ctSSL.BIO.BIO, ctSSL.BIO.BIO)
-        @return: A tuple of BIOs that form a BIO pair.
-        """
-        bio1_p = c_void_p(0)
-        bio2_p = c_void_p(0)
-        libcrypto.BIO_new_bio_pair(byref(bio1_p), 0, byref(bio2_p), 0);
-        return (BIO(bio1_p), BIO(bio2_p))
-
-
-    @classmethod
-    def new_connect(self, name):
-        """
-        Create a new connect BIO with the given hostname.
-        Directly calls OpenSSL's BIO_new_connect().
-
-        @type name: str
-        @param name: Hostname the BIO should connect to.
-
-        @rtype: ctSSL.BIO.BIO
-        @return: The new connect BIO.
-        """
-        bio_struct_p = libcrypto.BIO_new_connect(host + ':' + str(port))
-        return BIO(bio_struct_p)
 
 
     def get_bio_struct_p(self):
@@ -162,7 +175,6 @@ def _errcheck_BIO_default(result, func, arguments):
     return result
 
 
-
 def _errcheck_BIO_read(result, func, arguments):
     """
     Ctype error handler for the OpenSSL BIO_read() C function.
@@ -200,12 +212,6 @@ def _errcheck_BIO_write(result, func, arguments):
     return result
 
 
-def _errcheck_BIO_new(result, func, arguments):
-    if result is None:
-        raise get_openssl_error()
-    return result
-
-
 # == CTYPE INIT ==
 def init_BIO_functions():
     """
@@ -214,7 +220,7 @@ def init_BIO_functions():
     """
     libcrypto.BIO_new_connect.argtypes = [c_char_p]
     libcrypto.BIO_new_connect.restype = c_void_p
-    libcrypto.BIO_new_connect.errcheck = _errcheck_BIO_new
+    libcrypto.BIO_new_connect.errcheck = errcheck_get_error_if_null
 
     libcrypto.BIO_ctrl.argtypes = [c_void_p, c_int, c_long, c_void_p]
     libcrypto.BIO_ctrl.restype = c_long
@@ -240,10 +246,10 @@ def init_BIO_functions():
     libcrypto.BIO_ctrl_pending.argtypes = [c_void_p]
     libcrypto.BIO_ctrl_pending.restype = c_int
 
-    # Only used in SSL_SESSION for now:
     libcrypto.BIO_s_mem.argtypes = None
     libcrypto.BIO_s_mem.restype = c_void_p
+
     libcrypto.BIO_new.argtypes = [c_void_p]
     libcrypto.BIO_new.restype = c_void_p
-    libcrypto.BIO_new.errcheck = _errcheck_BIO_new
+    libcrypto.BIO_new.errcheck = errcheck_get_error_if_null
 

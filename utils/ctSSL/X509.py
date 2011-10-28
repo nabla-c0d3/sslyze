@@ -14,7 +14,7 @@
 from ctypes import c_void_p, c_int, c_char_p
 from ctypes import create_string_buffer, sizeof, pointer
 from load_openssl import libcrypto
-
+import BIO
 
 class X509:
     def __init__(self, x509_struct):
@@ -22,14 +22,12 @@ class X509:
 
     def as_text(self):
         # Print the full certificate to a BIO
-        mem_bio_p = libcrypto.BIO_new(libcrypto.BIO_s_mem())
-        libcrypto.X509_print(mem_bio_p, self._x509_struct)
+        mem_bio = BIO.BIOFactory.new_mem()
+        libcrypto.X509_print(mem_bio.get_bio_struct_p(), self._x509_struct)
 
         # Extract the text from the BIO
-        x509_str = create_string_buffer(4096)
-        libcrypto.BIO_read(mem_bio_p, x509_str, sizeof(x509_str))
-        libcrypto.BIO_free(mem_bio_p)
-        return x509_str.value
+        x509_str = mem_bio.read(4096)
+        return x509_str
 
 
     def get_serial_number(self):

@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 # Name:         errors.py
 # Purpose:      Exceptions that can be raised by ctSSL.
-#               TODO: Clean.
+#               TODO: Clean/Clarify.
 #
 # Author:       alban
 #
@@ -102,7 +102,8 @@ SSL_ERROR_WANT_ACCEPT = 8
 
 # ==OPENSSL GENERIC ERROR PROCESSING==
 def get_openssl_error():
-    """Read the OpenSSL error queue and returns an exception.
+    """
+    Read the OpenSSL error queue and return an exception.
     """
     error_code = libcrypto.ERR_get_error()
     error_string = create_string_buffer(ERROR_STRING_BUFFER_SIZE)
@@ -114,7 +115,8 @@ def get_openssl_error():
 
 # ==OPENSSL SSL_XXX() ERROR PROCESSING==
 def get_openssl_ssl_error(ssl_struct, ret):
-    """Read the OpenSSL SSL error queue and returns an exception.
+    """
+    Read the OpenSSL SSL error queue and return an exception.
     """
     ssl_error = libssl.SSL_get_error(ssl_struct, ret)
     if ssl_error == SSL_ERROR_SSL:
@@ -205,3 +207,17 @@ def init_ERR_functions():
 
     libssl.SSL_get_error.argtypes = [c_void_p, c_int]
     libssl.SSL_get_error.restype = c_int
+
+
+
+# Ctypes common errcheck callbacks
+
+def errcheck_get_error_if_null(result, func, arguments):
+    if result is None:
+        raise get_openssl_error()
+    return result
+
+def errcheck_get_error_if_eq0(result, func, arguments):
+    if result == 0:
+        raise errors.get_openssl_error()
+    return result

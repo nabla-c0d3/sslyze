@@ -13,7 +13,7 @@
 from ctypes import create_string_buffer, CFUNCTYPE, memmove
 from ctypes import c_void_p, c_int, c_char_p, c_long
 from load_openssl import libssl
-from errors import get_openssl_error, ctSSLError
+from errors import errcheck_get_error_if_eq0, errcheck_get_error_if_null
 
 
 # INTERNAL SSL_CTX CONSTANTS
@@ -176,19 +176,6 @@ class SSL_CTX:
         libssl.SSL_CTX_check_private_key(self._ssl_ctx_struct_p)
 
 
-# == CTYPE ERRCHECK CALLBACK(S) ==
-def _errcheck_get_error_if_none(result, func, arguments):
-    if result is None:
-        raise get_openssl_error()
-    return result
-
-
-def _errcheck_get_error_if_0(result, func, arguments):
-    if result is 0:
-        raise get_openssl_error()
-    return result
-
-
 # == CTYPE INIT ==
 def init_SSL_CTX_functions():
     """
@@ -210,7 +197,7 @@ def init_SSL_CTX_functions():
 
     libssl.SSL_CTX_new.argtypes = [c_void_p]
     libssl.SSL_CTX_new.restype = c_void_p
-    libssl.SSL_CTX_new.errcheck = _errcheck_get_error_if_none
+    libssl.SSL_CTX_new.errcheck = errcheck_get_error_if_null
 
     libssl.SSL_CTX_free.argtypes = [c_void_p]
     libssl.SSL_CTX_free.restype = None
@@ -227,19 +214,19 @@ def init_SSL_CTX_functions():
     libssl.SSL_CTX_load_verify_locations.argtypes = \
         [c_void_p, c_char_p, c_char_p]
     libssl.SSL_CTX_load_verify_locations.restype = c_int
-    libssl.SSL_CTX_load_verify_locations.errcheck = _errcheck_get_error_if_0
+    libssl.SSL_CTX_load_verify_locations.errcheck = errcheck_get_error_if_eq0
 
     libssl.SSL_CTX_use_certificate_file.argtypes = [c_void_p, c_char_p, c_int]
     libssl.SSL_CTX_use_certificate_file.restype = c_int
-    libssl.SSL_CTX_use_certificate_file.errcheck = _errcheck_get_error_if_0
+    libssl.SSL_CTX_use_certificate_file.errcheck = errcheck_get_error_if_eq0
 
     libssl.SSL_CTX_set_default_passwd_cb.argtypes = [c_void_p, c_void_p]
     libssl.SSL_CTX_set_default_passwd_cb.restype = None
 
     libssl.SSL_CTX_use_PrivateKey_file.argtypes = [c_void_p, c_char_p, c_int]
     libssl.SSL_CTX_use_PrivateKey_file.restype = c_int
-    libssl.SSL_CTX_use_PrivateKey_file.errcheck = _errcheck_get_error_if_0
+    libssl.SSL_CTX_use_PrivateKey_file.errcheck = errcheck_get_error_if_eq0
 
     libssl.SSL_CTX_check_private_key.argtypes = [c_void_p]
     libssl.SSL_CTX_check_private_key.restype = c_int
-    libssl.SSL_CTX_check_private_key.errcheck = _errcheck_get_error_if_0
+    libssl.SSL_CTX_check_private_key.errcheck = errcheck_get_error_if_eq0

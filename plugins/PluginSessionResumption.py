@@ -88,7 +88,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
                 sucessful_resumptions += 1
 
         result_string = str(sucessful_resumptions) + \
-            ' resumptions successful out of' + NB_RESUM + ' attempts.'
+            ' resumptions successful out of ' + str(NB_RESUM) + ' attempts.'
 
         error_list = []
         for failed_job in thread_pool.get_error():
@@ -212,7 +212,7 @@ def _resume_with_session_id(target, ssl_version, shared_state):
     # Finally, compare the two Session IDs
     if session1_id != session2_id:
         raise FailedSessionResumption(
-            'Not Supported (Session ID assigned but not accepted)')
+            'Not Supported (Session ID assigned but not accepted; try --resum_rate)')
 
     return
 
@@ -240,7 +240,7 @@ def _resume_with_session_ticket(target, shared_state):
     try: # Recover the TLS ticket
         session1_tls_ticket = _extract_tls_session_ticket(session1)
     except IndexError:
-       raise FailedSessionResumption('Not Supported (TLS tickets not assigned)')
+       raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
 
     # Try to resume that session using the TLS ticket
     try:
@@ -251,12 +251,12 @@ def _resume_with_session_ticket(target, shared_state):
     try: # Recover the TLS ticket
         session2_tls_ticket = _extract_tls_session_ticket(session2)
     except IndexError:
-       raise FailedSessionResumption('Not Supported (TLS tickets not assigned)')
+       raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
 
     # Finally, compare the two TLS Tickets
     if session1_tls_ticket != session2_tls_ticket:
         raise FailedSessionResumption(
-            'Not Supported (TLS tickets assigned but not accepted)')
+            'Not Supported (TLS ticket assigned but not accepted)')
 
     return
 

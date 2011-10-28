@@ -13,6 +13,7 @@ from ctypes import create_string_buffer, sizeof, memmove, byref
 from ctypes import c_char_p, c_void_p, c_int, c_long
 from load_openssl import libssl, OpenSSL_version
 import SSL_SESSION, X509, BIO, errors
+from errors import errcheck_get_error_if_null, errcheck_get_error_if_eq0
 
 SSL_CTRL_GET_RI_SUPPORT = 76 # SSL_get_secure_renegotiation_support()
 
@@ -63,7 +64,7 @@ class SSL:
         self._network_bio = None
 
         # Create a BIO pair to handle SSL operations
-        (internal_bio, network_bio) = BIO.BIO.new_bio_pair()
+        (internal_bio, network_bio) = BIO.BIOFactory.new_bio_pair()
 
         # This BIO will not be implicitely freed by OpenSSL
         network_bio.require_manual_free()
@@ -393,21 +394,10 @@ def _errcheck_SSL_default(result, func, arguments):
         raise errors.get_openssl_ssl_error(arguments[0], result)
     return result
 
-def _errcheck_get_error_if_none(result, func, arguments):
-    if result is None:
-        raise get_openssl_error()
-    return result
-
 
 def _errcheck_SSL_shutdown(result, func, arguments):
     if result < 0: # fatal error
         raise errors.get_openssl_ssl_error(arguments[0], result)
-    return result
-
-
-def _errcheck_get_error_if_0(result, func, arguments):
-    if result == 0:
-        raise errors.get_openssl_error()
     return result
 
 
@@ -437,7 +427,7 @@ def init_SSL_functions():
     """
     libssl.SSL_new.argtypes = [c_void_p]
     libssl.SSL_new.restype = c_void_p
-    libssl.SSL_new.errcheck = _errcheck_get_error_if_none
+    libssl.SSL_new.errcheck = errcheck_get_error_if_null
 
     libssl.SSL_set_bio.argtypes = [c_void_p, c_void_p, c_void_p]
     libssl.SSL_set_bio.restype = None
@@ -490,7 +480,7 @@ def init_SSL_functions():
 
     libssl.SSL_set_session.argtypes = [c_void_p, c_void_p]
     libssl.SSL_set_session.restype = c_int
-    libssl.SSL_set_session.errcheck = _errcheck_get_error_if_0
+    libssl.SSL_set_session.errcheck = errcheck_get_error_if_eq0
 
     libssl.SSL_get_peer_certificate.argtypes = [c_void_p]
     libssl.SSL_get_peer_certificate.restype = c_void_p

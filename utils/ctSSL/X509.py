@@ -20,6 +20,14 @@ class X509:
     def __init__(self, x509_struct):
         self._x509_struct = x509_struct
 
+
+    def __del__(self):
+        """Call OpenSSL X509_free() if a X509 C struct was allocated."""
+        if self._x509_struct:
+            libcrypto.X509_free(self._x509_struct)
+            self._x509_struct = None
+
+
     def as_text(self):
         # Print the full certificate to a BIO
         mem_bio = BIO.BIOFactory.new_mem()
@@ -188,3 +196,6 @@ def init_X509_functions():
     # Used with X509_get_pubkey()
     libcrypto.EVP_PKEY_size.argtypes = [c_void_p]
     libcrypto.EVP_PKEY_size.restype = c_int
+
+    libcrypto.X509_free.argtypes = [c_void_p]
+    libcrypto.X509_free.restype = None

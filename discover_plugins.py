@@ -24,7 +24,7 @@
 import os
 import inspect
 from imp import load_module, find_module
-import plugins
+import plugins.PluginBase
 
 def discover_plugins(plugin_dir):
     """

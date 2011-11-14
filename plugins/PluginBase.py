@@ -55,23 +55,22 @@ class PluginBase(object):
     __metaclass__ = abc.ABCMeta
 
 
-    def  __init__(self, shared_state):
+    def  __init__(self, shared_settings):
         """
-        Plugin constructor. Initializes self.shared_state, which contains
+        Plugin constructor. Initializes self._shared_settings, which contains
         read-only info available to all the plugins: client certificate, timeout
         value, etc...
         """
-        self._shared_state = shared_state #TODO: Document what's in shared_state
+        #TODO: Document what's in shared_settings
+        self._shared_settings = shared_settings
         return
 
-
+    @classmethod
     def get_commands(plugin_class):
         """
         This method returns the AvailableCommands object for the current plugin.
         """
         return plugin_class.available_commands
-    get_commands = classmethod(get_commands)
-
 
     @abc.abstractmethod
     def process_task(self, target, command, args):

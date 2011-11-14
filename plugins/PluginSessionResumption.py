@@ -26,7 +26,7 @@ from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, ctSSL_cleanup
 from utils.CtSSLHelper import FailedSSLHandshake, do_ssl_handshake, \
-    load_client_certificate
+    load_shared_settings
 
 
 class PluginSessionResumption(PluginBase.PluginBase):
@@ -77,7 +77,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         for i in xrange(NB_RESUM):
             thread_pool.add_job((
                 _test_resumption_with_session_id,
-                (target, ('sslv3'), self._shared_state)))
+                (target, ('sslv3'), self._shared_settings)))
         thread_pool.start(NB_THREADS)
 
         # Count successful resumptions
@@ -112,15 +112,15 @@ class PluginSessionResumption(PluginBase.PluginBase):
         thread_pool = ThreadPool()
         thread_pool.add_job((
             _test_resumption_with_session_ticket,
-            (target, None, self._shared_state),
+            (target, None, self._shared_settings),
             'Using TLSv1 Session Tickets: '))
         thread_pool.add_job((
             _test_resumption_with_session_id,
-            (target,('sslv3'), self._shared_state),
+            (target,('sslv3'), self._shared_settings),
             'Using SSLv3 Session IDs: '))
         thread_pool.add_job((
             _test_resumption_with_session_id,
-            (target,('tlsv1'), self._shared_state),
+            (target,('tlsv1'), self._shared_settings),
             'Using TLSv1 Session IDs: '))
         thread_pool.start(NB_THREADS)
 
@@ -144,12 +144,12 @@ class FailedSessionResumption(Exception):
     pass
 
 
-def _test_resumption_with_session_id(target, ssl_version, shared_state):
+def _test_resumption_with_session_id(target, ssl_version, shared_settings):
     """
     Tests the server for session resumption support using Session IDs.
     """
     try:
-        _resume_with_session_id(target, ssl_version, shared_state)
+        _resume_with_session_id(target, ssl_version, shared_settings)
         result = 'Supported'
     except FailedSessionResumption as e:
         result = e[0]
@@ -157,12 +157,12 @@ def _test_resumption_with_session_id(target, ssl_version, shared_state):
     return result
 
 
-def _test_resumption_with_session_ticket(target, args, shared_state):
+def _test_resumption_with_session_ticket(target, args, shared_settings):
     """
     Tests the server for session resumption support using TLS Tickets.
     """
     try:
-        _resume_with_session_ticket(target, shared_state)
+        _resume_with_session_ticket(target, shared_settings)
         result = 'Supported'
     except FailedSessionResumption as e:
         result = e[0]
@@ -170,7 +170,7 @@ def _test_resumption_with_session_ticket(target, args, shared_state):
     return result
 
 
-def _resume_with_session_id(target, ssl_version, shared_state):
+def _resume_with_session_id(target, ssl_version, shared_settings):
     """
     Performs one session resumption using Session IDs.
     Raises FailedSessionResumption if resumption failed.
@@ -185,11 +185,8 @@ def _resume_with_session_id(target, ssl_version, shared_state):
     # Session Tickets and Session ID mechanisms can be mutually exclusive.
     ctx.set_options(constants.SSL_OP_NO_TICKET) # Turning off TLS tickets.
 
-    if shared_state['cert']: # Load the client certificate
-        load_client_certificate(ctx, shared_state)
-
     try: # Connect to the server and keep the SSL session
-        session1 =_resume_ssl_session(target, ctx, shared_state)
+        session1 =_resume_ssl_session(target, ctx, shared_settings)
     except FailedSSLHandshake as e:
         raise FailedSSLHandshake('SSL Handshake failed: ' + e[0])
 
@@ -200,7 +197,7 @@ def _resume_with_session_id(target, ssl_version, shared_state):
 
     # Try to resume that SSL session
     try:
-        session2 =_resume_ssl_session(target, ctx, shared_state, session1)
+        session2 =_resume_ssl_session(target, ctx, shared_settings, session1)
     except FailedSSLHandshake as e:
         raise FailedSSLHandshake('SSL Handshake failed: ' + e[0])
 
@@ -217,7 +214,7 @@ def _resume_with_session_id(target, ssl_version, shared_state):
     return
 
 
-def _resume_with_session_ticket(target, shared_state):
+def _resume_with_session_ticket(target, shared_settings):
     """
     Performs one session resumption using TLS Session Tickets.
     Raises FailedSessionResumption if resumption failed.
@@ -229,11 +226,8 @@ def _resume_with_session_ticket(target, shared_state):
     # Session Tickets and Session ID mechanisms can be mutually exclusive.
     ctx.set_session_cache_mode(constants.SSL_SESS_CACHE_OFF) # Turning off IDs.
 
-    if shared_state['cert']: # Load the client certificate
-        load_client_certificate(ctx, shared_state)
-
     try: # Connect to the server and keep the SSL session
-        session1 =_resume_ssl_session(target, ctx, shared_state)
+        session1 =_resume_ssl_session(target, ctx, shared_settings)
     except FailedSSLHandshake as e:
         raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
 
@@ -244,7 +238,7 @@ def _resume_with_session_ticket(target, shared_state):
 
     # Try to resume that session using the TLS ticket
     try:
-        session2 =_resume_ssl_session(target, ctx, shared_state, session1)
+        session2 =_resume_ssl_session(target, ctx, shared_settings, session1)
     except FailedSSLHandshake as e:
         raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
 
@@ -281,7 +275,7 @@ def _extract_tls_session_ticket(ssl_session):
     return session_tls_ticket
 
 
-def _resume_ssl_session(target, ctx, shared_state, ssl_session = None):
+def _resume_ssl_session(target, ctx, shared_settings, ssl_session = None):
     """
     Connect to the server and returns the session object that was assigned for
     that connection.
@@ -290,7 +284,7 @@ def _resume_ssl_session(target, ctx, shared_state, ssl_session = None):
     (host, ip_addr, port) = target
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ssl = SSL.SSL(ctx, sock)
-    sock.settimeout(shared_state['timeout'])
+    load_shared_settings(ctx, sock, shared_settings) # client cert, etc...
 
     if ssl_session:
         ssl.set_session(ssl_session)

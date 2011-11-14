@@ -29,21 +29,46 @@ class FailedSSLHandshake(Exception):
     pass
 
 
-def load_client_certificate(ctx, shared_state):
+def load_shared_settings(ctx, sock, shared_settings):
+    """
+    Read the shared_settings object shared between all the plugins and load
+    the proper settings the ssl context and socket.
+    """
+
+    # Load client certificate and private key
+    if shared_settings['cert']:
+        if shared_settings['certform'] is 'DER':
+            ctx.use_certificate_file(
+                shared_settings['cert'],
+                constants.SSL_FILETYPE_ASN1)
+        else:
+            ctx.use_certificate_file(
+                shared_settings['cert'],
+                constants.SSL_FILETYPE_PEM)
+
+        if shared_settings['keyform'] is 'DER':
+            ctx.use_PrivateKey_file(
+                shared_settings['key'],
+                constants.SSL_FILETYPE_ASN1)
+        else:
+            ctx.use_PrivateKey_file(
+                shared_settings['key'],
+                constants.SSL_FILETYPE_PEM)
+
+        ctx.check_private_key()
+
+    # Set socket timeout
+    sock.settimeout(shared_settings['timeout'])
+
+    # TODO: CONNECT proxy
+
+
+
+def load_client_certificate(ctx, shared_settings):
     """
     Loads the client certificate from the shared state object, to the SSL_CTX.
     """
-    if shared_state['certform'] is 'DER':
-        ctx.use_certificate_file(shared_state['cert'], constants.SSL_FILETYPE_DER)
-    else:
-        ctx.use_certificate_file(shared_state['cert'], constants.SSL_FILETYPE_PEM)
 
-    if shared_state['keyform'] is 'DER':
-        ctx.use_PrivateKey_file(shared_state['key'], constants.SSL_FILETYPE_DER)
-    else:
-        ctx.use_PrivateKey_file(shared_state['key'], constants.SSL_FILETYPE_PEM)
-
-    ctx.check_private_key()
     return
 
 
@@ -91,11 +116,11 @@ def do_ssl_handshake(ssl):
         elif "peer error no cipher" in str(e.args):
             result_ssl_handshake = 'Failed - SSL Peer error no ciph'
         elif "illegal padding" in str(e.args):
-             result_ssl_handshake = 'Failed - SSL Illegal padding'
+            result_ssl_handshake = 'Failed - SSL Illegal padding'
         elif "ecc cert should have sha1 signature" in str(e.args):
-             result_ssl_handshake = 'ECC cert should have SHA1 sig'
+            result_ssl_handshake = 'ECC cert should have SHA1 sig'
         elif "insufficient security" in str(e.args):
-             result_ssl_handshake = 'Rejected - TLS Insufficient sec'
+            result_ssl_handshake = 'Rejected - TLS Insufficient sec'
         else:
             raise e
 

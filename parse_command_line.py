@@ -137,7 +137,7 @@ def process_parsing_results(args_command_list):
     shared_mgr = Manager()
     shared_state = shared_mgr.dict() # Will be sent to every plugin process.
 
-   # Sanity checks on the client cert options
+    # Sanity checks on the client cert options
     if bool(args_command_list.cert) ^ bool(args_command_list.key):
         print '   Error=> no private key or certificate file was given! ' + \
                 'Use --client_cert and --client_key.\n\n'

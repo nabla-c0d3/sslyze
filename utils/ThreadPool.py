@@ -26,7 +26,7 @@ import threading
 from Queue import Queue
 
 
-class ThreadSentinel:
+class _ThreadPoolSentinel:
     pass
 
 
@@ -51,7 +51,7 @@ class ThreadPool:
         active_threads = self._active_threads
         while (active_threads) or (not self._error_q.empty()):
             error = self._error_q.get()
-            if isinstance(error, ThreadSentinel): # One thread was done
+            if isinstance(error, _ThreadPoolSentinel): # One thread was done
                 active_threads -= 1
                 self._error_q.task_done()
                 continue
@@ -65,7 +65,7 @@ class ThreadPool:
         active_threads = self._active_threads
         while (active_threads) or (not self._result_q.empty()):
             result = self._result_q.get()
-            if isinstance(result, ThreadSentinel): # One thread was done
+            if isinstance(result, _ThreadPoolSentinel): # One thread was done
                 active_threads -= 1
                 self._result_q.task_done()
                 continue
@@ -92,7 +92,7 @@ class ThreadPool:
             self._active_threads += 1
 
         # Put sentinels to let the threads know when there's no more jobs
-        [self._job_q.put(ThreadSentinel()) for worker in self._thread_list]
+        [self._job_q.put(_ThreadPoolSentinel()) for worker in self._thread_list]
 
 
     def join(self): # Clean exit
@@ -108,9 +108,9 @@ def _work_function(job_q, result_q, error_q):
     while True:
         job = job_q.get()
 
-        if isinstance(job, ThreadSentinel): # All the work is done, get out
-            result_q.put(ThreadSentinel())
-            error_q.put(ThreadSentinel())
+        if isinstance(job, _ThreadPoolSentinel): # All the work is done, get out
+            result_q.put(_ThreadPoolSentinel())
+            error_q.put(_ThreadPoolSentinel())
             job_q.task_done()
             break
 
@@ -121,6 +121,7 @@ def _work_function(job_q, result_q, error_q):
         except Exception as e:
             error_q.put((job, e))
         else:
-             result_q.put((job, result))
+            result_q.put((job, result))
         finally:
             job_q.task_done()
+            

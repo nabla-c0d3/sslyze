@@ -46,7 +46,7 @@ def discover_targets(args_target_list, args_command_list, available_commands, ma
             host = (target.split(':'))[0]
             temp_port = (target.split(':'))[1]
 
-        except IndexError as e: # No port was specified, default to 443
+        except IndexError: # No port was specified, default to 443
             port = 443
             valid_target = (host, port)
 
@@ -108,11 +108,11 @@ def _test_connect(target, out_q, timeout):
         # Host is up => keep the IP adress we actually connected to
         ip_addr = s.getpeername()
 
-    except socket.timeout as e: # Host is down
+    except socket.timeout: # Host is down
         error_text = 'WARNING: Could not connect (timeout), discarding corresponding tasks.'
-    except socket.gaierror as e: # Host is down
+    except socket.gaierror: # Host is down
         error_text = 'WARNING: Could not connect, discarding corresponding tasks.'
-    except socket.error as e: # Connection Refused
+    except socket.error: # Connection Refused
         error_text = 'WARNING: Connection rejected, discarding corresponding tasks.'
 
     finally:

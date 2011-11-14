@@ -13,7 +13,8 @@
 from ctypes import create_string_buffer, CFUNCTYPE, memmove
 from ctypes import c_void_p, c_int, c_char_p, c_long
 from load_openssl import libssl
-from errors import errcheck_get_error_if_eq0, errcheck_get_error_if_null
+from errors import errcheck_get_error_if_eq0, errcheck_get_error_if_null, \
+    ctSSLError
 
 
 # INTERNAL SSL_CTX CONSTANTS

@@ -122,7 +122,7 @@ def get_openssl_ssl_error(ssl_struct, ret):
     if ssl_error == SSL_ERROR_SSL:
         openssl_error = libcrypto.ERR_get_error()
         #if err == 0:
-         #   return
+        #   return
         openssl_error_string = create_string_buffer(ERROR_STRING_BUFFER_SIZE)
         libcrypto.ERR_error_string_n(openssl_error, openssl_error_string,
                                         ERROR_STRING_BUFFER_SIZE)

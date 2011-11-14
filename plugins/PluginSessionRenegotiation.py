@@ -26,7 +26,7 @@ from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL, SSL_CTX, \
     constants, errors
 from utils.CtSSLHelper import FailedSSLHandshake, do_ssl_handshake, \
-    get_http_server_response, load_client_certificate
+    load_shared_settings
 
 
 class PluginSessionRenegotiation(PluginBase.PluginBase):
@@ -56,7 +56,7 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         else:
             try: # OpenSSL version is OK, test insecure reneg
                 (result_reneg, result_secure) = \
-                    _test_renegotiation(target, self._shared_state)
+                    _test_renegotiation(target, self._shared_settings)
                 formatted_results.append('      {0:<35} {1}'.format(
                     'Client-initiated Renegotiations:',
                     result_reneg))
@@ -71,7 +71,7 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         return formatted_results
 
 
-def _test_renegotiation(target, shared_state):
+def _test_renegotiation(target, shared_settings):
     """
     Checks whether the server honors session renegotation requests and whether
     it supports secure renegotiation.
@@ -80,13 +80,11 @@ def _test_renegotiation(target, shared_state):
     result_reneg = 'N/A'
     result_secure = 'N/A'
     ctx = SSL_CTX.SSL_CTX()
-
-    if shared_state['cert']: # Client certificate
-        load_client_certificate(ctx, shared_state)
-
+    ctx.set_verify(constants.SSL_VERIFY_NONE)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ssl = SSL.SSL(ctx, sock)
-    sock.settimeout(shared_state['timeout'])
+    load_shared_settings(ctx, sock, shared_settings) # client cert, etc...
+
     sock.connect((ip_addr, port))
 
     try:

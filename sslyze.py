@@ -24,16 +24,14 @@
 
 
 from time import time
-from multiprocessing import Process, JoinableQueue, Manager
+from multiprocessing import Process, JoinableQueue
 
-import plugins
-from plugins.PluginBase import PluginBase
 from discover_targets import discover_targets
 from discover_plugins import discover_plugins
 from parse_command_line import create_command_line_parser, \
     parse_command_line, process_parsing_results
 
-PROG_VERSION = 'SSLyze v0.3'
+PROG_VERSION = 'SSLyze v0.4 beta'
 NB_PROCESSES = 10 # Should be controlled by the user
 PLUGIN_PATH = "./plugins"
 DEFAULT_TIMEOUT = 5
@@ -41,12 +39,12 @@ DEFAULT_TIMEOUT = 5
 
 class WorkerProcess(Process):
 
-    def __init__(self, queue_in, queue_out, available_commands, shared_state):
-      Process.__init__(self)
-      self.queue_in = queue_in
-      self.queue_out = queue_out
-      self.available_commands = available_commands
-      self.shared_state = shared_state
+    def __init__(self, queue_in, queue_out, available_commands, shared_settings):
+        Process.__init__(self)
+        self.queue_in = queue_in
+        self.queue_out = queue_out
+        self.available_commands = available_commands
+        self.shared_settings = shared_settings
 
     def run(self):
         """
@@ -65,7 +63,8 @@ class WorkerProcess(Process):
 
             (target, command, args) = task
             # Instatiate the proper plugin
-            plugin_instance =self.available_commands[command](self.shared_state)
+            plugin_instance =self.available_commands[command](self.shared_settings)
+
             try: # Process the task
                 result = plugin_instance.process_task(target, command, args)
             except Exception as e:
@@ -129,9 +128,9 @@ def main():
     else:
         (args_command_list, args_target_list) = parse_result
 
-    # Fill the shared state dictionnary, shared between all the plugins
-    shared_state = process_parsing_results(args_command_list)
-    if not shared_state:
+    # Fill the shared settings dictionnary, shared between all the plugins
+    shared_settings = process_parsing_results(args_command_list)
+    if not shared_settings:
         parser.print_help()
         return
 
@@ -143,7 +142,7 @@ def main():
     process_list = []
     for i in xrange(NB_PROCESSES):
         p = WorkerProcess(task_queue, result_queue, available_commands, \
-                            shared_state)
+                            shared_settings)
         p.start()
         process_list.append(p) # Keep track of the processes that were started
 

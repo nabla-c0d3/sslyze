@@ -25,11 +25,9 @@
 
 import socket
 from plugins import PluginBase
-from utils.ThreadPool import ThreadPool
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL, SSL_CTX, \
     constants, errors
-from utils.CtSSLHelper import FailedSSLHandshake, do_ssl_handshake, \
-    load_client_certificate
+from utils.CtSSLHelper import do_ssl_handshake, load_shared_settings
 
 
 # aaron:
@@ -193,12 +191,10 @@ class PluginCertInfo(PluginBase.PluginBase):
         else:
             ctx.set_verify(constants.SSL_VERIFY_NONE)
 
-        if self._shared_state['cert']: # Load client certificate
-            load_client_certificate(ctx, self._shared_state)
-
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ssl = SSL.SSL(ctx, sock)
-        sock.settimeout(self._shared_state['timeout'])
+        load_shared_settings(ctx, sock, self._shared_settings) # client cert, etc...
+
         sock.connect((ip_addr, port))
 
         try: # Perform the SSL handshake

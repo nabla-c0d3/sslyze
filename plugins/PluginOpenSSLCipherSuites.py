@@ -21,16 +21,20 @@
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
 
+
 import socket
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, \
     errors, ctSSL_cleanup
 from utils.CtSSLHelper import FailedSSLHandshake, do_ssl_handshake, \
-    get_http_server_response, load_client_certificate
+    get_http_server_response, load_shared_settings
+
+
 
 
 class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
+
 
     available_commands = PluginBase.AvailableCommands(
         "PluginOpenSSLCipherSuites",
@@ -47,9 +51,10 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         command="tlsv1",
         help="Lists the TLS 1.0 OpenSSL cipher suites supported by the server.",
         dest=None)
-
+    
 
     def process_task(self, target, command, args):
+
 
         MAX_THREADS = 50
         if command in ['sslv2', 'sslv3', 'tlsv1']:
@@ -84,11 +89,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         # Scan for every available cipher suite
         for cipher in cipher_list:
             thread_pool.add_job((_test_ciphersuite,
-                (target, ssl_version, cipher, self._shared_state)))
+                (target, ssl_version, cipher, self._shared_settings)))
 
         # Scan for the preferred cipher suite
         thread_pool.add_job((_test_ciphersuite,
-            (target, ssl_version, None, self._shared_state)))
+            (target, ssl_version, None, self._shared_settings)))
 
         # Start processing the jobs
         thread_pool.start(NB_THREADS)
@@ -97,17 +102,17 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         accepted_ciphers = {}
         rejected_ciphers = {}
         for completed_job in thread_pool.get_result():
-             (job, result) = completed_job
-             if result is not None:
-                 (ssl_cipher, result_ssl , result_http_get) = result
-                 if result_ssl == 'Accepted':
+            (job, result) = completed_job
+            if result is not None:
+                (ssl_cipher, result_ssl , result_http_get) = result
+                if result_ssl == 'Accepted':
                     # Store the result without overwriting the Preferred cipher
                     accepted_ciphers.setdefault(
-                        ssl_cipher,
-                        (result_ssl, result_http_get))
-                 elif result_ssl == 'Preferred':
+                       ssl_cipher,
+                       (result_ssl, result_http_get))
+                elif result_ssl == 'Preferred':
                     accepted_ciphers[ssl_cipher] = (result_ssl, result_http_get)
-                 else:
+                else:
                     rejected_ciphers[ssl_cipher] = (result_ssl, result_http_get)
 
         # Format the results to make them printable
@@ -146,7 +151,7 @@ def _format_cipher_results(result_format, result_dict):
     return printable_results
 
 
-def _test_ciphersuite(target, ssl_version, ssl_cipher, shared_state):
+def _test_ciphersuite(target, ssl_version, ssl_cipher, shared_settings):
     """
     Initiates a SSL handshake with the server, using the SSL version and cipher
     suite specified. If no ssl_cipher is None, will connect to the server
@@ -162,13 +167,10 @@ def _test_ciphersuite(target, ssl_version, ssl_cipher, shared_state):
     else: # Testing for the server's preferred cipher suite
         result_success = 'Preferred'
 
-    if shared_state['cert']: # Load client certificate
-        load_client_certificate(ctx, shared_state)
-
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ssl = SSL.SSL(ctx, sock)
-    sock.settimeout(shared_state['timeout'])
-
+    load_shared_settings(ctx, sock, shared_settings) # client cert, etc...
+    
     try: # Initiate a TCP connection
         sock.connect((ip_addr, port))
     except socket.timeout:
@@ -177,11 +179,9 @@ def _test_ciphersuite(target, ssl_version, ssl_cipher, shared_state):
 
     try: # Perform the SSL handshake
         do_ssl_handshake(ssl)
-
     except FailedSSLHandshake as e:
         if ssl_cipher:
             return (ssl_cipher, str(e), 'N/A')
-
     except Exception as e:
         if ssl_cipher:
             return (ssl_cipher, 'Error ' + str(type(e)) + ': ' + str(e), 'N/A')
@@ -202,5 +202,5 @@ def _test_ciphersuite(target, ssl_version, ssl_cipher, shared_state):
     finally:
         ssl.shutdown()
         sock.close()
-
+        
     return

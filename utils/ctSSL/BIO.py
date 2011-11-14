@@ -13,7 +13,8 @@
 from ctypes import create_string_buffer, sizeof, memmove, byref
 from ctypes import c_char_p, c_void_p, c_int, c_long
 from load_openssl import libcrypto
-from errors import get_openssl_error, BIOError, errcheck_get_error_if_null
+from errors import get_openssl_error, BIOError, errcheck_get_error_if_null, \
+    BIOShouldRead, BIOShouldRetry, BIOShouldWrite
 
 # INTERNAL BIO CONSTANTS
 BIO_C_DO_STATE_MACHINE = 101 # BIO_do_connect()
@@ -64,7 +65,7 @@ class BIOFactory:
         @rtype: ctSSL.BIO.BIO
         @return: The new connect BIO.
         """
-        bio_struct_p = libcrypto.BIO_new_connect(host + ':' + str(port))
+        bio_struct_p = libcrypto.BIO_new_connect(name)
         return BIO(bio_struct_p)
 
 
@@ -153,8 +154,8 @@ class BIO:
         if len(data) == 0:
             return
         write_buffer = create_string_buffer(data)
-        result = libcrypto.BIO_write(self._bio_struct_p, write_buffer,
-                                     sizeof(write_buffer) - 1)
+        libcrypto.BIO_write(self._bio_struct_p, write_buffer,
+                                sizeof(write_buffer) - 1)
 
 
     def ctrl_pending(self):

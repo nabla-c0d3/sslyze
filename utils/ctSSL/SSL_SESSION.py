@@ -9,9 +9,8 @@
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
 
-from ctypes import create_string_buffer, sizeof
 from ctypes import c_int, c_void_p
-from load_openssl import libssl, libcrypto
+from load_openssl import libssl
 import BIO
 
 class SSL_SESSION:
@@ -23,14 +22,14 @@ class SSL_SESSION:
     corresponds to that SSL_SESSION object.
     """
 
-    def __init__(self, ssl_session_struct):
+    def __init__(self, _ssl_session_struct_p):
         """
         Create a new SSL_SESSION instance.
 
-        @type ssl_session_struct: ctypes.c_void_p
-        @param ssl_session_struct: Pointer to the OpenSSL SSL_SESSION C struct.
+        @type _ssl_session_struct_p: ctypes.c_void_p
+        @param _ssl_session_struct_p: Pointer to the OpenSSL SSL_SESSION C struct.
         """
-        self._ssl_session_struct_p = ssl_session_struct
+        self._ssl_session_struct_p = _ssl_session_struct_p
 
 
     def __del__(self):

@@ -9,7 +9,7 @@
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
 
-from ctypes import create_string_buffer, sizeof, memmove, byref
+from ctypes import create_string_buffer, sizeof, memmove
 from ctypes import c_char_p, c_void_p, c_int, c_long
 from load_openssl import libssl, OpenSSL_version
 import SSL_SESSION, X509, BIO, errors
@@ -468,12 +468,6 @@ def init_SSL_functions():
     libssl.SSL_get_current_cipher.restype = c_void_p
     libssl.SSL_get_current_cipher.errcheck = _errcheck_get_current_cipher
 
-    libssl.SSL_CIPHER_get_name.argtypes = [c_void_p]
-    libssl.SSL_CIPHER_get_name.restype = c_char_p
-
-    libssl.SSL_CIPHER_get_bits.argtypes = [c_void_p, c_void_p]
-    libssl.SSL_CIPHER_get_bits.restype = c_int
-
     libssl.SSL_get1_session.argtypes = [c_void_p]
     libssl.SSL_get1_session.restype = c_void_p
     libssl.SSL_get1_session.errcheck = _errcheck_SSL_get_session
@@ -491,4 +485,10 @@ def init_SSL_functions():
 
     libssl.SSL_set_connect_state.argtypes = [c_void_p]
     libssl.SSL_set_connect_state.restype = None
+    
+    libssl.SSL_CIPHER_get_name.argtypes = [c_void_p]
+    libssl.SSL_CIPHER_get_name.restype = c_char_p
+
+    libssl.SSL_CIPHER_get_bits.argtypes = [c_void_p, c_void_p]
+    libssl.SSL_CIPHER_get_bits.restype = c_int
 

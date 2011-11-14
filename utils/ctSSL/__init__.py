@@ -11,7 +11,7 @@
 
 from ctypes import c_ulong, c_int, CFUNCTYPE, c_char_p, c_void_p
 from load_openssl import libssl, libcrypto, ctSSLInitError
-import SSL, BIO, SSL_CTX, errors, SSL_SESSION
+import SSL, BIO, SSL_CTX, errors, SSL_SESSION, X509
 
 
 openSSL_threading = False
@@ -55,7 +55,6 @@ def ctSSL_cleanup():
         libcrypto.CRYPTO_set_id_callback(None)
         libcrypto.CRYPTO_set_locking_callback(None)
         openSSL_crypto_lock_list = []
-
 
 
 # MULTITHREADING SUPPORT

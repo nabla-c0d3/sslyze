@@ -22,6 +22,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import inspect
 from imp import load_module, find_module
 import plugins.PluginBase
@@ -34,10 +35,11 @@ def discover_plugins(plugin_dir):
     Returns a list of plugin classes.
     """
     plugins_found = set([])
+    full_plugin_dir = os.path.join(sys.path[0], plugin_dir)
     print''
 
-    if os.path.exists(plugin_dir):
-        for (root, dirs, files) in os.walk(plugin_dir):
+    if os.path.exists(full_plugin_dir):
+        for (root, dirs, files) in os.walk(full_plugin_dir):
             del dirs[:] # Do not walk into subfolders of the plugin directory
             # Checking every .py module in the plugin directory
             for source in (s for s in files if s.endswith(".py")):

@@ -15,6 +15,7 @@ from ctypes import c_void_p, c_int, c_char_p
 from ctypes import create_string_buffer, sizeof, pointer
 from load_openssl import libcrypto
 import BIO
+from errors import ctSSLEmptyValue
 
 class X509:
     def __init__(self, x509_struct):
@@ -145,8 +146,7 @@ def errcheck_X509_default(result, func, arguments):
     this module.
     """
     if result is None: # Not expecting a NULL pointer back
-        #TODO: Change that
-        raise Exception('Error calling ' + str(func.__name__) )
+        raise ctSSLEmptyValue('Error calling ' + str(func.__name__) )
     return result
 
 

@@ -31,10 +31,10 @@ from discover_plugins import discover_plugins
 from parse_command_line import create_command_line_parser, \
     parse_command_line, process_parsing_results
 
-PROG_VERSION = 'SSLyze v0.4 beta'
-NB_PROCESSES = 10 # Should be controlled by the user
-PLUGIN_PATH = "./plugins"
-DEFAULT_TIMEOUT = 5
+PROG_VERSION =      'SSLyze v0.4 beta'
+NB_PROCESSES =      10 # Should be controlled by the user
+PLUGIN_PATH =       "plugins"
+DEFAULT_TIMEOUT =   5
 
 
 class WorkerProcess(Process):

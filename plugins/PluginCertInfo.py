@@ -24,10 +24,15 @@
 #!/usr/bin/env python
 
 import socket
+import os
+import sys
+
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL, SSL_CTX, \
     constants, errors
 from utils.CtSSLHelper import do_ssl_handshake, load_shared_settings
+
+TRUSTED_CA_STORE = os.path.join(sys.path[0], 'mozilla_cacert.pem')
 
 
 # aaron:
@@ -104,10 +109,7 @@ class PluginCertInfo(PluginBase.PluginBase):
                     error_str = str(e)
             else:
                 error_str = str(e)
-
-        except Exception as e:
-            error_str = str(e)
-
+                
 
         # Result processing
         returnstr = ['  * Certificate : ']
@@ -186,7 +188,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         ctx = SSL_CTX.SSL_CTX()
 
         if verify_cert:
-            ctx.load_verify_locations('mozilla_cacert.pem')
+            ctx.load_verify_locations(TRUSTED_CA_STORE)
             ctx.set_verify(constants.SSL_VERIFY_PEER)
         else:
             ctx.set_verify(constants.SSL_VERIFY_NONE)

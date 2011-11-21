@@ -11,9 +11,11 @@
 
 from ctypes import create_string_buffer, sizeof, memmove
 from ctypes import c_char_p, c_void_p, c_int, c_long
+
 from load_openssl import libssl, OpenSSL_version
 import SSL_SESSION, X509, BIO, errors
 from errors import errcheck_get_error_if_null, errcheck_get_error_if_eq0
+import features_not_available
 
 SSL_CTRL_GET_RI_SUPPORT = 76 # SSL_get_secure_renegotiation_support()
 
@@ -255,15 +257,13 @@ class SSL:
         @rtype: bool
         @return: True if the peer supports secure renegotiation.
 
-        @raise ctSSL.errors.ctSSLError: The OpenSSL library that was loaded is
-        too old and does not support SSL_get_secure_renegotiation_support().
-        Use OpenSSL 0.9.8m or later.
+        @raise ctSSL.errors.ctSSLFeatureNotAvailable
         """
-        if OpenSSL_version <= 0x9080CFL: # Only available in 0.9.8m or later
-            raise errors.ctSSLError('SSL_get_secure_renegotiation_support() '
-                                    'is not supported by the version of the '
-                                    'OpenSSL library that was loaded. '
-                                    'Upgrade to OpenSSL 0.9.8m or later.')
+        if features_not_available.SSL_SECURE_RENEGOTIATION_NOT_AVAIL:
+            raise errors.ctSSLFeatureNotAvailable(
+                'SSL_get_secure_renegotiation_support() is not supported by the'
+                ' version of the OpenSSL library that was loaded. '
+                'Upgrade to OpenSSL 0.9.8m or later.')
 
         if libssl.SSL_ctrl(self._ssl_struct_p, SSL_CTRL_GET_RI_SUPPORT, 0,None):
             return True
@@ -424,7 +424,11 @@ def init_SSL_functions():
     """
     Tell ctype the argument, return type, and error checking callback of every
     OpenSSL SSL_xxx() C functions called in this module.
+    Figure out functions that might not be available depending on the OpenSSL 
+    library that was loaded.
     """
+    # Initializing standard functions
+    
     libssl.SSL_new.argtypes = [c_void_p]
     libssl.SSL_new.restype = c_void_p
     libssl.SSL_new.errcheck = errcheck_get_error_if_null
@@ -491,4 +495,12 @@ def init_SSL_functions():
 
     libssl.SSL_CIPHER_get_bits.argtypes = [c_void_p, c_void_p]
     libssl.SSL_CIPHER_get_bits.restype = c_int
+
+
+    # Initializing functions that may or may not be there
+
+    # Secure renegotiation is only available in 0.9.8m or later
+    if OpenSSL_version <= 0x9080CFL: 
+        features_not_available.SSL_SECURE_RENEGOTIATION_NOT_AVAIL = True
+
 

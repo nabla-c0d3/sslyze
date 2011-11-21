@@ -46,28 +46,19 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
 
         ctSSL_initialize()
         formatted_results = ['  * {0} : '.format('Session Renegotiation')]
-
-        try:  # We need OpenSSL 0.9.8m or later to check for insecure reneg
-            ctx = SSL_CTX.SSL_CTX()
-            ctx.set_options(constants.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION)
-        except AttributeError:
-            formatted_results.append('OpenSSL version is 0.9.8l or earlier. '
-            "Can't test for insecure renegotiation. Update OpenSSL to 0.9.8m+.")
-        else:
-            try: # OpenSSL version is OK, test insecure reneg
-                (result_reneg, result_secure) = \
-                    _test_renegotiation(target, self._shared_settings)
-                formatted_results.append('      {0:<35} {1}'.format(
-                    'Client-initiated Renegotiations:',
-                    result_reneg))
-                formatted_results.append('      {0:<35} {1}'.format(
-                    'Secure Renegotiation: ',
-                    result_secure))
-            except Exception as e:
-                formatted_results.append('      Error => ' + str(e))
-        finally:
-            ctSSL_cleanup()
-
+        
+        (result_reneg, result_secure) = \
+            _test_renegotiation(target, self._shared_settings)
+            
+        formatted_results.append('      {0:<35} {1}'.format(
+            'Client-initiated Renegotiations:',
+            result_reneg))
+        
+        formatted_results.append('      {0:<35} {1}'.format(
+            'Secure Renegotiation: ',
+            result_secure))
+  
+        ctSSL_cleanup()
         return formatted_results
 
 

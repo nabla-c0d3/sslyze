@@ -12,9 +12,11 @@
 
 from ctypes import create_string_buffer, CFUNCTYPE, memmove
 from ctypes import c_void_p, c_int, c_char_p, c_long
+
 from load_openssl import libssl
+import features_not_available
 from errors import errcheck_get_error_if_eq0, errcheck_get_error_if_null, \
-    ctSSLError
+    ctSSLError, OpenSSLError, ctSSLFeatureNotAvailable
 
 
 # INTERNAL SSL_CTX CONSTANTS
@@ -47,9 +49,14 @@ class SSL_CTX:
         @raise ctSSL.errors.ctSSLError: Could not create the SSL_CTX C struct
         (SSL_CTX_new() failed).
         """
+        self._ssl_ctx_struct_p = None
+        self._pem_passwd_cb = None
+        
         if ssl_version == 'sslv23':
             ssl_version = libssl.SSLv23_method()
         elif ssl_version == 'sslv2':
+            if features_not_available.SSL2_NOT_AVAIL:
+                raise ctSSLFeatureNotAvailable('SSLv2 disabled.')
             ssl_version = libssl.SSLv2_method()
         elif ssl_version == 'sslv3':
             ssl_version = libssl.SSLv3_method()
@@ -59,7 +66,6 @@ class SSL_CTX:
             raise ctSSLError('Incorrect SSL version. Could not create SSL_CTX.')
 
         self._ssl_ctx_struct_p = libssl.SSL_CTX_new(ssl_version)
-        self._pem_passwd_cb = None
 
 
     def __del__(self):
@@ -182,16 +188,16 @@ def init_SSL_CTX_functions():
     """
     Tells ctype the argument, return type, and error checking callback of every
     OpenSSL SSL_CTX_xxx() C functions called in this module.
+    Figure out functions that might not be available depending on the OpenSSL 
+    library that was loaded.
     """
-
+    
+    # Initializing standard functions
     libssl.TLSv1_method.argtypes = None
     libssl.TLSv1_method.restype = c_void_p
 
     libssl.SSLv23_method.argtypes = None
     libssl.SSLv23_method.restype = c_void_p
-
-    libssl.SSLv2_method.argtypes = None
-    libssl.SSLv2_method.restype = c_void_p
 
     libssl.SSLv3_method.argtypes = None
     libssl.SSLv3_method.restype = c_void_p
@@ -231,3 +237,20 @@ def init_SSL_CTX_functions():
     libssl.SSL_CTX_check_private_key.argtypes = [c_void_p]
     libssl.SSL_CTX_check_private_key.restype = c_int
     libssl.SSL_CTX_check_private_key.errcheck = errcheck_get_error_if_eq0
+    
+    
+    # Initializing functions that may or may not be there
+    
+    try: # Is SSLv2 disabled - Debian h4ck
+        libssl.SSLv2_method.argtypes = None
+        libssl.SSLv2_method.restype = c_void_p
+    except AttributeError:
+        features_not_available.SSL2_NOT_AVAIL = True
+    
+    else: # Is SSL2 disabled - Ubuntu h4ck
+        try: 
+            libssl.SSL_CTX_new(libssl.SSLv2_method())
+        except OpenSSLError as e:
+            if 'null ssl method passed' in str(e.args):
+                features_not_available.SSL2_NOT_AVAIL = True
+                    

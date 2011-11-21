@@ -26,7 +26,7 @@ import socket
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, \
-    errors, ctSSL_cleanup
+    ctSSL_cleanup
 from utils.CtSSLHelper import FailedSSLHandshake, do_ssl_handshake, \
     get_http_server_response, load_shared_settings
 
@@ -65,19 +65,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         # Get the list of available cipher suites for the given ssl version
         ctSSL_initialize(multithreading=True)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        try: # Ubuntu sometimes has ssl2 disabled. It would crash here.
-            ctx = SSL_CTX.SSL_CTX(ssl_version)
-        except errors.OpenSSLError as e:
-            if 'null ssl method passed' in str(e.args):
-                if ssl_version == 'sslv2': # Def. Ubuntu with ssl2 disabled
-                    formatted_results = []
-                    formatted_results.append(
-                        ('  * Supported {0} Cipher Suite(s):'
-                        'Could not initialize SSLv2 context. Using Ubuntu with'
-                        'SSL2 disabled ?').format(ssl_version.upper()))
-                    return formatted_results
-
+        ctx = SSL_CTX.SSL_CTX(ssl_version)
         ctx.set_cipher_list('ALL:NULL:@STRENGTH')
         ssl = SSL.SSL(ctx, sock)
         cipher_list = ssl.get_cipher_list()

@@ -29,6 +29,11 @@ class ctSSLEmptyValue(ctSSLError):
     """Receveid a null pointer or an empty buffer from a C function."""
     pass
 
+class ctSSLFeatureNotAvailable(ctSSLError):
+    """Function is not available within the OpenSSL library that was loaded.
+    Could be because the library is too old or because it was modified."""
+    pass
+
 
 class OpenSSLError(ctSSLError):
     """

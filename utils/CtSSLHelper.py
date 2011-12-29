@@ -121,6 +121,8 @@ def do_ssl_handshake(ssl):
             result_ssl_handshake = 'ECC cert should have SHA1 sig'
         elif "insufficient security" in str(e.args):
             result_ssl_handshake = 'Rejected - TLS Insufficient sec'
+        elif "bad record mac" in str(e.args):
+            result_ssl_handshake = 'Rejected - SSL Bad Record MAC'
         else:
             raise e
 

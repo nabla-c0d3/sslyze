@@ -27,9 +27,8 @@ from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, \
     ctSSL_cleanup
-from utils.CtSSLHelper import FailedSSLHandshake, do_ssl_handshake, \
-    get_http_server_response, load_shared_settings
-
+from utils.CtSSLHelper import create_https_connection
+from utils.HTTPSConnection import SSLHandshakeFailed
 
 
 
@@ -55,19 +54,18 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
     def process_task(self, target, command, args):
 
-
         MAX_THREADS = 50
+        
         if command in ['sslv2', 'sslv3', 'tlsv1']:
             ssl_version = command
         else:
             raise Exception("PluginOpenSSLCipherSuites: Unknown command.")
-
+        
         # Get the list of available cipher suites for the given ssl version
         ctSSL_initialize(multithreading=True)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ctx = SSL_CTX.SSL_CTX(ssl_version)
         ctx.set_cipher_list('ALL:NULL:@STRENGTH')
-        ssl = SSL.SSL(ctx, sock)
+        ssl = SSL.SSL(ctx)
         cipher_list = ssl.get_cipher_list()
 
         # Create a thread pool
@@ -80,45 +78,55 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 (target, ssl_version, cipher, self._shared_settings)))
 
         # Scan for the preferred cipher suite
-        thread_pool.add_job((_test_ciphersuite,
-            (target, ssl_version, None, self._shared_settings)))
+        thread_pool.add_job((_pref_ciphersuite,
+           (target, ssl_version, self._shared_settings)))
 
         # Start processing the jobs
         thread_pool.start(NB_THREADS)
 
         # Process the results as they come
-        accepted_ciphers = {}
-        rejected_ciphers = {}
+        test_ciphers_results = {}
+        possible_results = ['Preferred','Accepted','Rejected', 'Errors']
+        for result_type in possible_results:
+            test_ciphers_results[result_type] = {}
+            
         for completed_job in thread_pool.get_result():
             (job, result) = completed_job
             if result is not None:
-                (ssl_cipher, result_ssl , result_http_get) = result
-                if result_ssl == 'Accepted':
-                    # Store the result without overwriting the Preferred cipher
-                    accepted_ciphers.setdefault(
-                       ssl_cipher,
-                       (result_ssl, result_http_get))
-                elif result_ssl == 'Preferred':
-                    accepted_ciphers[ssl_cipher] = (result_ssl, result_http_get)
-                else:
-                    rejected_ciphers[ssl_cipher] = (result_ssl, result_http_get)
+                (ssl_cipher, result, msg) = result
+                (test_ciphers_results[result])[ssl_cipher] = msg
+                    
 
         # Format the results to make them printable
-        line_format = '      {0:<32}{1:^35}{2:^10}'
+        cipher_format = '        {0:<32}{1:<35}'
+        title_format =  '      {0:<32} '
         formatted_results = [
-            ('  * {0} Cipher Suites :'.format(ssl_version.upper())),
-            line_format.format('Cipher Suite:', 'SSL Handshake:', 'HTTP GET:') ]
-        formatted_results.extend(
-            _format_cipher_results(line_format, accepted_ciphers) )
-        formatted_results.extend(
-            _format_cipher_results(line_format, rejected_ciphers) )
+            ('  * {0} Cipher Suites :'.format(ssl_version.upper()))]
+        
+        # Print each dictionnary of results 
+        for result_type in possible_results:
+            if len(test_ciphers_results[result_type]) != 0:
+                # Print accepted cipher suites
+                formatted_results.append('') # New line
+                
+                if result_type == 'Errors':
+                    formatted_results.append(
+                        title_format.format('Errors:'))
+                else:
+                    formatted_results.append(
+                        title_format.format(result_type + ' Cipher Suites:'))
+                    
+                formatted_results.extend(
+                    _format_cipher_results(
+                        cipher_format, 
+                        test_ciphers_results[result_type]) )
 
         # Process errors
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
             formatted_results.append(
-                line_format.format(str((job[1])[2]),
-                ' Error => ' + str(exception),''))
+                cipher_format.format(str((job[1])[2]),
+                ' Error => ' + str(exception)))
         thread_pool.join()
         ctSSL_cleanup()
         return formatted_results
@@ -133,62 +141,100 @@ def _format_cipher_results(result_format, result_dict):
     # Sorting the cipher suites by result
     result_list = sorted(result_dict.iteritems(), key=lambda (k,v): (v,k),
         reverse=True)
-    for (ssl_cipher, (result_ssl, result_http_get) ) in result_list:
+    for (ssl_cipher, (msg) ) in result_list:
         printable_results.append(
-            result_format.format(ssl_cipher, result_ssl, result_http_get) )
+            result_format.format(ssl_cipher, msg) )
     return printable_results
 
 
 def _test_ciphersuite(target, ssl_version, ssl_cipher, shared_settings):
     """
     Initiates a SSL handshake with the server, using the SSL version and cipher
-    suite specified. If no ssl_cipher is None, will connect to the server
-    and return its preferred cipher suite.
+    suite specified.
     """
-    (host, ip_addr, port) = target
-    ctx = SSL_CTX.SSL_CTX(ssl_version)
-    ctx.set_verify(constants.SSL_VERIFY_NONE)
+    ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
+    ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
+    ssl_ctx.set_cipher_list(ssl_cipher)
 
-    if ssl_cipher: # Testing one specific cipher
-        ctx.set_cipher_list(ssl_cipher)
-        result_success = 'Accepted'
-    else: # Testing for the server's preferred cipher suite
-        result_success = 'Preferred'
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ssl = SSL.SSL(ctx, sock)
-    load_shared_settings(ctx, sock, shared_settings) # client cert, etc...
+    https_connect = \
+        create_https_connection(target, shared_settings, ssl_ctx=ssl_ctx)
     
-    try: # Initiate a TCP connection
-        sock.connect((ip_addr, port))
-    except socket.timeout:
-        if ssl_cipher:
-            return (ssl_cipher, 'Failed - Timeout', 'N/A')
-
     try: # Perform the SSL handshake
-        do_ssl_handshake(ssl)
-    except FailedSSLHandshake as e:
-        if ssl_cipher:
-            return (ssl_cipher, str(e), 'N/A')
+        https_connect.connect()
+    except SSLHandshakeFailed as e:
+        return (ssl_cipher, 'Rejected', str(e))
     except Exception as e:
-        if ssl_cipher:
-            return (ssl_cipher, 'Error ' + str(type(e)) + ': ' + str(e), 'N/A')
+        return (ssl_cipher, 'Errors', str(e.__class__.__module__) + '.' + str(e.__class__.__name__) + ' - ' + str(e))
 
     else:
-        ssl_cipher = ssl.get_current_cipher()
+        ssl_cipher = https_connect.ssl.get_current_cipher()
+        
         # Add key length or ANON to the cipher name
+        cipher_format = '{0:<25}{1:<14}'
         if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
-            ssl_cipher += '  Anon'
+            ssl_cipher = cipher_format.format(ssl_cipher, 'Anon')
         else:
-            ssl_cipher += '  ' + str(ssl.get_current_cipher_bits()) + 'bits'
-        try: # Send an HTTP GET to the server and store the HTTP Status Code
-            result_http_get = get_http_server_response(ssl, host)
-            return (ssl_cipher , result_success, result_http_get)
+            ssl_cipher = cipher_format.format(ssl_cipher,  str(https_connect.ssl.get_current_cipher_bits()) + ' bits')
+               
+            
+        try: 
+            # Send an HTTP GET to the server and store the HTTP Status Code
+            https_connect.request("GET", "/", headers={"Connection": "close"})
+            http_response = https_connect.getresponse()
+            result_http_get = 'HTTP ' \
+                + str(http_response.status) \
+                + ' ' \
+                + str(http_response.reason)
+            return (ssl_cipher, 'Accepted', result_http_get)
         except socket.timeout:
-            return (ssl_cipher, result_success, 'Timeout')
+            return (ssl_cipher, 'Accepted', 'Timeout')
 
     finally:
-        ssl.shutdown()
-        sock.close()
+        https_connect.close()
+        
+    return
+
+def _pref_ciphersuite(target, ssl_version, shared_settings):
+    """
+    Initiates a SSL handshake with the server, using the SSL version specified,
+    and returns the server's preferred cipher suite or None if the connection
+    failed.
+    """
+    ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
+    ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
+    ssl_ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
+
+    https_connect = \
+        create_https_connection(target, shared_settings, ssl_ctx=ssl_ctx)
+    
+    try: # Perform the SSL handshake
+        https_connect.connect()
+    except Exception:
+        return None
+
+    else:
+        ssl_cipher = https_connect.ssl.get_current_cipher()
+        
+        # Add key length or ANON to the cipher name
+        cipher_format = '{0:<25}{1:<14}'
+        if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
+            ssl_cipher = cipher_format.format(ssl_cipher, 'Anon')
+        else:
+            ssl_cipher = cipher_format.format(ssl_cipher,  str(https_connect.ssl.get_current_cipher_bits()) + ' bits')
+            
+        try: 
+            # Send an HTTP GET to the server and store the HTTP Status Code
+            https_connect.request("GET", "/", headers={"Connection": "close"})
+            http_response = https_connect.getresponse()
+            result_http_get = 'HTTP ' \
+                + str(http_response.status) \
+                + ' ' \
+                + str(http_response.reason)
+            return (ssl_cipher, 'Preferred', result_http_get)
+        except socket.timeout:
+            return (ssl_cipher, 'Preferred', 'Timeout')
+
+    finally:
+        https_connect.close()
         
     return

@@ -23,14 +23,13 @@
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
 
-import socket
 import os
 import sys
 
 from plugins import PluginBase
-from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL, SSL_CTX, \
-    constants, errors
-from utils.CtSSLHelper import do_ssl_handshake, load_shared_settings
+from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors
+from utils.CtSSLHelper import create_https_connection
+
 
 TRUSTED_CA_STORE = os.path.join(sys.path[0], 'mozilla_cacert.pem')
 
@@ -110,7 +109,10 @@ class PluginCertInfo(PluginBase.PluginBase):
             else:
                 error_str = str(e)
                 
-
+        except Exception:
+            ctSSL_cleanup()
+            raise
+                
         # Result processing
         returnstr = ['  * Certificate : ']
         self.result_format = '      {0:<35}{1:<35}'
@@ -184,28 +186,19 @@ class PluginCertInfo(PluginBase.PluginBase):
         return full_cert.split('\n', 1)[1]
 
     def _get_cert(self, verify_cert=False):
-        (host, ip_addr, port) = self.target
-        ctx = SSL_CTX.SSL_CTX()
+        https_connect = \
+            create_https_connection(self.target, self._shared_settings)
 
         if verify_cert:
-            ctx.load_verify_locations(TRUSTED_CA_STORE)
-            ctx.set_verify(constants.SSL_VERIFY_PEER)
-        else:
-            ctx.set_verify(constants.SSL_VERIFY_NONE)
-
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        ssl = SSL.SSL(ctx, sock)
-        load_shared_settings(ctx, sock, self._shared_settings) # client cert, etc...
-
-        sock.connect((ip_addr, port))
+            https_connect.ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)
+            https_connect.ssl_ctx.set_verify(constants.SSL_VERIFY_PEER)
 
         try: # Perform the SSL handshake
-            do_ssl_handshake(ssl)
-            cert = ssl.get_peer_certificate()
-        except Exception as e:
-            raise e
+            https_connect.connect()
+            cert = https_connect.ssl.get_peer_certificate()
+        except Exception:
+            raise
         finally:
-            ssl.shutdown()
-            sock.close()
+            https_connect.close()
 
         return cert

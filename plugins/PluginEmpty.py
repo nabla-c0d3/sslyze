@@ -33,7 +33,7 @@ class PluginEmpty(PluginBase.PluginBase):
     available_commands = PluginBase.AvailableCommands(
         title='PluginEmpty',
         description=(
-            "PluginEmpty is a sample plugin that does not implement"
+            "PluginEmpty is a sample plugin that does not implement "
             "any actual tests. It's designed to show how plugins are written."))
     available_commands.add_option(command="empty", help="Do nothing", dest=None)
 

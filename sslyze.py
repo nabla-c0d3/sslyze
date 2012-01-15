@@ -63,14 +63,16 @@ class WorkerProcess(Process):
 
             (target, command, args) = task
             # Instatiate the proper plugin
-            plugin_instance =self.available_commands[command](self.shared_settings)
-
+            plugin_instance = \
+                self.available_commands[command](self.shared_settings)
+                
             try: # Process the task
                 result = plugin_instance.process_task(target, command, args)
             except Exception as e:
                 result = [
                     'Unhandled exception when processing --' + command + ': ',
-                    str(type(e)) + ': ' + str(e)]
+                     str(e.__class__.__module__) + \
+                        '.' + str(e.__class__.__name__) + ' - ' + str(e)]
 
             # Send the result to queue_out
             self.queue_out.put((target, command, result))

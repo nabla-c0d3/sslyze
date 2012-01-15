@@ -14,7 +14,8 @@ from ctypes import c_char_p, c_void_p, c_int, c_long
 
 from load_openssl import libssl, OpenSSL_version
 import SSL_SESSION, X509, BIO, errors
-from errors import errcheck_get_error_if_null, errcheck_get_error_if_eq0
+from errors import errcheck_get_error_if_null, errcheck_get_error_if_eq0, \
+    ctSSLError
 import features_not_available
 
 SSL_CTRL_GET_RI_SUPPORT = 76 # SSL_get_secure_renegotiation_support()
@@ -48,18 +49,15 @@ class SSL:
     Forms a BIO pair with _internal_bio.
     """
 
-    def __init__(self, ssl_ctx, socket):
+    def __init__(self, ssl_ctx):
         """
         Create a new SSL instance.
 
         @type ssl_ctx: ctSSL.SSL_CTX.SSL_CTX
         @param ssl_ctx: The SSL_CTX object to be used with that SSL
         connection.
-
-        @type socket: socket.socket
-        @param socket: Python socket data will be transmitted on.
         """
-        self._socket = socket # The python socket handles network transmission
+        self._socket = None # The python socket handles network transmission
         self._ssl_ctx = ssl_ctx
         self._ssl_struct_p = libssl.SSL_new(ssl_ctx.get_ssl_ctx_struct_p())
         self._internal_bio = None
@@ -81,6 +79,39 @@ class SSL:
         if self._ssl_struct_p:
             libssl.SSL_free(self._ssl_struct_p)
             self._ssl_struct_p = None
+
+    def get_socket(self):
+        """
+        Return the Python socket used by the SSL object for network 
+        communications.
+
+        @rtype: socket
+        @return: The Python socket used by the SSL object for network 
+        communications.
+        """
+        return self._socket
+    
+    
+    def set_socket(self, sock):
+        """
+        Set the Python socket to use for network communications.
+
+        @type socket: socket.socket
+        @param socket: Python socket data will be transmitted through.
+        """
+        if self._socket != None:
+            raise ctSSLError('Error: a socket has already been set.') 
+        self._socket = sock
+        
+    
+    def get_ssl_ctx(self):
+        """
+        Return the ctSSL.SSL_CTX object associated with the SSL object.
+
+        @rtype: ctSSL.SSL_CTX
+        @return: The ctSSL.SSL_CTX object associated with the SSL object.
+        """
+        return self._ssl_ctx
 
 
     def _do_handshake(self):
@@ -104,7 +135,7 @@ class SSL:
                 if libssl.SSL_do_handshake(self._ssl_struct_p) == 1:
                     break # Handshake was successful
 
-            except errors.SSLErrorWantRead as e:
+            except errors.SSLErrorWantRead:
             # OpenSSL is expecting more data from the peer
 
                 # Send available handshake data to the peer
@@ -381,6 +412,17 @@ class SSL:
         """
         cert = X509.X509(libssl.SSL_get_peer_certificate(self._ssl_struct_p))
         return cert
+    
+    
+    def pending(self):
+        """
+        Obtain number of readable bytes buffered in the SSL object.
+
+        @rtype: int
+        @return: Number of readable bytes.
+        """
+        return  libssl.SSL_pending(self._ssl_struct_p)
+
 
 
 # == CTYPE ERRCHECK CALLBACK(S) ==

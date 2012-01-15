@@ -23,10 +23,10 @@
 
 import socket
 from plugins import PluginBase
-from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL, SSL_CTX, \
+from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL_CTX, \
     constants, errors
-from utils.CtSSLHelper import FailedSSLHandshake, do_ssl_handshake, \
-    load_shared_settings
+from utils.CtSSLHelper import create_https_connection
+from utils.HTTPSConnection import SSLHandshakeFailed
 
 
 class PluginSessionRenegotiation(PluginBase.PluginBase):
@@ -45,20 +45,22 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
     def process_task(self, target, command, args):
 
         ctSSL_initialize()
-        formatted_results = ['  * {0} : '.format('Session Renegotiation')]
-        
-        (result_reneg, result_secure) = \
-            _test_renegotiation(target, self._shared_settings)
+        try:
+            (result_reneg, result_secure) = \
+                _test_renegotiation(target, self._shared_settings)
+        except:
+            raise
+        finally:
+            ctSSL_cleanup()
             
+        formatted_results = ['  * {0} : '.format('Session Renegotiation')]
         formatted_results.append('      {0:<35} {1}'.format(
             'Client-initiated Renegotiations:',
             result_reneg))
-        
         formatted_results.append('      {0:<35} {1}'.format(
             'Secure Renegotiation: ',
             result_secure))
-  
-        ctSSL_cleanup()
+        
         return formatted_results
 
 
@@ -67,29 +69,24 @@ def _test_renegotiation(target, shared_settings):
     Checks whether the server honors session renegotation requests and whether
     it supports secure renegotiation.
     """
-    (host, ip_addr, port) = target
     result_reneg = 'N/A'
     result_secure = 'N/A'
-    ctx = SSL_CTX.SSL_CTX()
-    ctx.set_verify(constants.SSL_VERIFY_NONE)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ssl = SSL.SSL(ctx, sock)
-    load_shared_settings(ctx, sock, shared_settings) # client cert, etc...
-
-    sock.connect((ip_addr, port))
+    
+    ssl_ctx = SSL_CTX.SSL_CTX()
+    ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
+    https_connect = \
+        create_https_connection(target, shared_settings, ssl_ctx=ssl_ctx)
 
     try:
-        do_ssl_handshake(ssl)
-
-    except FailedSSLHandshake as e:
-        raise FailedSSLHandshake('SSL Handshake Failed')
-
+        https_connect.connect()
+    except SSLHandshakeFailed as e:
+        raise SSLHandshakeFailed('SSL Handshake Failed')
     else:
-        result_secure = 'Supported' if ssl.get_secure_renegotiation_support() \
+        result_secure = 'Supported' if https_connect.ssl.get_secure_renegotiation_support() \
                                     else 'Not Supported'
 
         try: # Let's try to renegotiate
-            ssl.renegotiate()
+            https_connect.ssl.renegotiate()
             result_reneg = 'Honored'
 
         except errors.ctSSLUnexpectedEOF as e:
@@ -115,7 +112,6 @@ def _test_renegotiation(target, shared_settings):
                 raise e
 
     finally:
-        ssl.shutdown()
-        sock.close()
+        https_connect.close()
 
     return (result_reneg, result_secure)

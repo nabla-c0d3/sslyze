@@ -24,6 +24,9 @@
 
 from optparse import OptionParser, OptionGroup
 from multiprocessing import Manager
+import platform
+
+from discover_targets import is_target_valid
 
 def create_command_line_parser(available_plugins, prog_version, timeout):
     """
@@ -39,28 +42,31 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
     # TODO: Verbose/Debug
 
     # Client certificate options
-    parser.add_option(
+    clientcert_group = OptionGroup(parser, 'Client certificate support',\
+                            '')
+    clientcert_group.add_option(
         '--cert',
         help='Client certificate filename.',
         dest='cert')
-    parser.add_option(
+    clientcert_group.add_option(
         '--certform',
         help= 'Client certificate format. DER or PEM (default).',
         dest='certform',
         default='PEM')
-    parser.add_option(
+    clientcert_group.add_option(
         '--key',
         help= 'Client private key filename.',
         dest='key')
-    parser.add_option(
+    clientcert_group.add_option(
         '--keyform',
         help= 'Client private key format. DER or PEM (default).',
         dest='keyform',
         default='PEM')
-    parser.add_option(
+    clientcert_group.add_option(
         '--pass',
         help= 'Client private key passphrase.',
         dest='keypass')
+    parser.add_option_group(clientcert_group)
 
     # Timeout
     parser.add_option(
@@ -71,7 +77,17 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
         type='int',
         dest='timeout',
         default=timeout)
-
+    
+    # HTTP CONNECT Proxy
+    parser.add_option(
+        '--https_tunnel',
+        help= (
+            'Sets an HTTP CONNECT proxy to tunnel SSL traffic to the target '
+            'server(s). HTTP_TUNNEL should be \'host:port\'. ' 
+            'Requires Python 2.7'),
+        dest='https_tunnel',
+        default=None)
+    
 
     # Add plugin options to the parser
     for plugin_class in available_plugins:
@@ -135,7 +151,7 @@ def parse_command_line(parser):
 def process_parsing_results(args_command_list):
 
     shared_mgr = Manager()
-    shared_state = shared_mgr.dict() # Will be sent to every plugin process.
+    shared_settings = shared_mgr.dict() # Will be sent to every plugin process.
 
     # Sanity checks on the client cert options
     if bool(args_command_list.cert) ^ bool(args_command_list.key):
@@ -143,29 +159,47 @@ def process_parsing_results(args_command_list):
                 'Use --client_cert and --client_key.\n\n'
         return
     else:
-        shared_state['cert'] = args_command_list.cert
-        shared_state['key'] = args_command_list.key
+        shared_settings['cert'] = args_command_list.cert
+        shared_settings['key'] = args_command_list.key
 
     # Parse client cert options
     if args_command_list.certform in ['DER', 'PEM']:
-        shared_state['certform'] = args_command_list.certform
+        shared_settings['certform'] = args_command_list.certform
     else:
         print '   Error=> --certform should be DER or PEM.\n\n'
         return
 
     if args_command_list.keyform in ['DER', 'PEM']:
-        shared_state['keyform'] = args_command_list.keyform
+        shared_settings['keyform'] = args_command_list.keyform
     else:
         print '   Error=> --keyform should be DER or PEM.\n\n'
         return
 
     if args_command_list.keypass:
-        shared_state['keypass'] = args_command_list.keypass
+        shared_settings['keypass'] = args_command_list.keypass
     else:
-        shared_state['keypass'] = None
+        shared_settings['keypass'] = None
 
     # Timeout
-    shared_state['timeout'] = args_command_list.timeout
+    shared_settings['timeout'] = args_command_list.timeout
+    
+    # HTTP CONNECT proxy
+    if args_command_list.https_tunnel:
+        if '2.7.' not in platform.python_version(): # Python 2.7 only
+            print '   Error =>  --https_tunnel requires Python 2.7.X. Current version is ' + platform.python_version() + '.\n\n'
+            return
+            
+        try:
+            (host,port) = is_target_valid(args_command_list.https_tunnel)
+            shared_settings['https_tunnel_host'] = host
+            shared_settings['https_tunnel_port'] = port
+        except:
+            print '   Error =>  Not a valid host/port for --https_tunnel, discarding all tasks.\n\n'
+            return
+    else:
+        shared_settings['https_tunnel_host'] = None
+        shared_settings['https_tunnel_port'] = None
+        
 
-    return shared_state
+    return shared_settings
 

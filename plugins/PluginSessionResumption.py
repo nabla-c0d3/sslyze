@@ -21,12 +21,11 @@
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
 
-import socket
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
-from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, ctSSL_cleanup
-from utils.CtSSLHelper import FailedSSLHandshake, do_ssl_handshake, \
-    load_shared_settings
+from utils.ctSSL import SSL_CTX, constants, ctSSL_initialize, ctSSL_cleanup
+from utils.CtSSLHelper import create_https_connection
+from utils.HTTPSConnection import SSLHandshakeFailed
 
 
 class PluginSessionResumption(PluginBase.PluginBase):
@@ -126,8 +125,8 @@ class PluginSessionResumption(PluginBase.PluginBase):
 
         formatted_results = ['  * {0} :'.format('Session Resumption')]
         for completed_job in thread_pool.get_result():
-             (job, result_string) = completed_job
-             formatted_results.append(
+            (job, result_string) = completed_job
+            formatted_results.append(
                 '      {0:<30} {1}'.format(job[2], result_string))
 
         for failed_job in thread_pool.get_error():
@@ -187,8 +186,8 @@ def _resume_with_session_id(target, ssl_version, shared_settings):
 
     try: # Connect to the server and keep the SSL session
         session1 =_resume_ssl_session(target, ctx, shared_settings)
-    except FailedSSLHandshake as e:
-        raise FailedSSLHandshake('SSL Handshake failed: ' + e[0])
+    except SSLHandshakeFailed as e:
+        raise SSLHandshakeFailed('SSL Handshake failed: ' + e[0])
 
     try: # Recover the session ID
         session1_id = _extract_session_id(session1)
@@ -198,8 +197,8 @@ def _resume_with_session_id(target, ssl_version, shared_settings):
     # Try to resume that SSL session
     try:
         session2 =_resume_ssl_session(target, ctx, shared_settings, session1)
-    except FailedSSLHandshake as e:
-        raise FailedSSLHandshake('SSL Handshake failed: ' + e[0])
+    except SSLHandshakeFailed as e:
+        raise SSLHandshakeFailed('SSL Handshake failed: ' + e[0])
 
     try: # Recover the session ID
         session2_id = _extract_session_id(session2)
@@ -228,24 +227,24 @@ def _resume_with_session_ticket(target, shared_settings):
 
     try: # Connect to the server and keep the SSL session
         session1 =_resume_ssl_session(target, ctx, shared_settings)
-    except FailedSSLHandshake as e:
+    except SSLHandshakeFailed as e:
         raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
 
     try: # Recover the TLS ticket
         session1_tls_ticket = _extract_tls_session_ticket(session1)
     except IndexError:
-       raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
+        raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
 
     # Try to resume that session using the TLS ticket
     try:
         session2 =_resume_ssl_session(target, ctx, shared_settings, session1)
-    except FailedSSLHandshake as e:
+    except SSLHandshakeFailed as e:
         raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
 
     try: # Recover the TLS ticket
         session2_tls_ticket = _extract_tls_session_ticket(session2)
     except IndexError:
-       raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
+        raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
 
     # Finally, compare the two TLS Tickets
     if session1_tls_ticket != session2_tls_ticket:
@@ -275,31 +274,24 @@ def _extract_tls_session_ticket(ssl_session):
     return session_tls_ticket
 
 
-def _resume_ssl_session(target, ctx, shared_settings, ssl_session = None):
+def _resume_ssl_session(target, ssl_ctx, shared_settings, ssl_session = None):
     """
     Connect to the server and returns the session object that was assigned for
     that connection.
     If ssl_session is given, tries to resume that session.
     """
-    (host, ip_addr, port) = target
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ssl = SSL.SSL(ctx, sock)
-    load_shared_settings(ctx, sock, shared_settings) # client cert, etc...
+    https_connect = \
+        create_https_connection(target, shared_settings, ssl_ctx=ssl_ctx)
 
     if ssl_session:
-        ssl.set_session(ssl_session)
-
-    sock.connect((ip_addr, port))
+        https_connect.ssl.set_session(ssl_session)
 
     try: # Perform the SSL handshake
-        do_ssl_handshake(ssl)
-        session = ssl.get_session() # Get session data
-
-    except FailedSSLHandshake as e:
-        raise e
-
+        https_connect.connect()
+        session = https_connect.ssl.get_session() # Get session data
+    except SSLHandshakeFailed:
+        raise
     finally:
-        ssl.shutdown()
-        sock.close()
-
+        https_connect.close()
+        
     return session

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         __init__.py
 # Purpose:      Initialize and cleanup functions for ctSSL.
@@ -7,7 +8,6 @@
 # Copyright:    2011 Alban Diquet
 # License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 from ctypes import c_ulong, c_int, CFUNCTYPE, c_char_p, c_void_p
 from load_openssl import libssl, libcrypto, ctSSLInitError

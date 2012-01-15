@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         errors.py
 # Purpose:      Exceptions that can be raised by ctSSL.
@@ -8,7 +9,6 @@
 # Copyright:    2011 Alban Diquet
 # License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 from load_openssl import libssl, libcrypto
 from ctypes import c_char_p, c_void_p, c_int, c_long, c_ulong

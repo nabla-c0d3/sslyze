@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         ThreadPool.py
 # Purpose:      Generic, simple thread pool used in some of the plugins.
@@ -19,8 +20,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
-
 
 import threading
 from Queue import Queue

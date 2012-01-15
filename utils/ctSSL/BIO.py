@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         BIO.py
 # Purpose:      Wrapper around the OpenSSL C functions BIO_xxx().
@@ -8,7 +9,6 @@
 # Copyright:    2011 Alban Diquet
 # License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 from ctypes import create_string_buffer, sizeof, memmove, byref
 from ctypes import c_char_p, c_void_p, c_int, c_long

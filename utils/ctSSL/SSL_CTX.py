@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         SSL_CTX.py
 # Purpose:      Wrapper around the OpenSSL C functions SSL_CTX_xxx().
@@ -7,8 +8,6 @@
 # Copyright:    2011 Alban Diquet
 # License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
-
 
 from ctypes import create_string_buffer, CFUNCTYPE, memmove
 from ctypes import c_void_p, c_int, c_char_p, c_long

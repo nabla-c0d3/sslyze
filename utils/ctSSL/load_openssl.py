@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         load_openssl.py
 # Purpose:      Helper module to find and load the OpenSSL libraries.
@@ -9,7 +10,6 @@
 # Copyright:    2011 Alban Diquet
 # License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 import ctypes
 from ctypes import c_ulong, c_char_p

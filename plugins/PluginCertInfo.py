@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         PluginCertInfo.py
 # Purpose:      Verifies the target server's certificate validity against
@@ -21,7 +22,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 import os
 import sys

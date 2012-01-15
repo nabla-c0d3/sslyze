@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         PluginEmpty.py
 # Purpose:      Sample code to show how to write a plugin for SSLyze.
@@ -19,7 +20,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 from plugins import PluginBase
 

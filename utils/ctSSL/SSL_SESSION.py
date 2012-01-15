@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         SSL_SESSION.py
 # Purpose:      Wrapper around the OpenSSL C functions SSL_SESSION_xxx().
@@ -7,7 +8,6 @@
 # Copyright:    2011 Alban Diquet
 # License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 from ctypes import c_int, c_void_p
 from load_openssl import libssl

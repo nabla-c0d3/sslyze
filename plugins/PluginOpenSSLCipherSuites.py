@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         PluginOpenSSLCipherSuites.py
 # Purpose:      Scans the target server for supported OpenSSL cipher suites.
@@ -19,7 +20,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 
 import socket

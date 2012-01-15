@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         parse_command_line.py
 # Purpose:      Command line parsing utilities.
@@ -19,8 +20,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
-
 
 from optparse import OptionParser, OptionGroup
 from multiprocessing import Manager

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         PluginSessionRenegotiation.py
 # Purpose:      Tests the target server for insecure renegotiation.
@@ -19,7 +20,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 import socket
 from plugins import PluginBase

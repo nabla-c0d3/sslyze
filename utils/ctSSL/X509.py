@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         X509.py
 # Purpose:      Wrapper around the OpenSSL C functions X509_xxx().
@@ -9,7 +10,6 @@
 # Copyright:    2011 Alban Diquet
 # License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 from ctypes import c_void_p, c_int, c_char_p
 from ctypes import create_string_buffer, sizeof, pointer

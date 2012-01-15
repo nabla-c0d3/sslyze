@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         ctSSLHelper.py
 # Purpose:      ctSSL helper functions.
@@ -19,7 +20,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 from ctSSL import constants
 from HTTPSConnection import HTTPSConnection

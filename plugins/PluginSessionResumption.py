@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         PluginSessionResumption.py
 # Purpose:      Analyzes the server's SSL session resumption capabilities.
@@ -19,7 +20,6 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-#!/usr/bin/env python
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool

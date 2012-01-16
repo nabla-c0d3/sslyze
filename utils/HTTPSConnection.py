@@ -98,7 +98,7 @@ def filter_handshake_exceptions(exception):
         raise exception
     
     except socket.timeout as e:
-            raise SSLHandshakeFailed('Timeout')
+            raise # Timeout doesn't mean handshake was rejected.
 
     except socket.error as e:
         if 'connection was forcibly closed' in str(e.args):

@@ -50,13 +50,21 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         command="tlsv1",
         help="Lists the TLS 1.0 OpenSSL cipher suites supported by the server.",
         dest=None)
+    available_commands.add_option(
+        command="tlsv1_1",
+        help="Lists the TLS 1.1 OpenSSL cipher suites supported by the server.",
+        dest=None)
+    available_commands.add_option(
+        command="tlsv1_2",
+        help="Lists the TLS 1.2 OpenSSL cipher suites supported by the server.",
+        dest=None)
     
 
     def process_task(self, target, command, args):
 
         MAX_THREADS = 50
         
-        if command in ['sslv2', 'sslv3', 'tlsv1']:
+        if command in ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2']:
             ssl_version = command
         else:
             raise Exception("PluginOpenSSLCipherSuites: Unknown command.")

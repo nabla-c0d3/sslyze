@@ -12,7 +12,7 @@
 from ctypes import create_string_buffer, CFUNCTYPE, memmove
 from ctypes import c_void_p, c_int, c_char_p, c_long
 
-from load_openssl import libssl
+from load_openssl import libssl, OpenSSL_version
 import features_not_available
 from errors import errcheck_get_error_if_eq0, errcheck_get_error_if_null, \
     ctSSLError, OpenSSLError, ctSSLFeatureNotAvailable
@@ -43,7 +43,7 @@ class SSL_CTX:
 
         @type ssl_version: str
         @param ssl_version: SSL protocol version to use. Should be 'sslv23',
-        'sslv2', 'sslv3' or 'tlsv1'.
+        'sslv2', 'sslv3', 'tlsv1', 'tlsv1_1' or 'tlsv1_2'.
 
         @raise ctSSL.errors.ctSSLError: Could not create the SSL_CTX C struct
         (SSL_CTX_new() failed).
@@ -61,6 +61,18 @@ class SSL_CTX:
             ssl_version = libssl.SSLv3_method()
         elif ssl_version == 'tlsv1':
             ssl_version = libssl.TLSv1_method()
+        elif ssl_version == 'tlsv1_1':
+            if features_not_available.TLS1_1_TLS1_2_NOT_AVAIL:
+                raise ctSSLFeatureNotAvailable('TLS 1.1 is not supported by the'
+                ' version of the OpenSSL library that was loaded.'
+                ' Upgrade to 1.0.1 or later.')
+            ssl_version = libssl.TLSv1_1_method()
+        elif ssl_version == 'tlsv1_2':
+            if features_not_available.TLS1_1_TLS1_2_NOT_AVAIL:
+                raise ctSSLFeatureNotAvailable('TLS 1.2 is not supported by the'
+                ' version of the OpenSSL library that was loaded.'
+                ' Upgrade to 1.0.1 or later.')
+            ssl_version = libssl.TLSv1_2_method()
         else:
             raise ctSSLError('Incorrect SSL version. Could not create SSL_CTX.')
 
@@ -252,4 +264,14 @@ def init_SSL_CTX_functions():
         except OpenSSLError as e:
             if 'null ssl method passed' in str(e.args):
                 features_not_available.SSL2_NOT_AVAIL = True
-                    
+                
+    # TLS 1.1 and 1.2 are only available with OpenSSL 1.0.1 or later
+    if OpenSSL_version < 0x10001002L:
+        features_not_available.TLS1_1_TLS1_2_NOT_AVAIL = True
+    else:
+        libssl.TLSv1_1_method.argtypes = None
+        libssl.TLSv1_1_method.restype = c_void_p
+
+        libssl.TLSv1_2_method.argtypes = None
+        libssl.TLSv1_2_method.restype = c_void_p
+

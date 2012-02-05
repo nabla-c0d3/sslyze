@@ -13,3 +13,4 @@
 
 SSL2_NOT_AVAIL =                        False # SSL2 support.
 SSL_SECURE_RENEGOTIATION_NOT_AVAIL =    False # Secure renegotiation APIs
+TLS1_1_TLS1_2_NOT_AVAIL =               False # TLS 1.1 and 1.2

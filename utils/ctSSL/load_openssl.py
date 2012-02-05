@@ -84,4 +84,3 @@ libcrypto.SSLeay.restype = c_ulong
 libcrypto.SSLeay_version.argtypes = [c_ulong]
 libcrypto.SSLeay_version.restype = c_char_p
 OpenSSL_version =  libcrypto.SSLeay()
-

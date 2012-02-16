@@ -240,7 +240,7 @@ def _pref_ciphersuite(target, ssl_version, shared_settings):
                 + str(http_response.reason)
             return (ssl_cipher, 'Preferred', result_http_get)
         except socket.timeout:
-            return (ssl_cipher, 'Preferred', 'Timeout')
+            return (ssl_cipher, 'Preferred', 'Timeout on HTTP GET')
 
     finally:
         https_connect.close()

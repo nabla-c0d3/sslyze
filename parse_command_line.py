@@ -27,6 +27,8 @@ import platform
 
 from discover_targets import is_target_valid
 
+PARSING_ERROR_FORMAT = '   Command line error: {0}\n   Use -h for help.'
+
 def create_command_line_parser(available_plugins, prog_version, timeout):
     """
     Generates the list of possible command line options by calling the
@@ -87,6 +89,14 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
         dest='https_tunnel',
         default=None)
     
+    # STARTTLS
+    parser.add_option(
+        '--starttls',
+        help= (
+            'Uses STARTTLS to scan an SMTP server.'
+            ' STARTTLS should be \'smtp\'. '),
+        dest='starttls',
+        default=None)
 
     # Add plugin options to the parser
     for plugin_class in available_plugins:
@@ -154,8 +164,9 @@ def process_parsing_results(args_command_list):
 
     # Sanity checks on the client cert options
     if bool(args_command_list.cert) ^ bool(args_command_list.key):
-        print '   Error=> no private key or certificate file was given! ' + \
-                'Use --client_cert and --client_key.\n\n'
+        print PARSING_ERROR_FORMAT.format(
+            'No private key or certificate file were given! '
+            'See --client_cert and --client_key.')
         return
     else:
         shared_settings['cert'] = args_command_list.cert
@@ -165,13 +176,13 @@ def process_parsing_results(args_command_list):
     if args_command_list.certform in ['DER', 'PEM']:
         shared_settings['certform'] = args_command_list.certform
     else:
-        print '   Error=> --certform should be DER or PEM.\n\n'
+        print PARSING_ERROR_FORMAT.format('--certform should be DER or PEM.')
         return
 
     if args_command_list.keyform in ['DER', 'PEM']:
         shared_settings['keyform'] = args_command_list.keyform
     else:
-        print '   Error=> --keyform should be DER or PEM.\n\n'
+        print PARSING_ERROR_FORMAT.format('--keyform should be DER or PEM.')
         return
 
     if args_command_list.keypass:
@@ -185,7 +196,9 @@ def process_parsing_results(args_command_list):
     # HTTP CONNECT proxy
     if args_command_list.https_tunnel:
         if '2.7.' not in platform.python_version(): # Python 2.7 only
-            print '   Error =>  --https_tunnel requires Python 2.7.X. Current version is ' + platform.python_version() + '.\n\n'
+            print PARSING_ERROR_FORMAT.format(
+                '--https_tunnel requires Python 2.7.X. '
+                'Current version is ' + platform.python_version() + '.')
             return
             
         try:
@@ -193,11 +206,25 @@ def process_parsing_results(args_command_list):
             shared_settings['https_tunnel_host'] = host
             shared_settings['https_tunnel_port'] = port
         except:
-            print '   Error =>  Not a valid host/port for --https_tunnel, discarding all tasks.\n\n'
+            print PARSING_ERROR_FORMAT.format(
+                'Not a valid host/port for --https_tunnel'
+                ', discarding all tasks.')
             return
     else:
         shared_settings['https_tunnel_host'] = None
         shared_settings['https_tunnel_port'] = None
+        
+    # STARTTLS
+    if args_command_list.starttls not in [None,'smtp']:
+        print PARSING_ERROR_FORMAT.format('--starttls should be \'smtp\'.')
+        return
+    else:
+        shared_settings['starttls'] = args_command_list.starttls
+    
+    if args_command_list.starttls and args_command_list.https_tunnel:
+        print PARSING_ERROR_FORMAT.format(
+            'Cannot have --https_tunnel and --starttls at the same time.')
+        return      
         
 
     return shared_settings

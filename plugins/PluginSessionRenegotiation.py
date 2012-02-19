@@ -25,8 +25,8 @@ import socket
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL_CTX, \
     constants, errors
-from utils.CtSSLHelper import create_https_connection
-from utils.HTTPSConnection import SSLHandshakeFailed
+from utils.SharedSettingsHelper import create_ssl_connection
+from utils.CtSSLHelper import SSLHandshakeFailed
 
 
 class PluginSessionRenegotiation(PluginBase.PluginBase):
@@ -74,19 +74,19 @@ def _test_renegotiation(target, shared_settings):
     
     ssl_ctx = SSL_CTX.SSL_CTX()
     ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-    https_connect = \
-        create_https_connection(target, shared_settings, ssl_ctx=ssl_ctx)
+    ssl_connect = \
+        create_ssl_connection(target, shared_settings, ssl_ctx=ssl_ctx)
 
     try:
-        https_connect.connect()
+        ssl_connect.connect()
     except SSLHandshakeFailed as e:
         raise SSLHandshakeFailed('SSL Handshake Failed')
     else:
-        result_secure = 'Supported' if https_connect.ssl.get_secure_renegotiation_support() \
+        result_secure = 'Supported' if ssl_connect.ssl.get_secure_renegotiation_support() \
                                     else 'Not Supported'
 
         try: # Let's try to renegotiate
-            https_connect.ssl.renegotiate()
+            ssl_connect.ssl.renegotiate()
             result_reneg = 'Honored'
 
         except errors.ctSSLUnexpectedEOF as e:
@@ -112,6 +112,6 @@ def _test_renegotiation(target, shared_settings):
                 raise e
 
     finally:
-        https_connect.close()
+        ssl_connect.close()
 
     return (result_reneg, result_secure)

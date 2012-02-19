@@ -22,13 +22,13 @@
 #-------------------------------------------------------------------------------
 
 
-import socket
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, \
     ctSSL_cleanup
-from utils.CtSSLHelper import create_https_connection
-from utils.HTTPSConnection import SSLHandshakeFailed
+from utils.SharedSettingsHelper import create_ssl_connection, \
+    check_ssl_connection_is_alive
+from utils.CtSSLHelper import SSLHandshakeFailed
 
 
 
@@ -164,85 +164,73 @@ def _test_ciphersuite(target, ssl_version, ssl_cipher, shared_settings):
     ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
     ssl_ctx.set_cipher_list(ssl_cipher)
 
-    https_connect = \
-        create_https_connection(target, shared_settings, ssl_ctx=ssl_ctx)
+    # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
+    ssl_connect = \
+        create_ssl_connection(target, shared_settings, ssl_ctx=ssl_ctx)
     
     try: # Perform the SSL handshake
-        https_connect.connect()
+        ssl_connect.connect()
     except SSLHandshakeFailed as e:
         return (ssl_cipher, 'Rejected', str(e))
     except Exception as e:
         return (ssl_cipher, 'Errors', str(e.__class__.__module__) + '.' + str(e.__class__.__name__) + ' - ' + str(e))
 
     else:
-        ssl_cipher = https_connect.ssl.get_current_cipher()
+        ssl_cipher = ssl_connect.ssl.get_current_cipher()
         
         # Add key length or ANON to the cipher name
         cipher_format = '{0:<25}{1:<14}'
         if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
             ssl_cipher = cipher_format.format(ssl_cipher, 'Anon')
         else:
-            ssl_cipher = cipher_format.format(ssl_cipher,  str(https_connect.ssl.get_current_cipher_bits()) + ' bits')
-               
+            ssl_cipher = cipher_format.format(
+                ssl_cipher,  
+                str(ssl_connect.ssl.get_current_cipher_bits()) + ' bits')
             
-        try: 
-            # Send an HTTP GET to the server and store the HTTP Status Code
-            https_connect.request("GET", "/", headers={"Connection": "close"})
-            http_response = https_connect.getresponse()
-            result_http_get = 'HTTP ' \
-                + str(http_response.status) \
-                + ' ' \
-                + str(http_response.reason)
-            return (ssl_cipher, 'Accepted', result_http_get)
-        except socket.timeout:
-            return (ssl_cipher, 'Accepted', 'Timeout')
+            return (ssl_cipher, 'Accepted', 
+                    check_ssl_connection_is_alive(ssl_connect, shared_settings))
 
     finally:
-        https_connect.close()
+        ssl_connect.close()
         
     return
 
+
+
 def _pref_ciphersuite(target, ssl_version, shared_settings):
     """
-    Initiates a SSL handshake with the server, using the SSL version specified,
-    and returns the server's preferred cipher suite or None if the connection
-    failed.
+    Initiates a SSL handshake with the server, using the SSL version and cipher
+    suite specified.
     """
     ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
     ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
     ssl_ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
 
-    https_connect = \
-        create_https_connection(target, shared_settings, ssl_ctx=ssl_ctx)
+    # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
+    ssl_connect = \
+        create_ssl_connection(target, shared_settings, ssl_ctx=ssl_ctx)
     
     try: # Perform the SSL handshake
-        https_connect.connect()
+        ssl_connect.connect()
     except Exception:
         return None
 
     else:
-        ssl_cipher = https_connect.ssl.get_current_cipher()
+        ssl_cipher = ssl_connect.ssl.get_current_cipher()
         
         # Add key length or ANON to the cipher name
         cipher_format = '{0:<25}{1:<14}'
         if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
             ssl_cipher = cipher_format.format(ssl_cipher, 'Anon')
         else:
-            ssl_cipher = cipher_format.format(ssl_cipher,  str(https_connect.ssl.get_current_cipher_bits()) + ' bits')
+            ssl_cipher = cipher_format.format(
+                ssl_cipher,  
+                str(ssl_connect.ssl.get_current_cipher_bits()) + ' bits')
             
-        try: 
-            # Send an HTTP GET to the server and store the HTTP Status Code
-            https_connect.request("GET", "/", headers={"Connection": "close"})
-            http_response = https_connect.getresponse()
-            result_http_get = 'HTTP ' \
-                + str(http_response.status) \
-                + ' ' \
-                + str(http_response.reason)
-            return (ssl_cipher, 'Preferred', result_http_get)
-        except socket.timeout:
-            return (ssl_cipher, 'Preferred', 'Timeout on HTTP GET')
+            return (ssl_cipher, 'Preferred', 
+                    check_ssl_connection_is_alive(ssl_connect, shared_settings))
 
     finally:
-        https_connect.close()
+        ssl_connect.close()
         
     return

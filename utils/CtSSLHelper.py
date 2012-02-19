@@ -21,50 +21,80 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-from ctSSL import constants
-from HTTPSConnection import HTTPSConnection
-    
-def create_https_connection(target, shared_settings, ssl=None, ssl_ctx=None):
-    """
-    Read the shared_settings object shared between all the plugins and load
-    the proper settings the ssl context and socket.
-    """
-    
-    timeout = shared_settings['timeout']
-    (host, ip_addr, port) = target
-    
-    if shared_settings['https_tunnel_host']:
-        # Using an HTTP CONNECT proxy to tunnel SSL traffic
-        tunnel_host = shared_settings['https_tunnel_host']
-        tunnel_port = shared_settings['https_tunnel_port']
-        https_connect = HTTPSConnection(tunnel_host, tunnel_port, ssl, ssl_ctx, 
-                                        timeout=timeout)
-        https_connect.set_tunnel(host, port)
-    else:
-        https_connect = HTTPSConnection(ip_addr, port, ssl, ssl_ctx, 
-                                        timeout=timeout)
-        
-        
-    # Load client certificate and private key
-    if shared_settings['cert']:
-        if shared_settings['certform'] is 'DER':
-            https_connect.ssl_ctx.use_certificate_file(
-                shared_settings['cert'],
-                constants.SSL_FILETYPE_ASN1)
-        else:
-            https_connect.ssl_ctx.use_certificate_file(
-                shared_settings['cert'],
-                constants.SSL_FILETYPE_PEM)
+import socket
+from ctSSL import errors
 
-        if shared_settings['keyform'] is 'DER':
-            https_connect.ssl_ctx.use_PrivateKey_file(
-                shared_settings['key'],
-                constants.SSL_FILETYPE_ASN1)
-        else:
-            https_connect.ssl_ctx.use_PrivateKey_file(
-                shared_settings['key'],
-                constants.SSL_FILETYPE_PEM)
 
-        https_connect.ssl_ctx.check_private_key()
+class SSLHandshakeFailed(Exception):
+    pass
+
+
+# TODO: Rename, re design
+def filter_handshake_exceptions(exception):
+    """
+    Try to identify why the handshake failed by looking at the socket or 
+    OpenSSL error.
+    TODO: Clean that and formatting shouldn't be done here.
+    """
+
+    try:
+        raise exception
+    
+    except socket.timeout as e:
+            raise # Timeout doesn't mean handshake was rejected.
+
+    except socket.error as e:
+        if 'connection was forcibly closed' in str(e.args):
+            raise SSLHandshakeFailed('TCP FIN')
+        elif 'reset by peer' in str(e.args):
+            raise SSLHandshakeFailed('TCP RST')
+
+    except errors.ctSSLUnexpectedEOF as e: # Unexpected EOF
+        raise SSLHandshakeFailed('TCP FIN')
+
+    except errors.SSLErrorSSL as e:
+        # Parse the OpenSSL error to make it readable
+        #openssl_error_msg = str(e[0])
+        #try: # Extract the last part of the error
+        #    error_msg = openssl_error_msg.split(':')[4]
+        #except IndexError: # Couldn't parse the error message ?
+        #    error_msg = openssl_error_msg
+        #raise SSLHandshakeFailed(error_msg)
         
-    return https_connect
+        result_ssl_handshake = str(e[0]) 
+        
+        if 'handshake failure' in str(e.args):
+            result_ssl_handshake = 'SSL Alert'
+        elif "block type is not 01" in str(e.args):
+            result_ssl_handshake = 'SSL Bad block type'
+        elif "excessive message size" in str(e.args):
+            result_ssl_handshake = 'SSL Bad message size'
+        elif "bad mac decode" in str(e.args):
+            result_ssl_handshake = 'SSL Bad MAC decode'
+        elif "wrong version number" in str(e.args):
+            result_ssl_handshake = 'SSL Wrong version'
+        elif "no cipher match" in str(e.args):
+            result_ssl_handshake = 'SSL No cipher match'
+        elif "no cipher list" in str(e.args):
+            result_ssl_handshake = 'SSL No cipher list'
+        elif "no ciphers available" in str(e.args):
+            result_ssl_handshake = 'SSL No ciphers avail'
+        elif "bad decompression" in str(e.args):
+            result_ssl_handshake = 'SSL Bad decompression'
+        elif "client cert" in str(e.args):
+            result_ssl_handshake = 'Client cert needed'
+        elif "peer error no cipher" in str(e.args):
+            result_ssl_handshake = 'SSL Peer error no ciph'
+        elif "illegal padding" in str(e.args):
+            result_ssl_handshake = 'SSL Illegal padding'
+        elif "ecc cert should have sha1 signature" in str(e.args):
+            result_ssl_handshake = 'ECC cert should have SHA1 sig'
+        elif "insufficient security" in str(e.args):
+            result_ssl_handshake = 'TLS Insufficient sec'
+        else:
+            raise
+
+        raise SSLHandshakeFailed(result_ssl_handshake)
+
+    except errors.SSLErrorZeroReturn as e: # Connection abruptly closed by peer
+        raise SSLHandshakeFailed('Rejected - TCP RST')    

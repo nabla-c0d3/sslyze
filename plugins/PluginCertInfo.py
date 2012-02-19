@@ -28,7 +28,7 @@ import sys
 
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors
-from utils.CtSSLHelper import create_https_connection
+from utils.SharedSettingsHelper import create_ssl_connection
 
 
 TRUSTED_CA_STORE = os.path.join(sys.path[0], 'mozilla_cacert.pem')
@@ -186,19 +186,20 @@ class PluginCertInfo(PluginBase.PluginBase):
         return full_cert.split('\n', 1)[1]
 
     def _get_cert(self, verify_cert=False):
-        https_connect = \
-            create_https_connection(self.target, self._shared_settings)
+        
+        ssl_connect = \
+            create_ssl_connection(self.target, self._shared_settings)
 
         if verify_cert:
-            https_connect.ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)
-            https_connect.ssl_ctx.set_verify(constants.SSL_VERIFY_PEER)
+            ssl_connect.ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)
+            ssl_connect.ssl.set_verify(constants.SSL_VERIFY_PEER)
 
         try: # Perform the SSL handshake
-            https_connect.connect()
-            cert = https_connect.ssl.get_peer_certificate()
+            ssl_connect.connect()
+            cert = ssl_connect.ssl.get_peer_certificate()
         except Exception:
             raise
         finally:
-            https_connect.close()
+            ssl_connect.close()
 
         return cert

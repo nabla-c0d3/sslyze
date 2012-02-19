@@ -28,15 +28,15 @@ from Queue import Queue
 
 RESULT_FORMAT = '   {0:<35} => {1:<35}'
 
-def is_target_valid(target):
+def is_target_valid(target, default_port = 443):
     valid_target = None
     
     try: # Extract port if one was specified
         host = (target.split(':'))[0]
         temp_port = (target.split(':'))[1]
     
-    except IndexError: # No port was specified, default to 443
-        port = 443
+    except IndexError: # No port was specified, use default
+        port = default_port
         valid_target = (host, port)
     
     else: # Make sure the provided port is an int
@@ -94,17 +94,29 @@ def discover_targets(args_target_list, args_command_list, available_commands, ma
             
     # No proxy try to connect to all targets
     else:  
+        if args_command_list.starttls == 'smtp':
+            default_port = 25
+            test_stattls = test_starttls_smtp
+        else:
+            default_port = 443
+            test_stattls = None
+            
         for target in args_target_list:
             try:
-                (host,port) = is_target_valid(target)
+                (host,port) = is_target_valid(target, default_port)
             except:
                 print RESULT_FORMAT.format(target, \
-                    'WARNING: Not a valid host/port, discarding corresponding tasks.')
+                    'WARNING: Not a valid host/port'
+                    ', discarding corresponding tasks.')
             
             else: # Host and port are correct, let's try to connect
                 worker = \
                     Thread(target=_test_connect, 
-                           args=((host,port), socket_timeout, result_queue))
+                           args=(
+                                 (host,port), 
+                                 socket_timeout, 
+                                 result_queue, 
+                                 test_stattls))
                 worker.start()
                 thread_list.append(worker)
     
@@ -113,7 +125,7 @@ def discover_targets(args_target_list, args_command_list, available_commands, ma
             (host_addr, ip_addr, error_string) = result_queue.get()
             (host,port) = host_addr
     
-            if ip_addr is None:
+            if error_string is not '': # An error occurred
                 print RESULT_FORMAT.format(host + ':' + str(port), error_string)
             else:
                 (ip, port) = ip_addr
@@ -135,19 +147,19 @@ def discover_targets(args_target_list, args_command_list, available_commands, ma
     return alive_target_list
 
 
-def _test_connect(target, timeout, out_q=None):
+def _test_connect(target, timeout, out_q=None, test_starttls=None):
     """
     Try to connect to the given target=(host,port) and put the result in out_q.
     """
     (host,port) = target
     s = socket.socket()
     s.settimeout(timeout)
-    error_text = "N/A"
+    error_text = ''
     ip_addr = None
 
     try:
         s.connect((host, port))
-        # Host is up => keep the IP adress we actually connected to
+        # Host is up => keep the IP address we actually connected to
         ip_addr = s.getpeername()
 
     except socket.timeout: # Host is down
@@ -156,6 +168,10 @@ def _test_connect(target, timeout, out_q=None):
         error_text = 'WARNING: Could not connect, discarding corresponding tasks.'
     except socket.error: # Connection Refused
         error_text = 'WARNING: Connection rejected, discarding corresponding tasks.'
+        
+    else:
+        if test_starttls:
+            error_text = test_starttls(s)
 
     finally:
         s.close()
@@ -163,3 +179,25 @@ def _test_connect(target, timeout, out_q=None):
             out_q.put( (target, ip_addr, error_text) )
 
     return ip_addr
+
+
+def test_starttls_smtp(s): 
+    """
+    Using a socket already connected to an SMTP server, try to initiate a 
+    STARTLS handshake.
+    """
+    error_text = ''
+    # Send a EHLO and wait for the 250 status
+    smtp_resp = s.recv(2048)
+    s.send('EHLO sslyze.scan\r\n')
+    smtp_resp = s.recv(2048)
+            
+    # Semd a STARTTLS
+    s.send('STARTTLS\r\n')
+    smtp_resp = s.recv(2048)
+    if 'Ready to start TLS'  not in smtp_resp:
+        error_text = 'WARNING: STARTTLS not supported, discarding corresponding tasks.'
+        
+    return error_text
+        
+

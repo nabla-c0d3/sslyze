@@ -24,8 +24,8 @@
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL_CTX, constants, ctSSL_initialize, ctSSL_cleanup
-from utils.CtSSLHelper import create_https_connection
-from utils.HTTPSConnection import SSLHandshakeFailed
+from utils.SharedSettingsHelper import create_ssl_connection
+from utils.CtSSLHelper import SSLHandshakeFailed
 
 
 class PluginSessionResumption(PluginBase.PluginBase):
@@ -280,18 +280,18 @@ def _resume_ssl_session(target, ssl_ctx, shared_settings, ssl_session = None):
     that connection.
     If ssl_session is given, tries to resume that session.
     """
-    https_connect = \
-        create_https_connection(target, shared_settings, ssl_ctx=ssl_ctx)
+    ssl_connect = \
+        create_ssl_connection(target, shared_settings, ssl_ctx=ssl_ctx)
 
     if ssl_session:
-        https_connect.ssl.set_session(ssl_session)
+        ssl_connect.ssl.set_session(ssl_session)
 
     try: # Perform the SSL handshake
-        https_connect.connect()
-        session = https_connect.ssl.get_session() # Get session data
+        ssl_connect.connect()
+        session = ssl_connect.ssl.get_session() # Get session data
     except SSLHandshakeFailed:
         raise
     finally:
-        https_connect.close()
+        ssl_connect.close()
         
     return session

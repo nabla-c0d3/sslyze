@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 #-------------------------------------------------------------------------------
-# Name:         HTTPSConnection.py
-# Purpose:      Similar to httplib.HTTPSConnection but uses ctSSL instead of 
-#               the standard ssl module. Should eventually be part of ctSSL.
+# Name:         STARTTLS.py
+# Purpose:      ctSSL-based STARTTLS support for SMTP.
 #
 # Author:       alban
 #
@@ -23,33 +22,24 @@
 #-------------------------------------------------------------------------------
 
 import socket
-from httplib import HTTPConnection, HTTPS_PORT
-
 from ctSSL import SSL, SSL_CTX
 from ctSSL import constants
 
-from CtSSLHelper import filter_handshake_exceptions
 from SSLSocket import SSLSocket
+from CtSSLHelper import filter_handshake_exceptions
 
-# Create a ctSSL-based HTTPSConnection
-class HTTPSConnection(HTTPConnection):
-    """
-    This class mirrors httplib.HTTPSConnection but uses ctSSL instead of the 
-    standard ssl module.
-    For now the way to access low level SSL functions associated with a given 
-    HTTPSConnection is too just access the ssl and ssl_ctx attribute of the 
-    object.
-    """
+class SMTPConnection():
     
-    default_port = HTTPS_PORT
+    default_port = 25
     
-    def __init__(self, host, port=None, ssl=None, ssl_ctx=None, 
-                 strict=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
+    def __init__(self, host, port=default_port, ssl=None, ssl_ctx=None, 
+                 timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
         
-        HTTPConnection.__init__(self, host, port, strict, timeout)
-
         self.ssl_ctx = ssl_ctx
         self.ssl = ssl
+        self.host = host
+        self.port = port
+        self.timeout = timeout
         
         if self.ssl_ctx is None:
             self.ssl_ctx = SSL_CTX.SSL_CTX()
@@ -61,23 +51,37 @@ class HTTPSConnection(HTTPConnection):
             
     
     def connect(self):
-        "Connect to a host on a given (SSL) port."
-    
+        """
+        Connect to a host on a given (SSL) port, send a STARTTLS command,
+        and perform the SSL handshake.
+        """
+        
         sock = socket.create_connection((self.host, self.port),
                                         self.timeout)
         
-        if self._tunnel_host:
-            self.sock = sock
-            self._tunnel()
-              
-        # Doing something similar to ssl.wrap_socket() but with ctSSL
+        # Get the SMTP banner
+        smtp_resp = sock.recv(2048)
+        
+        # Send a EHLO and wait for the 250 status
+        sock.send('EHLO sslyze.scan\r\n')
+        while '250 ' not in smtp_resp:
+            smtp_resp = sock.recv(2048)
+                
+        # Semd a STARTTLS
+        sock.send('STARTTLS\r\n')
+        smtp_resp = sock.recv(2048)
+        if 'Ready to start TLS'  not in smtp_resp: 
+            return
+
+        # Do the SSL handshake
         self.ssl.set_socket(sock)
         ssl_sock = SSLSocket(self.ssl)
-        
+        self.sock = ssl_sock
         try:
             ssl_sock.do_handshake()
         except Exception as e:
-            filter_handshake_exceptions(e)
-            
-        self.sock = ssl_sock
+            filter_handshake_exceptions(e)    
         
+
+    def close(self):
+        self.sock.close()

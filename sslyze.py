@@ -27,7 +27,7 @@ from multiprocessing import Process, JoinableQueue
 from discover_targets import discover_targets
 from discover_plugins import discover_plugins
 from parse_command_line import create_command_line_parser, \
-    parse_command_line, process_parsing_results
+    parse_command_line, process_parsing_results, PARSING_ERROR_FORMAT
 
 PROG_VERSION =      'SSLyze v0.4 beta'
 NB_PROCESSES =      10 # Should be controlled by the user
@@ -122,8 +122,7 @@ def main():
     print '\n\n'
     parse_result = parse_command_line(parser)
     if parse_result == None:
-        print '   Error=> no hosts to scan !\n\n'
-        parser.print_help()
+        print PARSING_ERROR_FORMAT.format('No hosts to scan.')
         return
     else:
         (args_command_list, args_target_list) = parse_result
@@ -131,7 +130,6 @@ def main():
     # Fill the shared settings dictionnary, shared between all the plugins
     shared_settings = process_parsing_results(args_command_list)
     if not shared_settings:
-        parser.print_help()
         return
 
     #--PROCESSES INITIALIZATION--

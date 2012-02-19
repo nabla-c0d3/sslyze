@@ -424,6 +424,17 @@ class SSL:
         return  libssl.SSL_pending(self._ssl_struct_p)
 
 
+    def  set_verify(self, mode):
+        """
+        Set the verification flags.
+        Directly calls OpenSSL's SSL_set_verify(), but no verify_callback
+        for now.
+
+        @type mode: int
+        @param mode: The verification flags to set. See ctSSL.constants.
+        """
+        libssl.SSL_set_verify(self._ssl_struct_p, mode, None)
+
 
 # == CTYPE ERRCHECK CALLBACK(S) ==
 def _errcheck_SSL_default(result, func, arguments):
@@ -537,6 +548,9 @@ def init_SSL_functions():
 
     libssl.SSL_CIPHER_get_bits.argtypes = [c_void_p, c_void_p]
     libssl.SSL_CIPHER_get_bits.restype = c_int
+    
+    libssl.SSL_set_verify.argtypes = [c_void_p, c_int, c_void_p]
+    libssl.SSL_set_verify.restype = c_int
 
 
     # Initializing functions that may or may not be there

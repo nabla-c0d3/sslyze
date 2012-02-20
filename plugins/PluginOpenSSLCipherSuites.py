@@ -28,7 +28,7 @@ from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, \
     ctSSL_cleanup
 from utils.SharedSettingsHelper import create_ssl_connection, \
     check_ssl_connection_is_alive
-from utils.CtSSLHelper import SSLHandshakeFailed
+from utils.CtSSLHelper import SSLHandshakeRejected
 
 
 
@@ -170,7 +170,7 @@ def _test_ciphersuite(target, ssl_version, ssl_cipher, shared_settings):
     
     try: # Perform the SSL handshake
         ssl_connect.connect()
-    except SSLHandshakeFailed as e:
+    except SSLHandshakeRejected as e:
         return (ssl_cipher, 'Rejected', str(e))
     except Exception as e:
         return (ssl_cipher, 'Errors', str(e.__class__.__module__) + '.' + str(e.__class__.__name__) + ' - ' + str(e))

@@ -26,7 +26,7 @@ from ctSSL import SSL, SSL_CTX
 from ctSSL import constants
 
 from SSLSocket import SSLSocket
-from CtSSLHelper import filter_handshake_exceptions
+from CtSSLHelper import filter_handshake_exceptions, SSLHandshakeError
 
 class SMTPConnection():
     
@@ -40,6 +40,7 @@ class SMTPConnection():
         self.host = host
         self.port = port
         self.timeout = timeout
+        self.sock = None
         
         if self.ssl_ctx is None:
             self.ssl_ctx = SSL_CTX.SSL_CTX()
@@ -58,30 +59,37 @@ class SMTPConnection():
         
         sock = socket.create_connection((self.host, self.port),
                                         self.timeout)
+        self.sock = sock
         
+
         # Get the SMTP banner
         smtp_resp = sock.recv(2048)
         
         # Send a EHLO and wait for the 250 status
         sock.send('EHLO sslyze.scan\r\n')
-        while '250 ' not in smtp_resp:
-            smtp_resp = sock.recv(2048)
+        smtp_resp = sock.recv(2048)
+        if '250 ' not in smtp_resp:
+            raise SSLHandshakeError('SMTP EHLO was rejected ?')
                 
         # Semd a STARTTLS
         sock.send('STARTTLS\r\n')
         smtp_resp = sock.recv(2048)
         if 'Ready to start TLS'  not in smtp_resp: 
-            return
+            raise SSLHandshakeError('SMTP STARTTLS not supported ?')
 
         # Do the SSL handshake
         self.ssl.set_socket(sock)
         ssl_sock = SSLSocket(self.ssl)
-        self.sock = ssl_sock
+
+            
         try:
             ssl_sock.do_handshake()
         except Exception as e:
             filter_handshake_exceptions(e)    
+            
+        self.sock = ssl_sock
         
 
     def close(self):
         self.sock.close()
+        

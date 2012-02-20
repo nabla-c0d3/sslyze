@@ -26,7 +26,7 @@ from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL_CTX, \
     constants, errors
 from utils.SharedSettingsHelper import create_ssl_connection
-from utils.CtSSLHelper import SSLHandshakeFailed
+from utils.CtSSLHelper import SSLHandshakeRejected
 
 
 class PluginSessionRenegotiation(PluginBase.PluginBase):
@@ -79,8 +79,8 @@ def _test_renegotiation(target, shared_settings):
 
     try:
         ssl_connect.connect()
-    except SSLHandshakeFailed as e:
-        raise SSLHandshakeFailed('SSL Handshake Failed')
+    except SSLHandshakeRejected as e:
+        raise
     else:
         result_secure = 'Supported' if ssl_connect.ssl.get_secure_renegotiation_support() \
                                     else 'Not Supported'

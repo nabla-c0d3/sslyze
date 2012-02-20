@@ -25,7 +25,20 @@ import socket
 from ctSSL import errors
 
 
-class SSLHandshakeFailed(Exception):
+class SSLHandshakeRejected(Exception):
+    """
+    Exception raised when the server explicitly rejected the handshake.
+    """
+    pass
+
+
+
+class SSLHandshakeError(Exception):
+    """
+    Exception raised when the handshake failed but we can't tell whether it's 
+    because the server rejected it or because something caused it to fail.
+    Could be network congestion, the server going offline etc...
+    """
     pass
 
 
@@ -45,12 +58,12 @@ def filter_handshake_exceptions(exception):
 
     except socket.error as e:
         if 'connection was forcibly closed' in str(e.args):
-            raise SSLHandshakeFailed('TCP FIN')
+            raise SSLHandshakeRejected('TCP FIN')
         elif 'reset by peer' in str(e.args):
-            raise SSLHandshakeFailed('TCP RST')
+            raise SSLHandshakeRejected('TCP RST')
 
     except errors.ctSSLUnexpectedEOF as e: # Unexpected EOF
-        raise SSLHandshakeFailed('TCP FIN')
+        raise SSLHandshakeRejected('TCP FIN')
 
     except errors.SSLErrorSSL as e:
         # Parse the OpenSSL error to make it readable
@@ -94,7 +107,7 @@ def filter_handshake_exceptions(exception):
         else:
             raise
 
-        raise SSLHandshakeFailed(result_ssl_handshake)
+        raise SSLHandshakeRejected(result_ssl_handshake)
 
     except errors.SSLErrorZeroReturn as e: # Connection abruptly closed by peer
-        raise SSLHandshakeFailed('Rejected - TCP RST')    
+        raise SSLHandshakeRejected('Rejected - TCP RST')    

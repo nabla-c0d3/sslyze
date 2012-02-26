@@ -186,8 +186,8 @@ def _resume_with_session_id(target, ssl_version, shared_settings):
 
     try: # Connect to the server and keep the SSL session
         session1 =_resume_ssl_session(target, ctx, shared_settings)
-    except SSLHandshakeFailed as e:
-        raise SSLHandshakeFailed('SSL Handshake failed: ' + e[0])
+    except SSLHandshakeRejected as e:
+        raise SSLHandshakeRejected('SSL Handshake failed: ' + e[0])
 
     try: # Recover the session ID
         session1_id = _extract_session_id(session1)
@@ -197,8 +197,8 @@ def _resume_with_session_id(target, ssl_version, shared_settings):
     # Try to resume that SSL session
     try:
         session2 =_resume_ssl_session(target, ctx, shared_settings, session1)
-    except SSLHandshakeFailed as e:
-        raise SSLHandshakeFailed('SSL Handshake failed: ' + e[0])
+    except SSLHandshakeRejected as e:
+        raise SSLHandshakeRejected('SSL Handshake failed: ' + e[0])
 
     try: # Recover the session ID
         session2_id = _extract_session_id(session2)
@@ -227,7 +227,7 @@ def _resume_with_session_ticket(target, shared_settings):
 
     try: # Connect to the server and keep the SSL session
         session1 =_resume_ssl_session(target, ctx, shared_settings)
-    except SSLHandshakeFailed as e:
+    except SSLHandshakeRejected as e:
         raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
 
     try: # Recover the TLS ticket
@@ -238,7 +238,7 @@ def _resume_with_session_ticket(target, shared_settings):
     # Try to resume that session using the TLS ticket
     try:
         session2 =_resume_ssl_session(target, ctx, shared_settings, session1)
-    except SSLHandshakeFailed as e:
+    except SSLHandshakeRejected as e:
         raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
 
     try: # Recover the TLS ticket

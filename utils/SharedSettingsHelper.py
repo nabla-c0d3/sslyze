@@ -36,10 +36,19 @@ def create_ssl_connection(target, shared_settings, ssl=None, ssl_ctx=None):
     timeout = shared_settings['timeout']
     (host, ip_addr, port) = target
     
-    if shared_settings['starttls']:
+    if shared_settings['starttls'] == 'smtp':
         ssl_connection = STARTTLS.SMTPConnection(ip_addr, port, ssl, ssl_ctx, 
                                                  timeout=timeout)
-    
+    elif shared_settings['starttls'] == 'xmpp':
+        if shared_settings['xmpp_to']:
+            xmpp_to = shared_settings['xmpp_to']
+        else:
+            xmpp_to = host
+            
+        ssl_connection = \
+            STARTTLS.XMPPConnection(ip_addr, port, ssl, ssl_ctx, 
+                                    timeout=timeout, xmpp_to=xmpp_to)   
+             
     elif shared_settings['https_tunnel_host']:
         # Using an HTTP CONNECT proxy to tunnel SSL traffic
         tunnel_host = shared_settings['https_tunnel_host']
@@ -86,12 +95,14 @@ def check_ssl_connection_is_alive(ssl_connection, shared_settings):
     """    
 
     result = 'N/A'
-    if shared_settings['starttls']:
+    if shared_settings['starttls'] == 'smtp':
         try:
             ssl_connection.sock.send('NOOP\r\n')
             result = ssl_connection.sock.read(2048).strip()
         except socket.timeout:
             result = 'Timeout on SMTP NOOP'
+    elif shared_settings['starttls'] == 'xmpp':
+        result = 'OK'
     else:
         try: 
             # Send an HTTP GET to the server and store the HTTP Status Code

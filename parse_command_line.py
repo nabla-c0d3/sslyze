@@ -93,9 +93,18 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
     parser.add_option(
         '--starttls',
         help= (
-            'Uses STARTTLS to scan an SMTP server.'
-            ' STARTTLS should be \'smtp\'. '),
+            'Uses STARTTLS to scan a server.'
+            ' STARTTLS should be \'smtp\' or \'xmpp\'.'),
         dest='starttls',
+        default=None)
+
+    parser.add_option(
+        '--xmpp_to',
+        help= (
+            'Optional setting for STARTTLS XMPP. '
+            ' XMPP_TO should be the hostname to be put in the \'to\' attribute '
+            'of the XMPP stream. Default is the server\'s hostname.'),
+        dest='xmpp_to',
         default=None)
 
     # Add plugin options to the parser
@@ -215,11 +224,12 @@ def process_parsing_results(args_command_list):
         shared_settings['https_tunnel_port'] = None
         
     # STARTTLS
-    if args_command_list.starttls not in [None,'smtp']:
-        print PARSING_ERROR_FORMAT.format('--starttls should be \'smtp\'.')
+    if args_command_list.starttls not in [None,'smtp','xmpp']:
+        print PARSING_ERROR_FORMAT.format('--starttls should be \'smtp\' or \'xmpp\'.')
         return
     else:
         shared_settings['starttls'] = args_command_list.starttls
+        shared_settings['xmpp_to'] = args_command_list.xmpp_to
     
     if args_command_list.starttls and args_command_list.https_tunnel:
         print PARSING_ERROR_FORMAT.format(

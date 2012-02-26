@@ -97,9 +97,15 @@ def discover_targets(args_target_list, args_command_list, available_commands, ma
         if args_command_list.starttls == 'smtp':
             default_port = 25
             test_stattls = test_starttls_smtp
+            test_starttls_args = ()
+        elif args_command_list.starttls == 'xmpp':
+            default_port = 5222
+            test_stattls = test_starttls_xmpp
+            test_starttls_args = args_command_list.xmpp_to
         else:
             default_port = 443
             test_stattls = None
+            test_starttls_args = ()
             
         for target in args_target_list:
             try:
@@ -116,7 +122,8 @@ def discover_targets(args_target_list, args_command_list, available_commands, ma
                                  (host,port), 
                                  socket_timeout, 
                                  result_queue, 
-                                 test_stattls))
+                                 test_stattls,
+                                 test_starttls_args))
                 worker.start()
                 thread_list.append(worker)
     
@@ -147,7 +154,7 @@ def discover_targets(args_target_list, args_command_list, available_commands, ma
     return alive_target_list
 
 
-def _test_connect(target, timeout, out_q=None, test_starttls=None):
+def _test_connect(target, timeout, out_q=None, test_starttls=None, test_starttls_args=()):
     """
     Try to connect to the given target=(host,port) and put the result in out_q.
     """
@@ -161,6 +168,8 @@ def _test_connect(target, timeout, out_q=None, test_starttls=None):
         s.connect((host, port))
         # Host is up => keep the IP address we actually connected to
         ip_addr = s.getpeername()
+        if test_starttls:
+            error_text = test_starttls(s, host, test_starttls_args)
 
     except socket.timeout: # Host is down
         error_text = 'WARNING: Could not connect (timeout), discarding corresponding tasks.'
@@ -168,10 +177,6 @@ def _test_connect(target, timeout, out_q=None, test_starttls=None):
         error_text = 'WARNING: Could not connect, discarding corresponding tasks.'
     except socket.error: # Connection Refused
         error_text = 'WARNING: Connection rejected, discarding corresponding tasks.'
-        
-    else:
-        if test_starttls:
-            error_text = test_starttls(s)
 
     finally:
         s.close()
@@ -181,22 +186,48 @@ def _test_connect(target, timeout, out_q=None, test_starttls=None):
     return ip_addr
 
 
-def test_starttls_smtp(s): 
+def test_starttls_smtp(s, host): 
     """
     Using a socket already connected to an SMTP server, try to initiate a 
     STARTLS handshake.
     """
     error_text = ''
     # Send a EHLO and wait for the 250 status
-    smtp_resp = s.recv(2048)
+    s.recv(2048)
     s.send('EHLO sslyze.scan\r\n')
-    smtp_resp = s.recv(2048)
+    if '250 ' not in s.recv(2048):
+        return 'WARNING: SMTP EHLO was rejected, discarding corresponding tasks.'
             
     # Semd a STARTTLS
     s.send('STARTTLS\r\n')
     smtp_resp = s.recv(2048)
     if 'Ready to start TLS'  not in smtp_resp:
-        error_text = 'WARNING: STARTTLS not supported, discarding corresponding tasks.'
+        error_text = 'WARNING: SMTP STARTTLS not supported, discarding corresponding tasks.'
+        
+    return error_text
+
+
+def test_starttls_xmpp(sock, host, xmpp_to): 
+    """
+    Using a socket already connected to an XMPP server, try to initiate a 
+    STARTLS handshake.
+    """
+    xmpp_open_stream = "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/rfc2595.txt' to='{0}'>" 
+    xmpp_starttls = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
+    
+    if xmpp_to is None:
+        xmpp_to = host
+    
+    error_text = ''
+    # Open an XMPP stream
+    sock.send(xmpp_open_stream.format(xmpp_to))
+    if '<stream:error>' in sock.recv(2048):
+        return 'WARNING: Error opening XMPP stream, discarding corresponding tasks. Consider using --xmpp_to ?'
+        
+    # Send a STARTTLS
+    sock.send(xmpp_starttls)
+    if 'proceed'  not in sock.recv(2048): 
+        error_text = 'WARNING: XMPP STARTTLS not supported, discarding corresponding tasks.'
         
     return error_text
         

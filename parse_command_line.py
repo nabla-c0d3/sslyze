@@ -78,6 +78,7 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
         type='int',
         dest='timeout',
         default=timeout)
+
     
     # HTTP CONNECT Proxy
     parser.add_option(
@@ -93,8 +94,9 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
     parser.add_option(
         '--starttls',
         help= (
-            'Uses STARTTLS to scan a server.'
-            ' STARTTLS should be \'smtp\' or \'xmpp\'.'),
+            'Identifies the target server(s) as a SMTP or an XMPP server(s) '
+            'and scans the server(s) using STARTTLS. '
+            'STARTTLS should be \'smtp\' or \'xmpp\'.'),
         dest='starttls',
         default=None)
 
@@ -168,9 +170,11 @@ def parse_command_line(parser):
 
 def process_parsing_results(args_command_list):
 
-    shared_mgr = Manager()
-    shared_settings = shared_mgr.dict() # Will be sent to every plugin process.
-
+    #shared_mgr = Manager()
+    #shared_settings = shared_mgr.dict() # Will be sent to every plugin process.
+    # Don't really neeed a manager since shared_settings is read only.
+    shared_settings = dict()
+    
     # Sanity checks on the client cert options
     if bool(args_command_list.cert) ^ bool(args_command_list.key):
         print PARSING_ERROR_FORMAT.format(

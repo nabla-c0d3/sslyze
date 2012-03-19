@@ -28,6 +28,8 @@ from discover_targets import discover_targets
 from discover_plugins import discover_plugins
 from parse_command_line import create_command_line_parser, \
     parse_command_line, process_parsing_results, PARSING_ERROR_FORMAT
+    
+
 
 PROG_VERSION =      'SSLyze v0.4 beta'
 NB_PROCESSES =      10 # Should be controlled by the user
@@ -50,6 +52,11 @@ class WorkerProcess(Process):
         Once it gets notified that all the tasks have been completed,
         it terminates.
         """
+        # Plugin classes are unpickled by the multiprocessing module
+        # without state info. Need to assign shared_settings to PluginBase here
+        import plugins
+        plugins.PluginBase.PluginBase._shared_settings = self.shared_settings
+        
         while True:
 
             task = self.queue_in.get() # Grab a task from queue_in
@@ -61,8 +68,7 @@ class WorkerProcess(Process):
 
             (target, command, args) = task
             # Instatiate the proper plugin
-            plugin_instance = \
-                self.available_commands[command](self.shared_settings)
+            plugin_instance = self.available_commands[command]()
                 
             try: # Process the task
                 result = plugin_instance.process_task(target, command, args)
@@ -131,6 +137,7 @@ def main():
     shared_settings = process_parsing_results(args_command_list)
     if not shared_settings:
         return
+
 
     #--PROCESSES INITIALIZATION--
     task_queue = JoinableQueue() # Processes get tasks from task_queue and

@@ -26,10 +26,7 @@ from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, \
     ctSSL_cleanup
-from utils.SharedSettingsHelper import create_ssl_connection, \
-    check_ssl_connection_is_alive
 from utils.CtSSLHelper import SSLHandshakeRejected
-
 
 
 class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
@@ -82,12 +79,12 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         # Scan for every available cipher suite
         for cipher in cipher_list:
-            thread_pool.add_job((_test_ciphersuite,
-                (target, ssl_version, cipher, self._shared_settings)))
+            thread_pool.add_job((self._test_ciphersuite,
+                                 (target, ssl_version, cipher)))
 
         # Scan for the preferred cipher suite
-        thread_pool.add_job((_pref_ciphersuite,
-           (target, ssl_version, self._shared_settings)))
+        thread_pool.add_job((self._pref_ciphersuite,
+                             (target, ssl_version)))
 
         # Start processing the jobs
         thread_pool.start(NB_THREADS)
@@ -119,21 +116,21 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 
                 if result_type == 'Errors':
                     formatted_results.append(
-                        title_format.format('Errors:'))
+                        title_format.format('Unknown errors:'))
                 else:
                     formatted_results.append(
                         title_format.format(result_type + ' Cipher Suites:'))
                     
                 formatted_results.extend(
-                    _format_cipher_results(
+                    self._format_cipher_results(
                         cipher_format, 
                         test_ciphers_results[result_type]) )
 
-        # Process errors
+        # Process thread pool errors
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
             formatted_results.append(
-                cipher_format.format(str((job[1])[2]),
+                cipher_format.format(str((job[1])),
                 ' Error => ' + str(exception)))
         thread_pool.join()
         ctSSL_cleanup()
@@ -141,96 +138,93 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
 
 # == INTERNAL FUNCTIONS ==
-def _format_cipher_results(result_format, result_dict):
-    """
-    Extract results from a result dictionnary and make those results printable.
-    """
-    printable_results = []
-    # Sorting the cipher suites by result
-    result_list = sorted(result_dict.iteritems(), key=lambda (k,v): (v,k),
-        reverse=True)
-    for (ssl_cipher, (msg) ) in result_list:
-        printable_results.append(
-            result_format.format(ssl_cipher, msg) )
-    return printable_results
-
-
-def _test_ciphersuite(target, ssl_version, ssl_cipher, shared_settings):
-    """
-    Initiates a SSL handshake with the server, using the SSL version and cipher
-    suite specified.
-    """
-    ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
-    ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-    ssl_ctx.set_cipher_list(ssl_cipher)
-
-    # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
-    ssl_connect = \
-        create_ssl_connection(target, shared_settings, ssl_ctx=ssl_ctx)
+    def _format_cipher_results(self, result_format, result_dict):
+        """
+        Extract results from a result dictionnary and make those results printable.
+        """
+        printable_results = []
+        # Sorting the cipher suites by result
+        result_list = sorted(result_dict.iteritems(), key=lambda (k,v): (v,k),
+            reverse=True)
+        for (ssl_cipher, (msg) ) in result_list:
+            printable_results.append(
+                result_format.format(ssl_cipher, msg) )
+        return printable_results
     
-    try: # Perform the SSL handshake
-        ssl_connect.connect()
-    except SSLHandshakeRejected as e:
-        return (ssl_cipher, 'Rejected', str(e))
-    except Exception as e:
-        return (ssl_cipher, 'Errors', str(e.__class__.__module__) + '.' + str(e.__class__.__name__) + ' - ' + str(e))
-
-    else:
-        ssl_cipher = ssl_connect.ssl.get_current_cipher()
-        
-        # Add key length or ANON to the cipher name
-        cipher_format = '{0:<25}{1:<14}'
-        if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
-            ssl_cipher = cipher_format.format(ssl_cipher, 'Anon')
-        else:
-            ssl_cipher = cipher_format.format(
-                ssl_cipher,  
-                str(ssl_connect.ssl.get_current_cipher_bits()) + ' bits')
-            
-            return (ssl_cipher, 'Accepted', 
-                    check_ssl_connection_is_alive(ssl_connect, shared_settings))
-
-    finally:
-        ssl_connect.close()
-        
-    return
-
-
-
-def _pref_ciphersuite(target, ssl_version, shared_settings):
-    """
-    Initiates a SSL handshake with the server, using the SSL version and cipher
-    suite specified.
-    """
-    ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
-    ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-    ssl_ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
-
-    # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
-    ssl_connect = \
-        create_ssl_connection(target, shared_settings, ssl_ctx=ssl_ctx)
     
-    try: # Perform the SSL handshake
-        ssl_connect.connect()
-    except Exception:
-        return None
-
-    else:
-        ssl_cipher = ssl_connect.ssl.get_current_cipher()
+    def _test_ciphersuite(self, target, ssl_version, ssl_cipher):
+        """
+        Initiates a SSL handshake with the server, using the SSL version and 
+        cipher suite specified.
+        """
+        ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
+        ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
+        ssl_ctx.set_cipher_list(ssl_cipher)
+    
+        # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
+        ssl_connect = self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
         
-        # Add key length or ANON to the cipher name
-        cipher_format = '{0:<25}{1:<14}'
-        if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
-            ssl_cipher = cipher_format.format(ssl_cipher, 'Anon')
+        try: # Perform the SSL handshake
+            ssl_connect.connect()
+        except SSLHandshakeRejected as e:
+            return (ssl_cipher, 'Rejected', str(e))
+        except Exception as e:
+            return (ssl_cipher, 'Errors', str(e.__class__.__module__) + '.' + str(e.__class__.__name__) + ' - ' + str(e))
+    
         else:
-            ssl_cipher = cipher_format.format(
-                ssl_cipher,  
-                str(ssl_connect.ssl.get_current_cipher_bits()) + ' bits')
+            ssl_cipher = ssl_connect.ssl.get_current_cipher()
             
-            return (ssl_cipher, 'Preferred', 
-                    check_ssl_connection_is_alive(ssl_connect, shared_settings))
-
-    finally:
-        ssl_connect.close()
+            # Add key length or ANON to the cipher name
+            cipher_format = '{0:<25}{1:<14}'
+            if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
+                ssl_cipher = cipher_format.format(ssl_cipher, 'Anon')
+            else:
+                ssl_cipher = cipher_format.format(
+                    ssl_cipher,  
+                    str(ssl_connect.ssl.get_current_cipher_bits()) + ' bits')
+                
+                return (ssl_cipher, 'Accepted', 
+                        self._check_ssl_connection_is_alive(ssl_connect))
+    
+        finally:
+            ssl_connect.close()
+            
+        return
+    
+    
+    def _pref_ciphersuite(self, target, ssl_version):
+        """
+        Initiates a SSL handshake with the server, using the SSL version and cipher
+        suite specified.
+        """
+        ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
+        ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
+        ssl_ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
+    
+        # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
+        ssl_connect = self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
         
-    return
+        try: # Perform the SSL handshake
+            ssl_connect.connect()
+        except Exception:
+            return None
+    
+        else:
+            ssl_cipher = ssl_connect.ssl.get_current_cipher()
+            
+            # Add key length or ANON to the cipher name
+            cipher_format = '{0:<25}{1:<14}'
+            if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
+                ssl_cipher = cipher_format.format(ssl_cipher, 'Anon')
+            else:
+                ssl_cipher = cipher_format.format(
+                    ssl_cipher,  
+                    str(ssl_connect.ssl.get_current_cipher_bits()) + ' bits')
+                
+                return (ssl_cipher, 'Preferred', 
+                        self._check_ssl_connection_is_alive(ssl_connect))
+    
+        finally:
+            ssl_connect.close()
+            
+        return

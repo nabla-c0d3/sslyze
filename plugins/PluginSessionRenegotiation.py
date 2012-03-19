@@ -25,7 +25,6 @@ import socket
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL_CTX, \
     constants, errors
-from utils.SharedSettingsHelper import create_ssl_connection
 from utils.CtSSLHelper import SSLHandshakeRejected
 
 
@@ -46,8 +45,7 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
 
         ctSSL_initialize()
         try:
-            (result_reneg, result_secure) = \
-                _test_renegotiation(target, self._shared_settings)
+            (result_reneg, result_secure) = self._test_renegotiation(target)
         except:
             raise
         finally:
@@ -64,54 +62,54 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         return formatted_results
 
 
-def _test_renegotiation(target, shared_settings):
-    """
-    Checks whether the server honors session renegotation requests and whether
-    it supports secure renegotiation.
-    """
-    result_reneg = 'N/A'
-    result_secure = 'N/A'
+    def _test_renegotiation(self, target):
+        """
+        Checks whether the server honors session renegotation requests and 
+        whether it supports secure renegotiation.
+        """
+        result_reneg = 'N/A'
+        result_secure = 'N/A'
+        
+        ssl_ctx = SSL_CTX.SSL_CTX()
+        ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
+        ssl_connect = \
+            self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
     
-    ssl_ctx = SSL_CTX.SSL_CTX()
-    ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-    ssl_connect = \
-        create_ssl_connection(target, shared_settings, ssl_ctx=ssl_ctx)
-
-    try:
-        ssl_connect.connect()
-    except SSLHandshakeRejected as e:
-        raise
-    else:
-        result_secure = 'Supported' if ssl_connect.ssl.get_secure_renegotiation_support() \
-                                    else 'Not Supported'
-
-        try: # Let's try to renegotiate
-            ssl_connect.ssl.renegotiate()
-            result_reneg = 'Honored'
-
-        except errors.ctSSLUnexpectedEOF as e:
-            result_reneg = 'Rejected'
-
-        except socket.error as e:
-            if 'connection was forcibly closed' in str(e.args):
+        try:
+            ssl_connect.connect()
+        except SSLHandshakeRejected as e:
+            raise
+        else:
+            result_secure = 'Supported' if ssl_connect.ssl.get_secure_renegotiation_support() \
+                                        else 'Not Supported'
+    
+            try: # Let's try to renegotiate
+                ssl_connect.ssl.renegotiate()
+                result_reneg = 'Honored'
+    
+            except errors.ctSSLUnexpectedEOF as e:
                 result_reneg = 'Rejected'
-            elif 'reset by peer' in str(e.args):
-                result_reneg = 'Rejected'
-            else:
-                raise e
-
-        except socket.timeout as e:
-            result_reneg = 'Rejected (timeout)'
-
-        except errors.SSLError as e:
-            if 'handshake failure' in str(e.args):
-                result_reneg = 'Rejected'
-            elif 'no renegotiation' in str(e.args):
-                result_reneg = 'Rejected'
-            else:
-                raise e
-
-    finally:
-        ssl_connect.close()
-
-    return (result_reneg, result_secure)
+    
+            except socket.error as e:
+                if 'connection was forcibly closed' in str(e.args):
+                    result_reneg = 'Rejected'
+                elif 'reset by peer' in str(e.args):
+                    result_reneg = 'Rejected'
+                else:
+                    raise e
+    
+            except socket.timeout as e:
+                result_reneg = 'Rejected (timeout)'
+    
+            except errors.SSLError as e:
+                if 'handshake failure' in str(e.args):
+                    result_reneg = 'Rejected'
+                elif 'no renegotiation' in str(e.args):
+                    result_reneg = 'Rejected'
+                else:
+                    raise e
+    
+        finally:
+            ssl_connect.close()
+    
+        return (result_reneg, result_secure)

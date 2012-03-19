@@ -24,7 +24,6 @@
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL_CTX, constants, ctSSL_initialize, ctSSL_cleanup
-from utils.SharedSettingsHelper import create_ssl_connection
 from utils.CtSSLHelper import SSLHandshakeRejected
 
 
@@ -75,8 +74,8 @@ class PluginSessionResumption(PluginBase.PluginBase):
         thread_pool = ThreadPool()
         for i in xrange(NB_RESUM):
             thread_pool.add_job((
-                _test_resumption_with_session_id,
-                (target, ('sslv3'), self._shared_settings)))
+                self._test_resumption_with_session_id,
+                (target, ('sslv3'))))
         thread_pool.start(NB_THREADS)
 
         # Count successful resumptions
@@ -110,16 +109,16 @@ class PluginSessionResumption(PluginBase.PluginBase):
         NB_THREADS = 3
         thread_pool = ThreadPool()
         thread_pool.add_job((
-            _test_resumption_with_session_ticket,
-            (target, None, self._shared_settings),
+            self._test_resumption_with_session_ticket,
+            (target, None),
             'Using TLSv1 Session Tickets: '))
         thread_pool.add_job((
-            _test_resumption_with_session_id,
-            (target,('sslv3'), self._shared_settings),
+            self._test_resumption_with_session_id,
+            (target,('sslv3')),
             'Using SSLv3 Session IDs: '))
         thread_pool.add_job((
-            _test_resumption_with_session_id,
-            (target,('tlsv1'), self._shared_settings),
+            self._test_resumption_with_session_id,
+            (target,('tlsv1')),
             'Using TLSv1 Session IDs: '))
         thread_pool.start(NB_THREADS)
 
@@ -138,160 +137,160 @@ class PluginSessionResumption(PluginBase.PluginBase):
         return formatted_results
 
 
-# == INTERNAL FUNCTIONS ==
+    # == INTERNAL FUNCTIONS ==
+
+    def _test_resumption_with_session_id(self, target, ssl_version):
+        """
+        Tests the server for session resumption support using Session IDs.
+        """
+        try:
+            self._resume_with_session_id(target, ssl_version)
+            result = 'Supported'
+        except FailedSessionResumption as e:
+            result = e[0]
+    
+        return result
+    
+    
+    def _test_resumption_with_session_ticket(self, target, args):
+        """
+        Tests the server for session resumption support using TLS Tickets.
+        """
+        try:
+            self._resume_with_session_ticket(target)
+            result = 'Supported'
+        except FailedSessionResumption as e:
+            result = e[0]
+    
+        return result
+    
+    
+    def _resume_with_session_id(self, target, ssl_version):
+        """
+        Performs one session resumption using Session IDs.
+        Raises FailedSessionResumption if resumption failed.
+        """
+        ctx = SSL_CTX.SSL_CTX(ssl_version)
+        ctx.set_verify(constants.SSL_VERIFY_NONE)
+        #ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
+        # All ciphers + non empty session ID field make the TLSv1 client hello
+        # larger than 255 bytes, making lots of servers on the Internet
+        # not answer our hello :(
+    
+        # Session Tickets and Session ID mechanisms can be mutually exclusive.
+        ctx.set_options(constants.SSL_OP_NO_TICKET) # Turning off TLS tickets.
+    
+        try: # Connect to the server and keep the SSL session
+            session1 = self._resume_ssl_session(target, ctx)
+        except SSLHandshakeRejected as e:
+            raise SSLHandshakeRejected('SSL Handshake failed: ' + e[0])
+    
+        try: # Recover the session ID
+            session1_id = self._extract_session_id(session1)
+        except IndexError as e:
+            raise FailedSessionResumption('Not Supported (Session ID not assigned)')
+    
+        # Try to resume that SSL session
+        try:
+            session2 = self._resume_ssl_session(target, ctx, session1)
+        except SSLHandshakeRejected as e:
+            raise SSLHandshakeRejected('SSL Handshake failed: ' + e[0])
+    
+        try: # Recover the session ID
+            session2_id = self._extract_session_id(session2)
+        except IndexError as e:
+            raise FailedSessionResumption('Not Supported (Session ID not assigned)')
+    
+        # Finally, compare the two Session IDs
+        if session1_id != session2_id:
+            raise FailedSessionResumption(
+                'Not Supported (Session ID assigned but not accepted; try --resum_rate)')
+    
+        return
+    
+    
+    def _resume_with_session_ticket(self, target):
+        """
+        Performs one session resumption using TLS Session Tickets.
+        Raises FailedSessionResumption if resumption failed.
+        """
+        ctx = SSL_CTX.SSL_CTX('tlsv1')
+        ctx.set_verify(constants.SSL_VERIFY_NONE)
+        ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
+    
+        # Session Tickets and Session ID mechanisms can be mutually exclusive.
+        ctx.set_session_cache_mode(constants.SSL_SESS_CACHE_OFF) # Turning off IDs.
+    
+        try: # Connect to the server and keep the SSL session
+            session1 =self._resume_ssl_session(target, ctx)
+        except SSLHandshakeRejected as e:
+            raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
+    
+        try: # Recover the TLS ticket
+            session1_tls_ticket = self._extract_tls_session_ticket(session1)
+        except IndexError:
+            raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
+    
+        # Try to resume that session using the TLS ticket
+        try:
+            session2 = self._resume_ssl_session(target, ctx, session1)
+        except SSLHandshakeRejected as e:
+            raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
+    
+        try: # Recover the TLS ticket
+            session2_tls_ticket = self._extract_tls_session_ticket(session2)
+        except IndexError:
+            raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
+    
+        # Finally, compare the two TLS Tickets
+        if session1_tls_ticket != session2_tls_ticket:
+            raise FailedSessionResumption(
+                'Not Supported (TLS ticket assigned but not accepted)')
+    
+        return
+    
+    
+    def _extract_session_id(self, ssl_session):
+        """
+        Extracts the SSL session ID from a SSL session object or raises IndexError
+        if the session ID was not set.
+        """
+        session_string = ( (ssl_session.as_text()).split("Session-ID:") )[1]
+        session_id = ( session_string.split("Session-ID-ctx:") )[0]
+        return session_id
+    
+    
+    def _extract_tls_session_ticket(self, ssl_session):
+        """
+        Extracts the TLS session ticket from a SSL session object or raises
+        IndexError if the ticket was not set.
+        """
+        session_string = ( (ssl_session.as_text()).split("TLS session ticket:") )[1]
+        session_tls_ticket = ( session_string.split("Compression:") )[0]
+        return session_tls_ticket
+    
+    
+    def _resume_ssl_session(self, target, ssl_ctx, ssl_session = None):
+        """
+        Connect to the server and returns the session object that was assigned 
+        for that connection.
+        If ssl_session is given, tries to resume that session.
+        """
+        ssl_connect = self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
+    
+        if ssl_session:
+            ssl_connect.ssl.set_session(ssl_session)
+    
+        try: # Perform the SSL handshake
+            ssl_connect.connect()
+            session = ssl_connect.ssl.get_session() # Get session data
+        except SSLHandshakeRejected:
+            raise
+        finally:
+            ssl_connect.close()
+            
+        return session
+
+
 class FailedSessionResumption(Exception):
     pass
-
-
-def _test_resumption_with_session_id(target, ssl_version, shared_settings):
-    """
-    Tests the server for session resumption support using Session IDs.
-    """
-    try:
-        _resume_with_session_id(target, ssl_version, shared_settings)
-        result = 'Supported'
-    except FailedSessionResumption as e:
-        result = e[0]
-
-    return result
-
-
-def _test_resumption_with_session_ticket(target, args, shared_settings):
-    """
-    Tests the server for session resumption support using TLS Tickets.
-    """
-    try:
-        _resume_with_session_ticket(target, shared_settings)
-        result = 'Supported'
-    except FailedSessionResumption as e:
-        result = e[0]
-
-    return result
-
-
-def _resume_with_session_id(target, ssl_version, shared_settings):
-    """
-    Performs one session resumption using Session IDs.
-    Raises FailedSessionResumption if resumption failed.
-    """
-    ctx = SSL_CTX.SSL_CTX(ssl_version)
-    ctx.set_verify(constants.SSL_VERIFY_NONE)
-    #ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
-    # All ciphers + non empty session ID field make the TLSv1 client hello
-    # larger than 255 bytes, making lots of servers on the Internet
-    # not answer our hello :(
-
-    # Session Tickets and Session ID mechanisms can be mutually exclusive.
-    ctx.set_options(constants.SSL_OP_NO_TICKET) # Turning off TLS tickets.
-
-    try: # Connect to the server and keep the SSL session
-        session1 =_resume_ssl_session(target, ctx, shared_settings)
-    except SSLHandshakeRejected as e:
-        raise SSLHandshakeRejected('SSL Handshake failed: ' + e[0])
-
-    try: # Recover the session ID
-        session1_id = _extract_session_id(session1)
-    except IndexError as e:
-        raise FailedSessionResumption('Not Supported (Session ID not assigned)')
-
-    # Try to resume that SSL session
-    try:
-        session2 =_resume_ssl_session(target, ctx, shared_settings, session1)
-    except SSLHandshakeRejected as e:
-        raise SSLHandshakeRejected('SSL Handshake failed: ' + e[0])
-
-    try: # Recover the session ID
-        session2_id = _extract_session_id(session2)
-    except IndexError as e:
-        raise FailedSessionResumption('Not Supported (Session ID not assigned)')
-
-    # Finally, compare the two Session IDs
-    if session1_id != session2_id:
-        raise FailedSessionResumption(
-            'Not Supported (Session ID assigned but not accepted; try --resum_rate)')
-
-    return
-
-
-def _resume_with_session_ticket(target, shared_settings):
-    """
-    Performs one session resumption using TLS Session Tickets.
-    Raises FailedSessionResumption if resumption failed.
-    """
-    ctx = SSL_CTX.SSL_CTX('tlsv1')
-    ctx.set_verify(constants.SSL_VERIFY_NONE)
-    ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
-
-    # Session Tickets and Session ID mechanisms can be mutually exclusive.
-    ctx.set_session_cache_mode(constants.SSL_SESS_CACHE_OFF) # Turning off IDs.
-
-    try: # Connect to the server and keep the SSL session
-        session1 =_resume_ssl_session(target, ctx, shared_settings)
-    except SSLHandshakeRejected as e:
-        raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
-
-    try: # Recover the TLS ticket
-        session1_tls_ticket = _extract_tls_session_ticket(session1)
-    except IndexError:
-        raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
-
-    # Try to resume that session using the TLS ticket
-    try:
-        session2 =_resume_ssl_session(target, ctx, shared_settings, session1)
-    except SSLHandshakeRejected as e:
-        raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
-
-    try: # Recover the TLS ticket
-        session2_tls_ticket = _extract_tls_session_ticket(session2)
-    except IndexError:
-        raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
-
-    # Finally, compare the two TLS Tickets
-    if session1_tls_ticket != session2_tls_ticket:
-        raise FailedSessionResumption(
-            'Not Supported (TLS ticket assigned but not accepted)')
-
-    return
-
-
-def _extract_session_id(ssl_session):
-    """
-    Extracts the SSL session ID from a SSL session object or raises IndexError
-    if the session ID was not set.
-    """
-    session_string = ( (ssl_session.as_text()).split("Session-ID:") )[1]
-    session_id = ( session_string.split("Session-ID-ctx:") )[0]
-    return session_id
-
-
-def _extract_tls_session_ticket(ssl_session):
-    """
-    Extracts the TLS session ticket from a SSL session object or raises
-    IndexError if the ticket was not set.
-    """
-    session_string = ( (ssl_session.as_text()).split("TLS session ticket:") )[1]
-    session_tls_ticket = ( session_string.split("Compression:") )[0]
-    return session_tls_ticket
-
-
-def _resume_ssl_session(target, ssl_ctx, shared_settings, ssl_session = None):
-    """
-    Connect to the server and returns the session object that was assigned for
-    that connection.
-    If ssl_session is given, tries to resume that session.
-    """
-    ssl_connect = \
-        create_ssl_connection(target, shared_settings, ssl_ctx=ssl_ctx)
-
-    if ssl_session:
-        ssl_connect.ssl.set_session(ssl_session)
-
-    try: # Perform the SSL handshake
-        ssl_connect.connect()
-        session = ssl_connect.ssl.get_session() # Get session data
-    except SSLHandshakeRejected:
-        raise
-    finally:
-        ssl_connect.close()
-        
-    return session

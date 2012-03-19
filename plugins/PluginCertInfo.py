@@ -28,7 +28,6 @@ import sys
 
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors
-from utils.SharedSettingsHelper import create_ssl_connection
 
 
 TRUSTED_CA_STORE = os.path.join(sys.path[0], 'mozilla_cacert.pem')
@@ -168,11 +167,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             'Signature Algorithm:', self.cert.get_sig_algorithm() ))
         #result_list.append(self.result_format.format('CA Certificate:', self.cert.check_ca() )) #TODO
         result_list.append(self.result_format.format(
-            'Version:', self.cert.get_version() ))
-        result_list.append(self.result_format.format(
             'SHA1 Fingerprint:', self.cert.get_fingerprint() ))
-        result_list.append(self.result_format.format(
-            'Number of Extensions:', self.cert.get_ext_count() ))
         return result_list
 
     def _get_keysize(self):
@@ -188,7 +183,7 @@ class PluginCertInfo(PluginBase.PluginBase):
     def _get_cert(self, verify_cert=False):
         
         ssl_connect = \
-            create_ssl_connection(self.target, self._shared_settings)
+            self._create_ssl_connection(self.target)
 
         if verify_cert:
             ssl_connect.ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)

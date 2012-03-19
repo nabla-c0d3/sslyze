@@ -94,18 +94,16 @@ def discover_targets(args_target_list, args_command_list, available_commands, ma
             
     # No proxy try to connect to all targets
     else:  
+        default_port = 443
+        test_stattls = None
+        test_starttls_args = []
         if args_command_list.starttls == 'smtp':
             default_port = 25
             test_stattls = test_starttls_smtp
-            test_starttls_args = ()
         elif args_command_list.starttls == 'xmpp':
             default_port = 5222
             test_stattls = test_starttls_xmpp
-            test_starttls_args = args_command_list.xmpp_to
-        else:
-            default_port = 443
-            test_stattls = None
-            test_starttls_args = ()
+            test_starttls_args = [args_command_list.xmpp_to]
             
         for target in args_target_list:
             try:
@@ -169,7 +167,9 @@ def _test_connect(target, timeout, out_q=None, test_starttls=None, test_starttls
         # Host is up => keep the IP address we actually connected to
         ip_addr = s.getpeername()
         if test_starttls:
-            error_text = test_starttls(s, host, test_starttls_args)
+            starttls_args = [s, host]
+            starttls_args.extend(test_starttls_args)
+            error_text = test_starttls( *starttls_args )
 
     except socket.timeout: # Host is down
         error_text = 'WARNING: Could not connect (timeout), discarding corresponding tasks.'

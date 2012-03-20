@@ -28,6 +28,7 @@ from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, \
     ctSSL_cleanup
 from utils.CtSSLHelper import SSLHandshakeRejected
 
+import socket
 
 class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
@@ -35,31 +36,40 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
     available_commands = PluginBase.AvailableCommands(
         "PluginOpenSSLCipherSuites",
         "Scans the target server for supported OpenSSL cipher suites.")
-    available_commands.add_option(
+    available_commands.add_command(
         command="sslv2",
         help="Lists the SSL 2.0 OpenSSL cipher suites supported by the server.",
         dest=None)
-    available_commands.add_option(
+    available_commands.add_command(
         command="sslv3",
         help="Lists the SSL 3.0 OpenSSL cipher suites supported by the server.",
         dest=None)
-    available_commands.add_option(
+    available_commands.add_command(
         command="tlsv1",
         help="Lists the TLS 1.0 OpenSSL cipher suites supported by the server.",
         dest=None)
-    available_commands.add_option(
+    available_commands.add_command(
         command="tlsv1_1",
         help="Lists the TLS 1.1 OpenSSL cipher suites supported by the server.",
         dest=None)
-    available_commands.add_option(
+    available_commands.add_command(
         command="tlsv1_2",
         help="Lists the TLS 1.2 OpenSSL cipher suites supported by the server.",
         dest=None)
-    
+    available_commands.add_option(
+        option='http_get',
+        help="Option - For each cipher suite, sends an HTTP GET request after "
+        "completing the SSL handshake and returns the HTTP status code.",
+        dest=None)
+    available_commands.add_option(
+        option='hide_rejected_ciphers',
+        help="Option - Hides the list of cipher suites that were rejected by "
+        "the server.",
+        dest=None)    
 
     def process_task(self, target, command, args):
 
-        MAX_THREADS = 50
+        MAX_THREADS = 30
         
         if command in ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2']:
             ssl_version = command
@@ -108,6 +118,15 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         formatted_results = [
             ('  * {0} Cipher Suites :'.format(ssl_version.upper()))]
         
+        if self._shared_settings['hide_rejected_ciphers']:
+            # Do not display rejected cipher suites
+            possible_results = ['Preferred','Accepted', 'Errors']
+            if len(test_ciphers_results['Rejected']) == len(cipher_list):
+                possible_results = []
+                formatted_results = [
+                    ('  * {0} Cipher Suites : None'.format(ssl_version.upper()))]
+                
+                
         # Print each dictionnary of results 
         for result_type in possible_results:
             if len(test_ciphers_results[result_type]) != 0:
@@ -228,3 +247,39 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             ssl_connect.close()
             
         return
+
+
+    def _check_ssl_connection_is_alive(self, ssl_connection):
+        """
+        Check if the SSL connection is still alive after the handshake.
+        Will send an HTTP GET for an HTTPS connection.
+        Will send a NOOP for an SMTP connection.
+        """    
+        shared_settings = self._shared_settings
+        result = 'N/A'
+        
+        if shared_settings['starttls'] == 'smtp':
+            try:
+                ssl_connection.sock.send('NOOP\r\n')
+                result = ssl_connection.sock.read(2048).strip()
+            except socket.timeout:
+                result = 'Timeout on SMTP NOOP'
+                
+        elif shared_settings['starttls'] == 'xmpp':
+            result = ''
+            
+        elif shared_settings['http_get']:
+            try: # Send an HTTP GET to the server and store the HTTP Status Code
+                ssl_connection.request("GET", "/", headers={"Connection": "close"})
+                http_response = ssl_connection.getresponse()
+                result = 'HTTP ' \
+                    + str(http_response.status) \
+                    + ' ' \
+                    + str(http_response.reason)
+            except socket.timeout:
+                result = 'Timeout on HTTP GET'
+                
+        else:
+            result = ''
+                    
+        return result

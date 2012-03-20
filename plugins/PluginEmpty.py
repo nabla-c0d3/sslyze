@@ -35,7 +35,7 @@ class PluginEmpty(PluginBase.PluginBase):
         description=(
             "PluginEmpty is a sample plugin that does not implement "
             "any actual tests. It's designed to show how plugins are written."))
-    available_commands.add_option(command="empty", help="Do nothing", dest=None)
+    available_commands.add_command(command="empty", help="Do nothing", dest=None)
 
 
     def process_task(self, target, command, args):

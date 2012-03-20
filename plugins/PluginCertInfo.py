@@ -78,7 +78,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             "Verifies the target server's certificate validity against "
             "Mozilla's trusted root store, and prints relevant fields of "
             "the certificate."))
-    available_commands.add_option(
+    available_commands.add_command(
         command="certinfo",
         help="Should be one of: 'basic', 'full', 'serial', 'cn', 'keysize'.",
         dest="certinfo")

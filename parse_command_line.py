@@ -114,16 +114,26 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
         pluginoptiongroup = plugin_class.get_commands()
 
         # Get the list of commands implemented by the current plugin
-        plugin_commands = (zip(*pluginoptiongroup.options))[0]
+        plugin_commands = (zip(*pluginoptiongroup.commands))[0]
         # Keep track of which plugin/module supports which command
         for command in plugin_commands:
             available_commands[command] = plugin_class
 
-        # Add the current plugin's options to the parser
+        # Add the current plugin's commands to the parser
         group = OptionGroup(parser, pluginoptiongroup.title,\
                             pluginoptiongroup.description)
+        for option in pluginoptiongroup.commands:
+            # If dest is something, store it, otherwise just use store_true
+            if option[2] is not None:
+                group.add_option('--' + option[0], action="store",
+                                    help=option[1], dest=option[2])
+            else:
+                group.add_option('--' + option[0], action="store_true",
+                                    help=option[1], dest=option[2])
+
+        # Add the current plugin's options to the parser
         for option in pluginoptiongroup.options:
-            # If dest is something.. then we store, otherwise just set True
+            # If dest is something, store it, otherwise just use store_true
             if option[2] is not None:
                 group.add_option('--' + option[0], action="store",
                                     help=option[1], dest=option[2])
@@ -135,13 +145,16 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
     # Add the --regular command line parameter as a shortcut
     if parser.has_option('--sslv2') and parser.has_option('--sslv3') \
         and parser.has_option('--tlsv1') and parser.has_option('--reneg') \
-        and parser.has_option('--resum') and parser.has_option('--certinfo'):
+        and parser.has_option('--resum') and parser.has_option('--certinfo') \
+        and parser.has_option('--http_get') \
+        and parser.has_option('--hide_rejected_ciphers'):
             parser.add_option(
                 '--regular',
                 action="store_true",
                 help=(
-                    'Regular scan. Shortcut for --sslv2 --sslv3 '
-                    '--tlsv1 --reneg --resum --certinfo=basic'),
+                    'Regular HTTP scan. Shortcut for --sslv2 --sslv3 --tlsv1 '
+                    '--reneg --resum --certinfo=basic --http_get '
+                    '--hide_rejected_ciphers'),
                 dest=None)
 
     return (parser, available_commands)
@@ -164,47 +177,29 @@ def parse_command_line(parser):
             setattr(args_command_list, 'reneg', True)
             setattr(args_command_list, 'resum', True)
             setattr(args_command_list, 'certinfo', 'basic')
-
+            setattr(args_command_list, 'hide_rejected_ciphers', True)
+            setattr(args_command_list, 'http_get', True)
+            
     return (args_command_list, args_target_list)
 
-
 def process_parsing_results(args_command_list):
-
-    #shared_mgr = Manager()
-    #shared_settings = shared_mgr.dict() # Will be sent to every plugin process.
-    # Don't really neeed a manager since shared_settings is read only.
-    shared_settings = dict()
     
+    shared_settings = {}
     # Sanity checks on the client cert options
     if bool(args_command_list.cert) ^ bool(args_command_list.key):
         print PARSING_ERROR_FORMAT.format(
-            'No private key or certificate file were given! '
+            'No private key or certificate file were given. '
             'See --client_cert and --client_key.')
         return
-    else:
-        shared_settings['cert'] = args_command_list.cert
-        shared_settings['key'] = args_command_list.key
 
     # Parse client cert options
-    if args_command_list.certform in ['DER', 'PEM']:
-        shared_settings['certform'] = args_command_list.certform
-    else:
+    if args_command_list.certform not in ['DER', 'PEM']:
         print PARSING_ERROR_FORMAT.format('--certform should be DER or PEM.')
         return
 
-    if args_command_list.keyform in ['DER', 'PEM']:
-        shared_settings['keyform'] = args_command_list.keyform
-    else:
+    if args_command_list.keyform not in ['DER', 'PEM']:
         print PARSING_ERROR_FORMAT.format('--keyform should be DER or PEM.')
         return
-
-    if args_command_list.keypass:
-        shared_settings['keypass'] = args_command_list.keypass
-    else:
-        shared_settings['keypass'] = None
-
-    # Timeout
-    shared_settings['timeout'] = args_command_list.timeout
     
     # HTTP CONNECT proxy
     if args_command_list.https_tunnel:
@@ -224,6 +219,7 @@ def process_parsing_results(args_command_list):
                 ', discarding all tasks.')
             return
     else:
+        pass
         shared_settings['https_tunnel_host'] = None
         shared_settings['https_tunnel_port'] = None
         
@@ -231,15 +227,15 @@ def process_parsing_results(args_command_list):
     if args_command_list.starttls not in [None,'smtp','xmpp']:
         print PARSING_ERROR_FORMAT.format('--starttls should be \'smtp\' or \'xmpp\'.')
         return
-    else:
-        shared_settings['starttls'] = args_command_list.starttls
-        shared_settings['xmpp_to'] = args_command_list.xmpp_to
     
     if args_command_list.starttls and args_command_list.https_tunnel:
         print PARSING_ERROR_FORMAT.format(
             'Cannot have --https_tunnel and --starttls at the same time.')
         return      
-        
+    
+    # All good, let's save the data    
+    for key, value in args_command_list.__dict__.iteritems():
+        shared_settings[key] = value
 
     return shared_settings
 

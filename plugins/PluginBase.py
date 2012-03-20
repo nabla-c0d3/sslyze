@@ -45,13 +45,23 @@ class AvailableCommands:
         self.title = title
         self.description = description
         self.options = []
+        self.commands = []
 
-    def add_option(self, command, help, dest):
+    def add_option(self, option, help, dest):
         """
+        Options are settings specific to one single plugin. 
+        They are sent to PluginBase._shared_settings.
+        """
+        self.options.append( (option, help, dest) )
+        
+    def add_command(self, command, help, dest):
+        """
+        Commands are actions/scans the plugin implements, with 
+        PluginXXX.process_task().
         Command and help are sent to optparse.OptionGroup.add_option().
         Note: dest to None if you don't need arguments
         """
-        self.options.append( (command, help, dest) )
+        self.commands.append( (command, help, dest) )
 
 
 class PluginBase(object):
@@ -142,38 +152,4 @@ class PluginBase(object):
             ssl_connection.ssl_ctx.check_private_key()
             
         return ssl_connection
-    
-    
-    @classmethod
-    def _check_ssl_connection_is_alive(self_class, ssl_connection):
-        """
-        Check if the SSL connection is still alive after the handshake.
-        Will send an HTTP GET for an HTTPS connection.
-        Will send a NOOP for an SMTP connection.
-        """    
-        shared_settings = PluginBase._shared_settings
-        result = 'N/A'
-        if shared_settings['starttls'] == 'smtp':
-            try:
-                ssl_connection.sock.send('NOOP\r\n')
-                result = ssl_connection.sock.read(2048).strip()
-            except socket.timeout:
-                result = 'Timeout on SMTP NOOP'
-        elif shared_settings['starttls'] == 'xmpp':
-            result = 'OK'
-        else:
-            try: 
-                # Send an HTTP GET to the server and store the HTTP Status Code
-                ssl_connection.request("GET", "/", headers={"Connection": "close"})
-                http_response = ssl_connection.getresponse()
-                result = 'HTTP ' \
-                    + str(http_response.status) \
-                    + ' ' \
-                    + str(http_response.reason)
-            except socket.timeout:
-                result = 'Timeout on HTTP GET'
-    
-    
-        return result
-    
 

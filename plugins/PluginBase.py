@@ -100,7 +100,7 @@ class PluginBase(object):
         Read the shared_settings object shared between all the plugins and load
         the proper settings the ssl context and socket.
         """
-        shared_settings = PluginBase._shared_settings
+        shared_settings = self_class._shared_settings
         timeout = shared_settings['timeout']
         (host, ip_addr, port) = target
         

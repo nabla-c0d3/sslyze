@@ -65,8 +65,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         option='hide_rejected_ciphers',
         help="Option - Hides the list of cipher suites that were rejected by "
         "the server.",
-        dest=None)    
-
+        dest=None)
+        
     def process_task(self, target, command, args):
 
         MAX_THREADS = 30

@@ -53,10 +53,10 @@ class WorkerProcess(Process):
         it terminates.
         """
         # Plugin classes are unpickled by the multiprocessing module
-        # without state info. Need to assign shared_settings to PluginBase here
-        import plugins
-        plugins.PluginBase.PluginBase._shared_settings = self.shared_settings
-        
+        # without state info. Need to assign shared_settings here
+        for plugin_class in self.available_commands.itervalues():
+            plugin_class._shared_settings = self.shared_settings
+            
         while True:
 
             task = self.queue_in.get() # Grab a task from queue_in

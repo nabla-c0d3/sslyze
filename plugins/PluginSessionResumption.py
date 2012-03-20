@@ -129,9 +129,10 @@ class PluginSessionResumption(PluginBase.PluginBase):
                 '      {0:<30} {1}'.format(job[2], result_string))
 
         for failed_job in thread_pool.get_error():
-            (job, excep) = failed_job
+            (job, e) = failed_job
             formatted_results.append(
-                '      {0:<30} {1}'.format(job[2],  'Error => ' + str(excep)))
+                '      {0:<30} {1}'.format(job[2], 
+                    'Error => ' + str(e.__class__.__module__) + '.' + str(e.__class__.__name__) + ' - ' + str(e)))
 
         thread_pool.join()
         return formatted_results

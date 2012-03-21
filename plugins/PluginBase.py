@@ -132,24 +132,24 @@ class PluginBase(object):
         # Load client certificate and private key
         if shared_settings['cert']:
             if shared_settings['certform'] is 'DER':
-                ssl_connection.ssl_ctx.use_certificate_file(
+                ssl_connection.ssl.use_certificate_file(
                     shared_settings['cert'],
                     constants.SSL_FILETYPE_ASN1)
             else:
-                ssl_connection.ssl_ctx.use_certificate_file(
+                ssl_connection.ssl.use_certificate_file(
                     shared_settings['cert'],
                     constants.SSL_FILETYPE_PEM)
     
             if shared_settings['keyform'] is 'DER':
-                ssl_connection.ssl_ctx.use_PrivateKey_file(
+                ssl_connection.ssl.use_PrivateKey_file(
                     shared_settings['key'],
                     constants.SSL_FILETYPE_ASN1)
             else:
-                ssl_connection.ssl_ctx.use_PrivateKey_file(
+                ssl_connection.ssl.use_PrivateKey_file(
                     shared_settings['key'],
                     constants.SSL_FILETYPE_PEM)
     
-            ssl_connection.ssl_ctx.check_private_key()
+            ssl_connection.ssl.check_private_key()
             
         return ssl_connection
 

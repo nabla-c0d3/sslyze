@@ -47,6 +47,10 @@ class SSL:
     @type _network_bio: ctSSL.BIO.BIO
     @ivar _network_bio: BIO used to read to and from the SSL C struct.
     Forms a BIO pair with _internal_bio.
+
+    @type _pem_passwd_cb: ctypes.CFUNCTYPE
+    @ivar _pem_passwd_cb: Callback function used for password protected client
+    certificates.
     """
 
     def __init__(self, ssl_ctx):
@@ -62,6 +66,7 @@ class SSL:
         self._ssl_struct_p = libssl.SSL_new(ssl_ctx.get_ssl_ctx_struct_p())
         self._internal_bio = None
         self._network_bio = None
+        self._pem_passwd_cb = None
 
         # Create a BIO pair to handle SSL operations
         (internal_bio, network_bio) = BIO.BIOFactory.new_bio_pair()
@@ -436,6 +441,44 @@ class SSL:
         libssl.SSL_set_verify(self._ssl_struct_p, mode, None)
 
 
+    def use_certificate_file(self, cert, certform):
+        """Directly calls OpenSSL's SSL_CTX_use_certificate_file()."""
+        #TODO: Clean error if the file can't be found/opened
+        #TODO: Check openssl version to see if SSL_FILETYPE_ASN1 is supported
+
+        cert_buffer = create_string_buffer(cert)
+        libssl.SSL_use_certificate_file(self._ssl_struct_p, cert_buffer,
+                                            certform);
+
+
+    def use_PrivateKey_file(self, key, keyform, keypass=None):
+        """
+        Sets the the passphrase protecting the private key if one is provided
+        and then calls OpenSSL's SSL_CTX_use_PrivateKey_file().
+        """
+        if keypass: # Set up the C callback if a password is needed
+            password_buffer = create_string_buffer(keypass)
+            PEMPWFUNC = CFUNCTYPE(c_int, c_char_p, c_int, c_int, c_void_p)
+
+            def py_pem_passwd_cb(buf, size, rwflag, userdata):
+                memmove(buf, password_buffer, size)
+                return 0
+
+            # Keep a reference to prevent garbage collection
+            self._pem_passwd_cb = PEMPWFUNC(py_pem_passwd_cb)
+            libssl.SSL_CTX_set_default_passwd_cb(self.ssl_ctx.get_ssl_ctx_struct_p(),
+                                                 self._pem_passwd_cb)
+
+        key_buffer = create_string_buffer(key)
+        libssl.SSL_use_PrivateKey_file(self._ssl_struct_p, key_buffer,
+                                           keyform);
+
+
+    def check_private_key(self):
+        """Directly calls OpenSSL's SSL_CTX_check_private_key()."""
+        libssl.SSL_check_private_key(self._ssl_struct_p)
+
+
 # == CTYPE ERRCHECK CALLBACK(S) ==
 def _errcheck_SSL_default(result, func, arguments):
     """
@@ -551,6 +594,18 @@ def init_SSL_functions():
     
     libssl.SSL_set_verify.argtypes = [c_void_p, c_int, c_void_p]
     libssl.SSL_set_verify.restype = c_int
+    
+    libssl.SSL_use_certificate_file.argtypes = [c_void_p, c_char_p, c_int]
+    libssl.SSL_use_certificate_file.restype = c_int
+    libssl.SSL_use_certificate_file.errcheck = errcheck_get_error_if_eq0
+
+    libssl.SSL_use_PrivateKey_file.argtypes = [c_void_p, c_char_p, c_int]
+    libssl.SSL_use_PrivateKey_file.restype = c_int
+    libssl.SSL_use_PrivateKey_file.errcheck = errcheck_get_error_if_eq0
+
+    libssl.SSL_check_private_key.argtypes = [c_void_p]
+    libssl.SSL_check_private_key.restype = c_int
+    libssl.SSL_check_private_key.errcheck = errcheck_get_error_if_eq0
 
 
     # Initializing functions that may or may not be there

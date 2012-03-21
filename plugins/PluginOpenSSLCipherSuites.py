@@ -63,8 +63,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         dest=None)
     available_commands.add_option(
         option='hide_rejected_ciphers',
-        help="Option - Hides the list of cipher suites that were rejected by "
-        "the server.",
+        help="Option - Hides the (usually long) list of cipher suites that were"
+        " rejected by the server.",
         dest=None)
         
     def process_task(self, target, command, args):

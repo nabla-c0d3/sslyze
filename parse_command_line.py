@@ -189,7 +189,20 @@ def process_parsing_results(args_command_list):
     if bool(args_command_list.cert) ^ bool(args_command_list.key):
         print PARSING_ERROR_FORMAT.format(
             'No private key or certificate file were given. '
-            'See --client_cert and --client_key.')
+            'See --cert and --key.')
+        return
+    
+    # Let's try to open the cert and key files
+    try:
+        open(args_command_list.cert,"r")
+    except:
+        print PARSING_ERROR_FORMAT.format('Could not open the client certificate file "' + str(args_command_list.cert) + '".')
+        return
+    
+    try:
+        open(args_command_list.key,"r")
+    except:
+        print PARSING_ERROR_FORMAT.format('Could not open the client private key file "' + str(args_command_list.key) + '"')
         return
 
     # Parse client cert options

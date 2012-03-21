@@ -193,17 +193,18 @@ def process_parsing_results(args_command_list):
         return
     
     # Let's try to open the cert and key files
-    try:
-        open(args_command_list.cert,"r")
-    except:
-        print PARSING_ERROR_FORMAT.format('Could not open the client certificate file "' + str(args_command_list.cert) + '".')
-        return
-    
-    try:
-        open(args_command_list.key,"r")
-    except:
-        print PARSING_ERROR_FORMAT.format('Could not open the client private key file "' + str(args_command_list.key) + '"')
-        return
+    if args_command_list.cert:
+        try:
+            open(args_command_list.cert,"r")
+        except:
+            print PARSING_ERROR_FORMAT.format('Could not open the client certificate file "' + str(args_command_list.cert) + '".')
+            return
+    if args_command_list.key:    
+        try:
+            open(args_command_list.key,"r")
+        except:
+            print PARSING_ERROR_FORMAT.format('Could not open the client private key file "' + str(args_command_list.key) + '"')
+            return
 
     # Parse client cert options
     if args_command_list.certform not in ['DER', 'PEM']:

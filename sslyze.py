@@ -109,8 +109,6 @@ def main():
     # Workaround for Cygwin and MAC OS X
     nb_processes = DEFAULT_NB_PROCESSES
     if sys.platform == 'darwin' or sys.platform == 'cygwin':
-        pass
-    else:
         print '\nWarning: Running on MAC OS X or Cygwin. Disabling multiprocessing - scans will be slower.'
         nb_processes = 1
 

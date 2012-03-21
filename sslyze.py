@@ -23,6 +23,7 @@
 
 from time import time
 from multiprocessing import Process, JoinableQueue
+import sys
 
 from discover_targets import discover_targets
 from discover_plugins import discover_plugins
@@ -32,7 +33,7 @@ from parse_command_line import create_command_line_parser, \
 
 
 PROG_VERSION =      'SSLyze v0.4 beta'
-NB_PROCESSES =      5 # 10 was too aggressive, lowering it to 5
+DEFAULT_NB_PROCESSES =      5 # 10 was too aggressive, lowering it to 5
 PLUGIN_PATH =       "plugins"
 DEFAULT_TIMEOUT =   5
 
@@ -104,14 +105,12 @@ def _format_target_results(target, result_list):
 
 
 def main():
-    #print '\n\n\n' + _format_title(PROG_VERSION)
 
-    # Cygwin mysteriously fails :(
-    import sys
-    if sys.platform == 'cygwin':
-        print 'Cygwin not supported... use cmd.exe.'
-        return
-
+    # Workaround for Cygwin and MAC OS X
+    nb_processes = DEFAULT_NB_PROCESSES
+    if sys.platform == 'darwin' or sys.platform == 'cygwin':
+        print 'Running on MAC OS X or Cygwin. Disabling multiprocessing until I find a better solution.'
+        nb_processes = 1
 
     #--PLUGINS INITIALIZATION--
     start_time = time()
@@ -145,7 +144,7 @@ def main():
 
     # Spawn a pool of processes, and pass them the queues
     process_list = []
-    for i in xrange(NB_PROCESSES):
+    for i in xrange(nb_processes):
         p = WorkerProcess(task_queue, result_queue, available_commands, \
                             shared_settings)
         p.start()
@@ -171,7 +170,7 @@ def main():
 
 
     # --REPORTING SECTION--
-    processes_running = NB_PROCESSES
+    processes_running = nb_processes
 
     # Each host has a list of results
     result_dict = {}

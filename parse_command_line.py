@@ -69,6 +69,15 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
         dest='keypass')
     parser.add_option_group(clientcert_group)
 
+    # XML output
+    parser.add_option(
+        '--xml_file',
+        help= (
+            'Output the scan results to an XML file. '
+            'XML_FILE should be the name of the file to write to.'),
+        dest='xml_file',
+        default=None)
+
     # Timeout
     parser.add_option(
         '--timeout',
@@ -214,7 +223,8 @@ def process_parsing_results(args_command_list):
     if args_command_list.keyform not in ['DER', 'PEM']:
         print PARSING_ERROR_FORMAT.format('--keyform should be DER or PEM.')
         return
-    
+
+        
     # HTTP CONNECT proxy
     if args_command_list.https_tunnel:
         if '2.7.' not in platform.python_version(): # Python 2.7 only
@@ -233,7 +243,6 @@ def process_parsing_results(args_command_list):
                 ', discarding all tasks.')
             return
     else:
-        pass
         shared_settings['https_tunnel_host'] = None
         shared_settings['https_tunnel_port'] = None
         

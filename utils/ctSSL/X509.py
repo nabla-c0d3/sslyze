@@ -66,11 +66,6 @@ class X509:
         return subject.value
 
 
-    def get_subject_CN(self):
-        subject = self.get_subject()
-        # Parse the CN part of the subject
-        return (subject.partition('/CN=')[2]).partition('/')[0]
-
     def get_ext_count(self):
         return libcrypto.X509_get_ext_count(self._x509_struct)
 

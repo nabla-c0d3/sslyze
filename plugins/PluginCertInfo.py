@@ -25,10 +25,10 @@
 
 import os
 import sys
+from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors
-
 
 TRUSTED_CA_STORE = os.path.join(sys.path[0], 'mozilla_cacert.pem')
 
@@ -80,110 +80,143 @@ class PluginCertInfo(PluginBase.PluginBase):
             "the certificate."))
     available_commands.add_command(
         command="certinfo",
-        help="Should be one of: 'basic', 'full', 'serial', 'cn', 'keysize'.",
+        help="Should be one of: 'basic', 'full', 'serial', 'subject', 'keysize'.",
         dest="certinfo")
 
+    FIELD_FORMAT = '      {0:<35}{1:<35}'
+    
+    def process_task(self, target, command, arg):
 
-    def process_task(self, target, command, args):
-
-        self.target = target
-        self.cert = None
         ctSSL_initialize()
-        cert_trust = ''
-        error_str = ''
+        cert_trusted = False
 
-        try:
-            # First verify the server's certificate
-            self.cert = self._get_cert(verify_cert=True)
-            cert_trust = 'Certificate is Trusted'
+        try: # First verify the server's certificate
+            cert = self._get_cert(target, verify_cert=True)
+            cert_trusted = True
 
         except errors.SSLErrorSSL as e:
             # Recover the server's certificate without verifying it
             if 'certificate verify failed' in str(e.args):
-                cert_trust = 'Certificate is NOT Trusted'
-                try:
-                    self.cert = self._get_cert(verify_cert=False)
-                except Exception as e:
-                    error_str = str(e)
+                cert = self._get_cert(verify_cert=False)
             else:
-                error_str = str(e)
-                
-        except Exception:
-            ctSSL_cleanup()
-            raise
-                
-        # Result processing
-        returnstr = ['  * Certificate : ']
-        self.result_format = '      {0:<35}{1:<35}'
+                ctSSL_cleanup()
+                raise
+            
+        result_dict = {'basic':     self._get_basic, 
+                       'serial':    self._get_serial,
+                       'keysize':   self._get_keysize,
+                       'subject':   self._get_subject,
+                       'full':      self._get_full}
 
-        if error_str:
-            returnstr.append(self.result_format.format("Error =>", error_str))
+        (cert_txt, cert_xml) = result_dict[arg](cert)
+        
+        # Text output
+        txt_result = ['  * Certificate : ']
+        trust_txt = 'Certificate is Trusted' if cert_trusted \
+                                             else 'Certificate is NOT Trusted'
 
-        else:
-            returnstr.append(self.result_format.format(
-                "Validation w/ Mozilla's CA Store:", cert_trust))
+        txt_result.append(self.FIELD_FORMAT.format("Validation w/ Mozilla's CA Store:", trust_txt))
+        txt_result.extend(cert_txt)
 
-            if self.cert:
-                if "cn" in args:
-                    returnstr.append(self._get_cn())
-                if "serial" in args:
-                    returnstr.append(self._get_serial())
-                if "keysize" in args:
-                    returnstr.append(self._get_keysize())
-                if "basic" in args:
-                    returnstr.extend(self._get_basic())
-                if "full" in args:
-                    returnstr.append(self._get_full())
-
+        # XML output
+        xml_result = Element(self.__class__.__name__,command=command, argument=arg)
+        trust_xml = Element('certificate', trusted=str(cert_trusted))
+        trust_xml.extend(cert_xml)
+        xml_result.append(trust_xml)
+        
         ctSSL_cleanup()
-        return returnstr
+        return PluginBase.PluginResult(txt_result,xml_result)
 
 
-    def _get_serial(self):
-        return self.result_format.format(
-            'Serial Number:', self.cert.get_serial_number() )
+# FORMATTING FUNCTIONS
+    def _get_basic(self, cert):
+        basic_xml = []
+        basic_txt = []
+        
+        vals_to_get = [self._get_subject(cert), self._get_issuer(cert),
+                       self._get_serial(cert),self._get_not_before(cert),
+                       self._get_not_after(cert), self._get_sig_algorithm(cert),
+                       self._get_keysize(cert), self._get_fingerprint(cert)]
+        
+        for (val_txt, val_xml) in vals_to_get:
+            basic_xml.extend(val_xml)
+            basic_txt.extend(val_txt)
 
+        return (basic_txt, basic_xml)
 
-    def _get_cn(self):
-        return self.result_format.format(
-            'Subject CN:', self.cert.get_subject_CN() )
+    def _get_serial(self, cert):
+        sn = cert.get_serial_number()
+        serial_txt = self.FIELD_FORMAT.format('Serial Number:', sn)
+        serial_xml = Element('serial')
+        serial_xml.text = sn
+        return ([serial_txt], [serial_xml])
 
+    def _get_keysize(self, cert):
+        keysize = cert.get_pubkey_size()*8
+        keysize_txt = self.FIELD_FORMAT.format('Key Size:', str(keysize) + ' bits')
+        keysize_xml = Element('pk', keysize=str(keysize))
+        return ([keysize_txt],[keysize_xml])   
 
-    def _get_basic(self):
-        result_list = []
-        result_list.append(self.result_format.format(
-            'Subject CN:', self.cert.get_subject_CN() ))
-        result_list.append(self.result_format.format(
-            'Issuer:', self.cert.get_issuer() ))
-        result_list.append(self.result_format.format(
-            'Serial Number:', self.cert.get_serial_number() ))
-        result_list.append(self.result_format.format(
-            'Not before:', self.cert.get_not_before() ))
-        result_list.append(self.result_format.format(
-            'Not after:', self.cert.get_not_after() ))
-        result_list.append(self.result_format.format(
-            'Keysize:', str(self.cert.get_pubkey_size()*8) + ' bits' ))
-        result_list.append(self.result_format.format(
-            'Signature Algorithm:', self.cert.get_sig_algorithm() ))
-        #result_list.append(self.result_format.format('CA Certificate:', self.cert.check_ca() )) #TODO
-        result_list.append(self.result_format.format(
-            'SHA1 Fingerprint:', self.cert.get_fingerprint() ))
-        return result_list
+    def _get_not_before(self, cert):
+        nb = cert.get_not_before()
+        val_txt = self.FIELD_FORMAT.format('Not Before:', nb)
+        val_xml = Element('not-before')
+        val_xml.text = nb
+        return ([val_txt], [val_xml])
 
-    def _get_keysize(self):
-        return self.result_format.format(
-            'Keysize:', str(self.cert.get_pubkey_size()*8) + ' bits' )
+    def _get_not_after(self, cert):
+        nb = cert.get_not_after()
+        val_txt = self.FIELD_FORMAT.format('Not After:', nb)
+        val_xml = Element('not-after')
+        val_xml.text = nb
+        return ([val_txt], [val_xml])
 
-    def _get_full(self):
-        full_cert = self.cert.as_text()
+    def _get_issuer(self, cert):
+        nb = cert.get_issuer()
+        val_txt = self.FIELD_FORMAT.format('Issuer:', nb)
+        val_xml = Element('issuer')
+        val_xml.text = nb
+        return ([val_txt], [val_xml])    
+      
+    def _get_sig_algorithm(self, cert):
+        nb = cert.get_sig_algorithm()
+        val_txt = self.FIELD_FORMAT.format('Signature Algorithm:', nb)
+        val_xml = Element('signature-algorithm')
+        val_xml.text = nb
+        return ([val_txt], [val_xml])    
+
+    def _get_fingerprint(self, cert):
+        nb = cert.get_fingerprint()
+        val_txt = self.FIELD_FORMAT.format('SHA1 Fingerprint:', nb)
+        val_xml = Element('fingerprint', algorithm='sha1')
+        val_xml.text = nb
+        return ([val_txt], [val_xml])    
+
+    def _get_subject(self, cert):
+        nb = cert.get_subject()
+        val_txt = self.FIELD_FORMAT.format('Subject:', nb)
+        val_xml = Element('subject')
+        val_xml.text = nb
+        return ([val_txt], [val_xml]) 
+
+    def _get_full(self, cert):
+        # TODO: Proper parsing of the cert for XML output
+        full_cert = cert.as_text()
         # Removing the first and the last lines
         full_cert = full_cert.rsplit('\n', 1)[0]
-        return full_cert.split('\n', 1)[1]
-
-    def _get_cert(self, verify_cert=False):
+        full_cert_txt = full_cert.split('\n', 1)[1]
+        full_cert_xml = Element('raw-certificate')
+        full_cert_xml.text = full_cert_txt
+        return ([full_cert_txt], [full_cert_xml])
         
-        ssl_connect = \
-            self._create_ssl_connection(self.target)
+
+    def _get_cert(self, target, verify_cert=False):
+        """
+        Connects to the target server and returns the server's certificate if
+        the connection was successful.
+        """
+        
+        ssl_connect = self._create_ssl_connection(target)
 
         if verify_cert:
             ssl_connect.ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)
@@ -192,8 +225,6 @@ class PluginCertInfo(PluginBase.PluginBase):
         try: # Perform the SSL handshake
             ssl_connect.connect()
             cert = ssl_connect.ssl.get_peer_certificate()
-        except Exception:
-            raise
         finally:
             ssl_connect.close()
 

@@ -39,7 +39,9 @@ class PluginEmpty(PluginBase.PluginBase):
 
 
     def process_task(self, target, command, args):
-
+        """
+        OUTDATED FOR NOW. LOOK AT REAL PLUGINS IF YOU WANT TO SEE HOW IT WORKS.
+        """
         (host, ip_addr, port) = target
         result = []
         result.append('Nothing was done on ' + host + ':' + str(port) +

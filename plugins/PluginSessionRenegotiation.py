@@ -22,10 +22,11 @@
 #-------------------------------------------------------------------------------
 
 import socket
+from xml.etree.ElementTree import Element
+
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL_CTX, \
     constants, errors
-from utils.CtSSLHelper import SSLHandshakeRejected
 
 
 class PluginSessionRenegotiation(PluginBase.PluginBase):
@@ -45,31 +46,34 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
 
         ctSSL_initialize()
         try:
-            (result_reneg, result_secure) = self._test_renegotiation(target)
-        except:
-            raise
+            (can_reneg, is_secure) = self._test_renegotiation(target)
         finally:
             ctSSL_cleanup()
-            
-        formatted_results = ['  * {0} : '.format('Session Renegotiation')]
-        formatted_results.append('      {0:<35} {1}'.format(
-            'Client-initiated Renegotiations:',
-            result_reneg))
-        formatted_results.append('      {0:<35} {1}'.format(
-            'Secure Renegotiation: ',
-            result_secure))
         
-        return formatted_results
+        # Text output
+        reneg_txt = 'Honored' if can_reneg else 'Rejected'
+        secure_txt = 'Supported' if is_secure else 'Not supported'
+        
+        txt_result = ['  * {0} : '.format('Session Renegotiation')]
+        RENEG_FORMAT = '      {0:<35} {1}'
+        txt_result.append(RENEG_FORMAT.format('Client-initiated Renegotiations:', reneg_txt))
+        txt_result.append(RENEG_FORMAT.format('Secure Renegotiation: ', secure_txt))
+        
+        # XML output
+        xml_reneg = Element('reneg', reneg='client initiated', supported = str(can_reneg))
+        xml_secure = Element('reneg', reneg='secure', supported = str(is_secure))
+        
+        xml_result = Element(self.__class__.__name__, command=command)
+        xml_result.extend([xml_reneg, xml_secure])
+        
+        return PluginBase.PluginResult(txt_result, xml_result)
 
 
     def _test_renegotiation(self, target):
         """
-        Checks whether the server honors session renegotation requests and 
+        Checks whether the server honors session renegotiation requests and 
         whether it supports secure renegotiation.
         """
-        result_reneg = 'N/A'
-        result_secure = 'N/A'
-        
         ssl_ctx = SSL_CTX.SSL_CTX()
         ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
         ssl_connect = \
@@ -77,39 +81,33 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
     
         try:
             ssl_connect.connect()
-        except SSLHandshakeRejected as e:
-            raise
-        else:
-            result_secure = 'Supported' if ssl_connect.ssl.get_secure_renegotiation_support() \
-                                        else 'Not Supported'
+            is_secure = ssl_connect.ssl.get_secure_renegotiation_support()
     
             try: # Let's try to renegotiate
                 ssl_connect.ssl.renegotiate()
-                result_reneg = 'Honored'
+                can_reneg = True
     
+            # Errors caused by a server rejecting the renegotiation
             except errors.ctSSLUnexpectedEOF as e:
-                result_reneg = 'Rejected'
-    
+                can_reneg = False
             except socket.error as e:
                 if 'connection was forcibly closed' in str(e.args):
-                    result_reneg = 'Rejected'
+                    can_reneg = False
                 elif 'reset by peer' in str(e.args):
-                    result_reneg = 'Rejected'
+                    can_reneg = False
                 else:
-                    raise e
-    
-            except socket.timeout as e:
-                result_reneg = 'Rejected (timeout)'
-    
+                    raise
+            #except socket.timeout as e:
+            #    result_reneg = 'Rejected (timeout)'
             except errors.SSLError as e:
                 if 'handshake failure' in str(e.args):
-                    result_reneg = 'Rejected'
+                    can_reneg = False
                 elif 'no renegotiation' in str(e.args):
-                    result_reneg = 'Rejected'
+                    can_reneg = False
                 else:
-                    raise e
+                    raise
     
         finally:
             ssl_connect.close()
     
-        return (result_reneg, result_secure)
+        return (can_reneg, is_secure)

@@ -31,21 +31,49 @@ from ctSSL import constants
 from CtSSLHelper import filter_handshake_exceptions
 from SSLSocket import SSLSocket
 
-# Create a ctSSL-based HTTPSConnection
+
 class HTTPSConnection(HTTPConnection):
     """
     This class mirrors httplib.HTTPSConnection but uses ctSSL instead of the 
     standard ssl module.
     For now the way to access low level SSL functions associated with a given 
-    HTTPSConnection is too just access the ssl and ssl_ctx attribute of the 
-    object.
+    HTTPSConnection is to directly access the ssl and ssl_ctx attributes of the 
+    object. TODO: change that.
+    
+    @type ssl_ctx: ctSSL.SSL_CTX
+    @ivar ssl_ctx: SSL_CTX object for the HTTPS connection.
+
+    @type ssl: ctSSL.SSL
+    @ivar ssl: SSL object for the HTTPS connection.
+    certificates.
     """
     
     default_port = HTTPS_PORT
     
     def __init__(self, host, port=None, ssl=None, ssl_ctx=None, 
                  strict=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
+        """
+        Create a new HTTPSConnection.
+
+        @type host: str
+        @param host: Host name of the server to connect to.
         
+        @type port: int
+        @param port: Port number to connect to. 443 by default.
+
+        @type ssl: ctSSL.SSL
+        @param ssl: SSL object for the HTTPS connection. If not specified,
+        a default SSL object will be created for the connection and SSL 
+        certificates will NOT be verified when connecting to the server.
+        
+        @type ssl_ctx: ctSSL.SSL_CTX
+        @param ssl_ctx: SSL_CTX object for the HTTPS connection. If not 
+        specified, a default SSL_CTX object will be created for the connection 
+        and SSL certificates will NOT be verified when connecting to the server.
+
+        @type timeout: int
+        @param timeout: Socket timeout value.
+        """        
         HTTPConnection.__init__(self, host, port, strict, timeout)
 
         self.ssl_ctx = ssl_ctx
@@ -61,8 +89,14 @@ class HTTPSConnection(HTTPConnection):
             
     
     def connect(self):
-        "Connect to a host on a given (SSL) port."
-    
+        """
+        Connect to a host on a given (SSL) port.
+        
+        @raise ctSSLHelper.SSLHandshakeRejected: The server explicitly rejected 
+        the SSL handshake.
+        @raise ctSSLHelper.SSLHandshakeError: The SSL handshake failed.
+        """
+            
         sock = socket.create_connection((self.host, self.port),
                                         self.timeout)
         

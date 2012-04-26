@@ -24,11 +24,9 @@
 
 import abc
 
-
 from utils.ctSSL import constants
 from utils.HTTPSConnection import HTTPSConnection
 from utils import STARTTLS
-import socket
 
 
 class AvailableCommands:
@@ -62,6 +60,30 @@ class AvailableCommands:
         Note: dest to None if you don't need arguments
         """
         self.commands.append( (command, help, dest) )
+
+
+class PluginResult:
+    """
+    Plugin.process_task() should return an instance of this class.
+    """    
+    def __init__(self, text_result, xml_result):
+        """
+        @type text_result: [str]
+        @param text_result: Printable version of the plugin's results.
+        Each string within the list gets printed as a separate line.
+        
+        @type xml_result: xml.etree.ElementTree.Element
+        @param xml_result: XML version of the plugin's results.
+        """            
+        self._text_result = text_result
+        self._xml_result = xml_result
+
+    def get_xml_result(self):
+        return self._xml_result
+        
+    def get_txt_result(self):  
+        return self._text_result  
+
 
 
 class PluginBase(object):
@@ -98,7 +120,17 @@ class PluginBase(object):
     def _create_ssl_connection(self_class, target, ssl=None, ssl_ctx=None):
         """
         Read the shared_settings object shared between all the plugins and load
-        the proper settings the ssl context and socket.
+        the proper settings the SSL_CTX and SSL objects.
+        
+        @type ssl: ctSSL.SSL
+        @param ssl: SSL object for the SSL connection. If not specified,
+        a default SSL object will be created for the connection and SSL 
+        certificates will NOT be verified when connecting to the server.
+        
+        @type ssl_ctx: ctSSL.SSL_CTX
+        @param ssl_ctx: SSL_CTX object for the SSL connection. If not 
+        specified, a default SSL_CTX object will be created for the connection 
+        and SSL certificates will NOT be verified when connecting to the server.        
         """
         shared_settings = self_class._shared_settings
         timeout = shared_settings['timeout']

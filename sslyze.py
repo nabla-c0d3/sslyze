@@ -24,15 +24,16 @@
 from time import time
 from multiprocessing import Process, JoinableQueue
 import sys
+from xml.etree.ElementTree import ElementTree, Element
 
 from discover_targets import discover_targets
 from discover_plugins import discover_plugins
 from parse_command_line import create_command_line_parser, \
     parse_command_line, process_parsing_results, PARSING_ERROR_FORMAT
-    
+from plugins.PluginBase import PluginResult
 
 
-PROG_VERSION =      'SSLyze v0.4'
+SSLYZE_VERSION =      'SSLyze v0.5 beta'
 DEFAULT_NB_PROCESSES =      5 # 10 was too aggressive, lowering it to 5
 PLUGIN_PATH =       "plugins"
 DEFAULT_TIMEOUT =   5
@@ -57,6 +58,7 @@ class WorkerProcess(Process):
         # without state info. Need to assign shared_settings here
         for plugin_class in self.available_commands.itervalues():
             plugin_class._shared_settings = self.shared_settings
+        
             
         while True:
 
@@ -73,11 +75,14 @@ class WorkerProcess(Process):
                 
             try: # Process the task
                 result = plugin_instance.process_task(target, command, args)
-            except Exception as e:
-                result = [
-                    'Unhandled exception when processing --' + command + ': ',
-                     str(e.__class__.__module__) + \
-                        '.' + str(e.__class__.__name__) + ' - ' + str(e)]
+            except Exception as e: # Generate txt and xml results
+                txt_result = ['Unhandled exception when processing --' + 
+                              command + ': ', str(e.__class__.__module__) + 
+                              '.' + str(e.__class__.__name__) + ' - ' + str(e)]
+                xml_result = Element(plugin_instance.__class__.__name__,
+                                     command = command,
+                                     exception=txt_result[1])
+                result = PluginResult(txt_result, xml_result)
 
             # Send the result to queue_out
             self.queue_out.put((target, command, result))
@@ -90,14 +95,24 @@ def _format_title(title):
     return ' ' + title.upper()+ '\n' + ' ' + ('-' * len(title))
 
 
-def _format_target_results(target, result_list):
+def _format_xml_target_result(target, result_list):
+    (host, ip, port) = target
+    target_xml = Element('target', host=host, ip_addr=ip, port=str(port))
+
+    for (command, plugin_result) in result_list:
+        target_xml.append(plugin_result.get_xml_result())
+
+    return target_xml
+
+
+def _format_txt_target_result(target, result_list):
     (host, ip, port) = target
     target_result_str = ''
 
-    for (command, task_result_str) in result_list:
+    for (command, plugin_result) in result_list:
         # Print the result of each separate command
         target_result_str += '\n'
-        for line in task_result_str:
+        for line in plugin_result.get_txt_result():
             target_result_str += line + '\n'
 
     return _format_title('Scan Results For ' + host + ':' + str(port) + ' - ' \
@@ -108,8 +123,8 @@ def main():
 
     # Workaround for Cygwin and MAC OS X
     nb_processes = DEFAULT_NB_PROCESSES
-    if sys.platform == 'darwin' or sys.platform == 'cygwin':
-        print '\nWarning: Running on MAC OS X or Cygwin. Disabling multiprocessing - scans will be slower.'
+    if sys.platform == 'darwin':
+        print '\nWarning: Running on MAC OS X. Disabling multiprocessing - scans will be slower.'
         nb_processes = 1
 
     #--PLUGINS INITIALIZATION--
@@ -120,7 +135,7 @@ def main():
     # Create the command line parser and the list of available options
     (parser, available_commands) = create_command_line_parser(
         available_plugins,
-        PROG_VERSION,
+        SSLYZE_VERSION,
         DEFAULT_TIMEOUT)
 
     # Parse the command line
@@ -171,6 +186,10 @@ def main():
 
     # --REPORTING SECTION--
     processes_running = nb_processes
+    
+    # XML output
+    if shared_settings['xml_file']:
+        xml_output_list = []
 
     # Each host has a list of results
     result_dict = {}
@@ -185,22 +204,46 @@ def main():
             processes_running -= 1
 
         else: # Getting an actual result
-            (target, command, task_result_str) = result
-            result_dict[target].append((command, task_result_str))
+            (target, command, plugin_result) = result
+            result_dict[target].append((command, plugin_result))
 
             if len(result_dict[target]) == task_num: # Done with this target
-                # Print the results
-                print _format_target_results(target, result_dict[target])
-
+                # Print the results and update the xml doc
+                print _format_txt_target_result(target, result_dict[target])
+                if shared_settings['xml_file']:
+                    xml_output_list.append(_format_xml_target_result(target, result_dict[target]))
+                           
         result_queue.task_done()
 
 
     # --TERMINATE--
+    
     # Make sure all the processes had time to terminate
     task_queue.join()
     result_queue.join()
-    #[process.join() for process in process_list]#Causes interpeter shutdown err
+    #[process.join() for process in process_list] # Causes interpreter shutdown errors
     exec_time = time()-start_time
+    
+    # Output XML doc to a file if needed
+    if shared_settings['xml_file']:
+        
+        result_xml = Element('results', 
+                             https_tunnel = str(shared_settings['https_tunnel_host']),
+                             scan_time = str(exec_time), 
+                             timeout = str(shared_settings['timeout']), 
+                             starttls = str(shared_settings['starttls']) )
+        
+        for xml_element in xml_output_list:
+            result_xml.append(xml_element)
+            
+        xml_final_doc = Element('document', title = "SSLyze Results",
+                                version = SSLYZE_VERSION, 
+                                web = "http://code.google.com/p/sslyze")
+        xml_final_doc.append(result_xml)
+    
+        xml_final_tree = ElementTree(xml_final_doc)
+        xml_final_tree.write(shared_settings['xml_file'])
+        
     print _format_title('Scan Completed in {0:.2f} s'.format(exec_time))
 
 

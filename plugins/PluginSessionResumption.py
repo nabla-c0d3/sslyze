@@ -20,6 +20,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
+from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
@@ -60,6 +61,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
                 raise Exception("PluginSessionResumption: Unknown command.")
         finally:
             ctSSL_cleanup()
+            
         return result
 
 
@@ -69,186 +71,188 @@ class PluginSessionResumption(PluginBase.PluginBase):
         the session resumption rate.
         """
         # Create a thread pool and process the jobs
-        NB_THREADS = 50
-        NB_RESUM = 100
+        NB_THREADS = 20
+        MAX_RESUM = 100
         thread_pool = ThreadPool()
-        for i in xrange(NB_RESUM):
-            thread_pool.add_job((
-                self._test_resumption_with_session_id,
-                (target, ('sslv3'))))
+        for i in xrange(MAX_RESUM):
+            thread_pool.add_job((self._resume_with_session_id, 
+                                 (target, ('tlsv1'))))
         thread_pool.start(NB_THREADS)
 
-        # Count successful resumptions
-        sucessful_resumptions = 0
-        for completed_job in thread_pool.get_result():
-            (job, result_string) = completed_job
-            if result_string == 'Supported':
-                sucessful_resumptions += 1
+        # Count successful resumptions      
+        (nb_resum, nb_error) = self._count_resumptions(thread_pool)
+        nb_failed = MAX_RESUM - nb_error - nb_resum
 
-        result_string = str(sucessful_resumptions) + \
-            ' resumptions successful out of ' + str(NB_RESUM) + ' attempts.'
+        # Text output
+        result_string = str(nb_resum) + ' successful, ' + \
+            str(nb_failed) + ' failed, ' + str(nb_error) + ' errors, ' + \
+            str(MAX_RESUM) + ' total attempts.'
+            
+        txt_result = ['  * {0} : {1}'.format('Resumption Rate with Session IDs', 
+                                             result_string)]
 
-        error_list = []
-        for failed_job in thread_pool.get_error():
-            error_list.append(failed_job)
-        if error_list:
-            result_string += ' Errors were encountered.'
-
-        formatted_results = [
-            '  * {0} : {1}'.format('Session Resumption Rate', result_string)]
+        # XML output
+        xml_resum = Element('resum_rate', total = str(MAX_RESUM), 
+                                successful = str(nb_resum),
+                                failed = str(nb_failed),
+                                errors = str(nb_error))  
+        xml_result = Element(self.__class__.__name__, command='resum_rate')
+        xml_result.append(xml_resum)
 
         thread_pool.join()
-        return formatted_results
-
+        return PluginBase.PluginResult(txt_result, xml_result)
+        
 
     def _command_resum(self, target):
         """
-        Tests the server for session ressumption support, using session IDs and
+        Tests the server for session resumption support using session IDs and
         TLS session tickets (RFC 5077).
         """
-        NB_THREADS = 3
+        NB_THREADS = 5
+        MAX_RESUM = 5
         thread_pool = ThreadPool()
-        thread_pool.add_job((
-            self._test_resumption_with_session_ticket,
-            (target, None),
-            'Using TLSv1 Session Tickets: '))
-        thread_pool.add_job((
-            self._test_resumption_with_session_id,
-            (target,('sslv3')),
-            'Using SSLv3 Session IDs: '))
-        thread_pool.add_job((
-            self._test_resumption_with_session_id,
-            (target,('tlsv1')),
-            'Using TLSv1 Session IDs: '))
+        
+        for i in xrange(MAX_RESUM): # Test 5 resumptions with session IDs
+            thread_pool.add_job((self._resume_with_session_id,
+                                 (target,('tlsv1')), 'session_id'))
         thread_pool.start(NB_THREADS)
-
-        formatted_results = ['  * {0} :'.format('Session Resumption')]
-        for completed_job in thread_pool.get_result():
-            (job, result_string) = completed_job
-            formatted_results.append(
-                '      {0:<30} {1}'.format(job[2], result_string))
-
-        for failed_job in thread_pool.get_error():
-            (job, e) = failed_job
-            formatted_results.append(
-                '      {0:<30} {1}'.format(job[2], 
-                    'Error => ' + str(e.__class__.__module__) + '.' + str(e.__class__.__name__) + ' - ' + str(e)))
+        
+        # Test TLS tickets support while threads are running
+        try:
+            (ticket_supported, ticket_txt) = self._resume_with_session_ticket(target)
+        except Exception as e:
+            ticket_supported = False
+            ticket_txt = str(e.__class__.__module__) + '.' + \
+                            str(e.__class__.__name__) + ' - ' + str(e)
+                            
+        # Count successful resumptions      
+        (nb_resum, nb_error) = self._count_resumptions(thread_pool)
+        nb_failed = MAX_RESUM - nb_error - nb_resum
+            
+        # Text output
+        sessid_txt = str(nb_resum) + ' successful, ' + \
+            str(nb_failed) + ' failed, ' + str(nb_error) + ' errors, ' + \
+            str(MAX_RESUM) + ' total attempts'
+        if nb_resum == MAX_RESUM:
+            sessid_txt = 'Supported (' + sessid_txt + ').'
+        elif nb_failed == MAX_RESUM:
+            sessid_txt = 'Not supported (' + sessid_txt + ').'
+        elif nb_error == MAX_RESUM:
+            sessid_txt = 'Errors (' + sessid_txt + ').'
+        else:
+            sessid_txt = 'Partially supported: (' + sessid_txt + '). Try --resum_rate.'
+         
+        txt_result = ['  * {0}:'.format('Session Resumption')]
+        RESUM_FORMAT = '      {0:<27} {1}'
+        txt_result.append(RESUM_FORMAT.format('With Session IDs:', sessid_txt))
+        txt_result.append(RESUM_FORMAT.format('With TLS Session Tickets:', ticket_txt))
+        
+        # XML output
+        sessid_xml = str(nb_resum == MAX_RESUM)        
+        xml_resum_id = Element('resum', mechanism = 'session ids',
+                            total = str(MAX_RESUM), errors = str(nb_error), 
+                            supported = sessid_xml, successful = str(nb_resum), 
+                            failed = str(nb_failed))
+        xml_resum_ticket = Element('resum', mechanism = 'tls tickets',
+                                   supported = str(ticket_supported))
+        xml_resum_ticket.text = ticket_txt
+                
+        xml_result = Element(self.__class__.__name__, command='resum')
+        xml_result.append(xml_resum_id)
+        xml_result.append(xml_resum_ticket)
 
         thread_pool.join()
-        return formatted_results
+        return PluginBase.PluginResult(txt_result, xml_result)
 
 
-    # == INTERNAL FUNCTIONS ==
+    def _count_resumptions(self, thread_pool):
+        """
+        Utility function to count the number of resumptions that were successful
+        by looking at the result of a thread_pool of _resume_with_session_id()
+        workers.
+        """
+        # Count successful/failed resumptions
+        nb_resum = 0
+        for completed_job in thread_pool.get_result():
+            (job, (is_supported, reason_str)) = completed_job
+            if is_supported: 
+                nb_resum += 1
+                
+        # Count errors
+        error_list = []
+        for failed_job in thread_pool.get_error():
+            error_list.append(failed_job)
+        nb_error = len(error_list)
+        
+        return (nb_resum, nb_error)
 
-    def _test_resumption_with_session_id(self, target, ssl_version):
-        """
-        Tests the server for session resumption support using Session IDs.
-        """
-        try:
-            self._resume_with_session_id(target, ssl_version)
-            result = 'Supported'
-        except FailedSessionResumption as e:
-            result = e[0]
-    
-        return result
-    
-    
-    def _test_resumption_with_session_ticket(self, target, args):
-        """
-        Tests the server for session resumption support using TLS Tickets.
-        """
-        try:
-            self._resume_with_session_ticket(target)
-            result = 'Supported'
-        except FailedSessionResumption as e:
-            result = e[0]
-    
-        return result
-    
-    
+
     def _resume_with_session_id(self, target, ssl_version):
         """
         Performs one session resumption using Session IDs.
-        Raises FailedSessionResumption if resumption failed.
         """
         ctx = SSL_CTX.SSL_CTX(ssl_version)
         ctx.set_verify(constants.SSL_VERIFY_NONE)
-        #ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
-        # All ciphers + non empty session ID field make the TLSv1 client hello
-        # larger than 255 bytes, making lots of servers on the Internet
-        # not answer our hello :(
-    
+        
+        # There is a really annoying bug that causes specific servers to not
+        # reply to a client hello that is bigger than 255 bytes.
+        # Until this gets fixed, I have to disable cipher suites in order to
+        # make our client hello smaller :(
+        ctx.set_cipher_list("aRSA:AES:-SRP:-PSK:-NULL")
+
         # Session Tickets and Session ID mechanisms can be mutually exclusive.
         ctx.set_options(constants.SSL_OP_NO_TICKET) # Turning off TLS tickets.
     
-        try: # Connect to the server and keep the SSL session
-            session1 = self._resume_ssl_session(target, ctx)
-        except SSLHandshakeRejected as e:
-            raise SSLHandshakeRejected('SSL Handshake failed: ' + e[0])
-    
+        session1 = self._resume_ssl_session(target, ctx) 
         try: # Recover the session ID
             session1_id = self._extract_session_id(session1)
-        except IndexError as e:
-            raise FailedSessionResumption('Not Supported (Session ID not assigned)')
+        except IndexError:
+            return (False, 'Not Supported (Session ID not assigned)')
     
         # Try to resume that SSL session
-        try:
-            session2 = self._resume_ssl_session(target, ctx, session1)
-        except SSLHandshakeRejected as e:
-            raise SSLHandshakeRejected('SSL Handshake failed: ' + e[0])
-    
+        session2 = self._resume_ssl_session(target, ctx, session1)
         try: # Recover the session ID
             session2_id = self._extract_session_id(session2)
-        except IndexError as e:
-            raise FailedSessionResumption('Not Supported (Session ID not assigned)')
+        except IndexError:
+            return (False, 'Not Supported (Session ID not assigned)')
     
         # Finally, compare the two Session IDs
         if session1_id != session2_id:
-            raise FailedSessionResumption(
-                'Not Supported (Session ID assigned but not accepted; try --resum_rate)')
+            return (False, 'Not Supported (Session ID assigned but not accepted')
     
-        return
+        return (True, 'Supported')
     
     
     def _resume_with_session_ticket(self, target):
         """
         Performs one session resumption using TLS Session Tickets.
-        Raises FailedSessionResumption if resumption failed.
         """
         ctx = SSL_CTX.SSL_CTX('tlsv1')
         ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
+        ctx.set_cipher_list("aRSA:AES:-SRP:-PSK:-NULL")
     
         # Session Tickets and Session ID mechanisms can be mutually exclusive.
         ctx.set_session_cache_mode(constants.SSL_SESS_CACHE_OFF) # Turning off IDs.
     
-        try: # Connect to the server and keep the SSL session
-            session1 =self._resume_ssl_session(target, ctx)
-        except SSLHandshakeRejected as e:
-            raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
-    
+        #try: # Connect to the server and keep the SSL session
+        session1 = self._resume_ssl_session(target, ctx)
         try: # Recover the TLS ticket
             session1_tls_ticket = self._extract_tls_session_ticket(session1)
         except IndexError:
-            raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
+            return (False, 'Not Supported (TLS ticket not assigned)')
     
         # Try to resume that session using the TLS ticket
-        try:
-            session2 = self._resume_ssl_session(target, ctx, session1)
-        except SSLHandshakeRejected as e:
-            raise FailedSessionResumption('SSL Handshake failed: ' + e[0])
-    
+        session2 = self._resume_ssl_session(target, ctx, session1)
         try: # Recover the TLS ticket
             session2_tls_ticket = self._extract_tls_session_ticket(session2)
         except IndexError:
-            raise FailedSessionResumption('Not Supported (TLS ticket not assigned)')
+            return (False, 'Not Supported (TLS ticket not assigned)')
     
         # Finally, compare the two TLS Tickets
         if session1_tls_ticket != session2_tls_ticket:
-            raise FailedSessionResumption(
-                'Not Supported (TLS ticket assigned but not accepted)')
-    
-        return
+            return (False, 'Not Supported (TLS ticket assigned but not accepted)')
+
+        return (True, 'Supported')
     
     
     def _extract_session_id(self, ssl_session):
@@ -285,13 +289,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         try: # Perform the SSL handshake
             ssl_connect.connect()
             session = ssl_connect.ssl.get_session() # Get session data
-        except SSLHandshakeRejected:
-            raise
         finally:
             ssl_connect.close()
             
         return session
-
-
-class FailedSessionResumption(Exception):
-    pass

@@ -53,18 +53,21 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         # Text output
         reneg_txt = 'Honored' if can_reneg else 'Rejected'
         secure_txt = 'Supported' if is_secure else 'Not supported'
+        cmd_title = 'Session Renegotiation'
+        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
         
-        txt_result = ['  * {0} : '.format('Session Renegotiation')]
         RENEG_FORMAT = '      {0:<35} {1}'
         txt_result.append(RENEG_FORMAT.format('Client-initiated Renegotiations:', reneg_txt))
         txt_result.append(RENEG_FORMAT.format('Secure Renegotiation: ', secure_txt))
         
         # XML output
-        xml_reneg = Element('reneg', reneg='client initiated', supported = str(can_reneg))
-        xml_secure = Element('reneg', reneg='secure', supported = str(is_secure))
+        xml_reneg_attr = {'client-initiated' : str(can_reneg),
+                          'secure' : str(is_secure)}
+        xml_reneg = Element('reneg', attrib = xml_reneg_attr)
         
-        xml_result = Element(self.__class__.__name__, command=command)
-        xml_result.extend([xml_reneg, xml_secure])
+        xml_result = Element(self.__class__.__name__, command = command,
+                             title = cmd_title)
+        xml_result.append(xml_reneg)
         
         return PluginBase.PluginResult(txt_result, xml_result)
 
@@ -76,6 +79,7 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         """
         ssl_ctx = SSL_CTX.SSL_CTX()
         ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
+        ssl_ctx.set_cipher_list(self.hello_workaround_cipher_list)
         ssl_connect = \
             self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
     

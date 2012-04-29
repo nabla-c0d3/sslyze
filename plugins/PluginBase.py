@@ -96,7 +96,15 @@ class PluginBase(object):
     # client certificate, timeoutvalue, etc...
     # TODO: Document it
     _shared_settings = None
-
+    
+    # Formatting stuff
+    PLUGIN_TITLE_FORMAT = '  * {0} :'
+    
+    # There is a really annoying bug that causes specific servers to not
+    # reply to a client hello that is bigger than 255 bytes.
+    # Until this gets fixed, I have to disable cipher suites in order to
+    # make our client hello smaller :(
+    hello_workaround_cipher_list = "aRSA:AES:-SRP:-PSK:-NULL"
                               
     @classmethod
     def get_commands(plugin_class):
@@ -184,4 +192,5 @@ class PluginBase(object):
             ssl_connection.ssl.check_private_key()
             
         return ssl_connection
-
+    
+    

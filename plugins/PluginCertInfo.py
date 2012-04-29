@@ -111,7 +111,8 @@ class PluginCertInfo(PluginBase.PluginBase):
         (cert_txt, cert_xml) = result_dict[arg](cert)
         
         # Text output
-        txt_result = ['  * Certificate : ']
+        cmd_title = 'Certificate'
+        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
         trust_txt = 'Certificate is Trusted' if cert_trusted \
                                              else 'Certificate is NOT Trusted'
 
@@ -119,13 +120,15 @@ class PluginCertInfo(PluginBase.PluginBase):
         txt_result.extend(cert_txt)
 
         # XML output
-        xml_result = Element(self.__class__.__name__,command=command, argument=arg)
-        trust_xml = Element('certificate', trusted=str(cert_trusted))
+        xml_result = Element(self.__class__.__name__, command = command, 
+                             argument = arg, title = cmd_title)
+        trust_xml_attr = {'trusted-by-mozilla' : str(cert_trusted)}
+        trust_xml = Element('certificate', attrib = trust_xml_attr)
         trust_xml.extend(cert_xml)
         xml_result.append(trust_xml)
         
         ctSSL_cleanup()
-        return PluginBase.PluginResult(txt_result,xml_result)
+        return PluginBase.PluginResult(txt_result, xml_result)
 
 
 # FORMATTING FUNCTIONS
@@ -215,9 +218,8 @@ class PluginCertInfo(PluginBase.PluginBase):
         Connects to the target server and returns the server's certificate if
         the connection was successful.
         """
-        
         ssl_connect = self._create_ssl_connection(target)
-
+        ssl_connect.ssl_ctx.set_cipher_list(self.hello_workaround_cipher_list)
         if verify_cert:
             ssl_connect.ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)
             ssl_connect.ssl.set_verify(constants.SSL_VERIFY_PEER)

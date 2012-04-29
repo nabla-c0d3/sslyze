@@ -84,19 +84,20 @@ class PluginSessionResumption(PluginBase.PluginBase):
         nb_failed = MAX_RESUM - nb_error - nb_resum
 
         # Text output
-        result_string = str(nb_resum) + ' successful, ' + \
-            str(nb_failed) + ' failed, ' + str(nb_error) + ' errors, ' + \
-            str(MAX_RESUM) + ' total attempts.'
-            
-        txt_result = ['  * {0} : {1}'.format('Resumption Rate with Session IDs', 
-                                             result_string)]
+        resum_format = '{0} successful, {1} failed, {2} errors, {3} total attempts.'
+        resum_txt = resum_format.format(str(nb_resum), str(nb_failed), 
+                          str(nb_error), str(MAX_RESUM))
+        
+        cmd_title = 'Resumption Rate with Session IDs'
+        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)+' '+resum_txt]
 
         # XML output
-        xml_resum = Element('resum_rate', total = str(MAX_RESUM), 
-                                successful = str(nb_resum),
-                                failed = str(nb_failed),
-                                errors = str(nb_error))  
-        xml_result = Element(self.__class__.__name__, command='resum_rate')
+        xml_resum_attr = {'total' : str(MAX_RESUM),'successful' : str(nb_resum),
+                          'failed' : str(nb_failed), 'errors' : str(nb_error)}
+        
+        xml_resum = Element('resum_rate', attrib = xml_resum_attr)  
+        xml_result = Element(self.__class__.__name__, command = 'resum_rate',
+                             title = cmd_title)
         xml_result.append(xml_resum)
 
         thread_pool.join()
@@ -119,10 +120,10 @@ class PluginSessionResumption(PluginBase.PluginBase):
         
         # Test TLS tickets support while threads are running
         try:
-            (ticket_supported, ticket_txt) = self._resume_with_session_ticket(target)
+            (ticket_supported, ticket_reason) = self._resume_with_session_ticket(target)
+            ticket_error = None
         except Exception as e:
-            ticket_supported = False
-            ticket_txt = str(e.__class__.__module__) + '.' + \
+            ticket_error = str(e.__class__.__module__) + '.' + \
                             str(e.__class__.__name__) + ' - ' + str(e)
                             
         # Count successful resumptions      
@@ -130,34 +131,51 @@ class PluginSessionResumption(PluginBase.PluginBase):
         nb_failed = MAX_RESUM - nb_error - nb_resum
             
         # Text output
-        sessid_txt = str(nb_resum) + ' successful, ' + \
-            str(nb_failed) + ' failed, ' + str(nb_error) + ' errors, ' + \
-            str(MAX_RESUM) + ' total attempts'
+        sessid_format = '{4} ({0} successful, {1} failed, {2} errors, {3} total attempts).{5}'
+        sessid_try = '' 
         if nb_resum == MAX_RESUM:
-            sessid_txt = 'Supported (' + sessid_txt + ').'
+            sessid_stat = 'Supported'
         elif nb_failed == MAX_RESUM:
-            sessid_txt = 'Not supported (' + sessid_txt + ').'
+            sessid_stat = 'Not supported'
         elif nb_error == MAX_RESUM:
-            sessid_txt = 'Errors (' + sessid_txt + ').'
+            sessid_stat = 'Error'
         else:
-            sessid_txt = 'Partially supported: (' + sessid_txt + '). Try --resum_rate.'
-         
-        txt_result = ['  * {0}:'.format('Session Resumption')]
+            sessid_stat = 'Partially supported'
+            sessid_try = ' Try --resum_rate.'
+        sessid_txt = sessid_format.format(str(nb_resum), str(nb_failed), 
+                                  str(nb_error), str(MAX_RESUM),
+                                  sessid_stat, sessid_try)
+        
+        if ticket_error:
+            ticket_txt = 'Error: ' + ticket_error
+        else:
+            ticket_txt = 'Supported' if ticket_supported \
+                                     else 'Not Supported - ' + ticket_reason+'.'
+        
+        cmd_title = 'Session Resumption'
+        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
         RESUM_FORMAT = '      {0:<27} {1}'
         txt_result.append(RESUM_FORMAT.format('With Session IDs:', sessid_txt))
         txt_result.append(RESUM_FORMAT.format('With TLS Session Tickets:', ticket_txt))
         
         # XML output
-        sessid_xml = str(nb_resum == MAX_RESUM)        
-        xml_resum_id = Element('resum', mechanism = 'session ids',
-                            total = str(MAX_RESUM), errors = str(nb_error), 
-                            supported = sessid_xml, successful = str(nb_resum), 
-                            failed = str(nb_failed))
-        xml_resum_ticket = Element('resum', mechanism = 'tls tickets',
-                                   supported = str(ticket_supported))
-        xml_resum_ticket.text = ticket_txt
-                
-        xml_result = Element(self.__class__.__name__, command='resum')
+        sessid_xml = str(nb_resum == MAX_RESUM)
+        
+        xml_resum_id_attr = {'mechanism' :'session ids','total':str(MAX_RESUM), 
+                             'errors' : str(nb_error), 'supported' : sessid_xml,
+                             'successful':str(nb_resum),'failed':str(nb_failed)}
+        xml_resum_id = Element('resum', attrib = xml_resum_id_attr)
+
+        xml_resum_ticket_attr = {'mechanism' : 'tls tickets'}
+        if ticket_error:
+            xml_resum_ticket_attr['error'] = ticket_error
+        else:
+            xml_resum_ticket_attr['supported'] = str(ticket_supported)
+            if not ticket_supported:
+                xml_resum_ticket_attr['reason'] = ticket_reason
+        
+        xml_resum_ticket = Element('resum', attrib = xml_resum_ticket_attr)   
+        xml_result = Element(self.__class__.__name__, command='resum', title=cmd_title)
         xml_result.append(xml_resum_id)
         xml_result.append(xml_resum_ticket)
 
@@ -193,12 +211,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         """
         ctx = SSL_CTX.SSL_CTX(ssl_version)
         ctx.set_verify(constants.SSL_VERIFY_NONE)
-        
-        # There is a really annoying bug that causes specific servers to not
-        # reply to a client hello that is bigger than 255 bytes.
-        # Until this gets fixed, I have to disable cipher suites in order to
-        # make our client hello smaller :(
-        ctx.set_cipher_list("aRSA:AES:-SRP:-PSK:-NULL")
+        ctx.set_cipher_list(self.hello_workaround_cipher_list)
 
         # Session Tickets and Session ID mechanisms can be mutually exclusive.
         ctx.set_options(constants.SSL_OP_NO_TICKET) # Turning off TLS tickets.
@@ -207,20 +220,20 @@ class PluginSessionResumption(PluginBase.PluginBase):
         try: # Recover the session ID
             session1_id = self._extract_session_id(session1)
         except IndexError:
-            return (False, 'Not Supported (Session ID not assigned)')
+            return (False, 'Session ID not assigned')
     
         # Try to resume that SSL session
         session2 = self._resume_ssl_session(target, ctx, session1)
         try: # Recover the session ID
             session2_id = self._extract_session_id(session2)
         except IndexError:
-            return (False, 'Not Supported (Session ID not assigned)')
+            return (False, 'Session ID not assigned')
     
         # Finally, compare the two Session IDs
         if session1_id != session2_id:
-            return (False, 'Not Supported (Session ID assigned but not accepted')
+            return (False, 'Session ID assigned but not accepted')
     
-        return (True, 'Supported')
+        return (True, '')
     
     
     def _resume_with_session_ticket(self, target):
@@ -229,7 +242,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         """
         ctx = SSL_CTX.SSL_CTX('tlsv1')
         ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ctx.set_cipher_list("aRSA:AES:-SRP:-PSK:-NULL")
+        ctx.set_cipher_list(self.hello_workaround_cipher_list)
     
         # Session Tickets and Session ID mechanisms can be mutually exclusive.
         ctx.set_session_cache_mode(constants.SSL_SESS_CACHE_OFF) # Turning off IDs.
@@ -239,20 +252,20 @@ class PluginSessionResumption(PluginBase.PluginBase):
         try: # Recover the TLS ticket
             session1_tls_ticket = self._extract_tls_session_ticket(session1)
         except IndexError:
-            return (False, 'Not Supported (TLS ticket not assigned)')
+            return (False, 'TLS ticket not assigned')
     
         # Try to resume that session using the TLS ticket
         session2 = self._resume_ssl_session(target, ctx, session1)
         try: # Recover the TLS ticket
             session2_tls_ticket = self._extract_tls_session_ticket(session2)
         except IndexError:
-            return (False, 'Not Supported (TLS ticket not assigned)')
+            return (False, 'TLS ticket not assigned')
     
         # Finally, compare the two TLS Tickets
         if session1_tls_ticket != session2_tls_ticket:
-            return (False, 'Not Supported (TLS ticket assigned but not accepted)')
+            return (False, 'TLS ticket assigned but not accepted')
 
-        return (True, 'Supported')
+        return (True, '')
     
     
     def _extract_session_id(self, ssl_session):

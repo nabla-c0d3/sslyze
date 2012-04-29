@@ -38,6 +38,8 @@ DEFAULT_NB_PROCESSES =      5 # 10 was too aggressive, lowering it to 5
 PLUGIN_PATH =       "plugins"
 DEFAULT_TIMEOUT =   5
 
+# Todo: Move formatting stuff to another file
+SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
 
 class WorkerProcess(Process):
 
@@ -97,8 +99,7 @@ def _format_title(title):
 
 def _format_xml_target_result(target, result_list):
     (host, ip, port) = target
-    target_xml = Element('target', host=host, ip_addr=ip, port=str(port))
-
+    target_xml = Element('target', host=host, ip=ip, port=str(port))
     for (command, plugin_result) in result_list:
         target_xml.append(plugin_result.get_xml_result())
 
@@ -114,9 +115,9 @@ def _format_txt_target_result(target, result_list):
         target_result_str += '\n'
         for line in plugin_result.get_txt_result():
             target_result_str += line + '\n'
-
-    return _format_title('Scan Results For ' + host + ':' + str(port) + ' - ' \
-                + ip + ':' + str(port) ) + '\n' + target_result_str + '\n\n'
+    
+    scan_txt = SCAN_FORMAT.format(host, str(port), ip)
+    return _format_title(scan_txt) + '\n' + target_result_str + '\n\n'
 
 
 def main():
@@ -226,12 +227,12 @@ def main():
     
     # Output XML doc to a file if needed
     if shared_settings['xml_file']:
+        result_xml_attr = {'https-tunnel':str(shared_settings['https_tunnel_host']),
+                           'scan-time' : str(exec_time), 
+                           'timeout' : str(shared_settings['timeout']), 
+                           'startTLS' : str(shared_settings['starttls'])}
         
-        result_xml = Element('results', 
-                             https_tunnel = str(shared_settings['https_tunnel_host']),
-                             scan_time = str(exec_time), 
-                             timeout = str(shared_settings['timeout']), 
-                             starttls = str(shared_settings['starttls']) )
+        result_xml = Element('results', attrib = result_xml_attr)
         
         for xml_element in xml_output_list:
             result_xml.append(xml_element)

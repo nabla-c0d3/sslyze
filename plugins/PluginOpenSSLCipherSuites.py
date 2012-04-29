@@ -101,8 +101,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         # Start processing the jobs
         thread_pool.start(NB_THREADS)
 
-        result_dicts = {'preferred_cipher':{}, 'accepted_ciphers':{},
-                        'rejected_ciphers':{}, 'errors':{}}
+        result_dicts = {'preferred-cipher':{}, 'accepted-ciphers':{},
+                        'rejected-ciphers':{}, 'errors':{}}
         
         # Store the results as they come
         for completed_job in thread_pool.get_result():
@@ -133,16 +133,17 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         cipher_format = '        {0:<32}{1:<35}'
         title_format =  '      {0:<32} '        
         keysize_format = '{0:<25}{1:<14}'
-        txt_titles = [('preferred_cipher', 'Preferred Cipher Suite:'),
-                      ('accepted_ciphers', 'Accepted Cipher Suite(s):'),
-                      ('rejected_ciphers', 'Rejected Cipher Suite(s):'),
+        txt_titles = [('preferred-cipher', 'Preferred Cipher Suite:'),
+                      ('accepted-ciphers', 'Accepted Cipher Suite(s):'),
+                      ('rejected-ciphers', 'Rejected Cipher Suite(s):'),
                       ('errors', 'Unknown Errors:')]
         
-        txt_result = [('  * {0} Cipher Suites :'.format(ssl_version.upper()))]
+        title_txt = self.PLUGIN_TITLE_FORMAT.format(ssl_version.upper() + ' Cipher Suites')
+        txt_result = [title_txt]
               
         if self._shared_settings['hide_rejected_ciphers']:     
-            txt_titles = [('preferred_cipher', 'Preferred Cipher Suite:'),
-                          ('accepted_ciphers', 'Accepted Cipher Suite(s):'),
+            txt_titles = [('preferred-cipher', 'Preferred Cipher Suite:'),
+                          ('accepted-ciphers', 'Accepted Cipher Suite(s):'),
                           ('errors', 'Unknown Errors:')]
             
             txt_result.append('')
@@ -173,19 +174,18 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             
     def _generate_xml_result(self, result_dicts, command):
                 
-        xml_result = Element(self.__class__.__name__,command=command)
+        xml_result = Element(self.__class__.__name__, command = command,
+                             title = command.upper() + ' Cipher Suites')
         
         for (result_type, result_dict) in result_dicts.items():
             xml_dict = Element(result_type)
             
             # Add one element for each ciphers
             for (ssl_cipher, (msg, keysize)) in result_dict.items():
-                if keysize:
-                    cipher_xml = Element('cipher', cipher=ssl_cipher, keysize=keysize)
-                    cipher_xml.text = msg
-                else:
-                    cipher_xml = Element('cipher', cipher=ssl_cipher)
-                    cipher_xml.text = msg
+                cipher_xml_attr = {'cipher' : ssl_cipher, 'status' : msg}
+                if keysize: 
+                    cipher_xml_attr['keysize'] = keysize
+                cipher_xml = Element('cipher', attrib = cipher_xml_attr)
                     
                 xml_dict.append(cipher_xml)
                 
@@ -210,7 +210,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         try: # Perform the SSL handshake
             ssl_connect.connect()
         except SSLHandshakeRejected as e:
-            return ('rejected_ciphers', ssl_cipher, None, str(e))
+            return ('rejected-ciphers', ssl_cipher, None, str(e))
         except Exception as e: # Non standard way to reject a cipher or an error happened
             error_msg = str(e.__class__.__module__) + '.' \
                         + str(e.__class__.__name__) + ' - ' + str(e)
@@ -224,7 +224,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 keysize = str(ssl_connect.ssl.get_current_cipher_bits())+' bits'
                 
             status_msg = self._check_ssl_connection_is_alive(ssl_connect)
-            return ('accepted_ciphers', ssl_cipher, keysize, status_msg)
+            return ('accepted-ciphers', ssl_cipher, keysize, status_msg)
     
         finally:
             ssl_connect.close()
@@ -239,7 +239,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         """
         ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
         ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ssl_ctx.set_cipher_list('ALL:NULL:@STRENGTH') # Explicitely allow all ciphers
+        ssl_ctx.set_cipher_list(self.hello_workaround_cipher_list)
     
         # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
         ssl_connect = self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
@@ -257,7 +257,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 keysize = str(ssl_connect.ssl.get_current_cipher_bits())+' bits'
                 
             status_msg = self._check_ssl_connection_is_alive(ssl_connect)
-            return ('preferred_cipher', ssl_cipher, keysize, status_msg)
+            return ('preferred-cipher', ssl_cipher, keysize, status_msg)
     
         finally:
             ssl_connect.close()

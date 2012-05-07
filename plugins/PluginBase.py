@@ -104,6 +104,8 @@ class PluginBase(object):
     # reply to a client hello that is bigger than 255 bytes.
     # Until this gets fixed, I have to disable cipher suites in order to
     # make our client hello smaller :(
+    # Probably this bug:
+    # http://rt.openssl.org/Ticket/Display.html?id=2771&user=guest&pass=guest
     hello_workaround_cipher_list = "aRSA:AES:-SRP:-PSK:-NULL"
                               
     @classmethod

@@ -30,7 +30,7 @@ from discover_targets import discover_targets
 from discover_plugins import discover_plugins
 from parse_command_line import create_command_line_parser, \
     parse_command_line, process_parsing_results, PARSING_ERROR_FORMAT
-from plugins.PluginBase import PluginResult
+
 
 
 SSLYZE_VERSION =      'SSLyze v0.5 beta'
@@ -56,12 +56,12 @@ class WorkerProcess(Process):
         Once it gets notified that all the tasks have been completed,
         it terminates.
         """
+        from plugins.PluginBase import PluginResult    
         # Plugin classes are unpickled by the multiprocessing module
         # without state info. Need to assign shared_settings here
         for plugin_class in self.available_commands.itervalues():
             plugin_class._shared_settings = self.shared_settings
         
-            
         while True:
 
             task = self.queue_in.get() # Grab a task from queue_in

@@ -292,6 +292,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                     + str(http_response.status) \
                     + ' ' \
                     + str(http_response.reason)
+                if http_response.status >= 300 and http_response.status < 400:
+                    # Add redirection URL to the result
+                    redirect = http_response.getheader('Location', None)
+                    if redirect:
+                        result = result + ' - ' + redirect
             except socket.timeout:
                 result = 'Timeout on HTTP GET'
                 

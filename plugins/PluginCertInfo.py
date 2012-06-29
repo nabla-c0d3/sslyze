@@ -97,7 +97,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         except errors.SSLErrorSSL as e:
             # Recover the server's certificate without verifying it
             if 'certificate verify failed' in str(e.args):
-                cert = self._get_cert(verify_cert=False)
+                cert = self._get_cert(target, verify_cert=False)
             else:
                 ctSSL_cleanup()
                 raise

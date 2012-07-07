@@ -124,7 +124,8 @@ class PluginCertInfo(PluginBase.PluginBase):
                              argument = arg, title = cmd_title)
         trust_xml_attr = {'trusted-by-mozilla' : str(cert_trusted)}
         trust_xml = Element('certificate', attrib = trust_xml_attr)
-        trust_xml.extend(cert_xml)
+        for elem_xml in cert_xml:
+            trust_xml.append(elem_xml)
         xml_result.append(trust_xml)
         
         ctSSL_cleanup()

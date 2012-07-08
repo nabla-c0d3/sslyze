@@ -1,7 +1,13 @@
 SSLyze
 ======
 
-Fast and full-featured SSL scanner.
+Fast and full-featured SSL scanner:
+* Compatible with SSL 2.0, 3.0 and TLS 1.0, 1.1 and 1.2
+* Server certificate, cipher suites, session resumption and insecure renegotiation scanning
+* Supports StartTLS with SMTP and XMPP
+* Can tunnel traffic through an HTTPS proxy
+* Supports client authentication
+* Provides XML output
 
 Usage
 -----

@@ -33,43 +33,6 @@ from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors
 TRUSTED_CA_STORE = os.path.join(sys.path[0], 'mozilla_cacert.pem')
 
 
-# aaron:
-# X.509 certificates contain several required and optional attributes that
-# enable the identification of the subject. You can obtain the following list of
-# attributes in an X.509 certificate:
-
-    #Version number: The certificate version.
-        #Note Different versions (version 1, 2, and 3) of X.509 certificates
-        # have evolved over time, to provide additional security and attributes
-        # that are bound to the certificate. In practice, only version 3
-        # certificates should now be used.
-
-    # Serial number: A unique identifier for the certificate.
-
-    # Signature algorithm ID: The algorithm used to create the digital signature.
-
-    # Issuer name: The name of the certificate issuer.
-
-    # Validity period: The period during which the certificate is valid.
-
-    # Subject name: The name of the subject represented by the certificate. (The
-    # subject of a certificate is typically a person, an organization, or a
-    # Web/application server.)
-
-    # Subject public key information: The public key algorithm.
-
-    # Issuer unique identifier: The identifier for the issuer.
-
-    # Subject unique identifier: The identifier for the subject.
-
-    # Extensions: Extensions that can be used to store additional information.
-    # such as KeyUsage or AlternativeNames.
-
-    # Signed hash of the certificate data: The hash of the preceding fields
-    # encrypted using the issuer's private key, which results in a digital
-    # signature.
-
-
 class PluginCertInfo(PluginBase.PluginBase):
 
     available_commands = PluginBase.AvailableCommands(
@@ -80,7 +43,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             "the certificate."))
     available_commands.add_command(
         command="certinfo",
-        help="Should be one of: 'basic', 'full', 'serial', 'subject', 'keysize'.",
+        help="Should be one of: 'basic', 'detail' or 'full'",
         dest="certinfo")
 
     FIELD_FORMAT = '      {0:<35}{1:<35}'
@@ -103,9 +66,7 @@ class PluginCertInfo(PluginBase.PluginBase):
                 raise
             
         result_dict = {'basic':     self._get_basic, 
-                       'serial':    self._get_serial,
-                       'keysize':   self._get_keysize,
-                       'subject':   self._get_subject,
+                       'detail':     self._get_detail, 
                        'full':      self._get_full}
 
         (cert_txt, cert_xml) = result_dict[arg](cert)
@@ -133,59 +94,188 @@ class PluginCertInfo(PluginBase.PluginBase):
 
 
 # FORMATTING FUNCTIONS
+
+# TODO: Write results to an object and use an XML serializer instead
+
     def _get_basic(self, cert):
         basic_xml = []
         basic_txt = []
         
         vals_to_get = [self._get_subject(cert), self._get_issuer(cert),
-                       self._get_serial(cert),self._get_not_before(cert),
-                       self._get_not_after(cert), self._get_sig_algorithm(cert),
-                       self._get_keysize(cert), self._get_fingerprint(cert)]
+                       self._get_serial(cert),self._get_validity(cert),
+                       self._get_sig_algorithm(cert),
+                       self._get_keysize(cert), self._get_fingerprint(cert),
+                       self._get_subject_alternative_name(cert)]
         
         for (val_txt, val_xml) in vals_to_get:
             basic_xml.extend(val_xml)
             basic_txt.extend(val_txt)
 
         return (basic_txt, basic_xml)
+    
+    
+    def _get_detail(self, cert):
+        basic_xml = []
+        basic_txt = []
+        
+        vals_to_get = [self._get_subject(cert), self._get_issuer(cert),
+                       self._get_serial(cert),self._get_validity(cert),
+                       self._get_sig_algorithm(cert),
+                       self._get_keysize(cert), self._get_fingerprint(cert),
+                       self._get_all_extensions(cert)]
+        
+        for (val_txt, val_xml) in vals_to_get:
+            basic_xml.extend(val_xml)
+            basic_txt.extend(val_txt)
+
+        return (basic_txt, basic_xml)
+    
+    
+    def _subject_alternative_name_to_xml(self, alt_name):
+        alt_name_xml = []
+        
+        # Parse the names for a useful xml output TODO: do it somewhere else
+        alt_name = alt_name.replace(' ', '')
+        alt_name_l = alt_name.split(',')
+        for name in alt_name_l:
+            name_val = name.split(':')
+            name_xml = Element(name_val[0])
+            name_xml.text = name_val[1]
+            alt_name_xml.append(name_xml)
+        
+        return alt_name_xml
+        
+    def _authority_information_access_to_xml(self, auth_ext):
+        # Hazardous attempt at parsing an Authority Information Access extension
+        auth_ext = auth_ext.strip(' \n')
+        auth_ext = auth_ext.split('\n')
+        auth_xml = []
+        for auth_entry in auth_ext:
+            auth_entry = auth_entry.split(' - ')
+            auth_entry_xml = Element(auth_entry[0].replace(' ', ''))
+            auth_entry_data = auth_entry[1].split(':', 1)
+            auth_entry_data_xml = Element(auth_entry_data[0])
+            auth_entry_data_xml.text = auth_entry_data[1]
+            auth_entry_xml.append(auth_entry_data_xml)
+            auth_xml.append(auth_entry_xml)
+            
+        return auth_xml
+            
+              
+    def _crl_distribution_points_to_xml(self, crl_ext):
+        # Hazardous attempt at parsing a CRL Distribution Point extension
+        crl_ext = crl_ext.strip(' \n')
+        crl_ext = crl_ext.split('\n')
+        subcrl_xml = []
+        
+        for distrib_point in crl_ext:
+            distrib_point = distrib_point.strip()
+            distrib_point = distrib_point.split(':', 1)
+            distrib_point_xml = Element(distrib_point[0].replace(' ', ''))
+            distrib_point_xml.text = distrib_point[1]
+            subcrl_xml.append(distrib_point_xml)
+            
+        return subcrl_xml
+        
+    def _extended_key_usage_to_xml(self, key_ext):
+        key_ext = key_ext.split(', ')
+        key_ext_xml = []
+        for key_usage in key_ext:
+            key_usage_xml = Element(key_usage.replace(' ', ''))
+            key_ext_xml.append(key_usage_xml)
+        return key_ext_xml
+            
+                
+    def _get_all_extensions(self, cert):
+        ext_dict = cert.get_extension_list().get_all_extensions()
+        ext_list_txt = ['', self.FIELD_FORMAT.format('Extensions', '')]
+        ext_list_xml = Element('extensions')
+        
+        xml_format_functions = {'X509v3 Subject Alternative Name': self._subject_alternative_name_to_xml,
+                                'X509v3 CRL Distribution Points': self._crl_distribution_points_to_xml,
+                                'Authority Information Access': self._authority_information_access_to_xml,
+                                'X509v3 Key Usage': self._extended_key_usage_to_xml,
+                                'X509v3 Extended Key Usage': self._extended_key_usage_to_xml}
+        
+        for ext in ext_dict.items():
+            ext_list_txt.append(self.FIELD_FORMAT.format(ext[0], ext[1]))
+            ext_name = ext[0].replace(' ', '').replace('/','')
+            if ext_name[0].isdigit(): # Unknown extension, would generate invalid XML
+                ext_name = 'ext-' + ext_name # Tags cannot start with a digit
+            ext_xml = Element(ext_name)
+            
+            if ext[0] in xml_format_functions.keys(): # Special XML formatting
+                for xml_node in xml_format_functions[ext[0]](ext[1]):
+                    ext_xml.append(xml_node)
+            else:
+                ext_xml.text = ext[1]
+            ext_list_xml.append(ext_xml)
+        
+        return (ext_list_txt, [ext_list_xml])
+        
+        
+    def _get_subject_alternative_name(self, cert):
+        try:
+            alt_name = cert.get_extension_list().get_extension('X509v3 Subject Alternative Name')
+        except KeyError: 
+            return ([],[])
+        
+        alt_name_txt = self.FIELD_FORMAT.format('X509v3 Subject Alternative Name:', alt_name)
+        
+        val_xml = Element('extensions')
+        alt_name_xml = self._subject_alternative_name_to_xml(alt_name)
+        val_xml.append(alt_name_xml)
+        return ([alt_name_txt],[val_xml])
+        
 
     def _get_serial(self, cert):
         sn = cert.get_serial_number()
         serial_txt = self.FIELD_FORMAT.format('Serial Number:', sn)
-        serial_xml = Element('serial')
+        serial_xml = Element('serialNumber')
         serial_xml.text = sn
         return ([serial_txt], [serial_xml])
 
     def _get_keysize(self, cert):
         keysize = cert.get_pubkey_size()*8
         keysize_txt = self.FIELD_FORMAT.format('Key Size:', str(keysize) + ' bits')
-        keysize_xml = Element('pk', keysize=str(keysize))
+        keysize_xml = Element('publicKey', keysize=str(keysize))
         return ([keysize_txt],[keysize_xml])   
 
-    def _get_not_before(self, cert):
+    def _get_validity(self, cert):
+        val_xml = Element('validity')
+        #val_txt = []
+        # Not before
         nb = cert.get_not_before()
         val_txt = self.FIELD_FORMAT.format('Not Before:', nb)
-        val_xml = Element('not-before')
-        val_xml.text = nb
-        return ([val_txt], [val_xml])
-
-    def _get_not_after(self, cert):
+        subval_xml = Element('notBefore')
+        subval_xml.text = nb
+        val_xml.append(subval_xml)
+        
+        # Not After
         nb = cert.get_not_after()
-        val_txt = self.FIELD_FORMAT.format('Not After:', nb)
-        val_xml = Element('not-after')
-        val_xml.text = nb
-        return ([val_txt], [val_xml])
+        val2_txt = self.FIELD_FORMAT.format('Not After:', nb)
+        subval2_xml = Element('notAfter')
+        subval2_xml.text = nb
+        val_xml.append(subval2_xml)
+        return ([val_txt, val2_txt], [val_xml])        
 
     def _get_issuer(self, cert):
-        nb = cert.get_issuer()
-        val_txt = self.FIELD_FORMAT.format('Issuer:', nb)
+        issuer_name = cert.get_issuer_name()
+        val_txt = self.FIELD_FORMAT.format('Issuer:', issuer_name.get_as_text())
         val_xml = Element('issuer')
-        val_xml.text = nb
+        for (field_name, field_value) in issuer_name.get_all_entries().items():
+            if field_name[0].isdigit(): # Would generate invalid XML
+                field_name = 'field-' + field_name # Tags cannot start with a digit
+            
+            subval_xml = Element(field_name)
+            subval_xml.text = field_value
+            val_xml.append(subval_xml)
         return ([val_txt], [val_xml])    
       
     def _get_sig_algorithm(self, cert):
         nb = cert.get_sig_algorithm()
         val_txt = self.FIELD_FORMAT.format('Signature Algorithm:', nb)
-        val_xml = Element('signature-algorithm')
+        val_xml = Element('signatureAlgorithm')
         val_xml.text = nb
         return ([val_txt], [val_xml])    
 
@@ -197,10 +287,16 @@ class PluginCertInfo(PluginBase.PluginBase):
         return ([val_txt], [val_xml])    
 
     def _get_subject(self, cert):
-        nb = cert.get_subject()
-        val_txt = self.FIELD_FORMAT.format('Subject:', nb)
+        subject_name = cert.get_subject_name()
+        cn = subject_name.get_entry('commonName')
+        val_txt = self.FIELD_FORMAT.format('Common Name:', cn)
         val_xml = Element('subject')
-        val_xml.text = nb
+        for (field_name, field_value) in subject_name.get_all_entries().items():
+            if field_name[0].isdigit(): # Would generate invalid XML
+                field_name = 'field-' + field_name # Tags cannot start with a digit
+            subval_xml = Element(field_name)
+            subval_xml.text = field_value
+            val_xml.append(subval_xml)
         return ([val_txt], [val_xml]) 
 
     def _get_full(self, cert):

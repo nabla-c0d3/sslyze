@@ -25,7 +25,6 @@ from xml.etree.ElementTree import Element
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL_CTX, constants, ctSSL_initialize, ctSSL_cleanup
-from utils.CtSSLHelper import SSLHandshakeRejected
 
 
 class PluginSessionResumption(PluginBase.PluginBase):

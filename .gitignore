@@ -31,3 +31,13 @@ nosetests.xml
 
 #Mr Developer
 .mr.developer.cfg
+
+# Pydev
+.project
+.pydevproject
+
+# OpenSSL DLLs
+*.dll
+
+# Tests
+*.xml

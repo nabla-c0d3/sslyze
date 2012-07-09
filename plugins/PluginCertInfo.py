@@ -224,7 +224,8 @@ class PluginCertInfo(PluginBase.PluginBase):
         
         val_xml = Element('extensions')
         alt_name_xml = self._subject_alternative_name_to_xml(alt_name)
-        val_xml.append(alt_name_xml)
+        for elem in alt_name_xml:
+            val_xml.append(elem)
         return ([alt_name_txt],[val_xml])
         
 

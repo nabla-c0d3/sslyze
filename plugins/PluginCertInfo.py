@@ -323,7 +323,8 @@ class PluginCertInfo(PluginBase.PluginBase):
         val_txt = self.FIELD_FORMAT.format('Common Name:', '???')
         
         for (field_name, field_value) in subject_name.get_all_entries():
-            if field_name is 'commonName': # store the CN
+            print field_name
+            if field_name == 'commonName': # store the CN
                 val_txt = self.FIELD_FORMAT.format('Common Name:', field_value)
                 
             if field_name[0].isdigit(): # Would generate invalid XML

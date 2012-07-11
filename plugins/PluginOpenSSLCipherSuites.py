@@ -101,8 +101,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         # Start processing the jobs
         thread_pool.start(NB_THREADS)
 
-        result_dicts = {'preferred-cipher':{}, 'accepted-ciphers':{},
-                        'rejected-ciphers':{}, 'errors':{}}
+        result_dicts = {'preferredCipherSuite':{}, 'acceptedCipherSuites':{},
+                        'rejectedCipherSuites':{}, 'errors':{}}
         
         # Store the results as they come
         for completed_job in thread_pool.get_result():
@@ -133,17 +133,17 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         cipher_format = '        {0:<32}{1:<35}'
         title_format =  '      {0:<32} '        
         keysize_format = '{0:<25}{1:<14}'
-        txt_titles = [('preferred-cipher', 'Preferred Cipher Suite:'),
-                      ('accepted-ciphers', 'Accepted Cipher Suite(s):'),
-                      ('rejected-ciphers', 'Rejected Cipher Suite(s):'),
+        txt_titles = [('preferredCipherSuite', 'Preferred Cipher Suite:'),
+                      ('acceptedCipherSuites', 'Accepted Cipher Suite(s):'),
+                      ('rejectedCipherSuites', 'Rejected Cipher Suite(s):'),
                       ('errors', 'Unknown Errors:')]
         
         title_txt = self.PLUGIN_TITLE_FORMAT.format(ssl_version.upper() + ' Cipher Suites')
         txt_result = [title_txt]
               
         if self._shared_settings['hide_rejected_ciphers']:     
-            txt_titles = [('preferred-cipher', 'Preferred Cipher Suite:'),
-                          ('accepted-ciphers', 'Accepted Cipher Suite(s):'),
+            txt_titles = [('preferredCipherSuite', 'Preferred Cipher Suite:'),
+                          ('acceptedCipherSuites', 'Accepted Cipher Suite(s):'),
                           ('errors', 'Unknown Errors:')]
             
             txt_result.append('')
@@ -182,10 +182,10 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             
             # Add one element for each ciphers
             for (ssl_cipher, (msg, keysize)) in result_dict.items():
-                cipher_xml_attr = {'cipher' : ssl_cipher, 'status' : msg}
+                cipher_xml_attr = {'name' : ssl_cipher, 'connectionStatus' : msg}
                 if keysize: 
-                    cipher_xml_attr['keysize'] = keysize
-                cipher_xml = Element('cipher', attrib = cipher_xml_attr)
+                    cipher_xml_attr['keySize'] = keysize
+                cipher_xml = Element('cipherSuite', attrib = cipher_xml_attr)
                     
                 xml_dict.append(cipher_xml)
                 
@@ -210,7 +210,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         try: # Perform the SSL handshake
             ssl_connect.connect()
         except SSLHandshakeRejected as e:
-            return ('rejected-ciphers', ssl_cipher, None, str(e))
+            return ('rejectedCipherSuites', ssl_cipher, None, str(e))
         except Exception as e: # Non standard way to reject a cipher or an error happened
             error_msg = str(e.__class__.__module__) + '.' \
                         + str(e.__class__.__name__) + ' - ' + str(e)
@@ -224,7 +224,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 keysize = str(ssl_connect.ssl.get_current_cipher_bits())+' bits'
                 
             status_msg = self._check_ssl_connection_is_alive(ssl_connect)
-            return ('accepted-ciphers', ssl_cipher, keysize, status_msg)
+            return ('acceptedCipherSuites', ssl_cipher, keysize, status_msg)
     
         finally:
             ssl_connect.close()
@@ -257,7 +257,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 keysize = str(ssl_connect.ssl.get_current_cipher_bits())+' bits'
                 
             status_msg = self._check_ssl_connection_is_alive(ssl_connect)
-            return ('preferred-cipher', ssl_cipher, keysize, status_msg)
+            return ('preferredCipherSuite', ssl_cipher, keysize, status_msg)
     
         finally:
             ssl_connect.close()

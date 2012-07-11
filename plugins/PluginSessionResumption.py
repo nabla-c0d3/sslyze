@@ -94,7 +94,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         xml_resum_attr = {'total' : str(MAX_RESUM),'successful' : str(nb_resum),
                           'failed' : str(nb_failed), 'errors' : str(nb_error)}
         
-        xml_resum = Element('resum_rate', attrib = xml_resum_attr)  
+        xml_resum = Element('sessionResumptionWithSessionIDs', attrib = xml_resum_attr)  
         xml_result = Element(self.__class__.__name__, command = 'resum_rate',
                              title = cmd_title)
         xml_result.append(xml_resum)
@@ -160,12 +160,12 @@ class PluginSessionResumption(PluginBase.PluginBase):
         # XML output
         sessid_xml = str(nb_resum == MAX_RESUM)
         
-        xml_resum_id_attr = {'mechanism' :'session ids','total':str(MAX_RESUM), 
+        xml_resum_id_attr = {'totalAttempts':str(MAX_RESUM), 
                              'errors' : str(nb_error), 'supported' : sessid_xml,
                              'successful':str(nb_resum),'failed':str(nb_failed)}
-        xml_resum_id = Element('resum', attrib = xml_resum_id_attr)
+        xml_resum_id = Element('sessionResumptionWithSessionIDs', attrib = xml_resum_id_attr)
 
-        xml_resum_ticket_attr = {'mechanism' : 'tls tickets'}
+        xml_resum_ticket_attr = {}
         if ticket_error:
             xml_resum_ticket_attr['error'] = ticket_error
         else:
@@ -173,7 +173,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
             if not ticket_supported:
                 xml_resum_ticket_attr['reason'] = ticket_reason
         
-        xml_resum_ticket = Element('resum', attrib = xml_resum_ticket_attr)   
+        xml_resum_ticket = Element('sessionResumptionWithTLSTickets', attrib = xml_resum_ticket_attr)   
         xml_result = Element(self.__class__.__name__, command='resum', title=cmd_title)
         xml_result.append(xml_resum_id)
         xml_result.append(xml_resum_ticket)

@@ -82,7 +82,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         # XML output
         xml_result = Element(self.__class__.__name__, command = command, 
                              argument = arg, title = cmd_title)
-        trust_xml_attr = {'trusted-by-mozilla' : str(cert_trusted)}
+        trust_xml_attr = {'trustedByMozilla' : str(cert_trusted)}
         trust_xml = Element('certificate', attrib = trust_xml_attr)
         for elem_xml in cert_xml:
             trust_xml.append(elem_xml)

@@ -228,9 +228,9 @@ def main():
     
     # Output XML doc to a file if needed
     if shared_settings['xml_file']:
-        result_xml_attr = {'https-tunnel':str(shared_settings['https_tunnel_host']),
-                           'scan-time' : str(exec_time), 
-                           'timeout' : str(shared_settings['timeout']), 
+        result_xml_attr = {'HTTPSTunnel':str(shared_settings['https_tunnel_host']),
+                           'totalScanTime' : str(exec_time), 
+                           'defaultTimeout' : str(shared_settings['timeout']), 
                            'startTLS' : str(shared_settings['starttls'])}
         
         result_xml = Element('results', attrib = result_xml_attr)

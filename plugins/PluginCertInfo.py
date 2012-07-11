@@ -303,8 +303,8 @@ class PluginCertInfo(PluginBase.PluginBase):
             val_xml.append(subval_xml)
         return ([val_txt], [val_xml])    
       
-    def _get_sig_algorithm(self, cert):
-        nb = cert.get_sig_algorithm()
+    def _get_signature_algorithm(self, cert):
+        nb = cert.get_signature_algorithm()
         val_txt = self.FIELD_FORMAT.format('Signature Algorithm:', nb)
         val_xml = Element('signatureAlgorithm')
         val_xml.text = nb

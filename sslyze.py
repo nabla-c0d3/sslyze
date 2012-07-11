@@ -37,6 +37,7 @@ SSLYZE_VERSION =      'SSLyze v0.5 beta'
 DEFAULT_NB_PROCESSES =      5 # 10 was too aggressive, lowering it to 5
 PLUGIN_PATH =       "plugins"
 DEFAULT_TIMEOUT =   5
+PROJECT_URL = "https://github.com/nabla-c0d3/sslyze"
 
 # Todo: Move formatting stuff to another file
 SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
@@ -239,7 +240,7 @@ def main():
             
         xml_final_doc = Element('document', title = "SSLyze Results",
                                 version = SSLYZE_VERSION, 
-                                web = "http://code.google.com/p/sslyze")
+                                web = PROJECT_URL)
         xml_final_doc.append(result_xml)
     
         xml_final_tree = ElementTree(xml_final_doc)

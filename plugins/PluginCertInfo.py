@@ -43,7 +43,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             "the certificate."))
     available_commands.add_command(
         command="certinfo",
-        help="Should be one of: 'basic', 'detail' or 'full'",
+        help="Should be 'basic' or 'full'",
         dest="certinfo")
 
     FIELD_FORMAT = '      {0:<35}{1:<35}'
@@ -66,7 +66,6 @@ class PluginCertInfo(PluginBase.PluginBase):
                 raise
             
         result_dict = {'basic':     self._get_basic, 
-                       'detail':     self._get_detail, 
                        'full':      self._get_full}
 
         (cert_txt, cert_xml) = result_dict[arg](cert)
@@ -103,7 +102,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         
         vals_to_get = [self._get_subject(cert), self._get_issuer(cert),
                        self._get_serial(cert),self._get_validity(cert),
-                       self._get_sig_algorithm(cert),
+                       self._get_signature_algorithm(cert),
                        self._get_keysize(cert), self._get_fingerprint(cert),
                        self._get_subject_alternative_name(cert)]
         
@@ -113,23 +112,63 @@ class PluginCertInfo(PluginBase.PluginBase):
 
         return (basic_txt, basic_xml)
     
-    
-    def _get_detail(self, cert):
+
+    def _get_full(self, cert):
         basic_xml = []
         basic_txt = []
         
-        vals_to_get = [self._get_subject(cert), self._get_issuer(cert),
-                       self._get_serial(cert),self._get_validity(cert),
-                       self._get_sig_algorithm(cert),
-                       self._get_keysize(cert), self._get_fingerprint(cert),
-                       self._get_all_extensions(cert)]
+        vals_to_get = [self._get_version(cert), self._get_serial(cert), 
+                       self._get_issuer(cert),  self._get_validity(cert),
+                       self._get_subject(cert), self._get_publickey(cert), 
+                       self._get_all_extensions(cert),
+                       self._get_signature(cert), self._get_fingerprint(cert)]
         
         for (val_txt, val_xml) in vals_to_get:
             basic_xml.extend(val_xml)
-            basic_txt.extend(val_txt)
 
-        return (basic_txt, basic_xml)
-    
+        return ([cert.as_text()], basic_xml)
+
+
+    def _get_signature(self, cert):
+        sig_txt = cert.get_signature_as_text()
+        sig_alg = cert.get_signature_algorithm()
+        
+        sig_xml = Element('signature', algorithm=sig_alg)
+        sig_xml.text = sig_txt
+        
+        return ([], [sig_xml])
+        
+        
+    def _get_version(self,cert):
+        version = cert.get_version().split('(')[0].strip()
+        version_xml = Element('version')
+        version_xml.text = version
+        return([],[version_xml])
+        
+        
+    def _get_publickey(self, cert):
+        pubkey_txt = cert.get_pubkey_as_text()
+        pubkey_alg = cert.get_pubkey_algorithm()
+        # Manually parse this... what could possibly go wrong?
+        modulus_lines = pubkey_txt.split('Modulus:')[1].split('Exponent:')[0].strip().split('\n')
+        pubkey_modulus = ''
+        
+        for line in modulus_lines:
+            pubkey_modulus += line.strip()
+            
+        pubkey_exponent = pubkey_txt.split('Modulus:')[1].split('Exponent:')[1].split('(')[0].strip()
+        keysize = cert.get_pubkey_size()*8
+        
+        pubkey_xml = Element('subjectPublicKeyInfo', size=str(keysize), algorithm=pubkey_alg)
+        modulus_xml = Element('modulus')
+        modulus_xml.text = pubkey_modulus
+        exponent_xml = Element('exponent')
+        exponent_xml.text = pubkey_exponent
+        pubkey_xml.append(modulus_xml)
+        pubkey_xml.append(exponent_xml)
+        
+        return ([pubkey_txt], [pubkey_xml])
+        
     
     def _subject_alternative_name_to_xml(self, alt_name):
         alt_name_xml = []
@@ -187,6 +226,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             
                 
     def _get_all_extensions(self, cert):
+        
         ext_dict = cert.get_extension_list().get_all_extensions()
         ext_list_txt = ['', self.FIELD_FORMAT.format('Extensions', '')]
         ext_list_xml = Element('extensions')
@@ -227,7 +267,6 @@ class PluginCertInfo(PluginBase.PluginBase):
         for elem in alt_name_xml:
             val_xml.append(elem)
         return ([alt_name_txt],[val_xml])
-        
 
     def _get_serial(self, cert):
         sn = cert.get_serial_number()
@@ -236,10 +275,11 @@ class PluginCertInfo(PluginBase.PluginBase):
         serial_xml.text = sn
         return ([serial_txt], [serial_xml])
 
+
     def _get_keysize(self, cert):
         keysize = cert.get_pubkey_size()*8
         keysize_txt = self.FIELD_FORMAT.format('Key Size:', str(keysize) + ' bits')
-        keysize_xml = Element('publicKey', keysize=str(keysize))
+        keysize_xml = Element('publicKey', size=str(keysize))
         return ([keysize_txt],[keysize_xml])   
 
     def _get_validity(self, cert):
@@ -264,7 +304,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         issuer_name = cert.get_issuer_name()
         val_txt = self.FIELD_FORMAT.format('Issuer:', issuer_name.get_as_text())
         val_xml = Element('issuer')
-        for (field_name, field_value) in issuer_name.get_all_entries().items():
+        for (field_name, field_value) in issuer_name.get_all_entries():
             if field_name[0].isdigit(): # Would generate invalid XML
                 field_name = 'field-' + field_name # Tags cannot start with a digit
             
@@ -289,10 +329,13 @@ class PluginCertInfo(PluginBase.PluginBase):
 
     def _get_subject(self, cert):
         subject_name = cert.get_subject_name()
-        cn = subject_name.get_entry('commonName')
-        val_txt = self.FIELD_FORMAT.format('Common Name:', cn)
         val_xml = Element('subject')
-        for (field_name, field_value) in subject_name.get_all_entries().items():
+        val_txt = self.FIELD_FORMAT.format('Common Name:', '???')
+        
+        for (field_name, field_value) in subject_name.get_all_entries():
+            if field_name is 'commonName': # store the CN
+                val_txt = self.FIELD_FORMAT.format('Common Name:', field_value)
+                
             if field_name[0].isdigit(): # Would generate invalid XML
                 field_name = 'field-' + field_name # Tags cannot start with a digit
             subval_xml = Element(field_name)
@@ -300,15 +343,6 @@ class PluginCertInfo(PluginBase.PluginBase):
             val_xml.append(subval_xml)
         return ([val_txt], [val_xml]) 
 
-    def _get_full(self, cert):
-        # TODO: Proper parsing of the cert for XML output
-        full_cert = cert.as_text()
-        # Removing the first and the last lines
-        full_cert = full_cert.rsplit('\n', 1)[0]
-        full_cert_txt = full_cert.split('\n', 1)[1]
-        full_cert_xml = Element('raw-certificate')
-        full_cert_xml.text = full_cert_txt
-        return ([full_cert_txt], [full_cert_xml])
         
 
     def _get_cert(self, target, verify_cert=False):

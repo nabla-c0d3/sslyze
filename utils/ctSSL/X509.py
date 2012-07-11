@@ -58,7 +58,7 @@ class X509_EXTENSION_LIST:
 class X509_NAME:
     """Parses an X509 Issuer Name or Subject Name field"""
     def __init__(self, x509_name_struct):
-        self._x509name_entries = {} 
+        self._x509name_entries = [] # Cannot be a dict as multiple entries can have the same name
                 
         # Extract entries within the x509name field 
         entry_nb = libcrypto.X509_NAME_entry_count(x509_name_struct)
@@ -74,7 +74,7 @@ class X509_NAME:
             entry_name = create_string_buffer(1024) #TODO no hardcoded len
             libcrypto.OBJ_obj2txt(entry_name, sizeof(entry_name), entry_name_asn1_p, c_int(0))
             
-            self._x509name_entries[entry_name.value] = entry_data_txt
+            self._x509name_entries.append((entry_name.value, entry_data_txt))
         
         # Store the x509 name as a string too
         x509name_txt = create_string_buffer(4096)
@@ -85,11 +85,6 @@ class X509_NAME:
     def get_as_text(self):
         return self._x509name_txt
     
-        
-    def get_entry(self, entry_name):
-        """Read an entry within the X509 name field"""
-        return self._x509name_entries[entry_name]
-        
         
     def get_all_entries(self):
         return self._x509name_entries
@@ -144,6 +139,7 @@ class X509:
     def get_extension_list(self):
         return X509_EXTENSION_LIST(self._x509_struct)
 
+
     def get_ext_count(self):
         return libcrypto.X509_get_ext_count(self._x509_struct)
 
@@ -165,6 +161,15 @@ class X509:
             fingerprint_string.append('%02X' % ord( fingerprint_p.raw[i] ) )
 
         return ''.join(fingerprint_string)
+
+
+    def get_pubkey_as_text(self):
+        evp_key_struct_p = libcrypto.X509_get_pubkey(self._x509_struct)
+        
+        mem_bio = BIO.BIOFactory.new_mem()
+        libcrypto.EVP_PKEY_print_public(mem_bio.get_bio_struct_p(), 
+                                        evp_key_struct_p, c_int(0), None)
+        return mem_bio.read(4096)
 
 
     def get_pubkey_size(self):
@@ -195,7 +200,9 @@ class X509:
 
         return value
 
-
+    def get_pubkey_algorithm(self):
+        return self._extract_cert_value('Public Key Algorithm: ')
+        
     def get_version(self):
         return self._extract_cert_value('Version: ')
 
@@ -208,8 +215,19 @@ class X509:
         return self._extract_cert_value('Not After : ')
 
 
-    def get_sig_algorithm(self):
+    def get_signature_algorithm(self):
         return self._extract_cert_value('Signature Algorithm: ')
+    
+    def get_signature_as_text(self):
+        cert_txt = self.as_text()
+        # Horrible assumptions about what OpenSSL's X509_print() returns
+        sig_txt = cert_txt.split('Signature Algorithm:', 1)[1].split('Signature Algorithm:')[1].split('\n',1)[1]
+        sig_parts = sig_txt.split('\n')
+        signature = ''
+        for part in sig_parts:
+            signature += part.strip()         
+        return signature.strip()
+        
 
 
 # == CTYPE ERRCHECK CALLBACK(S) ==
@@ -312,5 +330,8 @@ def init_X509_functions():
 
     libcrypto.X509V3_EXT_print.argtypes = [c_void_p, c_void_p, c_long, c_int]
     libcrypto.X509V3_EXT_print.restype = c_int
+    
+    libcrypto.EVP_PKEY_print_public.argtypes = [c_void_p, c_void_p, c_int, c_void_p]
+    libcrypto.EVP_PKEY_print_public.restype = c_int
  
     

@@ -6,7 +6,7 @@
 #
 # Author:       alban
 #
-# Copyright:    2011 SSLyze developers (http://code.google.com/sslyze)
+# Copyright:    2012 SSLyze developers
 #
 #   SSLyze is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by

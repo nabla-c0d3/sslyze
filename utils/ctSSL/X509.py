@@ -162,14 +162,14 @@ class X509:
 
         return ''.join(fingerprint_string)
 
-
-    def get_pubkey_as_text(self):
-        evp_key_struct_p = libcrypto.X509_get_pubkey(self._x509_struct)
-        
-        mem_bio = BIO.BIOFactory.new_mem()
-        libcrypto.EVP_PKEY_print_public(mem_bio.get_bio_struct_p(), 
-                                        evp_key_struct_p, c_int(0), None)
-        return mem_bio.read(4096)
+                
+    #def get_pubkey_as_text(self):
+        # EVP_PKEY_print_public() not in OpenSSL 0.9.8 :(
+        # evp_key_struct_p = libcrypto.X509_get_pubkey(self._x509_struct)
+        #mem_bio = BIO.BIOFactory.new_mem()
+        #libcrypto.EVP_PKEY_print_public(mem_bio.get_bio_struct_p(), 
+        #                                evp_key_struct_p, c_int(0), None)
+        #return mem_bio.read(4096)
 
 
     def get_pubkey_size(self):
@@ -199,6 +199,20 @@ class X509:
                 break
 
         return value
+
+    def get_pubkey_modulus_as_text(self):
+        cert =  self.as_text()
+        modulus_lines = cert.split('Modulus')[1].split('\n',1)[1].split('Exponent:')[0].strip().split('\n')
+        pubkey_modulus_txt = ''
+    
+        for line in modulus_lines:
+            pubkey_modulus_txt += line.strip()
+        return pubkey_modulus_txt
+        
+    def get_pubkey_exponent_as_text(self):
+        exp = self._extract_cert_value('Exponent:')
+        return exp.split('(')[0].strip()
+        
 
     def get_pubkey_algorithm(self):
         return self._extract_cert_value('Public Key Algorithm: ')
@@ -331,7 +345,8 @@ def init_X509_functions():
     libcrypto.X509V3_EXT_print.argtypes = [c_void_p, c_void_p, c_long, c_int]
     libcrypto.X509V3_EXT_print.restype = c_int
     
-    libcrypto.EVP_PKEY_print_public.argtypes = [c_void_p, c_void_p, c_int, c_void_p]
-    libcrypto.EVP_PKEY_print_public.restype = c_int
+    # Not in OpenSSL 0.9.8 :(
+    #libcrypto.EVP_PKEY_print_public.argtypes = [c_void_p, c_void_p, c_int, c_void_p]
+    #libcrypto.EVP_PKEY_print_public.restype = c_int
  
     

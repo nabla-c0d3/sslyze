@@ -147,27 +147,17 @@ class PluginCertInfo(PluginBase.PluginBase):
         
         
     def _get_publickey(self, cert):
-        pubkey_txt = cert.get_pubkey_as_text()
-        pubkey_alg = cert.get_pubkey_algorithm()
-        # Manually parse this... what could possibly go wrong?
-        modulus_lines = pubkey_txt.split('Modulus:')[1].split('Exponent:')[0].strip().split('\n')
-        pubkey_modulus = ''
-        
-        for line in modulus_lines:
-            pubkey_modulus += line.strip()
-            
-        pubkey_exponent = pubkey_txt.split('Modulus:')[1].split('Exponent:')[1].split('(')[0].strip()
-        keysize = cert.get_pubkey_size()*8
-        
-        pubkey_xml = Element('subjectPublicKeyInfo', size=str(keysize), algorithm=pubkey_alg)
+        pubkey_xml = Element('subjectPublicKeyInfo', 
+                             size=str(cert.get_pubkey_size()*8), 
+                             algorithm=cert.get_pubkey_algorithm())
         modulus_xml = Element('modulus')
-        modulus_xml.text = pubkey_modulus
+        modulus_xml.text = cert.get_pubkey_modulus_as_text()
         exponent_xml = Element('exponent')
-        exponent_xml.text = pubkey_exponent
+        exponent_xml.text = cert.get_pubkey_exponent_as_text()
         pubkey_xml.append(modulus_xml)
         pubkey_xml.append(exponent_xml)
         
-        return ([pubkey_txt], [pubkey_xml])
+        return ([], [pubkey_xml])
         
     
     def _subject_alternative_name_to_xml(self, alt_name):

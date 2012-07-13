@@ -26,9 +26,9 @@ from multiprocessing import Process, JoinableQueue
 import sys
 from xml.etree.ElementTree import ElementTree, Element
 
-from discover_targets import discover_targets
-from discover_plugins import discover_plugins
-from parse_command_line import create_command_line_parser, \
+from utils.discover_targets import discover_targets
+from utils.discover_plugins import discover_plugins
+from utils.parse_command_line import create_command_line_parser, \
     parse_command_line, process_parsing_results, PARSING_ERROR_FORMAT
 
 

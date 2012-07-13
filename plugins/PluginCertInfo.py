@@ -200,9 +200,10 @@ class PluginCertInfo(PluginBase.PluginBase):
         for distrib_point in crl_ext:
             distrib_point = distrib_point.strip()
             distrib_point = distrib_point.split(':', 1)
-            distrib_point_xml = Element(distrib_point[0].replace(' ', ''))
-            distrib_point_xml.text = distrib_point[1]
-            subcrl_xml.append(distrib_point_xml)
+            if distrib_point[0] != '':
+                distrib_point_xml = Element(distrib_point[0].replace(' ', ''))
+                distrib_point_xml.text = distrib_point[1]
+                subcrl_xml.append(distrib_point_xml)
             
         return subcrl_xml
         
@@ -323,7 +324,6 @@ class PluginCertInfo(PluginBase.PluginBase):
         val_txt = self.FIELD_FORMAT.format('Common Name:', '???')
         
         for (field_name, field_value) in subject_name.get_all_entries():
-            print field_name
             if field_name == 'commonName': # store the CN
                 val_txt = self.FIELD_FORMAT.format('Common Name:', field_value)
                 

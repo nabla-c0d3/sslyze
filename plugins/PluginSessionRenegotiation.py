@@ -62,7 +62,7 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         
         # XML output
         xml_reneg_attr = {'canBeClientInitiated' : str(can_reneg),
-                          'secure' : str(is_secure)}
+                          'isSecure' : str(is_secure)}
         xml_reneg = Element('sessionRenegotiation', attrib = xml_reneg_attr)
         
         xml_result = Element(self.__class__.__name__, command = command,

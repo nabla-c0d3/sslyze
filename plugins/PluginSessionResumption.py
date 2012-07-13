@@ -91,8 +91,8 @@ class PluginSessionResumption(PluginBase.PluginBase):
         txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)+' '+resum_txt]
 
         # XML output
-        xml_resum_attr = {'total' : str(MAX_RESUM),'successful' : str(nb_resum),
-                          'failed' : str(nb_failed), 'errors' : str(nb_error)}
+        xml_resum_attr = {'totalAttempts' : str(MAX_RESUM),'successfulAttempts' : str(nb_resum),
+                          'failedAttempts' : str(nb_failed), 'errors' : str(nb_error)}
         
         xml_resum = Element('sessionResumptionWithSessionIDs', attrib = xml_resum_attr)  
         xml_result = Element(self.__class__.__name__, command = 'resum_rate',
@@ -161,15 +161,15 @@ class PluginSessionResumption(PluginBase.PluginBase):
         sessid_xml = str(nb_resum == MAX_RESUM)
         
         xml_resum_id_attr = {'totalAttempts':str(MAX_RESUM), 
-                             'errors' : str(nb_error), 'supported' : sessid_xml,
-                             'successful':str(nb_resum),'failed':str(nb_failed)}
+                             'errors' : str(nb_error), 'isSupported' : sessid_xml,
+                             'successfulAttempts':str(nb_resum),'failedAttempts':str(nb_failed)}
         xml_resum_id = Element('sessionResumptionWithSessionIDs', attrib = xml_resum_id_attr)
 
         xml_resum_ticket_attr = {}
         if ticket_error:
             xml_resum_ticket_attr['error'] = ticket_error
         else:
-            xml_resum_ticket_attr['supported'] = str(ticket_supported)
+            xml_resum_ticket_attr['isSupported'] = str(ticket_supported)
             if not ticket_supported:
                 xml_resum_ticket_attr['reason'] = ticket_reason
         

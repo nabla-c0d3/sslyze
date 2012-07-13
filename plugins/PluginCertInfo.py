@@ -70,19 +70,23 @@ class PluginCertInfo(PluginBase.PluginBase):
 
         (cert_txt, cert_xml) = result_dict[arg](cert)
         
+        
         # Text output
+        fingerprint = cert.get_fingerprint()
         cmd_title = 'Certificate'
         txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
         trust_txt = 'Certificate is Trusted' if cert_trusted \
                                              else 'Certificate is NOT Trusted'
 
         txt_result.append(self.FIELD_FORMAT.format("Validation w/ Mozilla's CA Store:", trust_txt))
+        txt_result.append(self.FIELD_FORMAT.format('SHA1 Fingerprint:', fingerprint))
         txt_result.extend(cert_txt)
 
         # XML output
         xml_result = Element(self.__class__.__name__, command = command, 
                              argument = arg, title = cmd_title)
-        trust_xml_attr = {'trustedByMozilla' : str(cert_trusted)}
+        trust_xml_attr = {'isTrustedByMozilla' : str(cert_trusted),
+                          'sha1Fingerprint' : fingerprint}
         trust_xml = Element('certificate', attrib = trust_xml_attr)
         for elem_xml in cert_xml:
             trust_xml.append(elem_xml)
@@ -103,7 +107,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         vals_to_get = [self._get_subject(cert), self._get_issuer(cert),
                        self._get_serial(cert),self._get_validity(cert),
                        self._get_signature_algorithm(cert),
-                       self._get_keysize(cert), self._get_fingerprint(cert),
+                       self._get_keysize(cert), 
                        self._get_subject_alternative_name(cert)]
         
         for (val_txt, val_xml) in vals_to_get:
@@ -120,8 +124,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         vals_to_get = [self._get_version(cert), self._get_serial(cert), 
                        self._get_issuer(cert),  self._get_validity(cert),
                        self._get_subject(cert), self._get_publickey(cert), 
-                       self._get_all_extensions(cert),
-                       self._get_signature(cert), self._get_fingerprint(cert)]
+                       self._get_all_extensions(cert),self._get_signature(cert)]
         
         for (val_txt, val_xml) in vals_to_get:
             basic_xml.extend(val_xml)
@@ -131,12 +134,13 @@ class PluginCertInfo(PluginBase.PluginBase):
 
     def _get_signature(self, cert):
         sig_txt = cert.get_signature_as_text()
-        sig_alg = cert.get_signature_algorithm()
+        sig_alg_xml = Element('signatureAlgorithm')
+        sig_alg_xml.text = cert.get_signature_algorithm()
         
-        sig_xml = Element('signature', algorithm=sig_alg)
+        sig_xml = Element('signatureValue')
         sig_xml.text = sig_txt
         
-        return ([], [sig_xml])
+        return ([], [sig_alg_xml, sig_xml])
         
         
     def _get_version(self,cert):
@@ -147,15 +151,20 @@ class PluginCertInfo(PluginBase.PluginBase):
         
         
     def _get_publickey(self, cert):
-        pubkey_xml = Element('subjectPublicKeyInfo', 
-                             size=str(cert.get_pubkey_size()*8), 
-                             algorithm=cert.get_pubkey_algorithm())
+        pubkey_xml = Element('subjectPublicKeyInfo')
+        pubkey_algo_xml = Element('publicKeyAlgorithm')
+        pubkey_algo_xml.text = cert.get_pubkey_algorithm()
+        pubkey_xml.append(pubkey_algo_xml)
+        
+        pubkey_xml2 = Element('publicKey', 
+                             keySize=str(cert.get_pubkey_size()*8))
         modulus_xml = Element('modulus')
         modulus_xml.text = cert.get_pubkey_modulus_as_text()
         exponent_xml = Element('exponent')
         exponent_xml.text = cert.get_pubkey_exponent_as_text()
-        pubkey_xml.append(modulus_xml)
-        pubkey_xml.append(exponent_xml)
+        pubkey_xml2.append(modulus_xml)
+        pubkey_xml2.append(exponent_xml)
+        pubkey_xml.append(pubkey_xml2)
         
         return ([], [pubkey_xml])
         
@@ -254,9 +263,11 @@ class PluginCertInfo(PluginBase.PluginBase):
         alt_name_txt = self.FIELD_FORMAT.format('X509v3 Subject Alternative Name:', alt_name)
         
         val_xml = Element('extensions')
+        val_xml2 = Element('X509v3SubjectAlternativeName')
         alt_name_xml = self._subject_alternative_name_to_xml(alt_name)
         for elem in alt_name_xml:
-            val_xml.append(elem)
+            val_xml2.append(elem)
+        val_xml.append(val_xml2)
         return ([alt_name_txt],[val_xml])
 
     def _get_serial(self, cert):
@@ -270,7 +281,9 @@ class PluginCertInfo(PluginBase.PluginBase):
     def _get_keysize(self, cert):
         keysize = cert.get_pubkey_size()*8
         keysize_txt = self.FIELD_FORMAT.format('Key Size:', str(keysize) + ' bits')
-        keysize_xml = Element('publicKey', size=str(keysize))
+        keysize_xml = Element('subjectPublicKeyInfo')
+        keysize_xml2 = Element('publicKey', keySize=str(keysize))
+        keysize_xml.append(keysize_xml2)
         return ([keysize_txt],[keysize_xml])   
 
     def _get_validity(self, cert):

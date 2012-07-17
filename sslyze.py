@@ -37,7 +37,7 @@ SSLYZE_VERSION =      'SSLyze v0.5 beta'
 DEFAULT_NB_PROCESSES =      5 # 10 was too aggressive, lowering it to 5
 PLUGIN_PATH =       "plugins"
 DEFAULT_TIMEOUT =   5
-PROJECT_URL = "https://github.com/nabla-c0d3/sslyze"
+PROJECT_URL = "https://github.com/isecPartners/sslyze"
 
 # Todo: Move formatting stuff to another file
 SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'

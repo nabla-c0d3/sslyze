@@ -33,6 +33,150 @@ from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors
 TRUSTED_CA_STORE = os.path.join(sys.path[0], 'mozilla_cacert.pem')
 
 
+class X509CertificateHelper:
+    """
+    Helper functions for X509 certificate parsing and XML serialization.
+    """
+    
+    def __init__(self, certificate):
+        self._cert = certificate
+        
+    def parse_certificate(self):
+        cert_dict = \
+            {'version': self._cert.get_version().split('(')[0].strip() ,
+             'serialNumber': self._cert.get_serial_number() ,
+             'issuer': self._cert.get_issuer_name().get_all_entries() ,
+             'validity': {'notBefore': self._cert.get_not_before() ,
+                         'notAfter' : self._cert.get_not_after()} ,
+             'subject': self._cert.get_subject_name().get_all_entries() ,
+             'subjectPublicKeyInfo':{'publicKeyAlgorithm': self._cert.get_pubkey_algorithm() ,
+                                     'publicKeySize': str( self._cert.get_pubkey_size()*8) ,
+                                     'publicKey': {'modulus': self._cert.get_pubkey_modulus_as_text(),
+                                                   'exponent': self._cert.get_pubkey_exponent_as_text()}
+                                     },
+             'extensions': self._get_all_extensions() ,
+             'signatureAlgorithm': self._cert.get_signature_algorithm() ,
+             'signatureValue': self._cert.get_signature_as_text() }
+        
+        return cert_dict
+        
+
+    def parse_certificate_to_xml(self):
+        cert_dict = self.parse_certificate()
+        cert_xml = []
+        
+        for (key, value) in cert_dict.items():
+            for xml_elem in self._keyvalue_pair_to_xml(key,value):
+                cert_xml.append(xml_elem)
+            
+        return cert_xml
+
+
+    def _create_xml_node(self, key, value=''):
+        key = key.replace(' ', '').strip()
+        if key[0].isdigit(): # Would generate invalid XML
+                key = 'oid-' + key # Tags cannot start with a digit
+        xml_node = Element(key)
+        xml_node.text = value.strip()
+        return xml_node
+    
+    
+    def _keyvalue_pair_to_xml(self, key, value=''):
+        res_xml = []
+        
+        if type(value) is str: # value is a string
+            key_xml = self._create_xml_node(key)
+            key_xml.text = value
+            res_xml.append(key_xml)
+            
+        elif value is None: # no value
+           res_xml.append(self._create_xml_node(key))
+           
+        elif type(value) is list: # multiple strings
+            for val in value:
+                res_xml.append(self._create_xml_node(key, val))
+           
+        else: # value is a list of subnodes
+            key_xml = self._create_xml_node(key)
+            for subdata in value.items():
+                key_xml.append(self._keyvalue_pair_to_xml(*subdata)[0])
+            res_xml.append(key_xml)
+            
+        return res_xml    
+
+
+    def _parse_multi_valued_extension(self, extension):
+        
+        extension = extension.split(', ')
+        # Split the (key,value) pairs
+        parsed_ext = {}
+        for value in extension:
+            value = value.split(':', 1)
+            if len(value) == 1:
+                parsed_ext[value[0]] = ''
+            else:
+                if parsed_ext.has_key(value[0]):
+                    parsed_ext[value[0]].append(value[1])
+                else:
+                    parsed_ext[value[0]] = [value[1]]
+
+        return parsed_ext
+        
+    
+    def _parse_authority_information_access(self, auth_ext):
+        # Hazardous attempt at parsing an Authority Information Access extension
+        auth_ext_list = {}
+        auth_ext = auth_ext.strip(' \n')
+        auth_ext = auth_ext.split('\n')
+ 
+        for auth_entry in auth_ext:
+            auth_entry_res = []
+            auth_entry = auth_entry.split(' - ')
+            entry_name = auth_entry[0].replace(' ', '')
+            entry_data = auth_entry[1].split(':', 1)
+            auth_ext_list[entry_name] = {entry_data[0]: entry_data[1]}
+                
+        return auth_ext_list
+            
+              
+    def _parse_crl_distribution_points(self, crl_ext):
+
+        # Hazardous attempt at parsing a CRL Distribution Point extension
+        crl_ext = crl_ext.strip(' \n')
+        crl_ext = crl_ext.split('\n')
+        subcrl = {}
+        
+        for distrib_point in crl_ext:
+            distrib_point = distrib_point.strip()
+            distrib_point = distrib_point.split(':', 1)
+            if distrib_point[0] != '':
+                if subcrl.has_key(distrib_point[0].strip()):
+                    subcrl[distrib_point[0].strip()].append(distrib_point[1].strip())
+                else:
+                    subcrl[distrib_point[0].strip()] = [(distrib_point[1].strip())]
+
+        return subcrl
+        
+                
+    def _get_all_extensions(self):
+
+        ext_dict = self._cert.get_extension_list().get_all_extensions()
+
+        parsing_functions = {'X509v3 Subject Alternative Name': self._parse_multi_valued_extension,
+                             'X509v3 CRL Distribution Points': self._parse_crl_distribution_points,
+                             'Authority Information Access': self._parse_authority_information_access,
+                             'X509v3 Key Usage': self._parse_multi_valued_extension,
+                             'X509v3 Extended Key Usage': self._parse_multi_valued_extension,
+                             'X509v3 Certificate Policies' : self._parse_crl_distribution_points}
+        
+        for (ext_key, ext_val) in ext_dict.items():
+            # Overwrite the data we have if we know how to parse it
+            if ext_key in parsing_functions.keys():
+                ext_dict[ext_key] = parsing_functions[ext_key](ext_val)
+        
+        return ext_dict
+        
+
 class PluginCertInfo(PluginBase.PluginBase):
 
     available_commands = PluginBase.AvailableCommands(
@@ -98,231 +242,33 @@ class PluginCertInfo(PluginBase.PluginBase):
 
 # FORMATTING FUNCTIONS
 
-# TODO: Write results to an object and use an XML serializer instead
-
     def _get_basic(self, cert):
-        basic_xml = []
-        basic_txt = []
+        cert_parsed =  X509CertificateHelper(cert)
+        cert_dict = cert_parsed.parse_certificate()
+        cert_xml = cert_parsed.parse_certificate_to_xml()
         
-        vals_to_get = [self._get_subject(cert), self._get_issuer(cert),
-                       self._get_serial(cert),self._get_validity(cert),
-                       self._get_signature_algorithm(cert),
-                       self._get_keysize(cert), 
-                       self._get_subject_alternative_name(cert)]
+        basic_txt = [ \
+        self.FIELD_FORMAT.format("Common Name:", cert_dict['subject']['commonName'][0] ),
+        self.FIELD_FORMAT.format("Issuer:", cert.get_issuer_name().get_as_text()),
+        self.FIELD_FORMAT.format("Serial Number:", cert_dict['serialNumber']),
+        self.FIELD_FORMAT.format("Not Before:", cert_dict['validity']['notBefore']),
+        self.FIELD_FORMAT.format("Not After:", cert_dict['validity']['notAfter']),
+        self.FIELD_FORMAT.format("Signature Algorithm:", cert_dict['signatureAlgorithm']),
+        self.FIELD_FORMAT.format("Key Size:", cert_dict['subjectPublicKeyInfo']['publicKeySize'])]
         
-        for (val_txt, val_xml) in vals_to_get:
-            basic_xml.extend(val_xml)
-            basic_txt.extend(val_txt)
-
-        return (basic_txt, basic_xml)
+        try:
+            alt_name = cert.get_extension_list().get_extension('X509v3 Subject Alternative Name')
+            basic_txt.append (self.FIELD_FORMAT.format('X509v3 Subject Alternative Name:', alt_name))
+        except KeyError:
+            pass
+        
+        return (basic_txt, cert_xml)
     
 
     def _get_full(self, cert):
-        basic_xml = []
-        basic_txt = []
-        
-        vals_to_get = [self._get_version(cert), self._get_serial(cert), 
-                       self._get_issuer(cert),  self._get_validity(cert),
-                       self._get_subject(cert), self._get_publickey(cert), 
-                       self._get_all_extensions(cert),self._get_signature(cert)]
-        
-        for (val_txt, val_xml) in vals_to_get:
-            basic_xml.extend(val_xml)
+        cert_xml = X509CertificateHelper(cert).parse_certificate_to_xml()  
+        return ([cert.as_text()], cert_xml)
 
-        return ([cert.as_text()], basic_xml)
-
-
-    def _get_signature(self, cert):
-        sig_txt = cert.get_signature_as_text()
-        sig_alg_xml = Element('signatureAlgorithm')
-        sig_alg_xml.text = cert.get_signature_algorithm()
-        
-        sig_xml = Element('signatureValue')
-        sig_xml.text = sig_txt
-        
-        return ([], [sig_alg_xml, sig_xml])
-        
-        
-    def _get_version(self,cert):
-        version = cert.get_version().split('(')[0].strip()
-        version_xml = Element('version')
-        version_xml.text = version
-        return([],[version_xml])
-        
-        
-    def _get_publickey(self, cert):
-        pubkey_xml = Element('subjectPublicKeyInfo')
-        pubkey_algo_xml = Element('publicKeyAlgorithm')
-        pubkey_algo_xml.text = cert.get_pubkey_algorithm()
-        pubkey_xml.append(pubkey_algo_xml)
-        
-        pubkey_xml2 = Element('publicKey', 
-                             keySize=str(cert.get_pubkey_size()*8))
-        modulus_xml = Element('modulus')
-        modulus_xml.text = cert.get_pubkey_modulus_as_text()
-        exponent_xml = Element('exponent')
-        exponent_xml.text = cert.get_pubkey_exponent_as_text()
-        pubkey_xml2.append(modulus_xml)
-        pubkey_xml2.append(exponent_xml)
-        pubkey_xml.append(pubkey_xml2)
-        
-        return ([], [pubkey_xml])
-        
-    
-    def _subject_alternative_name_to_xml(self, alt_name):
-        alt_name_xml = []
-        
-        # Parse the names for a useful xml output TODO: do it somewhere else
-        alt_name = alt_name.replace(' ', '')
-        alt_name_l = alt_name.split(',')
-        for name in alt_name_l:
-            name_val = name.split(':')
-            name_xml = Element(name_val[0])
-            name_xml.text = name_val[1]
-            alt_name_xml.append(name_xml)
-        
-        return alt_name_xml
-        
-    def _authority_information_access_to_xml(self, auth_ext):
-        # Hazardous attempt at parsing an Authority Information Access extension
-        auth_ext = auth_ext.strip(' \n')
-        auth_ext = auth_ext.split('\n')
-        auth_xml = []
-        for auth_entry in auth_ext:
-            auth_entry = auth_entry.split(' - ')
-            auth_entry_xml = Element(auth_entry[0].replace(' ', ''))
-            auth_entry_data = auth_entry[1].split(':', 1)
-            auth_entry_data_xml = Element(auth_entry_data[0])
-            auth_entry_data_xml.text = auth_entry_data[1]
-            auth_entry_xml.append(auth_entry_data_xml)
-            auth_xml.append(auth_entry_xml)
-            
-        return auth_xml
-            
-              
-    def _crl_distribution_points_to_xml(self, crl_ext):
-        # Hazardous attempt at parsing a CRL Distribution Point extension
-        crl_ext = crl_ext.strip(' \n')
-        crl_ext = crl_ext.split('\n')
-        subcrl_xml = []
-        
-        for distrib_point in crl_ext:
-            distrib_point = distrib_point.strip()
-            distrib_point = distrib_point.split(':', 1)
-            if distrib_point[0] != '':
-                distrib_point_xml = Element(distrib_point[0].replace(' ', ''))
-                distrib_point_xml.text = distrib_point[1]
-                subcrl_xml.append(distrib_point_xml)
-            
-        return subcrl_xml
-        
-    def _extended_key_usage_to_xml(self, key_ext):
-        key_ext = key_ext.split(', ')
-        key_ext_xml = []
-        for key_usage in key_ext:
-            key_usage_xml = Element(key_usage.replace(' ', ''))
-            key_ext_xml.append(key_usage_xml)
-        return key_ext_xml
-            
-                
-    def _get_all_extensions(self, cert):
-        
-        ext_dict = cert.get_extension_list().get_all_extensions()
-        ext_list_txt = ['', self.FIELD_FORMAT.format('Extensions', '')]
-        ext_list_xml = Element('extensions')
-        
-        xml_format_functions = {'X509v3 Subject Alternative Name': self._subject_alternative_name_to_xml,
-                                'X509v3 CRL Distribution Points': self._crl_distribution_points_to_xml,
-                                'Authority Information Access': self._authority_information_access_to_xml,
-                                'X509v3 Key Usage': self._extended_key_usage_to_xml,
-                                'X509v3 Extended Key Usage': self._extended_key_usage_to_xml}
-        
-        for ext in ext_dict.items():
-            ext_list_txt.append(self.FIELD_FORMAT.format(ext[0], ext[1]))
-            ext_name = ext[0].replace(' ', '').replace('/','')
-            if ext_name[0].isdigit(): # Unknown extension, would generate invalid XML
-                ext_name = 'ext-' + ext_name # Tags cannot start with a digit
-            ext_xml = Element(ext_name)
-            
-            if ext[0] in xml_format_functions.keys(): # Special XML formatting
-                for xml_node in xml_format_functions[ext[0]](ext[1]):
-                    ext_xml.append(xml_node)
-            else:
-                ext_xml.text = ext[1]
-            ext_list_xml.append(ext_xml)
-        
-        return (ext_list_txt, [ext_list_xml])
-        
-        
-    def _get_subject_alternative_name(self, cert):
-        try:
-            alt_name = cert.get_extension_list().get_extension('X509v3 Subject Alternative Name')
-        except KeyError: 
-            return ([],[])
-        
-        alt_name_txt = self.FIELD_FORMAT.format('X509v3 Subject Alternative Name:', alt_name)
-        
-        val_xml = Element('extensions')
-        val_xml2 = Element('X509v3SubjectAlternativeName')
-        alt_name_xml = self._subject_alternative_name_to_xml(alt_name)
-        for elem in alt_name_xml:
-            val_xml2.append(elem)
-        val_xml.append(val_xml2)
-        return ([alt_name_txt],[val_xml])
-
-    def _get_serial(self, cert):
-        sn = cert.get_serial_number()
-        serial_txt = self.FIELD_FORMAT.format('Serial Number:', sn)
-        serial_xml = Element('serialNumber')
-        serial_xml.text = sn
-        return ([serial_txt], [serial_xml])
-
-
-    def _get_keysize(self, cert):
-        keysize = cert.get_pubkey_size()*8
-        keysize_txt = self.FIELD_FORMAT.format('Key Size:', str(keysize) + ' bits')
-        keysize_xml = Element('subjectPublicKeyInfo')
-        keysize_xml2 = Element('publicKey', keySize=str(keysize))
-        keysize_xml.append(keysize_xml2)
-        return ([keysize_txt],[keysize_xml])   
-
-    def _get_validity(self, cert):
-        val_xml = Element('validity')
-        #val_txt = []
-        # Not before
-        nb = cert.get_not_before()
-        val_txt = self.FIELD_FORMAT.format('Not Before:', nb)
-        subval_xml = Element('notBefore')
-        subval_xml.text = nb
-        val_xml.append(subval_xml)
-        
-        # Not After
-        nb = cert.get_not_after()
-        val2_txt = self.FIELD_FORMAT.format('Not After:', nb)
-        subval2_xml = Element('notAfter')
-        subval2_xml.text = nb
-        val_xml.append(subval2_xml)
-        return ([val_txt, val2_txt], [val_xml])        
-
-    def _get_issuer(self, cert):
-        issuer_name = cert.get_issuer_name()
-        val_txt = self.FIELD_FORMAT.format('Issuer:', issuer_name.get_as_text())
-        val_xml = Element('issuer')
-        for (field_name, field_value) in issuer_name.get_all_entries():
-            if field_name[0].isdigit(): # Would generate invalid XML
-                field_name = 'field-' + field_name # Tags cannot start with a digit
-            
-            subval_xml = Element(field_name)
-            subval_xml.text = field_value
-            val_xml.append(subval_xml)
-        return ([val_txt], [val_xml])    
-      
-    def _get_signature_algorithm(self, cert):
-        nb = cert.get_signature_algorithm()
-        val_txt = self.FIELD_FORMAT.format('Signature Algorithm:', nb)
-        val_xml = Element('signatureAlgorithm')
-        val_xml.text = nb
-        return ([val_txt], [val_xml])    
 
     def _get_fingerprint(self, cert):
         nb = cert.get_fingerprint()
@@ -331,24 +277,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         val_xml.text = nb
         return ([val_txt], [val_xml])    
 
-    def _get_subject(self, cert):
-        subject_name = cert.get_subject_name()
-        val_xml = Element('subject')
-        val_txt = self.FIELD_FORMAT.format('Common Name:', '???')
         
-        for (field_name, field_value) in subject_name.get_all_entries():
-            if field_name == 'commonName': # store the CN
-                val_txt = self.FIELD_FORMAT.format('Common Name:', field_value)
-                
-            if field_name[0].isdigit(): # Would generate invalid XML
-                field_name = 'field-' + field_name # Tags cannot start with a digit
-            subval_xml = Element(field_name)
-            subval_xml.text = field_value
-            val_xml.append(subval_xml)
-        return ([val_txt], [val_xml]) 
-
-        
-
     def _get_cert(self, target, verify_cert=False):
         """
         Connects to the target server and returns the server's certificate if

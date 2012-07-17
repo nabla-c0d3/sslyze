@@ -43,7 +43,7 @@ class X509_EXTENSION_LIST:
             libcrypto.X509V3_EXT_print(mem_bio.get_bio_struct_p(), x509ext, c_long(self.X509V3_EXT_ERROR_UNKNOWN), c_int(0))
             x509ext_data_txt = mem_bio.read(4096)
         
-            self._x509extensions[x509ext_obj_name.value] = x509ext_data_txt
+            self._x509extensions[x509ext_obj_name.value.strip()] = x509ext_data_txt.strip()
             
             
     def get_extension(self, ext_name):
@@ -58,7 +58,7 @@ class X509_EXTENSION_LIST:
 class X509_NAME:
     """Parses an X509 Issuer Name or Subject Name field"""
     def __init__(self, x509_name_struct):
-        self._x509name_entries = [] # Cannot be a dict as multiple entries can have the same name
+        self._x509name_entries = {}
                 
         # Extract entries within the x509name field 
         entry_nb = libcrypto.X509_NAME_entry_count(x509_name_struct)
@@ -74,8 +74,11 @@ class X509_NAME:
             entry_name = create_string_buffer(1024) #TODO no hardcoded len
             libcrypto.OBJ_obj2txt(entry_name, sizeof(entry_name), entry_name_asn1_p, c_int(0))
             
-            self._x509name_entries.append((entry_name.value, entry_data_txt))
-        
+            if self._x509name_entries.has_key(entry_name.value):
+                self._x509name_entries[entry_name.value].append(entry_data_txt)
+            else:
+                self._x509name_entries[entry_name.value] = [entry_data_txt]
+                
         # Store the x509 name as a string too
         x509name_txt = create_string_buffer(4096)
         libcrypto.X509_NAME_oneline(x509_name_struct, x509name_txt, sizeof(x509name_txt))

@@ -31,7 +31,7 @@ from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors
 
 TRUSTED_CA_STORE = os.path.join(sys.path[0], 'mozilla_cacert.pem')
-
+from mozilla_ev_oids import mozilla_EV_OIDs
 
 class X509CertificateHelper:
     """
@@ -221,6 +221,9 @@ class PluginCertInfo(PluginBase.PluginBase):
         txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
         trust_txt = 'Certificate is Trusted' if cert_trusted \
                                              else 'Certificate is NOT Trusted'
+        is_ev = self._is_ev_certificate(cert)
+        if is_ev:
+            trust_txt = trust_txt + ' - Extended Validation'
 
         txt_result.append(self.FIELD_FORMAT.format("Validation w/ Mozilla's CA Store:", trust_txt))
         txt_result.append(self.FIELD_FORMAT.format('SHA1 Fingerprint:', fingerprint))
@@ -230,7 +233,8 @@ class PluginCertInfo(PluginBase.PluginBase):
         xml_result = Element(self.__class__.__name__, command = command, 
                              argument = arg, title = cmd_title)
         trust_xml_attr = {'isTrustedByMozilla' : str(cert_trusted),
-                          'sha1Fingerprint' : fingerprint}
+                          'sha1Fingerprint' : fingerprint,
+                          'isExtendedValidation' : str(is_ev)}
         trust_xml = Element('certificate', attrib = trust_xml_attr)
         for elem_xml in cert_xml:
             trust_xml.append(elem_xml)
@@ -242,6 +246,18 @@ class PluginCertInfo(PluginBase.PluginBase):
 
 # FORMATTING FUNCTIONS
 
+    def _is_ev_certificate(self,cert):
+        cert_parsed =  X509CertificateHelper(cert)
+        cert_dict = cert_parsed.parse_certificate()
+        try:
+            policy = cert_dict['extensions']['X509v3 Certificate Policies']['Policy']
+            if policy[0] in mozilla_EV_OIDs:
+                return True
+        except:
+            return False
+        return False
+        
+    
     def _get_basic(self, cert):
         cert_parsed =  X509CertificateHelper(cert)
         cert_dict = cert_parsed.parse_certificate()

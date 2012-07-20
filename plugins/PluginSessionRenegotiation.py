@@ -65,8 +65,7 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
                           'isSecure' : str(is_secure)}
         xml_reneg = Element('sessionRenegotiation', attrib = xml_reneg_attr)
         
-        xml_result = Element(self.__class__.__name__, command = command,
-                             title = cmd_title)
+        xml_result = Element(command, title = cmd_title)
         xml_result.append(xml_reneg)
         
         return PluginBase.PluginResult(txt_result, xml_result)

@@ -231,8 +231,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         txt_result.extend(cert_txt)
 
         # XML output: always return the full certificate
-        xml_result = Element(self.__class__.__name__, command = command, 
-                             argument = arg, title = cmd_title)
+        xml_result = Element(command, argument = arg, title = cmd_title)
         trust_xml_attr = {'isTrustedByMozillaCAStore' : str(is_cert_trusted),
                           'sha1Fingerprint' : fingerprint,
                           'isExtendedValidation' : str(is_ev)}

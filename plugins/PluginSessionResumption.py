@@ -95,8 +95,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
                           'failedAttempts' : str(nb_failed), 'errors' : str(nb_error)}
         
         xml_resum = Element('sessionResumptionWithSessionIDs', attrib = xml_resum_attr)  
-        xml_result = Element(self.__class__.__name__, command = 'resum_rate',
-                             title = cmd_title)
+        xml_result = Element('resum_rate', title = cmd_title)
         xml_result.append(xml_resum)
 
         thread_pool.join()
@@ -174,7 +173,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
                 xml_resum_ticket_attr['reason'] = ticket_reason
         
         xml_resum_ticket = Element('sessionResumptionWithTLSTickets', attrib = xml_resum_ticket_attr)   
-        xml_result = Element(self.__class__.__name__, command='resum', title=cmd_title)
+        xml_result = Element('resum', title=cmd_title)
         xml_result.append(xml_resum_id)
         xml_result.append(xml_resum_ticket)
 

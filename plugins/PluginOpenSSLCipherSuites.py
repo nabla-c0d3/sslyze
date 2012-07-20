@@ -174,8 +174,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             
     def _generate_xml_result(self, result_dicts, command):
                 
-        xml_result = Element(self.__class__.__name__, command = command,
-                             title = command.upper() + ' Cipher Suites')
+        xml_result = Element(command,  title = command.upper() + ' Cipher Suites')
         
         for (result_type, result_dict) in result_dicts.items():
             xml_dict = Element(result_type)

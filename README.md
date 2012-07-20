@@ -23,9 +23,3 @@ User manual available at https://github.com/iSECPartners/sslyze/wiki
 License
 --------
 GPLv2 - See LICENSE.txt.
-
-
-SSLyze Developer Team 
----------------------
-* Aaron Grattafiori
-* Alban Diquet  

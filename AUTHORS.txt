@@ -1,0 +1,15 @@
+
+Creators
+--------
+Alban Diquet
+Aaron Grattafiori
+
+
+Maintainers
+-----------
+Alban Diquet
+
+
+Contributors
+------------
+Tom Samstag

@@ -287,15 +287,18 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             try: # Send an HTTP GET to the server and store the HTTP Status Code
                 ssl_connection.request("GET", "/", headers={"Connection": "close"})
                 http_response = ssl_connection.getresponse()
-                result = 'HTTP ' \
-                    + str(http_response.status) \
-                    + ' ' \
-                    + str(http_response.reason)
-                if http_response.status >= 300 and http_response.status < 400:
-                    # Add redirection URL to the result
-                    redirect = http_response.getheader('Location', None)
-                    if redirect:
-                        result = result + ' - ' + redirect
+                if http_response.version == 9 :
+                    # HTTP 0.9 => Probably not an HTTP response
+                    result = 'Server response was not HTTP'
+                else:    
+                    result = 'HTTP ' + str(http_response.status) + ' ' \
+                           + str(http_response.reason)
+                    if http_response.status >= 300 and http_response.status < 400:
+                        # Add redirection URL to the result
+                        redirect = http_response.getheader('Location', None)
+                        if redirect:
+                            result = result + ' - ' + redirect
+                            
             except socket.timeout:
                 result = 'Timeout on HTTP GET'
                 

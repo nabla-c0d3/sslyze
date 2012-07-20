@@ -28,12 +28,13 @@ import sys
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
-from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors
+from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors, X509_V_CODES
 
 TRUSTED_CA_STORE = os.path.join(sys.path[0], 'mozilla_cacert.pem')
 from mozilla_ev_oids import mozilla_EV_OIDs
 
 class X509CertificateHelper:
+    # TODO: Move this somewhere else
     """
     Helper functions for X509 certificate parsing and XML serialization.
     """
@@ -195,48 +196,51 @@ class PluginCertInfo(PluginBase.PluginBase):
     def process_task(self, target, command, arg):
 
         ctSSL_initialize()
-        cert_trusted = False
-
-        try: # First verify the server's certificate
-            cert = self._get_cert(target, verify_cert=True)
-            cert_trusted = True
-
-        except errors.SSLErrorSSL as e:
-            # Recover the server's certificate without verifying it
-            if 'certificate verify failed' in str(e.args):
-                cert = self._get_cert(target, verify_cert=False)
-            else:
-                ctSSL_cleanup()
-                raise
-            
-        result_dict = {'basic':     self._get_basic, 
-                       'full':      self._get_full}
-
-        (cert_txt, cert_xml) = result_dict[arg](cert)
+        try: # Get the certificate
+             (cert, verify_result) = self._get_cert(target)
+        except:
+            ctSSL_cleanup()
+            raise
         
-        
+        # Figure out if/why the verification failed
+        untrusted_reason = None
+        is_cert_trusted = True
+        if verify_result != 0:
+            is_cert_trusted = False
+            untrusted_reason = X509_V_CODES.X509_V_CODES[verify_result]
+         
+        # Results formatting
         # Text output
+        result_dict = {'basic':     self._get_basic_text, 
+                       'full':      self._get_full_text}
+        
+        cert_txt = result_dict[arg](cert)
         fingerprint = cert.get_fingerprint()
         cmd_title = 'Certificate'
         txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
-        trust_txt = 'Certificate is Trusted' if cert_trusted \
+        trust_txt = 'Certificate is Trusted' if is_cert_trusted \
                                              else 'Certificate is NOT Trusted'
         is_ev = self._is_ev_certificate(cert)
         if is_ev:
             trust_txt = trust_txt + ' - Extended Validation'
+        if untrusted_reason:
+            trust_txt = trust_txt + ': ' + untrusted_reason
 
         txt_result.append(self.FIELD_FORMAT.format("Validation w/ Mozilla's CA Store:", trust_txt))
         txt_result.append(self.FIELD_FORMAT.format('SHA1 Fingerprint:', fingerprint))
         txt_result.extend(cert_txt)
 
-        # XML output
+        # XML output: always return the full certificate
         xml_result = Element(self.__class__.__name__, command = command, 
                              argument = arg, title = cmd_title)
-        trust_xml_attr = {'isTrustedByMozilla' : str(cert_trusted),
+        trust_xml_attr = {'isTrustedByMozillaCAStore' : str(is_cert_trusted),
                           'sha1Fingerprint' : fingerprint,
                           'isExtendedValidation' : str(is_ev)}
+        if untrusted_reason:
+            trust_xml_attr['reasonWhyNotTrusted'] = untrusted_reason
+            
         trust_xml = Element('certificate', attrib = trust_xml_attr)
-        for elem_xml in cert_xml:
+        for elem_xml in X509CertificateHelper(cert).parse_certificate_to_xml():
             trust_xml.append(elem_xml)
         xml_result.append(trust_xml)
         
@@ -258,7 +262,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         return False
         
     
-    def _get_basic(self, cert):
+    def _get_basic_text(self, cert):
         cert_parsed =  X509CertificateHelper(cert)
         cert_dict = cert_parsed.parse_certificate()
         cert_xml = cert_parsed.parse_certificate_to_xml()
@@ -278,12 +282,11 @@ class PluginCertInfo(PluginBase.PluginBase):
         except KeyError:
             pass
         
-        return (basic_txt, cert_xml)
+        return basic_txt
     
 
-    def _get_full(self, cert):
-        cert_xml = X509CertificateHelper(cert).parse_certificate_to_xml()  
-        return ([cert.as_text()], cert_xml)
+    def _get_full_text(self, cert):
+        return cert.as_text()
 
 
     def _get_fingerprint(self, cert):
@@ -294,21 +297,22 @@ class PluginCertInfo(PluginBase.PluginBase):
         return ([val_txt], [val_xml])    
 
         
-    def _get_cert(self, target, verify_cert=False):
+    def _get_cert(self, target):
         """
         Connects to the target server and returns the server's certificate if
         the connection was successful.
         """
+        verify_result = None
         ssl_connect = self._create_ssl_connection(target)
         ssl_connect.ssl_ctx.set_cipher_list(self.hello_workaround_cipher_list)
-        if verify_cert:
-            ssl_connect.ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)
-            ssl_connect.ssl.set_verify(constants.SSL_VERIFY_PEER)
+        ssl_connect.ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)
+        ssl_connect.ssl.set_verify(constants.SSL_VERIFY_NONE) # We'll use get_verify_result()
 
         try: # Perform the SSL handshake
             ssl_connect.connect()
             cert = ssl_connect.ssl.get_peer_certificate()
+            verify_result = ssl_connect.ssl.get_verify_result()
         finally:
             ssl_connect.close()
 
-        return cert
+        return (cert, verify_result)

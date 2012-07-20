@@ -441,6 +441,10 @@ class SSL:
         libssl.SSL_set_verify(self._ssl_struct_p, mode, None)
 
 
+    def get_verify_result(self):
+        return libssl.SSL_get_verify_result(self._ssl_struct_p)
+         
+
     def use_certificate_file(self, cert, certform):
         """Directly calls OpenSSL's SSL_CTX_use_certificate_file()."""
         #TODO: Clean error if the file can't be found/opened
@@ -607,6 +611,8 @@ def init_SSL_functions():
     libssl.SSL_check_private_key.restype = c_int
     libssl.SSL_check_private_key.errcheck = errcheck_get_error_if_eq0
 
+    libssl.SSL_get_verify_result.argtypes = [c_void_p]
+    libssl.SSL_get_verify_result.restype = c_long
 
     # Initializing functions that may or may not be there
 

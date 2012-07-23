@@ -17,6 +17,7 @@ from load_openssl import libcrypto
 import BIO
 from errors import ctSSLEmptyValue
 
+MAX_X509_CERT_AS_TXT_SIZE = 16384 # google.fr's certificate is *HUGE*
 
 class X509_EXTENSION_LIST:
     
@@ -41,7 +42,7 @@ class X509_EXTENSION_LIST:
             #x509ext_data_txt = libcrypto.ASN1_STRING_data(x509ext_data)
             mem_bio = BIO.BIOFactory.new_mem()
             libcrypto.X509V3_EXT_print(mem_bio.get_bio_struct_p(), x509ext, c_long(self.X509V3_EXT_ERROR_UNKNOWN), c_int(0))
-            x509ext_data_txt = mem_bio.read(4096)
+            x509ext_data_txt = mem_bio.read(MAX_X509_CERT_AS_TXT_SIZE)
         
             self._x509extensions[x509ext_obj_name.value.strip()] = x509ext_data_txt.strip()
             
@@ -112,7 +113,7 @@ class X509:
         libcrypto.X509_print(mem_bio.get_bio_struct_p(), self._x509_struct)
 
         # Extract the text from the BIO
-        x509_str = mem_bio.read(4096)
+        x509_str = mem_bio.read(MAX_X509_CERT_AS_TXT_SIZE)
         return x509_str
 
 

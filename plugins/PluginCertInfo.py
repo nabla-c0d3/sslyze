@@ -224,7 +224,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         
         # Text output
         if arg == 'basic':
-            cert_txt = self._get_basic_text(cert_dict)
+            cert_txt = self._get_basic_text(cert, cert_dict)
         elif arg == 'full':
             cert_txt = [cert.as_text()]
         else:
@@ -307,7 +307,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         return False
         
     
-    def _get_basic_text(self, cert_dict):      
+    def _get_basic_text(self, cert,  cert_dict):      
         basic_txt = [ \
         self.FIELD_FORMAT.format("Common Name:", cert_dict['subject']['commonName'][0] ),
         self.FIELD_FORMAT.format("Issuer:", cert.get_issuer_name().get_as_text()),

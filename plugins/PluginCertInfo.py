@@ -29,7 +29,8 @@ import re
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
-from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors, X509_V_CODES
+from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, errors, \
+    X509_V_CODES, SSL_CTX
 
 TRUSTED_CA_STORE = os.path.join(sys.path[0], 'mozilla_cacert.pem')
 from mozilla_ev_oids import mozilla_EV_OIDs
@@ -339,10 +340,11 @@ class PluginCertInfo(PluginBase.PluginBase):
         Connects to the target server and returns the server's certificate
         """
         verify_result = None
-        ssl_connect = self._create_ssl_connection(target)
-        ssl_connect.ssl_ctx.set_cipher_list(self.hello_workaround_cipher_list)
-        ssl_connect.ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)
-        ssl_connect.ssl.set_verify(constants.SSL_VERIFY_NONE) # We'll use get_verify_result()
+        ssl_ctx = SSL_CTX.SSL_CTX('tlsv1') # sslv23 hello will fail for specific servers such as post.craigslist.org
+        ssl_ctx.set_cipher_list(self.hello_workaround_cipher_list)
+        ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)
+        ssl_ctx.set_verify(constants.SSL_VERIFY_NONE) # We'll use get_verify_result()
+        ssl_connect = self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
 
         try: # Perform the SSL handshake
             ssl_connect.connect()

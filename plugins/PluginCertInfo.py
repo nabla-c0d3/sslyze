@@ -68,9 +68,9 @@ class X509CertificateHelper:
         cert_xml = []
         
         for (key, value) in cert_dict.items():
-            for xml_elem in self._keyvalue_pair_to_xml(key,value):
+            for xml_elem in self._keyvalue_pair_to_xml(key, value):
                 cert_xml.append(xml_elem)
-            
+ 
         return cert_xml
 
 
@@ -98,10 +98,12 @@ class X509CertificateHelper:
             for val in value:
                 res_xml.append(self._create_xml_node(key, val))
            
-        else: # value is a list of subnodes
+        elif type(value) is dict: # value is a list of subnodes
             key_xml = self._create_xml_node(key)
-            for subdata in value.items():
-                key_xml.append(self._keyvalue_pair_to_xml(*subdata)[0])
+            for subkey in value.keys():
+                for subxml in self._keyvalue_pair_to_xml(subkey, value[subkey]):
+                    key_xml.append(subxml)
+                 
             res_xml.append(key_xml)
             
         return res_xml    
@@ -135,8 +137,15 @@ class X509CertificateHelper:
             auth_entry_res = []
             auth_entry = auth_entry.split(' - ')
             entry_name = auth_entry[0].replace(' ', '')
+
+            if not auth_ext_list.has_key(entry_name):
+                auth_ext_list[entry_name] = {}
+            
             entry_data = auth_entry[1].split(':', 1)
-            auth_ext_list[entry_name] = {entry_data[0]: entry_data[1]}
+            if auth_ext_list[entry_name].has_key(entry_data[0]):
+                auth_ext_list[entry_name][entry_data[0]].append(entry_data[1])
+            else:
+                auth_ext_list[entry_name] = {entry_data[0]: [entry_data[1]]}
                 
         return auth_ext_list
             
@@ -144,10 +153,9 @@ class X509CertificateHelper:
     def _parse_crl_distribution_points(self, crl_ext):
 
         # Hazardous attempt at parsing a CRL Distribution Point extension
-        crl_ext = crl_ext.strip(' \n')
-        crl_ext = crl_ext.split('\n')
+        crl_ext = crl_ext.strip(' \n').split('\n')
         subcrl = {}
-        
+
         for distrib_point in crl_ext:
             distrib_point = distrib_point.strip()
             distrib_point = distrib_point.split(':', 1)
@@ -175,7 +183,7 @@ class X509CertificateHelper:
             # Overwrite the data we have if we know how to parse it
             if ext_key in parsing_functions.keys():
                 ext_dict[ext_key] = parsing_functions[ext_key](ext_val)
-        
+
         return ext_dict
         
 
@@ -211,18 +219,24 @@ class PluginCertInfo(PluginBase.PluginBase):
             untrusted_reason = X509_V_CODES.X509_V_CODES[verify_result]
          
         # Results formatting
-        # Text output
-        result_dict = {'basic':     self._get_basic_text, 
-                       'full':      self._get_full_text}
+        cert_parsed = X509CertificateHelper(cert)
+        cert_dict = cert_parsed.parse_certificate()
         
-        cert_txt = result_dict[arg](cert)
+        # Text output
+        if arg == 'basic':
+            cert_txt = self._get_basic_text(cert_dict)
+        elif arg == 'full':
+            cert_txt = [cert.as_text()]
+        else:
+            raise Exception("PluginCertInfo: Unknown command.")
+            
         fingerprint = cert.get_fingerprint()
         cmd_title = 'Certificate'
         txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
         trust_txt = 'Certificate is Trusted' if is_cert_trusted \
                                              else 'Certificate is NOT Trusted'
 
-        is_ev = self._is_ev_certificate(cert)
+        is_ev = self._is_ev_certificate(cert_dict)
         if is_ev:
             trust_txt = trust_txt + ' - Extended Validation'
             
@@ -231,7 +245,7 @@ class PluginCertInfo(PluginBase.PluginBase):
 
         txt_result.append(self.FIELD_FORMAT.format("Validation w/ Mozilla's CA Store:", trust_txt))
         
-        is_host_valid = self._is_hostname_valid(cert,target)
+        is_host_valid = self._is_hostname_valid(cert_dict, target)
         host_txt = 'OK - ' + is_host_valid + ' Matches' if is_host_valid \
                                          else 'MISMATCH'
         
@@ -239,7 +253,6 @@ class PluginCertInfo(PluginBase.PluginBase):
         txt_result.append(self.FIELD_FORMAT.format('SHA1 Fingerprint:', fingerprint))
         txt_result.append('')
         txt_result.extend(cert_txt)
-
 
         # XML output: always return the full certificate
         host_xml = True if is_host_valid \
@@ -254,7 +267,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             trust_xml_attr['reasonWhyNotTrusted'] = untrusted_reason
             
         trust_xml = Element('certificate', attrib = trust_xml_attr)
-        for elem_xml in X509CertificateHelper(cert).parse_certificate_to_xml():
+        for elem_xml in cert_parsed.parse_certificate_to_xml():
             trust_xml.append(elem_xml)
         xml_result.append(trust_xml)
         
@@ -264,10 +277,7 @@ class PluginCertInfo(PluginBase.PluginBase):
 
 # FORMATTING FUNCTIONS
 
-    def _is_hostname_valid(self, cert, target):
-
-        cert_parsed =  X509CertificateHelper(cert)
-        cert_dict = cert_parsed.parse_certificate()
+    def _is_hostname_valid(self, cert_dict, target):
         (host, ip, port) = target
         
         # Let's try the common name first
@@ -287,9 +297,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         return False
         
 
-    def _is_ev_certificate(self,cert):
-        cert_parsed =  X509CertificateHelper(cert)
-        cert_dict = cert_parsed.parse_certificate()
+    def _is_ev_certificate(self, cert_dict):
         try:
             policy = cert_dict['extensions']['X509v3 Certificate Policies']['Policy']
             if policy[0] in mozilla_EV_OIDs:
@@ -299,11 +307,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         return False
         
     
-    def _get_basic_text(self, cert):
-        cert_parsed =  X509CertificateHelper(cert)
-        cert_dict = cert_parsed.parse_certificate()
-        cert_xml = cert_parsed.parse_certificate_to_xml()
-        
+    def _get_basic_text(self, cert_dict):      
         basic_txt = [ \
         self.FIELD_FORMAT.format("Common Name:", cert_dict['subject']['commonName'][0] ),
         self.FIELD_FORMAT.format("Issuer:", cert.get_issuer_name().get_as_text()),
@@ -320,10 +324,6 @@ class PluginCertInfo(PluginBase.PluginBase):
             pass
         
         return basic_txt
-    
-
-    def _get_full_text(self, cert):
-        return [cert.as_text()]
 
 
     def _get_fingerprint(self, cert):

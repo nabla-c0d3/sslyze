@@ -25,6 +25,7 @@
 
 import os
 import sys
+import re
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
@@ -220,21 +221,35 @@ class PluginCertInfo(PluginBase.PluginBase):
         txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
         trust_txt = 'Certificate is Trusted' if is_cert_trusted \
                                              else 'Certificate is NOT Trusted'
+
         is_ev = self._is_ev_certificate(cert)
         if is_ev:
             trust_txt = trust_txt + ' - Extended Validation'
+            
         if untrusted_reason:
             trust_txt = trust_txt + ': ' + untrusted_reason
 
         txt_result.append(self.FIELD_FORMAT.format("Validation w/ Mozilla's CA Store:", trust_txt))
+        
+        is_host_valid = self._is_hostname_valid(cert,target)
+        host_txt = 'OK - ' + is_host_valid + ' Matches' if is_host_valid \
+                                         else 'MISMATCH'
+        
+        txt_result.append(self.FIELD_FORMAT.format("Hostname Validation:", host_txt))
         txt_result.append(self.FIELD_FORMAT.format('SHA1 Fingerprint:', fingerprint))
+        txt_result.append('')
         txt_result.extend(cert_txt)
 
+
         # XML output: always return the full certificate
+        host_xml = True if is_host_valid \
+                        else False
+            
         xml_result = Element(command, argument = arg, title = cmd_title)
         trust_xml_attr = {'isTrustedByMozillaCAStore' : str(is_cert_trusted),
                           'sha1Fingerprint' : fingerprint,
-                          'isExtendedValidation' : str(is_ev)}
+                          'isExtendedValidation' : str(is_ev),
+                          'hasMatchingHostname' : str(host_xml)}
         if untrusted_reason:
             trust_xml_attr['reasonWhyNotTrusted'] = untrusted_reason
             
@@ -248,6 +263,29 @@ class PluginCertInfo(PluginBase.PluginBase):
 
 
 # FORMATTING FUNCTIONS
+
+    def _is_hostname_valid(self, cert, target):
+
+        cert_parsed =  X509CertificateHelper(cert)
+        cert_dict = cert_parsed.parse_certificate()
+        (host, ip, port) = target
+        
+        # Let's try the common name first
+        commonName = cert_dict['subject']['commonName'][0]
+        if _dnsname_to_pat(commonName).match(host):
+            return 'Common Name'
+        
+        try: # No luch, let's look at Subject Alternative Names
+            alt_names = cert_dict['extensions']['X509v3 Subject Alternative Name']['DNS']
+        except KeyError:
+            return False
+        
+        for altname in alt_names:
+            if _dnsname_to_pat(altname).match(host):
+                return 'Subject Alternative Name'       
+        
+        return False
+        
 
     def _is_ev_certificate(self,cert):
         cert_parsed =  X509CertificateHelper(cert)
@@ -285,7 +323,7 @@ class PluginCertInfo(PluginBase.PluginBase):
     
 
     def _get_full_text(self, cert):
-        return cert.as_text()
+        return [cert.as_text()]
 
 
     def _get_fingerprint(self, cert):
@@ -295,11 +333,10 @@ class PluginCertInfo(PluginBase.PluginBase):
         val_xml.text = nb
         return ([val_txt], [val_xml])    
 
-        
+
     def _get_cert(self, target):
         """
-        Connects to the target server and returns the server's certificate if
-        the connection was successful.
+        Connects to the target server and returns the server's certificate
         """
         verify_result = None
         ssl_connect = self._create_ssl_connection(target)
@@ -315,3 +352,21 @@ class PluginCertInfo(PluginBase.PluginBase):
             ssl_connect.close()
 
         return (cert, verify_result)
+
+
+def _dnsname_to_pat(dn):
+    """
+    Generates a regexp for the given name, to be used for hostname validation
+    Taken from http://pypi.python.org/pypi/backports.ssl_match_hostname/3.2a3
+    """
+    pats = []
+    for frag in dn.split(r'.'):
+        if frag == '*':
+            # When '*' is a fragment by itself, it matches a non-empty dotless
+            # fragment.
+            pats.append('[^.]+')
+        else:
+            # Otherwise, '*' matches any dotless fragment.
+            frag = re.escape(frag)
+            pats.append(frag.replace(r'\*', '[^.]*'))
+    return re.compile(r'\A' + r'\.'.join(pats) + r'\Z', re.IGNORECASE)

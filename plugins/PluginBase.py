@@ -147,7 +147,7 @@ class PluginBase(object):
         (host, ip_addr, port) = target
         
         if shared_settings['starttls'] == 'smtp':
-            ssl_connection = STARTTLS.SMTPConnection(ip_addr, port, ssl, ssl_ctx, 
+            ssl_connection = STARTTLS.SMTPConnection(host, port, ssl, ssl_ctx, 
                                                      timeout=timeout)
         elif shared_settings['starttls'] == 'xmpp':
             if shared_settings['xmpp_to']:
@@ -156,7 +156,7 @@ class PluginBase(object):
                 xmpp_to = host
                 
             ssl_connection = \
-                STARTTLS.XMPPConnection(ip_addr, port, ssl, ssl_ctx, 
+                STARTTLS.XMPPConnection(host, port, ssl, ssl_ctx, 
                                         timeout=timeout, xmpp_to=xmpp_to)   
                  
         elif shared_settings['https_tunnel_host']:
@@ -167,7 +167,7 @@ class PluginBase(object):
                                             timeout=timeout)
             ssl_connection.set_tunnel(host, port)
         else:
-            ssl_connection = HTTPSConnection(ip_addr, port, ssl, ssl_ctx, 
+            ssl_connection = HTTPSConnection(host, port, ssl, ssl_ctx, 
                                             timeout=timeout)
             
             

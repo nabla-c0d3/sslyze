@@ -1,0 +1,5 @@
+# These files are text and should be normalized (convert crlf => lf)
+*.py      text
+*.pem     text
+*.txt     text
+*.md      text

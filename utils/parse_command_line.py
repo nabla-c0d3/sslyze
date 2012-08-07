@@ -78,6 +78,16 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
         dest='xml_file',
         default=None)
 
+    # Read targets from input file
+    parser.add_option(
+        '--targets_in',
+        help= (
+            'Read targets from a text file. '
+            'TARGETS_IN should be the name of the file containing the list of '
+            'targets.'),
+        dest='targets_in',
+        default=None)
+
     # Timeout
     parser.add_option(
         '--timeout',
@@ -172,6 +182,17 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
 def parse_command_line(parser):
 
     (args_command_list, args_target_list) = parser.parse_args()
+
+    # Handle the --targets_in command line and fill args_target_list
+    if args_command_list.targets_in:
+        try:
+            with open(args_command_list.targets_in) as f:
+                for target in f.readlines():
+                    args_target_list.append(target)
+        except IOError, e:
+            print PARSING_ERROR_FORMAT.format(
+                'Can\'t read targets from input file %s' %
+                args_command_list.targets_in)
 
     if args_target_list == []:
         return

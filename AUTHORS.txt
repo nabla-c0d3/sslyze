@@ -13,3 +13,4 @@ Alban Diquet
 Contributors
 ------------
 Tom Samstag
+Loïc Simon

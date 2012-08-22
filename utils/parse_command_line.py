@@ -185,14 +185,17 @@ def parse_command_line(parser):
 
     # Handle the --targets_in command line and fill args_target_list
     if args_command_list.targets_in:
+        if args_target_list:
+            print "   ERROR: Cannot use --targets_list and specify targets within the command line."
+            return
+            
         try:
             with open(args_command_list.targets_in) as f:
                 for target in f.readlines():
-                    args_target_list.append(target)
+                    args_target_list.append(target.strip())
         except IOError, e:
-            print PARSING_ERROR_FORMAT.format(
-                'Can\'t read targets from input file %s' %
-                args_command_list.targets_in)
+            print "   ERROR: Can't read targets from input file '%s'." %  args_command_list.targets_in
+            return
 
     if args_target_list == []:
         return

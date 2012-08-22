@@ -317,6 +317,10 @@ def init_X509_functions():
     libcrypto.X509_NAME_get_entry.restype = c_void_p
     libcrypto.X509_NAME_get_entry.errcheck = errcheck_X509_default
     
+    libcrypto.X509_NAME_ENTRY_get_object.argtypes = [c_void_p]
+    libcrypto.X509_NAME_ENTRY_get_object.restype = c_void_p
+    libcrypto.X509_NAME_ENTRY_get_object.errcheck = errcheck_X509_default
+
     libcrypto.X509_NAME_ENTRY_get_data.argtypes = [c_void_p]
     libcrypto.X509_NAME_ENTRY_get_data.restype = c_void_p
     libcrypto.X509_NAME_ENTRY_get_data.errcheck = errcheck_X509_default
@@ -328,16 +332,12 @@ def init_X509_functions():
     libcrypto.OBJ_obj2txt.argtypes = [c_char_p, c_int, c_void_p, c_int]
     libcrypto.OBJ_obj2txt.restype = c_int
     libcrypto.OBJ_obj2txt.errcheck = errcheck_X509_default        
-        
-    libcrypto.X509_get_ext_count.argtypes = [c_void_p]
-    libcrypto.X509_get_ext_count.restype = c_int
 
     # Used within X509_EXTENSION_LIST  
     libcrypto.X509_get_ext.argtypes = [c_void_p, c_int]
     libcrypto.X509_get_ext.restype = c_void_p
     libcrypto.X509_get_ext.errcheck = errcheck_X509_default
 
-    
     libcrypto.X509_EXTENSION_get_object.argtypes = [c_void_p]
     libcrypto.X509_EXTENSION_get_object.restype = c_void_p
     libcrypto.X509_EXTENSION_get_object.errcheck = errcheck_X509_default

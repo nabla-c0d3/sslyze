@@ -192,7 +192,8 @@ def parse_command_line(parser):
         try:
             with open(args_command_list.targets_in) as f:
                 for target in f.readlines():
-                    args_target_list.append(target.strip())
+                    if target.strip(): # Ignore empty lines
+                        args_target_list.append(target.strip())
         except IOError, e:
             print "   ERROR: Can't read targets from input file '%s'." %  args_command_list.targets_in
             return

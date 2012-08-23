@@ -71,10 +71,10 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
 
     # XML output
     parser.add_option(
-        '--xml_file',
+        '--xml_out',
         help= (
             'Output the scan results to an XML file. '
-            'XML_FILE should be the name of the file to write to.'),
+            'XML_OUT should be the name of the file to write to.'),
         dest='xml_file',
         default=None)
 

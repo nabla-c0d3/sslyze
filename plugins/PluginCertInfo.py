@@ -130,10 +130,9 @@ class X509CertificateHelper:
     
     def _parse_authority_information_access(self, auth_ext):
         # Hazardous attempt at parsing an Authority Information Access extension
+        auth_ext = auth_ext.strip(' \n').split('\n')
         auth_ext_list = {}
-        auth_ext = auth_ext.strip(' \n')
-        auth_ext = auth_ext.split('\n')
- 
+         
         for auth_entry in auth_ext:
             auth_entry_res = []
             auth_entry = auth_entry.split(' - ')
@@ -152,7 +151,6 @@ class X509CertificateHelper:
             
               
     def _parse_crl_distribution_points(self, crl_ext):
-
         # Hazardous attempt at parsing a CRL Distribution Point extension
         crl_ext = crl_ext.strip(' \n').split('\n')
         subcrl = {}
@@ -178,7 +176,8 @@ class X509CertificateHelper:
                              'Authority Information Access': self._parse_authority_information_access,
                              'X509v3 Key Usage': self._parse_multi_valued_extension,
                              'X509v3 Extended Key Usage': self._parse_multi_valued_extension,
-                             'X509v3 Certificate Policies' : self._parse_crl_distribution_points}
+                             'X509v3 Certificate Policies' : self._parse_crl_distribution_points,
+                             'X509v3 Issuer Alternative Name' : self._parse_crl_distribution_points}
         
         for (ext_key, ext_val) in ext_dict.items():
             # Overwrite the data we have if we know how to parse it

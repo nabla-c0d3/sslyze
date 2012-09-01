@@ -121,11 +121,7 @@ def _format_txt_target_result(target, result_list):
 
 def main():
 
-    # Workaround for Cygwin and MAC OS X
     nb_processes = DEFAULT_NB_PROCESSES
-    if sys.platform == 'darwin':
-        print '\nWarning: Running on MAC OS X. Disabling multiprocessing - scans will be slower.'
-        nb_processes = 1
 
     #--PLUGINS INITIALIZATION--
     start_time = time()

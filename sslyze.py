@@ -226,7 +226,7 @@ def main():
     
     # Output XML doc to a file if needed
     if shared_settings['xml_file']:
-        result_xml_attr = {'HTTPSTunnel':str(shared_settings['https_tunnel_host']),
+        result_xml_attr = {'httpsTunnel':str(shared_settings['https_tunnel_host']),
                            'totalScanTime' : str(exec_time), 
                            'defaultTimeout' : str(shared_settings['timeout']), 
                            'startTLS' : str(shared_settings['starttls'])}
@@ -236,9 +236,9 @@ def main():
         for xml_element in xml_output_list:
             result_xml.append(xml_element)
             
-        xml_final_doc = Element('document', title = "SSLyze Results",
-                                version = SSLYZE_VERSION, 
-                                web = PROJECT_URL)
+        xml_final_doc = Element('document', title = "SSLyze Scan Results",
+                                SSLyzeVersion = SSLYZE_VERSION, 
+                                SSLyzeWeb = PROJECT_URL)
         xml_final_doc.append(result_xml)
     
         xml_final_tree = ElementTree(xml_final_doc)

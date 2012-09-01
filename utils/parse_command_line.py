@@ -74,7 +74,7 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
         '--xml_out',
         help= (
             'Output the scan results to an XML file. '
-            'XML_OUT should be the name of the file to write to.'),
+            'XML_FILE should be the name of the file to write to.'),
         dest='xml_file',
         default=None)
 
@@ -84,7 +84,7 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
         help= (
             'Read targets from a text file. '
             'TARGETS_IN should be the name of the file containing the list of '
-            'targets.'),
+            'targets - one target per line.'),
         dest='targets_in',
         default=None)
 

@@ -27,7 +27,7 @@ from xml.etree.ElementTree import Element
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL_CTX, \
     constants, errors
-
+from utils.SSLyzeSSLConnection import SSLyzeSSLConnection
 
 class PluginSessionRenegotiation(PluginBase.PluginBase):
 
@@ -78,9 +78,8 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         """
         ssl_ctx = SSL_CTX.SSL_CTX('tlsv1') # sslv23 hello will fail for specific servers such as post.craigslist.org
         ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ssl_ctx.set_cipher_list(self.hello_workaround_cipher_list)
-        ssl_connect = \
-            self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
+        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target, 
+                                          ssl_ctx=ssl_ctx, hello_workaround=True)
     
         try:
             ssl_connect.connect()

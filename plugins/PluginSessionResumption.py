@@ -25,6 +25,7 @@ from xml.etree.ElementTree import Element
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL_CTX, constants, ctSSL_initialize, ctSSL_cleanup
+from utils.SSLyzeSSLConnection import SSLyzeSSLConnection
 
 
 class PluginSessionResumption(PluginBase.PluginBase):
@@ -77,24 +78,16 @@ class PluginSessionResumption(PluginBase.PluginBase):
             thread_pool.add_job((self._resume_with_session_id, 
                                  (target, )))
         thread_pool.start(NB_THREADS)
-
-        # Count successful resumptions      
-        (nb_resum, nb_error) = self._count_resumptions(thread_pool)
-        nb_failed = MAX_RESUM - nb_error - nb_resum
-
-        # Text output
-        resum_format = '{0} successful, {1} failed, {2} errors, {3} total attempts.'
-        resum_txt = resum_format.format(str(nb_resum), str(nb_failed), 
-                          str(nb_error), str(MAX_RESUM))
         
+        # Format session ID results
+        (txt_resum, xml_resum) = self._format_resum_id_results(thread_pool, MAX_RESUM)
+
+        # Text output        
         cmd_title = 'Resumption Rate with Session IDs'
-        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)+' '+resum_txt]
-
-        # XML output
-        xml_resum_attr = {'totalAttempts' : str(MAX_RESUM),'successfulAttempts' : str(nb_resum),
-                          'failedAttempts' : str(nb_failed), 'errors' : str(nb_error)}
+        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)+' '+ txt_resum[0]]
+        txt_result.extend(txt_resum[1:])
         
-        xml_resum = Element('sessionResumptionWithSessionIDs', attrib = xml_resum_attr)  
+        # XML output
         xml_result = Element('resum_rate', title = cmd_title)
         xml_result.append(xml_resum)
 
@@ -123,9 +116,60 @@ class PluginSessionResumption(PluginBase.PluginBase):
         except Exception as e:
             ticket_error = str(e.__class__.__module__) + '.' + \
                             str(e.__class__.__name__) + ' - ' + str(e)
-                            
-        # Count successful resumptions      
-        (nb_resum, nb_error) = self._count_resumptions(thread_pool)
+
+        # Format session ID results
+        (txt_resum, xml_resum) = self._format_resum_id_results(thread_pool, MAX_RESUM)
+
+        if ticket_error:
+            ticket_txt = 'Error: ' + ticket_error
+        else:
+            ticket_txt = 'Supported' if ticket_supported \
+                                     else 'Not Supported - ' + ticket_reason+'.'
+        
+        cmd_title = 'Session Resumption'
+        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
+        RESUM_FORMAT = '      {0:<27} {1}'
+        ERRORS_FORMAT ='        Error #{0}: {1}'
+        
+        txt_result.append(RESUM_FORMAT.format('With Session IDs:', txt_resum[0]))
+        txt_result.extend(txt_resum[1:])
+        txt_result.append(RESUM_FORMAT.format('With TLS Session Tickets:', ticket_txt))
+        
+        # XML output
+        xml_resum_ticket_attr = {}
+        if ticket_error:
+            xml_resum_ticket_attr['error'] = ticket_error
+        else:
+            xml_resum_ticket_attr['isSupported'] = str(ticket_supported)
+            if not ticket_supported:
+                xml_resum_ticket_attr['reason'] = ticket_reason
+        
+        xml_resum_ticket = Element('sessionResumptionWithTLSTickets', attrib = xml_resum_ticket_attr)   
+        xml_result = Element('resum', title=cmd_title)
+        xml_result.append(xml_resum)
+        xml_result.append(xml_resum_ticket)
+
+        thread_pool.join()
+        return PluginBase.PluginResult(txt_result, xml_result)
+
+
+    def _format_resum_id_results(self, thread_pool, MAX_RESUM):
+        # Count successful/failed resumptions
+        nb_resum = 0
+        for completed_job in thread_pool.get_result():
+            (job, (is_supported, reason_str)) = completed_job
+            if is_supported: 
+                nb_resum += 1
+                
+        # Count errors and store error messages
+        error_list = []
+        for failed_job in thread_pool.get_error():
+            (job, exception) = failed_job
+            error_msg = str(exception.__class__.__module__) + '.' \
+            + str(exception.__class__.__name__) + ' - ' + str(exception)
+            error_list.append(error_msg)
+        nb_error = len(error_list)
+        
         nb_failed = MAX_RESUM - nb_error - nb_resum
             
         # Text output
@@ -144,64 +188,31 @@ class PluginSessionResumption(PluginBase.PluginBase):
                                   str(nb_error), str(MAX_RESUM),
                                   sessid_stat, sessid_try)
         
-        if ticket_error:
-            ticket_txt = 'Error: ' + ticket_error
-        else:
-            ticket_txt = 'Supported' if ticket_supported \
-                                     else 'Not Supported - ' + ticket_reason+'.'
-        
-        cmd_title = 'Session Resumption'
-        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
-        RESUM_FORMAT = '      {0:<27} {1}'
-        txt_result.append(RESUM_FORMAT.format('With Session IDs:', sessid_txt))
-        txt_result.append(RESUM_FORMAT.format('With TLS Session Tickets:', ticket_txt))
+        ERRORS_FORMAT ='        Error #{0}: {1}'
+        txt_result = []
+        txt_result.append(sessid_txt)
+        # Add error messages
+        if error_list:
+            i=0
+            for error_msg in error_list:
+                i+=1
+                txt_result.append(ERRORS_FORMAT.format(str(i), error_msg))
         
         # XML output
         sessid_xml = str(nb_resum == MAX_RESUM)
-        
         xml_resum_id_attr = {'totalAttempts':str(MAX_RESUM), 
                              'errors' : str(nb_error), 'isSupported' : sessid_xml,
                              'successfulAttempts':str(nb_resum),'failedAttempts':str(nb_failed)}
         xml_resum_id = Element('sessionResumptionWithSessionIDs', attrib = xml_resum_id_attr)
-
-        xml_resum_ticket_attr = {}
-        if ticket_error:
-            xml_resum_ticket_attr['error'] = ticket_error
-        else:
-            xml_resum_ticket_attr['isSupported'] = str(ticket_supported)
-            if not ticket_supported:
-                xml_resum_ticket_attr['reason'] = ticket_reason
+        # Add errors
+        if error_list:
+            for error_msg in error_list:
+                xml_resum_error = Element('error')
+                xml_resum_error.text = error_msg
+                xml_resum_id.append(xml_resum_error)
         
-        xml_resum_ticket = Element('sessionResumptionWithTLSTickets', attrib = xml_resum_ticket_attr)   
-        xml_result = Element('resum', title=cmd_title)
-        xml_result.append(xml_resum_id)
-        xml_result.append(xml_resum_ticket)
-
-        thread_pool.join()
-        return PluginBase.PluginResult(txt_result, xml_result)
-
-
-    def _count_resumptions(self, thread_pool):
-        """
-        Utility function to count the number of resumptions that were successful
-        by looking at the result of a thread_pool of _resume_with_session_id()
-        workers.
-        """
-        # Count successful/failed resumptions
-        nb_resum = 0
-        for completed_job in thread_pool.get_result():
-            (job, (is_supported, reason_str)) = completed_job
-            if is_supported: 
-                nb_resum += 1
-                
-        # Count errors
-        error_list = []
-        for failed_job in thread_pool.get_error():
-            error_list.append(failed_job)
-        nb_error = len(error_list)
-        
-        return (nb_resum, nb_error)
-
+        return (txt_result, xml_resum_id)
+    
 
     def _resume_with_session_id(self, target):
         """
@@ -209,7 +220,6 @@ class PluginSessionResumption(PluginBase.PluginBase):
         """
         ctx = SSL_CTX.SSL_CTX('tlsv1')
         ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ctx.set_cipher_list(self.hello_workaround_cipher_list)
 
         # Session Tickets and Session ID mechanisms can be mutually exclusive.
         ctx.set_options(constants.SSL_OP_NO_TICKET) # Turning off TLS tickets.
@@ -240,7 +250,6 @@ class PluginSessionResumption(PluginBase.PluginBase):
         """
         ctx = SSL_CTX.SSL_CTX('tlsv1')
         ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ctx.set_cipher_list(self.hello_workaround_cipher_list)
     
         # Session Tickets and Session ID mechanisms can be mutually exclusive.
         ctx.set_session_cache_mode(constants.SSL_SESS_CACHE_OFF) # Turning off IDs.
@@ -292,7 +301,8 @@ class PluginSessionResumption(PluginBase.PluginBase):
         for that connection.
         If ssl_session is given, tries to resume that session.
         """
-        ssl_connect = self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
+        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target, 
+                                          ssl_ctx=ssl_ctx, hello_workaround=True)
     
         if ssl_session:
             ssl_connect.ssl.set_session(ssl_session)

@@ -100,13 +100,6 @@ class PluginBase(object):
     # Formatting stuff
     PLUGIN_TITLE_FORMAT = '  * {0} :'
     
-    # There is a really annoying bug that causes specific servers to not
-    # reply to a client hello that is bigger than 255 bytes.
-    # Until this gets fixed, I have to disable cipher suites in order to
-    # make our client hello smaller :(
-    # Probably this bug:
-    # http://rt.openssl.org/Ticket/Display.html?id=2771&user=guest&pass=guest
-    hello_workaround_cipher_list = "aRSA:AES:-SRP:-PSK:-NULL"
                               
     @classmethod
     def get_commands(plugin_class):
@@ -124,75 +117,3 @@ class PluginBase(object):
         """
         return
 
-
-    # Utility SSL/socket methods that turned out to be used by all the plugins
-    @classmethod
-    def _create_ssl_connection(self_class, target, ssl=None, ssl_ctx=None):
-        """
-        Read the shared_settings object shared between all the plugins and load
-        the proper settings the SSL_CTX and SSL objects.
-        
-        @type ssl: ctSSL.SSL
-        @param ssl: SSL object for the SSL connection. If not specified,
-        a default SSL object will be created for the connection and SSL 
-        certificates will NOT be verified when connecting to the server.
-        
-        @type ssl_ctx: ctSSL.SSL_CTX
-        @param ssl_ctx: SSL_CTX object for the SSL connection. If not 
-        specified, a default SSL_CTX object will be created for the connection 
-        and SSL certificates will NOT be verified when connecting to the server.        
-        """
-        shared_settings = self_class._shared_settings
-        timeout = shared_settings['timeout']
-        (host, ip_addr, port) = target
-        
-        if shared_settings['starttls'] == 'smtp':
-            ssl_connection = STARTTLS.SMTPConnection(host, port, ssl, ssl_ctx, 
-                                                     timeout=timeout)
-        elif shared_settings['starttls'] == 'xmpp':
-            if shared_settings['xmpp_to']:
-                xmpp_to = shared_settings['xmpp_to']
-            else:
-                xmpp_to = host
-                
-            ssl_connection = \
-                STARTTLS.XMPPConnection(host, port, ssl, ssl_ctx, 
-                                        timeout=timeout, xmpp_to=xmpp_to)   
-                 
-        elif shared_settings['https_tunnel_host']:
-            # Using an HTTP CONNECT proxy to tunnel SSL traffic
-            tunnel_host = shared_settings['https_tunnel_host']
-            tunnel_port = shared_settings['https_tunnel_port']
-            ssl_connection = HTTPSConnection(tunnel_host, tunnel_port, ssl, ssl_ctx, 
-                                            timeout=timeout)
-            ssl_connection.set_tunnel(host, port)
-        else:
-            ssl_connection = HTTPSConnection(host, port, ssl, ssl_ctx, 
-                                            timeout=timeout)
-            
-            
-        # Load client certificate and private key
-        if shared_settings['cert']:
-            if shared_settings['certform'] is 'DER':
-                ssl_connection.ssl.use_certificate_file(
-                    shared_settings['cert'],
-                    constants.SSL_FILETYPE_ASN1)
-            else:
-                ssl_connection.ssl.use_certificate_file(
-                    shared_settings['cert'],
-                    constants.SSL_FILETYPE_PEM)
-    
-            if shared_settings['keyform'] is 'DER':
-                ssl_connection.ssl.use_PrivateKey_file(
-                    shared_settings['key'],
-                    constants.SSL_FILETYPE_ASN1)
-            else:
-                ssl_connection.ssl.use_PrivateKey_file(
-                    shared_settings['key'],
-                    constants.SSL_FILETYPE_PEM)
-    
-            ssl_connection.ssl.check_private_key()
-            
-        return ssl_connection
-    
-    

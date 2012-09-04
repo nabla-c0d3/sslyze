@@ -25,11 +25,9 @@
 import socket
 from httplib import HTTPConnection, HTTPS_PORT
 
-from ctSSL import SSL, SSL_CTX
-from ctSSL import constants
-
-from CtSSLHelper import filter_handshake_exceptions
+from ctSSL import SSL, SSL_CTX, constants, errors
 from SSLSocket import SSLSocket
+
 
 
 class HTTPSConnection(HTTPConnection):
@@ -48,9 +46,7 @@ class HTTPSConnection(HTTPConnection):
     certificates.
     """
     
-    default_port = HTTPS_PORT
-    
-    def __init__(self, host, port=None, ssl=None, ssl_ctx=None, 
+    def __init__(self, host, port, ssl, ssl_ctx, 
                  strict=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
         """
         Create a new HTTPSConnection.
@@ -78,23 +74,11 @@ class HTTPSConnection(HTTPConnection):
 
         self.ssl_ctx = ssl_ctx
         self.ssl = ssl
-        
-        if self.ssl_ctx is None:
-            self.ssl_ctx = SSL_CTX.SSL_CTX()
-            # Can't verify certs by default
-            self.ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-    
-        if self.ssl is None: 
-            self.ssl = SSL.SSL(self.ssl_ctx)
             
     
     def connect(self):
         """
         Connect to a host on a given (SSL) port.
-        
-        @raise ctSSLHelper.SSLHandshakeRejected: The server explicitly rejected 
-        the SSL handshake.
-        @raise ctSSLHelper.SSLHandshakeError: The SSL handshake failed.
         """
             
         sock = socket.create_connection((self.host, self.port),
@@ -108,10 +92,6 @@ class HTTPSConnection(HTTPConnection):
         self.ssl.set_socket(sock)
         ssl_sock = SSLSocket(self.ssl)
         
-        try:
-            ssl_sock.do_handshake()
-        except Exception as e:
-            filter_handshake_exceptions(e)
-            
+        ssl_sock.do_handshake()
         self.sock = ssl_sock
         

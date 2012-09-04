@@ -28,7 +28,7 @@ from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, \
     ctSSL_cleanup
-from utils.CtSSLHelper import SSLHandshakeRejected
+from utils.SSLyzeSSLConnection import SSLyzeSSLConnection, SSLHandshakeRejected
 
 
 class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
@@ -114,8 +114,10 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         # Store thread pool errors
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
-            ssl_cipher = str(job[1])
-            result_dicts['errors'][ssl_cipher] = str(exception)        
+            ssl_cipher = str(job[1][2])
+            error_msg = str(exception.__class__.__module__) + '.' \
+                        + str(exception.__class__.__name__) + ' - ' + str(exception)
+            result_dicts['errors'][ssl_cipher] = (error_msg, None)        
             
         thread_pool.join()
         ctSSL_cleanup()
@@ -133,19 +135,16 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         cipher_format = '        {0:<32}{1:<35}'
         title_format =  '      {0:<32} '        
         keysize_format = '{0:<25}{1:<14}'
+        title_txt = self.PLUGIN_TITLE_FORMAT.format(ssl_version.upper() + ' Cipher Suites')
+        txt_result = [title_txt]
+        
         txt_titles = [('preferredCipherSuite', 'Preferred Cipher Suite:'),
                       ('acceptedCipherSuites', 'Accepted Cipher Suite(s):'),
                       ('rejectedCipherSuites', 'Rejected Cipher Suite(s):'),
                       ('errors', 'Unknown Errors:')]
-        
-        title_txt = self.PLUGIN_TITLE_FORMAT.format(ssl_version.upper() + ' Cipher Suites')
-        txt_result = [title_txt]
               
-        if self._shared_settings['hide_rejected_ciphers']:     
-            txt_titles = [('preferredCipherSuite', 'Preferred Cipher Suite:'),
-                          ('acceptedCipherSuites', 'Accepted Cipher Suite(s):'),
-                          ('errors', 'Unknown Errors:')]
-            
+        if self._shared_settings['hide_rejected_ciphers']:
+            txt_titles.pop(2)
             txt_result.append('')
             txt_result.append(title_format.format('Rejected Cipher Suite(s): Hidden'))
             
@@ -204,17 +203,14 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         ssl_ctx.set_cipher_list(ssl_cipher)
     
         # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
-        ssl_connect = self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
+        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target, ssl_ctx=ssl_ctx)
         
         try: # Perform the SSL handshake
             ssl_connect.connect()
+            
         except SSLHandshakeRejected as e:
             return ('rejectedCipherSuites', ssl_cipher, None, str(e))
-        except Exception as e: # Non standard way to reject a cipher or an error happened
-            error_msg = str(e.__class__.__module__) + '.' \
-                        + str(e.__class__.__name__) + ' - ' + str(e)
-            return ('errors', ssl_cipher, None, error_msg)
-    
+
         else:
             ssl_cipher = ssl_connect.ssl.get_current_cipher()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
@@ -222,7 +218,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             else:
                 keysize = str(ssl_connect.ssl.get_current_cipher_bits())+' bits'
                 
-            status_msg = self._check_ssl_connection_is_alive(ssl_connect)
+            status_msg = ssl_connect.post_handshake_check()
             return ('acceptedCipherSuites', ssl_cipher, keysize, status_msg)
     
         finally:
@@ -238,16 +234,15 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         """
         ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
         ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ssl_ctx.set_cipher_list(self.hello_workaround_cipher_list)
-    
         # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
-        ssl_connect = self._create_ssl_connection(target, ssl_ctx=ssl_ctx)
+        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target, 
+                                          ssl_ctx=ssl_ctx, hello_workaround=True)
         
         try: # Perform the SSL handshake
             ssl_connect.connect()
-        except Exception:
+        except:
             return None
-    
+
         else:
             ssl_cipher = ssl_connect.ssl.get_current_cipher()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
@@ -255,7 +250,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             else:
                 keysize = str(ssl_connect.ssl.get_current_cipher_bits())+' bits'
                 
-            status_msg = self._check_ssl_connection_is_alive(ssl_connect)
+            status_msg = ssl_connect.post_handshake_check()
             return ('preferredCipherSuite', ssl_cipher, keysize, status_msg)
     
         finally:
@@ -263,46 +258,3 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             
         return
 
-
-    def _check_ssl_connection_is_alive(self, ssl_connection):
-        """
-        Check if the SSL connection is still alive after the handshake.
-        Will send an HTTP GET for an HTTPS connection.
-        Will send a NOOP for an SMTP connection.
-        """    
-        shared_settings = self._shared_settings
-        result = 'N/A'
-        
-        if shared_settings['starttls'] == 'smtp':
-            try:
-                ssl_connection.sock.send('NOOP\r\n')
-                result = ssl_connection.sock.read(2048).strip()
-            except socket.timeout:
-                result = 'Timeout on SMTP NOOP'
-                
-        elif shared_settings['starttls'] == 'xmpp':
-            result = ''
-            
-        elif shared_settings['http_get']:
-            try: # Send an HTTP GET to the server and store the HTTP Status Code
-                ssl_connection.request("GET", "/", headers={"Connection": "close"})
-                http_response = ssl_connection.getresponse()
-                if http_response.version == 9 :
-                    # HTTP 0.9 => Probably not an HTTP response
-                    result = 'Server response was not HTTP'
-                else:    
-                    result = 'HTTP ' + str(http_response.status) + ' ' \
-                           + str(http_response.reason)
-                    if http_response.status >= 300 and http_response.status < 400:
-                        # Add redirection URL to the result
-                        redirect = http_response.getheader('Location', None)
-                        if redirect:
-                            result = result + ' - ' + redirect
-                            
-            except socket.timeout:
-                result = 'Timeout on HTTP GET'
-                
-        else:
-            result = ''
-                    
-        return result

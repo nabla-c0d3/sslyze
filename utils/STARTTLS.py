@@ -24,15 +24,16 @@
 import socket
 from ctSSL import SSL, SSL_CTX
 from ctSSL import constants
-
 from SSLSocket import SSLSocket
-from CtSSLHelper import filter_handshake_exceptions, SSLHandshakeError
+
+
+class SSLHandshakeError(Exception):
+    pass
+
 
 class SMTPConnection():
     
-    default_port = 25
-    
-    def __init__(self, host, port=default_port, ssl=None, ssl_ctx=None, 
+    def __init__(self, host, port, ssl, ssl_ctx, 
                  timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
         
         self.ssl_ctx = ssl_ctx
@@ -42,14 +43,6 @@ class SMTPConnection():
         self.timeout = timeout
         self.sock = None
         
-        if self.ssl_ctx is None:
-            self.ssl_ctx = SSL_CTX.SSL_CTX()
-            # Can't verify certs by default
-            self.ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-    
-        if self.ssl is None: 
-            self.ssl = SSL.SSL(self.ssl_ctx)
-            
     
     def connect(self):
         """
@@ -60,7 +53,6 @@ class SMTPConnection():
         sock = socket.create_connection((self.host, self.port),
                                         self.timeout)
         self.sock = sock
-        
 
         # Get the SMTP banner
         sock.recv(2048)
@@ -80,13 +72,8 @@ class SMTPConnection():
         # Do the SSL handshake
         self.ssl.set_socket(sock)
         ssl_sock = SSLSocket(self.ssl)
-
-            
-        try:
-            ssl_sock.do_handshake()
-        except Exception as e:
-            filter_handshake_exceptions(e)    
-            
+        
+        ssl_sock.do_handshake()
         self.sock = ssl_sock
         
 
@@ -97,11 +84,10 @@ class SMTPConnection():
         
 class XMPPConnection():
     
-    default_port = 5222
     xmpp_open_stream = "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/rfc2595.txt' to='{0}'>" 
     xmpp_starttls = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
     
-    def __init__(self, host, port=default_port, ssl=None, ssl_ctx=None, 
+    def __init__(self, host, port, ssl, ssl_ctx, 
                  timeout=socket._GLOBAL_DEFAULT_TIMEOUT, xmpp_to=None):
         
         self.ssl_ctx = ssl_ctx
@@ -114,14 +100,6 @@ class XMPPConnection():
             self.xmpp_to = host
         else:
             self.xmpp_to = xmpp_to
-        
-        if self.ssl_ctx is None:
-            self.ssl_ctx = SSL_CTX.SSL_CTX()
-            # Can't verify certs by default
-            self.ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-    
-        if self.ssl is None: 
-            self.ssl = SSL.SSL(self.ssl_ctx)
             
     
     def connect(self):
@@ -147,13 +125,8 @@ class XMPPConnection():
         # Do the SSL handshake
         self.ssl.set_socket(sock)
         ssl_sock = SSLSocket(self.ssl)
-
-            
-        try:
-            ssl_sock.do_handshake()
-        except Exception as e:
-            filter_handshake_exceptions(e)    
-            
+        
+        ssl_sock.do_handshake()
         self.sock = ssl_sock
         
 

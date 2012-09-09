@@ -24,7 +24,8 @@
 from time import time
 from multiprocessing import Process, JoinableQueue
 import sys
-from xml.etree.ElementTree import ElementTree, Element
+from xml.etree.ElementTree import ElementTree, Element, tostring
+from xml.dom import minidom
 
 from utils.discover_targets import discover_targets
 from utils.discover_plugins import discover_plugins
@@ -99,6 +100,8 @@ def _format_title(title):
 def _format_xml_target_result(target, result_list):
     (host, ip, port) = target
     target_xml = Element('target', host=host, ip=ip, port=str(port))
+    result_list.sort(key=lambda result: result[0]) # Sort results
+    
     for (command, plugin_result) in result_list:
         target_xml.append(plugin_result.get_xml_result())
 
@@ -229,6 +232,8 @@ def main():
         
         result_xml = Element('results', attrib = result_xml_attr)
         
+        # Sort results in alphabetical order to make the XML files (somewhat) diff-able
+        xml_output_list.sort(key=lambda xml_elem: xml_elem.attrib['host'])
         for xml_element in xml_output_list:
             result_xml.append(xml_element)
             
@@ -236,10 +241,13 @@ def main():
                                 SSLyzeVersion = SSLYZE_VERSION, 
                                 SSLyzeWeb = PROJECT_URL)
         xml_final_doc.append(result_xml)
-    
-        xml_final_tree = ElementTree(xml_final_doc)
-        xml_final_tree.write(shared_settings['xml_file'])
-        
+
+        # Hack: Prettify the XML file so it's (somewhat) diff-able
+        xml_final_pretty = minidom.parseString(tostring(xml_final_doc, 'utf-8'))
+        with open(shared_settings['xml_file'],'w') as xml_file:
+            xml_file.write(xml_final_pretty.toprettyxml(indent="  "))
+            
+
     print _format_title('Scan Completed in {0:.2f} s'.format(exec_time))
 
 

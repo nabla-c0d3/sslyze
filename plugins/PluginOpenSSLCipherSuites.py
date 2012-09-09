@@ -178,8 +178,12 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         for (result_type, result_dict) in result_dicts.items():
             xml_dict = Element(result_type)
             
+            # Sort the cipher suites by name to make the XML diff-able
+            result_list = sorted(result_dict.items(), 
+                                 key=lambda (k,v): (k,v), reverse=False)
+            
             # Add one element for each ciphers
-            for (ssl_cipher, (msg, keysize)) in result_dict.items():
+            for (ssl_cipher, (msg, keysize)) in result_list:
                 cipher_xml_attr = {'name' : ssl_cipher, 'connectionStatus' : msg}
                 if keysize: 
                     cipher_xml_attr['keySize'] = keysize

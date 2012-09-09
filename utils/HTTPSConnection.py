@@ -25,7 +25,7 @@
 import socket
 from httplib import HTTPConnection, HTTPS_PORT
 
-from ctSSL import SSL, SSL_CTX, constants, errors
+from ctSSL import SSL, constants, errors
 from SSLSocket import SSLSocket
 
 
@@ -33,21 +33,16 @@ from SSLSocket import SSLSocket
 class HTTPSConnection(HTTPConnection):
     """
     This class mirrors httplib.HTTPSConnection but uses ctSSL instead of the 
-    standard ssl module.
-    For now the way to access low level SSL functions associated with a given 
-    HTTPSConnection is to directly access the ssl and ssl_ctx attributes of the 
-    object. TODO: change that.
-    
-    @type ssl_ctx: ctSSL.SSL_CTX
-    @ivar ssl_ctx: SSL_CTX object for the HTTPS connection.
+    standard ssl module. This was done to use Python 2.7's CONNECT proxy
+    support within httplib without having to rewrite the whole thing for ctSSL.
 
     @type ssl: ctSSL.SSL
     @ivar ssl: SSL object for the HTTPS connection.
     certificates.
     """
     
-    def __init__(self, host, port, ssl, ssl_ctx, 
-                 strict=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
+    def __init__(self, host, port, ssl, strict=None, 
+                 timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
         """
         Create a new HTTPSConnection.
 
@@ -55,25 +50,16 @@ class HTTPSConnection(HTTPConnection):
         @param host: Host name of the server to connect to.
         
         @type port: int
-        @param port: Port number to connect to. 443 by default.
+        @param port: Port number to connect to.
 
         @type ssl: ctSSL.SSL
-        @param ssl: SSL object for the HTTPS connection. If not specified,
-        a default SSL object will be created for the connection and SSL 
-        certificates will NOT be verified when connecting to the server.
-        
-        @type ssl_ctx: ctSSL.SSL_CTX
-        @param ssl_ctx: SSL_CTX object for the HTTPS connection. If not 
-        specified, a default SSL_CTX object will be created for the connection 
-        and SSL certificates will NOT be verified when connecting to the server.
+        @param ssl: SSL object for the HTTPS connection.
 
         @type timeout: int
         @param timeout: Socket timeout value.
         """        
         HTTPConnection.__init__(self, host, port, strict, timeout)
-
-        self.ssl_ctx = ssl_ctx
-        self.ssl = ssl
+        self._ssl = ssl
             
     
     def connect(self):
@@ -89,8 +75,8 @@ class HTTPSConnection(HTTPConnection):
             self._tunnel()
               
         # Doing something similar to ssl.wrap_socket() but with ctSSL
-        self.ssl.set_socket(sock)
-        ssl_sock = SSLSocket(self.ssl)
+        self._ssl.set_socket(sock)
+        ssl_sock = SSLSocket(self._ssl)
         
         ssl_sock.do_handshake()
         self.sock = ssl_sock

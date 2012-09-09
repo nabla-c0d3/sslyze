@@ -5,6 +5,8 @@
 #               It takes care of all the things SSLyze plugins rely on when 
 #               performing an SSL connection, such as properly configuring 
 #               SSL_CTX from looking at the shared_settings object.
+#               The goal was to put everything related to SSLyze in one spot
+#               and keep the rest of the SSL code generic.
 #
 # Author:       alban
 #
@@ -28,6 +30,8 @@ import socket
 
 from ctSSL import SSL, SSL_CTX, errors
 from utils.HTTPSConnection import HTTPSConnection
+from utils.StartTLS import SMTPConnection, XMPPConnection
+
 
 class SSLHandshakeRejected(Exception):
     """
@@ -74,7 +78,7 @@ class SSLyzeSSLConnection:
     
 
 
-    def __init__(self, shared_settings, target, ssl=None, ssl_ctx=None, hello_workaround=False):
+    def __init__(self, shared_settings, target, ssl_ctx,hello_workaround=False):
         """
         Read the shared_settings object shared between all the plugins and 
         configure the SSL_CTX and SSL objects accordingly.
@@ -84,16 +88,9 @@ class SSLyzeSSLConnection:
 
         @type target: (host, ip_addr, port)
         @param target: Server to connect to.
-
-        @type ssl: ctSSL.SSL
-        @param ssl: SSL object for the SSL connection. If not specified,
-        a default SSL object will be created for the connection and SSL 
-        certificates will NOT be verified when connecting to the server.
         
         @type ssl_ctx: ctSSL.SSL_CTX
-        @param ssl_ctx: SSL_CTX object for the SSL connection. If not 
-        specified, a default SSL_CTX object will be created for the connection 
-        and SSL certificates will NOT be verified when connecting to the server.
+        @param ssl_ctx: SSL_CTX object for the SSL connection.
         
         @type hello_workaround: bool
         @param hello_workaround: Enable client hello workaround.       
@@ -101,69 +98,57 @@ class SSLyzeSSLConnection:
     
         timeout = shared_settings['timeout']
         (host, ip_addr, port) = target
-        
-        if ssl_ctx is None:
-            ssl_ctx = SSL_CTX.SSL_CTX()  
-            # Can't verify certs by default
-            ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-    
         if hello_workaround:
             ssl_ctx.set_cipher_list(self.SSL_HELLO_WORKAROUND_CIPHERS)
+        
+        # Create the SSL object
+        ssl = SSL.SSL(ssl_ctx)
+
+        # Load client certificate and private key in the SSL object
+        if shared_settings['cert']:
+            if shared_settings['certform'] is 'DER':
+                ssl.use_certificate_file(shared_settings['cert'],
+                                         constants.SSL_FILETYPE_ASN1)
+            else:
+                ssl.use_certificate_file(shared_settings['cert'],
+                                         constants.SSL_FILETYPE_PEM)
+    
+            if shared_settings['keyform'] is 'DER':
+                ssl.use_PrivateKey_file(shared_settings['key'],
+                                        constants.SSL_FILETYPE_ASN1)
+            else:
+                ssl.use_PrivateKey_file(shared_settings['key'],
+                                        constants.SSL_FILETYPE_PEM)
+    
+            ssl.check_private_key()
             
-        if ssl is None: 
-            ssl = SSL.SSL(ssl_ctx)
         
         # Create the proper SMTP / XMPP / HTTPS connection
         if shared_settings['starttls'] == 'smtp':
-            ssl_connection = STARTTLS.SMTPConnection(host, port, ssl, ssl_ctx, 
-                                                     timeout=timeout)
+            ssl_connection = SMTPConnection(host, port, ssl, timeout)
         elif shared_settings['starttls'] == 'xmpp':
             if shared_settings['xmpp_to']:
                 xmpp_to = shared_settings['xmpp_to']
             else:
                 xmpp_to = host
                 
-            ssl_connection = \
-                STARTTLS.XMPPConnection(host, port, ssl, ssl_ctx, 
-                                        timeout=timeout, xmpp_to=xmpp_to)   
+            ssl_connection = XMPPConnection(host, port, ssl, timeout, xmpp_to)   
                  
         elif shared_settings['https_tunnel_host']:
             # Using an HTTP CONNECT proxy to tunnel SSL traffic
             tunnel_host = shared_settings['https_tunnel_host']
             tunnel_port = shared_settings['https_tunnel_port']
-            ssl_connection = HTTPSConnection(tunnel_host, tunnel_port, ssl, ssl_ctx, 
+            ssl_connection = HTTPSConnection(tunnel_host, tunnel_port, ssl,  
                                             timeout=timeout)
             ssl_connection.set_tunnel(host, port)
         else:
-            ssl_connection = HTTPSConnection(host, port, ssl, ssl_ctx, 
-                                            timeout=timeout)
+            ssl_connection = HTTPSConnection(host, port, ssl, timeout=timeout)
             
-        # Load client certificate and private key
-        if shared_settings['cert']:
-            if shared_settings['certform'] is 'DER':
-                ssl_connection.ssl.use_certificate_file(
-                    shared_settings['cert'],
-                    constants.SSL_FILETYPE_ASN1)
-            else:
-                ssl_connection.ssl.use_certificate_file(
-                    shared_settings['cert'],
-                    constants.SSL_FILETYPE_PEM)
-    
-            if shared_settings['keyform'] is 'DER':
-                ssl_connection.ssl.use_PrivateKey_file(
-                    shared_settings['key'],
-                    constants.SSL_FILETYPE_ASN1)
-            else:
-                ssl_connection.ssl.use_PrivateKey_file(
-                    shared_settings['key'],
-                    constants.SSL_FILETYPE_PEM)
-    
-            ssl_connection.ssl.check_private_key()
         
         # All done
         self._ssl_connection = ssl_connection
-        self.ssl = ssl
-        self.ssl_ctx = ssl_ctx
+        self._ssl_ctx = ssl_ctx
+        self._ssl = ssl
         self._shared_settings = shared_settings
             
             

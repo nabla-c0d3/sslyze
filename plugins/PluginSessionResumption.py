@@ -301,15 +301,15 @@ class PluginSessionResumption(PluginBase.PluginBase):
         for that connection.
         If ssl_session is given, tries to resume that session.
         """
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target, 
-                                          ssl_ctx=ssl_ctx, hello_workaround=True)
+        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx,
+                                          hello_workaround=True)
     
         if ssl_session:
-            ssl_connect.ssl.set_session(ssl_session)
+            ssl_connect._ssl.set_session(ssl_session)
     
         try: # Perform the SSL handshake
             ssl_connect.connect()
-            session = ssl_connect.ssl.get_session() # Get session data
+            session = ssl_connect._ssl.get_session() # Get session data
         finally:
             ssl_connect.close()
             

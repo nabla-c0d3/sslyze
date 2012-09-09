@@ -343,13 +343,13 @@ class PluginCertInfo(PluginBase.PluginBase):
         ssl_ctx = SSL_CTX.SSL_CTX('tlsv1') # sslv23 hello will fail for specific servers such as post.craigslist.org
         ssl_ctx.load_verify_locations(TRUSTED_CA_STORE)
         ssl_ctx.set_verify(constants.SSL_VERIFY_NONE) # We'll use get_verify_result()
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target, 
-                                          ssl_ctx=ssl_ctx, hello_workaround=True)
+        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx,
+                                          hello_workaround=True)
 
         try: # Perform the SSL handshake
             ssl_connect.connect()
-            cert = ssl_connect.ssl.get_peer_certificate()
-            verify_result = ssl_connect.ssl.get_verify_result()
+            cert = ssl_connect._ssl.get_peer_certificate()
+            verify_result = ssl_connect._ssl.get_verify_result()
         finally:
             ssl_connect.close()
 

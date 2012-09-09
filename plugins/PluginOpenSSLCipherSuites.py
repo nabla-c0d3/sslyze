@@ -203,7 +203,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         ssl_ctx.set_cipher_list(ssl_cipher)
     
         # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target, ssl_ctx=ssl_ctx)
+        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx)
         
         try: # Perform the SSL handshake
             ssl_connect.connect()
@@ -212,11 +212,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             return ('rejectedCipherSuites', ssl_cipher, None, str(e))
 
         else:
-            ssl_cipher = ssl_connect.ssl.get_current_cipher()
+            ssl_cipher = ssl_connect._ssl.get_current_cipher()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
                 keysize = 'Anon' # Anonymous, let s not care about the key size
             else:
-                keysize = str(ssl_connect.ssl.get_current_cipher_bits())+' bits'
+                keysize = str(ssl_connect._ssl.get_current_cipher_bits())+' bits'
                 
             status_msg = ssl_connect.post_handshake_check()
             return ('acceptedCipherSuites', ssl_cipher, keysize, status_msg)
@@ -235,8 +235,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
         ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
         # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target, 
-                                          ssl_ctx=ssl_ctx, hello_workaround=True)
+        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx,
+                                          hello_workaround=True)
         
         try: # Perform the SSL handshake
             ssl_connect.connect()
@@ -244,11 +244,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             return None
 
         else:
-            ssl_cipher = ssl_connect.ssl.get_current_cipher()
+            ssl_cipher = ssl_connect._ssl.get_current_cipher()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
                 keysize = 'Anon' # Anonymous, let s not care about the key size
             else:
-                keysize = str(ssl_connect.ssl.get_current_cipher_bits())+' bits'
+                keysize = str(ssl_connect._ssl.get_current_cipher_bits())+' bits'
                 
             status_msg = ssl_connect.post_handshake_check()
             return ('preferredCipherSuite', ssl_cipher, keysize, status_msg)

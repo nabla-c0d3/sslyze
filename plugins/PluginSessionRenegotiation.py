@@ -78,15 +78,15 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         """
         ssl_ctx = SSL_CTX.SSL_CTX('tlsv1') # sslv23 hello will fail for specific servers such as post.craigslist.org
         ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target, 
-                                          ssl_ctx=ssl_ctx, hello_workaround=True)
+        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx,
+                                          hello_workaround=True)
     
         try:
             ssl_connect.connect()
-            is_secure = ssl_connect.ssl.get_secure_renegotiation_support()
+            is_secure = ssl_connect._ssl.get_secure_renegotiation_support()
     
             try: # Let's try to renegotiate
-                ssl_connect.ssl.renegotiate()
+                ssl_connect._ssl.renegotiate()
                 can_reneg = True
     
             # Errors caused by a server rejecting the renegotiation

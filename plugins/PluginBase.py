@@ -24,11 +24,6 @@
 
 import abc
 
-from utils.ctSSL import constants
-from utils.HTTPSConnection import HTTPSConnection
-from utils import STARTTLS
-
-
 class AvailableCommands:
     """
     This object tells the main process which command line option(s)

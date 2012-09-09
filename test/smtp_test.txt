@@ -1,0 +1,4 @@
+# python sslyze.py --tlsv1 --sslv2 --sslv3 --certinfo=basic --resum --reneg --starttls=smtp --hide_rejected_ciphers --xml_out smtp_test.xml --targets_in test/smtp_test.txt
+smtp.gmail.com
+smtp.mail.com
+smtp.comcast.net

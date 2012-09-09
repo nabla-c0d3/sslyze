@@ -1,0 +1,7 @@
+# python sslyze.py --regular --xml_out https_test.xml --targets_in test/https_test.txt
+www.google.fr
+www.bankofamerica.com
+store.steampowered.com
+www.facebook.com
+www.google.com
+www.isecpartners.com

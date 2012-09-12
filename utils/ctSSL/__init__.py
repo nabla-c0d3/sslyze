@@ -30,6 +30,7 @@ def ctSSL_initialize(multithreading=False):
         openSSL_threading_init()
         openSSL_threading = True
 
+        
     # Initialize libraries and error strings
     libssl.SSL_library_init()
     libssl.SSL_load_error_strings()
@@ -44,6 +45,11 @@ def ctSSL_initialize(multithreading=False):
     X509.init_X509_functions()
     errors.init_ERR_functions()
 
+    zlib_compression_p = libcrypto.COMP_zlib()
+    one  = c_int(1)
+    result = libssl.SSL_COMP_add_compression_method(one, zlib_compression_p)
+    if result != 0:
+        print "Could not enable compression"
 
 def ctSSL_cleanup():
     libcrypto.EVP_cleanup()

@@ -375,6 +375,19 @@ class SSL:
                                ssl_session.get_ssl_session_struct_p())
 
 
+    def get_current_compression(self):
+        session = self.get_session()
+        alltext = session.as_text()
+        lines = alltext.split('\n')
+        for l in lines:
+            if 'Compression' in l:
+                return l.replace('Compression: ', '').strip()
+        return '0 (none)'
+        
+        # This is the easier way to do if, if we have the function
+        #ssl_session_p = libssl.SSL_get1_session(self._ssl_struct_p)
+        #return libssl.SSL_SESSION_get_compress_id(ssl_session_p)
+                               
     def get_current_cipher(self):
         """
         Return the name of the cipher currently in use.

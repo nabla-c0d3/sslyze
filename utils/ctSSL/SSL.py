@@ -376,6 +376,10 @@ class SSL:
 
 
     def get_current_compression(self):
+        if features_not_available.ZLIB_NOT_AVAIL:
+            raise errors.ctSSLFeatureNotAvailable(
+                'ctSSL was not initialized with Zlib compression support. See ctSSL_initialize().')
+            
         session = self.get_session()
         alltext = session.as_text()
         lines = alltext.split('\n')

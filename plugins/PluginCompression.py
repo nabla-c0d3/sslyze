@@ -23,7 +23,7 @@ class PluginCompression(PluginBase.PluginBase):
     def process_task(self, target, command, args):
         output_format = '        {0:<25} {1}'
 
-        ctSSL_initialize()
+        ctSSL_initialize(zlib=True)
 
         ssl_ctx = SSL_CTX.SSL_CTX('tlsv1') # sslv23 hello will fail for specific servers such as post.craigslist.org
         ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx,

@@ -12,16 +12,23 @@
 from ctypes import c_ulong, c_int, CFUNCTYPE, c_char_p, c_void_p
 from load_openssl import libssl, libcrypto, ctSSLInitError
 import SSL, BIO, SSL_CTX, errors, SSL_SESSION, X509
-
+import features_not_available
 
 openSSL_threading = False
 
 
-def ctSSL_initialize(multithreading=False):
+def ctSSL_initialize(multithreading=False, zlib=False):
     """
     Initialize ctSSL's ctypes bindings, and OpenSSL libraries and error
-    strings. Optionally initializes OpenSSL multithreading support.
-    Should always be called before any other ctSSL function.
+    strings. Should always be called before any other ctSSL function.
+    
+    @type multithreading: boolean
+    @param multithreading: Initialize OpenSSL multithreading support. 
+    TODO: This actually doesn't do anything ATM.
+    
+    @type zlib: boolean
+    @param zlib: Initialize support for Zlib compression.
+    
     """
     # Initialize multithreading
     multithreading=False    # TODO: Clean start. Disabled for now, causes issues
@@ -30,6 +37,7 @@ def ctSSL_initialize(multithreading=False):
         openSSL_threading_init()
         openSSL_threading = True
 
+        
     # Initialize libraries and error strings
     libssl.SSL_library_init()
     libssl.SSL_load_error_strings()
@@ -43,6 +51,29 @@ def ctSSL_initialize(multithreading=False):
     SSL_SESSION.init_SSL_SESSION_functions()
     X509.init_X509_functions()
     errors.init_ERR_functions()
+
+    if zlib: # Enable Zlib compression. Can only be done globally.
+        try:
+            libcrypto.COMP_zlib.argtypes = []
+            libcrypto.COMP_zlib.restype = c_void_p
+    
+            libssl.SSL_COMP_add_compression_method.argtypes = [c_int, c_void_p]
+            libssl.SSL_COMP_add_compression_method.restype = c_int
+
+            zlib_comp_p = libcrypto.COMP_zlib()
+            has_zlib = libssl.SSL_COMP_add_compression_method(1, zlib_comp_p)
+        
+        except AttributeError: # OpenSSL is super old and COMP_XX() is not defined ?
+            raise errors.ctSSLFeatureNotAvailable("Could not enable Zlib compression: not supported by the version of the OpenSSL library that was loaded ?")
+        
+        except: # TODO: Check for common errors here and add meaningful error message
+            raise
+            
+        if has_zlib != 0:
+            raise errors.ctSSLFeatureNotAvailable("Could not enable Zlib compression: OpenSSL was not built with Zlib support ?")
+        
+        features_not_available.ZLIB_NOT_AVAIL = False
+
 
 
 def ctSSL_cleanup():

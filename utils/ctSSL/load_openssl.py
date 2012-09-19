@@ -26,7 +26,6 @@ class ctSSLInitError(Exception):
     pass
 
 
-
 def _load_openSSL_windows():
     try: # Hopefully the DLLs are in the current folder
         libcrypto = ctypes.CDLL('.\libeay32.dll', use_errno=True,use_last_error=True)
@@ -39,6 +38,16 @@ def _load_openSSL_windows():
         except OSError:
             raise ctSSLInitError('Could not load OpenSSL libraries.')
         
+    return (libcrypto, libssl)
+
+
+def _load_openSSL_osx():
+    try: # Hopefully the DLLs are in the current folder
+        libcrypto = ctypes.CDLL('libcrypto.1.0.0.dylib', use_errno=True,use_last_error=True)
+        libssl = ctypes.CDLL('libssl.1.0.0.dylib', use_errno=True, use_last_error=True)
+    except OSError: # Else fallback to the system's library
+        (libcrypto, libssl) = _load_openSSL_linux_default() 
+
     return (libcrypto, libssl)
 
 
@@ -61,7 +70,7 @@ if os.name == 'nt':
 
 elif os.name == 'posix':
     if sys.platform == 'darwin': # MAC OS X
-        (libcrypto, libssl) = _load_openSSL_linux_default()
+        (libcrypto, libssl) = _load_openSSL_osx()
 
     elif sys.platform == 'cygwin':
         (libcrypto, libssl) = _load_openSSL_windows()

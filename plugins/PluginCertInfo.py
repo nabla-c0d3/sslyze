@@ -77,9 +77,13 @@ class X509CertificateHelper:
 
 
     def _create_xml_node(self, key, value=''):
-        key = key.replace(' ', '').strip()
-        if key[0].isdigit(): # Would generate invalid XML
-                key = 'oid-' + key # Tags cannot start with a digit
+        key = key.replace(' ', '').strip() # Remove spaces
+        key = key.replace('/', '').strip() # Remove slashes (S/MIME Capabilities)
+        
+         # Things that would generate invalid XML
+        if key[0].isdigit(): # Tags cannot start with a digit
+                key = 'oid-' + key 
+                
         xml_node = Element(key)
         xml_node.text = value.strip()
         return xml_node

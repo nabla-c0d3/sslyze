@@ -85,7 +85,7 @@ class X509CertificateHelper:
                 key = 'oid-' + key 
                 
         xml_node = Element(key)
-        xml_node.text = value.strip()
+        xml_node.text = value.decode( "utf-8" ).strip()
         return xml_node
     
     

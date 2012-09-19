@@ -242,9 +242,9 @@ def main():
         xml_final_doc.append(result_xml)
 
         # Hack: Prettify the XML file so it's (somewhat) diff-able
-        xml_final_pretty = minidom.parseString(tostring(xml_final_doc, 'utf-8'))
+        xml_final_pretty = minidom.parseString(tostring(xml_final_doc, encoding='UTF-8'))
         with open(shared_settings['xml_file'],'w') as xml_file:
-            xml_file.write(xml_final_pretty.toprettyxml(indent="  "))
+            xml_file.write(xml_final_pretty.toprettyxml(indent="  ", encoding="utf-8" ))
             
 
     print _format_title('Scan Completed in {0:.2f} s'.format(exec_time))

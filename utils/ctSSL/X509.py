@@ -12,7 +12,7 @@
 #-------------------------------------------------------------------------------
 
 from ctypes import c_void_p, c_int, c_char_p, c_long
-from ctypes import create_string_buffer, sizeof, pointer
+from ctypes import create_string_buffer, sizeof, pointer, byref
 from load_openssl import libcrypto
 import BIO
 from errors import ctSSLEmptyValue
@@ -53,8 +53,7 @@ class X509_EXTENSION_LIST:
             
     def get_all_extensions(self):
         return self._x509extensions
-                
-            
+
 
 class X509_NAME:
     """Parses an X509 Issuer Name or Subject Name field"""
@@ -67,9 +66,15 @@ class X509_NAME:
             entry_p = libcrypto.X509_NAME_get_entry(x509_name_struct, c_int(i))
             
             # Get entry value
-            entry_data_asn1_p =  libcrypto.X509_NAME_ENTRY_get_data(entry_p)          
-            entry_data_txt = libcrypto.ASN1_STRING_data(entry_data_asn1_p)
-            
+            entry_data_asn1_p =  libcrypto.X509_NAME_ENTRY_get_data(entry_p)
+            entry_data_txt_p = c_char_p(0)
+            length = libcrypto.ASN1_STRING_length(entry_data_asn1_p) 
+            if length != libcrypto.ASN1_STRING_to_UTF8(byref(entry_data_txt_p), entry_data_asn1_p):
+                # TODO: error
+                pass
+
+            entry_data_txt = entry_data_txt_p.value
+
             # Get entry name
             entry_name_asn1_p =  libcrypto.X509_NAME_ENTRY_get_object(entry_p)
             entry_name = create_string_buffer(1024) #TODO no hardcoded len
@@ -348,6 +353,13 @@ def init_X509_functions():
 
     libcrypto.X509V3_EXT_print.argtypes = [c_void_p, c_void_p, c_long, c_int]
     libcrypto.X509V3_EXT_print.restype = c_int
+    
+    libcrypto.ASN1_STRING_to_UTF8.argtypes = [c_void_p, c_void_p]
+    libcrypto.ASN1_STRING_to_UTF8.restype = c_int
+
+    libcrypto.ASN1_STRING_length.argtypes = [c_void_p]
+    libcrypto.ASN1_STRING_length.restype = c_int
+            
     
     # Not in OpenSSL 0.9.8 :(
     #libcrypto.EVP_PKEY_print_public.argtypes = [c_void_p, c_void_p, c_int, c_void_p]

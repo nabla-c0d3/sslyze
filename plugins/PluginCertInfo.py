@@ -193,12 +193,12 @@ class PluginCertInfo(PluginBase.PluginBase):
     available_commands = PluginBase.AvailableCommands(
         title="PluginCertInfo",
         description=(
-            "Verifies the target server's certificate validity against "
-            "Mozilla's trusted root store, and prints relevant fields of "
-            "the certificate."))
+            ""))
     available_commands.add_command(
         command="certinfo",
-        help="Should be 'basic' or 'full'",
+        help= "Verifies the target server's certificate validity against "
+            "Mozilla's trusted root store, and prints relevant fields of "
+            "the certificate. CERTINFO should be 'basic' or 'full'.",
         dest="certinfo")
 
     FIELD_FORMAT = '      {0:<35}{1:<35}'

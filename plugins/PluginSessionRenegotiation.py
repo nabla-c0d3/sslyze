@@ -33,7 +33,7 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
 
     available_commands = PluginBase.AvailableCommands(
         title="PluginSessionRenegotiation",
-        description="Tests the target server for insecure renegotiation.")
+        description="")
     available_commands.add_command(
         command="reneg",
         help=(

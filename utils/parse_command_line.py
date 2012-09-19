@@ -166,7 +166,8 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
         and parser.has_option('--tlsv1') and parser.has_option('--reneg') \
         and parser.has_option('--resum') and parser.has_option('--certinfo') \
         and parser.has_option('--http_get') \
-        and parser.has_option('--hide_rejected_ciphers'):
+        and parser.has_option('--hide_rejected_ciphers') \
+        and parser.has_option('--compression'):
             parser.add_option(
                 '--regular',
                 action="store_true",
@@ -214,6 +215,7 @@ def parse_command_line(parser):
             setattr(args_command_list, 'certinfo', 'basic')
             setattr(args_command_list, 'hide_rejected_ciphers', True)
             setattr(args_command_list, 'http_get', True)
+            setattr(args_command_list, 'compression', True)
             
     return (args_command_list, args_target_list)
 

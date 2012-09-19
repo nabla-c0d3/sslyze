@@ -23,7 +23,6 @@
 
 from time import time
 from multiprocessing import Process, JoinableQueue
-import sys
 from xml.etree.ElementTree import ElementTree, Element, tostring
 from xml.dom import minidom
 

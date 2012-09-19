@@ -18,7 +18,8 @@ Usage
 ### Sample command line:
 	$ python sslyze.py --regular www.isecpartners.com:443 www.google.com
 
-User manual available at https://github.com/iSECPartners/sslyze/wiki
+See the test folder for additional examples. User manual available at: 
+https://github.com/iSECPartners/sslyze/wiki
 
 License
 --------

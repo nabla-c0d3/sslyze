@@ -167,12 +167,15 @@ def create_command_line_parser(available_plugins, prog_version, timeout):
         and parser.has_option('--resum') and parser.has_option('--certinfo') \
         and parser.has_option('--http_get') \
         and parser.has_option('--hide_rejected_ciphers') \
-        and parser.has_option('--compression'):
+        and parser.has_option('--compression') \
+        and parser.has_option('--tlsv1_1') \
+        and parser.has_option('--tlsv1_2'):
             parser.add_option(
                 '--regular',
                 action="store_true",
                 help=(
-                    'Regular HTTP scan. Shortcut for --sslv2 --sslv3 --tlsv1 '
+                    'Regular HTTPS scan. Shortcut for --sslv2 --sslv3 --tlsv1 '
+                    '--tlsv1_2 --tlsv1_2 --compression'
                     '--reneg --resum --certinfo=basic --http_get '
                     '--hide_rejected_ciphers'),
                 dest=None)
@@ -210,6 +213,8 @@ def parse_command_line(parser):
             setattr(args_command_list, 'sslv2', True)
             setattr(args_command_list, 'sslv3', True)
             setattr(args_command_list, 'tlsv1', True)
+            setattr(args_command_list, 'tlsv1_1', True)
+            setattr(args_command_list, 'tlsv1_2', True)
             setattr(args_command_list, 'reneg', True)
             setattr(args_command_list, 'resum', True)
             setattr(args_command_list, 'certinfo', 'basic')

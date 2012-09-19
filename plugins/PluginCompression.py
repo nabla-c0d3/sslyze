@@ -1,7 +1,28 @@
+#!/usr/bin/env python
+#-------------------------------------------------------------------------------
+# Name:         PluginCompression.py
+# Purpose:      Tests the server for Zlib compression support.
+#
+# Author:       tritter, alban
+#
+# Copyright:    2012 SSLyze developers
+#
+#   SSLyze is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   SSLyze is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
+#-------------------------------------------------------------------------------
+
 from xml.etree.ElementTree import Element
-import socket
-import time
-import re
+
 
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, \
@@ -14,10 +35,10 @@ class PluginCompression(PluginBase.PluginBase):
 
     available_commands = PluginBase.AvailableCommands(
         title="PluginCompression",
-        description="Checks to see if the server supports SSL Compression")
+        description="")
     available_commands.add_command(
         command="compression",
-        help="Enable the test for compression",
+        help="Tests the server for Zlib compression support.",
         dest=None)
 
     def process_task(self, target, command, args):
@@ -35,23 +56,23 @@ class PluginCompression(PluginBase.PluginBase):
         finally:
             ssl_connect.close()
             
-           
-
-        ev = False
-
         ctSSL_cleanup()
 
         # Text output
+        if compression_status:
+            comp_txt = 'Enabled ' +  compression_status
+            comp_xml = {'isSupported':'True','type':compression_status.strip('()')}
+        else:
+            comp_txt = 'Disabled'
+            comp_xml = {'isSupported':'False'}
+            
         cmd_title = 'Compression'
         txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
-
-        txt_result.append(output_format.format("Compression Status:", compression_status))
+        txt_result.append(output_format.format("Compression Support:", comp_txt))
 
         # XML output
-        xml_el = Element('compresison', value = compression_status)
-
-        xml_result = Element(self.__class__.__name__, command = command,
-                             title = cmd_title)
+        xml_el = Element('compression', comp_xml)
+        xml_result = Element(command, title = cmd_title)
         xml_result.append(xml_el)
 
         return PluginBase.PluginResult(txt_result, xml_result)

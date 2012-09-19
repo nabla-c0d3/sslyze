@@ -33,7 +33,7 @@ from utils.parse_command_line import create_command_line_parser, \
 
 
 
-SSLYZE_VERSION =      'SSLyze v0.5 beta'
+SSLYZE_VERSION =      'SSLyze v0.5'
 DEFAULT_NB_PROCESSES =      5 # 10 was too aggressive, lowering it to 5
 PLUGIN_PATH =       "plugins"
 DEFAULT_TIMEOUT =   5

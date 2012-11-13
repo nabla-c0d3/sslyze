@@ -33,7 +33,7 @@ from utils.parse_command_line import create_command_line_parser, \
 
 
 
-SSLYZE_VERSION =      'SSLyze v0.5'
+SSLYZE_VERSION =      'SSLyze v0.6 beta'
 DEFAULT_NB_PROCESSES =      5 # 10 was too aggressive, lowering it to 5
 DEFAULT_TIMEOUT =   5
 PROJECT_URL = "https://github.com/isecPartners/sslyze"

@@ -6,7 +6,8 @@ from distutils.core import setup
 setup(name='SSLyze',
     version=SSLYZE_VERSION,
     description='Fast and full-featured SSL scanner',
-    long_description=open('README.md').read(),
+    long_description=open('README.md').read()+ '\n' +
+                     open('AUTHORS.txt').read(),
     author_email='sslyze@isecpartners.com',
     url=PROJECT_URL,
     scripts=['sslyze.py'],

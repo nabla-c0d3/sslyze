@@ -27,7 +27,7 @@ from xml.etree.ElementTree import ElementTree, Element, tostring
 from xml.dom import minidom
 
 from utils.discover_targets import discover_targets
-from utils.discover_plugins import discover_plugins
+from plugins import discover_plugins
 from utils.parse_command_line import create_command_line_parser, \
     parse_command_line, process_parsing_results, PARSING_ERROR_FORMAT
 
@@ -35,7 +35,6 @@ from utils.parse_command_line import create_command_line_parser, \
 
 SSLYZE_VERSION =      'SSLyze v0.5'
 DEFAULT_NB_PROCESSES =      5 # 10 was too aggressive, lowering it to 5
-PLUGIN_PATH =       "plugins"
 DEFAULT_TIMEOUT =   5
 PROJECT_URL = "https://github.com/isecPartners/sslyze"
 
@@ -128,7 +127,10 @@ def main():
     #--PLUGINS INITIALIZATION--
     start_time = time()
     print '\n\n\n' + _format_title('Registering available plugins')
-    available_plugins = discover_plugins(PLUGIN_PATH)
+    available_plugins = discover_plugins()
+    print '\n'
+    for plugin in available_plugins:
+        print '  ' + plugin.__name__
 
     # Create the command line parser and the list of available options
     (parser, available_commands) = create_command_line_parser(

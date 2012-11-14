@@ -128,7 +128,7 @@ def main():
     start_time = time()
     print '\n\n\n' + _format_title('Registering available plugins')
     available_plugins = discover_plugins()
-    print '\n'
+    print ''
     for plugin in available_plugins:
         print '  ' + plugin.__name__
 

@@ -11,7 +11,7 @@ setup(name='SSLyze',
     author_email='sslyze@isecpartners.com',
     url=PROJECT_URL,
     scripts=['sslyze.py'],
-    packages=['plugins', 'utils', 'utils.ctSSL'],
+    packages=['plugins', 'utils', 'utils.ctSSL', 'utils.SSLyzeSSLConnection'],
     package_data={'plugins': ['data/mozilla_cacert.pem','data/mozilla_ev_oids.py']},
     license=open('LICENSE.txt').read(),
     )

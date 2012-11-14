@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-------------------------------------------------------------------------------
-# Name:         SSLyzeSSLConnection.py
+# Name:         __init__.py
 # Purpose:      Helper class for SSL connections - very specific to SSLyze. 
 #               It takes care of all the things SSLyze plugins rely on when 
 #               performing an SSL connection, such as properly configuring 
@@ -28,9 +28,9 @@
 
 import socket
 
-from ctSSL import SSL, SSL_CTX, errors
-from utils.HTTPSConnection import HTTPSConnection
-from utils.StartTLS import SMTPConnection, XMPPConnection
+from utils.ctSSL import SSL, SSL_CTX, errors
+from HTTPSConnection import HTTPSConnection
+from StartTLS import SMTPConnection, XMPPConnection
 
 
 class SSLHandshakeRejected(Exception):

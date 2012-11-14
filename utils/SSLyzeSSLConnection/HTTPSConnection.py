@@ -25,7 +25,7 @@
 import socket
 from httplib import HTTPConnection, HTTPS_PORT
 
-from ctSSL import SSL, constants, errors
+from utils.ctSSL import SSL, constants, errors
 from SSLSocket import SSLSocket
 
 

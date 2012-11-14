@@ -25,11 +25,12 @@
 import abc
 from optparse import make_option
 
-class AvailableCommands:
+class PluginInterface:
     """
-    This object tells the main process which command line option(s)
-    a plugin implements. Every plugin should have a class attribute called
-    available_commands that is an instance of AvailableCommands.
+    This object tells SSLyze what the plugin does: its title, description, and 
+    which command line option(s) it implements. 
+    Every plugin should have a class attribute called interface that is an 
+    instance of PluginInterface.
     """
 
     def __init__(self, title, description):
@@ -125,11 +126,11 @@ class PluginBase(object):
     
                               
     @classmethod
-    def get_commands(plugin_class):
+    def get_interface(plugin_class):
         """
         This method returns the AvailableCommands object for the current plugin.
         """
-        return plugin_class.available_commands
+        return plugin_class.interface
 
     @abc.abstractmethod
     def process_task(self, target, command, args):

@@ -63,7 +63,7 @@ class PluginsFinder:
                         module = load_module('plugins.' + full_name, file,
                                                 pathname, description)
                     except Exception as e:
-                        print '   ' + module_name + ' - Import Error: ' + str(e)
+                        #print '   ' + module_name + ' - Import Error: ' + str(e)
                         continue
     
                     # Check every declaration in that module
@@ -79,7 +79,7 @@ class PluginsFinder:
                                     self._plugin_classes.add(obj)
                                     
                                     # Store the plugin's commands
-                                    for cmd in obj.get_commands().get_commands_as_text():
+                                    for cmd in obj.get_interface().get_commands_as_text():
                                         self._commands[cmd] = obj
                                     
                                     

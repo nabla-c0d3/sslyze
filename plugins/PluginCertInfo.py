@@ -199,11 +199,8 @@ class X509CertificateHelper:
 
 class PluginCertInfo(PluginBase.PluginBase):
 
-    available_commands = PluginBase.AvailableCommands(
-        title="PluginCertInfo",
-        description=(
-            ""))
-    available_commands.add_command(
+    interface = PluginBase.PluginInterface(title="PluginCertInfo", description=(''))
+    interface.add_command(
         command="certinfo",
         help= "Verifies the target server's certificate validity against "
             "Mozilla's trusted root store, and prints relevant fields of "

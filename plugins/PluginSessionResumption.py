@@ -30,18 +30,18 @@ from utils.SSLyzeSSLConnection import SSLyzeSSLConnection
 
 class PluginSessionResumption(PluginBase.PluginBase):
 
-    available_commands = PluginBase.AvailableCommands(
+    interface = PluginBase.PluginInterface(
         title="PluginSessionResumption",
         description=(
             "Analyzes the target server's SSL session "
             "resumption capabilities."))
-    available_commands.add_command(
+    interface.add_command(
         command="resum",
         help=(
             "Tests the server for session ressumption support, using "
             "session IDs and TLS session tickets (RFC 5077)."),
         dest=None)
-    available_commands.add_command(
+    interface.add_command(
         command="resum_rate",
         help=(
             "Performs 100 session resumptions with the target server, "

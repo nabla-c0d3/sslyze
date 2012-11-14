@@ -200,7 +200,7 @@ class CommandLineParser():
         """
         
         for plugin_class in available_plugins:
-            plugin_desc = plugin_class.get_commands()
+            plugin_desc = plugin_class.get_interface()
     
             # Add the current plugin's commands to the parser
             group = OptionGroup(self._parser, plugin_desc.title,\

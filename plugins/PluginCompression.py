@@ -33,10 +33,8 @@ from utils.SSLyzeSSLConnection import SSLyzeSSLConnection
 
 class PluginCompression(PluginBase.PluginBase):
 
-    available_commands = PluginBase.AvailableCommands(
-        title="PluginCompression",
-        description="")
-    available_commands.add_command(
+    interface = PluginBase.PluginInterface(title="PluginCompression", description="")
+    interface.add_command(
         command="compression",
         help="Tests the server for Zlib compression support.",
         dest=None)

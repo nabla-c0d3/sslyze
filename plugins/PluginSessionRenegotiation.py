@@ -31,10 +31,8 @@ from utils.SSLyzeSSLConnection import SSLyzeSSLConnection
 
 class PluginSessionRenegotiation(PluginBase.PluginBase):
 
-    available_commands = PluginBase.AvailableCommands(
-        title="PluginSessionRenegotiation",
-        description="")
-    available_commands.add_command(
+    interface = PluginBase.PluginInterface("PluginSessionRenegotiation",  "")
+    interface.add_command(
         command="reneg",
         help=(
             "Tests the target server's support for client-initiated "

@@ -23,6 +23,7 @@
 #-------------------------------------------------------------------------------
 
 import abc
+from optparse import make_option
 
 class AvailableCommands:
     """
@@ -37,24 +38,51 @@ class AvailableCommands:
         """
         self.title = title
         self.description = description
-        self.options = []
-        self.commands = []
+        self._options = []
+        self._commands = []
+        self._commands_as_text = []
 
     def add_option(self, option, help, dest):
         """
         Options are settings specific to one single plugin. 
         They are sent to PluginBase._shared_settings.
         """
-        self.options.append( (option, help, dest) )
+        
+        self._options.append(self._make_option(option, help, dest))
+
         
     def add_command(self, command, help, dest):
         """
         Commands are actions/scans the plugin implements, with 
         PluginXXX.process_task().
-        Command and help are sent to optparse.OptionGroup.add_option().
         Note: dest to None if you don't need arguments
         """
-        self.commands.append( (command, help, dest) )
+        
+        self._commands.append(self._make_option(command, help, dest))
+        self._commands_as_text.append(command)
+        
+        
+    def get_commands(self):
+        return self._commands
+    
+    
+    def get_commands_as_text(self):
+        return self._commands_as_text
+
+        
+    def get_options(self):
+        return self._options
+        
+        
+    def _make_option(self, command, help, dest):
+        # If dest is something, store it, otherwise just use store_true
+        action="store_true"
+        if dest is not None:
+            action="store"
+
+        return make_option('--' + command, action=action, help=help, dest=dest)
+    
+    
 
 
 class PluginResult:

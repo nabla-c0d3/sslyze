@@ -27,10 +27,9 @@ from xml.etree.ElementTree import ElementTree, Element, tostring
 from xml.dom import minidom
 
 from utils.discover_targets import discover_targets
-from plugins import discover_plugins
-from utils.parse_command_line import create_command_line_parser, \
-    parse_command_line, process_parsing_results, PARSING_ERROR_FORMAT
-
+from plugins import PluginsFinder
+import utils.CommandLineParser
+from utils.CommandLineParser import CommandLineParser, CommandLineParsingError
 
 
 SSLYZE_VERSION =      'SSLyze v0.6 beta'
@@ -127,31 +126,23 @@ def main():
     #--PLUGINS INITIALIZATION--
     start_time = time()
     print '\n\n\n' + _format_title('Registering available plugins')
-    available_plugins = discover_plugins()
+    sslyze_plugins = PluginsFinder()
+    available_plugins = sslyze_plugins.get_plugins()
+    available_commands = sslyze_plugins.get_commands()
     print ''
     for plugin in available_plugins:
         print '  ' + plugin.__name__
+    print '\n\n'
 
     # Create the command line parser and the list of available options
-    (parser, available_commands) = create_command_line_parser(
-        available_plugins,
-        SSLYZE_VERSION,
-        DEFAULT_TIMEOUT)
+    sslyze_parser = CommandLineParser(available_plugins, SSLYZE_VERSION, DEFAULT_TIMEOUT)
 
-    # Parse the command line
-    print '\n\n'
-    parse_result = parse_command_line(parser)
-    if parse_result == None:
-        print PARSING_ERROR_FORMAT.format('No hosts to scan.')
+    try: # Parse the command line
+         (command_list, target_list, shared_settings) = sslyze_parser.parse_command_line()
+    except CommandLineParsingError as e:
+        e.print_error()
         return
-    else:
-        (args_command_list, args_target_list) = parse_result
-
-    # Fill the shared settings dictionnary, shared between all the plugins
-    shared_settings = process_parsing_results(args_command_list)
-    if not shared_settings:
-        return
-
+    
 
     #--PROCESSES INITIALIZATION--
     task_queue = JoinableQueue() # Processes get tasks from task_queue and
@@ -169,7 +160,7 @@ def main():
     #--TESTING SECTION--
     # Figure out which hosts are up and fill the task queue with work to do
     print _format_title('Checking host(s) availability')
-    alive_target_list = discover_targets(args_target_list, args_command_list,\
+    alive_target_list = discover_targets(target_list, command_list,\
                                          available_commands, task_queue)
     print '\n\n'
 
@@ -180,7 +171,7 @@ def main():
     # Keep track of how many tasks have to be performed for each target
     task_num=0
     for command in available_commands:
-        if getattr(args_command_list, command):
+        if getattr(command_list, command):
             task_num+=1
 
 

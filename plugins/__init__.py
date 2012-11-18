@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         __init__.py
-# Purpose:      __init__.py for the SSLyze plugins package.
+# Purpose:      PluginsFinder class for the SSLyze plugins package.
 #
-# Author:       alban
+# Author:       alban, aaron
 #
 # Copyright:    2012 SSLyze developers
 #

@@ -26,14 +26,13 @@ from multiprocessing import Process, JoinableQueue
 from xml.etree.ElementTree import ElementTree, Element, tostring
 from xml.dom import minidom
 
-from utils.discover_targets import discover_targets
 from plugins import PluginsFinder
-import utils.CommandLineParser
 from utils.CommandLineParser import CommandLineParser, CommandLineParsingError
+from utils.ServersConnectivityTester import ServersConnectivityTester, \
+    ProxyConnectivityTester
 
-
-SSLYZE_VERSION =      'SSLyze v0.6 beta'
-DEFAULT_NB_PROCESSES =      5 # 10 was too aggressive, lowering it to 5
+SSLYZE_VERSION = 'SSLyze v0.6 beta'
+DEFAULT_NB_PROCESSES = 5
 DEFAULT_TIMEOUT =   5
 PROJECT_URL = "https://github.com/isecPartners/sslyze"
 
@@ -140,11 +139,14 @@ def main():
     try: # Parse the command line
          (command_list, target_list, shared_settings) = sslyze_parser.parse_command_line()
     except CommandLineParsingError as e:
-        e.print_error()
+        print e.get_error_msg()
         return
     
 
     #--PROCESSES INITIALIZATION--
+    if command_list.https_tunnel:
+        nb_processes = 1 # Let's not kill the proxy
+        
     task_queue = JoinableQueue() # Processes get tasks from task_queue and
     result_queue = JoinableQueue() # put the result of each task in result_queue
 
@@ -160,8 +162,25 @@ def main():
     #--TESTING SECTION--
     # Figure out which hosts are up and fill the task queue with work to do
     print _format_title('Checking host(s) availability')
-    alive_target_list = discover_targets(target_list, command_list,\
-                                         available_commands, task_queue)
+
+    if command_list.https_tunnel:
+        targets_tester = ProxyConnectivityTester(target_list, 
+                                                 command_list.https_tunnel)
+    else:
+        targets_tester = ServersConnectivityTester(target_list, 
+                                                   command_list.starttls,
+                                                   command_list.xmpp_to)
+
+    targets_OK = []
+    for target in targets_tester.test_connectivity(command_list.timeout):
+        # Send tasks to worker processes
+        targets_OK.append(target)
+        for command in available_commands:
+            if getattr(command_list, command):
+                args = command_list.__dict__[command]
+                task_queue.put( (target, command, args) )
+                
+    print targets_tester.get_result_str()
     print '\n\n'
 
     # Put a 'None' sentinel in the queue to let the each process know when every
@@ -184,7 +203,7 @@ def main():
 
     # Each host has a list of results
     result_dict = {}
-    for target in alive_target_list:
+    for target in targets_OK:
         result_dict[target] = []
 
     # If all processes have stopped, all the work is done

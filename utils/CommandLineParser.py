@@ -24,15 +24,15 @@
 from optparse import OptionParser, OptionGroup
 import platform
 
-from discover_targets import is_target_valid
+from ServersConnectivityTester import SSLServerTester, InvalidTargetError
 
 
 class CommandLineParsingError(Exception):
     
-    PARSING_ERROR_FORMAT = '   Command line error: {0}\n   Use -h for help.'
+    PARSING_ERROR_FORMAT = '  Command line error: {0}\n  Use -h for help.'
     
-    def print_error(self):
-        print self.PARSING_ERROR_FORMAT.format(self)
+    def get_error_msg(self):
+        return self.PARSING_ERROR_FORMAT.format(self)
 
 
 class CommandLineParser():
@@ -49,7 +49,8 @@ class CommandLineParser():
         Generates SSLyze's command line parser.
         """
 
-        self._parser = OptionParser(version=sslyze_version, usage=self.SSLYZE_USAGE)
+        self._parser = OptionParser(version=sslyze_version,
+                                    usage=self.SSLYZE_USAGE)
     
         # Add generic command line options to the parser
         self._add_default_options(timeout)
@@ -255,11 +256,11 @@ class CommandLineParser():
                     '--https_tunnel requires Python 2.7.X. '
                     'Current version is ' + platform.python_version() + '.')
                 
-            try:
-                (host,port) = is_target_valid(args_command_list.https_tunnel)
-                shared_settings['https_tunnel_host'] = host
-                shared_settings['https_tunnel_port'] = port
-            except:
+            try: # Need to parse the proxy host:port string now
+                proxy_test = SSLServerTester(args_command_list.https_tunnel)
+                shared_settings['https_tunnel_host'] = proxy_test.get_target()[0]
+                shared_settings['https_tunnel_port'] = proxy_test.get_target()[2]
+            except InvalidTargetError:
                 raise CommandLineParsingError(
                     'Not a valid host/port for --https_tunnel'
                     ', discarding all tasks.')

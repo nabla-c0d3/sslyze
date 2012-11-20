@@ -25,8 +25,7 @@ from xml.etree.ElementTree import Element
 
 
 from plugins import PluginBase
-from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, \
-    X509_V_CODES, SSL_CTX
+from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL_CTX
 from utils.SSLyzeSSLConnection import SSLyzeSSLConnection
 
 

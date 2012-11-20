@@ -23,9 +23,8 @@
 
 import socket
 
-from utils.ctSSL import SSL
-from utils.ctSSL import constants
 from SSLSocket import SSLSocket
+
 
 class SSLHandshakeError(Exception):
     pass

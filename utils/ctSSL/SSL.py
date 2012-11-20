@@ -9,8 +9,8 @@
 # License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
 
-from ctypes import create_string_buffer, sizeof, memmove
-from ctypes import c_char_p, c_void_p, c_int, c_long
+from ctypes import create_string_buffer, sizeof, memmove, CFUNCTYPE, c_char_p, \
+    c_void_p, c_int, c_long
 
 from load_openssl import libssl, OpenSSL_version
 import SSL_SESSION, X509, BIO, errors
@@ -239,12 +239,12 @@ class SSL:
                     memmove(final_buffer, read_buffer, size_read)
                     decrypted_data += final_buffer.raw
 
-                except errors.SSLErrorWantRead as e:
+                except errors.SSLErrorWantRead:
                     # If we get SSLErrorWantRead, it means that OpenSSL needs
                     # more data from the peer to finish the read operation
                     break # Restart the read loop
 
-                except errors.SSLErrorZeroReturn as e:
+                except errors.SSLErrorZeroReturn:
                     # OpenSSL was able to decrypt the message, all done
                     want_read = False
                     break

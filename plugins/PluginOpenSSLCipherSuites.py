@@ -22,7 +22,6 @@
 #-------------------------------------------------------------------------------
 
 from xml.etree.ElementTree import Element
-import socket
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool

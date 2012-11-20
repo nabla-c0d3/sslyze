@@ -85,7 +85,7 @@ class X509CertificateHelper:
         key = key.replace(' ', '').strip() # Remove spaces
         key = key.replace('/', '').strip() # Remove slashes (S/MIME Capabilities)
         
-         # Things that would generate invalid XML
+        # Things that would generate invalid XML
         if key[0].isdigit(): # Tags cannot start with a digit
                 key = 'oid-' + key 
                 
@@ -103,7 +103,7 @@ class X509CertificateHelper:
             res_xml.append(key_xml)
             
         elif value is None: # no value
-           res_xml.append(self._create_xml_node(key))
+            res_xml.append(self._create_xml_node(key))
            
         elif type(value) is list: # multiple strings
             for val in value:
@@ -144,7 +144,6 @@ class X509CertificateHelper:
         auth_ext_list = {}
          
         for auth_entry in auth_ext:
-            auth_entry_res = []
             auth_entry = auth_entry.split(' - ')
             entry_name = auth_entry[0].replace(' ', '')
 
@@ -213,7 +212,7 @@ class PluginCertInfo(PluginBase.PluginBase):
 
         ctSSL_initialize()
         try: # Get the certificate
-             (cert, verify_result) = self._get_cert(target)
+            (cert, verify_result) = self._get_cert(target)
         except:
             ctSSL_cleanup()
             raise

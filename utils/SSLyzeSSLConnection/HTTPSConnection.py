@@ -23,11 +23,9 @@
 #-------------------------------------------------------------------------------
 
 import socket
-from httplib import HTTPConnection, HTTPS_PORT
+from httplib import HTTPConnection
 
-from utils.ctSSL import SSL, constants, errors
 from SSLSocket import SSLSocket
-
 
 
 class HTTPSConnection(HTTPConnection):

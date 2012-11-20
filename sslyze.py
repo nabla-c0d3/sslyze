@@ -23,7 +23,7 @@
 
 from time import time
 from multiprocessing import Process, JoinableQueue
-from xml.etree.ElementTree import ElementTree, Element, tostring
+from xml.etree.ElementTree import Element, tostring
 from xml.dom import minidom
 
 from plugins import PluginsFinder
@@ -137,7 +137,7 @@ def main():
     sslyze_parser = CommandLineParser(available_plugins, SSLYZE_VERSION, DEFAULT_TIMEOUT)
 
     try: # Parse the command line
-         (command_list, target_list, shared_settings) = sslyze_parser.parse_command_line()
+        (command_list, target_list, shared_settings) = sslyze_parser.parse_command_line()
     except CommandLineParsingError as e:
         print e.get_error_msg()
         return
@@ -152,7 +152,7 @@ def main():
 
     # Spawn a pool of processes, and pass them the queues
     process_list = []
-    for i in xrange(nb_processes):
+    for _ in xrange(nb_processes):
         p = WorkerProcess(task_queue, result_queue, available_commands, \
                             shared_settings)
         p.start()
@@ -185,7 +185,7 @@ def main():
 
     # Put a 'None' sentinel in the queue to let the each process know when every
     # task has been completed
-    [task_queue.put(None) for process in process_list]
+    [task_queue.put(None) for _ in process_list]
 
     # Keep track of how many tasks have to be performed for each target
     task_num=0

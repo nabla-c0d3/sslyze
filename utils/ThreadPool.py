@@ -82,7 +82,7 @@ class ThreadPool:
             raise Exception('Threads already started.')
 
         # Create thread pool
-        for i in xrange(nb_threads):
+        for _ in xrange(nb_threads):
             worker = threading.Thread(
                 target=_work_function,
                 args=(self._job_q, self._result_q, self._error_q))

@@ -28,7 +28,7 @@
 
 import socket
 
-from utils.ctSSL import SSL, SSL_CTX, errors
+from utils.ctSSL import SSL, SSL_CTX, errors, constants
 from HTTPSConnection import HTTPSConnection
 from StartTLS import SMTPConnection, XMPPConnection
 
@@ -97,7 +97,7 @@ class SSLyzeSSLConnection:
         """
     
         timeout = shared_settings['timeout']
-        (host, ip_addr, port) = target
+        (host, _, port) = target
         if hello_workaround:
             ssl_ctx.set_cipher_list(self.SSL_HELLO_WORKAROUND_CIPHERS)
         

@@ -128,7 +128,7 @@ def openSSL_threading_init():
     libcrypto.CRYPTO_num_locks.argtypes = []
     libcrypto.CRYPTO_num_locks.restype = c_int
     OPENSSL_CRYPTO_NUM_LOCKS = int(libcrypto.CRYPTO_num_locks())
-    for id in xrange(OPENSSL_CRYPTO_NUM_LOCKS):
+    for _ in xrange(OPENSSL_CRYPTO_NUM_LOCKS):
         new_lock = thread.allocate_lock()
         openSSL_crypto_lock_list.append(new_lock)
 

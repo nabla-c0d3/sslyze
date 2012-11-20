@@ -74,7 +74,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         NB_THREADS = 20
         MAX_RESUM = 100
         thread_pool = ThreadPool()
-        for i in xrange(MAX_RESUM):
+        for _ in xrange(MAX_RESUM):
             thread_pool.add_job((self._resume_with_session_id, 
                                  (target, )))
         thread_pool.start(NB_THREADS)
@@ -104,7 +104,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         MAX_RESUM = 5
         thread_pool = ThreadPool()
         
-        for i in xrange(MAX_RESUM): # Test 5 resumptions with session IDs
+        for _ in xrange(MAX_RESUM): # Test 5 resumptions with session IDs
             thread_pool.add_job((self._resume_with_session_id,
                                  (target,), 'session_id'))
         thread_pool.start(NB_THREADS)
@@ -129,7 +129,6 @@ class PluginSessionResumption(PluginBase.PluginBase):
         cmd_title = 'Session Resumption'
         txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
         RESUM_FORMAT = '      {0:<27} {1}'
-        ERRORS_FORMAT ='        Error #{0}: {1}'
         
         txt_result.append(RESUM_FORMAT.format('With Session IDs:', txt_resum[0]))
         txt_result.extend(txt_resum[1:])

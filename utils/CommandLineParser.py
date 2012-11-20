@@ -87,7 +87,7 @@ class CommandLineParser():
                         if target.strip(): # Ignore empty lines
                             if not target.startswith('#'): # Ignore comment lines
                                 args_target_list.append(target.strip())
-            except IOError, e:
+            except IOError:
                 raise CommandLineParsingError("Can't read targets from input file '%s'." %  args_command_list.targets_in)
     
         if args_target_list == []:

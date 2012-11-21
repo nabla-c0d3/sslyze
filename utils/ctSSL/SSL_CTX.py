@@ -10,7 +10,7 @@
 #-------------------------------------------------------------------------------
 
 from ctypes import create_string_buffer, CFUNCTYPE, memmove
-from ctypes import c_void_p, c_int, c_char_p, c_long
+from ctypes import c_void_p, c_int, c_char_p, c_long, string_at
 
 from load_openssl import libssl, OpenSSL_version
 import features_not_available
@@ -163,30 +163,22 @@ class SSL_CTX:
 
         cert_buffer = create_string_buffer(cert)
         libssl.SSL_CTX_use_certificate_file(self._ssl_ctx_struct_p, cert_buffer,
-                                            certform);
+                                            certform)
 
 
-    def use_PrivateKey_file(self, key, keyform, keypass=None):
+    def use_PrivateKey_file(self, key_filepath, keyform, keypass=None):
         """
         Sets the the passphrase protecting the private key if one is provided
         and then calls OpenSSL's SSL_CTX_use_PrivateKey_file().
         """
         if keypass: # Set up the C callback if a password is needed
             password_buffer = create_string_buffer(keypass)
-            PEMPWFUNC = CFUNCTYPE(c_int, c_char_p, c_int, c_int, c_void_p)
+            libssl.SSL_CTX_set_default_passwd_cb_userdata(self._ssl_ctx_struct_p,
+                                                          password_buffer)
 
-            def py_pem_passwd_cb(buf, size, rwflag, userdata):
-                memmove(buf, password_buffer, size)
-                return 0
-
-            # Keep a reference to prevent garbage collection
-            self._pem_passwd_cb = PEMPWFUNC(py_pem_passwd_cb)
-            libssl.SSL_CTX_set_default_passwd_cb(self._ssl_ctx_struct_p,
-                                                 self._pem_passwd_cb)
-
-        key_buffer = create_string_buffer(key)
-        libssl.SSL_CTX_use_PrivateKey_file(self._ssl_ctx_struct_p, key_buffer,
-                                           keyform);
+        key_filepath_str = create_string_buffer(key_filepath)
+        libssl.SSL_CTX_use_PrivateKey_file(self._ssl_ctx_struct_p, 
+                                           key_filepath_str, keyform)
 
 
     def check_private_key(self):
@@ -229,8 +221,8 @@ def init_SSL_CTX_functions():
     libssl.SSL_CTX_ctrl.argtypes = [c_void_p, c_int, c_long, c_void_p]
     libssl.SSL_CTX_ctrl.restype = c_long
 
-    libssl.SSL_CTX_load_verify_locations.argtypes = \
-        [c_void_p, c_char_p, c_char_p]
+    libssl.SSL_CTX_load_verify_locations.argtypes = [c_void_p, c_char_p, 
+                                                     c_char_p]
     libssl.SSL_CTX_load_verify_locations.restype = c_int
     libssl.SSL_CTX_load_verify_locations.errcheck = errcheck_get_error_if_eq0
 
@@ -238,8 +230,8 @@ def init_SSL_CTX_functions():
     libssl.SSL_CTX_use_certificate_file.restype = c_int
     libssl.SSL_CTX_use_certificate_file.errcheck = errcheck_get_error_if_eq0
 
-    libssl.SSL_CTX_set_default_passwd_cb.argtypes = [c_void_p, c_void_p]
-    libssl.SSL_CTX_set_default_passwd_cb.restype = None
+    libssl.SSL_CTX_set_default_passwd_cb_userdata.argtypes = [c_void_p, c_char_p]
+    libssl.SSL_CTX_set_default_passwd_cb_userdata.restype = None
 
     libssl.SSL_CTX_use_PrivateKey_file.argtypes = [c_void_p, c_char_p, c_int]
     libssl.SSL_CTX_use_PrivateKey_file.restype = c_int

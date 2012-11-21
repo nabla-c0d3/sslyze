@@ -40,6 +40,13 @@ class SSLHandshakeRejected(Exception):
     pass
 
 
+class ClientCertificateError(Exception):
+    """
+    Something didn't work when trying to load the client certificate.
+    """
+    pass
+
+
 class SSLyzeSSLConnection:
     """
     Helper class for SSL connections - very specific to SSLyze. 
@@ -101,27 +108,33 @@ class SSLyzeSSLConnection:
         if hello_workaround:
             ssl_ctx.set_cipher_list(self.SSL_HELLO_WORKAROUND_CIPHERS)
         
-        # Create the SSL object
-        ssl = SSL.SSL(ssl_ctx)
-
-        # Load client certificate and private key in the SSL object
+        
+        # Load client certificate and private key in the SSL_CTX object
         if shared_settings['cert']:
             if shared_settings['certform'] is 'DER':
-                ssl.use_certificate_file(shared_settings['cert'],
-                                         constants.SSL_FILETYPE_ASN1)
+                cert_type = constants.SSL_FILETYPE_ASN1
             else:
-                ssl.use_certificate_file(shared_settings['cert'],
-                                         constants.SSL_FILETYPE_PEM)
-    
+                cert_type =  constants.SSL_FILETYPE_PEM
+                
             if shared_settings['keyform'] is 'DER':
-                ssl.use_PrivateKey_file(shared_settings['key'],
-                                        constants.SSL_FILETYPE_ASN1)
+                key_type = constants.SSL_FILETYPE_ASN1
             else:
-                ssl.use_PrivateKey_file(shared_settings['key'],
-                                        constants.SSL_FILETYPE_PEM)
-    
-            ssl.check_private_key()
-            
+                key_type = constants.SSL_FILETYPE_PEM
+                
+            try:
+                ssl_ctx.use_certificate_file(shared_settings['cert'], cert_type)                
+                ssl_ctx.use_PrivateKey_file(shared_settings['key'], key_type,
+                                            shared_settings['keypass'])
+                ssl_ctx.check_private_key()
+            except errors.OpenSSLError as e: # TODO: Proper error checking
+                # Also this should be done much earlier like after parsing the command line
+                if 'bad decrypt' in str(e):
+                    raise ClientCertificateError('Invalid private key passphrase ?')
+                else:
+                    raise
+
+        # Create the SSL object
+        ssl = SSL.SSL(ssl_ctx)            
         
         # Create the proper SMTP / XMPP / HTTPS connection
         if shared_settings['starttls'] == 'smtp':

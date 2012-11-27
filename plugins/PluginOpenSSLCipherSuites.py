@@ -243,10 +243,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         
         try: # Perform the SSL handshake
             ssl_connect.connect()
-        except:
-            return None
 
-        else:
             ssl_cipher = ssl_connect._ssl.get_current_cipher()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
                 keysize = 'Anon' # Anonymous, let s not care about the key size
@@ -255,6 +252,9 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 
             status_msg = ssl_connect.post_handshake_check()
             return ('preferredCipherSuite', ssl_cipher, keysize, status_msg)
+        
+        except:
+            return None
     
         finally:
             ssl_connect.close()

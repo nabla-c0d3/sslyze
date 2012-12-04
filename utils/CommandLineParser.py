@@ -38,7 +38,7 @@ class CommandLineParsingError(Exception):
 class CommandLineParser():
     
     # Defines what --regular means
-    REGULAR_CMD = ['sslv3', 'tlsv1', 'reneg', 'resum', 'certinfo', 
+    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'reneg', 'resum', 'certinfo', 
                       'http_get', 'hide_rejected_ciphers', 'compression', 
                       'tlsv1_1', 'tlsv1_2']
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 etc...'

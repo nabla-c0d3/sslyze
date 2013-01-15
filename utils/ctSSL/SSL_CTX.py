@@ -9,8 +9,8 @@
 # License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
 
-from ctypes import create_string_buffer, CFUNCTYPE, memmove
-from ctypes import c_void_p, c_int, c_char_p, c_long, string_at
+from ctypes import create_string_buffer
+from ctypes import c_void_p, c_int, c_char_p, c_long
 
 from load_openssl import libssl, OpenSSL_version
 import features_not_available
@@ -31,10 +31,6 @@ class SSL_CTX:
     @type _ssl_ctx_struct_p: ctypes.c_void_p
     @ivar _ssl_ctx_struct_p: Pointer to the SSL_CTX C struct that corresponds to
     that SSL_CTX object.
-
-    @type _pem_passwd_cb: ctypes.CFUNCTYPE
-    @ivar _pem_passwd_cb: Callback function used for password protected client
-    certificates.
     """
 
     def __init__(self, ssl_version='sslv23'):
@@ -49,7 +45,6 @@ class SSL_CTX:
         (SSL_CTX_new() failed).
         """
         self._ssl_ctx_struct_p = None
-        self._pem_passwd_cb = None
         
         if ssl_version == 'sslv23':
             ssl_version = libssl.SSLv23_method()

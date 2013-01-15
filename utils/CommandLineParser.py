@@ -192,7 +192,15 @@ class CommandLineParser():
                 'of the XMPP stream. Default is the server\'s hostname.'),
             dest='xmpp_to',
             default=None)
-
+        
+        # Server Name Indication
+        self._parser.add_option(
+            '--sni',
+            help= (
+                'Use Server Name Indication to specify the hostname to connect to.'
+                ' Will only affect TLS 1.0+ connections.'),
+            dest='sni',
+            default=None)
 
     def _add_plugin_options(self, available_plugins):
         """

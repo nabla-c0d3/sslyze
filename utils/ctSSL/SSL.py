@@ -9,8 +9,8 @@
 # License:      ctSSL is licensed under the terms of the MIT License.
 #-------------------------------------------------------------------------------
 
-from ctypes import create_string_buffer, sizeof, memmove, CFUNCTYPE, c_char_p, \
-    c_void_p, c_int, c_long
+from ctypes import create_string_buffer, sizeof, memmove, c_char_p, c_void_p,\
+    c_int, c_long
 
 from load_openssl import libssl, OpenSSL_version
 import SSL_SESSION, X509, BIO, errors
@@ -18,7 +18,9 @@ from errors import errcheck_get_error_if_null, errcheck_get_error_if_eq0, \
     ctSSLError
 import features_not_available
 
-SSL_CTRL_GET_RI_SUPPORT = 76 # SSL_get_secure_renegotiation_support()
+SSL_CTRL_GET_RI_SUPPORT = 76        # SSL_get_secure_renegotiation_support()
+SSL_CTRL_SET_TLSEXT_HOSTNAME = 55   # SSL_set_tlsext_host_name()
+TLSEXT_NAMETYPE_host_name = 0       # SSL_set_tlsext_host_name()
 
 
 class SSL:
@@ -47,10 +49,6 @@ class SSL:
     @type _network_bio: ctSSL.BIO.BIO
     @ivar _network_bio: BIO used to read to and from the SSL C struct.
     Forms a BIO pair with _internal_bio.
-
-    @type _pem_passwd_cb: ctypes.CFUNCTYPE
-    @ivar _pem_passwd_cb: Callback function used for password protected client
-    certificates.
     """
 
     def __init__(self, ssl_ctx):
@@ -66,7 +64,6 @@ class SSL:
         self._ssl_struct_p = libssl.SSL_new(ssl_ctx.get_ssl_ctx_struct_p())
         self._internal_bio = None
         self._network_bio = None
-        self._pem_passwd_cb = None
 
         # Create a BIO pair to handle SSL operations
         (internal_bio, network_bio) = BIO.BIOFactory.new_bio_pair()
@@ -464,6 +461,20 @@ class SSL:
         return libssl.SSL_get_verify_result(self._ssl_struct_p)
 
 
+    def set_tlsext_host_name(self, name):
+        if features_not_available.SNI_NOT_AVAIL:
+            raise errors.ctSSLFeatureNotAvailable(
+                'SSL_set_tlsext_host_name() is not supported by the'
+                ' version of the OpenSSL library that was loaded.')
+            
+        name_buffer = create_string_buffer(name)
+        if libssl.SSL_ctrl(self._ssl_struct_p, SSL_CTRL_SET_TLSEXT_HOSTNAME, 
+                        TLSEXT_NAMETYPE_host_name, name_buffer):
+            return True
+        else:
+            return False
+        
+
 # == CTYPE ERRCHECK CALLBACK(S) ==
 def _errcheck_SSL_default(result, func, arguments):
     """
@@ -588,5 +599,9 @@ def init_SSL_functions():
     # Secure renegotiation is only available in 0.9.8m or later
     if OpenSSL_version <= 0x9080CFL: 
         features_not_available.SSL_SECURE_RENEGOTIATION_NOT_AVAIL = True
+
+    # SNI
+    if OpenSSL_version < 0x908070: 
+        features_not_available.SNI_NOT_AVAIL = True
 
 

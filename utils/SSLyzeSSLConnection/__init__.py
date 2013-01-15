@@ -134,7 +134,11 @@ class SSLyzeSSLConnection:
                     raise
 
         # Create the SSL object
-        ssl = SSL.SSL(ssl_ctx)            
+        ssl = SSL.SSL(ssl_ctx)
+        
+        # Add Server Name Indication
+        if shared_settings['sni']:
+            ssl.set_tlsext_host_name(shared_settings['sni'])
         
         # Create the proper SMTP / XMPP / HTTPS connection
         if shared_settings['starttls'] == 'smtp':

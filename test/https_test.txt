@@ -5,3 +5,7 @@ store.steampowered.com
 www.facebook.com
 www.google.com
 www.isecpartners.com
+
+# IPV6 test cases
+www.ietf.org
+[2001:1890:126c::1:1e]

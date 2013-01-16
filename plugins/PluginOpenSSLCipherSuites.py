@@ -143,7 +143,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                       ('rejectedCipherSuites', 'Rejected Cipher Suite(s):')]
               
         if self._shared_settings['hide_rejected_ciphers']:
-            txt_titles.pop(2)
+            txt_titles.pop(3)
             txt_result.append('')
             txt_result.append(title_format.format('Rejected Cipher Suite(s): Hidden'))
             

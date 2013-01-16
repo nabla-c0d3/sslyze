@@ -42,7 +42,8 @@ class SSLHandshakeRejected(Exception):
 
 class ClientCertificateError(Exception):
     """
-    Something didn't work when trying to load the client certificate.
+    Something didn't work when trying to load the client certificate or
+    the server asked for a client certificate and we didn't send one.
     """
     pass
 

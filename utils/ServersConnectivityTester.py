@@ -201,8 +201,18 @@ class SSLServerTester(object):
     def __init__(self, target_str):
         
         # Parse target string
+        if '[' in target_str:
+            (host, port) = self._parse_ipv6_target(target_str)
+        else: # Fallback to ipv4
+            (host, port) = self._parse_ipv4_target(target_str)
+            
+        self._target_str = target_str
+        self._target = (host, host, port)
+
+
+    def _parse_ipv4_target(self, target_str):        
         if ':' in target_str:
-            host = (target_str.split(':'))[0]
+            host = (target_str.split(':'))[0] # hostname or ipv4 address
             try:
                 port = int((target_str.split(':'))[1])
             except: # Port is not an int
@@ -213,6 +223,19 @@ class SSLServerTester(object):
             
         self._target_str = host + ':' + str(port)
         self._target = (host, host, port)
+        return (host, port)
+
+
+    def _parse_ipv6_target(self, target_str):
+        port = self.DEFAULT_PORT
+        target_split = (target_str.split(']'))
+        ipv6_addr = target_split[0] + ']'
+        if ':' in target_split[1]: # port was specified
+            try:
+                port = int(target_split[1].rsplit(':')[1])
+            except: # Port is not an int
+                raise InvalidTargetError(target_str, self.ERR_BAD_PORT)
+        return (ipv6_addr, port)
         
 
     def get_target(self):
@@ -224,10 +247,8 @@ class SSLServerTester(object):
         Tries to connect to the given target=(host,port).
         """
         (host, ip_addr, port) = self._target
-        s = socket.socket()
-        s.settimeout(timeout)
         try:
-            s.connect((ip_addr, port))
+            s = socket.create_connection((ip_addr, port), timeout)
             ip_addr = s.getpeername()[0]
             self._connect_callback(s) # StartTLS callback
     

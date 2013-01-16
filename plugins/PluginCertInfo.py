@@ -31,7 +31,7 @@ from xml.etree.ElementTree import Element
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, constants, \
     X509_V_CODES, SSL_CTX
-from utils.SSLyzeSSLConnection import SSLyzeSSLConnection
+from utils.SSLyzeSSLConnection import SSLyzeSSLConnection, ClientCertificateError
 
 
 # Import Mozilla trust store and EV OIDs
@@ -355,6 +355,12 @@ class PluginCertInfo(PluginBase.PluginBase):
             ssl_connect.connect()
             cert = ssl_connect._ssl.get_peer_certificate()
             verify_result = ssl_connect._ssl.get_verify_result()
+        
+        except ClientCertificateError: # The server asked for a client cert
+            # We can get the server cert anyway
+            cert = ssl_connect._ssl.get_peer_certificate()
+            verify_result = ssl_connect._ssl.get_verify_result()            
+            
         finally:
             ssl_connect.close()
 

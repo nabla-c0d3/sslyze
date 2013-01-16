@@ -26,7 +26,7 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL_CTX
-from utils.SSLyzeSSLConnection import SSLyzeSSLConnection
+from utils.SSLyzeSSLConnection import SSLyzeSSLConnection, ClientCertificateError
 
 
 
@@ -49,6 +49,8 @@ class PluginCompression(PluginBase.PluginBase):
 
         try: # Perform the SSL handshake
             ssl_connect.connect()
+            compression_status = ssl_connect._ssl.get_current_compression()
+        except ClientCertificateError: # The server asked for a client cert
             compression_status = ssl_connect._ssl.get_current_compression()
         finally:
             ssl_connect.close()

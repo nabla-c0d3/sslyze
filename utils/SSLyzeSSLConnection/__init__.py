@@ -190,7 +190,11 @@ class SSLyzeSSLConnection:
         except errors.ctSSLUnexpectedEOF as e: # Unexpected EOF
             raise SSLHandshakeRejected('TCP - Received FIN')
     
-        except errors.SSLErrorSSL as e:    
+        except errors.SSLErrorSSL as e:
+            
+            if self._ssl.received_client_CA_list():
+                raise ClientCertificateError('Server requested a client certificate; use --cert and --key.')
+                
             for error_msg in self.HANDSHAKE_REJECTED_SSL_ERRORS.keys():
                 if error_msg in str(e.args):
                     raise SSLHandshakeRejected('TLS Alert - ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])

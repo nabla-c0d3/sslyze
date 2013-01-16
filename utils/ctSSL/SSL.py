@@ -462,6 +462,7 @@ class SSL:
 
 
     def set_tlsext_host_name(self, name):
+        
         if features_not_available.SNI_NOT_AVAIL:
             raise errors.ctSSLFeatureNotAvailable(
                 'SSL_set_tlsext_host_name() is not supported by the'
@@ -473,7 +474,21 @@ class SSL:
             return True
         else:
             return False
-        
+
+
+    def received_client_CA_list(self):
+        """
+        Returns True if the server asked for a client certificate. We can't get
+        the actual X509NAME because SSL_get_client_CA_list() returns a 
+        STACK_OF(X509NAME) which is opaque to ctSSL since all the safestack
+        functions are defined as macros :(.
+        """
+        sk_x509_names = libssl.SSL_get_client_CA_list(self._ssl_struct_p)
+        if sk_x509_names:
+            return True
+        else:
+            return False
+
 
 # == CTYPE ERRCHECK CALLBACK(S) ==
 def _errcheck_SSL_default(result, func, arguments):
@@ -594,6 +609,9 @@ def init_SSL_functions():
     libssl.SSL_get_verify_result.argtypes = [c_void_p]
     libssl.SSL_get_verify_result.restype = c_long
 
+    libssl.SSL_get_client_CA_list.argtypes = [c_void_p]
+    libssl.SSL_get_client_CA_list.restype = c_void_p   
+    
     # Initializing functions that may or may not be there
 
     # Secure renegotiation is only available in 0.9.8m or later

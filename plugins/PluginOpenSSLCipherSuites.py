@@ -139,8 +139,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         
         txt_titles = [('preferredCipherSuite', 'Preferred Cipher Suite:'),
                       ('acceptedCipherSuites', 'Accepted Cipher Suite(s):'),
-                      ('rejectedCipherSuites', 'Rejected Cipher Suite(s):'),
-                      ('errors', 'Unknown Errors:')]
+                      ('errors', 'Undefined - An unexpected error happened:'),
+                      ('rejectedCipherSuites', 'Rejected Cipher Suite(s):')]
               
         if self._shared_settings['hide_rejected_ciphers']:
             txt_titles.pop(2)

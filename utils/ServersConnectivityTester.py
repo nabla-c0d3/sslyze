@@ -194,6 +194,7 @@ class SSLServerTester(object):
     ERR_TIMEOUT = 'Could not connect (timeout)'
     ERR_NAME_NOT_RESOLVED = 'Could not resolve hostname'
     ERR_REJECTED = 'Connection rejected'
+    ERR_NO_IPV6 = 'IPv6 is not supported on this platform'
     
     DEFAULT_PORT = 443
     
@@ -211,6 +212,7 @@ class SSLServerTester(object):
 
 
     def _parse_ipv4_target(self, target_str):        
+        
         if ':' in target_str:
             host = (target_str.split(':'))[0] # hostname or ipv4 address
             try:
@@ -227,6 +229,10 @@ class SSLServerTester(object):
 
 
     def _parse_ipv6_target(self, target_str):
+        
+        if not socket.has_ipv6:
+            raise InvalidTargetError(target_str, self.ERR_NO_IPV6)
+        
         port = self.DEFAULT_PORT
         target_split = (target_str.split(']'))
         ipv6_addr = target_split[0] + ']'

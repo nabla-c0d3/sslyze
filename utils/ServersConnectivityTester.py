@@ -257,6 +257,7 @@ class SSLServerTester(object):
             s = socket.create_connection((ip_addr, port), timeout)
             ip_addr = s.getpeername()[0]
             self._connect_callback(s) # StartTLS callback
+            s.close()
     
         except socket.timeout: # Host is down
             raise InvalidTargetError(self._target_str, self.ERR_TIMEOUT)
@@ -265,9 +266,6 @@ class SSLServerTester(object):
         except socket.gaierror:
             raise InvalidTargetError(self._target_str,
                                      self.ERR_NAME_NOT_RESOLVED)
-    
-        finally:
-            s.close()
     
         return (host, ip_addr, port)
     

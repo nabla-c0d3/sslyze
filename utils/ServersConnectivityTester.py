@@ -117,7 +117,7 @@ class ServersConnectivityTester(ConnectivityTester):
     Tests connectivity to a list of servers.
     """
     
-    MAX_THREADS = 10
+    MAX_THREADS = 50
 
     TARGET_OK_FORMAT = '\n   {0:<35} => {1}'
 

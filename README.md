@@ -28,15 +28,14 @@ Supported platforms include Windows 7, Linux and OS X Mountain Lion, both 32
 and 64 bits. SSLyze requires Python 2.6 or 2.7 and OpenSSL 0.9.8+.
 
 ### Linux / OS X
-
-Linux and OS X users should download the source package for the latest version,
-available at:
-https://github.com/iSECPartners/sslyze/downloads
+On Linux and OS X, SSLyze relies on the system's OpenSSL libraries.
 
 ### Windows
-For Windows, specific packages that include the OpenSSL DLLs are available at 
-https://github.com/iSECPartners/sslyze/downloads.
-There is one package for Python 32 bits, and one for Python 64 bits.
+For Windows, specific packages that include the OpenSSL DLLs are provided.
+
+### Installation Packages
+Installation packages are available at: 
+http://nabla-c0d3.blogspot.com/2013/01/sslyze-v06.html
 
 Usage
 -----

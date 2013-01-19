@@ -1,4 +1,5 @@
-# Beware, this going to take forever. Last run took 4522.97 seconds. 
+# Beware, this going to take forever
+# Last run took 4522.97 seconds and generated a 30 MB xml file that crashed IE
 # python sslyze.py --regular --xml_out top1000.xml --targets_in test/top1000.txt
 www.smartevents.com
 billpay.wellsfargo.com

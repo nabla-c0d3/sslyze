@@ -31,7 +31,7 @@ from utils.CommandLineParser import CommandLineParser, CommandLineParsingError
 from utils.ServersConnectivityTester import ServersConnectivityTester, \
     ProxyConnectivityTester
 
-SSLYZE_VERSION = 'SSLyze v0.6'
+SSLYZE_VERSION = 'SSLyze v0.7 beta'
 DEFAULT_NB_PROCESSES = 5
 DEFAULT_TIMEOUT =   5
 PROJECT_URL = "https://github.com/isecPartners/sslyze"

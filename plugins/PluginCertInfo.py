@@ -273,6 +273,12 @@ class PluginCertInfo(PluginBase.PluginBase):
             trust_xml_attr['reasonWhyNotTrusted'] = untrusted_reason
             
         trust_xml = Element('certificate', attrib = trust_xml_attr)
+        
+        # Add certificate in PEM format
+        PEMcert_xml = Element('asPEM')
+        PEMcert_xml.text = cert.as_PEM().strip()
+        trust_xml.append(PEMcert_xml)
+        
         for elem_xml in cert_parsed.parse_certificate_to_xml():
             trust_xml.append(elem_xml)
         xml_result.append(trust_xml)

@@ -122,6 +122,13 @@ class X509:
         return x509_str
 
 
+    def as_PEM(self):
+        mem_bio = BIO.BIOFactory.new_mem()
+        libcrypto.PEM_write_bio_X509(mem_bio.get_bio_struct_p(), self._x509_struct);
+        x509_PEM = mem_bio.read(MAX_X509_CERT_AS_TXT_SIZE)
+        return x509_PEM       
+
+
     def get_serial_number(self):
         serial_number_p = libcrypto.X509_get_serialNumber(self._x509_struct)
         mem_bio_p = libcrypto.BIO_new(libcrypto.BIO_s_mem())
@@ -359,7 +366,10 @@ def init_X509_functions():
 
     libcrypto.ASN1_STRING_length.argtypes = [c_void_p]
     libcrypto.ASN1_STRING_length.restype = c_int
-            
+    
+    libcrypto.PEM_write_bio_X509.argtypes = [c_void_p, c_void_p]
+    libcrypto.PEM_write_bio_X509.restype = c_int
+    
     
     # Not in OpenSSL 0.9.8 :(
     #libcrypto.EVP_PKEY_print_public.argtypes = [c_void_p, c_void_p, c_int, c_void_p]

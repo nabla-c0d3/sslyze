@@ -1,10 +1,13 @@
-Work in progress...
-ctSSL is released under the MIT license.  See the LICENSE file for details.
+SSLyze's very own ctypes-based OpenSSL wrapper. 
+https://github.com/iSECPartners/sslyze/
 
-Copyright (c) 2011 Alban Diquet
+Mostly untested and in the process of being deprecated because OpenSSL and
+ctypes do not work well together.
+
+ctSSL is released under the MIT license.  See the LICENSE file for details.
 
 Prerequisites: 
 	Python 2.6 or 2.7 and OpenSSL 0.9.8+.
 
-http://code.google.com/p/ctssl/
-
+Copyright (c) 2011 Alban Diquet
+https://github.com/nabla-c0d3

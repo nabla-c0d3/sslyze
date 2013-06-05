@@ -1,3 +1,32 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#-------------------------------------------------------------------------------
+# Name:         PluginHSTS.py
+# Purpose:      Checks if the server supports RFC 6797 HTTP Strict Transport
+#               Security by checking if the server responds with the
+#               Strict-Transport-Security field in the header.
+#
+#               This plugin was written by Tom Samstag (tecknicaltom) and
+#               integrated, adapted by Joachim Strömbergson
+#
+# Author:       tecknicaltom, joachims
+#
+# Copyright:    2013 SSLyze developers
+#
+#   SSLyze is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   SSLyze is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
+#-------------------------------------------------------------------------------
+
 from xml.etree.ElementTree import Element
 import socket
 
@@ -6,12 +35,12 @@ from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup
 
 class PluginHSTS(PluginBase.PluginBase):
 
-    available_commands = PluginBase.AvailableCommands(
-        title="PluginHSTS",
-        description="Prints out the HSTS header details")
-    available_commands.add_command(
+    interface = PluginBase.PluginInterface(title="PluginHSTS", description=(''))
+    interface.add_command(
         command="hsts",
-        help="Help text for HSTS",
+        help="Verifies the support of a server for HTTP Strict Transport Security "
+             "(HSTS) by collecting any Strict-Transport-Security field present in "
+             "the response from the server.",
         dest=None)
 
     def process_task(self, target, command, args):

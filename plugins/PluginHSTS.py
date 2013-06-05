@@ -28,10 +28,9 @@
 #-------------------------------------------------------------------------------
 
 from xml.etree.ElementTree import Element
-import socket
-
+import httplib
 from plugins import PluginBase
-from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup
+
 
 class PluginHSTS(PluginBase.PluginBase):
 
@@ -47,30 +46,40 @@ class PluginHSTS(PluginBase.PluginBase):
 
         output_format = '        {0:<25} {1}'
 
-        ctSSL_initialize()
-        ssl_connect = self._create_ssl_connection(target)
+        hsts_supported = False
+        hsts_timeout = ""
+        (host, addr, port) = target
+        connection = httplib.HTTPSConnection(host)
+        try:
+            connection.connect()
+            connection.request("HEAD", "/", headers={"Connection": "close"})
+            response = connection.getresponse()
+            headers = response.getheaders()
+            for (field, data) in headers:
+                if field == 'strict-transport-security':
+                    hsts_supported = True
+                    hsts_timeout = data
 
-        header = None
+        except httplib.HTTPException as ex:
+            print "Error: %s" % ex
 
-        #try: # Perform the SSL handshake
-        ssl_connect.connect()
-        ssl_connect.request("HEAD", "/", headers={"Connection": "close"})
-        http_response = ssl_connect.getresponse()
-        header = http_response.getheader('Strict-Transport-Security', None)
-
-        ctSSL_cleanup()
+        finally:
+            connection.close()
 
         # Text output
         cmd_title = 'HSTS'
         txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
-        txt_result.append(output_format.format("Strict-Transport-Security header:", header))
+        if hsts_supported:
+            txt_result.append(output_format.format("Supported:", hsts_timeout))
+        else:
+            txt_result.append(output_format.format("Not supported.", ""))
 
         # XML output
-        xml_hsts_attr = {'header_found': str(header != None)}
-        if header:
-            xml_hsts_attr['header'] = header
+        xml_hsts_attr = {'hsts_header_found': str(hsts_supported)}
+        if hsts_supported:
+            xml_hsts_attr['hsts_header'] = hsts_timeout
         xml_hsts = Element('hsts', attrib = xml_hsts_attr)
-        
+
         xml_result = Element(self.__class__.__name__, command = command,
                              title = cmd_title)
         xml_result.append(xml_hsts)

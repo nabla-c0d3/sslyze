@@ -6,8 +6,11 @@
 #               Security by checking if the server responds with the
 #               Strict-Transport-Security field in the header.
 #
-#               This plugin was written by Tom Samstag (tecknicaltom) and
-#               integrated, adapted by Joachim Strömbergson
+#               Note: There is currently no support for hsts pinning.
+#
+#               This plugin is based on the plugin written by Tom Samstag
+#               (tecknicaltom) and reworked, integrated and adapted to the
+#               new sslyze plugin API by Joachim Strömbergson.
 #
 # Author:       tecknicaltom, joachims
 #

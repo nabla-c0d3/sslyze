@@ -23,34 +23,22 @@
 
 import socket
 
-from SSLSocket import SSLSocket
+from HTTPSConnection import SSLyzeSSLConnection
 
-
+# TODO: Move this somewhere else
 class SSLHandshakeError(Exception):
     pass
 
 
-class SMTPConnection():
-    
-    def __init__(self, host, port, ssl, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
-        
-        self.ssl = ssl
-        self.host = host
-        self.port = port
-        self.timeout = timeout
-        self.sock = None
-        
-    
-    def connect(self):
-        """
-        Connect to a host on a given (SSL) port, send a STARTTLS command,
-        and perform the SSL handshake.
-        """
-        
-        sock = socket.create_connection((self.host, self.port),
-                                        self.timeout)
-        self.sock = sock
 
+class SMTPConnection(SSLyzeSSLConnection):
+
+    
+    def connect(self,(host,port)):
+            
+        sock = socket.create_connection((host, port), self.timeout)
+        self._sock = sock           
+    
         # Get the SMTP banner
         sock.recv(2048)
         
@@ -67,65 +55,54 @@ class SMTPConnection():
             raise SSLHandshakeError('SMTP STARTTLS not supported ?')
 
         # Do the SSL handshake
-        self.ssl.set_socket(sock)
-        ssl_sock = SSLSocket(self.ssl)
-        
-        ssl_sock.do_handshake()
-        self.sock = ssl_sock
-        
+        self.do_handshake()
 
-    def close(self):
-        self.sock.close()
+
+    def post_handshake_check(self):
+        try:
+            self.write('NOOP\r\n')
+            result = self.read(128).strip()
+            print result
+        except socket.timeout:
+            result = 'Timeout on SMTP NOOP'
+        return result
         
         
-        
-class XMPPConnection():
+class XMPPConnection(SSLyzeSSLConnection):
     
-    xmpp_open_stream = "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/rfc2595.txt' to='{0}'>" 
-    xmpp_starttls = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
+    XMPP_OPEN_STREAM = "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/rfc2595.txt' to='{0}'>" 
+    XMPP_STARTTLS = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
     
-    def __init__(self, host, port, ssl, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, 
-                 xmpp_to=None):
-        
-        self.ssl = ssl
-        self.host = host
-        self.port = port
-        self.timeout = timeout
-        self.sock = None
-        if xmpp_to is None:
-            self.xmpp_to = host
-        else:
-            self.xmpp_to = xmpp_to
+    def __init__(self, sslVersion, sslVerifyLocations, timeout, xmpp_to=None):
+        super(XMPPConnection, self).__init__(sslVersion, sslVerifyLocations, timeout)
+        self.xmpp_to = xmpp_to
             
     
-    def connect(self):
+    def connect(self,(host,port)):
         """
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
         """
-        
-        sock = socket.create_connection((self.host, self.port),
-                                        self.timeout)
-        self.sock = sock
+
+        sock = socket.create_connection((host, port), self.timeout)
+        self._sock = sock           
         
         # Open an XMPP stream
-        sock.send(self.xmpp_open_stream.format(self.xmpp_to))
+        if self.xmpp_to is None:
+            xmpp_to = host
+        else:
+            xmpp_to = self.xmpp_to 
+            
+        sock.send(self.XMPP_OPEN_STREAM.format(xmpp_to))
         sock.recv(2048)
-                
-        # Send a STARTTLS
-        sock.send(self.xmpp_starttls)
+
+        # Send a STARTTLS msg
+        sock.send(self.XMPP_STARTTLS)
         xmpp_resp = sock.recv(2048)
         if 'proceed'  not in xmpp_resp: 
             raise SSLHandshakeError('XMPP STARTTLS not supported ?')
 
-        # Do the SSL handshake
-        self.ssl.set_socket(sock)
-        ssl_sock = SSLSocket(self.ssl)
-        
-        ssl_sock.do_handshake()
-        self.sock = ssl_sock
+        self.do_handshake()
         
 
-    def close(self):
-        self.sock.close()
         

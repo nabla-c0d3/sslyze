@@ -28,9 +28,71 @@
 
 import socket
 
-from utils.ctSSL import SSL, SSL_CTX, errors, constants
-from HTTPSConnection import HTTPSConnection
+from HTTPSConnection import SSLyzeSSLConnection
 from StartTLS import SMTPConnection, XMPPConnection
+from nassl import SSL_FILETYPE_ASN1,  SSL_FILETYPE_PEM, SSLV23
+
+
+def create_sslConnection(shared_settings, sslVersion=SSLV23, sslVerifyLocations=None):
+
+
+    # Create the proper SMTP / XMPP / HTTPS connection
+    #TODO
+    if shared_settings['starttls'] == 'smtp':
+        ssl_connection = SMTPConnection(sslVersion, sslVerifyLocations, 
+                                        shared_settings['timeout'])
+    elif shared_settings['starttls'] == 'xmpp':
+        if shared_settings['xmpp_to']:
+            xmpp_to = shared_settings['xmpp_to']
+        else:
+            xmpp_to = None
+            
+        ssl_connection = XMPPConnection(sslVersion, sslVerifyLocations, 
+                                        shared_settings['timeout'], xmpp_to)   
+             
+    elif shared_settings['https_tunnel_host']:
+        # TODO
+        # Using an HTTP CONNECT proxy to tunnel SSL traffic
+        tunnel_host = shared_settings['https_tunnel_host']
+        tunnel_port = shared_settings['https_tunnel_port']
+        ssl_connection = HTTPSConnection(tunnel_host, tunnel_port, ssl,  
+                                        timeout=timeout)
+        ssl_connection.set_tunnel(host, port)
+    else:
+        ssl_connection = SSLyzeSSLConnection(sslVersion, sslVerifyLocations, shared_settings['timeout'])
+    
+    
+    # Load client certificate and private key
+    if shared_settings['cert']:
+        if shared_settings['certform'] is 'DER':
+            cert_type = SSL_FILETYPE_ASN1
+        else:
+            cert_type =  SSL_FILETYPE_PEM
+            
+        if shared_settings['keyform'] is 'DER':
+            key_type = SSL_FILETYPE_ASN1
+        else:
+            key_type = SSL_FILETYPE_PEM
+            
+        try:
+            ssl_connection.use_certificate_file(shared_settings['cert'], cert_type)                
+            ssl_connection.use_PrivateKey_file(shared_settings['key'], key_type)
+            ssl_connection.check_private_key()
+        except errors.OpenSSLError as e: # TODO: Proper error checking
+            # Also this should be done much earlier like after parsing the command line
+            if 'bad decrypt' in str(e):
+                raise ClientCertificateError('Invalid private key passphrase ?')
+            else:
+                raise
+    
+    
+    # Add Server Name Indication
+    if shared_settings['sni']:
+        ssl_connection.set_tlsext_host_name(shared_settings['sni'])
+
+        
+    return ssl_connection
+    
 
 
 class SSLHandshakeRejected(Exception):
@@ -48,22 +110,14 @@ class ClientCertificateError(Exception):
     pass
 
 
-class SSLyzeSSLConnection:
+class SSLyzeSSLConnection2:
     """
     Helper class for SSL connections - very specific to SSLyze. 
     It takes care of all the things SSLyze plugins rely on when performing 
     an SSL connection, such as properly configuring SSL_CTX from looking at 
     the shared_settings object.
     """
-    
-    # There is a really annoying bug that causes specific servers to not
-    # reply to a client hello that is bigger than 255 bytes.
-    # Until this gets fixed, I have to disable cipher suites in order to
-    # make our client hello smaller :(
-    # Probably this bug:
-    # http://rt.openssl.org/Ticket/Display.html?id=2771&user=guest&pass=guest
-    SSL_HELLO_WORKAROUND_CIPHERS = "aRSA:AES:-SRP:-PSK:-NULL"
-    
+
     
     # The following errors mean that the server explicitely rejected the handshake
     HANDSHAKE_REJECTED_SOCKET_ERRORS = \
@@ -86,7 +140,7 @@ class SSLyzeSSLConnection:
     
 
 
-    def __init__(self, shared_settings, target, ssl_ctx,hello_workaround=False):
+    def __init__(self, shared_settings, target, sslVersion=SSLV23, sslVerifyLocations=None):
         """
         Read the shared_settings object shared between all the plugins and 
         configure the SSL_CTX and SSL objects accordingly.
@@ -97,20 +151,15 @@ class SSLyzeSSLConnection:
         @type target: (host, ip_addr, port)
         @param target: Server to connect to.
         
-        @type ssl_ctx: ctSSL.SSL_CTX
-        @param ssl_ctx: SSL_CTX object for the SSL connection.
-        
-        @type hello_workaround: bool
-        @param hello_workaround: Enable client hello workaround.       
+        TBD
         """
     
         timeout = shared_settings['timeout']
         (host, _, port) = target
-        if hello_workaround:
-            ssl_ctx.set_cipher_list(self.SSL_HELLO_WORKAROUND_CIPHERS)
-        
+
         
         # Load client certificate and private key in the SSL_CTX object
+        #TODO
         if shared_settings['cert']:
             if shared_settings['certform'] is 'DER':
                 cert_type = constants.SSL_FILETYPE_ASN1
@@ -134,14 +183,15 @@ class SSLyzeSSLConnection:
                 else:
                     raise
 
-        # Create the SSL object
-        ssl = SSL.SSL(ssl_ctx)
+        # Create the SSL client
+        sslClient = SslClient.SslClient(sslVersion=ssl_version)
         
         # Add Server Name Indication
         if shared_settings['sni']:
-            ssl.set_tlsext_host_name(shared_settings['sni'])
+            sslClient.set_tlsext_host_name(shared_settings['sni'])
         
         # Create the proper SMTP / XMPP / HTTPS connection
+        #TODO
         if shared_settings['starttls'] == 'smtp':
             ssl_connection = SMTPConnection(host, port, ssl, timeout)
         elif shared_settings['starttls'] == 'xmpp':

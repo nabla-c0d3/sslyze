@@ -25,9 +25,9 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
-from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, \
-    ctSSL_cleanup
-from utils.SSLyzeSSLConnection import SSLyzeSSLConnection, SSLHandshakeRejected
+from utils.SSLyzeSSLConnection import create_sslConnection
+from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2 
+from nassl.SslClient import SslClient
 
 
 class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
@@ -71,18 +71,20 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
     def process_task(self, target, command, args):
 
         MAX_THREADS = 30
-        
-        if command in ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2']:
-            ssl_version = command
-        else:
+        sslVersionDict = {'sslv2': SSLV2, 
+                       'sslv3': SSLV3, 
+                       'tlsv1': TLSV1, 
+                       'tlsv1_1': TLSV1_1, 
+                       'tlsv1_2': TLSV1_2}
+        try:
+            sslVersion = sslVersionDict[command]
+        except KeyError:
             raise Exception("PluginOpenSSLCipherSuites: Unknown command.")
 
         # Get the list of available cipher suites for the given ssl version
-        ctSSL_initialize(multithreading=True)
-        ctx = SSL_CTX.SSL_CTX(ssl_version)
-        ctx.set_cipher_list('ALL:NULL:@STRENGTH')
-        ssl = SSL.SSL(ctx)
-        cipher_list = ssl.get_cipher_list()
+        sslClient = SslClient(sslVersion=sslVersion)
+        sslClient.set_cipher_list('ALL:COMPLEMENTOFALL')
+        cipher_list = sslClient.get_cipher_list()
 
         # Create a thread pool
         NB_THREADS = min(len(cipher_list), MAX_THREADS) # One thread per cipher
@@ -90,12 +92,13 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         # Scan for every available cipher suite
         for cipher in cipher_list:
+            self._test_ciphersuite(target, sslVersion, cipher)
             thread_pool.add_job((self._test_ciphersuite,
-                                 (target, ssl_version, cipher)))
+                                 (target, sslVersion, cipher)))
 
         # Scan for the preferred cipher suite
         thread_pool.add_job((self._pref_ciphersuite,
-                             (target, ssl_version)))
+                             (target, sslVersion)))
 
         # Start processing the jobs
         thread_pool.start(NB_THREADS)
@@ -113,13 +116,13 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         # Store thread pool errors
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
+            print exception
             ssl_cipher = str(job[1][2])
             error_msg = str(exception.__class__.__module__) + '.' \
                         + str(exception.__class__.__name__) + ' - ' + str(exception)
             result_dicts['errors'][ssl_cipher] = (error_msg, None)        
             
         thread_pool.join()
-        ctSSL_cleanup()
         
         # Generate results
         return PluginBase.PluginResult(self._generate_txt_result(result_dicts, command),
@@ -201,31 +204,28 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         Initiates a SSL handshake with the server, using the SSL version and 
         cipher suite specified.
         """
-        ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
-        ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ssl_ctx.set_cipher_list(ssl_cipher)
-    
-        # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx)
+
+        sslConn = create_sslConnection(self._shared_settings, sslVersion=ssl_version)
+        sslConn.set_cipher_list(ssl_cipher)
         
         try: # Perform the SSL handshake
-            ssl_connect.connect()
+            sslConn.connect((target[0], target[2]))
             
-        except SSLHandshakeRejected as e:
+        except Exception as e:
             return ('rejectedCipherSuites', ssl_cipher, None, str(e))
 
         else:
-            ssl_cipher = ssl_connect._ssl.get_current_cipher()
+            ssl_cipher = sslConn.get_cipher_name()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
                 keysize = 'Anon' # Anonymous, let s not care about the key size
             else:
-                keysize = str(ssl_connect._ssl.get_current_cipher_bits())+' bits'
+                keysize = str(sslConn.get_cipher_bits())+' bits'
                 
-            status_msg = ssl_connect.post_handshake_check()
+            status_msg = sslConn.post_handshake_check()
             return ('acceptedCipherSuites', ssl_cipher, keysize, status_msg)
     
         finally:
-            ssl_connect.close()
+            sslConn.shutdown()
             
         return
     
@@ -235,29 +235,26 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         Initiates a SSL handshake with the server, using the SSL version and cipher
         suite specified.
         """
-        ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
-        ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-        # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx,
-                                          hello_workaround=True)
+        
+        sslConn = create_sslConnection(self._shared_settings, ssl_version)
         
         try: # Perform the SSL handshake
-            ssl_connect.connect()
+            sslConn.connect((target[0], target[2]))
 
-            ssl_cipher = ssl_connect._ssl.get_current_cipher()
+            ssl_cipher = sslConn.get_cipher_name()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
                 keysize = 'Anon' # Anonymous, let s not care about the key size
             else:
-                keysize = str(ssl_connect._ssl.get_current_cipher_bits())+' bits'
+                keysize = str(sslConn.get_cipher_bits())+' bits'
                 
-            status_msg = ssl_connect.post_handshake_check()
+            status_msg = sslConn.post_handshake_check()
             return ('preferredCipherSuite', ssl_cipher, keysize, status_msg)
         
         except:
             return None
     
         finally:
-            ssl_connect.close()
+            sslConn.shutdown()
             
         return
 

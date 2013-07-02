@@ -92,7 +92,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         # Scan for every available cipher suite
         for cipher in cipher_list:
-            self._test_ciphersuite(target, sslVersion, cipher)
+            #self._test_ciphersuite(target, sslVersion, cipher)
             thread_pool.add_job((self._test_ciphersuite,
                                  (target, sslVersion, cipher)))
 
@@ -225,7 +225,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             return ('acceptedCipherSuites', ssl_cipher, keysize, status_msg)
     
         finally:
-            sslConn.shutdown()
+            sslConn.close()
             
         return
     
@@ -254,7 +254,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             return None
     
         finally:
-            sslConn.shutdown()
+            sslConn.close()
             
         return
 

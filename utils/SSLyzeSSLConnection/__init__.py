@@ -28,7 +28,7 @@
 
 import socket
 
-from HTTPSConnection import SSLyzeSSLConnection
+from HTTPSConnection import SSLyzeSSLConnection, SSLyzeHTTPSConnection
 from StartTLS import SMTPConnection, XMPPConnection
 from nassl import SSL_FILETYPE_ASN1,  SSL_FILETYPE_PEM, SSLV23
 
@@ -37,7 +37,6 @@ def create_sslConnection(shared_settings, sslVersion=SSLV23, sslVerifyLocations=
 
 
     # Create the proper SMTP / XMPP / HTTPS connection
-    #TODO
     if shared_settings['starttls'] == 'smtp':
         ssl_connection = SMTPConnection(sslVersion, sslVerifyLocations, 
                                         shared_settings['timeout'])
@@ -58,6 +57,8 @@ def create_sslConnection(shared_settings, sslVersion=SSLV23, sslVerifyLocations=
         ssl_connection = HTTPSConnection(tunnel_host, tunnel_port, ssl,  
                                         timeout=timeout)
         ssl_connection.set_tunnel(host, port)
+    elif shared_settings['http_get']:
+        ssl_connection = SSLyzeHTTPSConnection(sslVersion, sslVerifyLocations, shared_settings['timeout'])    
     else:
         ssl_connection = SSLyzeSSLConnection(sslVersion, sslVerifyLocations, shared_settings['timeout'])
     

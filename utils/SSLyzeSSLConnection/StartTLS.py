@@ -44,14 +44,12 @@ class SMTPConnection(SSLyzeSSLConnection):
         
         # Send a EHLO and wait for the 250 status
         sock.send('EHLO sslyze.scan\r\n')
-        smtp_resp = sock.recv(2048)
-        if '250 ' not in smtp_resp:
+        if '250 ' not in sock.recv(2048):
             raise SSLHandshakeError('SMTP EHLO was rejected ?')
                 
         # Send a STARTTLS
         sock.send('STARTTLS\r\n')
-        smtp_resp = sock.recv(2048)
-        if 'Ready to start TLS'  not in smtp_resp: 
+        if 'Ready to start TLS'  not in sock.recv(2048): 
             raise SSLHandshakeError('SMTP STARTTLS not supported ?')
 
         # Do the SSL handshake
@@ -61,8 +59,7 @@ class SMTPConnection(SSLyzeSSLConnection):
     def post_handshake_check(self):
         try:
             self.write('NOOP\r\n')
-            result = self.read(128).strip()
-            print result
+            result = self.read(2048).strip()
         except socket.timeout:
             result = 'Timeout on SMTP NOOP'
         return result

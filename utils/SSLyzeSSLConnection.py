@@ -106,8 +106,8 @@ class ClientAuthenticationError(IOError):
     The server asked for a client certificate and we didn't send one.
     """
     
-    ERROR_MSG = 'Server requested a client certificate signed by one of the '
-    'following CAs:{0}; use the --cert and --key options.'
+    ERROR_MSG = 'Server requested a client certificate signed by one of the ' +\
+    'following CAs: {0}; use the --cert and --key options.'
     
     def __init__(self, caList):
         self.caList = caList

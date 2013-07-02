@@ -49,9 +49,9 @@ def create_sslyze_connection(shared_settings, sslVersion=SSLV23, sslVerifyLocati
         # Using an HTTP CONNECT proxy to tunnel SSL traffic
         tunnel_host = shared_settings['https_tunnel_host']
         tunnel_port = shared_settings['https_tunnel_port']
-        ssl_connection = HTTPSConnection(tunnel_host, tunnel_port, ssl,  
-                                        timeout=timeout)
-        ssl_connection.set_tunnel(host, port)
+        ssl_connection = SSLyzeHTTPSTunnelConnection(sslVersion, 
+            sslVerifyLocations, shared_settings['timeout'], tunnel_host, 
+            tunnel_port)
     
     elif shared_settings['http_get']:
         ssl_connection = SSLyzeHTTPSConnection(sslVersion, sslVerifyLocations, 
@@ -91,6 +91,13 @@ class SSLHandshakeRejected(IOError):
 class StartTLSError(IOError):
     """
     The server rejected the StartTLS negotiation.
+    """
+    pass
+
+
+class ProxyError(IOError):
+    """
+    The proxy did not return HTTP 200 to our CONNECT request.
     """
     pass
 
@@ -143,25 +150,23 @@ class SSLyzeSSLConnection(SslClient):
         super(SSLyzeSSLConnection, self).__init__(None, sslVersion, 
                                                   sslVerifyLocations)
         self.timeout = timeout
+        self._sock = None
     
  
-    def do_starttls(self):
-        pass
-    
-    
-    def connect(self,(host,port)):
-        
+    def do_pre_handshake(self, (host,port)):
         try: # TCP connection            
             self._sock = socket.create_connection((host, port), self.timeout)
         except socket.error as e: 
             # Could not connect to the server although we tested that at startup
             # Did we lose connectivity ?
             raise
-                           
-                           
-        # StartTLS negotiation if there's one
-        self.do_starttls()
+    
+
+    
+    def connect(self,(host,port)):
         
+        # StartTLS negotiation or proxy setup if needed
+        self.do_pre_handshake((host,port))
         
         try: # SSL handshake
             self.do_handshake()
@@ -192,7 +197,8 @@ class SSLyzeSSLConnection(SslClient):
         
     def close(self):
         self.shutdown()
-        self._sock.close()
+        if self._sock:
+            self._sock.close()
         
         
     def post_handshake_check(self):
@@ -228,11 +234,38 @@ class SSLyzeHTTPSConnection(SSLyzeSSLConnection):
         return result
     
 
+class SSLyzeHTTPSTunnelConnection(SSLyzeSSLConnection):
+    """SSL connection class that connects to a server through a CONNECT proxy 
+    and sends an HTTP GET request after the SSL handshake."""
+
+    CONNECT_TUNNEL_MSG = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
+    
+    def __init__(self, sslVersion, sslVerifyLocations, timeout, tunnelHost, 
+                 tunnelPort):
+        super(SSLyzeHTTPSTunnelConnection, self).__init__(sslVersion,
+                                                          sslVerifyLocations, 
+                                                          timeout)
+        self._tunnelHost = tunnelHost
+        self._tunnelPort = tunnelPort
+        
+            
+    def do_pre_handshake(self, (host,port)):
+
+        self._sock = socket.create_connection((self._tunnelHost, self._tunnelPort), 
+                                              self.timeout)
+        self._sock.send(self.CONNECT_TUNNEL_MSG.format(host,port))
+        httpResp = parse_http_response(self._sock.recv(1024))
+        if httpResp.status != 200:
+            raise ProxyError('Tunneling proxy rejected the CONNECT request.')
+
+
 class SSLyzeSMTPConnection(SSLyzeSSLConnection):
     """SSL connection class that performs an SMTP StartTLS negotiation
     before the SSL handshake and sends a NOOP after the handshake."""
 
-    def do_starttls(self):
+    def do_pre_handshake(self, (host,port)):
+        
+        self._sock = socket.create_connection((host, port), self.timeout)
         # Get the SMTP banner
         self._sock.recv(2048)
         
@@ -267,22 +300,18 @@ class SSLyzeXMPPConnection(SSLyzeSSLConnection):
         super(SSLyzeXMPPConnection, self).__init__(sslVersion, sslVerifyLocations, timeout)
         self._xmpp_to = xmpp_to
         
-    
-    def connect(self,(host, port)):
-        # h4ck
-        if self._xmpp_to is None:
-            self._xmpp_to = host
-    
-        return super(SSLyzeXMPPConnection, self).connect((host,port))
-    
-    
-    def do_starttls(self):
+
+    def do_pre_handshake(self, (host,port)):
         """
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
         """
-
+        if self._xmpp_to is None:
+            self._xmpp_to = host
+            
         # Open an XMPP stream            
+        self._sock = socket.create_connection((host, port), self.timeout)
+        
         self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
         self._sock.recv(2048)
 

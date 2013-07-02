@@ -25,7 +25,7 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
-from utils.SSLyzeSSLConnection import create_sslConnection
+from utils.SSLyzeSSLConnection import create_sslyze_connection, SSLHandshakeRejected
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2 
 from nassl.SslClient import SslClient
 
@@ -205,13 +205,14 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         cipher suite specified.
         """
 
-        sslConn = create_sslConnection(self._shared_settings, sslVersion=ssl_version)
+        sslConn = create_sslyze_connection(self._shared_settings, 
+                                           sslVersion=ssl_version)
         sslConn.set_cipher_list(ssl_cipher)
         
         try: # Perform the SSL handshake
             sslConn.connect((target[0], target[2]))
             
-        except Exception as e:
+        except SSLHandshakeRejected as e:
             return ('rejectedCipherSuites', ssl_cipher, None, str(e))
 
         else:
@@ -236,7 +237,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         suite specified.
         """
         
-        sslConn = create_sslConnection(self._shared_settings, ssl_version)
+        sslConn = create_sslyze_connection(self._shared_settings, ssl_version)
         
         try: # Perform the SSL handshake
             sslConn.connect((target[0], target[2]))

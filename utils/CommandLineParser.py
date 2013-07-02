@@ -255,6 +255,8 @@ class CommandLineParser():
     
         if args_command_list.keyform not in ['DER', 'PEM']:
             raise CommandLineParsingError('--keyform should be DER or PEM.')
+        
+        # TODO: Try the cert's passphrase
     
             
         # HTTP CONNECT proxy

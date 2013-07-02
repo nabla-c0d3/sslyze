@@ -38,14 +38,11 @@ def create_sslyze_connection(shared_settings, sslVersion=SSLV23, sslVerifyLocati
     if shared_settings['starttls'] == 'smtp':
         ssl_connection = SSLyzeSMTPConnection(sslVersion, sslVerifyLocations, 
                                         shared_settings['timeout'])
-    elif shared_settings['starttls'] == 'xmpp':
-        if shared_settings['xmpp_to']:
-            xmpp_to = shared_settings['xmpp_to']
-        else:
-            xmpp_to = None
-            
+    
+    elif shared_settings['starttls'] == 'xmpp':            
         ssl_connection = SSLyzeXMPPConnection(sslVersion, sslVerifyLocations, 
-                                        shared_settings['timeout'], xmpp_to)   
+                                        shared_settings['timeout'], 
+                                        shared_settings['xmpp_to'])   
              
     elif shared_settings['https_tunnel_host']:
         # TODO
@@ -55,26 +52,23 @@ def create_sslyze_connection(shared_settings, sslVersion=SSLV23, sslVerifyLocati
         ssl_connection = HTTPSConnection(tunnel_host, tunnel_port, ssl,  
                                         timeout=timeout)
         ssl_connection.set_tunnel(host, port)
+    
     elif shared_settings['http_get']:
-        ssl_connection = SSLyzeHTTPSConnection(sslVersion, sslVerifyLocations, shared_settings['timeout'])    
+        ssl_connection = SSLyzeHTTPSConnection(sslVersion, sslVerifyLocations, 
+                                               shared_settings['timeout'])    
     else:
-        ssl_connection = SSLyzeSSLConnection(sslVersion, sslVerifyLocations, shared_settings['timeout'])
+        ssl_connection = SSLyzeSSLConnection(sslVersion, sslVerifyLocations, 
+                                             shared_settings['timeout'])
     
     
     # Load client certificate and private key
+    # These parameters should have been validated when parsing the command line
     if shared_settings['cert']:
-        if shared_settings['certform'] is 'DER':
-            cert_type = SSL_FILETYPE_ASN1
-        else:
-            cert_type =  SSL_FILETYPE_PEM
-            
-        if shared_settings['keyform'] is 'DER':
-            key_type = SSL_FILETYPE_ASN1
-        else:
-            key_type = SSL_FILETYPE_PEM
-            
-        ssl_connection.use_certificate_file(shared_settings['cert'], cert_type)                
-        ssl_connection.use_PrivateKey_file(shared_settings['key'], key_type)
+        ssl_connection.use_certificate_file(shared_settings['cert'], 
+                                            shared_settings['certform'])                
+        ssl_connection.use_privateKey_file(shared_settings['key'], 
+                                           shared_settings['keyform'], 
+                                           shared_settings['keypass'])
         ssl_connection.check_private_key()
     
     

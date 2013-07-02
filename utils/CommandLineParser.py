@@ -26,6 +26,10 @@ import platform
 
 from ServersConnectivityTester import SSLServerTester, InvalidTargetError
 
+# Client cert/key checking
+from nassl.SslClient import SslClient
+from nassl import _nassl, SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
+
 
 class CommandLineParsingError(Exception):
     
@@ -136,7 +140,8 @@ class CommandLineParser():
         clientcert_group.add_option(
             '--pass',
             help= 'Client private key passphrase.',
-            dest='keypass')
+            dest='keypass',
+            default='')
         self._parser.add_option_group(clientcert_group)
     
         # XML output
@@ -236,6 +241,21 @@ class CommandLineParser():
         if bool(args_command_list.cert) ^ bool(args_command_list.key):
             raise CommandLineParsingError('No private key or certificate file were given. See --cert and --key.')
         
+        # Private key and cert formats
+        if args_command_list.certform is'DER':
+            args_command_list.certform = SSL_FILETYPE_ASN1
+        elif args_command_list.certform is 'PEM':
+            args_command_list.certform = SSL_FILETYPE_PEM
+        else:
+            raise CommandLineParsingError('--certform should be DER or PEM.')
+    
+        if args_command_list.keyform is'DER':
+            args_command_list.keyform = SSL_FILETYPE_ASN1
+        elif args_command_list.keyform is 'PEM':
+            args_command_list.keyform = SSL_FILETYPE_PEM
+        else:
+            raise CommandLineParsingError('--keyform should be DER or PEM.')
+        
         # Let's try to open the cert and key files
         if args_command_list.cert:
             try:
@@ -248,16 +268,22 @@ class CommandLineParser():
                 open(args_command_list.key,"r")
             except:
                 raise CommandLineParsingError('Could not open the client private key file "' + str(args_command_list.key) + '"')
-    
-        # Parse client cert options
-        if args_command_list.certform not in ['DER', 'PEM']:
-            raise CommandLineParsingError('--certform should be DER or PEM.')
-    
-        if args_command_list.keyform not in ['DER', 'PEM']:
-            raise CommandLineParsingError('--keyform should be DER or PEM.')
         
-        # TODO: Try the cert's passphrase
-    
+            # Try to load the cert and key in OpenSSL
+            try:
+                sslClient = SslClient()
+                sslClient.use_certificate_file(args_command_list.cert, 
+                                               args_command_list.certform)                
+                sslClient.use_privateKey_file(args_command_list.key, 
+                                              args_command_list.keyform, 
+                                              args_command_list.keypass)
+                sslClient.check_private_key()
+            except _nassl.OpenSSLError as e:
+                if 'bad decrypt' in str(e.args):
+                    raise CommandLineParsingError('Could not decrypt the private key. Wrong passphrase ?')
+                raise CommandLineParsingError('Could not load the certificate or the private key. Passphrase needed ?')
+                
+
             
         # HTTP CONNECT proxy
         if args_command_list.https_tunnel:

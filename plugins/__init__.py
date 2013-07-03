@@ -63,7 +63,7 @@ class PluginsFinder:
                         module = load_module('plugins.' + full_name, file,
                                                 pathname, description)
                     except Exception as e:
-                        #print '   ' + module_name + ' - Import Error: ' + str(e)
+                        print '  ' + module_name + ' - Import Error: ' + str(e)
                         continue
     
                     # Check every declaration in that module

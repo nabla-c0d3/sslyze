@@ -97,7 +97,7 @@ class StartTLSError(IOError):
 
 class ProxyError(IOError):
     """
-    The proxy did not return HTTP 200 to our CONNECT request.
+    The proxy was offline or did not return HTTP 200 to our CONNECT request.
     """
     pass
 
@@ -154,15 +154,10 @@ class SSLyzeSSLConnection(SslClient):
     
  
     def do_pre_handshake(self, (host,port)):
-        try: # TCP connection            
-            self._sock = socket.create_connection((host, port), self.timeout)
-        except socket.error as e: 
-            # Could not connect to the server although we tested that at startup
-            # Did we lose connectivity ?
-            raise
+        # Just a TCP connection            
+        self._sock = socket.create_connection((host, port), self.timeout)
     
 
-    
     def connect(self,(host,port)):
         
         # StartTLS negotiation or proxy setup if needed
@@ -204,6 +199,7 @@ class SSLyzeSSLConnection(SslClient):
     def post_handshake_check(self):
         return ''
     
+    
 
 class SSLyzeHTTPSConnection(SSLyzeSSLConnection):
     """SSL connection class that sends an HTTP GET request after the SSL
@@ -234,11 +230,14 @@ class SSLyzeHTTPSConnection(SSLyzeSSLConnection):
         return result
     
 
+
 class SSLyzeHTTPSTunnelConnection(SSLyzeSSLConnection):
-    """SSL connection class that connects to a server through a CONNECT proxy 
-    and sends an HTTP GET request after the SSL handshake."""
+    """SSL connection class that connects to a server through a CONNECT proxy."""
 
     CONNECT_TUNNEL_MSG = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
+    
+    ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
+    ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
     
     def __init__(self, sslVersion, sslVerifyLocations, timeout, tunnelHost, 
                  tunnelPort):
@@ -250,18 +249,33 @@ class SSLyzeHTTPSTunnelConnection(SSLyzeSSLConnection):
         
             
     def do_pre_handshake(self, (host,port)):
-
-        self._sock = socket.create_connection((self._tunnelHost, self._tunnelPort), 
-                                              self.timeout)
+        
+        try: # Connect to the proxy first
+            self._sock = socket.create_connection((self._tunnelHost, 
+                                                   self._tunnelPort), 
+                                                   self.timeout)
+        except socket.timeout as e:
+            raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[0]))
+        except socket.error as e:
+            raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[1]))
+        
+        # Send a CONNECT request with the host we want to tunnel to
         self._sock.send(self.CONNECT_TUNNEL_MSG.format(host,port))
-        httpResp = parse_http_response(self._sock.recv(1024))
+        httpResp = parse_http_response(self._sock.recv(2048))
+        
+        # Check if the proxy was able to connect to the host
         if httpResp.status != 200:
-            raise ProxyError('Tunneling proxy rejected the CONNECT request.')
+            raise ProxyError(self.ERR_CONNECT_REJECTED)
+
 
 
 class SSLyzeSMTPConnection(SSLyzeSSLConnection):
     """SSL connection class that performs an SMTP StartTLS negotiation
     before the SSL handshake and sends a NOOP after the handshake."""
+
+    ERR_SMTP_REJECTED = 'SMTP EHLO was rejected'
+    ERR_NO_SMTP_STARTTLS = 'SMTP STARTTLS not supported'
+    
 
     def do_pre_handshake(self, (host,port)):
         
@@ -272,12 +286,12 @@ class SSLyzeSMTPConnection(SSLyzeSSLConnection):
         # Send a EHLO and wait for the 250 status
         self._sock.send('EHLO sslyze.scan\r\n')
         if '250 ' not in self._sock.recv(2048):
-            raise StartTLSError('SMTP EHLO was rejected ?')
+            raise StartTLSError(self.ERR_SMTP_REJECTED)
                 
         # Send a STARTTLS
         self._sock.send('STARTTLS\r\n')
         if 'Ready to start TLS'  not in self._sock.recv(2048): 
-            raise StartTLSError('SMTP STARTTLS not supported ?')
+            raise StartTLSError(self.ERR_NO_SMTP_STARTTLS)
 
 
     def post_handshake_check(self):
@@ -289,12 +303,19 @@ class SSLyzeSMTPConnection(SSLyzeSSLConnection):
         return result
         
         
+        
 class SSLyzeXMPPConnection(SSLyzeSSLConnection):
     """SSL connection class that performs an XMPP StartTLS negotiation
     before the SSL handshake."""
     
-    XMPP_OPEN_STREAM = "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/rfc2595.txt' to='{0}'>" 
+    ERR_XMPP_REJECTED = 'Error opening XMPP stream, try --xmpp_to'
+    ERR_NO_XMPP_STARTTLS = 'XMPP STARTTLS not supported'
+    
+    XMPP_OPEN_STREAM = ("<stream:stream xmlns='jabber:client' xmlns:stream='"
+        "http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
+        "rfc2595.txt' to='{0}'>" )
     XMPP_STARTTLS = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
+    
     
     def __init__(self, sslVersion, sslVerifyLocations, timeout, xmpp_to=None):
         super(SSLyzeXMPPConnection, self).__init__(sslVersion, sslVerifyLocations, timeout)
@@ -311,14 +332,14 @@ class SSLyzeXMPPConnection(SSLyzeSSLConnection):
             
         # Open an XMPP stream            
         self._sock = socket.create_connection((host, port), self.timeout)
-        
         self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
-        self._sock.recv(2048)
-
-        # Send a STARTTLS msg
+        if '<stream:error>' in self._sock.recv(2048):
+            raise StartTLSError(self._target_str, self.ERR_XMPP_REJECTED)
+            
+        # Send a STARTTLS message
         self._sock.send(self.XMPP_STARTTLS)
         xmpp_resp = self._sock.recv(2048)
         if 'proceed'  not in xmpp_resp: 
-            raise StartTLSError('XMPP STARTTLS not supported ?')
+            raise StartTLSError(self.ERR_NO_XMPP_STARTTLS)
 
 

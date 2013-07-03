@@ -24,7 +24,7 @@
 from optparse import OptionParser, OptionGroup
 import platform
 
-from ServersConnectivityTester import SSLServerTester, InvalidTargetError
+from ServersConnectivityTester import TargetStringParser, InvalidTargetError
 
 # Client cert/key checking
 from nassl.SslClient import SslClient
@@ -293,9 +293,9 @@ class CommandLineParser():
                     'Current version is ' + platform.python_version() + '.')
                 
             try: # Need to parse the proxy host:port string now
-                proxy_test = SSLServerTester(args_command_list.https_tunnel)
-                shared_settings['https_tunnel_host'] = proxy_test.get_target()[0]
-                shared_settings['https_tunnel_port'] = proxy_test.get_target()[2]
+                (host, port) = TargetStringParser.parse_target_str(args_command_list.https_tunnel, 443)
+                shared_settings['https_tunnel_host'] = host
+                shared_settings['https_tunnel_port'] = port
             except InvalidTargetError:
                 raise CommandLineParsingError(
                     'Not a valid host/port for --https_tunnel'

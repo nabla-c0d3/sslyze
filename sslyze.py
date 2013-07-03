@@ -28,8 +28,8 @@ from xml.dom import minidom
 
 from plugins import PluginsFinder
 from utils.CommandLineParser import CommandLineParser, CommandLineParsingError
-from utils.ServersConnectivityTester import ServersConnectivityTester, \
-    ProxyConnectivityTester
+from utils.ServersConnectivityTester import ServersConnectivityTester
+
 
 SSLYZE_VERSION = 'SSLyze v0.7 beta'
 DEFAULT_NB_PROCESSES = 5
@@ -38,6 +38,7 @@ PROJECT_URL = "https://github.com/isecPartners/sslyze"
 
 # Todo: Move formatting stuff to another file
 SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
+
 
 class WorkerProcess(Process):
 
@@ -76,6 +77,7 @@ class WorkerProcess(Process):
             try: # Process the task
                 result = plugin_instance.process_task(target, command, args)
             except Exception as e: # Generate txt and xml results
+                #raise
                 txt_result = ['Unhandled exception when processing --' + 
                               command + ': ', str(e.__class__.__module__) + 
                               '.' + str(e.__class__.__name__) + ' - ' + str(e)]
@@ -163,24 +165,26 @@ def main():
     # Figure out which hosts are up and fill the task queue with work to do
     print _format_title('Checking host(s) availability')
 
-    if command_list.https_tunnel:
-        targets_tester = ProxyConnectivityTester(target_list, 
-                                                 command_list.https_tunnel)
-    else:
-        targets_tester = ServersConnectivityTester(target_list, 
-                                                   command_list.starttls,
-                                                   command_list.xmpp_to)
 
     targets_OK = []
-    for target in targets_tester.test_connectivity(command_list.timeout):
+    targets_ERR = []
+    target_results = ServersConnectivityTester.test_server_list(target_list, 
+                                                                shared_settings)
+    for target in target_results:
+        if target is None:
+            break # None is a sentinel here
+        
         # Send tasks to worker processes
         targets_OK.append(target)
         for command in available_commands:
             if getattr(command_list, command):
                 args = command_list.__dict__[command]
                 task_queue.put( (target, command, args) )
-                
-    print targets_tester.get_result_str()
+    
+    for exception in target_results:
+        targets_ERR.append(exception)
+        
+    print ServersConnectivityTester.get_printable_result(targets_OK, targets_ERR)
     print '\n\n'
 
     # Put a 'None' sentinel in the queue to let the each process know when every

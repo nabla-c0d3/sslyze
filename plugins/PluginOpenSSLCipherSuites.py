@@ -205,8 +205,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         cipher suite specified.
         """
 
-        sslConn = create_sslyze_connection(self._shared_settings, 
-                                           sslVersion=ssl_version)
+        sslConn = create_sslyze_connection(self._shared_settings, ssl_version)
         sslConn.set_cipher_list(ssl_cipher)
         
         try: # Perform the SSL handshake

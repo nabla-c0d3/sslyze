@@ -30,54 +30,55 @@ from nassl.SslClient import SslClient
 
 def create_sslyze_connection(shared_settings, sslVersion=SSLV23, sslVerifyLocations=None):
     """
-    Utility function to create the proper SSLyzeSSLConnection based on what's 
-    in the shared_settings. All plugins should use this.
+    Utility function to create the proper SSLConnection based on what's 
+    in the shared_settings. All plugins should use this for their SSL 
+    connections.
     """
 
-    # Create the proper SMTP / XMPP / HTTPS connection
+    # Create the proper SMTP / XMPP / HTTPS / Proxy connection
+    timeout = shared_settings['timeout']
+    
     if shared_settings['starttls'] == 'smtp':
-        ssl_connection = SSLyzeSMTPConnection(sslVersion, sslVerifyLocations, 
-                                        shared_settings['timeout'])
+        sslConn = SMTPConnection(sslVersion, sslVerifyLocations, timeout)
     
     elif shared_settings['starttls'] == 'xmpp':            
-        ssl_connection = SSLyzeXMPPConnection(sslVersion, sslVerifyLocations, 
-                                        shared_settings['timeout'], 
-                                        shared_settings['xmpp_to'])   
+        sslConn = XMPPConnection(sslVersion, sslVerifyLocations, timeout, 
+                                 shared_settings['xmpp_to'])   
              
     elif shared_settings['https_tunnel_host']:
-        # TODO
         # Using an HTTP CONNECT proxy to tunnel SSL traffic
-        tunnel_host = shared_settings['https_tunnel_host']
-        tunnel_port = shared_settings['https_tunnel_port']
-        ssl_connection = SSLyzeHTTPSTunnelConnection(sslVersion, 
-            sslVerifyLocations, shared_settings['timeout'], tunnel_host, 
-            tunnel_port)
+        if shared_settings['http_get']:
+            sslConn = HTTPSTunnelConnection(sslVersion, sslVerifyLocations, timeout, 
+                                            shared_settings['https_tunnel_host'], 
+                                            shared_settings['https_tunnel_port'])
+        else:
+            sslConn = SSLTunnelConnection(sslVersion, sslVerifyLocations, timeout, 
+                                          shared_settings['https_tunnel_host'], 
+                                          shared_settings['https_tunnel_port'])
     
     elif shared_settings['http_get']:
-        ssl_connection = SSLyzeHTTPSConnection(sslVersion, sslVerifyLocations, 
-                                               shared_settings['timeout'])    
+        sslConn = HTTPSConnection(sslVersion, sslVerifyLocations, timeout)    
     else:
-        ssl_connection = SSLyzeSSLConnection(sslVersion, sslVerifyLocations, 
-                                             shared_settings['timeout'])
+        sslConn = SSLConnection(sslVersion, sslVerifyLocations, timeout)
     
     
     # Load client certificate and private key
     # These parameters should have been validated when parsing the command line
     if shared_settings['cert']:
-        ssl_connection.use_certificate_file(shared_settings['cert'], 
+        sslConn.use_certificate_file(shared_settings['cert'], 
                                             shared_settings['certform'])                
-        ssl_connection.use_privateKey_file(shared_settings['key'], 
+        sslConn.use_privateKey_file(shared_settings['key'], 
                                            shared_settings['keyform'], 
                                            shared_settings['keypass'])
-        ssl_connection.check_private_key()
+        sslConn.check_private_key()
     
     
     # Add Server Name Indication
     if shared_settings['sni']:
-        ssl_connection.set_tlsext_host_name(shared_settings['sni'])
+        sslConn.set_tlsext_host_name(shared_settings['sni'])
 
 
-    return ssl_connection
+    return sslConn
     
 
 
@@ -110,6 +111,7 @@ class ClientAuthenticationError(IOError):
     ERROR_MSG = 'Server requested a client certificate signed by one of the ' +\
     'following CAs: {0}; use the --cert and --key options.'
     
+    
     def __init__(self, caList):
         self.caList = caList
         
@@ -121,7 +123,7 @@ class ClientAuthenticationError(IOError):
 
 
 
-class SSLyzeSSLConnection(SslClient):
+class SSLConnection(SslClient):
     """Base SSL connection class."""
 
     # The following errors mean that the server explicitly rejected the 
@@ -147,15 +149,15 @@ class SSLyzeSSLConnection(SslClient):
     
     
     def __init__(self, sslVersion, sslVerifyLocations, timeout):
-        super(SSLyzeSSLConnection, self).__init__(None, sslVersion, 
+        super(SSLConnection, self).__init__(None, sslVersion, 
                                                   sslVerifyLocations)
-        self.timeout = timeout
+        self._timeout = timeout
         self._sock = None
     
  
     def do_pre_handshake(self, (host,port)):
         # Just a TCP connection            
-        self._sock = socket.create_connection((host, port), self.timeout)
+        self._sock = socket.create_connection((host, port), self._timeout)
     
 
     def connect(self,(host,port)):
@@ -201,7 +203,7 @@ class SSLyzeSSLConnection(SslClient):
     
     
 
-class SSLyzeHTTPSConnection(SSLyzeSSLConnection):
+class HTTPSConnection(SSLConnection):
     """SSL connection class that sends an HTTP GET request after the SSL
     handshake."""
     
@@ -211,6 +213,7 @@ class SSLyzeHTTPSConnection(SSLyzeSSLConnection):
     
     ERR_TIMEOUT = 'Timeout on HTTP GET'
     ERR_NOT_HTTP = 'Server response was not HTTP'
+    
     
     def post_handshake_check(self):
         
@@ -238,7 +241,7 @@ class SSLyzeHTTPSConnection(SSLyzeSSLConnection):
     
 
 
-class SSLyzeHTTPSTunnelConnection(SSLyzeSSLConnection):
+class SSLTunnelConnection(SSLConnection):
     """SSL connection class that connects to a server through a CONNECT proxy."""
 
     HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
@@ -246,11 +249,11 @@ class SSLyzeHTTPSTunnelConnection(SSLyzeSSLConnection):
     ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
     
-    def __init__(self, sslVersion, sslVerifyLocations, timeout, tunnelHost, 
-                 tunnelPort):
-        super(SSLyzeHTTPSTunnelConnection, self).__init__(sslVersion,
-                                                          sslVerifyLocations, 
-                                                          timeout)
+    
+    def __init__(self, sslVersion, sslVerifyLocations, timeout, tunnelHost, tunnelPort):
+        
+        super(SSLTunnelConnection, self).__init__(sslVersion,
+                                                  sslVerifyLocations, timeout)
         self._tunnelHost = tunnelHost
         self._tunnelPort = tunnelPort
         
@@ -260,7 +263,7 @@ class SSLyzeHTTPSTunnelConnection(SSLyzeSSLConnection):
         try: # Connect to the proxy first
             self._sock = socket.create_connection((self._tunnelHost, 
                                                    self._tunnelPort), 
-                                                   self.timeout)
+                                                   self._timeout)
         except socket.timeout as e:
             raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[0]))
         except socket.error as e:
@@ -276,7 +279,13 @@ class SSLyzeHTTPSTunnelConnection(SSLyzeSSLConnection):
 
 
 
-class SSLyzeSMTPConnection(SSLyzeSSLConnection):
+class HTTPSTunnelConnection(SSLTunnelConnection, HTTPSConnection):
+    """SSL connection class that connects to a server through a CONNECT proxy 
+    and sends an HTTP GET request after the SSL handshake."""
+
+
+
+class SMTPConnection(SSLConnection):
     """SSL connection class that performs an SMTP StartTLS negotiation
     before the SSL handshake and sends a NOOP after the handshake."""
 
@@ -286,7 +295,7 @@ class SSLyzeSMTPConnection(SSLyzeSSLConnection):
 
     def do_pre_handshake(self, (host,port)):
         
-        self._sock = socket.create_connection((host, port), self.timeout)
+        self._sock = socket.create_connection((host, port), self._timeout)
         # Get the SMTP banner
         self._sock.recv(2048)
         
@@ -311,7 +320,7 @@ class SSLyzeSMTPConnection(SSLyzeSSLConnection):
         
         
         
-class SSLyzeXMPPConnection(SSLyzeSSLConnection):
+class XMPPConnection(SSLConnection):
     """SSL connection class that performs an XMPP StartTLS negotiation
     before the SSL handshake."""
     
@@ -325,7 +334,7 @@ class SSLyzeXMPPConnection(SSLyzeSSLConnection):
     
     
     def __init__(self, sslVersion, sslVerifyLocations, timeout, xmpp_to=None):
-        super(SSLyzeXMPPConnection, self).__init__(sslVersion, sslVerifyLocations, timeout)
+        super(XMPPConnection, self).__init__(sslVersion, sslVerifyLocations, timeout)
         self._xmpp_to = xmpp_to
         
 
@@ -338,7 +347,7 @@ class SSLyzeXMPPConnection(SSLyzeSSLConnection):
             self._xmpp_to = host
             
         # Open an XMPP stream            
-        self._sock = socket.create_connection((host, port), self.timeout)
+        self._sock = socket.create_connection((host, port), self._timeout)
         self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
         if '<stream:error>' in self._sock.recv(2048):
             raise StartTLSError(self._target_str, self.ERR_XMPP_REJECTED)

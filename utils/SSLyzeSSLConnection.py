@@ -89,6 +89,7 @@ class SSLHandshakeRejected(IOError):
     pass
 
 
+
 class StartTLSError(IOError):
     """
     The server rejected the StartTLS negotiation.
@@ -96,11 +97,13 @@ class StartTLSError(IOError):
     pass
 
 
+
 class ProxyError(IOError):
     """
     The proxy was offline or did not return HTTP 200 to our CONNECT request.
     """
     pass
+
 
 
 class ClientAuthenticationError(IOError):

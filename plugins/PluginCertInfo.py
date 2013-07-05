@@ -79,18 +79,19 @@ class PluginCertInfo(PluginBase.PluginBase):
         fingerprint = cert.get_SHA1_fingerprint()
         cmd_title = 'Certificate'
         txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
-        trust_txt = 'Certificate is Trusted' if trustedCert \
-                                             else 'Certificate is NOT Trusted'
+        
+        if trustedCert:
+            trust_txt = 'Certificate is Trusted'
+        else:
+            trust_txt = 'Certificate is NOT Trusted: ' + verifyStr
 
         is_ev = self._is_ev_certificate(cert_dict)
         if is_ev:
             trust_txt = trust_txt + ' - Extended Validation'
-            
-        if verifyStr:
-            trust_txt = trust_txt + ': ' + verifyStr
 
         txt_result.append(self.FIELD_FORMAT("Validation w/ Mozilla's CA Store:", trust_txt))
         
+        # TODO: Use SNI name when --sni was used
         is_host_valid = self._is_hostname_valid(cert_dict, target)
         host_txt = 'OK - ' + is_host_valid + ' Matches' if is_host_valid \
                                          else 'MISMATCH'

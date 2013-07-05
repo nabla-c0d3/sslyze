@@ -42,4 +42,7 @@ nosetests.xml
 # Tests
 *.xml
 
+# Depedencies
+nassl/*
+
 .DS_Store

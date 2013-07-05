@@ -146,7 +146,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         if self._shared_settings['hide_rejected_ciphers']:
             dictTitles.pop(3)
             txtOutput.append('')
-            txtOutput.append(titleformat('Rejected Cipher Suite(s): Hidden'))
+            txtOutput.append(titleFormat('Rejected Cipher Suite(s): Hidden'))
             
         for (resultKey, resultTitle) in dictTitles:
             

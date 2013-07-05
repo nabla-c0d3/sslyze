@@ -25,9 +25,9 @@ import socket
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
-from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL_CTX, \
-    constants, errors
-from utils.SSLyzeSSLConnection import SSLyzeSSLConnection
+from utils.SSLyzeSSLConnection import create_sslyze_connection
+from nassl._nassl import OpenSSLError
+
 
 class PluginSessionRenegotiation(PluginBase.PluginBase):
 
@@ -42,31 +42,27 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
 
     def process_task(self, target, command, args):
 
-        ctSSL_initialize()
-        try:
-            (can_reneg, is_secure) = self._test_renegotiation(target)
-        finally:
-            ctSSL_cleanup()
+        (clientReneg, secureReneg) = self._test_renegotiation(target)
         
         # Text output
-        reneg_txt = 'Honored' if can_reneg else 'Rejected'
-        secure_txt = 'Supported' if is_secure else 'Not supported'
-        cmd_title = 'Session Renegotiation'
-        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
+        clientTxt = 'Honored' if clientReneg else 'Rejected'
+        secureTxt = 'Supported' if secureReneg else 'Not supported'
+        cmdTitle = 'Session Renegotiation'
+        txtOutput = [self.PLUGIN_TITLE_FORMAT.format(cmdTitle)]
         
-        RENEG_FORMAT = '      {0:<35} {1}'
-        txt_result.append(RENEG_FORMAT.format('Client-initiated Renegotiations:', reneg_txt))
-        txt_result.append(RENEG_FORMAT.format('Secure Renegotiation: ', secure_txt))
+        output = '      {0:<35} {1}'.format
+        txtOutput.append(output('Client-initiated Renegotiations:', clientTxt))
+        txtOutput.append(output('Secure Renegotiation: ', secureTxt))
         
         # XML output
-        xml_reneg_attr = {'canBeClientInitiated' : str(can_reneg),
-                          'isSecure' : str(is_secure)}
-        xml_reneg = Element('sessionRenegotiation', attrib = xml_reneg_attr)
+        xmlReneg = Element('sessionRenegotiation', 
+                           attrib = {'canBeClientInitiated' : str(clientReneg),
+                                     'isSecure' : str(secureReneg)})
         
-        xml_result = Element(command, title = cmd_title)
-        xml_result.append(xml_reneg)
+        xmlOutput = Element(command, title=cmdTitle)
+        xmlOutput.append(xmlReneg)
         
-        return PluginBase.PluginResult(txt_result, xml_result)
+        return PluginBase.PluginResult(txtOutput, xmlOutput)
 
 
     def _test_renegotiation(self, target):
@@ -74,40 +70,41 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         Checks whether the server honors session renegotiation requests and 
         whether it supports secure renegotiation.
         """
-        ssl_ctx = SSL_CTX.SSL_CTX('tlsv1') # sslv23 hello will fail for specific servers such as post.craigslist.org
-        ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx,
-                                          hello_workaround=True)
-    
-        try:
-            ssl_connect.connect()
-            is_secure = ssl_connect._ssl.get_secure_renegotiation_support()
+        
+        sslConn = create_sslyze_connection(self._shared_settings)
+        
+        try: # Perform the SSL handshake
+            sslConn.connect((target[0], target[2]))
+            secureReneg = sslConn.get_secure_renegotiation_support()
     
             try: # Let's try to renegotiate
-                ssl_connect._ssl.renegotiate()
-                can_reneg = True
+                sslConn.do_renegotiate()
+                clientReneg = True
     
             # Errors caused by a server rejecting the renegotiation
-            except errors.ctSSLUnexpectedEOF as e:
-                can_reneg = False
+            except IOError as e:
+                if 'Nassl SSL handshake failed' in str(e.args):
+                    clientReneg = False
+                else:
+                    raise
             except socket.error as e:
                 if 'connection was forcibly closed' in str(e.args):
-                    can_reneg = False
+                    clientReneg = False
                 elif 'reset by peer' in str(e.args):
-                    can_reneg = False
+                    clientReneg = False
                 else:
                     raise
             #except socket.timeout as e:
             #    result_reneg = 'Rejected (timeout)'
-            except errors.SSLError as e:
+            except OpenSSLError as e:
                 if 'handshake failure' in str(e.args):
-                    can_reneg = False
+                    clientReneg = False
                 elif 'no renegotiation' in str(e.args):
-                    can_reneg = False
+                    clientReneg = False
                 else:
                     raise
     
         finally:
-            ssl_connect.close()
+            sslConn.close()
     
-        return (can_reneg, is_secure)
+        return (clientReneg, secureReneg)

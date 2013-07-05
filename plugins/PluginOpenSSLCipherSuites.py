@@ -92,7 +92,6 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         # Scan for every available cipher suite
         for cipher in cipher_list:
-            #self._test_ciphersuite(target, sslVersion, cipher)
             thread_pool.add_job((self._test_ciphersuite,
                                  (target, sslVersion, cipher)))
 
@@ -116,7 +115,6 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         # Store thread pool errors
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
-            print exception
             ssl_cipher = str(job[1][2])
             error_msg = str(exception.__class__.__module__) + '.' \
                         + str(exception.__class__.__name__) + ' - ' + str(exception)
@@ -166,7 +164,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 # Add one line for each ciphers
                 for (cipherTxt, (msg, keysize)) in result_list:
                     if keysize:
-                        cipherTxt = keysizeFormat(cipher_txt, keysize)
+                        cipherTxt = keysizeFormat(cipherTxt, keysize)
                                     
                     txtOutput.append(cipherFormat(cipherTxt, msg))
                                   
@@ -207,7 +205,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         sslConn = create_sslyze_connection(self._shared_settings, ssl_version)
         sslConn.set_cipher_list(ssl_cipher)
-        
+
         try: # Perform the SSL handshake
             sslConn.connect((target[0], target[2]))
             
@@ -219,15 +217,13 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
                 keysize = 'Anon' # Anonymous, let s not care about the key size
             else:
-                keysize = str(sslConn.get_cipher_bits())+' bits'
+                keysize = str(sslConn.get_cipher_bits()) + ' bits'
                 
             status_msg = sslConn.post_handshake_check()
             return ('acceptedCipherSuites', ssl_cipher, keysize, status_msg)
     
         finally:
             sslConn.close()
-            
-        return
     
     
     def _pref_ciphersuite(self, target, ssl_version):
@@ -255,6 +251,4 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
     
         finally:
             sslConn.close()
-            
-        return
 

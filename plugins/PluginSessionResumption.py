@@ -24,8 +24,9 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
-from utils.ctSSL import SSL_CTX, constants, ctSSL_initialize, ctSSL_cleanup
-from utils.SSLyzeSSLConnection import SSLyzeSSLConnection
+
+from nassl import SSL_OP_NO_TICKET
+from utils.SSLyzeSSLConnection import create_sslyze_connection
 
 
 class PluginSessionResumption(PluginBase.PluginBase):
@@ -51,16 +52,12 @@ class PluginSessionResumption(PluginBase.PluginBase):
 
     def process_task(self, target, command, args):
 
-        ctSSL_initialize(multithreading=True)
-        try:
-            if command == 'resum':
-                result = self._command_resum(target)
-            elif command == 'resum_rate':
-                result = self._command_resum_rate(target)
-            else:
-                raise Exception("PluginSessionResumption: Unknown command.")
-        finally:
-            ctSSL_cleanup()
+        if command == 'resum':
+            result = self._command_resum(target)
+        elif command == 'resum_rate':
+            result = self._command_resum_rate(target)
+        else:
+            raise Exception("PluginSessionResumption: Unknown command.")
             
         return result
 
@@ -75,8 +72,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         MAX_RESUM = 100
         thread_pool = ThreadPool()
         for _ in xrange(MAX_RESUM):
-            thread_pool.add_job((self._resume_with_session_id, 
-                                 (target, )))
+            thread_pool.add_job((self._resume_with_session_id, (target, )))
         thread_pool.start(NB_THREADS)
         
         # Format session ID results
@@ -84,7 +80,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
 
         # Text output        
         cmd_title = 'Resumption Rate with Session IDs'
-        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)+' '+ txt_resum[0]]
+        txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)+' '+ txt_resum[0]]
         txt_result.extend(txt_resum[1:])
         
         # XML output
@@ -127,12 +123,12 @@ class PluginSessionResumption(PluginBase.PluginBase):
                                      else 'Not Supported - ' + ticket_reason+'.'
         
         cmd_title = 'Session Resumption'
-        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
-        RESUM_FORMAT = '      {0:<27} {1}'
+        txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
+        RESUM_FORMAT = '      {0:<27} {1}'.format
         
-        txt_result.append(RESUM_FORMAT.format('With Session IDs:', txt_resum[0]))
+        txt_result.append(RESUM_FORMAT('With Session IDs:', txt_resum[0]))
         txt_result.extend(txt_resum[1:])
-        txt_result.append(RESUM_FORMAT.format('With TLS Session Tickets:', ticket_txt))
+        txt_result.append(RESUM_FORMAT('With TLS Session Tickets:', ticket_txt))
         
         # XML output
         xml_resum_ticket_attr = {}
@@ -172,7 +168,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         nb_failed = MAX_RESUM - nb_error - nb_resum
             
         # Text output
-        sessid_format = '{4} ({0} successful, {1} failed, {2} errors, {3} total attempts).{5}'
+        SESSID_FORMAT = '{4} ({0} successful, {1} failed, {2} errors, {3} total attempts).{5}'.format
         sessid_try = '' 
         if nb_resum == MAX_RESUM:
             sessid_stat = 'Supported'
@@ -183,11 +179,10 @@ class PluginSessionResumption(PluginBase.PluginBase):
         else:
             sessid_stat = 'Partially supported'
             sessid_try = ' Try --resum_rate.'
-        sessid_txt = sessid_format.format(str(nb_resum), str(nb_failed), 
-                                  str(nb_error), str(MAX_RESUM),
-                                  sessid_stat, sessid_try)
+        sessid_txt = SESSID_FORMAT(str(nb_resum), str(nb_failed), str(nb_error), 
+                                   str(MAX_RESUM), sessid_stat, sessid_try)
         
-        ERRORS_FORMAT ='        Error #{0}: {1}'
+        ERRORS_FORMAT ='        Error #{0}: {1}'.format
         txt_result = []
         txt_result.append(sessid_txt)
         # Add error messages
@@ -195,7 +190,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
             i=0
             for error_msg in error_list:
                 i+=1
-                txt_result.append(ERRORS_FORMAT.format(str(i), error_msg))
+                txt_result.append(ERRORS_FORMAT(str(i), error_msg))
         
         # XML output
         sessid_xml = str(nb_resum == MAX_RESUM)
@@ -217,20 +212,15 @@ class PluginSessionResumption(PluginBase.PluginBase):
         """
         Performs one session resumption using Session IDs.
         """
-        ctx = SSL_CTX.SSL_CTX('tlsv1')
-        ctx.set_verify(constants.SSL_VERIFY_NONE)
-
-        # Session Tickets and Session ID mechanisms can be mutually exclusive.
-        ctx.set_options(constants.SSL_OP_NO_TICKET) # Turning off TLS tickets.
-    
-        session1 = self._resume_ssl_session(target, ctx) 
+        
+        session1 = self._resume_ssl_session(target) 
         try: # Recover the session ID
             session1_id = self._extract_session_id(session1)
         except IndexError:
             return (False, 'Session ID not assigned')
     
         # Try to resume that SSL session
-        session2 = self._resume_ssl_session(target, ctx, session1)
+        session2 = self._resume_ssl_session(target, session1)
         try: # Recover the session ID
             session2_id = self._extract_session_id(session2)
         except IndexError:
@@ -247,21 +237,16 @@ class PluginSessionResumption(PluginBase.PluginBase):
         """
         Performs one session resumption using TLS Session Tickets.
         """
-        ctx = SSL_CTX.SSL_CTX('tlsv1')
-        ctx.set_verify(constants.SSL_VERIFY_NONE)
     
-        # Session Tickets and Session ID mechanisms can be mutually exclusive.
-        ctx.set_session_cache_mode(constants.SSL_SESS_CACHE_OFF) # Turning off IDs.
-    
-        #try: # Connect to the server and keep the SSL session
-        session1 = self._resume_ssl_session(target, ctx)
+        # Connect to the server and keep the SSL session
+        session1 = self._resume_ssl_session(target, tlsTicket=True)
         try: # Recover the TLS ticket
             session1_tls_ticket = self._extract_tls_session_ticket(session1)
         except IndexError:
             return (False, 'TLS ticket not assigned')
     
         # Try to resume that session using the TLS ticket
-        session2 = self._resume_ssl_session(target, ctx, session1)
+        session2 = self._resume_ssl_session(target, session1, tlsTicket=True)
         try: # Recover the TLS ticket
             session2_tls_ticket = self._extract_tls_session_ticket(session2)
         except IndexError:
@@ -294,22 +279,27 @@ class PluginSessionResumption(PluginBase.PluginBase):
         return session_tls_ticket
     
     
-    def _resume_ssl_session(self, target, ssl_ctx, ssl_session = None):
+    def _resume_ssl_session(self, target, sslSession=None, tlsTicket=False):
         """
         Connect to the server and returns the session object that was assigned 
         for that connection.
         If ssl_session is given, tries to resume that session.
         """
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx,
-                                          hello_workaround=True)
     
-        if ssl_session:
-            ssl_connect._ssl.set_session(ssl_session)
+        sslConn = create_sslyze_connection(self._shared_settings)
+        if not tlsTicket:
+        # Need to disable TLS tickets to test session IDs, according to rfc5077:
+        # If a ticket is presented by the client, the server MUST NOT attempt 
+        # to use the Session ID in the ClientHello for stateful session resumption
+            sslConn.set_options(SSL_OP_NO_TICKET) # Turning off TLS tickets.
+
+        if sslSession:
+            sslConn.set_session(sslSession)
     
         try: # Perform the SSL handshake
-            ssl_connect.connect()
-            session = ssl_connect._ssl.get_session() # Get session data
+            sslConn.connect((target[0], target[2]))
+            newSession = sslConn.get_session() # Get session data
         finally:
-            ssl_connect.close()
+            sslConn.close()
             
-        return session
+        return newSession

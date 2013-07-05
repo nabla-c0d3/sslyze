@@ -41,7 +41,6 @@ MOZILLA_EV_OIDS = imp.load_source('mozilla_ev_oids',
 
 
         
-
 class PluginCertInfo(PluginBase.PluginBase):
 
     interface = PluginBase.PluginInterface(title="PluginCertInfo", description=(''))
@@ -52,7 +51,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             "the certificate. CERTINFO should be 'basic' or 'full'.",
         dest="certinfo")
 
-    FIELD_FORMAT = '      {0:<35}{1:<35}'
+    FIELD_FORMAT = '      {0:<35}{1:<35}'.format
     
 
     def process_task(self, target, command, arg):
@@ -79,7 +78,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             
         fingerprint = cert.get_SHA1_fingerprint()
         cmd_title = 'Certificate'
-        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
+        txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
         trust_txt = 'Certificate is Trusted' if trustedCert \
                                              else 'Certificate is NOT Trusted'
 
@@ -90,14 +89,14 @@ class PluginCertInfo(PluginBase.PluginBase):
         if verifyStr:
             trust_txt = trust_txt + ': ' + verifyStr
 
-        txt_result.append(self.FIELD_FORMAT.format("Validation w/ Mozilla's CA Store:", trust_txt))
+        txt_result.append(self.FIELD_FORMAT("Validation w/ Mozilla's CA Store:", trust_txt))
         
         is_host_valid = self._is_hostname_valid(cert_dict, target)
         host_txt = 'OK - ' + is_host_valid + ' Matches' if is_host_valid \
                                          else 'MISMATCH'
         
-        txt_result.append(self.FIELD_FORMAT.format("Hostname Validation:", host_txt))
-        txt_result.append(self.FIELD_FORMAT.format('SHA1 Fingerprint:', fingerprint))
+        txt_result.append(self.FIELD_FORMAT("Hostname Validation:", host_txt))
+        txt_result.append(self.FIELD_FORMAT('SHA1 Fingerprint:', fingerprint))
         txt_result.append('')
         txt_result.extend(cert_txt)
 
@@ -161,20 +160,18 @@ class PluginCertInfo(PluginBase.PluginBase):
     
     def _get_basic_text(self, certDict):
         
-        output = self.FIELD_FORMAT.format
-        
         basicTxt = [ \
-        output("Common Name:", certDict['subject']['commonName']),
-        output("Issuer:", certDict['issuer']),
-        output("Serial Number:", certDict['serialNumber']),
-        output("Not Before:", certDict['validity']['notBefore']),
-        output("Not After:", certDict['validity']['notAfter']),
-        output("Signature Algorithm:", certDict['signatureAlgorithm']),
-        output("Key Size:", certDict['subjectPublicKeyInfo']['publicKeySize'])]
+            self.FIELD_FORMAT("Common Name:", certDict['subject']['commonName']),
+            self.FIELD_FORMAT("Issuer:", certDict['issuer']),
+            self.FIELD_FORMAT("Serial Number:", certDict['serialNumber']),
+            self.FIELD_FORMAT("Not Before:", certDict['validity']['notBefore']),
+            self.FIELD_FORMAT("Not After:", certDict['validity']['notAfter']),
+            self.FIELD_FORMAT("Signature Algorithm:", certDict['signatureAlgorithm']),
+            self.FIELD_FORMAT("Key Size:", certDict['subjectPublicKeyInfo']['publicKeySize'])]
         
         try: # Print the SAN extension if there's one
-            basicTxt.append(output('X509v3 Subject Alternative Name:', 
-                                    certDict['extensions']['X509v3 Subject Alternative Name']))
+            basicTxt.append(self.FIELD_FORMAT('X509v3 Subject Alternative Name:', 
+                                              certDict['extensions']['X509v3 Subject Alternative Name']))
         except KeyError:
             pass
         
@@ -183,7 +180,7 @@ class PluginCertInfo(PluginBase.PluginBase):
 
     def _get_fingerprint(self, cert):
         nb = cert.get_SHA1_fingerprint()
-        val_txt = self.FIELD_FORMAT.format('SHA1 Fingerprint:', nb)
+        val_txt = self.FIELD_FORMAT('SHA1 Fingerprint:', nb)
         val_xml = Element('fingerprint', algorithm='sha1')
         val_xml.text = nb
         return ([val_txt], [val_xml])    

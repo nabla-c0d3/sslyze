@@ -122,7 +122,7 @@ class PluginBase(object):
     _shared_settings = None
     
     # Formatting stuff
-    PLUGIN_TITLE_FORMAT = '  * {0} :'
+    PLUGIN_TITLE_FORMAT = '  * {0} :'.format
     
                               
     @classmethod

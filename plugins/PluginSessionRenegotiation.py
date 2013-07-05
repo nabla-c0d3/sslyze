@@ -48,11 +48,11 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         clientTxt = 'Honored' if clientReneg else 'Rejected'
         secureTxt = 'Supported' if secureReneg else 'Not supported'
         cmdTitle = 'Session Renegotiation'
-        txtOutput = [self.PLUGIN_TITLE_FORMAT.format(cmdTitle)]
+        txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
         
-        output = '      {0:<35} {1}'.format
-        txtOutput.append(output('Client-initiated Renegotiations:', clientTxt))
-        txtOutput.append(output('Secure Renegotiation: ', secureTxt))
+        outFormat = '      {0:<35} {1}'.format
+        txtOutput.append(outFormat('Client-initiated Renegotiations:', clientTxt))
+        txtOutput.append(outFormat('Secure Renegotiation: ', secureTxt))
         
         # XML output
         xmlReneg = Element('sessionRenegotiation', 

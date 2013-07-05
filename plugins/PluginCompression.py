@@ -25,9 +25,8 @@ from xml.etree.ElementTree import Element
 
 
 from plugins import PluginBase
-from utils.ctSSL import ctSSL_initialize, ctSSL_cleanup, SSL_CTX
-from utils.SSLyzeSSLConnection import SSLyzeSSLConnection, ClientCertificateError
 
+from utils.SSLyzeSSLConnection import create_sslyze_connection, ClientAuthenticationError
 
 
 class PluginCompression(PluginBase.PluginBase):
@@ -38,41 +37,37 @@ class PluginCompression(PluginBase.PluginBase):
         help="Tests the server for Zlib compression support.",
         dest=None)
 
+
     def process_task(self, target, command, args):
-        output_format = '        {0:<25} {1}'
+        
+        OUT_FORMAT = '        {0:<25} {1}'.format
 
-        ctSSL_initialize(zlib=True)
-
-        ssl_ctx = SSL_CTX.SSL_CTX('tlsv1') # sslv23 hello will fail for specific servers such as post.craigslist.org
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx,
-                                          hello_workaround=True)
+        sslConn = create_sslyze_connection(self._shared_settings)
 
         try: # Perform the SSL handshake
-            ssl_connect.connect()
-            compression_status = ssl_connect._ssl.get_current_compression()
-        except ClientCertificateError: # The server asked for a client cert
-            compression_status = ssl_connect._ssl.get_current_compression()
+            sslConn.connect((target[0], target[2]))
+            compName = sslConn.get_current_compression_name()
+        except ClientAuthenticationError: # The server asked for a client cert
+            compName = sslConn.get_current_compression_name()
         finally:
-            ssl_connect.close()
-            
-        ctSSL_cleanup()
-
+            sslConn.close()
+      
         # Text output
-        if compression_status:
-            comp_txt = 'Enabled ' +  compression_status
-            comp_xml = {'isSupported':'True','type':compression_status.strip('()')}
+        if compName:
+            compTxt = 'Enabled ' +  compName
+            compXml = {'isSupported':'True','type':compName.strip('()')}
         else:
-            comp_txt = 'Disabled'
-            comp_xml = {'isSupported':'False'}
+            compTxt = 'Disabled'
+            compXml = {'isSupported':'False'}
             
-        cmd_title = 'Compression'
-        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
-        txt_result.append(output_format.format("Compression Support:", comp_txt))
+        cmdTitle = 'Compression'
+        txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
+        txtOutput.append(OUT_FORMAT("Compression Support:", compTxt))
 
         # XML output
-        xml_el = Element('compression', comp_xml)
-        xml_result = Element(command, title = cmd_title)
-        xml_result.append(xml_el)
+        xmlNode = Element('compression', compXml)
+        xmlOutput = Element(command, title = cmdTitle)
+        xmlOutput.append(xmlNode)
 
-        return PluginBase.PluginResult(txt_result, xml_result)
+        return PluginBase.PluginResult(txtOutput, xmlOutput)
 

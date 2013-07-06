@@ -210,7 +210,7 @@ class HTTPSConnection(SSLConnection):
     """SSL connection class that sends an HTTP GET request after the SSL
     handshake."""
     
-    HTTP_GET_REQ = 'GET / HTTP/1.0\r\nConnection": "close\r\n\r\n'
+    HTTP_GET_REQ = 'GET / HTTP/1.0\r\nConnection: close\r\n\r\n'
     
     GET_RESULT_FORMAT = 'HTTP {0} {1}{2}'
     

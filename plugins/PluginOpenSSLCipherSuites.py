@@ -134,7 +134,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         
         cipherFormat = '        {0:<32}{1:<35}'.format
         titleFormat =  '      {0:<32} '.format        
-        keysizeFormat = '{0:<25}{1:<14}'.format
+        keysizeFormat = '{0:<30}{1:<14}'.format
         
         txtOutput = [self.PLUGIN_TITLE_FORMAT(sslVersion.upper() + ' Cipher Suites')]
         

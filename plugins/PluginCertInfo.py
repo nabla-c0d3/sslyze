@@ -62,7 +62,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             raise
         
         trustedCert = False
-        if verifyStr is 'ok':
+        if verifyStr in 'ok':
             trustedCert = True        
  
         # Results formatting
@@ -196,15 +196,14 @@ class PluginCertInfo(PluginBase.PluginBase):
         
         try: # Perform the SSL handshake
             sslConn.connect((target[0], target[2]))
-            print sslConn.get_verify_result()
 
             x509Cert = sslConn.get_peer_certificate()
-            verifyStr = sslConn.get_verify_result_string()
+            (verifyCode, verifyStr) = sslConn.get_certificate_chain_verify_result()
         
         except ClientAuthenticationError: # The server asked for a client cert
             # We can get the server cert anyway
             x509Cert = sslConn.get_peer_certificate()
-            verifyStr = sslConn.get_verify_result_string()           
+            (verifyCode, verifyStr) = sslConn.get_certificate_chain_verify_result()      
             
         finally:
             sslConn.close()

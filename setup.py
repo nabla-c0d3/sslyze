@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 
-from sslyze import SSLYZE_VERSION, PROJECT_URL
+from sslyze import PROJECT_VERSION, PROJECT_URL, PROJECT_EMAIL, PROJECT_DESC
 from distutils.core import setup
 
 setup(name='SSLyze',
-    version=SSLYZE_VERSION,
-    description='Fast and full-featured SSL scanner',
-    long_description=open('README.md').read()+ '\n' +
+    version=PROJECT_VERSION,
+    description=PROJECT_DESC,
+    long_description=open('README.md').read() + '\n' +
                      open('AUTHORS.txt').read(),
-    author_email='sslyze@isecpartners.com',
+    author_email=PROJECT_EMAIL,
     url=PROJECT_URL,
     scripts=['sslyze.py'],
-    packages=['plugins', 'utils', 'utils.ctSSL', 'utils.SSLyzeSSLConnection'],
-    package_data={'plugins': ['data/mozilla_cacert.pem','data/mozilla_ev_oids.py']},
+    packages=['plugins', 'utils', 'nassl'],
+    package_data={'plugins' : ['data/mozilla_cacert.pem','data/mozilla_ev_oids.py'],
+                  'nassl' : ['_nassl.so']},
     license=open('LICENSE.txt').read(),
     )

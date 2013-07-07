@@ -38,11 +38,13 @@ except ImportError:
     sys.exit()
 
 
+PROJECT_VERSION = 'SSLyze v0.7 beta'
+PROJECT_URL = "https://github.com/isecPartners/sslyze"
+PROJECT_EMAIL = 'sslyze@isecpartners.com'
+PROJECT_DESC = 'Fast and full-featured SSL scanner'
 
-SSLYZE_VERSION = 'SSLyze v0.7 beta'
 DEFAULT_NB_PROCESSES = 5
 DEFAULT_TIMEOUT =   5
-PROJECT_URL = "https://github.com/isecPartners/sslyze"
 
 # Todo: Move formatting stuff to another file
 SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
@@ -144,7 +146,7 @@ def main():
     print '\n\n'
 
     # Create the command line parser and the list of available options
-    sslyze_parser = CommandLineParser(available_plugins, SSLYZE_VERSION, DEFAULT_TIMEOUT)
+    sslyze_parser = CommandLineParser(available_plugins, PROJECT_VERSION, DEFAULT_TIMEOUT)
 
     try: # Parse the command line
         (command_list, target_list, shared_settings) = sslyze_parser.parse_command_line()
@@ -261,7 +263,7 @@ def main():
             result_xml.append(xml_element)
             
         xml_final_doc = Element('document', title = "SSLyze Scan Results",
-                                SSLyzeVersion = SSLYZE_VERSION, 
+                                SSLyzeVersion = PROJECT_VERSION, 
                                 SSLyzeWeb = PROJECT_URL)
         xml_final_doc.append(result_xml)
 

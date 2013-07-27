@@ -42,9 +42,9 @@ class CommandLineParsingError(Exception):
 class CommandLineParser():
     
     # Defines what --regular means
-    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'reneg', 'resum', 'certinfo', 
-                      'http_get', 'hide_rejected_ciphers', 'compression', 
-                      'tlsv1_1', 'tlsv1_2']
+    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'reneg', 
+                   'resum', 'certinfo', 'http_get', 'hide_rejected_ciphers', 
+                   'compression']
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 etc...'
     
     
@@ -66,6 +66,9 @@ class CommandLineParser():
         regular_help = 'Regular HTTPS scan; shortcut for'
         for cmd in self.REGULAR_CMD:
             regular_help += ' --' + cmd
+            if cmd == 'certinfo': # gah
+                regular_help += '=basic'
+            
             if (self._parser.has_option('--' + cmd) == False):
                 return
         

@@ -180,10 +180,12 @@ class SSLConnection(SslClient):
             for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                 if error_msg in str(e.args):
                     raise SSLHandshakeRejected('TCP - ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
+            raise # Unknown socket error
         
         except IOError as e:
             if 'Nassl SSL handshake failed' in str(e.args):
                 raise SSLHandshakeRejected('TLS - Unexpected EOF')
+            raise
         
         except _nassl.OpenSSLError as e:
             clientCertCaList = self.get_client_CA_list()

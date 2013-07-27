@@ -130,7 +130,7 @@ class PluginCertInfo(PluginBase.PluginBase):
 # FORMATTING FUNCTIONS
 
     def _is_hostname_valid(self, cert_dict, target):
-        (host, ip, port) = target
+        (host, ip, port, sslVersion) = target
         
         # Let's try the common name first
         commonName = cert_dict['subject']['commonName'][0]
@@ -191,11 +191,12 @@ class PluginCertInfo(PluginBase.PluginBase):
         """
         Connects to the target server and returns the server's certificate
         """
-        sslConn = create_sslyze_connection(self._shared_settings, 
-                                           sslVerifyLocations=MOZILLA_CA_STORE)
+        (host, ip, port, sslVersion) = target
+        sslConn = create_sslyze_connection(self._shared_settings, sslVersion)#, 
+#                                           sslVerifyLocations=MOZILLA_CA_STORE)
         
         try: # Perform the SSL handshake
-            sslConn.connect((target[0], target[2]))
+            sslConn.connect((ip, port))
 
             x509Cert = sslConn.get_peer_certificate()
             (verifyCode, verifyStr) = sslConn.get_certificate_chain_verify_result()

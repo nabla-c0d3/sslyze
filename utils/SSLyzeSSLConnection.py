@@ -76,6 +76,8 @@ def create_sslyze_connection(shared_settings, sslVersion=SSLV23, sslVerifyLocati
     # Add Server Name Indication
     if shared_settings['sni']:
         sslConn.set_tlsext_host_name(shared_settings['sni'])
+        
+    sslConn.set_cipher_list('HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA')
 
 
     return sslConn

@@ -23,6 +23,7 @@
 
 import socket
 from ThreadPool import ThreadPool
+from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2
 from SSLyzeSSLConnection import create_sslyze_connection, StartTLSError, ProxyError
 
 
@@ -163,8 +164,8 @@ class ServersConnectivityTester(object):
             defaultPort = cls.DEFAULT_PORTS['default']
         (host, port) = TargetStringParser.parse_target_str(targetStr, defaultPort)
         
-        # We use an SSL connection (for code re-use) but we won't do the 
-        # full SSL handshake
+        
+        # First try to connect and do StartTLS if needed
         sslCon = create_sslyze_connection(shared_settings)
         try:
             sslCon.do_pre_handshake((host, port))
@@ -189,4 +190,23 @@ class ServersConnectivityTester(object):
         finally:
             sslCon.close()
     
-        return (host, ipAddr, port)
+        
+        # Then try to do SSL handshakes just to figure out the SSL version
+        # supported by the server; the plugins need to know this in advance.
+        # If the hadnshakes fail, we keep going anyway; maybe the server 
+        # only supports exotic cipher suites
+        sslSupport = SSLV23
+        for sslVersion in [TLSV1, SSLV23, SSLV3, TLSV1_2]:
+            sslCon = create_sslyze_connection(shared_settings, sslVersion)
+            try:
+                sslCon.connect((ipAddr, port))
+            except:
+                pass
+            else:
+                sslSupport = sslVersion
+                break
+            finally:
+                sslCon.close()
+    
+    
+        return (host, ipAddr, port, sslSupport)

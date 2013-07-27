@@ -106,7 +106,7 @@ def _format_title(title):
 
 
 def _format_xml_target_result(target, result_list):
-    (host, ip, port) = target
+    (host, ip, port, sslVersion) = target
     target_xml = Element('target', host=host, ip=ip, port=str(port))
     result_list.sort(key=lambda result: result[0]) # Sort results
     
@@ -117,7 +117,7 @@ def _format_xml_target_result(target, result_list):
 
 
 def _format_txt_target_result(target, result_list):
-    (host, ip, port) = target
+    (host, ip, port, sslVersion) = target
     target_result_str = ''
 
     for (command, plugin_result) in result_list:

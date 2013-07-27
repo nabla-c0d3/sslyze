@@ -285,8 +285,8 @@ class PluginSessionResumption(PluginBase.PluginBase):
         for that connection.
         If ssl_session is given, tries to resume that session.
         """
-    
-        sslConn = create_sslyze_connection(self._shared_settings)
+        (host, ip, port, sslVersion) = target
+        sslConn = create_sslyze_connection(self._shared_settings, sslVersion)
         if not tlsTicket:
         # Need to disable TLS tickets to test session IDs, according to rfc5077:
         # If a ticket is presented by the client, the server MUST NOT attempt 
@@ -297,7 +297,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
             sslConn.set_session(sslSession)
     
         try: # Perform the SSL handshake
-            sslConn.connect((target[0], target[2]))
+            sslConn.connect((ip, port))
             newSession = sslConn.get_session() # Get session data
         finally:
             sslConn.close()

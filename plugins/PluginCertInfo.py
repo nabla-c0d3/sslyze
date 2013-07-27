@@ -192,8 +192,8 @@ class PluginCertInfo(PluginBase.PluginBase):
         Connects to the target server and returns the server's certificate
         """
         (host, ip, port, sslVersion) = target
-        sslConn = create_sslyze_connection(self._shared_settings, sslVersion)#, 
-#                                           sslVerifyLocations=MOZILLA_CA_STORE)
+        sslConn = create_sslyze_connection(self._shared_settings, sslVersion, 
+                                           sslVerifyLocations=MOZILLA_CA_STORE)
         
         try: # Perform the SSL handshake
             sslConn.connect((ip, port))

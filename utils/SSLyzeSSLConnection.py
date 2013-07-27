@@ -23,7 +23,7 @@
 
 import socket
 from HTTPResponseParser import parse_http_response
-from nassl import SSL_FILETYPE_ASN1,  SSL_FILETYPE_PEM, SSLV23, _nassl
+from nassl import SSL_FILETYPE_ASN1,  SSL_FILETYPE_PEM, SSLV23, _nassl, SSL_VERIFY_NONE
 from nassl.SslClient import SslClient
 
 
@@ -154,8 +154,8 @@ class SSLConnection(SslClient):
     
     
     def __init__(self, sslVersion, sslVerifyLocations, timeout):
-        super(SSLConnection, self).__init__(None, sslVersion, 
-                                                  sslVerifyLocations)
+        super(SSLConnection, self).__init__(None, sslVersion, SSL_VERIFY_NONE,
+                                            sslVerifyLocations)
         self._timeout = timeout
         self._sock = None
     

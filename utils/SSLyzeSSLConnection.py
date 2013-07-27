@@ -40,7 +40,10 @@ def create_sslyze_connection(shared_settings, sslVersion=SSLV23, sslVerifyLocati
     
     if shared_settings['starttls'] == 'smtp':
         sslConn = SMTPConnection(sslVersion, sslVerifyLocations, timeout)
-    
+        
+    elif shared_settings['starttls'] == 'ftp':            
+        sslConn = FTPConnection(sslVersion, sslVerifyLocations, timeout)   
+        
     elif shared_settings['starttls'] == 'xmpp':            
         sslConn = XMPPConnection(sslVersion, sslVerifyLocations, timeout, 
                                  shared_settings['xmpp_to'])   
@@ -357,12 +360,37 @@ class XMPPConnection(SSLConnection):
         self._sock = socket.create_connection((host, port), self._timeout)
         self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
         if '<stream:error>' in self._sock.recv(2048):
-            raise StartTLSError(self._target_str, self.ERR_XMPP_REJECTED)
+            raise StartTLSError(self.ERR_XMPP_REJECTED)
             
         # Send a STARTTLS message
         self._sock.send(self.XMPP_STARTTLS)
         xmpp_resp = self._sock.recv(2048)
         if 'proceed'  not in xmpp_resp: 
             raise StartTLSError(self.ERR_NO_XMPP_STARTTLS)
+
+
+
+class FTPConnection(SSLConnection):
+    """SSL connection class that performs an FTP StartTLS negotiation
+    before the SSL handshake."""
+
+    ERR_NO_FTP_STARTTLS = 'FTP AUTH TLS was rejected'
+
+    FTP_AUTH_TLS = 'AUTH TLS\r\n'
+
+    def do_pre_handshake(self, (host,port)):
+        """
+        Connect to a host on a given (SSL) port, send a STARTTLS command,
+        and perform the SSL handshake.
+        """
+        self._sock = socket.create_connection((host, port), self._timeout)
+        
+        # Grab the banner
+        self._sock.recv(2048)
+                
+        # Send AUTH TLS
+        self._sock.send(self.FTP_AUTH_TLS)
+        if '234'  not in self._sock.recv(2048):
+            raise StartTLSError(self.ERR_NO_FTP_STARTTLS)
 
 

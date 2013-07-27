@@ -98,9 +98,10 @@ class ServersConnectivityTester(object):
     
     MAX_THREADS = 50
 
-    DEFAULT_PORTS = {'smtp' : 25,
-                     'xmpp' : 5222,
-                     'default' : 443}
+    DEFAULT_PORTS = {'smtp'     : 25,
+                     'xmpp'     : 5222,
+                     'ftp'      : 21,
+                     'default'  : 443}
     
     ERR_BAD_PORT = 'Not a valid host:port'
     ERR_TIMEOUT = 'Could not connect (timeout)'

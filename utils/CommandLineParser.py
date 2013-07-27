@@ -176,9 +176,8 @@ class CommandLineParser():
         self._parser.add_option(
             '--https_tunnel',
             help= (
-                'Sets an HTTP CONNECT proxy to tunnel SSL traffic to the target '
-                'server(s). HTTP_TUNNEL should be \'host:port\'. ' 
-                'Requires Python 2.7'),
+                'Tunnels all traffic to the target server(s) through an HTTP '
+                'CONNECT proxy. HTTP_TUNNEL should be \'host:port\'.'),
             dest='https_tunnel',
             default=None)
         
@@ -186,9 +185,8 @@ class CommandLineParser():
         self._parser.add_option(
             '--starttls',
             help= (
-                'Identifies the target server(s) as a SMTP or an XMPP server(s) '
-                'and scans the server(s) using STARTTLS. '
-                'STARTTLS should be \'smtp\' or \'xmpp\'.'),
+                'Performs StartTLS handshakes when connecting to the target server(s). '
+                'STARTTLS should be \'smtp\', \'xmpp\' or \'ftp\'.'),
             dest='starttls',
             default=None)
     
@@ -309,9 +307,9 @@ class CommandLineParser():
             shared_settings['https_tunnel_port'] = None
             
         # STARTTLS
-        if args_command_list.starttls not in [None,'smtp','xmpp']:
+        if args_command_list.starttls not in [None,'smtp','xmpp', 'ftp']:
             raise CommandLineParsingError(
-                '--starttls should be \'smtp\' or \'xmpp\'.')
+                '--starttls should be \'smtp\', \'xmpp\' or \'ftp\'.')
         
         if args_command_list.starttls and args_command_list.https_tunnel:
             raise CommandLineParsingError(

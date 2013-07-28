@@ -165,7 +165,7 @@ class PluginCertInfo(PluginBase.PluginBase):
     def _get_basic_text(self, certDict):
 
         try: # Extract the CN if there's one
-            commonName = certDict['subject']['commonName'][0]
+            commonName = certDict['subject']['commonName']
         except KeyError:
             commonName = 'None'
         

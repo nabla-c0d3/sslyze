@@ -70,11 +70,10 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         Checks whether the server honors session renegotiation requests and 
         whether it supports secure renegotiation.
         """
-        (host, ip, port, sslVersion) = target
-        sslConn = create_sslyze_connection(self._shared_settings, sslVersion)
+        sslConn = create_sslyze_connection(target, self._shared_settings)
         
         try: # Perform the SSL handshake
-            sslConn.connect((ip, port))
+            sslConn.connect()
             secureReneg = sslConn.get_secure_renegotiation_support()
     
             try: # Let's try to renegotiate

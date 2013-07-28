@@ -200,11 +200,11 @@ class PluginCertInfo(PluginBase.PluginBase):
         Connects to the target server and returns the server's certificate
         """
         (host, ip, port, sslVersion) = target
-        sslConn = create_sslyze_connection(self._shared_settings, sslVersion, 
+        sslConn = create_sslyze_connection(target, self._shared_settings, sslVersion, 
                                            sslVerifyLocations=MOZILLA_CA_STORE)
         
         try: # Perform the SSL handshake
-            sslConn.connect((ip, port))
+            sslConn.connect()
 
             x509Cert = sslConn.get_peer_certificate()
             (verifyCode, verifyStr) = sslConn.get_certificate_chain_verify_result()

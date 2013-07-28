@@ -170,9 +170,9 @@ class ServersConnectivityTester(object):
         
         
         # First try to connect and do StartTLS if needed
-        sslCon = create_sslyze_connection(shared_settings)
+        sslCon = create_sslyze_connection((host, host, port, None), shared_settings, SSLV23)
         try:
-            sslCon.do_pre_handshake((host, port))
+            sslCon.do_pre_handshake()
             ipAddr = sslCon._sock.getpeername()[0]
             
         # Socket errors
@@ -201,9 +201,9 @@ class ServersConnectivityTester(object):
         # only supports exotic cipher suites
         sslSupport = SSLV23
         for sslVersion in [TLSV1, SSLV23, SSLV3, TLSV1_2]:
-            sslCon = create_sslyze_connection(shared_settings, sslVersion)
+            sslCon = create_sslyze_connection((host, ipAddr, port, sslVersion), shared_settings)
             try:
-                sslCon.connect((ipAddr, port))
+                sslCon.connect()
             except:
                 pass
             else:

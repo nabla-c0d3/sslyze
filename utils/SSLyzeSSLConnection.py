@@ -28,47 +28,81 @@ from nassl.SslClient import SslClient
 
 
 
-def create_sslyze_connection(shared_settings, sslVersion=SSLV23, sslVerifyLocations=None):
+def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerifyLocations=None):
     """
     Utility function to create the proper SSLConnection based on what's 
     in the shared_settings. All plugins should use this for their SSL 
     connections.
     """
-
-    # Create the proper SMTP / XMPP / HTTPS / Proxy connection
+    (host, ip, port, sslSupport) = target
+    # If no SSL version was provided, use the one supported by the server
+    if sslVersion == None: 
+        sslVersion = sslSupport
+    
+    # Create the proper connection
     timeout = shared_settings['timeout']
     startTls = shared_settings['starttls']
     
-    startTlsDispatch = { 'smtp' : SMTPConnection,
-                         'pop3' : POP3Connection,
-                         'imap' : IMAPConnection,
-                         'ftp'  : FTPConnection,
-                         'ldap' : LDAPConnection }
+    STARTTLS_DISPATCH = { 'smtp' :  SMTPConnection,
+                          587 :     SMTPConnection,
+                          22 :      SMTPConnection,
+                          'xmpp':   XMPPConnection,
+                          5222 :    XMPPConnection,
+                          5269 :    XMPPConnection,
+                          'pop3' :  POP3Connection,
+                          109 :     POP3Connection,
+                          110 :     POP3Connection,
+                          'imap' :  IMAPConnection,
+                          143 :     IMAPConnection,
+                          220 :     IMAPConnection,
+                          'ftp' :   FTPConnection,
+                          21 :      FTPConnection,
+                          'ldap' :  LDAPConnection,
+                          3268 :    LDAPConnection,
+                          389 :     LDAPConnection }
     
-    if startTls in startTlsDispatch.keys():
-        sslConn = startTlsDispatch[startTls](sslVersion, sslVerifyLocations, timeout)
+    if shared_settings['starttls']:
+        
+        if shared_settings['starttls'] in STARTTLS_DISPATCH.keys():
+            # Protocol was given in the command line
+            connectionClass = STARTTLS_DISPATCH[startTls]
 
-    elif startTls == 'xmpp':            
-        sslConn = XMPPConnection(sslVersion, sslVerifyLocations, timeout, 
-                                 shared_settings['xmpp_to'])   
-                     
+        elif shared_settings['starttls'] == 'auto': 
+            # We use the port number to deduce the protocol
+            if port in STARTTLS_DISPATCH.keys():
+                connectionClass = STARTTLS_DISPATCH[port]    
+            else:
+                connectionClass = SSLConnection
+                
+        sslConn = connectionClass((ip,port), sslVersion, sslVerifyLocations, timeout)
+        
+        # XMPP configuration
+        if connectionClass == XMPPConnection:
+            if shared_settings['xmpp_to']:
+                sslConn.set_xmpp_to(shared_settings['xmpp_to'])
+            else:
+                sslConn.set_xmpp_to(host)
+                        
+        
     elif shared_settings['https_tunnel_host']:
         # Using an HTTP CONNECT proxy to tunnel SSL traffic
         if shared_settings['http_get']:
-            sslConn = HTTPSTunnelConnection(sslVersion, sslVerifyLocations, timeout, 
+            sslConn = HTTPSTunnelConnection((ip,port), sslVersion, 
+                                            sslVerifyLocations, timeout, 
                                             shared_settings['https_tunnel_host'], 
                                             shared_settings['https_tunnel_port'])
         else:
-            sslConn = SSLTunnelConnection(sslVersion, sslVerifyLocations, timeout, 
+            sslConn = SSLTunnelConnection((ip,port), sslVersion, 
+                                          sslVerifyLocations, timeout, 
                                           shared_settings['https_tunnel_host'], 
                                           shared_settings['https_tunnel_port'])
     
     elif shared_settings['http_get']:
-        sslConn = HTTPSConnection(sslVersion, sslVerifyLocations, timeout)    
+        sslConn = HTTPSConnection((ip,port), sslVersion, sslVerifyLocations, timeout)    
     else:
-        sslConn = SSLConnection(sslVersion, sslVerifyLocations, timeout)
+        sslConn = SSLConnection((ip,port), sslVersion, sslVerifyLocations, timeout)
     
-    
+
     # Load client certificate and private key
     # These parameters should have been validated when parsing the command line
     if shared_settings['cert']:
@@ -83,9 +117,9 @@ def create_sslyze_connection(shared_settings, sslVersion=SSLV23, sslVerifyLocati
     # Add Server Name Indication
     if shared_settings['sni']:
         sslConn.set_tlsext_host_name(shared_settings['sni'])
-        
+    
+    # Restrict cipher list to make the client hello smaller
     sslConn.set_cipher_list('HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA')
-
 
     return sslConn
     
@@ -160,22 +194,24 @@ class SSLConnection(SslClient):
          'block type is not 01' : 'block type is not 01'} # Actually an RSA error
     
     
-    def __init__(self, sslVersion, sslVerifyLocations, timeout):
+    def __init__(self, (host, port), sslVersion, sslVerifyLocations, timeout):
         super(SSLConnection, self).__init__(None, sslVersion, SSL_VERIFY_NONE,
                                             sslVerifyLocations)
         self._timeout = timeout
         self._sock = None
+        self._host = host
+        self._port = port
     
  
-    def do_pre_handshake(self, (host,port)):
+    def do_pre_handshake(self):
         # Just a TCP connection            
-        self._sock = socket.create_connection((host, port), self._timeout)
+        self._sock = socket.create_connection((self._host, self._port), self._timeout)
     
 
-    def connect(self,(host,port)):
+    def connect(self):
         
         # StartTLS negotiation or proxy setup if needed
-        self.do_pre_handshake((host,port))
+        self.do_pre_handshake()
         
         try: # SSL handshake
             self.do_handshake()
@@ -264,15 +300,15 @@ class SSLTunnelConnection(SSLConnection):
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
     
     
-    def __init__(self, sslVersion, sslVerifyLocations, timeout, tunnelHost, tunnelPort):
+    def __init__(self, (host, port), sslVersion, sslVerifyLocations, timeout, tunnelHost, tunnelPort):
         
-        super(SSLTunnelConnection, self).__init__(sslVersion,
+        super(SSLTunnelConnection, self).__init__((host, port), sslVersion,
                                                   sslVerifyLocations, timeout)
         self._tunnelHost = tunnelHost
         self._tunnelPort = tunnelPort
         
             
-    def do_pre_handshake(self, (host,port)):
+    def do_pre_handshake(self):
         
         try: # Connect to the proxy first
             self._sock = socket.create_connection((self._tunnelHost, 
@@ -284,7 +320,7 @@ class SSLTunnelConnection(SSLConnection):
             raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[1]))
         
         # Send a CONNECT request with the host we want to tunnel to
-        self._sock.send(self.HTTP_CONNECT_REQ.format(host,port))
+        self._sock.send(self.HTTP_CONNECT_REQ.format(self._host, self._port))
         httpResp = parse_http_response(self._sock.recv(2048))
         
         # Check if the proxy was able to connect to the host
@@ -307,9 +343,9 @@ class SMTPConnection(SSLConnection):
     ERR_NO_SMTP_STARTTLS = 'SMTP STARTTLS not supported'
     
 
-    def do_pre_handshake(self, (host,port)):
+    def do_pre_handshake(self):
         
-        self._sock = socket.create_connection((host, port), self._timeout)
+        self._sock = socket.create_connection((self._host, self._port), self._timeout)
         # Get the SMTP banner
         self._sock.recv(2048)
         
@@ -346,22 +382,18 @@ class XMPPConnection(SSLConnection):
         "rfc2595.txt' to='{0}'>" )
     XMPP_STARTTLS = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
     
-    
-    def __init__(self, sslVersion, sslVerifyLocations, timeout, xmpp_to=None):
-        super(XMPPConnection, self).__init__(sslVersion, sslVerifyLocations, timeout)
-        self._xmpp_to = xmpp_to
         
+    def set_xmpp_to(self, xmpp_to):
+        self._xmpp_to = xmpp_to
 
-    def do_pre_handshake(self, (host,port)):
+
+    def do_pre_handshake(self):
         """
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
-        """
-        if self._xmpp_to is None:
-            self._xmpp_to = host
-            
+        """ 
         # Open an XMPP stream            
-        self._sock = socket.create_connection((host, port), self._timeout)
+        self._sock = socket.create_connection((self._host, self._port), self._timeout)
         self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
         if '<stream:error>' in self._sock.recv(2048):
             raise StartTLSError(self.ERR_XMPP_REJECTED)
@@ -384,12 +416,12 @@ class LDAPConnection(SSLConnection):
     START_TLS_OK = 'Start TLS request accepted.'
 
 
-    def do_pre_handshake(self, (host,port)):
+    def do_pre_handshake(self):
         """
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
         """
-        self._sock = socket.create_connection((host, port), self._timeout)
+        self._sock = socket.create_connection((self._host, self._port), self._timeout)
         
         # Send Start TLS
         self._sock.send(self.START_TLS_CMD)
@@ -403,12 +435,12 @@ class GenericStartTLSConnection(SSLConnection):
     before the SSL handshake. Used for POP3, IMAP and FTP."""
 
 
-    def do_pre_handshake(self, (host,port)):
+    def do_pre_handshake(self):
         """
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
         """
-        self._sock = socket.create_connection((host, port), self._timeout)
+        self._sock = socket.create_connection((self._host, self._port), self._timeout)
         
         # Grab the banner
         self._sock.recv(2048)

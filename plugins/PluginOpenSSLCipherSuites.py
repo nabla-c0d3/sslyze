@@ -202,12 +202,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         Initiates a SSL handshake with the server, using the SSL version and 
         cipher suite specified.
         """
-        (host, ip, port, sslSupport) = target
-        sslConn = create_sslyze_connection(self._shared_settings, ssl_version)
+        sslConn = create_sslyze_connection(target, self._shared_settings, ssl_version)
         sslConn.set_cipher_list(ssl_cipher)
 
         try: # Perform the SSL handshake
-            sslConn.connect((ip, port))
+            sslConn.connect()
             
         except SSLHandshakeRejected as e:
             return ('rejectedCipherSuites', ssl_cipher, None, str(e))
@@ -234,10 +233,10 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         Initiates a SSL handshake with the server, using the SSL version and cipher
         suite specified.
         """
-        sslConn = create_sslyze_connection(self._shared_settings, ssl_version)
+        sslConn = create_sslyze_connection(target, self._shared_settings, ssl_version)
         
         try: # Perform the SSL handshake
-            sslConn.connect((target[1], target[2]))
+            sslConn.connect()
 
             ssl_cipher = sslConn.get_cipher_name()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:

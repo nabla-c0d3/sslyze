@@ -42,10 +42,10 @@ class PluginCompression(PluginBase.PluginBase):
         
         OUT_FORMAT = '        {0:<25} {1}'.format
 
-        sslConn = create_sslyze_connection(self._shared_settings)
+        sslConn = create_sslyze_connection(target, self._shared_settings)
 
         try: # Perform the SSL handshake
-            sslConn.connect((target[0], target[2]))
+            sslConn.connect()
             compName = sslConn.get_current_compression_name()
         except ClientAuthenticationError: # The server asked for a client cert
             compName = sslConn.get_current_compression_name()

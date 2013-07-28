@@ -101,7 +101,8 @@ class ServersConnectivityTester(object):
     DEFAULT_PORTS = {'smtp'     : 25,
                      'xmpp'     : 5222,
                      'ftp'      : 21,
-                     'pop3'      : 110,
+                     'pop3'     : 110,
+                     'ldap'     : 389,
                      'imap'     : 143,
                      'default'  : 443}
     

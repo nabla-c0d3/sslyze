@@ -47,7 +47,7 @@ class CommandLineParser():
                    'compression']
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 etc...'
     
-    START_TLS_PROTS = ['smtp', 'xmpp', 'pop3', 'ftp', 'imap']
+    START_TLS_PROTS = ['smtp', 'xmpp', 'pop3', 'ftp', 'imap', 'ldap']
     START_TLS_USAGE = 'STARTTLS should be one of: ' + str(START_TLS_PROTS) + '.'
     
     def __init__(self, available_plugins, sslyze_version, timeout):

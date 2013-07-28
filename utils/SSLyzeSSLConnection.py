@@ -37,23 +37,21 @@ def create_sslyze_connection(shared_settings, sslVersion=SSLV23, sslVerifyLocati
 
     # Create the proper SMTP / XMPP / HTTPS / Proxy connection
     timeout = shared_settings['timeout']
+    startTls = shared_settings['starttls']
     
-    if shared_settings['starttls'] == 'smtp':
-        sslConn = SMTPConnection(sslVersion, sslVerifyLocations, timeout)
-        
-    elif shared_settings['starttls'] == 'ftp':            
-        sslConn = FTPConnection(sslVersion, sslVerifyLocations, timeout)   
-        
-    elif shared_settings['starttls'] == 'xmpp':            
+    startTlsDispatch = { 'smtp' : SMTPConnection,
+                         'pop3' : POP3Connection,
+                         'imap' : IMAPConnection,
+                         'ftp'  : FTPConnection,
+                         'ldap' : LDAPConnection }
+    
+    if startTls in startTlsDispatch.keys():
+        sslConn = startTlsDispatch[startTls](sslVersion, sslVerifyLocations, timeout)
+
+    elif startTls == 'xmpp':            
         sslConn = XMPPConnection(sslVersion, sslVerifyLocations, timeout, 
                                  shared_settings['xmpp_to'])   
-        
-    elif shared_settings['starttls'] == 'pop3':            
-        sslConn = POP3Connection(sslVersion, sslVerifyLocations, timeout)
-        
-    elif shared_settings['starttls'] == 'imap':            
-        sslConn = IMAPConnection(sslVersion, sslVerifyLocations, timeout)   
-             
+                     
     elif shared_settings['https_tunnel_host']:
         # Using an HTTP CONNECT proxy to tunnel SSL traffic
         if shared_settings['http_get']:
@@ -375,14 +373,35 @@ class XMPPConnection(SSLConnection):
             raise StartTLSError(self.ERR_NO_XMPP_STARTTLS)
 
 
+
+class LDAPConnection(SSLConnection):
+    """SSL connection class that performs an LDAP StartTLS negotiation
+    before the SSL handshake."""
+    
+    ERR_NO_STARTTLS = 'LDAP AUTH TLS was rejected'
+    
+    START_TLS_CMD = bytearray(b'0\x1d\x02\x01\x01w\x18\x80\x161.3.6.1.4.1.1466.20037')
+    START_TLS_OK = 'Start TLS request accepted.'
+
+
+    def do_pre_handshake(self, (host,port)):
+        """
+        Connect to a host on a given (SSL) port, send a STARTTLS command,
+        and perform the SSL handshake.
+        """
+        self._sock = socket.create_connection((host, port), self._timeout)
+        
+        # Send Start TLS
+        self._sock.send(self.START_TLS_CMD)
+        if self.START_TLS_OK  not in self._sock.recv(2048):
+            raise StartTLSError(self.ERR_NO_STARTTLS)
+        
+
+
 class GenericStartTLSConnection(SSLConnection):
     """SSL connection class that performs a StartTLS negotiation
-    before the SSL handshake."""
+    before the SSL handshake. Used for POP3, IMAP and FTP."""
 
-    ERR_NO_STARTTLS = 'START TLS was rejected'
-
-    START_TLS_CMD = '. STARTTLS\r\n'
-    START_TLS_OK = '. OK'
 
     def do_pre_handshake(self, (host,port)):
         """
@@ -400,6 +419,7 @@ class GenericStartTLSConnection(SSLConnection):
             raise StartTLSError(self.ERR_NO_STARTTLS)
         
         
+        
 class IMAPConnection(GenericStartTLSConnection):
     """SSL connection class that performs an IMAP StartTLS negotiation
     before the SSL handshake."""
@@ -408,6 +428,7 @@ class IMAPConnection(GenericStartTLSConnection):
 
     START_TLS_CMD = '. STARTTLS\r\n'
     START_TLS_OK = '. OK'
+
 
 
 class POP3Connection(GenericStartTLSConnection):
@@ -420,6 +441,7 @@ class POP3Connection(GenericStartTLSConnection):
     START_TLS_OK = '+OK'
 
 
+
 class FTPConnection(GenericStartTLSConnection):
     """SSL connection class that performs an FTP StartTLS negotiation
     before the SSL handshake."""
@@ -428,5 +450,5 @@ class FTPConnection(GenericStartTLSConnection):
 
     START_TLS_CMD = 'AUTH TLS\r\n'
     START_TLS_OK = '234'
-    
-    
+
+

@@ -47,6 +47,8 @@ class CommandLineParser():
                    'compression']
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 etc...'
     
+    START_TLS_PROTS = ['smtp', 'xmpp', 'pop3', 'ftp', 'imap']
+    START_TLS_USAGE = 'STARTTLS should be one of: ' + str(START_TLS_PROTS) + '.'
     
     def __init__(self, available_plugins, sslyze_version, timeout):
         """
@@ -185,8 +187,8 @@ class CommandLineParser():
         self._parser.add_option(
             '--starttls',
             help= (
-                'Performs StartTLS handshakes when connecting to the target server(s). '
-                'STARTTLS should be \'smtp\', \'xmpp\' or \'ftp\'.'),
+                'Performs StartTLS handshakes when connecting to the target '
+                'server(s). ' + self.START_TLS_USAGE),
             dest='starttls',
             default=None)
     
@@ -307,9 +309,9 @@ class CommandLineParser():
             shared_settings['https_tunnel_port'] = None
             
         # STARTTLS
-        if args_command_list.starttls not in [None,'smtp','xmpp', 'ftp']:
-            raise CommandLineParsingError(
-                '--starttls should be \'smtp\', \'xmpp\' or \'ftp\'.')
+        if args_command_list.starttls:
+            if args_command_list.starttls not in self.START_TLS_PROTS:
+                raise CommandLineParsingError(self.START_TLS_USAGE)
         
         if args_command_list.starttls and args_command_list.https_tunnel:
             raise CommandLineParsingError(

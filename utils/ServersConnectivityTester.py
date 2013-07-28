@@ -101,6 +101,8 @@ class ServersConnectivityTester(object):
     DEFAULT_PORTS = {'smtp'     : 25,
                      'xmpp'     : 5222,
                      'ftp'      : 21,
+                     'pop3'      : 110,
+                     'imap'     : 143,
                      'default'  : 443}
     
     ERR_BAD_PORT = 'Not a valid host:port'

@@ -47,6 +47,12 @@ def create_sslyze_connection(shared_settings, sslVersion=SSLV23, sslVerifyLocati
     elif shared_settings['starttls'] == 'xmpp':            
         sslConn = XMPPConnection(sslVersion, sslVerifyLocations, timeout, 
                                  shared_settings['xmpp_to'])   
+        
+    elif shared_settings['starttls'] == 'pop3':            
+        sslConn = POP3Connection(sslVersion, sslVerifyLocations, timeout)
+        
+    elif shared_settings['starttls'] == 'imap':            
+        sslConn = IMAPConnection(sslVersion, sslVerifyLocations, timeout)   
              
     elif shared_settings['https_tunnel_host']:
         # Using an HTTP CONNECT proxy to tunnel SSL traffic
@@ -369,14 +375,14 @@ class XMPPConnection(SSLConnection):
             raise StartTLSError(self.ERR_NO_XMPP_STARTTLS)
 
 
-
-class FTPConnection(SSLConnection):
-    """SSL connection class that performs an FTP StartTLS negotiation
+class GenericStartTLSConnection(SSLConnection):
+    """SSL connection class that performs a StartTLS negotiation
     before the SSL handshake."""
 
-    ERR_NO_FTP_STARTTLS = 'FTP AUTH TLS was rejected'
+    ERR_NO_STARTTLS = 'START TLS was rejected'
 
-    FTP_AUTH_TLS = 'AUTH TLS\r\n'
+    START_TLS_CMD = '. STARTTLS\r\n'
+    START_TLS_OK = '. OK'
 
     def do_pre_handshake(self, (host,port)):
         """
@@ -388,9 +394,39 @@ class FTPConnection(SSLConnection):
         # Grab the banner
         self._sock.recv(2048)
                 
-        # Send AUTH TLS
-        self._sock.send(self.FTP_AUTH_TLS)
-        if '234'  not in self._sock.recv(2048):
-            raise StartTLSError(self.ERR_NO_FTP_STARTTLS)
+        # Send Start TLS
+        self._sock.send(self.START_TLS_CMD)
+        if self.START_TLS_OK  not in self._sock.recv(2048):
+            raise StartTLSError(self.ERR_NO_STARTTLS)
+        
+        
+class IMAPConnection(GenericStartTLSConnection):
+    """SSL connection class that performs an IMAP StartTLS negotiation
+    before the SSL handshake."""
+
+    ERR_NO_STARTTLS = 'IMAP START TLS was rejected'
+
+    START_TLS_CMD = '. STARTTLS\r\n'
+    START_TLS_OK = '. OK'
 
 
+class POP3Connection(GenericStartTLSConnection):
+    """SSL connection class that performs a POP3 StartTLS negotiation
+    before the SSL handshake."""
+
+    ERR_NO_STARTTLS = 'POP START TLS was rejected'
+
+    START_TLS_CMD = 'STLS\r\n'
+    START_TLS_OK = '+OK'
+
+
+class FTPConnection(GenericStartTLSConnection):
+    """SSL connection class that performs an FTP StartTLS negotiation
+    before the SSL handshake."""
+    
+    ERR_NO_STARTTLS = 'FTP AUTH TLS was rejected'
+
+    START_TLS_CMD = 'AUTH TLS\r\n'
+    START_TLS_OK = '234'
+    
+    

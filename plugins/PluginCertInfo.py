@@ -132,10 +132,13 @@ class PluginCertInfo(PluginBase.PluginBase):
     def _is_hostname_valid(self, cert_dict, target):
         (host, ip, port, sslVersion) = target
         
-        # Let's try the common name first
-        commonName = cert_dict['subject']['commonName'][0]
-        if _dnsname_to_pat(commonName).match(host):
-            return 'Common Name'
+        # Let's try the common name first, if there's one
+        try:
+            commonName = cert_dict['subject']['commonName'][0]
+            if _dnsname_to_pat(commonName).match(host):
+                return 'Common Name'
+        except KeyError:
+            pass
         
         try: # No luch, let's look at Subject Alternative Names
             alt_names = cert_dict['extensions']['X509v3 Subject Alternative Name']['DNS']
@@ -160,9 +163,14 @@ class PluginCertInfo(PluginBase.PluginBase):
         
     
     def _get_basic_text(self, certDict):
+
+        try: # Extract the CN if there's one
+            commonName = certDict['subject']['commonName'][0]
+        except KeyError:
+            commonName = 'None'
         
         basicTxt = [ \
-            self.FIELD_FORMAT("Common Name:", certDict['subject']['commonName']),
+            self.FIELD_FORMAT("Common Name:", commonName),
             self.FIELD_FORMAT("Issuer:", certDict['issuer']),
             self.FIELD_FORMAT("Serial Number:", certDict['serialNumber']),
             self.FIELD_FORMAT("Not Before:", certDict['validity']['notBefore']),

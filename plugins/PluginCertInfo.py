@@ -57,42 +57,38 @@ class PluginCertInfo(PluginBase.PluginBase):
     def process_task(self, target, command, arg):
 
         try: # Get the certificate and the result of the cert validation
-            (cert, verifyStr) = self._get_cert(target)
+            (cert, certVerifyStr, ocspResp) = self._get_cert(target)
         except:
             raise
         
-        trustedCert = False
-        if verifyStr in 'ok':
-            trustedCert = True        
+        trustedCert = True if 'ok' in certVerifyStr else False
  
         # Results formatting
-        cert_dict = cert.as_dict()
+        # Text output - certificate
+        txt_result = [self.PLUGIN_TITLE_FORMAT('Certificate')]
         
-        # Text output
         if arg == 'basic':
-            cert_txt = self._get_basic_text(cert_dict)
+            cert_txt = self._get_basic_text(cert)
         elif arg == 'full':
             cert_txt = [cert.as_text()]
         else:
             raise Exception("PluginCertInfo: Unknown command.")
             
         fingerprint = cert.get_SHA1_fingerprint()
-        cmd_title = 'Certificate'
-        txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
         
-        if trustedCert:
-            trust_txt = 'Certificate is Trusted'
-        else:
-            trust_txt = 'Certificate is NOT Trusted: ' + verifyStr
+        # Cert chain validation
+        trust_txt = 'Certificate is Trusted' if trustedCert \
+            else 'Certificate is NOT Trusted: ' + certVerifyStr
 
-        is_ev = self._is_ev_certificate(cert_dict)
+        is_ev = self._is_ev_certificate(cert)
         if is_ev:
             trust_txt = trust_txt + ' - Extended Validation'
-
+            
+       # Hostname validation
         txt_result.append(self.FIELD_FORMAT("Validation w/ Mozilla's CA Store:", trust_txt))
         
         # TODO: Use SNI name when --sni was used
-        is_host_valid = self._is_hostname_valid(cert_dict, target)
+        is_host_valid = self._is_hostname_valid(cert, target)
         host_txt = 'OK - ' + is_host_valid + ' Matches' if is_host_valid \
                                          else 'MISMATCH'
         
@@ -101,17 +97,23 @@ class PluginCertInfo(PluginBase.PluginBase):
         txt_result.append('')
         txt_result.extend(cert_txt)
 
+        # Text output - OCSP stapling
+        txt_result.append('\n')
+        txt_result.append(self.PLUGIN_TITLE_FORMAT('OCSP Stapling'))
+        txt_result.extend(self._get_ocsp_text(ocspResp))
+
+
         # XML output: always return the full certificate
         host_xml = True if is_host_valid \
                         else False
             
-        xml_result = Element(command, argument = arg, title = cmd_title)
+        xml_result = Element(command, argument = arg, title = 'Certificate')
         trust_xml_attr = {'isTrustedByMozillaCAStore' : str(trustedCert),
                           'sha1Fingerprint' : fingerprint,
                           'isExtendedValidation' : str(is_ev),
                           'hasMatchingHostname' : str(host_xml)}
-        if verifyStr:
-            trust_xml_attr['reasonWhyNotTrusted'] = verifyStr
+        if certVerifyStr:
+            trust_xml_attr['reasonWhyNotTrusted'] = certVerifyStr
             
         trust_xml = Element('certificate', attrib = trust_xml_attr)
         
@@ -124,37 +126,76 @@ class PluginCertInfo(PluginBase.PluginBase):
             trust_xml.append(elem_xml)
         xml_result.append(trust_xml)
         
+        # XML output: OCSP Stapling
+        if ocspResp is None:
+            oscpAttr =  {'error' : 'Server did not send back an OCSP response'}
+            ocspXML = Element('ocspStapling', attrib = oscpAttr)
+        else:
+            oscpAttr =  {'isTrusted' : str(ocspResp.verify(MOZILLA_CA_STORE))}
+            ocspXML = Element('ocspResponse', attrib = oscpAttr)
+            for elem_xml in ocspResp.as_xml():
+                ocspXML.append(elem_xml)
+        xml_result.append(ocspXML)        
+        
         return PluginBase.PluginResult(txt_result, xml_result)
 
 
 # FORMATTING FUNCTIONS
 
-    def _is_hostname_valid(self, cert_dict, target):
+    def _get_ocsp_text(self, ocspResp):
+        
+        if ocspResp is None:
+            return [self.FIELD_FORMAT('Server did not send back an OCSP response.', '')]
+        
+        ocspRespDict = ocspResp.as_dict()
+        ocspRespTrustTxt = 'Trusted' if ocspResp.verify(MOZILLA_CA_STORE) \
+            else 'NOT Trusted'
+        
+        ocspRespTxt = [ \
+            self.FIELD_FORMAT('OCSP Response Status:', ocspRespDict['responseStatus']),
+            self.FIELD_FORMAT('OCSP Response Trust:', ocspRespTrustTxt),
+            self.FIELD_FORMAT('Responder Id:', ocspRespDict['responderID'])]
+        
+        if 'successful' not in ocspRespDict['responseStatus']:
+            return ocspRespTxt
+
+        ocspRespTxt.extend( [ \
+            self.FIELD_FORMAT('Cert Status:', ocspRespDict['responses'][0]['certStatus']),
+            self.FIELD_FORMAT('Cert Serial Number:', ocspRespDict['responses'][0]['certID']['serialNumber']),
+            self.FIELD_FORMAT('This Update:', ocspRespDict['responses'][0]['thisUpdate']),
+            self.FIELD_FORMAT('Next Update:', ocspRespDict['responses'][0]['nextUpdate'])])
+        
+        return ocspRespTxt
+
+    
+    def _is_hostname_valid(self, cert, target):
+        certDict = cert.as_dict()
         (host, ip, port, sslVersion) = target
         
         # Let's try the common name first, if there's one
         try:
-            commonName = cert_dict['subject']['commonName'][0]
+            commonName = certDict['subject']['commonName'][0]
             if _dnsname_to_pat(commonName).match(host):
                 return 'Common Name'
         except KeyError:
             pass
         
         try: # No luch, let's look at Subject Alternative Names
-            alt_names = cert_dict['extensions']['X509v3 Subject Alternative Name']['DNS']
+            altNames = certDict['extensions']['X509v3 Subject Alternative Name']['DNS']
         except KeyError:
             return False
         
-        for altname in alt_names:
+        for altname in altNames:
             if _dnsname_to_pat(altname).match(host):
                 return 'Subject Alternative Name'       
         
         return False
         
 
-    def _is_ev_certificate(self, cert_dict):
+    def _is_ev_certificate(self, cert):
+        certDict = cert.as_dict()
         try:
-            policy = cert_dict['extensions']['X509v3 Certificate Policies']['Policy']
+            policy = certDict['extensions']['X509v3 Certificate Policies']['Policy']
             if policy[0] in MOZILLA_EV_OIDS:
                 return True
         except:
@@ -162,7 +203,8 @@ class PluginCertInfo(PluginBase.PluginBase):
         return False
         
     
-    def _get_basic_text(self, certDict):
+    def _get_basic_text(self, cert):
+        certDict = cert.as_dict()
 
         try: # Extract the CN if there's one
             commonName = certDict['subject']['commonName']
@@ -197,27 +239,33 @@ class PluginCertInfo(PluginBase.PluginBase):
 
     def _get_cert(self, target):
         """
-        Connects to the target server and returns the server's certificate
+        Connects to the target server and returns the server's certificate and
+        OCSP response.
         """
         (host, ip, port, sslVersion) = target
         sslConn = create_sslyze_connection(target, self._shared_settings, sslVersion, 
                                            sslVerifyLocations=MOZILLA_CA_STORE)
         
+        # Enable OCSP stapling
+        sslConn.set_tlsext_status_ocsp()
+        
         try: # Perform the SSL handshake
             sslConn.connect()
-
+            
+            ocspResp = sslConn.get_tlsext_status_ocsp_resp()
             x509Cert = sslConn.get_peer_certificate()
             (verifyCode, verifyStr) = sslConn.get_certificate_chain_verify_result()
         
         except ClientAuthenticationError: # The server asked for a client cert
             # We can get the server cert anyway
+            ocspResp = sslConn.get_tlsext_status_ocsp_resp()
             x509Cert = sslConn.get_peer_certificate()
             (verifyCode, verifyStr) = sslConn.get_certificate_chain_verify_result()      
             
         finally:
             sslConn.close()
 
-        return (x509Cert, verifyStr)
+        return (x509Cert, verifyStr, ocspResp)
 
 
 def _dnsname_to_pat(dn):

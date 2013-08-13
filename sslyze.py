@@ -265,6 +265,9 @@ def main():
         xml_final_doc = Element('document', title = "SSLyze Scan Results",
                                 SSLyzeVersion = PROJECT_VERSION, 
                                 SSLyzeWeb = PROJECT_URL)
+        # Add the list of invalid targets
+        xml_final_doc.append(ServersConnectivityTester.get_xml_result(targets_ERR))
+        # Add the output of the plugins
         xml_final_doc.append(result_xml)
 
         # Hack: Prettify the XML file so it's (somewhat) diff-able

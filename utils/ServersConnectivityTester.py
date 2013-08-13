@@ -22,6 +22,7 @@
 #-------------------------------------------------------------------------------
 
 import socket
+from xml.etree.ElementTree import Element
 from ThreadPool import ThreadPool
 from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2
 from SSLyzeSSLConnection import create_sslyze_connection, StartTLSError, ProxyError
@@ -31,12 +32,17 @@ class InvalidTargetError(Exception):
         
     RESULT_FORMAT = '\n   {0:<35} => WARNING: {1}; discarding corresponding tasks.'
     
-    def __init__(cls, target_str, error_msg):
-        cls._target_str = target_str
-        cls._error_msg = error_msg
+    def __init__(self, target_str, error_msg):
+        self._target_str = target_str
+        self._error_msg = error_msg
         
-    def get_error_msg(cls):
-        return cls.RESULT_FORMAT.format(cls._target_str, cls._error_msg )
+    def get_error_txt(self):
+        return self.RESULT_FORMAT.format(self._target_str, self._error_msg )
+
+    def get_error_xml(self):
+        errorXml = Element('invalidTarget', error = self._error_msg)
+        errorXml.text = self._target_str
+        return errorXml
 
 
 
@@ -145,6 +151,10 @@ class ServersConnectivityTester(object):
 
     @classmethod
     def get_printable_result(cls, targets_OK, targets_ERR):
+        """
+        Returns a text meant to be displayed to the user and presenting the
+        results of the connectivity testing. 
+        """
         result_str = ''
         for target in targets_OK:
             result_str += cls.TARGET_OK_FORMAT.format(cls.HOST_FORMAT.format(target),
@@ -152,9 +162,22 @@ class ServersConnectivityTester(object):
 
         for exception in targets_ERR:
             print exception
-            result_str += exception.get_error_msg()
+            result_str += exception.get_error_txt()
 
-        return result_str    
+        return result_str   
+    
+    
+    @classmethod
+    def get_xml_result(cls, targets_ERR):
+        """
+        Returns XML containing the list of every target that returned an error
+        during the connectivity testing. 
+        """
+        resultXml = Element('invalidTargets')
+        for exception in targets_ERR:
+            resultXml.append(exception.get_error_xml())
+
+        return resultXml    
           
  
     @classmethod

@@ -34,7 +34,7 @@ try:
     from utils.ServersConnectivityTester import ServersConnectivityTester
 except ImportError:
     print '\nERROR: Could not import nassl Python module. Did you clone SSLyze\'s repo ? \n' +\
-    'Please download the right pre-compiled package instead at https://github.com/iSECPartners/sslyze/.'
+    'Please download the right pre-compiled package as described in the README.'
     sys.exit()
 
 

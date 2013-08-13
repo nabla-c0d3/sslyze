@@ -156,7 +156,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                                  
             # Add a new line and title
             txtOutput.append('')
-            if len(resultKey) == 0: # No ciphers
+            if len(resultDicts[resultKey]) == 0: # No ciphers
                 txtOutput.append(titleFormat(resultTitle + ' None'))
             else:
                 txtOutput.append(titleFormat(resultTitle))

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         ServersConnectivityTester.py
-# Purpose:      TODO
+# Purpose:      Initial checks to figure out which servers supplied by the
+#               user are actually reachable.
 #
 # Author:       alban
 #
-# Copyright:    2012 SSLyze developers
+# Copyright:    2013 SSLyze developers
 #
 #   SSLyze is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by

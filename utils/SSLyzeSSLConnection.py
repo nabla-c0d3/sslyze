@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 #-------------------------------------------------------------------------------
-# Name:         TODO
-# Purpose:      TODO
+# Name:         SSLyzeSSLConnection.py
+# Purpose:      The SSL connection class that all SSLyze Plugins should be 
+#               using. It takes care of creating the right connections based
+#               on the command line arguments supplied by the user.
 #
 # Author:       alban
 #
-# Copyright:    2012 SSLyze developers
+# Copyright:    2013 SSLyze developers
 #
 #   SSLyze is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -218,7 +220,7 @@ class SSLConnection(SslClient):
             
         # The goal here to differentiate rejected SSL handshakes (which will
         # raise SSLHandshakeRejected) from random network errors
-        
+
         except socket.error as e:
             for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                 if error_msg in str(e.args):

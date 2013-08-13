@@ -47,12 +47,18 @@ class CommandLineParser():
                    'compression']
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 etc...'
     
+    # StartTLS options
     START_TLS_PROTS = ['smtp', 'xmpp', 'pop3', 'ftp', 'imap', 'ldap', 'auto']
     START_TLS_USAGE = 'STARTTLS should be one of: ' + str(START_TLS_PROTS) +  \
         '. The \'auto\' option will cause SSLyze to deduce the protocol' + \
         ' (ftp, imap, etc.) from the supplied port number, for each target servers.'
+        
+    # Default values
+    DEFAULT_NB_PROCESSES = 6
+    DEFAULT_TIMEOUT =   5
     
-    def __init__(self, available_plugins, sslyze_version, timeout):
+    
+    def __init__(self, available_plugins, sslyze_version):
         """
         Generates SSLyze's command line parser.
         """
@@ -61,7 +67,7 @@ class CommandLineParser():
                                     usage=self.SSLYZE_USAGE)
     
         # Add generic command line options to the parser
-        self._add_default_options(timeout)
+        self._add_default_options()
     
         # Add plugin-specific options to the parser
         self._add_plugin_options(available_plugins)
@@ -118,7 +124,7 @@ class CommandLineParser():
         return (args_command_list, args_target_list, shared_settings)
 
 
-    def _add_default_options(self, timeout):
+    def _add_default_options(self):
         """
         Adds default command line options to the parser.
         """
@@ -170,10 +176,24 @@ class CommandLineParser():
             '--timeout',
             help= (
                 'Sets the timeout value in seconds used for every socket '
-                'connection made to the target server(s). Default is 5s.'),
+                'connection made to the target server(s). Default is ' + 
+                str(self.DEFAULT_TIMEOUT) + 's.'),
             type='int',
             dest='timeout',
-            default=timeout)
+            default=self.DEFAULT_TIMEOUT)
+
+
+        # Control multiprocessing
+        self._parser.add_option(
+            '--processes',
+            help= (
+                'Sets the number of concurrent processes for scanning. '
+                'Set this to 1 if you are getting a lot of timeout errors when'
+                'scanning a specific server. Default is ' + 
+                str(self.DEFAULT_NB_PROCESSES) + '.'),
+            type='int',
+            dest='nb_processes',
+            default=self.DEFAULT_NB_PROCESSES)
     
         
         # HTTP CONNECT Proxy
@@ -318,6 +338,11 @@ class CommandLineParser():
         if args_command_list.starttls and args_command_list.https_tunnel:
             raise CommandLineParsingError(
                 'Cannot have --https_tunnel and --starttls at the same time.')   
+        
+        # Number of processes
+        if args_command_list.nb_processes < 1:
+            raise CommandLineParsingError(
+                'Cannot have a number smaller than 1 for --processes.') 
         
         # All good, let's save the data    
         for key, value in args_command_list.__dict__.iteritems():

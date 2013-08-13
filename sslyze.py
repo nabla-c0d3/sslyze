@@ -43,8 +43,6 @@ PROJECT_URL = "https://github.com/isecPartners/sslyze"
 PROJECT_EMAIL = 'sslyze@isecpartners.com'
 PROJECT_DESC = 'Fast and full-featured SSL scanner'
 
-DEFAULT_NB_PROCESSES = 5
-DEFAULT_TIMEOUT =   5
 
 # Todo: Move formatting stuff to another file
 SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
@@ -132,8 +130,6 @@ def _format_txt_target_result(target, result_list):
 
 def main():
 
-    nb_processes = DEFAULT_NB_PROCESSES
-
     #--PLUGINS INITIALIZATION--
     start_time = time()
     print '\n\n\n' + _format_title('Registering available plugins')
@@ -146,7 +142,7 @@ def main():
     print '\n\n'
 
     # Create the command line parser and the list of available options
-    sslyze_parser = CommandLineParser(available_plugins, PROJECT_VERSION, DEFAULT_TIMEOUT)
+    sslyze_parser = CommandLineParser(available_plugins, PROJECT_VERSION)
 
     try: # Parse the command line
         (command_list, target_list, shared_settings) = sslyze_parser.parse_command_line()
@@ -156,6 +152,7 @@ def main():
     
 
     #--PROCESSES INITIALIZATION--
+    nb_processes = command_list.nb_processes
     if command_list.https_tunnel:
         nb_processes = 1 # Let's not kill the proxy
         

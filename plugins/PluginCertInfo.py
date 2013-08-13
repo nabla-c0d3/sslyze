@@ -98,6 +98,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         txt_result.extend(cert_txt)
 
         # Text output - OCSP stapling
+        txt_result.append('')
         txt_result.append(self.PLUGIN_TITLE_FORMAT('OCSP Stapling'))
         txt_result.extend(self._get_ocsp_text(ocspResp))
 
@@ -120,21 +121,24 @@ class PluginCertInfo(PluginBase.PluginBase):
         PEMcert_xml = Element('asPEM')
         PEMcert_xml.text = cert.as_pem().strip()
         trust_xml.append(PEMcert_xml)
-        
-        for elem_xml in cert.as_xml():
-            trust_xml.append(elem_xml)
+
+        for (key, value) in cert.as_dict().items():
+            trust_xml.append(_keyvalue_pair_to_xml(key, value))
+            
         xml_result.append(trust_xml)
         
         # XML output: OCSP Stapling
         if ocspResp is None:
             oscpAttr =  {'error' : 'Server did not send back an OCSP response'}
-            ocspXML = Element('ocspStapling', attrib = oscpAttr)
+            ocspXml = Element('ocspStapling', attrib = oscpAttr)
         else:
             oscpAttr =  {'isTrusted' : str(ocspResp.verify(MOZILLA_CA_STORE))}
-            ocspXML = Element('ocspResponse', attrib = oscpAttr)
-            for elem_xml in ocspResp.as_xml():
-                ocspXML.append(elem_xml)
-        xml_result.append(ocspXML)        
+            ocspXml = Element('ocspResponse', attrib = oscpAttr)
+
+            for (key, value) in ocspResp.as_dict().items():
+                ocspXml.append(_keyvalue_pair_to_xml(key,value))
+                
+        xml_result.append(ocspXml)        
         
         return PluginBase.PluginResult(txt_result, xml_result)
 
@@ -283,3 +287,45 @@ def _dnsname_to_pat(dn):
             frag = re.escape(frag)
             pats.append(frag.replace(r'\*', '[^.]*'))
     return re.compile(r'\A' + r'\.'.join(pats) + r'\Z', re.IGNORECASE)
+
+
+
+# XML generation
+def _create_xml_node(key, value=''):
+    key = key.replace(' ', '').strip() # Remove spaces
+    key = key.replace('/', '').strip() # Remove slashes (S/MIME Capabilities)
+    
+    # Things that would generate invalid XML
+    if key[0].isdigit(): # Tags cannot start with a digit
+            key = 'oid-' + key 
+            
+    xml_node = Element(key)
+    xml_node.text = value.decode( "utf-8" ).strip()
+    return xml_node
+
+
+def _keyvalue_pair_to_xml(key, value=''):
+    
+    if type(value) is str: # value is a string
+        key_xml = _create_xml_node(key, value)
+
+    elif type(value) is int:
+        key_xml = _create_xml_node(key, str(value))
+        
+    elif value is None: # no value
+        key_xml = _create_xml_node(key)
+       
+    elif type(value) is list: 
+        key_xml = _create_xml_node(key)
+        for val in value:
+            key_xml.append(_keyvalue_pair_to_xml('listEntry', val))
+       
+    elif type(value) is dict: # value is a list of subnodes
+        key_xml = _create_xml_node(key)
+        for subkey in value.keys():
+            key_xml.append(_keyvalue_pair_to_xml(subkey, value[subkey]))
+    else:
+        raise Exception()
+        
+    return key_xml    
+

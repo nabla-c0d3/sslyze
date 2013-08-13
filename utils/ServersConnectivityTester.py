@@ -161,7 +161,6 @@ class ServersConnectivityTester(object):
                                                        cls.IP_FORMAT.format(target))
 
         for exception in targets_ERR:
-            print exception
             result_str += exception.get_error_txt()
 
         return result_str   

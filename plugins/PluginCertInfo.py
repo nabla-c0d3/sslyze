@@ -98,7 +98,6 @@ class PluginCertInfo(PluginBase.PluginBase):
         txt_result.extend(cert_txt)
 
         # Text output - OCSP stapling
-        txt_result.append('\n')
         txt_result.append(self.PLUGIN_TITLE_FORMAT('OCSP Stapling'))
         txt_result.extend(self._get_ocsp_text(ocspResp))
 

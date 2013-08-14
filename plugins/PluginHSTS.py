@@ -40,18 +40,22 @@ class PluginHSTS(PluginBase.PluginBase):
     interface = PluginBase.PluginInterface(title="PluginHSTS", description=(''))
     interface.add_command(
         command="hsts",
-        help="Verifies the support of a server for HTTP Strict Transport Security "
+        help="Checks support for HTTP Strict Transport Security "
              "(HSTS) by collecting any Strict-Transport-Security field present in "
-             "the response from the server.",
+             "the HTTP response sent back by the server.",
         dest=None)
+
 
     def process_task(self, target, command, args):
 
+        if self._shared_settings['starttls']:
+            raise Exception('Cannot use --hsts with --starttls.')
+            
         output_format = '        {0:<25} {1}'
 
         hsts_supported = False
         hsts_timeout = ""
-        (host, addr, port) = target
+        (host, addr, port, sslVersion) = target
         connection = httplib.HTTPSConnection(host)
         try:
             connection.connect()
@@ -71,7 +75,7 @@ class PluginHSTS(PluginBase.PluginBase):
 
         # Text output
         cmd_title = 'HSTS'
-        txt_result = [self.PLUGIN_TITLE_FORMAT.format(cmd_title)]
+        txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
         if hsts_supported:
             txt_result.append(output_format.format("Supported:", hsts_timeout))
         else:

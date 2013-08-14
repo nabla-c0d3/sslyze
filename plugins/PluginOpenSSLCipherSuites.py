@@ -25,9 +25,9 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
-from utils.ctSSL import SSL, SSL_CTX, constants, ctSSL_initialize, \
-    ctSSL_cleanup
-from utils.SSLyzeSSLConnection import SSLyzeSSLConnection, SSLHandshakeRejected
+from utils.SSLyzeSSLConnection import create_sslyze_connection, SSLHandshakeRejected
+from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2 
+from nassl.SslClient import SslClient
 
 
 class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
@@ -71,18 +71,20 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
     def process_task(self, target, command, args):
 
         MAX_THREADS = 30
-        
-        if command in ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2']:
-            ssl_version = command
-        else:
+        sslVersionDict = {'sslv2': SSLV2, 
+                       'sslv3': SSLV3, 
+                       'tlsv1': TLSV1, 
+                       'tlsv1_1': TLSV1_1, 
+                       'tlsv1_2': TLSV1_2}
+        try:
+            sslVersion = sslVersionDict[command]
+        except KeyError:
             raise Exception("PluginOpenSSLCipherSuites: Unknown command.")
 
         # Get the list of available cipher suites for the given ssl version
-        ctSSL_initialize(multithreading=True)
-        ctx = SSL_CTX.SSL_CTX(ssl_version)
-        ctx.set_cipher_list('ALL:NULL:@STRENGTH')
-        ssl = SSL.SSL(ctx)
-        cipher_list = ssl.get_cipher_list()
+        sslClient = SslClient(sslVersion=sslVersion)
+        sslClient.set_cipher_list('ALL:COMPLEMENTOFALL')
+        cipher_list = sslClient.get_cipher_list()
 
         # Create a thread pool
         NB_THREADS = min(len(cipher_list), MAX_THREADS) # One thread per cipher
@@ -91,11 +93,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         # Scan for every available cipher suite
         for cipher in cipher_list:
             thread_pool.add_job((self._test_ciphersuite,
-                                 (target, ssl_version, cipher)))
+                                 (target, sslVersion, cipher)))
 
         # Scan for the preferred cipher suite
         thread_pool.add_job((self._pref_ciphersuite,
-                             (target, ssl_version)))
+                             (target, sslVersion)))
 
         # Start processing the jobs
         thread_pool.start(NB_THREADS)
@@ -119,80 +121,79 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             result_dicts['errors'][ssl_cipher] = (error_msg, None)        
             
         thread_pool.join()
-        ctSSL_cleanup()
         
         # Generate results
-        return PluginBase.PluginResult(self._generate_txt_result(result_dicts, command),
-                                       self._generate_xml_result(result_dicts, command))
+        return PluginBase.PluginResult(self._generate_text_output(result_dicts, command),
+                                       self._generate_xml_output(result_dicts, command))
         
          
 # == INTERNAL FUNCTIONS ==
 
 # FORMATTING FUNCTIONS
-    def _generate_txt_result(self, result_dicts, ssl_version):
+    def _generate_text_output(self, resultDicts, sslVersion):
         
-        cipher_format = '        {0:<32}{1:<35}'
-        title_format =  '      {0:<32} '        
-        keysize_format = '{0:<25}{1:<14}'
-        title_txt = self.PLUGIN_TITLE_FORMAT.format(ssl_version.upper() + ' Cipher Suites')
-        txt_result = [title_txt]
+        cipherFormat = '        {0:<32}{1:<35}'.format
+        titleFormat =  '      {0:<32} '.format        
+        keysizeFormat = '{0:<30}{1:<14}'.format
         
-        txt_titles = [('preferredCipherSuite', 'Preferred Cipher Suite:'),
+        txtOutput = [self.PLUGIN_TITLE_FORMAT(sslVersion.upper() + ' Cipher Suites')]
+        
+        dictTitles = [('preferredCipherSuite', 'Preferred Cipher Suite:'),
                       ('acceptedCipherSuites', 'Accepted Cipher Suite(s):'),
                       ('errors', 'Undefined - An unexpected error happened:'),
                       ('rejectedCipherSuites', 'Rejected Cipher Suite(s):')]
               
         if self._shared_settings['hide_rejected_ciphers']:
-            txt_titles.pop(3)
-            txt_result.append('')
-            txt_result.append(title_format.format('Rejected Cipher Suite(s): Hidden'))
+            dictTitles.pop(3)
+            txtOutput.append('')
+            txtOutput.append(titleFormat('Rejected Cipher Suite(s): Hidden'))
             
-        for (result_type, result_title) in txt_titles:
+        for (resultKey, resultTitle) in dictTitles:
             
             # Sort the cipher suites by results
-            result_list = sorted(result_dicts[result_type].iteritems(), 
+            result_list = sorted(resultDicts[resultKey].iteritems(), 
                                  key=lambda (k,v): (v,k), reverse=True)
                                  
             # Add a new line and title
-            txt_result.append('')
-            if len(result_list) == 0: # No ciphers
-                txt_result.append(title_format.format(result_title + ' None'))
+            txtOutput.append('')
+            if len(resultDicts[resultKey]) == 0: # No ciphers
+                txtOutput.append(titleFormat(resultTitle + ' None'))
             else:
-                txt_result.append(title_format.format(result_title))
+                txtOutput.append(titleFormat(resultTitle))
 
                 # Add one line for each ciphers
-                for (cipher_txt, (msg, keysize)) in result_list:
+                for (cipherTxt, (msg, keysize)) in result_list:
                     if keysize:
-                        cipher_txt = keysize_format.format(cipher_txt, keysize)
+                        cipherTxt = keysizeFormat(cipherTxt, keysize)
                                     
-                    txt_result.append(cipher_format.format(cipher_txt, msg))
+                    txtOutput.append(cipherFormat(cipherTxt, msg))
                                   
-        return txt_result
+        return txtOutput
             
             
-    def _generate_xml_result(self, result_dicts, command):
+    def _generate_xml_output(self, result_dicts, command):
                 
-        xml_result = Element(command,  title = command.upper() + ' Cipher Suites')
+        xmlOutput = Element(command, title=command.upper() + ' Cipher Suites')
         
-        for (result_type, result_dict) in result_dicts.items():
-            xml_dict = Element(result_type)
+        for (resultKey, resultDict) in result_dicts.items():
+            xmlNode = Element(resultKey)
             
             # Sort the cipher suites by name to make the XML diff-able
-            result_list = sorted(result_dict.items(), 
+            resultList = sorted(resultDict.items(), 
                                  key=lambda (k,v): (k,v), reverse=False)
             
             # Add one element for each ciphers
-            for (ssl_cipher, (msg, keysize)) in result_list:
-                cipher_xml_attr = {'name' : ssl_cipher, 'connectionStatus' : msg}
+            for (sslCipher, (msg, keysize)) in resultList:
+                cipherXmlAttr = {'name' : sslCipher, 'connectionStatus' : msg}
                 if keysize: 
-                    cipher_xml_attr['keySize'] = keysize
-                cipher_xml = Element('cipherSuite', attrib = cipher_xml_attr)
+                    cipherXmlAttr['keySize'] = keysize
+                cipherXml = Element('cipherSuite', attrib = cipherXmlAttr)
                     
-                xml_dict.append(cipher_xml)
+                xmlNode.append(cipherXml)
                 
-            xml_result.append(xml_dict)
+            xmlOutput.append(xmlNode)
 
-        return xml_result
+        return xmlOutput
             
             
 # SSL FUNCTIONS    
@@ -201,33 +202,30 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         Initiates a SSL handshake with the server, using the SSL version and 
         cipher suite specified.
         """
-        ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
-        ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-        ssl_ctx.set_cipher_list(ssl_cipher)
-    
-        # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx)
-        
+        sslConn = create_sslyze_connection(target, self._shared_settings, ssl_version)
+        sslConn.set_cipher_list(ssl_cipher)
+
         try: # Perform the SSL handshake
-            ssl_connect.connect()
+            sslConn.connect()
             
         except SSLHandshakeRejected as e:
             return ('rejectedCipherSuites', ssl_cipher, None, str(e))
+        
+        except:
+            raise
 
         else:
-            ssl_cipher = ssl_connect._ssl.get_current_cipher()
+            ssl_cipher = sslConn.get_cipher_name()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
                 keysize = 'Anon' # Anonymous, let s not care about the key size
             else:
-                keysize = str(ssl_connect._ssl.get_current_cipher_bits())+' bits'
+                keysize = str(sslConn.get_cipher_bits()) + ' bits'
                 
-            status_msg = ssl_connect.post_handshake_check()
+            status_msg = sslConn.post_handshake_check()
             return ('acceptedCipherSuites', ssl_cipher, keysize, status_msg)
     
         finally:
-            ssl_connect.close()
-            
-        return
+            sslConn.close()
     
     
     def _pref_ciphersuite(self, target, ssl_version):
@@ -235,29 +233,23 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         Initiates a SSL handshake with the server, using the SSL version and cipher
         suite specified.
         """
-        ssl_ctx = SSL_CTX.SSL_CTX(ssl_version)
-        ssl_ctx.set_verify(constants.SSL_VERIFY_NONE)
-        # ssl_connect can be an HTTPS connection or an SMTP STARTTLS connection
-        ssl_connect = SSLyzeSSLConnection(self._shared_settings, target,ssl_ctx,
-                                          hello_workaround=True)
+        sslConn = create_sslyze_connection(target, self._shared_settings, ssl_version)
         
         try: # Perform the SSL handshake
-            ssl_connect.connect()
+            sslConn.connect()
 
-            ssl_cipher = ssl_connect._ssl.get_current_cipher()
+            ssl_cipher = sslConn.get_cipher_name()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
                 keysize = 'Anon' # Anonymous, let s not care about the key size
             else:
-                keysize = str(ssl_connect._ssl.get_current_cipher_bits())+' bits'
+                keysize = str(sslConn.get_cipher_bits())+' bits'
                 
-            status_msg = ssl_connect.post_handshake_check()
+            status_msg = sslConn.post_handshake_check()
             return ('preferredCipherSuite', ssl_cipher, keysize, status_msg)
         
         except:
             return None
     
         finally:
-            ssl_connect.close()
-            
-        return
+            sslConn.close()
 

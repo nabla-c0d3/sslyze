@@ -25,19 +25,28 @@ from time import time
 from multiprocessing import Process, JoinableQueue
 from xml.etree.ElementTree import Element, tostring
 from xml.dom import minidom
+import sys
 
 from plugins import PluginsFinder
-from utils.CommandLineParser import CommandLineParser, CommandLineParsingError
-from utils.ServersConnectivityTester import ServersConnectivityTester, \
-    ProxyConnectivityTester
 
-SSLYZE_VERSION = 'SSLyze v0.7 beta'
-DEFAULT_NB_PROCESSES = 5
-DEFAULT_TIMEOUT =   5
+try:
+    from utils.CommandLineParser import CommandLineParser, CommandLineParsingError
+    from utils.ServersConnectivityTester import ServersConnectivityTester
+except ImportError:
+    print '\nERROR: Could not import nassl Python module. Did you clone SSLyze\'s repo ? \n' +\
+    'Please download the right pre-compiled package as described in the README.'
+    sys.exit()
+
+
+PROJECT_VERSION = 'SSLyze v0.7 beta'
 PROJECT_URL = "https://github.com/isecPartners/sslyze"
+PROJECT_EMAIL = 'sslyze@isecpartners.com'
+PROJECT_DESC = 'Fast and full-featured SSL scanner'
+
 
 # Todo: Move formatting stuff to another file
 SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
+
 
 class WorkerProcess(Process):
 
@@ -76,6 +85,7 @@ class WorkerProcess(Process):
             try: # Process the task
                 result = plugin_instance.process_task(target, command, args)
             except Exception as e: # Generate txt and xml results
+                #raise
                 txt_result = ['Unhandled exception when processing --' + 
                               command + ': ', str(e.__class__.__module__) + 
                               '.' + str(e.__class__.__name__) + ' - ' + str(e)]
@@ -94,7 +104,7 @@ def _format_title(title):
 
 
 def _format_xml_target_result(target, result_list):
-    (host, ip, port) = target
+    (host, ip, port, sslVersion) = target
     target_xml = Element('target', host=host, ip=ip, port=str(port))
     result_list.sort(key=lambda result: result[0]) # Sort results
     
@@ -105,7 +115,7 @@ def _format_xml_target_result(target, result_list):
 
 
 def _format_txt_target_result(target, result_list):
-    (host, ip, port) = target
+    (host, ip, port, sslVersion) = target
     target_result_str = ''
 
     for (command, plugin_result) in result_list:
@@ -120,8 +130,6 @@ def _format_txt_target_result(target, result_list):
 
 def main():
 
-    nb_processes = DEFAULT_NB_PROCESSES
-
     #--PLUGINS INITIALIZATION--
     start_time = time()
     print '\n\n\n' + _format_title('Registering available plugins')
@@ -134,7 +142,7 @@ def main():
     print '\n\n'
 
     # Create the command line parser and the list of available options
-    sslyze_parser = CommandLineParser(available_plugins, SSLYZE_VERSION, DEFAULT_TIMEOUT)
+    sslyze_parser = CommandLineParser(available_plugins, PROJECT_VERSION)
 
     try: # Parse the command line
         (command_list, target_list, shared_settings) = sslyze_parser.parse_command_line()
@@ -144,6 +152,7 @@ def main():
     
 
     #--PROCESSES INITIALIZATION--
+    nb_processes = command_list.nb_processes
     if command_list.https_tunnel:
         nb_processes = 1 # Let's not kill the proxy
         
@@ -163,24 +172,26 @@ def main():
     # Figure out which hosts are up and fill the task queue with work to do
     print _format_title('Checking host(s) availability')
 
-    if command_list.https_tunnel:
-        targets_tester = ProxyConnectivityTester(target_list, 
-                                                 command_list.https_tunnel)
-    else:
-        targets_tester = ServersConnectivityTester(target_list, 
-                                                   command_list.starttls,
-                                                   command_list.xmpp_to)
 
     targets_OK = []
-    for target in targets_tester.test_connectivity(command_list.timeout):
+    targets_ERR = []
+    target_results = ServersConnectivityTester.test_server_list(target_list, 
+                                                                shared_settings)
+    for target in target_results:
+        if target is None:
+            break # None is a sentinel here
+        
         # Send tasks to worker processes
         targets_OK.append(target)
         for command in available_commands:
             if getattr(command_list, command):
                 args = command_list.__dict__[command]
                 task_queue.put( (target, command, args) )
-                
-    print targets_tester.get_result_str()
+    
+    for exception in target_results:
+        targets_ERR.append(exception)
+        
+    print ServersConnectivityTester.get_printable_result(targets_OK, targets_ERR)
     print '\n\n'
 
     # Put a 'None' sentinel in the queue to let the each process know when every
@@ -249,8 +260,11 @@ def main():
             result_xml.append(xml_element)
             
         xml_final_doc = Element('document', title = "SSLyze Scan Results",
-                                SSLyzeVersion = SSLYZE_VERSION, 
+                                SSLyzeVersion = PROJECT_VERSION, 
                                 SSLyzeWeb = PROJECT_URL)
+        # Add the list of invalid targets
+        xml_final_doc.append(ServersConnectivityTester.get_xml_result(targets_ERR))
+        # Add the output of the plugins
         xml_final_doc.append(result_xml)
 
         # Hack: Prettify the XML file so it's (somewhat) diff-able

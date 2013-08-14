@@ -4,10 +4,10 @@ SSLyze Changelog
 
 ## v0.7
 * Complete rewrite of the OpenSSL wrapper as a C extension
-** SSLyze is now statically linked with the latest version of OpenSSL instead of using the system's (potentially outdated/broken) OpenSSL library
-** All of SSLyze's features are now available on all supported platforms (including SSL 2.0, TLS 1.1 and TLS 1.2)
-** Scans are slightly faster
-** Python 2.6 is no longer supported
+   * SSLyze is now statically linked with the latest version of OpenSSL instead of using the system's (potentially outdated/broken) OpenSSL library
+    * All of SSLyze's features are now available on all supported platforms (including SSL 2.0, TLS 1.1 and TLS 1.2)
+    * Scans are slightly faster
+    * Python 2.6 is no longer supported
 * Support for StartTLS FTP, POP, IMAP, LDAP and "auto". See --starttls
 * Support for OCSP Stapling. See --certinfo
 * Other various improvements that results in SSLyze being more robust

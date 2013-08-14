@@ -132,7 +132,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             oscpAttr =  {'error' : 'Server did not send back an OCSP response'}
             ocspXml = Element('ocspStapling', attrib = oscpAttr)
         else:
-            oscpAttr =  {'isTrusted' : str(ocspResp.verify(MOZILLA_CA_STORE))}
+            oscpAttr =  {'isTrustedByMozillaCAStore' : str(ocspResp.verify(MOZILLA_CA_STORE))}
             ocspXml = Element('ocspResponse', attrib = oscpAttr)
 
             for (key, value) in ocspResp.as_dict().items():
@@ -151,12 +151,12 @@ class PluginCertInfo(PluginBase.PluginBase):
             return [self.FIELD_FORMAT('Server did not send back an OCSP response.', '')]
         
         ocspRespDict = ocspResp.as_dict()
-        ocspRespTrustTxt = 'Trusted' if ocspResp.verify(MOZILLA_CA_STORE) \
-            else 'NOT Trusted'
+        ocspRespTrustTxt = 'Response is Trusted' if ocspResp.verify(MOZILLA_CA_STORE) \
+            else 'Response is NOT Trusted'
         
         ocspRespTxt = [ \
             self.FIELD_FORMAT('OCSP Response Status:', ocspRespDict['responseStatus']),
-            self.FIELD_FORMAT('OCSP Response Trust:', ocspRespTrustTxt),
+            self.FIELD_FORMAT('Validation w/ Mozilla\'s CA Store:', ocspRespTrustTxt),
             self.FIELD_FORMAT('Responder Id:', ocspRespDict['responderID'])]
         
         if 'successful' not in ocspRespDict['responseStatus']:

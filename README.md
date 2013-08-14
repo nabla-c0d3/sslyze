@@ -28,30 +28,23 @@ Installation
 ------------
 
 SSLyze requires Python 2.7; the supported platforms are Windows 7 32/64 bits, 
-and Linux and OS X Mountain Lion 64 bits.
+Linux 32/64 bits and OS X 64 bits.
 
 SSLyze is statically linked with OpenSSL 1.0.1e. For this reason, the easiest 
 way to run SSLyze is to download one the following pre-compiled packages:
 
+### Linux
 
-### Linux & Python 64 bits
+* Package for Python 64 bits: XXX
+* Package for Python 32 bits: XXX
 
-XXX
+### OS X
 
+* Package for Python 64 bits: XXX
 
-### OS X & Python 64 bits
-
-XXX
-
-
-### Windows & Python 32 bits
-
-XXX
-
-
-### Windows & Python 64 bits
-
-XXX
+### Windows 7
+* Package for Python 32 bits: XXX
+* Package for Python 64 bits: XXX
 
 
 Usage

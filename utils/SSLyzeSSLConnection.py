@@ -47,7 +47,7 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
     
     STARTTLS_DISPATCH = { 'smtp' :  SMTPConnection,
                           587 :     SMTPConnection,
-                          22 :      SMTPConnection,
+                          25 :      SMTPConnection,
                           'xmpp':   XMPPConnection,
                           5222 :    XMPPConnection,
                           5269 :    XMPPConnection,

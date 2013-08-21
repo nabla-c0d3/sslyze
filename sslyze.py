@@ -38,7 +38,7 @@ except ImportError:
     sys.exit()
 
 
-PROJECT_VERSION = 'SSLyze v0.7'
+PROJECT_VERSION = 'SSLyze v0.8 beta'
 PROJECT_URL = "https://github.com/isecPartners/sslyze"
 PROJECT_EMAIL = 'sslyze@isecpartners.com'
 PROJECT_DESC = 'Fast and full-featured SSL scanner'

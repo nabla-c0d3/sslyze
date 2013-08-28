@@ -358,7 +358,7 @@ class SMTPConnection(SSLConnection):
                 
         # Send a STARTTLS
         self._sock.send('STARTTLS\r\n')
-        if 'Ready to start TLS'  not in self._sock.recv(2048): 
+        if '220'  not in self._sock.recv(2048): 
             raise StartTLSError(self.ERR_NO_SMTP_STARTTLS)
 
 

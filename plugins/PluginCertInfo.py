@@ -85,6 +85,9 @@ class PluginCertInfo(PluginBase.PluginBase):
             trust_txt = trust_txt + ' - Extended Validation'
             
        # Hostname validation
+        if self._shared_settings['sni']:
+           txt_result.append(self.FIELD_FORMAT("SNI enabled with virtual domain:", 
+                                               self._shared_settings['sni'])) 
         txt_result.append(self.FIELD_FORMAT("Validation w/ Mozilla's CA Store:", trust_txt))
         
         # TODO: Use SNI name when --sni was used
@@ -114,6 +117,9 @@ class PluginCertInfo(PluginBase.PluginBase):
                           'hasMatchingHostname' : str(host_xml)}
         if certVerifyStr:
             trust_xml_attr['reasonWhyNotTrusted'] = certVerifyStr
+        
+        if self._shared_settings['sni']:
+            trust_xml_attr['sni'] = self._shared_settings['sni'] 
             
         trust_xml = Element('certificate', attrib = trust_xml_attr)
         

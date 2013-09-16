@@ -193,7 +193,7 @@ class ServersConnectivityTester(object):
         
         
         # First try to connect and do StartTLS if needed
-        sslCon = create_sslyze_connection((host, host, port, None), shared_settings, SSLV23)
+        sslCon = create_sslyze_connection((host, host, port, SSLV23), shared_settings)
         try:
             sslCon.do_pre_handshake()
             ipAddr = sslCon._sock.getpeername()[0]

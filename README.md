@@ -27,10 +27,10 @@ Key features include:
 Installation
 ------------
 
-SSLyze requires Python 2.7; the supported platforms are Windows 7 32/64 bits, 
+SSLyze requires Python 2.7; the supported platforms are Windows 7 32/64 bits,
 Linux 32/64 bits and OS X 64 bits.
 
-SSLyze is statically linked with OpenSSL 1.0.1e. For this reason, the easiest 
+SSLyze is statically linked with OpenSSL 1.0.1e. For this reason, the easiest
 way to run SSLyze is to download one the pre-compiled packages available at
 http://nabla-c0d3.github.io/blog/2013/08/14/sslyze-v0-dot-7-released/.
 
@@ -51,13 +51,17 @@ The following command will provide the list of available command line options:
 See the test folder for additional examples.
 
 
-Build
------
+Build / nassl
+-------------
 
-SSLyze is all Python code but since version 0.7, it uses a custom OpenSSL 
-wrapper written in C. The pre-compiled packages contain SSLyze's code and a 
-compiled version of this wrapper, statically linked with OpenSSL and Zlib. This 
-wrapper is hosted at https://github.com/nabla-c0d3/nassl.
+SSLyze is all Python code but since version 0.7, it uses a custom OpenSSL
+wrapper written in C called nassl. The pre-compiled packages for SSLyze
+contain a compiled version of this wrapper in sslyze/nassl. If you want to
+clone the SSLyze repo, you will have to get a compiled version of nassl from
+one of the SSLyze packages and copy it to sslyze-master/nassl, in order to get
+SSLyze to run.
+
+The source code for nassl is hosted at https://github.com/nabla-c0d3/nassl.
 
 
 License

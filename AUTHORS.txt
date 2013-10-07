@@ -17,3 +17,4 @@ Loic Simon
 Tom Ritter
 Joachim Strombergson
 Jakob Schlyter
+Eloi Vanderbéken

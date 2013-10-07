@@ -62,7 +62,9 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
                           21 :      FTPConnection,
                           'ldap' :  LDAPConnection,
                           3268 :    LDAPConnection,
-                          389 :     LDAPConnection }
+                          389 :     LDAPConnection,
+                          'rdp' :   RDPConnection,
+                          3389 :    RDPConnection }
     
     if shared_settings['starttls']:
         
@@ -440,6 +442,34 @@ class LDAPConnection(SSLConnection):
         if self.START_TLS_OK  not in self._sock.recv(2048):
             raise StartTLSError(self.ERR_NO_STARTTLS)
         
+        
+
+class RDPConnection(SSLConnection):
+    """SSL connection class that performs an RDP StartTLS negotiation
+    before the SSL handshake."""
+
+    ERR_NO_STARTTLS = 'RDP AUTH TLS was rejected'
+
+    START_TLS_CMD = bytearray(b'\x03\x00\x00\x13\x0E\xE0\x00\x00\x00\x00\x00\x01\x00\x08\x00\x03\x00\x00\x00')
+    START_TLS_OK = 'Start TLS request accepted.'
+
+    def do_pre_handshake(self):
+        """
+        Connect to a host on a given (SSL) port, send a STARTTLS command,
+        and perform the SSL handshake.
+        """
+        self._sock = socket.create_connection((self._host, self._port), self._timeout)
+
+        self._sock.send(self.START_TLS_CMD)
+        data = self._sock.recv(4)
+        if not data or len(data) != 4 or data[:2] != '\x03\x00' :
+            raise StartTLSError(self.ERR_NO_STARTTLS)
+        packet_len = struct.unpack(">H", data[2:])[0] - 4
+        data = self._sock.recv(packet_len)
+
+        if not data or len(data) != packet_len :
+            raise StartTLSError(self.ERR_NO_STARTTLS)
+
 
 
 class GenericStartTLSConnection(SSLConnection):

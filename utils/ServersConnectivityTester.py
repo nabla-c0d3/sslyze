@@ -111,6 +111,7 @@ class ServersConnectivityTester(object):
                      'pop3'     : 110,
                      'ldap'     : 389,
                      'imap'     : 143,
+                     'rdp'      : 3389,
                      'default'  : 443}
     
     ERR_BAD_PORT = 'Not a valid host:port'

@@ -263,7 +263,7 @@ class HTTPSConnection(SSLConnection):
     
     GET_RESULT_FORMAT = 'HTTP {0} {1}{2}'
     
-    ERR_TIMEOUT = 'Timeout on HTTP GET'
+    ERR_HTTP_TIMEOUT = 'Timeout on HTTP GET'
     ERR_NOT_HTTP = 'Server response was not HTTP'
     
     
@@ -287,7 +287,7 @@ class HTTPSConnection(SSLConnection):
                                                        httpResp.reason,
                                                        redirect)                      
         except socket.timeout:
-            result = self.ERR_TIMEOUT
+            result = self.ERR_HTTP_TIMEOUT
                     
         return result
     

@@ -54,20 +54,19 @@ class PluginCompression(PluginBase.PluginBase):
       
         # Text output
         if compName:
-            compTxt = 'Enabled ' +  compName
-            compXml = {'isSupported':'True','type':compName.strip('()')}
+            compTxt = 'Supported'
         else:
             compTxt = 'Disabled'
-            compXml = {'isSupported':'False'}
             
         cmdTitle = 'Compression'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-        txtOutput.append(OUT_FORMAT("Compression Support:", compTxt))
+        txtOutput.append(OUT_FORMAT("DEFLATE Compression:", compTxt))
 
         # XML output
-        xmlNode = Element('compression', compXml)
-        xmlOutput = Element(command, title = cmdTitle)
-        xmlOutput.append(xmlNode)
+        xmlOutput = Element(command, title=cmdTitle)
+        if compName:
+            xmlNode = Element('compressionMethod', type="DEFLATE")
+            xmlOutput.append(xmlNode)
 
         return PluginBase.PluginResult(txtOutput, xmlOutput)
 

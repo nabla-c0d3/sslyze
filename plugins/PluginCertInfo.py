@@ -24,7 +24,6 @@
 #-------------------------------------------------------------------------------
 
 import os
-import re
 import imp
 from xml.etree.ElementTree import Element
 
@@ -35,7 +34,7 @@ from utils.SSLyzeSSLConnection import create_sslyze_connection, ClientAuthentica
 
 # Import Mozilla trust store and EV OIDs
 DATA_PATH = os.path.join(os.path.dirname(PluginBase.__file__) , 'data')
-MOZILLA_CA_STORE = os.path.join(DATA_PATH, 'mozilla_cacert.pem')
+MOZILLA_CA_STORE = os.path.join(DATA_PATH, os.path.join('trust_stores', 'mozilla.pem'))
 MOZILLA_EV_OIDS = imp.load_source('mozilla_ev_oids',
                                   os.path.join(DATA_PATH,  'mozilla_ev_oids.py')).MOZILLA_EV_OIDS
 
@@ -177,31 +176,21 @@ class PluginCertInfo(PluginBase.PluginBase):
         return ocspRespTxt
 
     
-    def _is_hostname_valid(self, cert, target):
-        certDict = cert.as_dict()
+    @staticmethod
+    def _is_hostname_valid(cert, target):
         (host, ip, port, sslVersion) = target
         
-        # Let's try the common name first, if there's one
-        try:
-            commonName = certDict['subject']['commonName'][0]
-            if _dnsname_to_pat(commonName).match(host):
-                return 'Common Name'
-        except KeyError:
-            pass
-        
-        try: # No luch, let's look at Subject Alternative Names
-            altNames = certDict['extensions']['X509v3 Subject Alternative Name']['DNS']
-        except KeyError:
-            return False
-        
-        for altname in altNames:
-            if _dnsname_to_pat(altname).match(host):
-                return 'Subject Alternative Name'       
-        
+        if cert._matches_CN(host):
+            return 'Common Name'
+
+        if cert._matches_subject_alt_name(host):
+            return 'Subject Alternative Name' 
+
         return False
         
-
-    def _is_ev_certificate(self, cert):
+    
+    @staticmethod
+    def _is_ev_certificate(cert):
         certDict = cert.as_dict()
         try:
             policy = certDict['extensions']['X509v3 Certificate Policies']['Policy']
@@ -275,25 +264,6 @@ class PluginCertInfo(PluginBase.PluginBase):
             sslConn.close()
 
         return (x509Cert, verifyStr, ocspResp)
-
-
-def _dnsname_to_pat(dn):
-    """
-    Generates a regexp for the given name, to be used for hostname validation
-    Taken from http://pypi.python.org/pypi/backports.ssl_match_hostname/3.2a3
-    """
-    pats = []
-    for frag in dn.split(r'.'):
-        if frag == '*':
-            # When '*' is a fragment by itself, it matches a non-empty dotless
-            # fragment.
-            pats.append('[^.]+')
-        else:
-            # Otherwise, '*' matches any dotless fragment.
-            frag = re.escape(frag)
-            pats.append(frag.replace(r'\*', '[^.]*'))
-    return re.compile(r'\A' + r'\.'.join(pats) + r'\Z', re.IGNORECASE)
-
 
 
 # XML generation

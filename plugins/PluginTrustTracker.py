@@ -60,6 +60,8 @@ class PluginTrustTracker(PluginBase.PluginBase):
     def process_task(self, target, command, arg):
 
         verifyResults = {}
+        (host, ip, port, sslVersion) = target
+
         # Try to connect using each available trust store and store the result
         for (trustStoreTitle, trustStorePath) in AVAILABLE_TRUST_STORES.items():
             (cert, verifyStr) = self._get_cert(target, trustStorePath)
@@ -74,7 +76,10 @@ class PluginTrustTracker(PluginBase.PluginBase):
         fingerprint = cert.get_SHA1_fingerprint()
         txtOutput.append(self.FIELD_FORMAT('Certificate SHA1 Fingerprint', fingerprint))
         # TODO: hostname validation
-        txtOutput.append(self.FIELD_FORMAT('Hostname Validation', 'TBD'))
+        host_txt = 'ok' if cert.matches_hostname(host) \
+                        else 'MISMATCH'
+
+        txtOutput.append(self.FIELD_FORMAT('Hostname Validation', host_txt))
         
         for (trustStoreTitle, verifyStr) in verifyResults.items():
             if verifyStr != 'ok':
@@ -84,7 +89,9 @@ class PluginTrustTracker(PluginBase.PluginBase):
 
         # XML output
         xmlOutput = Element(command, title=cmdTitle)
-        trustStoresXml = Element('trustStoreList', isTrustedByAllTrustStores = str(isCertTrustedByAll))
+        trustStoresXml = Element('trustStoreList', 
+                                 isCertificateTrustedByAllTrustStores = str(isCertTrustedByAll),
+                                 hasCertificateMatchingHostname=str(cert.matches_hostname(host)))
         
         for (trustStoreTitle, verifyStr) in verifyResults.items():
             # Add the result of each trust store
@@ -119,7 +126,7 @@ class PluginTrustTracker(PluginBase.PluginBase):
             x509Cert = sslConn.get_peer_certificate()
             (verifyCode, verifyStr) = sslConn.get_certificate_chain_verify_result()
         
-        except ClientCertificateError:
+        except ClientAuthenticationError:
             # The server asked for a client cert
             # We can get the server cert anyway
             x509Cert = sslConn.get_peer_certificate()

@@ -30,13 +30,13 @@ from SSLyzeSSLConnection import create_sslyze_connection, StartTLSError, ProxyEr
 
 
 class InvalidTargetError(Exception):
-        
+
     RESULT_FORMAT = '\n   {0:<35} => WARNING: {1}; discarding corresponding tasks.'
-    
+
     def __init__(self, target_str, error_msg):
         self._target_str = target_str
         self._error_msg = error_msg
-        
+
     def get_error_txt(self):
         return self.RESULT_FORMAT.format(self._target_str, self._error_msg )
 
@@ -48,22 +48,22 @@ class InvalidTargetError(Exception):
 
 
 class TargetStringParser(object):
-    """Utility class to parse a 'host:port' string taken from the command line 
+    """Utility class to parse a 'host:port' string taken from the command line
     into a valid (host,port) tuple. Supports IPV6 addresses."""
 
     @classmethod
     def parse_target_str(cls, target_str, default_port):
 
-        
+
         if '[' in target_str:
             return cls._parse_ipv6_target_str(target_str, default_port)
         else: # Fallback to ipv4
-           return cls._parse_ipv4_target_str(target_str, default_port)
-            
-            
+            return cls._parse_ipv4_target_str(target_str, default_port)
+
+
     @classmethod
-    def _parse_ipv4_target_str(cls, target_str, default_port):        
-        
+    def _parse_ipv4_target_str(cls, target_str, default_port):
+
         if ':' in target_str:
             host = (target_str.split(':'))[0] # hostname or ipv4 address
             try:
@@ -73,16 +73,16 @@ class TargetStringParser(object):
         else:
             host = target_str
             port = default_port
-            
+
         return (host, port)
 
 
     @classmethod
     def _parse_ipv6_target_str(cls, target_str, default_port):
-        
+
         if not socket.has_ipv6:
             raise InvalidTargetError(target_str, cls.ERR_NO_IPV6)
-        
+
         port = default_port
         target_split = (target_str.split(']'))
         ipv6_addr = target_split[0] + ']'
@@ -96,13 +96,13 @@ class TargetStringParser(object):
 
 
 class ServersConnectivityTester(object):
-    """Utility class to connect to a list of servers and return a list of 
+    """Utility class to connect to a list of servers and return a list of
     online and offline servers."""
-    
+
     HOST_FORMAT = '{0[0]}:{0[2]}'
     IP_FORMAT = '{0[1]}:{0[2]}'
     TARGET_OK_FORMAT = '\n   {0:<35} => {1}'
-    
+
     MAX_THREADS = 50
 
     DEFAULT_PORTS = {'smtp'     : 25,
@@ -113,7 +113,7 @@ class ServersConnectivityTester(object):
                      'imap'     : 143,
                      'rdp'      : 3389,
                      'default'  : 443}
-    
+
     ERR_BAD_PORT = 'Not a valid host:port'
     ERR_TIMEOUT = 'Could not connect (timeout)'
     ERR_NAME_NOT_RESOLVED = 'Could not resolve hostname'
@@ -123,39 +123,39 @@ class ServersConnectivityTester(object):
     @classmethod
     def test_server_list(cls, target_list, shared_settings):
         """
-        Tests connectivity with each server of the target_list and returns 
+        Tests connectivity with each server of the target_list and returns
         the list of online servers.
         """
-        
+
         # Use a thread pool to connect to each server
         thread_pool = ThreadPool()
         for target_str in target_list:
             cls._test_server, (target_str, shared_settings)
             thread_pool.add_job((cls._test_server, (target_str, shared_settings)))
-            
+
         nb_threads = min(len(target_list), cls.MAX_THREADS)
         thread_pool.start(nb_threads)
-        
+
         # Return valid targets
         for (job, target) in thread_pool.get_result():
             yield target
-        
+
         # Use None as a sentinel
         yield None
-        
+
         # Return invalid targets
         for (job, exception) in thread_pool.get_error():
             yield exception
 
         thread_pool.join()
-        return   
+        return
 
 
     @classmethod
     def get_printable_result(cls, targets_OK, targets_ERR):
         """
         Returns a text meant to be displayed to the user and presenting the
-        results of the connectivity testing. 
+        results of the connectivity testing.
         """
         result_str = ''
         for target in targets_OK:
@@ -165,40 +165,40 @@ class ServersConnectivityTester(object):
         for exception in targets_ERR:
             result_str += exception.get_error_txt()
 
-        return result_str   
-    
-    
+        return result_str
+
+
     @classmethod
     def get_xml_result(cls, targets_ERR):
         """
         Returns XML containing the list of every target that returned an error
-        during the connectivity testing. 
+        during the connectivity testing.
         """
         resultXml = Element('invalidTargets')
         for exception in targets_ERR:
             resultXml.append(exception.get_error_xml())
 
-        return resultXml    
-          
- 
+        return resultXml
+
+
     @classmethod
     def _test_server(cls, targetStr, shared_settings):
         """Test connectivity to one single server."""
-        
+
         # Parse the target string
         try:
             defaultPort = cls.DEFAULT_PORTS[shared_settings['starttls']]
         except KeyError:
             defaultPort = cls.DEFAULT_PORTS['default']
         (host, port) = TargetStringParser.parse_target_str(targetStr, defaultPort)
-        
-        
+
+
         # First try to connect and do StartTLS if needed
         sslCon = create_sslyze_connection((host, host, port, SSLV23), shared_settings)
         try:
             sslCon.do_pre_handshake()
             ipAddr = sslCon._sock.getpeername()[0]
-            
+
         # Socket errors
         except socket.timeout: # Host is down
             raise InvalidTargetError(targetStr, cls.ERR_TIMEOUT)
@@ -206,22 +206,22 @@ class ServersConnectivityTester(object):
             raise InvalidTargetError(targetStr, cls.ERR_REJECTED)
         except socket.gaierror:
             raise InvalidTargetError(targetStr, cls.ERR_NAME_NOT_RESOLVED)
-        
+
         # StartTLS errors
         except StartTLSError as e:
             raise InvalidTargetError(targetStr, e[0])
-            
+
         # Proxy errors
         except ProxyError as e:
             raise InvalidTargetError(targetStr, e[0])
-            
+
         finally:
             sslCon.close()
-    
-        
+
+
         # Then try to do SSL handshakes just to figure out the SSL version
         # supported by the server; the plugins need to know this in advance.
-        # If the hadnshakes fail, we keep going anyway; maybe the server 
+        # If the hadnshakes fail, we keep going anyway; maybe the server
         # only supports exotic cipher suites
         sslSupport = SSLV23
         for sslVersion in [TLSV1, SSLV23, SSLV3, TLSV1_2]:
@@ -235,6 +235,6 @@ class ServersConnectivityTester(object):
                 break
             finally:
                 sslCon.close()
-    
-    
+
+
         return (host, ipAddr, port, sslSupport)

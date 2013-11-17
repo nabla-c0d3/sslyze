@@ -23,7 +23,7 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-from os.path import join, dirname, split
+from os.path import join, dirname
 import imp
 from xml.etree.ElementTree import Element
 
@@ -74,7 +74,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         else:
             raise Exception("PluginCertInfo: Unknown command.")
 
-        (host, ip, port, sslVersion) = target
+        (host, _, _, _) = target
         threadPool = ThreadPool()
 
         for (storePath, _) in AVAILABLE_TRUST_STORES.iteritems():
@@ -121,7 +121,7 @@ class PluginCertInfo(PluginBase.PluginBase):
 
         # Hostname validation
         if self._shared_settings['sni']:
-           outputTxt.append(self.FIELD_FORMAT("SNI enabled with virtual domain:",
+            outputTxt.append(self.FIELD_FORMAT("SNI enabled with virtual domain:",
                                                self._shared_settings['sni']))
         # TODO: Use SNI name for validation when --sni was used
         hostValDict = {
@@ -286,7 +286,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         validate the server's certificate. Returns the server's certificate and
         OCSP response.
         """
-        (host, ip, port, sslVersion) = target
+        (_, _, _, sslVersion) = target
         sslConn = create_sslyze_connection(target, self._shared_settings,
                                            sslVersion,
                                            sslVerifyLocations=storePath)
@@ -299,13 +299,13 @@ class PluginCertInfo(PluginBase.PluginBase):
 
             ocspResp = sslConn.get_tlsext_status_ocsp_resp()
             x509Cert = sslConn.get_peer_certificate()
-            (verifyCode, verifyStr) = sslConn.get_certificate_chain_verify_result()
+            (_, verifyStr) = sslConn.get_certificate_chain_verify_result()
 
         except ClientAuthenticationError: # The server asked for a client cert
             # We can get the server cert anyway
             ocspResp = sslConn.get_tlsext_status_ocsp_resp()
             x509Cert = sslConn.get_peer_certificate()
-            (verifyCode, verifyStr) = sslConn.get_certificate_chain_verify_result()
+            (_, verifyStr) = sslConn.get_certificate_chain_verify_result()
 
         finally:
             sslConn.close()

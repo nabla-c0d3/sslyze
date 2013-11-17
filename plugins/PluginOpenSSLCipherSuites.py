@@ -155,11 +155,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                                  key=lambda (k,v): (v,k), reverse=True)
 
             # Add a new line and title
-            txtOutput.append('')
             if len(resultDicts[resultKey]) == 0: # No ciphers
                 pass # Hide empty results
                 # txtOutput.append(titleFormat(resultTitle + ' None'))
             else:
+                txtOutput.append('')
                 txtOutput.append(titleFormat(resultTitle))
 
                 # Add one line for each ciphers

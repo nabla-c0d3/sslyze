@@ -61,7 +61,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             "the certificate. CERTINFO should be 'basic' or 'full'.",
         dest="certinfo")
 
-    FIELD_FORMAT = '      {0:<35}{1:<35}'.format
+    FIELD_FORMAT = '      {0:<35}{1}'.format
     TRUST_FORMAT = '\"{0}\" CA Store:'.format
 
 
@@ -144,7 +144,7 @@ class PluginCertInfo(PluginBase.PluginBase):
 
 
         # Text output - OCSP stapling
-        outputTxt.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - Revocation')])
+        outputTxt.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - OCSP Stapling')])
         outputTxt.extend(self._get_ocsp_text(ocspResp))
 
 

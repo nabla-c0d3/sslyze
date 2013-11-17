@@ -43,43 +43,43 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
     def process_task(self, target, command, args):
 
         (clientReneg, secureReneg) = self._test_renegotiation(target)
-        
+
         # Text output
         clientTxt = 'Honored' if clientReneg else 'Rejected'
         secureTxt = 'Supported' if secureReneg else 'Not supported'
         cmdTitle = 'Session Renegotiation'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-        
-        outFormat = '      {0:<35} {1}'.format
+
+        outFormat = '      {0:<35}{1}'.format
         txtOutput.append(outFormat('Client-initiated Renegotiations:', clientTxt))
-        txtOutput.append(outFormat('Secure Renegotiation: ', secureTxt))
-        
+        txtOutput.append(outFormat('Secure Renegotiation:', secureTxt))
+
         # XML output
-        xmlReneg = Element('sessionRenegotiation', 
+        xmlReneg = Element('sessionRenegotiation',
                            attrib = {'canBeClientInitiated' : str(clientReneg),
                                      'isSecure' : str(secureReneg)})
-        
+
         xmlOutput = Element(command, title=cmdTitle)
         xmlOutput.append(xmlReneg)
-        
+
         return PluginBase.PluginResult(txtOutput, xmlOutput)
 
 
     def _test_renegotiation(self, target):
         """
-        Checks whether the server honors session renegotiation requests and 
+        Checks whether the server honors session renegotiation requests and
         whether it supports secure renegotiation.
         """
         sslConn = create_sslyze_connection(target, self._shared_settings)
-        
+
         try: # Perform the SSL handshake
             sslConn.connect()
             secureReneg = sslConn.get_secure_renegotiation_support()
-    
+
             try: # Let's try to renegotiate
                 sslConn.do_renegotiate()
                 clientReneg = True
-                
+
             # Errors caused by a server rejecting the renegotiation
             except socket.error as e:
                 if 'connection was forcibly closed' in str(e.args):
@@ -97,15 +97,15 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
                     clientReneg = False
                 else:
                     raise
-                
+
             # Should be last as socket errors are also IOError
             except IOError as e:
                 if 'Nassl SSL handshake failed' in str(e.args):
                     clientReneg = False
                 else:
                     raise
-    
+
         finally:
             sslConn.close()
-    
+
         return (clientReneg, secureReneg)

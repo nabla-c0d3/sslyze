@@ -39,8 +39,8 @@ class PluginCompression(PluginBase.PluginBase):
 
 
     def process_task(self, target, command, args):
-        
-        OUT_FORMAT = '        {0:<25} {1}'.format
+
+        OUT_FORMAT = '      {0:<35}{1}'.format
 
         sslConn = create_sslyze_connection(target, self._shared_settings)
 
@@ -51,13 +51,13 @@ class PluginCompression(PluginBase.PluginBase):
             compName = sslConn.get_current_compression_name()
         finally:
             sslConn.close()
-      
+
         # Text output
         if compName:
             compTxt = 'Supported'
         else:
             compTxt = 'Disabled'
-            
+
         cmdTitle = 'Compression'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
         txtOutput.append(OUT_FORMAT("DEFLATE Compression:", compTxt))

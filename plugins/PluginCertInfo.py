@@ -23,20 +23,31 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-import os
+from os.path import join, dirname, split
 import imp
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
+from utils.ThreadPool import ThreadPool
 from utils.SSLyzeSSLConnection import create_sslyze_connection, ClientAuthenticationError
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
 
 
-# Import Mozilla trust store and EV OIDs
-DATA_PATH = os.path.join(os.path.dirname(PluginBase.__file__) , 'data')
-MOZILLA_CA_STORE = os.path.join(DATA_PATH, os.path.join('trust_stores', 'mozilla.pem'))
+TRUST_STORES_PATH = join(join(dirname(PluginBase.__file__), 'data'), 'trust_stores')
+
+# We use the Mozilla store for additional things: OCSP and EV validation
+MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')
+
+AVAILABLE_TRUST_STORES = \
+    { MOZILLA_STORE_PATH :                       'Mozilla NSS - 09/2013',
+      join(TRUST_STORES_PATH, 'microsoft.pem') : 'Microsoft - 11/2013',
+      join(TRUST_STORES_PATH, 'apple.pem') :     'Apple - OS X 10.9.0',
+      join(TRUST_STORES_PATH, 'java.pem') :      'Java 7 - Update 25'}
+
+
+# Import Mozilla EV OIDs
 MOZILLA_EV_OIDS = imp.load_source('mozilla_ev_oids',
-                                  os.path.join(DATA_PATH,  'mozilla_ev_oids.py')).MOZILLA_EV_OIDS
+                                  join(TRUST_STORES_PATH,  'mozilla_ev_oids.py')).MOZILLA_EV_OIDS
 
 
 
@@ -51,107 +62,151 @@ class PluginCertInfo(PluginBase.PluginBase):
         dest="certinfo")
 
     FIELD_FORMAT = '      {0:<35}{1:<35}'.format
+    TRUST_FORMAT = '\"{0}\" CA Store:'.format
 
 
     def process_task(self, target, command, arg):
 
-        try: # Get the certificate and the result of the cert validation
-            (cert, certVerifyStr, ocspResp) = self._get_cert(target)
-        except:
-            raise
-
-        (host, ip, port, sslVersion) = target
-        trustedCert = True if 'ok' in certVerifyStr else False
-
-        # Results formatting
-        # Text output - certificate
-        txt_result = [self.PLUGIN_TITLE_FORMAT('Certificate')]
-
         if arg == 'basic':
-            cert_txt = self._get_basic_text(cert)
+            textFunction  = self._get_basic_text
         elif arg == 'full':
-            cert_txt = [cert.as_text()]
+            textFunction = self._get_full_text
         else:
             raise Exception("PluginCertInfo: Unknown command.")
 
-        fingerprint = cert.get_SHA1_fingerprint()
+        (host, ip, port, sslVersion) = target
+        threadPool = ThreadPool()
 
-        # Cert chain validation
-        trust_txt = 'Certificate is Trusted' if trustedCert \
-            else 'Certificate is NOT Trusted: ' + certVerifyStr
+        for (storePath, _) in AVAILABLE_TRUST_STORES.iteritems():
+            # Try to connect with each trust store
+            threadPool.add_job((self._get_cert, (target, storePath)))
 
-        is_ev = self._is_ev_certificate(cert)
-        if is_ev:
-            trust_txt = trust_txt + ' - Extended Validation'
+        # Start processing the jobs
+        threadPool.start(len(AVAILABLE_TRUST_STORES))
 
-       # Hostname validation
-        if self._shared_settings['sni']:
-           txt_result.append(self.FIELD_FORMAT("SNI enabled with virtual domain:",
-                                               self._shared_settings['sni']))
-        txt_result.append(self.FIELD_FORMAT("Validation w/ Mozilla's CA Store:", trust_txt))
+        # Store the results as they come
+        (verifyDict, x509Cert, ocspResp)  = ({}, None, None)
 
-        # TODO: Use SNI name when --sni was used
+        for (job, result) in threadPool.get_result():
+            (_, (_, storePath)) = job
+            (x509Cert, verifyStr, ocspResp) = result
+            # Store the returned verify string for each trust store
+            storeName = AVAILABLE_TRUST_STORES[storePath]
+            verifyDict[storeName] = verifyStr
+
+        if x509Cert == None:
+            # This means none of the connections were successful. Get out
+            for (job, exception) in threadPool.get_error():
+                raise exception
+
+        # Store thread pool errors
+        for (job, exception) in threadPool.get_error():
+            (_, (_, storePath)) = job
+            errorMsg = str(exception.__class__.__module__) + '.' \
+                        + str(exception.__class__.__name__) + ' - ' \
+                        + str(exception)
+            verifyDict[storePath] = errorMsg
+
+        threadPool.join()
+
+
+        # Results formatting
+        # Text output - certificate info
+        outputTxt = [self.PLUGIN_TITLE_FORMAT('Certificate - Content')]
+        outputTxt.extend(textFunction(x509Cert))
+
+
+        # Text output - trust validation
+        outputTxt.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - Trust')])
 
         # Hostname validation
-        host_validation_txt = {
+        if self._shared_settings['sni']:
+           outputTxt.append(self.FIELD_FORMAT("SNI enabled with virtual domain:",
+                                               self._shared_settings['sni']))
+        # TODO: Use SNI name for validation when --sni was used
+        hostValDict = {
             X509_NAME_MATCHES_SAN : 'OK - Subject Alternative Name matches',
             X509_NAME_MATCHES_CN :  'OK - Common Name matches',
             X509_NAME_MISMATCH :    'FAILED - Certificate does not match ' + host
         }
-        host_txt = host_validation_txt[cert.matches_hostname(host)]
+        outputTxt.append(self.FIELD_FORMAT("Hostname Validation:",
+                                            hostValDict[x509Cert.matches_hostname(host)]))
 
-        txt_result.append(self.FIELD_FORMAT("Hostname Validation:", host_txt))
-        txt_result.append(self.FIELD_FORMAT('SHA1 Fingerprint:', fingerprint))
-        txt_result.append('')
-        txt_result.extend(cert_txt)
+        # Path validation
+        for (storeName, verifyStr) in verifyDict.iteritems():
+            verifyTxt = 'OK - Trusted' if (verifyStr in 'ok') else 'FAILED - ' + verifyStr
+
+            # EV certs - Only Mozilla supported for now
+            if (verifyStr in 'ok') and ('Mozilla' in storeName):
+                if (self._is_ev_certificate(x509Cert)):
+                    verifyTxt += ', Extended Validation'
+            outputTxt.append(self.FIELD_FORMAT(self.TRUST_FORMAT(storeName), verifyTxt))
+
 
         # Text output - OCSP stapling
-        txt_result.append('')
-        txt_result.append(self.PLUGIN_TITLE_FORMAT('OCSP Stapling'))
-        txt_result.extend(self._get_ocsp_text(ocspResp))
+        outputTxt.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - Revocation')])
+        outputTxt.extend(self._get_ocsp_text(ocspResp))
 
 
-        # XML output: always return the full certificate
-        host_xml = False if (cert.matches_hostname(host) == X509_NAME_MISMATCH) \
-                         else True
+        # XML output
+        outputXml = Element(command, argument = arg, title = 'Certificate Information')
 
-        xml_result = Element(command, argument = arg, title = 'Certificate')
-        trust_xml_attr = {'isTrustedByMozillaCAStore' : str(trustedCert),
-                          'sha1Fingerprint' : fingerprint,
-                          'isExtendedValidation' : str(is_ev),
-                          'hasMatchingHostname' : str(host_xml)}
-        if certVerifyStr:
-            trust_xml_attr['reasonWhyNotTrusted'] = certVerifyStr
-
+        # XML output - certificate info:  always return the full certificate
+        certAttrib = { 'sha1Fingerprint' : x509Cert.get_SHA1_fingerprint() }
         if self._shared_settings['sni']:
-            trust_xml_attr['sni'] = self._shared_settings['sni']
+            certAttrib['suppliedServerNameIndication'] = self._shared_settings['sni']
 
-        trust_xml = Element('certificate', attrib = trust_xml_attr)
+        certXml = Element('certificate', attrib = certAttrib)
 
         # Add certificate in PEM format
-        PEMcert_xml = Element('asPEM')
-        PEMcert_xml.text = cert.as_pem().strip()
-        trust_xml.append(PEMcert_xml)
+        PEMcertXml = Element('asPEM')
+        PEMcertXml.text = x509Cert.as_pem().strip()
+        certXml.append(PEMcertXml)
 
-        for (key, value) in cert.as_dict().items():
-            trust_xml.append(_keyvalue_pair_to_xml(key, value))
+        for (key, value) in x509Cert.as_dict().items():
+            certXml.append(_keyvalue_pair_to_xml(key, value))
 
-        xml_result.append(trust_xml)
+        outputXml.append(certXml)
 
-        # XML output: OCSP Stapling
+
+        # XML output - trust
+        trustXml = Element('certificateValidation')
+
+        # Hostname validation
+        hostValBool = 'False' if (x509Cert.matches_hostname(host) == X509_NAME_MISMATCH) \
+                              else 'True'
+        hostXml = Element('hostnameValidation', serverHostname = host,
+                           certificateMatchesServerHostname = hostValBool)
+        trustXml.append(hostXml)
+
+        # Path validation
+        for (storeName, verifyStr) in verifyDict.iteritems():
+            pathXmlAttrib = { 'usingTrustStore' : storeName,
+                              'validationResult' : verifyStr}
+
+            # EV certs - Only Mozilla supported for now
+            if (verifyStr in 'ok') and ('Mozilla' in storeName):
+                    pathXmlAttrib['isExtendedValidationCertificate'] = str(self._is_ev_certificate(x509Cert))
+
+            trustXml.append(Element('pathValidation', attrib = pathXmlAttrib))
+
+        outputXml.append(trustXml)
+
+
+        # XML output - OCSP Stapling
         if ocspResp is None:
             oscpAttr =  {'error' : 'Server did not send back an OCSP response'}
             ocspXml = Element('ocspStapling', attrib = oscpAttr)
         else:
-            oscpAttr =  {'isTrustedByMozillaCAStore' : str(ocspResp.verify(MOZILLA_CA_STORE))}
+            oscpAttr =  {'isTrustedByMozillaCAStore' : str(ocspResp.verify(MOZILLA_STORE_PATH))}
             ocspXml = Element('ocspResponse', attrib = oscpAttr)
 
             for (key, value) in ocspResp.as_dict().items():
                 ocspXml.append(_keyvalue_pair_to_xml(key,value))
 
-        xml_result.append(ocspXml)
+        outputXml.append(ocspXml)
 
-        return PluginBase.PluginResult(txt_result, xml_result)
+        return PluginBase.PluginResult(outputTxt, outputXml)
 
 
 # FORMATTING FUNCTIONS
@@ -162,7 +217,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             return [self.FIELD_FORMAT('Server did not send back an OCSP response.', '')]
 
         ocspRespDict = ocspResp.as_dict()
-        ocspRespTrustTxt = 'Response is Trusted' if ocspResp.verify(MOZILLA_CA_STORE) \
+        ocspRespTrustTxt = 'Response is Trusted' if ocspResp.verify(MOZILLA_STORE_PATH) \
             else 'Response is NOT Trusted'
 
         ocspRespTxt = [ \
@@ -194,6 +249,10 @@ class PluginCertInfo(PluginBase.PluginBase):
         return False
 
 
+    def _get_full_text(self, cert):
+        return [cert.as_text()]
+
+
     def _get_basic_text(self, cert):
         certDict = cert.as_dict()
 
@@ -203,6 +262,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             commonName = 'None'
 
         basicTxt = [ \
+            self.FIELD_FORMAT("SHA1 Fingerprint:", cert.get_SHA1_fingerprint()),
             self.FIELD_FORMAT("Common Name:", commonName),
             self.FIELD_FORMAT("Issuer:", certDict['issuer']),
             self.FIELD_FORMAT("Serial Number:", certDict['serialNumber']),
@@ -220,22 +280,16 @@ class PluginCertInfo(PluginBase.PluginBase):
         return basicTxt
 
 
-    def _get_fingerprint(self, cert):
-        nb = cert.get_SHA1_fingerprint()
-        val_txt = self.FIELD_FORMAT('SHA1 Fingerprint:', nb)
-        val_xml = Element('fingerprint', algorithm='sha1')
-        val_xml.text = nb
-        return ([val_txt], [val_xml])
-
-
-    def _get_cert(self, target):
+    def _get_cert(self, target, storePath):
         """
-        Connects to the target server and returns the server's certificate and
+        Connects to the target server and uses the supplied trust store to
+        validate the server's certificate. Returns the server's certificate and
         OCSP response.
         """
         (host, ip, port, sslVersion) = target
-        sslConn = create_sslyze_connection(target, self._shared_settings, sslVersion,
-                                           sslVerifyLocations=MOZILLA_CA_STORE)
+        sslConn = create_sslyze_connection(target, self._shared_settings,
+                                           sslVersion,
+                                           sslVerifyLocations=storePath)
 
         # Enable OCSP stapling
         sslConn.set_tlsext_status_ocsp()

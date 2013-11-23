@@ -44,11 +44,15 @@ class PluginCompression(PluginBase.PluginBase):
 
         sslConn = create_sslyze_connection(target, self._shared_settings)
 
+        # Make sure OpenSSL was built with support for compression to avoid false negatives
+        if 'zlib compression' not in sslConn.get_available_compression_methods():
+            raise RuntimeError('OpenSSL was not built with support for zlib / compression. Did you build nassl yourself ?')
+
         try: # Perform the SSL handshake
             sslConn.connect()
-            compName = sslConn.get_current_compression_name()
+            compName = sslConn.get_current_compression_method()
         except ClientAuthenticationError: # The server asked for a client cert
-            compName = sslConn.get_current_compression_name()
+            compName = sslConn.get_current_compression_method()
         finally:
             sslConn.close()
 

@@ -136,7 +136,7 @@ class PluginCertInfo(PluginBase.PluginBase):
 
         # Path validation that was successful
         for (storeName, verifyStr) in verifyDict.iteritems():
-            verifyTxt = 'OK - Trusted' if (verifyStr in 'ok') else 'FAILED - ' + verifyStr
+            verifyTxt = 'OK - Certificate is trusted' if (verifyStr in 'ok') else 'FAILED - Certificate is NOT Trusted: ' + verifyStr
 
             # EV certs - Only Mozilla supported for now
             if (verifyStr in 'ok') and ('Mozilla' in storeName):

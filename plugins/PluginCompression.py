@@ -26,7 +26,8 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 
-from utils.SSLyzeSSLConnection import create_sslyze_connection, ClientAuthenticationError
+from utils.SSLyzeSSLConnection import create_sslyze_connection
+from nassl.SslClient import ClientCertificateRequested
 
 
 class PluginCompression(PluginBase.PluginBase):
@@ -51,7 +52,7 @@ class PluginCompression(PluginBase.PluginBase):
         try: # Perform the SSL handshake
             sslConn.connect()
             compName = sslConn.get_current_compression_method()
-        except ClientAuthenticationError: # The server asked for a client cert
+        except ClientCertificateRequested: # The server asked for a client cert
             compName = sslConn.get_current_compression_method()
         finally:
             sslConn.close()

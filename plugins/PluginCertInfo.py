@@ -29,8 +29,9 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
-from utils.SSLyzeSSLConnection import create_sslyze_connection, ClientAuthenticationError
+from utils.SSLyzeSSLConnection import create_sslyze_connection
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
+from nassl.SslClient import ClientCertificateRequested
 
 
 TRUST_STORES_PATH = join(join(dirname(PluginBase.__file__), 'data'), 'trust_stores')
@@ -85,7 +86,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         threadPool.start(len(AVAILABLE_TRUST_STORES))
 
         # Store the results as they come
-        (verifyDict, x509Cert, ocspResp)  = ({}, None, None)
+        (verifyDict, verifyDictErr, x509Cert, ocspResp)  = ({}, {}, None, None)
 
         for (job, result) in threadPool.get_result():
             (_, (_, storePath)) = job
@@ -102,10 +103,11 @@ class PluginCertInfo(PluginBase.PluginBase):
         # Store thread pool errors
         for (job, exception) in threadPool.get_error():
             (_, (_, storePath)) = job
-            errorMsg = str(exception.__class__.__module__) + '.' \
-                        + str(exception.__class__.__name__) + ' - ' \
+            errorMsg = str(exception.__class__.__name__) + ' - ' \
                         + str(exception)
-            verifyDict[storePath] = errorMsg
+
+            storeName = AVAILABLE_TRUST_STORES[storePath]
+            verifyDictErr[storeName] = errorMsg
 
         threadPool.join()
 
@@ -132,7 +134,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         outputTxt.append(self.FIELD_FORMAT("Hostname Validation:",
                                             hostValDict[x509Cert.matches_hostname(host)]))
 
-        # Path validation
+        # Path validation that was successful
         for (storeName, verifyStr) in verifyDict.iteritems():
             verifyTxt = 'OK - Trusted' if (verifyStr in 'ok') else 'FAILED - ' + verifyStr
 
@@ -140,6 +142,12 @@ class PluginCertInfo(PluginBase.PluginBase):
             if (verifyStr in 'ok') and ('Mozilla' in storeName):
                 if (self._is_ev_certificate(x509Cert)):
                     verifyTxt += ', Extended Validation'
+            outputTxt.append(self.FIELD_FORMAT(self.TRUST_FORMAT(storeName), verifyTxt))
+
+
+        # Path validation that ran into errors
+        for (storeName, errorMsg) in verifyDictErr.iteritems():
+            verifyTxt = 'ERROR: ' + errorMsg
             outputTxt.append(self.FIELD_FORMAT(self.TRUST_FORMAT(storeName), verifyTxt))
 
 
@@ -179,7 +187,7 @@ class PluginCertInfo(PluginBase.PluginBase):
                            certificateMatchesServerHostname = hostValBool)
         trustXml.append(hostXml)
 
-        # Path validation
+        # Path validation - OK
         for (storeName, verifyStr) in verifyDict.iteritems():
             pathXmlAttrib = { 'usingTrustStore' : storeName,
                               'validationResult' : verifyStr}
@@ -189,6 +197,14 @@ class PluginCertInfo(PluginBase.PluginBase):
                     pathXmlAttrib['isExtendedValidationCertificate'] = str(self._is_ev_certificate(x509Cert))
 
             trustXml.append(Element('pathValidation', attrib = pathXmlAttrib))
+
+        # Path validation - Errors
+        for (storeName, errorMsg) in verifyDictErr.iteritems():
+            pathXmlAttrib = { 'usingTrustStore' : storeName,
+                              'error' : errorMsg}
+
+            trustXml.append(Element('pathValidation', attrib = pathXmlAttrib))
+
 
         outputXml.append(trustXml)
 
@@ -301,7 +317,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             x509Cert = sslConn.get_peer_certificate()
             (_, verifyStr) = sslConn.get_certificate_chain_verify_result()
 
-        except ClientAuthenticationError: # The server asked for a client cert
+        except ClientCertificateRequested: # The server asked for a client cert
             # We can get the server cert anyway
             ocspResp = sslConn.get_tlsext_status_ocsp_resp()
             x509Cert = sslConn.get_peer_certificate()

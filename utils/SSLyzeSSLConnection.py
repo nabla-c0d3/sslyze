@@ -26,7 +26,7 @@
 import socket, struct
 from HTTPResponseParser import parse_http_response
 from nassl import _nassl, SSL_VERIFY_NONE
-from nassl.SslClient import SslClient
+from nassl.SslClient import SslClient, ClientCertificateRequested
 
 
 
@@ -107,13 +107,8 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
     # Load client certificate and private key
     # These parameters should have been validated when parsing the command line
     if shared_settings['cert']:
-        sslConn.use_certificate_file(shared_settings['cert'],
-                                            shared_settings['certform'])
-        sslConn.use_privateKey_file(shared_settings['key'],
-                                           shared_settings['keyform'],
-                                           shared_settings['keypass'])
-        sslConn.check_private_key()
-
+        sslConn.use_private_key(shared_settings['cert'], shared_settings['certform'],
+            shared_settings['key'], shared_settings['keyform'], shared_settings['keypass'])
 
     # Add Server Name Indication
     if shared_settings['sni']:
@@ -147,26 +142,6 @@ class ProxyError(IOError):
     The proxy was offline or did not return HTTP 200 to our CONNECT request.
     """
     pass
-
-
-
-class ClientAuthenticationError(IOError):
-    """
-    The server asked for a client certificate and we didn't send one.
-    """
-
-    ERROR_MSG = 'Server requested a client certificate signed by one of the ' +\
-    'following CAs: {0}; use the --cert and --key options.'
-
-
-    def __init__(self, caList):
-        self.caList = caList
-
-    def __str__(self):
-        caListStr = ''
-        for ca in self.caList:
-            caListStr += ca + ' '
-        return self.ERROR_MSG.format(caListStr)
 
 
 
@@ -224,24 +199,25 @@ class SSLConnection(SslClient):
         except socket.error as e:
             for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                 if error_msg in str(e.args):
-                    raise SSLHandshakeRejected('TCP - ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
+                    raise SSLHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
             raise # Unknown socket error
 
         except IOError as e:
             if 'Nassl SSL handshake failed' in str(e.args):
-                raise SSLHandshakeRejected('TLS - Unexpected EOF')
+                raise SSLHandshakeRejected('TLS / Unexpected EOF')
             raise
 
         except _nassl.OpenSSLError as e:
-            clientCertCaList = self.get_client_CA_list()
-            if clientCertCaList: # Server wants a client certificate
-                raise ClientAuthenticationError(clientCertCaList)
-
             for error_msg in self.HANDSHAKE_REJECTED_SSL_ERRORS.keys():
                 if error_msg in str(e.args):
-                    raise SSLHandshakeRejected('TLS - ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
+                    raise SSLHandshakeRejected('TLS / ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
 
             raise # Unknown SSL error if we get there
+
+        except ClientCertificateRequested as e:
+            # Server expected a client certificate and we didn't provide one
+            raise
+
 
 
     def close(self):

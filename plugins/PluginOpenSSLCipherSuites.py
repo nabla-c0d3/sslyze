@@ -116,8 +116,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
             ssl_cipher = str(job[1][2])
-            error_msg = str(exception.__class__.__module__) + '.' \
-                        + str(exception.__class__.__name__) + ' - ' + str(exception)
+            error_msg = str(exception.__class__.__name__) + ' - ' + str(exception)
             result_dicts['errors'][ssl_cipher] = (error_msg, None)
 
         thread_pool.join()
@@ -216,11 +215,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             raise
 
         else:
-            ssl_cipher = sslConn.get_cipher_name()
+            ssl_cipher = sslConn.get_current_cipher_name()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
                 keysize = 'Anon' # Anonymous, let s not care about the key size
             else:
-                keysize = str(sslConn.get_cipher_bits()) + ' bits'
+                keysize = str(sslConn.get_current_cipher_bits()) + ' bits'
 
             status_msg = sslConn.post_handshake_check()
             return ('acceptedCipherSuites', ssl_cipher, keysize, status_msg)
@@ -239,11 +238,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         try: # Perform the SSL handshake
             sslConn.connect()
 
-            ssl_cipher = sslConn.get_cipher_name()
+            ssl_cipher = sslConn.get_current_cipher_name()
             if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
                 keysize = 'Anon' # Anonymous, let s not care about the key size
             else:
-                keysize = str(sslConn.get_cipher_bits())+' bits'
+                keysize = str(sslConn.get_current_cipher_bits())+' bits'
 
             status_msg = sslConn.post_handshake_check()
             return ('preferredCipherSuite', ssl_cipher, keysize, status_msg)

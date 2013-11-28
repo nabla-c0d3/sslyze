@@ -110,14 +110,13 @@ class PluginSessionResumption(PluginBase.PluginBase):
             (ticket_supported, ticket_reason) = self._resume_with_session_ticket(target)
             ticket_error = None
         except Exception as e:
-            ticket_error = str(e.__class__.__module__) + '.' + \
-                            str(e.__class__.__name__) + ' - ' + str(e)
+            ticket_error = str(e.__class__.__name__) + ' - ' + str(e)
 
         # Format session ID results
         (txt_resum, xml_resum) = self._format_resum_id_results(thread_pool, MAX_RESUM)
 
         if ticket_error:
-            ticket_txt = 'Error: ' + ticket_error
+            ticket_txt = 'ERROR: ' + ticket_error
         else:
             ticket_txt = 'Supported' if ticket_supported \
                                      else 'Not Supported - ' + ticket_reason+'.'
@@ -160,8 +159,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         error_list = []
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
-            error_msg = str(exception.__class__.__module__) + '.' \
-            + str(exception.__class__.__name__) + ' - ' + str(exception)
+            error_msg = str(exception.__class__.__name__) + ' - ' + str(exception)
             error_list.append(error_msg)
         nb_error = len(error_list)
 
@@ -175,14 +173,14 @@ class PluginSessionResumption(PluginBase.PluginBase):
         elif nb_failed == MAX_RESUM:
             sessid_stat = 'Not supported'
         elif nb_error == MAX_RESUM:
-            sessid_stat = 'Error'
+            sessid_stat = 'ERROR'
         else:
             sessid_stat = 'Partially supported'
             sessid_try = ' Try --resum_rate.'
         sessid_txt = SESSID_FORMAT(str(nb_resum), str(nb_failed), str(nb_error),
                                    str(MAX_RESUM), sessid_stat, sessid_try)
 
-        ERRORS_FORMAT ='        Error #{0}: {1}'.format
+        ERRORS_FORMAT ='        ERROR #{0}: {1}'.format
         txt_result = []
         txt_result.append(sessid_txt)
         # Add error messages

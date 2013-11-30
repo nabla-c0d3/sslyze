@@ -56,7 +56,7 @@ class PluginHSTS(PluginBase.PluginBase):
         hsts_supported = False
         hsts_timeout = ""
         (host, addr, port, sslVersion) = target
-        connection = httplib.HTTPSConnection(host)
+        connection = httplib.HTTPSConnection(host, port)
         try:
             connection.connect()
             connection.request("HEAD", "/", headers={"Connection": "close"})

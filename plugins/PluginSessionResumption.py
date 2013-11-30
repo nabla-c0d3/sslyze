@@ -40,14 +40,13 @@ class PluginSessionResumption(PluginBase.PluginBase):
         command="resum",
         help=(
             "Tests the server for session ressumption support, using "
-            "session IDs and TLS session tickets (RFC 5077)."),
-        dest=None)
+            "session IDs and TLS session tickets (RFC 5077)."))
     interface.add_command(
         command="resum_rate",
         help=(
             "Performs 100 session resumptions with the target server, "
             "in order to estimate the session resumption rate."),
-        dest=None)
+        aggressive=True)
 
 
     def process_task(self, target, command, args):

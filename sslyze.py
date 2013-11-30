@@ -22,6 +22,7 @@
 #-------------------------------------------------------------------------------
 
 from time import time
+from itertools import cycle
 from multiprocessing import Process, JoinableQueue
 from xml.etree.ElementTree import Element, tostring
 from xml.dom import minidom
@@ -46,14 +47,16 @@ PROJECT_DESC = 'Fast and full-featured SSL scanner'
 MAX_PROCESSES = 12
 MIN_PROCESSES = 3
 
+
 # Todo: Move formatting stuff to another file
 SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
 
 
 class WorkerProcess(Process):
 
-    def __init__(self, queue_in, queue_out, available_commands, shared_settings):
+    def __init__(self, priority_queue_in, queue_in, queue_out, available_commands, shared_settings):
         Process.__init__(self)
+        self.priority_queue_in = priority_queue_in
         self.queue_in = queue_in
         self.queue_out = queue_out
         self.available_commands = available_commands
@@ -71,14 +74,22 @@ class WorkerProcess(Process):
         for plugin_class in self.available_commands.itervalues():
             plugin_class._shared_settings = self.shared_settings
 
+        # Start processing task in the priority queue first
+        current_queue_in = self.priority_queue_in
         while True:
 
-            task = self.queue_in.get() # Grab a task from queue_in
+            task = current_queue_in.get() # Grab a task from queue_in
+            if task is None: # All tasks have been completed
+                current_queue_in.task_done()
 
-            if task is None: # All the tasks have been completed
-                self.queue_out.put(None) # Pass on the sentinel to result_queue
-                self.queue_in.task_done()
-                break
+                if (current_queue_in == self.priority_queue_in):
+                    # All high priority tasks have been completed
+                    current_queue_in = self.queue_in # Switch to low priority tasks
+                    continue
+                else:
+                    # All the tasks have been completed
+                    self.queue_out.put(None) # Pass on the sentinel to result_queue and exit
+                    break
 
             (target, command, args) = task
             # Instantiate the proper plugin
@@ -96,7 +107,7 @@ class WorkerProcess(Process):
 
             # Send the result to queue_out
             self.queue_out.put((target, command, result))
-            self.queue_in.task_done()
+            current_queue_in.task_done()
 
         return
 
@@ -165,10 +176,11 @@ def main():
     # Spawn a pool of processes, and pass them the queues
     process_list = []
     for _ in xrange(nb_processes):
-        p = WorkerProcess(task_queue, result_queue, available_commands,
-                            shared_settings)
+        priority_queue = JoinableQueue() # Each process gets a priority queue
+        p = WorkerProcess(priority_queue, task_queue, result_queue, available_commands, \
+                          shared_settings)
         p.start()
-        process_list.append(p) # Keep track of the processes that were started
+        process_list.append((p, priority_queue)) # Keep track of each process and priority_queue
 
 
     #--TESTING SECTION--
@@ -178,6 +190,10 @@ def main():
 
     targets_OK = []
     targets_ERR = []
+
+    # Each server gets assigned a priority queue for aggressive commands
+    # so that they're never run in parallel against this single server
+    cycle_priority_queues = cycle(process_list)
     target_results = ServersConnectivityTester.test_server_list(target_list,
                                                                 shared_settings)
     for target in target_results:
@@ -186,10 +202,19 @@ def main():
 
         # Send tasks to worker processes
         targets_OK.append(target)
+        (_, current_priority_queue) = cycle_priority_queues.next()
+
         for command in available_commands:
             if getattr(command_list, command):
                 args = command_list.__dict__[command]
-                task_queue.put( (target, command, args) )
+
+                if command in sslyze_plugins.get_aggressive_commands():
+                    # Aggressive commands should not be run in parallel against
+                    # a given server so we use the priority queues to prevent this
+                    current_priority_queue.put( (target, command, args) )
+                else:
+                    # Normal commands get put in the standard/shared queue
+                    task_queue.put( (target, command, args) )
 
     for exception in target_results:
         targets_ERR.append(exception)
@@ -199,7 +224,9 @@ def main():
 
     # Put a 'None' sentinel in the queue to let the each process know when every
     # task has been completed
-    [task_queue.put(None) for _ in process_list]
+    for (proc, priority_queue) in process_list:
+        task_queue.put(None) # One sentinel in the task_queue per proc
+        priority_queue.put(None) # One sentinel in each priority_queue
 
     # Keep track of how many tasks have to be performed for each target
     task_num=0

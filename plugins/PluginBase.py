@@ -27,9 +27,9 @@ from optparse import make_option
 
 class PluginInterface:
     """
-    This object tells SSLyze what the plugin does: its title, description, and 
-    which command line option(s) it implements. 
-    Every plugin should have a class attribute called interface that is an 
+    This object tells SSLyze what the plugin does: its title, description, and
+    which command line option(s) it implements.
+    Every plugin should have a class attribute called interface that is an
     instance of PluginInterface.
     """
 
@@ -43,38 +43,42 @@ class PluginInterface:
         self._commands = []
         self._commands_as_text = []
 
-    def add_option(self, option, help, dest):
+    def add_option(self, option, help, dest=None):
         """
-        Options are settings specific to one single plugin. 
+        Options are settings specific to one single plugin.
         They are sent to PluginBase._shared_settings.
         """
-        
+
         self._options.append(self._make_option(option, help, dest))
 
-        
-    def add_command(self, command, help, dest):
+
+    def add_command(self, command, help, dest=None, aggressive=False):
         """
-        Commands are actions/scans the plugin implements, with 
+        Commands are actions/scans the plugin implements, with
         PluginXXX.process_task().
-        Note: dest to None if you don't need arguments
+        Note: dest to None if you don't need arguments.
+        Setting aggressive to True means that the command will open
+        many simultaneous connections to the server and should therefore
+        not be run concurrently with other `aggressive` commands against
+        a given server.
         """
-        
+
         self._commands.append(self._make_option(command, help, dest))
-        self._commands_as_text.append(command)
-        
-        
+        self._commands_as_text.append((command, aggressive))
+
+
     def get_commands(self):
         return self._commands
-    
-    
+
+
     def get_commands_as_text(self):
         return self._commands_as_text
 
-        
+
     def get_options(self):
         return self._options
-        
-        
+
+
     @staticmethod
     def _make_option(command, help, dest):
         # If dest is something, store it, otherwise just use store_true
@@ -83,31 +87,29 @@ class PluginInterface:
             action="store"
 
         return make_option('--' + command, action=action, help=help, dest=dest)
-    
-    
 
 
 class PluginResult:
     """
     Plugin.process_task() should return an instance of this class.
-    """    
+    """
     def __init__(self, text_result, xml_result):
         """
         @type text_result: [str]
         @param text_result: Printable version of the plugin's results.
         Each string within the list gets printed as a separate line.
-        
+
         @type xml_result: xml.etree.ElementTree.Element
         @param xml_result: XML version of the plugin's results.
-        """            
+        """
         self._text_result = text_result
         self._xml_result = xml_result
 
     def get_xml_result(self):
         return self._xml_result
-        
-    def get_txt_result(self):  
-        return self._text_result  
+
+    def get_txt_result(self):
+        return self._text_result
 
 
 
@@ -116,16 +118,16 @@ class PluginBase(object):
     Base plugin abstract class. All plugins have to inherit from it.
     """
     __metaclass__ = abc.ABCMeta
-    
-    # _shared_settings contains read-only info available to all the plugins: 
+
+    # _shared_settings contains read-only info available to all the plugins:
     # client certificate, timeoutvalue, etc...
     # TODO: Document it
     _shared_settings = None
-    
+
     # Formatting stuff
     PLUGIN_TITLE_FORMAT = '  * {0} :'.format
-    
-                              
+
+
     @classmethod
     def get_interface(plugin_class):
         """

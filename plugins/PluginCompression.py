@@ -35,7 +35,8 @@ class PluginCompression(PluginBase.PluginBase):
     interface = PluginBase.PluginInterface(title="PluginCompression", description="")
     interface.add_command(
         command="compression",
-        help="Tests the server for Zlib compression support.")
+        help="Tests the server for Zlib compression support.",
+        dest=None)
 
 
     def process_task(self, target, command, args):

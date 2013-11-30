@@ -39,31 +39,33 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
     interface.add_command(
         command="sslv2",
         help="Lists the SSL 2.0 OpenSSL cipher suites supported by the server.",
-        aggressive=False)
+        dest=None)
     interface.add_command(
         command="sslv3",
         help="Lists the SSL 3.0 OpenSSL cipher suites supported by the server.",
-        aggressive=True)
+        dest=None)
     interface.add_command(
         command="tlsv1",
         help="Lists the TLS 1.0 OpenSSL cipher suites supported by the server.",
-        aggressive=True)
+        dest=None)
     interface.add_command(
         command="tlsv1_1",
         help="Lists the TLS 1.1 OpenSSL cipher suites supported by the server.",
-        aggressive=True)
+        dest=None)
     interface.add_command(
         command="tlsv1_2",
         help="Lists the TLS 1.2 OpenSSL cipher suites supported by the server.",
-        aggressive=True)
+        dest=None)
     interface.add_option(
         option='http_get',
         help="Option - For each cipher suite, sends an HTTP GET request after "
-        "completing the SSL handshake and returns the HTTP status code.")
+        "completing the SSL handshake and returns the HTTP status code.",
+        dest=None)
     interface.add_option(
         option='hide_rejected_ciphers',
         help="Option - Hides the (usually long) list of cipher suites that were"
-        " rejected by the server.")
+        " rejected by the server.",
+        dest=None)
 
 
     def process_task(self, target, command, args):

@@ -32,8 +32,8 @@ import plugins.PluginBase
 
 
 class PluginsFinder:
-    
-    
+
+
     def __init__(self):
         """
         Opens the plugins folder and looks at every .py module in that directory.
@@ -43,10 +43,11 @@ class PluginsFinder:
         """
         self._plugin_classes = set([])
         self._commands = {}
-        
+        self._aggressive_comands = []
+
         plugin_dir = plugins.__path__[0]
         full_plugin_dir = os.path.join(sys.path[0], plugin_dir)
-    
+
         if os.path.exists(full_plugin_dir):
             for (root, dirs, files) in os.walk(full_plugin_dir):
                 del dirs[:] # Do not walk into subfolders of the plugin directory
@@ -54,7 +55,7 @@ class PluginsFinder:
                 for source in (s for s in files if s.endswith(".py")):
                     module_name = os.path.splitext(os.path.basename(source))[0]
                     full_name = os.path.splitext(source)[0].replace(os.path.sep,'.')
-    
+
                     try: # Try to import the plugin package
                     # The plugin package HAS to be imported as a submodule
                     # of module 'plugins' or it will break windows compatibility
@@ -65,7 +66,7 @@ class PluginsFinder:
                     except Exception as e:
                         print '  ' + module_name + ' - Import Error: ' + str(e)
                         continue
-    
+
                     # Check every declaration in that module
                     for name in dir(module):
                         obj = getattr(module, name)
@@ -77,16 +78,23 @@ class PluginsFinder:
                                 if issubclass(obj, plugins.PluginBase.PluginBase):
                                     # A plugin was found, keep it
                                     self._plugin_classes.add(obj)
-                                    
+
                                     # Store the plugin's commands
-                                    for cmd in obj.get_interface().get_commands_as_text():
+                                    for (cmd, is_aggressive) in obj.get_interface().get_commands_as_text():
                                         self._commands[cmd] = obj
-                                    
-                                    
+                                        # Store a list of aggressive commands
+                                        if is_aggressive:
+                                            self._aggressive_comands.append(cmd)
+
+
     def get_plugins(self):
         return self._plugin_classes
 
-    
+
     def get_commands(self):
         return self._commands
-        
+
+
+    def get_aggressive_commands(self):
+        return self._aggressive_comands
+

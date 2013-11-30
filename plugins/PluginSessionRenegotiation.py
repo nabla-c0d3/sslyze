@@ -36,8 +36,7 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         command="reneg",
         help=(
             "Tests the target server's support for client-initiated "
-            'renegotiations and secure renegotiations.'),
-        dest=None)
+            'renegotiations and secure renegotiations.'))
 
 
     def process_task(self, target, command, args):

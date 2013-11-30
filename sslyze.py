@@ -22,6 +22,7 @@
 #-------------------------------------------------------------------------------
 
 from time import time
+from itertools import cycle
 from multiprocessing import Process, JoinableQueue
 from xml.etree.ElementTree import Element, tostring
 from xml.dom import minidom
@@ -43,6 +44,8 @@ PROJECT_URL = "https://github.com/isecPartners/sslyze"
 PROJECT_EMAIL = 'sslyze@isecpartners.com'
 PROJECT_DESC = 'Fast and full-featured SSL scanner'
 
+MAX_PROCESSES = 12
+MIN_PROCESSES = 4
 
 # Todo: Move formatting stuff to another file
 SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
@@ -50,8 +53,9 @@ SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
 
 class WorkerProcess(Process):
 
-    def __init__(self, queue_in, queue_out, available_commands, shared_settings):
+    def __init__(self, priority_queue_in, queue_in, queue_out, available_commands, shared_settings):
         Process.__init__(self)
+        self.priority_queue_in = priority_queue_in
         self.queue_in = queue_in
         self.queue_out = queue_out
         self.available_commands = available_commands
@@ -63,38 +67,46 @@ class WorkerProcess(Process):
         Once it gets notified that all the tasks have been completed,
         it terminates.
         """
-        from plugins.PluginBase import PluginResult    
+        from plugins.PluginBase import PluginResult
         # Plugin classes are unpickled by the multiprocessing module
         # without state info. Need to assign shared_settings here
         for plugin_class in self.available_commands.itervalues():
             plugin_class._shared_settings = self.shared_settings
-        
+
+        # Start processing task in the priority queue first
+        current_queue_in = self.priority_queue_in
         while True:
 
-            task = self.queue_in.get() # Grab a task from queue_in
+            task = current_queue_in.get() # Grab a task from queue_in
+            if task == None: # All tasks have been completed
+                current_queue_in.task_done()
 
-            if task == None: # All the tasks have been completed
-                self.queue_out.put(None) # Pass on the sentinel to result_queue
-                self.queue_in.task_done()
-                break
+                if (current_queue_in == self.priority_queue_in):
+                    # All high priority tasks have been completed
+                    current_queue_in = self.queue_in # Switch to low priority tasks
+                    continue
+                else:
+                    # All the tasks have been completed
+                    self.queue_out.put(None) # Pass on the sentinel to result_queue and exit
+                    break
 
             (target, command, args) = task
             # Instatiate the proper plugin
             plugin_instance = self.available_commands[command]()
-                
+
             try: # Process the task
                 result = plugin_instance.process_task(target, command, args)
             except Exception as e: # Generate txt and xml results
                 #raise
-                txt_result = ['Unhandled exception when processing --' + 
-                              command + ': ', str(e.__class__.__module__) + 
+                txt_result = ['Unhandled exception when processing --' +
+                              command + ': ', str(e.__class__.__module__) +
                               '.' + str(e.__class__.__name__) + ' - ' + str(e)]
                 xml_result = Element(command, exception=txt_result[1])
                 result = PluginResult(txt_result, xml_result)
 
             # Send the result to queue_out
             self.queue_out.put((target, command, result))
-            self.queue_in.task_done()
+            current_queue_in.task_done()
 
         return
 
@@ -107,7 +119,7 @@ def _format_xml_target_result(target, result_list):
     (host, ip, port, sslVersion) = target
     target_xml = Element('target', host=host, ip=ip, port=str(port))
     result_list.sort(key=lambda result: result[0]) # Sort results
-    
+
     for (command, plugin_result) in result_list:
         target_xml.append(plugin_result.get_xml_result())
 
@@ -123,7 +135,7 @@ def _format_txt_target_result(target, result_list):
         target_result_str += '\n'
         for line in plugin_result.get_txt_result():
             target_result_str += line + '\n'
-    
+
     scan_txt = SCAN_FORMAT.format(host, str(port), ip)
     return _format_title(scan_txt) + '\n' + target_result_str + '\n\n'
 
@@ -149,23 +161,25 @@ def main():
     except CommandLineParsingError as e:
         print e.get_error_msg()
         return
-    
+
 
     #--PROCESSES INITIALIZATION--
-    nb_processes = command_list.nb_processes
+    # Two processes per target from MIN_PROCESSES up to MAX_PROCESSES
+    nb_processes = max(MIN_PROCESSES, min(MAX_PROCESSES, len(target_list)*2))
     if command_list.https_tunnel:
         nb_processes = 1 # Let's not kill the proxy
-        
+
     task_queue = JoinableQueue() # Processes get tasks from task_queue and
     result_queue = JoinableQueue() # put the result of each task in result_queue
 
     # Spawn a pool of processes, and pass them the queues
     process_list = []
     for _ in xrange(nb_processes):
-        p = WorkerProcess(task_queue, result_queue, available_commands, \
-                            shared_settings)
+        priority_queue = JoinableQueue() # Each process gets a priority queue
+        p = WorkerProcess(priority_queue, task_queue, result_queue, available_commands, \
+                          shared_settings)
         p.start()
-        process_list.append(p) # Keep track of the processes that were started
+        process_list.append((p, priority_queue)) # Keep track of each process and priority_queue
 
 
     #--TESTING SECTION--
@@ -175,28 +189,41 @@ def main():
 
     targets_OK = []
     targets_ERR = []
-    target_results = ServersConnectivityTester.test_server_list(target_list, 
+    # Each server gets assigned a priority queue for aggressive commands
+    # so that they're never run in parallel against this single server
+    cycle_priority_queues = cycle(process_list)
+    target_results = ServersConnectivityTester.test_server_list(target_list,
                                                                 shared_settings)
     for target in target_results:
         if target is None:
             break # None is a sentinel here
-        
+
         # Send tasks to worker processes
         targets_OK.append(target)
+        (_, current_priority_queue) = cycle_priority_queues.next()
+
         for command in available_commands:
             if getattr(command_list, command):
                 args = command_list.__dict__[command]
-                task_queue.put( (target, command, args) )
-    
+                if command in sslyze_plugins.get_aggressive_commands():
+                    # Aggressive commands should not be run in parallel against
+                    # a given server so we use the priority queues to prevent this
+                    current_priority_queue.put( (target, command, args) )
+                else:
+                    # Normal commands get put in the standard/shared queue
+                    task_queue.put( (target, command, args) )
+
     for exception in target_results:
         targets_ERR.append(exception)
-        
+
     print ServersConnectivityTester.get_printable_result(targets_OK, targets_ERR)
     print '\n\n'
 
     # Put a 'None' sentinel in the queue to let the each process know when every
     # task has been completed
-    [task_queue.put(None) for _ in process_list]
+    for (proc, priority_queue) in process_list:
+        task_queue.put(None) # One sentinel in the task_queue per proc
+        priority_queue.put(None) # One sentinel in each priority_queue
 
     # Keep track of how many tasks have to be performed for each target
     task_num=0
@@ -207,7 +234,7 @@ def main():
 
     # --REPORTING SECTION--
     processes_running = nb_processes
-    
+
     # XML output
     if shared_settings['xml_file']:
         xml_output_list = []
@@ -233,34 +260,34 @@ def main():
                 print _format_txt_target_result(target, result_dict[target])
                 if shared_settings['xml_file']:
                     xml_output_list.append(_format_xml_target_result(target, result_dict[target]))
-                           
+
         result_queue.task_done()
 
 
     # --TERMINATE--
-    
+
     # Make sure all the processes had time to terminate
     task_queue.join()
     result_queue.join()
     #[process.join() for process in process_list] # Causes interpreter shutdown errors
     exec_time = time()-start_time
-    
+
     # Output XML doc to a file if needed
     if shared_settings['xml_file']:
         result_xml_attr = {'httpsTunnel':str(shared_settings['https_tunnel_host']),
-                           'totalScanTime' : str(exec_time), 
-                           'defaultTimeout' : str(shared_settings['timeout']), 
+                           'totalScanTime' : str(exec_time),
+                           'defaultTimeout' : str(shared_settings['timeout']),
                            'startTLS' : str(shared_settings['starttls'])}
-        
+
         result_xml = Element('results', attrib = result_xml_attr)
-        
+
         # Sort results in alphabetical order to make the XML files (somewhat) diff-able
         xml_output_list.sort(key=lambda xml_elem: xml_elem.attrib['host'])
         for xml_element in xml_output_list:
             result_xml.append(xml_element)
-            
+
         xml_final_doc = Element('document', title = "SSLyze Scan Results",
-                                SSLyzeVersion = PROJECT_VERSION, 
+                                SSLyzeVersion = PROJECT_VERSION,
                                 SSLyzeWeb = PROJECT_URL)
         # Add the list of invalid targets
         xml_final_doc.append(ServersConnectivityTester.get_xml_result(targets_ERR))
@@ -271,7 +298,7 @@ def main():
         xml_final_pretty = minidom.parseString(tostring(xml_final_doc, encoding='UTF-8'))
         with open(shared_settings['xml_file'],'w') as xml_file:
             xml_file.write(xml_final_pretty.toprettyxml(indent="  ", encoding="utf-8" ))
-            
+
 
     print _format_title('Scan Completed in {0:.2f} s'.format(exec_time))
 

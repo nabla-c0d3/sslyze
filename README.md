@@ -18,7 +18,7 @@ Key features include:
 * Performance testing: session resumption and TLS tickets support
 * Security testing: weak cipher suites, insecure renegotiation, CRIME and more
 * Server certificate validation and revocation checking through OCSP stapling
-* Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP and FTP
+* Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP and FTP
 * Support for client certificates when scanning servers that perform mutual authentication
 * XML output to further process the scan results
 * And much more !

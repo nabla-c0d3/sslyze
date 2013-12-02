@@ -1,6 +1,14 @@
 SSLyze Changelog
 ----------------
 
+## v0.8
+* Additional certificate chain validation using the Apple, Microsoft and Java trust stores in addition to Mozilla's
+* Added support for StartTLS RDP; see --starttls=rdp
+* Greatly improved the reliability and accuracy of scan results by adding an exponential backoff algorithm to retry failed network connections. This will especially impact scans against servers that stop properly answering after several concurrent connections have already been opened. The number of retry attempts can be controlled using --nb_retries
+* Bug fixes including:
+    * Better results when the server requested a client certificate but none was supplied
+    * Clarified text and XML output
+
 
 ## v0.7
 * Complete rewrite of the OpenSSL wrapper as a C extension

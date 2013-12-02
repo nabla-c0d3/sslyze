@@ -12,7 +12,7 @@
 #               (tecknicaltom) and reworked, integrated and adapted to the
 #               new sslyze plugin API by Joachim Strömbergson.
 #
-# Author:       tecknicaltom, joachims
+# Author:       tecknicaltom, joachims, alban
 #
 # Copyright:    2013 SSLyze developers
 #
@@ -31,7 +31,8 @@
 #-------------------------------------------------------------------------------
 
 from xml.etree.ElementTree import Element
-import httplib
+from utils.HTTPResponseParser import parse_http_response
+from utils.SSLyzeSSLConnection import create_sslyze_connection
 from plugins import PluginBase
 
 
@@ -48,38 +49,24 @@ class PluginHSTS(PluginBase.PluginBase):
 
     def process_task(self, target, command, args):
 
+
         if self._shared_settings['starttls']:
             raise Exception('Cannot use --hsts with --starttls.')
-            
-        output_format = '        {0:<25} {1}'
 
-        hsts_supported = False
-        hsts_timeout = ""
-        (host, addr, port, sslVersion) = target
-        connection = httplib.HTTPSConnection(host, port)
-        try:
-            connection.connect()
-            connection.request("HEAD", "/", headers={"Connection": "close"})
-            response = connection.getresponse()
-            headers = response.getheaders()
-            for (field, data) in headers:
-                if field == 'strict-transport-security':
-                    hsts_supported = True
-                    hsts_timeout = data
+        FIELD_FORMAT = '      {0:<35}{1}'.format
 
-        except httplib.HTTPException as ex:
-            print "Error: %s" % ex
-
-        finally:
-            connection.close()
+        hsts_supported = self._get_hsts_header(target)
+        if hsts_supported:
+            hsts_timeout = hsts_supported
+            hsts_supported = True
 
         # Text output
-        cmd_title = 'HSTS'
+        cmd_title = 'HTTP Strict Transport Security'
         txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
         if hsts_supported:
-            txt_result.append(output_format.format("Supported:", hsts_timeout))
+            txt_result.append(FIELD_FORMAT("Supported:", hsts_timeout))
         else:
-            txt_result.append(output_format.format("Not supported.", ""))
+            txt_result.append(FIELD_FORMAT("Not supported.", ""))
 
         # XML output
         xml_hsts_attr = {'hsts_header_found': str(hsts_supported)}
@@ -92,4 +79,26 @@ class PluginHSTS(PluginBase.PluginBase):
         xml_result.append(xml_hsts)
 
         return PluginBase.PluginResult(txt_result, xml_result)
+
+
+
+    def _get_hsts_header(self, target):
+
+        hstsHeader = None
+        HTTP_GET_REQ = 'GET / HTTP/1.0\r\nHost: {0}\r\nConnection: close\r\n\r\n'.format(target[0])
+        sslConn = create_sslyze_connection(target, self._shared_settings)
+
+        # Perform the SSL handshake
+        sslConn.connect()
+
+        sslConn.write(HTTP_GET_REQ)
+        httpResp = parse_http_response(sslConn.read(2048))
+        sslConn.close()
+        if httpResp.version == 9 :
+            # HTTP 0.9 => Probably not an HTTP response
+            raise Exception('Server did not return an HTTP response')
+        else:
+            hstsHeader = httpResp.getheader('strict-transport-security', None)
+        return hstsHeader
+
 

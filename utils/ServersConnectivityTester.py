@@ -224,8 +224,12 @@ class ServersConnectivityTester(object):
         # If the hadnshakes fail, we keep going anyway; maybe the server
         # only supports exotic cipher suites
         sslSupport = SSLV23
+        # No connection retry when testing connectivity
+        tweak_shared_settings = shared_settings.copy()
+        tweak_shared_settings['nb_retries'] = 1
         for sslVersion in [TLSV1, SSLV23, SSLV3, TLSV1_2]:
-            sslCon = create_sslyze_connection((host, ipAddr, port, sslVersion), shared_settings)
+            sslCon = create_sslyze_connection((host, ipAddr, port, sslVersion),
+                                              tweak_shared_settings)
             try:
                 sslCon.connect()
             except:

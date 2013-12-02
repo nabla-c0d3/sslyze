@@ -23,7 +23,7 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-import socket, struct
+import socket, struct, time, random
 from HTTPResponseParser import parse_http_response
 from nassl import _nassl, SSL_VERIFY_NONE
 from nassl.SslClient import SslClient, ClientCertificateRequested
@@ -82,26 +82,32 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
         # XMPP configuration
         if connectionClass == XMPPConnection:
             sslConn = connectionClass(target, sslVerifyLocations, timeout,
+                                      shared_settings['nb_retries'],
                                       shared_settings['xmpp_to'])
         else:
-            sslConn = connectionClass(target, sslVerifyLocations, timeout)
+            sslConn = connectionClass(target, sslVerifyLocations, timeout,
+                                      shared_settings['nb_retries'])
 
 
     elif shared_settings['https_tunnel_host']:
         # Using an HTTP CONNECT proxy to tunnel SSL traffic
         if shared_settings['http_get']:
             sslConn = HTTPSTunnelConnection(target, sslVerifyLocations, timeout,
+                                            shared_settings['nb_retries'],
                                             shared_settings['https_tunnel_host'],
                                             shared_settings['https_tunnel_port'])
         else:
             sslConn = SSLTunnelConnection(target, sslVerifyLocations, timeout,
+                                          shared_settings['nb_retries'],
                                           shared_settings['https_tunnel_host'],
                                           shared_settings['https_tunnel_port'])
 
     elif shared_settings['http_get']:
-        sslConn = HTTPSConnection(target, sslVerifyLocations, timeout)
+        sslConn = HTTPSConnection(target, sslVerifyLocations, timeout,
+                                  shared_settings['nb_retries'])
     else:
-        sslConn = SSLConnection(target, sslVerifyLocations, timeout)
+        sslConn = SSLConnection(target, sslVerifyLocations, timeout,
+                                shared_settings['nb_retries'])
 
 
     # Load client certificate and private key
@@ -170,7 +176,8 @@ class SSLConnection(SslClient):
          'block type is not 01' : 'block type is not 01'} # Actually an RSA error
 
 
-    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout):
+    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations,
+                 timeout, maxAttempts):
         super(SSLConnection, self).__init__(None, sslVersion, SSL_VERIFY_NONE,
                                             sslVerifyLocations)
         self._timeout = timeout
@@ -178,6 +185,7 @@ class SSLConnection(SslClient):
         self._host = host
         self._ip = ip
         self._port = port
+        self._maxAttempts = maxAttempts
 
 
     def do_pre_handshake(self):
@@ -187,37 +195,58 @@ class SSLConnection(SslClient):
 
     def connect(self):
 
-        # StartTLS negotiation or proxy setup if needed
-        self.do_pre_handshake()
+        retryAttempts = 0
+        delay = 0
+        while True:
+            try:
+                # Sleep if it's a rety attempt
+                time.sleep(delay)
 
-        try: # SSL handshake
-            self.do_handshake()
+                # StartTLS negotiation or proxy setup if needed
+                self.do_pre_handshake()
 
-        # The goal here to differentiate rejected SSL handshakes (which will
-        # raise SSLHandshakeRejected) from random network errors
+                try: # SSL handshake
+                    self.do_handshake()
 
-        except socket.error as e:
-            for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
-                if error_msg in str(e.args):
-                    raise SSLHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
-            raise # Unknown socket error
+                # The goal here to differentiate rejected SSL handshakes (which will
+                # raise SSLHandshakeRejected) from random network errors
+                except socket.error as e:
+                    for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
+                        if error_msg in str(e.args):
+                            raise SSLHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
+                    raise # Unknown socket error
+                except IOError as e:
+                    if 'Nassl SSL handshake failed' in str(e.args):
+                        raise SSLHandshakeRejected('TLS / Unexpected EOF')
+                    raise
+                except _nassl.OpenSSLError as e:
+                    for error_msg in self.HANDSHAKE_REJECTED_SSL_ERRORS.keys():
+                        if error_msg in str(e.args):
+                            raise SSLHandshakeRejected('TLS / ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
+                    raise # Unknown SSL error if we get there
+                except ClientCertificateRequested as e:
+                    # Server expected a client certificate and we didn't provide one
+                    raise
 
-        except IOError as e:
-            if 'Nassl SSL handshake failed' in str(e.args):
-                raise SSLHandshakeRejected('TLS / Unexpected EOF')
-            raise
+            # Pass on exceptions for rejected handshakes
+            except SSLHandshakeRejected:
+                raise
+            except ClientCertificateRequested:
+                raise
 
-        except _nassl.OpenSSLError as e:
-            for error_msg in self.HANDSHAKE_REJECTED_SSL_ERRORS.keys():
-                if error_msg in str(e.args):
-                    raise SSLHandshakeRejected('TLS / ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
+            # Attempt to retry connection if a network error occurred
+            except:
+                retryAttempts = retryAttempts + 1
+                if (retryAttempts == self._maxAttempts):
+                    # Exhausted the number of retry attempts, give up
+                    raise
+                elif (retryAttempts == 1):
+                    delay = random.random()
+                else: # Exponential back off
+                    delay *=2
 
-            raise # Unknown SSL error if we get there
-
-        except ClientCertificateRequested as e:
-            # Server expected a client certificate and we didn't provide one
-            raise
-
+            else: # No network error occurred
+                break
 
 
     def close(self):

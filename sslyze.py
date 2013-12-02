@@ -43,6 +43,8 @@ PROJECT_URL = "https://github.com/isecPartners/sslyze"
 PROJECT_EMAIL = 'sslyze@isecpartners.com'
 PROJECT_DESC = 'Fast and full-featured SSL scanner'
 
+MAX_PROCESSES = 12
+MIN_PROCESSES = 3
 
 # Todo: Move formatting stuff to another file
 SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
@@ -63,12 +65,12 @@ class WorkerProcess(Process):
         Once it gets notified that all the tasks have been completed,
         it terminates.
         """
-        from plugins.PluginBase import PluginResult    
+        from plugins.PluginBase import PluginResult
         # Plugin classes are unpickled by the multiprocessing module
         # without state info. Need to assign shared_settings here
         for plugin_class in self.available_commands.itervalues():
             plugin_class._shared_settings = self.shared_settings
-        
+
         while True:
 
             task = self.queue_in.get() # Grab a task from queue_in
@@ -81,13 +83,13 @@ class WorkerProcess(Process):
             (target, command, args) = task
             # Instatiate the proper plugin
             plugin_instance = self.available_commands[command]()
-                
+
             try: # Process the task
                 result = plugin_instance.process_task(target, command, args)
             except Exception as e: # Generate txt and xml results
                 #raise
-                txt_result = ['Unhandled exception when processing --' + 
-                              command + ': ', str(e.__class__.__module__) + 
+                txt_result = ['Unhandled exception when processing --' +
+                              command + ': ', str(e.__class__.__module__) +
                               '.' + str(e.__class__.__name__) + ' - ' + str(e)]
                 xml_result = Element(command, exception=txt_result[1])
                 result = PluginResult(txt_result, xml_result)
@@ -107,7 +109,7 @@ def _format_xml_target_result(target, result_list):
     (host, ip, port, sslVersion) = target
     target_xml = Element('target', host=host, ip=ip, port=str(port))
     result_list.sort(key=lambda result: result[0]) # Sort results
-    
+
     for (command, plugin_result) in result_list:
         target_xml.append(plugin_result.get_xml_result())
 
@@ -123,7 +125,7 @@ def _format_txt_target_result(target, result_list):
         target_result_str += '\n'
         for line in plugin_result.get_txt_result():
             target_result_str += line + '\n'
-    
+
     scan_txt = SCAN_FORMAT.format(host, str(port), ip)
     return _format_title(scan_txt) + '\n' + target_result_str + '\n\n'
 
@@ -149,13 +151,14 @@ def main():
     except CommandLineParsingError as e:
         print e.get_error_msg()
         return
-    
+
 
     #--PROCESSES INITIALIZATION--
-    nb_processes = command_list.nb_processes
+    # Three processes per target from MIN_PROCESSES up to MAX_PROCESSES
+    nb_processes = max(MIN_PROCESSES, min(MAX_PROCESSES, len(target_list)*3))
     if command_list.https_tunnel:
         nb_processes = 1 # Let's not kill the proxy
-        
+
     task_queue = JoinableQueue() # Processes get tasks from task_queue and
     result_queue = JoinableQueue() # put the result of each task in result_queue
 
@@ -175,22 +178,22 @@ def main():
 
     targets_OK = []
     targets_ERR = []
-    target_results = ServersConnectivityTester.test_server_list(target_list, 
+    target_results = ServersConnectivityTester.test_server_list(target_list,
                                                                 shared_settings)
     for target in target_results:
         if target is None:
             break # None is a sentinel here
-        
+
         # Send tasks to worker processes
         targets_OK.append(target)
         for command in available_commands:
             if getattr(command_list, command):
                 args = command_list.__dict__[command]
                 task_queue.put( (target, command, args) )
-    
+
     for exception in target_results:
         targets_ERR.append(exception)
-        
+
     print ServersConnectivityTester.get_printable_result(targets_OK, targets_ERR)
     print '\n\n'
 
@@ -207,7 +210,7 @@ def main():
 
     # --REPORTING SECTION--
     processes_running = nb_processes
-    
+
     # XML output
     if shared_settings['xml_file']:
         xml_output_list = []
@@ -233,34 +236,34 @@ def main():
                 print _format_txt_target_result(target, result_dict[target])
                 if shared_settings['xml_file']:
                     xml_output_list.append(_format_xml_target_result(target, result_dict[target]))
-                           
+
         result_queue.task_done()
 
 
     # --TERMINATE--
-    
+
     # Make sure all the processes had time to terminate
     task_queue.join()
     result_queue.join()
     #[process.join() for process in process_list] # Causes interpreter shutdown errors
     exec_time = time()-start_time
-    
+
     # Output XML doc to a file if needed
     if shared_settings['xml_file']:
         result_xml_attr = {'httpsTunnel':str(shared_settings['https_tunnel_host']),
-                           'totalScanTime' : str(exec_time), 
-                           'defaultTimeout' : str(shared_settings['timeout']), 
+                           'totalScanTime' : str(exec_time),
+                           'defaultTimeout' : str(shared_settings['timeout']),
                            'startTLS' : str(shared_settings['starttls'])}
-        
+
         result_xml = Element('results', attrib = result_xml_attr)
-        
+
         # Sort results in alphabetical order to make the XML files (somewhat) diff-able
         xml_output_list.sort(key=lambda xml_elem: xml_elem.attrib['host'])
         for xml_element in xml_output_list:
             result_xml.append(xml_element)
-            
+
         xml_final_doc = Element('document', title = "SSLyze Scan Results",
-                                SSLyzeVersion = PROJECT_VERSION, 
+                                SSLyzeVersion = PROJECT_VERSION,
                                 SSLyzeWeb = PROJECT_URL)
         # Add the list of invalid targets
         xml_final_doc.append(ServersConnectivityTester.get_xml_result(targets_ERR))
@@ -271,7 +274,7 @@ def main():
         xml_final_pretty = minidom.parseString(tostring(xml_final_doc, encoding='UTF-8'))
         with open(shared_settings['xml_file'],'w') as xml_file:
             xml_file.write(xml_final_pretty.toprettyxml(indent="  ", encoding="utf-8" ))
-            
+
 
     print _format_title('Scan Completed in {0:.2f} s'.format(exec_time))
 

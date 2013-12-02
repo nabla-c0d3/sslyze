@@ -129,7 +129,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         hostValDict = {
             X509_NAME_MATCHES_SAN : 'OK - Subject Alternative Name matches',
             X509_NAME_MATCHES_CN :  'OK - Common Name matches',
-            X509_NAME_MISMATCH :    'FAILED - Certificate does not match ' + host
+            X509_NAME_MISMATCH :    'FAILED - Certificate does NOT match ' + host
         }
         outputTxt.append(self.FIELD_FORMAT("Hostname Validation:",
                                             hostValDict[x509Cert.matches_hostname(host)]))

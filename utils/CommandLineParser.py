@@ -298,12 +298,11 @@ class CommandLineParser():
             # Try to load the cert and key in OpenSSL
             try:
                 sslClient = SslClient()
-                sslClient.use_certificate_file(args_command_list.cert,
-                                               args_command_list.certform)
-                sslClient.use_privateKey_file(args_command_list.key,
-                                              args_command_list.keyform,
-                                              args_command_list.keypass)
-                sslClient.check_private_key()
+                sslClient.use_private_key(args_command_list.cert,
+                                        args_command_list.certform,
+                                        args_command_list.key,
+                                        args_command_list.keyform,
+                                        args_command_list.keypass)
             except _nassl.OpenSSLError as e:
                 if 'bad decrypt' in str(e.args):
                     raise CommandLineParsingError('Could not decrypt the private key. Wrong passphrase ?')

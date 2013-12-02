@@ -6,7 +6,7 @@ from distutils.core import setup
 
 NASSL_BINARY = '_nassl.so'
 if platform == 'win32':
-    NASSL_BINARY = '_nassl.pyd'    
+    NASSL_BINARY = '_nassl.pyd'
 
 setup(name='SSLyze',
     version=PROJECT_VERSION,
@@ -17,7 +17,7 @@ setup(name='SSLyze',
     url=PROJECT_URL,
     scripts=['sslyze.py'],
     packages=['plugins', 'utils', 'nassl'],
-    package_data={'plugins' : ['data/mozilla_cacert.pem','data/mozilla_ev_oids.py'],
+    package_data={'plugins' : ['data/trust_stores/*.pem','data/trust_stores/mozilla_ev_oids.py'],
                   'nassl' : [NASSL_BINARY]},
     license=open('LICENSE.txt').read(),
     )

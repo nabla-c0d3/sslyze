@@ -58,7 +58,8 @@ class PluginCertInfo(PluginBase.PluginBase):
     interface.add_command(
         command="certinfo",
         help= "Verifies the target server's certificate validity against "
-            "Mozilla's trusted root store, and prints relevant fields of "
+            "various trust stores, checks for support for OCSP stapling, and "
+            "prints relevant fields of "
             "the certificate. CERTINFO should be 'basic' or 'full'.",
         dest="certinfo")
 

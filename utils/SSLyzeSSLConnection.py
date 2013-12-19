@@ -307,10 +307,11 @@ class SSLTunnelConnection(SSLConnection):
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
 
 
-    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout, tunnelHost, tunnelPort):
+    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout, maxAttempts, tunnelHost, tunnelPort):
 
         super(SSLTunnelConnection, self).__init__((host, ip, port, sslVersion),
-                                                  sslVerifyLocations, timeout)
+                                                  sslVerifyLocations, timeout,
+                                                  maxAttempts)
         self._tunnelHost = tunnelHost
         self._tunnelPort = tunnelPort
 
@@ -387,15 +388,16 @@ class XMPPConnection(SSLConnection):
 
     XMPP_OPEN_STREAM = ("<stream:stream xmlns='jabber:client' xmlns:stream='"
         "http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
-        "rfc2595.txt' to='{0}'>" )
+        "rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>" )
     XMPP_STARTTLS = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
 
     def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations,
-                 timeout, xmpp_to=None):
+                 timeout, maxAttempts, xmpp_to=None):
 
         super(XMPPConnection, self).__init__((host, ip, port, sslVersion),
-                                                  sslVerifyLocations, timeout)
+                                                  sslVerifyLocations, timeout,
+                                                  maxAttempts)
 
         self._xmpp_to = xmpp_to
         if xmpp_to is None:
@@ -412,6 +414,9 @@ class XMPPConnection(SSLConnection):
         self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
         if '<stream:error>' in self._sock.recv(2048):
             raise StartTLSError(self.ERR_XMPP_REJECTED)
+
+        # Get the server's features
+        self._sock.recv(4096)
 
         # Send a STARTTLS message
         self._sock.send(self.XMPP_STARTTLS)

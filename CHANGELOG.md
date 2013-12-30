@@ -8,6 +8,8 @@ SSLyze Changelog
 * Bug fixes including:
     * Better results when the server requested a client certificate but none was supplied
     * Clarified text and XML output
+    * Better HTTP Strict Transport Security plugin
+    * Fixed PluginCompression false negatives
 
 
 ## v0.7

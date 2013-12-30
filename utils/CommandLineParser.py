@@ -190,7 +190,9 @@ class CommandLineParser():
                 'Sets the number retry attempts for all network connections '
                 'initiated throughout the scan. Increase this value if you are '
                 'getting a lot of timeout/connection errors when scanning a '
-                'specific server. Default is '
+                'specific server. Decrease this value to increase the speed '
+                'of the scans; results may however return connection errors. '
+                'Default is '
                 + str(self.DEFAULT_RETRY_ATTEMPTS)  + ' connection attempts.'),
             type='int',
             dest='nb_retries',

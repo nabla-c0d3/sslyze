@@ -75,7 +75,7 @@ class TargetStringParser(object):
         # remove any trailing /
         target = target.replace('/','')
         # use classic parsing
-        target = cls.parse_target_str(cls, target, 80)
+        target = cls.parse_target_str(target, 80)
         return (auth,target)
 
     @classmethod

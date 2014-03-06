@@ -62,6 +62,21 @@ class TargetStringParser(object):
 
 
     @classmethod
+    def _parse_proxy_target_str(cls, proxy_str):
+
+        if '@' in target_str:
+            auth,target = proxy_str.split('@')
+            auth = auth.split('http://')[1]
+            # user:pass
+            auth = auth.split(':')
+        else:
+            auth = (None,None)
+            target = proxy_str.split('http://')[1]
+        # use classic parsing
+        target = parse_target_str(cls, target_str, 80)
+        return (auth,target)
+
+    @classmethod
     def _parse_ipv4_target_str(cls, target_str, default_port):
 
         if ':' in target_str:
@@ -75,7 +90,6 @@ class TargetStringParser(object):
             port = default_port
 
         return (host, port)
-
 
     @classmethod
     def _parse_ipv6_target_str(cls, target_str, default_port):

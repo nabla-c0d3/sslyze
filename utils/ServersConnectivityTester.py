@@ -62,7 +62,7 @@ class TargetStringParser(object):
 
 
     @classmethod
-    def _parse_proxy_target_str(cls, proxy_str):
+    def parse_proxy_target_str(cls, proxy_str):
 
         if '@' in target_str:
             auth,target = proxy_str.split('@')

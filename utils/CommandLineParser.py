@@ -321,9 +321,11 @@ class CommandLineParser():
                     'Current version is ' + platform.python_version() + '.')
 
             try: # Need to parse the proxy host:port string now
-                (host, port) = TargetStringParser.parse_target_str(args_command_list.https_tunnel, 443)
+                (user,password),(host, port) = TargetStringParser.parse_proxy_target_str(args_command_list.https_tunnel)
                 shared_settings['https_tunnel_host'] = host
                 shared_settings['https_tunnel_port'] = port
+                shared_settings['https_tunnel_user'] = user
+                shared_settings['https_tunnel_password'] = password
             except InvalidTargetError:
                 raise CommandLineParsingError(
                     'Not a valid host/port for --https_tunnel'

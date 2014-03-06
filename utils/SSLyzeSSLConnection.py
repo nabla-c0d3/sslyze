@@ -268,7 +268,6 @@ class HTTPSConnection(SSLConnection):
     handshake."""
 
     HTTP_GET_REQ = 'GET / HTTP/1.0\r\nHost: {0}\r\nConnection: close\r\n\r\n'
-    HTTP_GET_REQ_PROXY_AUTH_BASIC = 'GET / HTTP/1.0\r\nHost: {0}\r\nProxy-Authorization: Basic {1}\r\nConnection: close\r\n\r\n'
 
     GET_RESULT_FORMAT = 'HTTP {0} {1}{2}'
 
@@ -306,6 +305,7 @@ class SSLTunnelConnection(SSLConnection):
     """SSL connection class that connects to a server through a CONNECT proxy."""
 
     HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
+    HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = 'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {1}\r\n\r\n'
 
     ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'

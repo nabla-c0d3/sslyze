@@ -98,7 +98,10 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
             sslConn = HTTPSTunnelConnection(target, sslVerifyLocations, timeout,
                                             shared_settings['nb_retries'],
                                             shared_settings['https_tunnel_host'],
-                                            shared_settings['https_tunnel_port'])
+                                            shared_settings['https_tunnel_port'],
+                                            shared_settings['https_tunnel_user'],
+                                            shared_settings['https_tunnel_password']
+                                            )
         else:
             sslConn = SSLTunnelConnection(target, sslVerifyLocations, timeout,
                                           shared_settings['nb_retries'],

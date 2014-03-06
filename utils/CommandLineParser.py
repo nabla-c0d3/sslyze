@@ -23,6 +23,7 @@
 
 from optparse import OptionParser, OptionGroup
 import platform
+import os
 
 from ServersConnectivityTester import TargetStringParser, InvalidTargetError
 
@@ -206,7 +207,7 @@ class CommandLineParser():
                 'Tunnels all traffic to the target server(s) through an HTTP '
                 'CONNECT proxy. HTTP_TUNNEL should be \'host:port\'.'),
             dest='https_tunnel',
-            default=None)
+            default=os.environ.get('https_proxy'))
 
         # STARTTLS
         self._parser.add_option(

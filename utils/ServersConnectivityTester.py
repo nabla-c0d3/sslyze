@@ -73,7 +73,7 @@ class TargetStringParser(object):
             auth = (None,None)
             target = proxy_str.split('http://')[1]
         # use classic parsing
-        target = parse_target_str(cls, target_str, 80)
+        target = parse_target_str(cls, target, 80)
         return (auth,target)
 
     @classmethod

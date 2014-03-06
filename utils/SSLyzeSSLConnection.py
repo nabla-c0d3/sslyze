@@ -311,7 +311,7 @@ class SSLTunnelConnection(SSLConnection):
     """SSL connection class that connects to a server through a CONNECT proxy."""
 
     HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
-    HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = 'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {1}\r\n\r\n'
+    HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = 'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {2}\r\n\r\n'
 
     ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'

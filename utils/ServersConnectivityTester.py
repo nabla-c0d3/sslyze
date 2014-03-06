@@ -64,7 +64,7 @@ class TargetStringParser(object):
     @classmethod
     def parse_proxy_target_str(cls, proxy_str):
 
-        if '@' in target_str:
+        if '@' in proxy_str:
             auth,target = proxy_str.split('@')
             auth = auth.split('http://')[1]
             # user:pass
@@ -72,6 +72,8 @@ class TargetStringParser(object):
         else:
             auth = (None,None)
             target = proxy_str.split('http://')[1]
+        # remove any trailing /
+        target = target.replace('/','')
         # use classic parsing
         target = parse_target_str(cls, target, 80)
         return (auth,target)

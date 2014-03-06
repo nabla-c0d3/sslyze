@@ -23,6 +23,9 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
+from base64 import b64decode, b64encode
+from urllib import quote, unquote
+
 import socket, struct, time, random
 from HTTPResponseParser import parse_http_response
 from nassl import _nassl, SSL_VERIFY_NONE
@@ -265,6 +268,7 @@ class HTTPSConnection(SSLConnection):
     handshake."""
 
     HTTP_GET_REQ = 'GET / HTTP/1.0\r\nHost: {0}\r\nConnection: close\r\n\r\n'
+    HTTP_GET_REQ_PROXY_AUTH_BASIC = 'GET / HTTP/1.0\r\nHost: {0}\r\nProxy-Authorization: Basic {1}\r\nConnection: close\r\n\r\n'
 
     GET_RESULT_FORMAT = 'HTTP {0} {1}{2}'
 
@@ -315,8 +319,9 @@ class SSLTunnelConnection(SSLConnection):
                                                   maxAttempts)
         self._tunnelHost = tunnelHost
         self._tunnelPort = tunnelPort
-        self._tunnelUser = tunnelUser
-        self._tunnelPassword = tunnelPassword
+        self._tunnelBasicAuth = None
+        if tunnelUser is not None:
+            self._tunnelBasicAuth = b64encode('%s:%s' % (quote(tunnelUser), quote(tunnelPassword)))
 
 
     def do_pre_handshake(self):
@@ -331,7 +336,11 @@ class SSLTunnelConnection(SSLConnection):
             raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[1]))
 
         # Send a CONNECT request with the host we want to tunnel to
-        self._sock.send(self.HTTP_CONNECT_REQ.format(self._host, self._port))
+        if self._tunnelBasicAuth is None:
+            self._sock.send(self.HTTP_CONNECT_REQ.format(self._host, self._port))
+        else:
+            self._sock.send(self.HTTP_CONNECT_REQ_PROXY_AUTH_BASIC.format(self._host, self._port,
+                                        self._tunnelBasicAuth))
         httpResp = parse_http_response(self._sock.recv(2048))
 
         # Check if the proxy was able to connect to the host

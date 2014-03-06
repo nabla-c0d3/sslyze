@@ -307,13 +307,16 @@ class SSLTunnelConnection(SSLConnection):
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
 
 
-    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout, maxAttempts, tunnelHost, tunnelPort):
+    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout, 
+                    maxAttempts, tunnelHost, tunnelPort, tunnelUser=None, tunnelPassword=None):
 
         super(SSLTunnelConnection, self).__init__((host, ip, port, sslVersion),
                                                   sslVerifyLocations, timeout,
                                                   maxAttempts)
         self._tunnelHost = tunnelHost
         self._tunnelPort = tunnelPort
+        self._tunnelUser = tunnelUser
+        self._tunnelPassword = tunnelPassword
 
 
     def do_pre_handshake(self):

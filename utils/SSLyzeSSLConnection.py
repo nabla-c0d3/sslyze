@@ -199,7 +199,7 @@ class SSLConnection(SslClient):
         delay = 0
         while True:
             try:
-                # Sleep if it's a rety attempt
+                # Sleep if it's a retry attempt
                 time.sleep(delay)
 
                 # StartTLS negotiation or proxy setup if needed

@@ -85,7 +85,7 @@ class TargetStringParser(object):
 
         port = default_port
         target_split = (target_str.split(']'))
-        ipv6_addr = target_split[0] + ']'
+        ipv6_addr = target_split[0].split('[')[1]
         if ':' in target_split[1]: # port was specified
             try:
                 port = int(target_split[1].rsplit(':')[1])

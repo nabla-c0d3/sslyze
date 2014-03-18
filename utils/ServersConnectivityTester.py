@@ -51,6 +51,9 @@ class TargetStringParser(object):
     """Utility class to parse a 'host:port' string taken from the command line
     into a valid (host,port) tuple. Supports IPV6 addresses."""
 
+    ERR_BAD_PORT = 'Not a valid host:port'
+    ERR_NO_IPV6 = 'IPv6 is not supported on this platform'
+
     @classmethod
     def parse_target_str(cls, target_str, default_port):
 
@@ -114,11 +117,9 @@ class ServersConnectivityTester(object):
                      'rdp'      : 3389,
                      'default'  : 443}
 
-    ERR_BAD_PORT = 'Not a valid host:port'
     ERR_TIMEOUT = 'Could not connect (timeout)'
     ERR_NAME_NOT_RESOLVED = 'Could not resolve hostname'
     ERR_REJECTED = 'Connection rejected'
-    ERR_NO_IPV6 = 'IPv6 is not supported on this platform'
 
     @classmethod
     def test_server_list(cls, target_list, shared_settings):
@@ -130,7 +131,6 @@ class ServersConnectivityTester(object):
         # Use a thread pool to connect to each server
         thread_pool = ThreadPool()
         for target_str in target_list:
-            cls._test_server, (target_str, shared_settings)
             thread_pool.add_job((cls._test_server, (target_str, shared_settings)))
 
         nb_threads = min(len(target_list), cls.MAX_THREADS)

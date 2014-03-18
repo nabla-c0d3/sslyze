@@ -118,7 +118,11 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
 
     # Add Server Name Indication
     if shared_settings['sni']:
-        sslConn.set_tlsext_host_name(shared_settings['sni'])
+        try:
+            sslConn.set_tlsext_host_name(shared_settings['sni'])
+        except ValueError:
+            # This gets raised if we're using SSLv2 which doesn't support SNI (or TLS extensions in general)
+            pass
 
     # Restrict cipher list to make the client hello smaller
     sslConn.set_cipher_list('HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA')

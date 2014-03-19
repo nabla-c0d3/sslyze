@@ -147,7 +147,8 @@ class PluginSessionResumption(PluginBase.PluginBase):
         return PluginBase.PluginResult(txt_result, xml_result)
 
 
-    def _format_resum_id_results(self, thread_pool, MAX_RESUM):
+    @staticmethod
+    def _format_resum_id_results(thread_pool, MAX_RESUM):
         # Count successful/failed resumptions
         nb_resum = 0
         for completed_job in thread_pool.get_result():
@@ -181,8 +182,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
                                    str(MAX_RESUM), sessid_stat, sessid_try)
 
         ERRORS_FORMAT ='        ERROR #{0}: {1}'.format
-        txt_result = []
-        txt_result.append(sessid_txt)
+        txt_result = [sessid_txt]
         # Add error messages
         if error_list:
             i=0
@@ -203,7 +203,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
                 xml_resum_error.text = error_msg
                 xml_resum_id.append(xml_resum_error)
 
-        return (txt_result, xml_resum_id)
+        return txt_result, xml_resum_id
 
 
     def _resume_with_session_id(self, target):
@@ -215,20 +215,20 @@ class PluginSessionResumption(PluginBase.PluginBase):
         try: # Recover the session ID
             session1_id = self._extract_session_id(session1)
         except IndexError:
-            return (False, 'Session ID not assigned')
+            return False, 'Session ID not assigned'
 
         # Try to resume that SSL session
         session2 = self._resume_ssl_session(target, session1)
         try: # Recover the session ID
             session2_id = self._extract_session_id(session2)
         except IndexError:
-            return (False, 'Session ID not assigned')
+            return False, 'Session ID not assigned'
 
         # Finally, compare the two Session IDs
         if session1_id != session2_id:
-            return (False, 'Session ID assigned but not accepted')
+            return False, 'Session ID assigned but not accepted'
 
-        return (True, '')
+        return True, ''
 
 
     def _resume_with_session_ticket(self, target):
@@ -241,23 +241,24 @@ class PluginSessionResumption(PluginBase.PluginBase):
         try: # Recover the TLS ticket
             session1_tls_ticket = self._extract_tls_session_ticket(session1)
         except IndexError:
-            return (False, 'TLS ticket not assigned')
+            return False, 'TLS ticket not assigned'
 
         # Try to resume that session using the TLS ticket
         session2 = self._resume_ssl_session(target, session1, tlsTicket=True)
         try: # Recover the TLS ticket
             session2_tls_ticket = self._extract_tls_session_ticket(session2)
         except IndexError:
-            return (False, 'TLS ticket not assigned')
+            return False, 'TLS ticket not assigned'
 
         # Finally, compare the two TLS Tickets
         if session1_tls_ticket != session2_tls_ticket:
-            return (False, 'TLS ticket assigned but not accepted')
+            return False, 'TLS ticket assigned but not accepted'
 
-        return (True, '')
+        return True, ''
 
 
-    def _extract_session_id(self, ssl_session):
+    @staticmethod
+    def _extract_session_id(ssl_session):
         """
         Extracts the SSL session ID from a SSL session object or raises IndexError
         if the session ID was not set.
@@ -267,7 +268,8 @@ class PluginSessionResumption(PluginBase.PluginBase):
         return session_id
 
 
-    def _extract_tls_session_ticket(self, ssl_session):
+    @staticmethod
+    def _extract_tls_session_ticket(ssl_session):
         """
         Extracts the TLS session ticket from a SSL session object or raises
         IndexError if the ticket was not set.

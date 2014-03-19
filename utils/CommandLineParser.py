@@ -22,10 +22,7 @@
 #-------------------------------------------------------------------------------
 
 from optparse import OptionParser, OptionGroup
-import platform
-import os
-
-from ServersConnectivityTester import TargetStringParser, InvalidTargetError
+from urlparse import urlparse
 
 # Client cert/key checking
 from nassl.SslClient import SslClient
@@ -56,7 +53,7 @@ class CommandLineParser():
 
     # Default values
     DEFAULT_RETRY_ATTEMPTS = 5
-    DEFAULT_TIMEOUT =   5
+    DEFAULT_TIMEOUT = 5
 
 
     def __init__(self, available_plugins, sslyze_version):
@@ -194,7 +191,7 @@ class CommandLineParser():
                 'specific server. Decrease this value to increase the speed '
                 'of the scans; results may however return connection errors. '
                 'Default is '
-                + str(self.DEFAULT_RETRY_ATTEMPTS)  + ' connection attempts.'),
+                + str(self.DEFAULT_RETRY_ATTEMPTS) + ' connection attempts.'),
             type='int',
             dest='nb_retries',
             default=self.DEFAULT_RETRY_ATTEMPTS)
@@ -205,9 +202,11 @@ class CommandLineParser():
             '--https_tunnel',
             help= (
                 'Tunnels all traffic to the target server(s) through an HTTP '
-                'CONNECT proxy. HTTP_TUNNEL should be \'host:port\'.'),
+                'CONNECT proxy. HTTP_TUNNEL should be the proxy\'s URL: '
+                '\'http://USER:PW@HOST:PORT/\'. For proxies requiring '
+                'authentication, only Basic Authentication is supported.'),
             dest='https_tunnel',
-            default=os.environ.get('https_proxy'))
+            default=None)
 
         # STARTTLS
         self._parser.add_option(
@@ -315,25 +314,36 @@ class CommandLineParser():
 
         # HTTP CONNECT proxy
         if args_command_list.https_tunnel:
-            if '2.7.' not in platform.python_version(): # Python 2.7 only
-                raise CommandLineParsingError(
-                    '--https_tunnel requires Python 2.7.X. '
-                    'Current version is ' + platform.python_version() + '.')
 
-            try: # Need to parse the proxy host:port string now
-                (user,password),(host, port) = TargetStringParser.parse_proxy_target_str(args_command_list.https_tunnel)
-                shared_settings['https_tunnel_host'] = host
-                shared_settings['https_tunnel_port'] = port
-                shared_settings['https_tunnel_user'] = user
-                shared_settings['https_tunnel_password'] = password
-            except InvalidTargetError:
-                raise CommandLineParsingError(
-                    'Not a valid host/port for --https_tunnel'
-                    ', discarding all tasks.')
+            # Parse the proxy URL
+            parsedUrl = urlparse(args_command_list.https_tunnel)
 
-        else:
-            shared_settings['https_tunnel_host'] = None
-            shared_settings['https_tunnel_port'] = None
+            if not parsedUrl.netloc:
+                raise CommandLineParsingError(
+                    'Invalid Proxy URL for --https_tunnel, discarding all tasks.')
+
+            if parsedUrl.scheme in 'http':
+               defaultPort = 80
+            elif parsedUrl.scheme in 'https':
+               defaultPort = 443
+            else:
+                raise CommandLineParsingError(
+                    'Invalid URL scheme for --https_tunnel, discarding all tasks.')
+
+            if not parsedUrl.hostname:
+                raise CommandLineParsingError(
+                    'Invalid Proxy URL for --https_tunnel, discarding all tasks.')
+
+            try :
+                shared_settings['https_tunnel_port'] = parsedUrl.port if parsedUrl.port else defaultPort
+            except ValueError: # The supplied port was not a number
+                raise CommandLineParsingError(
+                    'Invalid Proxy URL for --https_tunnel, discarding all tasks.')
+
+            shared_settings['https_tunnel_host'] = parsedUrl.hostname
+            shared_settings['https_tunnel_user'] = parsedUrl.username
+            shared_settings['https_tunnel_password'] = parsedUrl.password
+
 
         # STARTTLS
         if args_command_list.starttls:

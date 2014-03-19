@@ -172,7 +172,6 @@ class SSLConnection(SslClient):
          'bad mac decode' : 'Bad mac decode',
          'wrong version number' : 'Wrong version number',
          'no cipher match' : 'No cipher match',
-         'no ciphers available' : 'No ciphers available',
          'bad decompression' : 'Bad decompression',
          'peer error no cipher' : 'Peer error no cipher',
          'no cipher list' : 'No ciphers list',
@@ -240,7 +239,7 @@ class SSLConnection(SslClient):
 
             # Attempt to retry connection if a network error occurred
             except:
-                retryAttempts = retryAttempts + 1
+                retryAttempts += 1
                 if (retryAttempts == self._maxAttempts):
                     # Exhausted the number of retry attempts, give up
                     raise
@@ -288,7 +287,7 @@ class HTTPSConnection(SSLConnection):
                 result = self.ERR_NOT_HTTP
             else:
                 redirect = ''
-                if httpResp.status >= 300 and httpResp.status < 400:
+                if 300 <= httpResp.status < 400:
                     # Add redirection URL to the result
                     redirect = ' - ' + httpResp.getheader('Location', None)
 

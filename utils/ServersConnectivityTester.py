@@ -77,7 +77,7 @@ class TargetStringParser(object):
             host = target_str
             port = default_port
 
-        return (host, port)
+        return host, port
 
 
     @classmethod
@@ -94,7 +94,7 @@ class TargetStringParser(object):
                 port = int(target_split[1].rsplit(':')[1])
             except: # Port is not an int
                 raise InvalidTargetError(target_str, cls.ERR_BAD_PORT)
-        return (ipv6_addr, port)
+        return ipv6_addr, port
 
 
 
@@ -202,10 +202,10 @@ class ServersConnectivityTester(object):
         # Socket errors
         except socket.timeout: # Host is down
             raise InvalidTargetError(targetStr, cls.ERR_TIMEOUT)
-        except socket.error: # Connection Refused
-            raise InvalidTargetError(targetStr, cls.ERR_REJECTED)
         except socket.gaierror:
             raise InvalidTargetError(targetStr, cls.ERR_NAME_NOT_RESOLVED)
+        except socket.error: # Connection Refused
+            raise InvalidTargetError(targetStr, cls.ERR_REJECTED)
 
         # StartTLS errors
         except StartTLSError as e:
@@ -221,7 +221,7 @@ class ServersConnectivityTester(object):
 
         # Then try to do SSL handshakes just to figure out the SSL version
         # supported by the server; the plugins need to know this in advance.
-        # If the hadnshakes fail, we keep going anyway; maybe the server
+        # If the handshakes fail, we keep going anyway; maybe the server
         # only supports exotic cipher suites
         sslSupport = SSLV23
         # No connection retry when testing connectivity
@@ -241,4 +241,4 @@ class ServersConnectivityTester(object):
                 sslCon.close()
 
 
-        return (host, ipAddr, port, sslSupport)
+        return host, ipAddr, port, sslSupport

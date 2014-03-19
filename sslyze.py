@@ -75,7 +75,7 @@ class WorkerProcess(Process):
 
             task = self.queue_in.get() # Grab a task from queue_in
 
-            if task == None: # All the tasks have been completed
+            if task is None: # All the tasks have been completed
                 self.queue_out.put(None) # Pass on the sentinel to result_queue
                 self.queue_in.task_done()
                 break
@@ -165,7 +165,7 @@ def main():
     # Spawn a pool of processes, and pass them the queues
     process_list = []
     for _ in xrange(nb_processes):
-        p = WorkerProcess(task_queue, result_queue, available_commands, \
+        p = WorkerProcess(task_queue, result_queue, available_commands,
                             shared_settings)
         p.start()
         process_list.append(p) # Keep track of the processes that were started
@@ -212,8 +212,7 @@ def main():
     processes_running = nb_processes
 
     # XML output
-    if shared_settings['xml_file']:
-        xml_output_list = []
+    xml_output_list = []
 
     # Each host has a list of results
     result_dict = {}
@@ -224,7 +223,7 @@ def main():
     while processes_running:
         result = result_queue.get()
 
-        if result == None: # Getting None means that one process was done
+        if result is None: # Getting None means that one process was done
             processes_running -= 1
 
         else: # Getting an actual result

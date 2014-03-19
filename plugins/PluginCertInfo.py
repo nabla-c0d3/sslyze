@@ -96,7 +96,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             storeName = AVAILABLE_TRUST_STORES[storePath]
             verifyDict[storeName] = verifyStr
 
-        if x509Cert == None:
+        if x509Cert is None:
             # This means none of the connections were successful. Get out
             for (job, exception) in threadPool.get_error():
                 raise exception
@@ -237,7 +237,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         ocspRespTrustTxt = 'Response is Trusted' if ocspResp.verify(MOZILLA_STORE_PATH) \
             else 'Response is NOT Trusted'
 
-        ocspRespTxt = [ \
+        ocspRespTxt = [
             self.FIELD_FORMAT('OCSP Response Status:', ocspRespDict['responseStatus']),
             self.FIELD_FORMAT('Validation w/ Mozilla\'s CA Store:', ocspRespTrustTxt),
             self.FIELD_FORMAT('Responder Id:', ocspRespDict['responderID'])]
@@ -245,7 +245,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         if 'successful' not in ocspRespDict['responseStatus']:
             return ocspRespTxt
 
-        ocspRespTxt.extend( [ \
+        ocspRespTxt.extend( [
             self.FIELD_FORMAT('Cert Status:', ocspRespDict['responses'][0]['certStatus']),
             self.FIELD_FORMAT('Cert Serial Number:', ocspRespDict['responses'][0]['certID']['serialNumber']),
             self.FIELD_FORMAT('This Update:', ocspRespDict['responses'][0]['thisUpdate']),
@@ -266,7 +266,8 @@ class PluginCertInfo(PluginBase.PluginBase):
         return False
 
 
-    def _get_full_text(self, cert):
+    @staticmethod
+    def _get_full_text(cert):
         return [cert.as_text()]
 
 
@@ -278,7 +279,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         except KeyError:
             commonName = 'None'
 
-        basicTxt = [ \
+        basicTxt = [
             self.FIELD_FORMAT("SHA1 Fingerprint:", cert.get_SHA1_fingerprint()),
             self.FIELD_FORMAT("Common Name:", commonName),
             self.FIELD_FORMAT("Issuer:", certDict['issuer']),

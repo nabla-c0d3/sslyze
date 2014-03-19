@@ -75,7 +75,8 @@ class PluginInterface:
         return self._options
         
         
-    def _make_option(self, command, help, dest):
+    @staticmethod
+    def _make_option(command, help, dest):
         # If dest is something, store it, otherwise just use store_true
         action="store_true"
         if dest is not None:

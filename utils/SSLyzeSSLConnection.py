@@ -227,7 +227,7 @@ class SSLConnection(SslClient):
                         if error_msg in str(e.args):
                             raise SSLHandshakeRejected('TLS / ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
                     raise # Unknown SSL error if we get there
-                except ClientCertificateRequested as e:
+                except ClientCertificateRequested:
                     # Server expected a client certificate and we didn't provide one
                     raise
 
@@ -240,10 +240,10 @@ class SSLConnection(SslClient):
             # Attempt to retry connection if a network error occurred
             except:
                 retryAttempts += 1
-                if (retryAttempts == self._maxAttempts):
+                if retryAttempts == self._maxAttempts:
                     # Exhausted the number of retry attempts, give up
                     raise
-                elif (retryAttempts == 1):
+                elif retryAttempts == 1:
                     delay = random.random()
                 else: # Exponential back off
                     delay *=2
@@ -277,7 +277,6 @@ class HTTPSConnection(SSLConnection):
 
     def post_handshake_check(self):
 
-        result = ''
         try: # Send an HTTP GET to the server and store the HTTP Status Code
             self.write(self.HTTP_GET_REQ.format(self._host))
             # Parse the response and print the Location header
@@ -489,6 +488,10 @@ class GenericStartTLSConnection(SSLConnection):
     """SSL connection class that performs a StartTLS negotiation
     before the SSL handshake. Used for POP3, IMAP and FTP."""
 
+    # To be defined in subclasses
+    ERR_NO_STARTTLS = ''
+    START_TLS_CMD = ''
+    START_TLS_OK = ''
 
     def do_pre_handshake(self):
         """

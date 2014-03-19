@@ -171,7 +171,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         return txtOutput
 
 
-    def _generate_xml_output(self, result_dicts, command):
+    @staticmethod
+    def _generate_xml_output(result_dicts, command):
 
         xmlOutput = Element(command, title=command.upper() + ' Cipher Suites')
 
@@ -209,7 +210,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             sslConn.connect()
 
         except SSLHandshakeRejected as e:
-            return ('rejectedCipherSuites', ssl_cipher, None, str(e))
+            return 'rejectedCipherSuites', ssl_cipher, None, str(e)
 
         except:
             raise
@@ -222,7 +223,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 keysize = str(sslConn.get_current_cipher_bits()) + ' bits'
 
             status_msg = sslConn.post_handshake_check()
-            return ('acceptedCipherSuites', ssl_cipher, keysize, status_msg)
+            return 'acceptedCipherSuites', ssl_cipher, keysize, status_msg
 
         finally:
             sslConn.close()
@@ -245,7 +246,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 keysize = str(sslConn.get_current_cipher_bits())+' bits'
 
             status_msg = sslConn.post_handshake_check()
-            return ('preferredCipherSuite', ssl_cipher, keysize, status_msg)
+            return 'preferredCipherSuite', ssl_cipher, keysize, status_msg
 
         except:
             return None

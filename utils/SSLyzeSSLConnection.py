@@ -23,6 +23,9 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
+from base64 import b64decode, b64encode
+from urllib import quote, unquote
+
 import socket, struct, time, random
 from HTTPResponseParser import parse_http_response
 from nassl import _nassl, SSL_VERIFY_NONE
@@ -95,12 +98,18 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
             sslConn = HTTPSTunnelConnection(target, sslVerifyLocations, timeout,
                                             shared_settings['nb_retries'],
                                             shared_settings['https_tunnel_host'],
-                                            shared_settings['https_tunnel_port'])
+                                            shared_settings['https_tunnel_port'],
+                                            shared_settings['https_tunnel_user'],
+                                            shared_settings['https_tunnel_password']
+                                            )
         else:
             sslConn = SSLTunnelConnection(target, sslVerifyLocations, timeout,
                                           shared_settings['nb_retries'],
                                           shared_settings['https_tunnel_host'],
-                                          shared_settings['https_tunnel_port'])
+                                          shared_settings['https_tunnel_port'],
+                                          shared_settings['https_tunnel_user'],
+                                          shared_settings['https_tunnel_password']
+                                          )
 
     elif shared_settings['http_get']:
         sslConn = HTTPSConnection(target, sslVerifyLocations, timeout,
@@ -304,18 +313,23 @@ class SSLTunnelConnection(SSLConnection):
     """SSL connection class that connects to a server through a CONNECT proxy."""
 
     HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
+    HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = 'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {2}\r\n\r\n'
 
     ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
 
 
-    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout, maxAttempts, tunnelHost, tunnelPort):
+    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout, 
+                    maxAttempts, tunnelHost, tunnelPort, tunnelUser=None, tunnelPassword=None):
 
         super(SSLTunnelConnection, self).__init__((host, ip, port, sslVersion),
                                                   sslVerifyLocations, timeout,
                                                   maxAttempts)
         self._tunnelHost = tunnelHost
         self._tunnelPort = tunnelPort
+        self._tunnelBasicAuth = None
+        if tunnelUser is not None:
+            self._tunnelBasicAuth = b64encode('%s:%s' % (quote(tunnelUser), quote(tunnelPassword)))
 
 
     def do_pre_handshake(self):
@@ -330,7 +344,11 @@ class SSLTunnelConnection(SSLConnection):
             raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[1]))
 
         # Send a CONNECT request with the host we want to tunnel to
-        self._sock.send(self.HTTP_CONNECT_REQ.format(self._host, self._port))
+        if self._tunnelBasicAuth is None:
+            self._sock.send(self.HTTP_CONNECT_REQ.format(self._host, self._port))
+        else:
+            self._sock.send(self.HTTP_CONNECT_REQ_PROXY_AUTH_BASIC.format(self._host, self._port,
+                                        self._tunnelBasicAuth))
         httpResp = parse_http_response(self._sock.recv(2048))
 
         # Check if the proxy was able to connect to the host

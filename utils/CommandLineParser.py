@@ -79,7 +79,7 @@ class CommandLineParser():
             if cmd == 'certinfo': # gah
                 regular_help += '=basic'
 
-            if (self._parser.has_option('--' + cmd) == False):
+            if not self._parser.has_option('--' + cmd):
                 return
 
         self._parser.add_option('--regular', action="store_true", dest=None,
@@ -107,7 +107,7 @@ class CommandLineParser():
             except IOError:
                 raise CommandLineParsingError("Can't read targets from input file '%s'." %  args_command_list.targets_in)
 
-        if args_target_list == []:
+        if not args_target_list:
             raise CommandLineParsingError('No targets to scan.')
 
         # Handle the --regular command line parameter as a shortcut
@@ -121,7 +121,7 @@ class CommandLineParser():
         # Create the shared_settings object from looking at the command line
         shared_settings = self._process_parsing_results(args_command_list)
 
-        return (args_command_list, args_target_list, shared_settings)
+        return args_command_list, args_target_list, shared_settings
 
 
     def _add_default_options(self):
@@ -160,14 +160,14 @@ class CommandLineParser():
         # XML output
         self._parser.add_option(
             '--xml_out',
-            help= ('Writes the scan results as an XML document to the file XML_FILE.'),
+            help='Writes the scan results as an XML document to the file XML_FILE.',
             dest='xml_file',
             default=None)
 
         # Read targets from input file
         self._parser.add_option(
             '--targets_in',
-            help= ('Reads the list of targets to scan from the file TARGETS_IN. It should contain one host:port per line.'),
+            help='Reads the list of targets to scan from the file TARGETS_IN. It should contain one host:port per line.',
             dest='targets_in',
             default=None)
 
@@ -245,7 +245,7 @@ class CommandLineParser():
             plugin_desc = plugin_class.get_interface()
 
             # Add the current plugin's commands to the parser
-            group = OptionGroup(self._parser, plugin_desc.title,\
+            group = OptionGroup(self._parser, plugin_desc.title,
                                 plugin_desc.description)
             for cmd in plugin_desc.get_commands():
                     group.add_option(cmd)

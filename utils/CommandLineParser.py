@@ -313,6 +313,7 @@ class CommandLineParser():
 
 
         # HTTP CONNECT proxy
+        shared_settings['https_tunnel_host'] = None
         if args_command_list.https_tunnel:
 
             # Parse the proxy URL

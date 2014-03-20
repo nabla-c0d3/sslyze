@@ -52,7 +52,7 @@ class CommandLineParser():
         ' (ftp, imap, etc.) from the supplied port number, for each target servers.'
 
     # Default values
-    DEFAULT_RETRY_ATTEMPTS = 5
+    DEFAULT_RETRY_ATTEMPTS = 4
     DEFAULT_TIMEOUT = 5
 
 

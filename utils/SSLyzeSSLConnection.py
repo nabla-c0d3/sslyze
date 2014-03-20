@@ -255,7 +255,7 @@ class SSLConnection(SslClient):
                 elif retryAttempts == 1:
                     delay = random.random()
                 else: # Exponential back off
-                    delay *=2
+                    delay = min(6, 2*delay) # Cap max delay at 6 seconds
 
             else: # No network error occurred
                 break

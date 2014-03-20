@@ -81,7 +81,7 @@ class WorkerProcess(Process):
                 break
 
             (target, command, args) = task
-            # Instatiate the proper plugin
+            # Instantiate the proper plugin
             plugin_instance = self.available_commands[command]()
 
             try: # Process the task

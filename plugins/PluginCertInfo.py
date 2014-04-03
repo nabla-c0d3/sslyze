@@ -287,7 +287,8 @@ class PluginCertInfo(PluginBase.PluginBase):
             self.FIELD_FORMAT("Not Before:", certDict['validity']['notBefore']),
             self.FIELD_FORMAT("Not After:", certDict['validity']['notAfter']),
             self.FIELD_FORMAT("Signature Algorithm:", certDict['signatureAlgorithm']),
-            self.FIELD_FORMAT("Key Size:", certDict['subjectPublicKeyInfo']['publicKeySize'])]
+            self.FIELD_FORMAT("Key Size:", certDict['subjectPublicKeyInfo']['publicKeySize']),
+            self.FIELD_FORMAT("Exponent:", "{0} (0x{0:x})".format(int(certDict['subjectPublicKeyInfo']['publicKey']['exponent'])))]
 
         try: # Print the SAN extension if there's one
             basicTxt.append(self.FIELD_FORMAT('X509v3 Subject Alternative Name:',

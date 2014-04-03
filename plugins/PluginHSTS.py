@@ -34,6 +34,8 @@ from xml.etree.ElementTree import Element
 from utils.HTTPResponseParser import parse_http_response
 from utils.SSLyzeSSLConnection import create_sslyze_connection
 from plugins import PluginBase
+from urlparse import urlparse
+import Cookie
 
 
 class PluginHSTS(PluginBase.PluginBase):
@@ -85,20 +87,61 @@ class PluginHSTS(PluginBase.PluginBase):
     def _get_hsts_header(self, target):
 
         hstsHeader = None
-        HTTP_GET_REQ = 'GET / HTTP/1.0\r\nHost: {0}\r\nConnection: close\r\n\r\n'.format(target[0])
-        sslConn = create_sslyze_connection(target, self._shared_settings)
-
-        # Perform the SSL handshake
-        sslConn.connect()
-
-        sslConn.write(HTTP_GET_REQ)
-        httpResp = parse_http_response(sslConn.read(2048))
-        sslConn.close()
-        if httpResp.version == 9 :
-            # HTTP 0.9 => Probably not an HTTP response
-            raise Exception('Server did not return an HTTP response')
-        else:
-            hstsHeader = httpResp.getheader('strict-transport-security', None)
+        MAX_REDIRECT = 5
+        nb_redirect = 0
+        httpGetFormat = 'GET {0} HTTP/1.0\r\nHost: {1}\r\n{2}Connection: close\r\n\r\n'.format
+        httpPath = '/'
+        httpAppend = ''    
+        
+        while nb_redirect < MAX_REDIRECT:
+            sslConn = create_sslyze_connection(target, self._shared_settings)
+            
+            # Perform the SSL handshake
+            sslConn.connect()
+            
+            sslConn.write(httpGetFormat(httpPath, target[0], httpAppend))
+            httpResp = parse_http_response(sslConn.read(2048))
+            sslConn.close()
+            
+            if httpResp.version == 9 :
+                # HTTP 0.9 => Probably not an HTTP response
+                raise Exception('Server did not return an HTTP response')
+            elif httpResp.status >= 300 and httpResp.status < 400:
+                redirectHeader = httpResp.getheader('Location', None)
+                cookieHeader = httpResp.getheader('Set-Cookie', None)
+                
+                if redirectHeader == None:
+                    break
+                
+                o = urlparse(redirectHeader)
+                httpPath = o.path
+                
+                # Handle absolute redirection URL
+                if o.hostname:
+                    if o.port:
+                        port = o.port
+                    else:
+                        if o.scheme == 'https':
+                            port = 443
+                        elif o.scheme == 'http':
+                            port = 80
+                        else:
+                            port = target[2]
+                        
+                    target = (o.hostname, o.hostname, port, target[3])
+                
+                # Handle cookies
+                if cookieHeader:
+                    cookie = Cookie.SimpleCookie(cookieHeader)
+                    
+                    if cookie:
+                        httpAppend = 'Cookie:' + cookie.output(attrs=[], header='', sep=';') + '\r\n'
+                
+                nb_redirect+=1
+            else:
+                hstsHeader = httpResp.getheader('strict-transport-security', None)
+                break
+        
         return hstsHeader
 
 

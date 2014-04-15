@@ -62,7 +62,6 @@ class PluginHeartbleed(PluginBase.PluginBase):
         except HeartbleedSent:
             # Awful hack #2: directly read the underlying network socket
             heartbleed = sslConn._sock.recv(16381)
-            print repr(heartbleed)
         finally:
             sslConn.close()
 

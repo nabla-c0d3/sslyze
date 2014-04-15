@@ -27,7 +27,7 @@ from xml.etree.ElementTree import Element
 from plugins import PluginBase
 from utils.SSLyzeSSLConnection import create_sslyze_connection, SSLHandshakeRejected
 from nassl._nassl import OpenSSLError, WantX509LookupError, WantReadError
-from nassl import TLSV1, TLSV1_1, TLSV1_2
+from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV23, SSLV3
 
 
 class PluginHeartbleed(PluginBase.PluginBase):
@@ -41,13 +41,17 @@ class PluginHeartbleed(PluginBase.PluginBase):
 
     def process_task(self, target, command, args):
 
+        (host, ip, port, sslVersion) = target
+
+        if sslVersion == SSLV23: # Could not determine the preferred  SSL version - client cert was required ?
+            sslVersion = TLSV1 # Default to TLS 1.0
+
         sslConn = create_sslyze_connection(target, self._shared_settings)
+        sslConn.sslVersion = sslVersion # Needed by the heartbleed payload
 
         # Awful hack #1: replace nassl.sslClient.do_handshake() with a heartbleed
         # checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work
-        (host, ip, port, sslVersion) = target
-        sslConn.sslVersion = sslVersion
         sslConn.do_handshake = new.instancemethod(do_handshake_with_heartbleed, sslConn, None)
 
         try: # Perform the SSL handshake
@@ -56,7 +60,7 @@ class PluginHeartbleed(PluginBase.PluginBase):
             # Awful hack #2: directly read the underlying network socket
             heartbleed = sslConn._sock.recv(16381)
             print len(heartbleed)
-            print heartbleed
+            print repr(heartbleed)
         finally:
             sslConn.close()
 
@@ -86,6 +90,7 @@ def heartbleed_payload(sslVersion):
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
 
     SSL_VERSION_MAPPING = {
+        SSLV3 :  '\x00', # Surprising that it works with SSL 3 which doesn't define TLS extensions
         TLSV1 :  '\x01',
         TLSV1_1: '\x02',
         TLSV1_2: '\x03'}

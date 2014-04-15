@@ -42,7 +42,7 @@ class CommandLineParser():
     # Defines what --regular means
     REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'reneg',
                    'resum', 'certinfo', 'http_get', 'hide_rejected_ciphers',
-                   'compression']
+                   'compression', 'heartbleed']
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 etc...'
 
     # StartTLS options

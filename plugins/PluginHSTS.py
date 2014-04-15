@@ -68,16 +68,15 @@ class PluginHSTS(PluginBase.PluginBase):
         if hsts_supported:
             txt_result.append(FIELD_FORMAT("Supported:", hsts_timeout))
         else:
-            txt_result.append(FIELD_FORMAT("Not supported.", ""))
+            txt_result.append(FIELD_FORMAT("Not supported: server did not send an HSTS header.", ""))
 
         # XML output
-        xml_hsts_attr = {'hsts_header_found': str(hsts_supported)}
+        xml_hsts_attr = {'sentHstsHeader': str(hsts_supported)}
         if hsts_supported:
-            xml_hsts_attr['hsts_header'] = hsts_timeout
+            xml_hsts_attr['hstsHeaderValue'] = hsts_timeout
         xml_hsts = Element('hsts', attrib = xml_hsts_attr)
 
-        xml_result = Element(self.__class__.__name__, command = command,
-                             title = cmd_title)
+        xml_result = Element('hsts', title = cmd_title)
         xml_result.append(xml_hsts)
 
         return PluginBase.PluginResult(txt_result, xml_result)
@@ -106,11 +105,11 @@ class PluginHSTS(PluginBase.PluginBase):
             if httpResp.version == 9 :
                 # HTTP 0.9 => Probably not an HTTP response
                 raise Exception('Server did not return an HTTP response')
-            elif httpResp.status >= 300 and httpResp.status < 400:
+            elif 300 <= httpResp.status < 400:
                 redirectHeader = httpResp.getheader('Location', None)
                 cookieHeader = httpResp.getheader('Set-Cookie', None)
                 
-                if redirectHeader == None:
+                if redirectHeader is None:
                     break
                 
                 o = urlparse(redirectHeader)
@@ -124,7 +123,8 @@ class PluginHSTS(PluginBase.PluginBase):
                         if o.scheme == 'https':
                             port = 443
                         elif o.scheme == 'http':
-                            port = 80
+                            # We would have to use urllib for http: URLs
+                            raise Exception("Error: server sent a redirection to HTTP.")
                         else:
                             port = target[2]
                         

@@ -74,7 +74,7 @@ class PluginHeartbleed(PluginBase.PluginBase):
             heartbleedTxt = 'VULNERABLE'
             heartbleedXml = 'True'
         else:
-            heartbleedTxt = 'NOT vulnerable'
+            heartbleedTxt = 'NOT Vulnerable'
             heartbleedXml = 'False'
 
         cmdTitle = 'Heartbleed'

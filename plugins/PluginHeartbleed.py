@@ -46,6 +46,7 @@ class PluginHeartbleed(PluginBase.PluginBase):
 
         if sslVersion == SSLV23: # Could not determine the preferred  SSL version - client cert was required ?
             sslVersion = TLSV1 # Default to TLS 1.0
+            target = (host, ip, port, sslVersion)
 
         sslConn = create_sslyze_connection(target, self._shared_settings)
         sslConn.sslVersion = sslVersion # Needed by the heartbleed payload

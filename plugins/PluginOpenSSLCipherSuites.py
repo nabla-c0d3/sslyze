@@ -129,21 +129,22 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 # FORMATTING FUNCTIONS
     def _generate_text_output(self, resultDicts, sslVersion):
 
-        cipherFormat = '        {0:<32}{1:<35}'.format
+        cipherFormat = '                 {0:<32}{1:<35}'.format
         titleFormat =  '      {0:<32} '.format
         keysizeFormat = '{0:<30}{1:<14}'.format
 
-        txtOutput = [self.PLUGIN_TITLE_FORMAT(sslVersion.upper() + ' Cipher Suites')]
+        txtTitle = self.PLUGIN_TITLE_FORMAT(sslVersion.upper() + ' Cipher Suites')
+        txtOutput = []
 
-        dictTitles = [('preferredCipherSuite', 'Preferred Cipher Suite:'),
-                      ('acceptedCipherSuites', 'Accepted Cipher Suite(s):'),
+        dictTitles = [('preferredCipherSuite', 'Preferred:'),
+                      ('acceptedCipherSuites', 'Accepted:'),
                       ('errors', 'Undefined - An unexpected error happened:'),
-                      ('rejectedCipherSuites', 'Rejected Cipher Suite(s):')]
+                      ('rejectedCipherSuites', 'Rejected:')]
 
         if self._shared_settings['hide_rejected_ciphers']:
             dictTitles.pop(3)
-            txtOutput.append('')
-            txtOutput.append(titleFormat('Rejected Cipher Suite(s): Hidden'))
+            #txtOutput.append('')
+            #txtOutput.append(titleFormat('Rejected:  Hidden'))
 
         for (resultKey, resultTitle) in dictTitles:
 
@@ -156,7 +157,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 pass # Hide empty results
                 # txtOutput.append(titleFormat(resultTitle + ' None'))
             else:
-                txtOutput.append('')
+                #txtOutput.append('')
                 txtOutput.append(titleFormat(resultTitle))
 
                 # Add one line for each ciphers
@@ -165,6 +166,12 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                         cipherTxt = keysizeFormat(cipherTxt, keysize)
 
                     txtOutput.append(cipherFormat(cipherTxt, msg))
+        if txtOutput == []:
+            # Server rejected all cipher suites
+            txtOutput = [txtTitle, '      Server rejected all cipher suites.']
+        else:
+            txtOutput = [txtTitle] + txtOutput
+
 
         return txtOutput
 

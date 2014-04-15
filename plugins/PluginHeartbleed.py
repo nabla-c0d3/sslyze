@@ -21,12 +21,12 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-import socket
+import socket, new
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
-from utils.SSLyzeSSLConnection import create_sslyze_connection
-from nassl._nassl import OpenSSLError
+from utils.SSLyzeSSLConnection import create_sslyze_connection, SSLHandshakeRejected
+from nassl._nassl import OpenSSLError, WantX509LookupError, WantReadError
 from nassl import TLSV1, TLSV1_1, TLSV1_2
 
 
@@ -41,62 +41,124 @@ class PluginHeartbleed(PluginBase.PluginBase):
 
     def process_task(self, target, command, args):
 
-        raise Exception('Not implemented')
+        sslConn = create_sslyze_connection(target, self._shared_settings)
+
+        # Awful hack #1: replace nassl.sslClient.do_handshake() with a heartbleed
+        # checking SSL handshake so that all the SSLyze options
+        # (startTLS, proxy, etc.) still work
+        (host, ip, port, sslVersion) = target
+        sslConn.sslVersion = sslVersion
+        sslConn.do_handshake = new.instancemethod(do_handshake_with_heartbleed, sslConn, None)
+
+        try: # Perform the SSL handshake
+            sslConn.connect()
+        except HeartbleedSent:
+            # Awful hack #2: directly read the underlying network socket
+            heartbleed = sslConn._sock.recv(16381)
+            print len(heartbleed)
+            print heartbleed
+        finally:
+            sslConn.close()
+
+        # Text output
+        if heartbleed:
+            heartbleedTxt = 'VULNERABLE'
+        else:
+            heartbleedTxt = 'NOT vulnerable'
+
+        cmdTitle = 'Heartbleed'
+        txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
+        txtOutput.append(OUT_FORMAT("OpenSSL Heartbleed:", heartbleedTxt))
+
+        # XML output
+        xmlOutput = Element(command, title=cmdTitle)
+        if heartbleed:
+            xmlNode = Element('heartbleed', type="DEFLATE")
+            xmlOutput.append(xmlNode)
+
+        return PluginBase.PluginResult(txtOutput, xmlOutput)
 
 
 
 
 def heartbleed_payload(sslVersion):
+    # This heartbleed payload does not exploit the server
+    # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
 
     SSL_VERSION_MAPPING = {
         TLSV1 :  '\x01',
         TLSV1_1: '\x02',
-        TLSV1_2: '\x03'
-    }
+        TLSV1_2: '\x03'}
 
     payload = ('\x18'           # Record type - Heartbeat
         '\x03{0}'               # TLS version
         '\x00\x03'              # Record length
         '\x01'                  # Heartbeat type - Request
-        '\x10\x00')             # Heartbeat length
+        '\x00\x00')             # Heartbeat length
+
+    payload = ('\x18'           # Record type - Heartbeat
+        '\x03{0}'               # TLS version
+        '\x40\x00'              # Record length
+        '\x01'                  # Heartbeat type - Request
+        '\x3f\xfd')             # Heartbeat length
+
+    payload += '\x01'*16381     # Heartbeat data
+
+    payload += (                # Second Heartbeat request with no padding
+        '\x18'                  # Record type - Heartbeat
+        '\x03{0}'
+        '\x00\x03\x01\x00\x00'
+    )
 
     return payload.format(SSL_VERSION_MAPPING[sslVersion])
 
 
+class HeartbleedSent(SSLHandshakeRejected):
+    # Awful hack #3: Use an exception to hack the handshake's control flow in
+    # a super obscure way
+    pass
 
-def do_handshake_with_heartbleed(sslClient, sslVersion):
+
+def do_handshake_with_heartbleed(self):
     # This is nassl's code for do_handshake() modified to send a heartbleed
     # payload that will reveal 1 byte of the server's memory
     # I copied nassl's code here so I could leave anything heartbleed-related
     # outside of the nassl code base
-	try:
-	    if self._ssl.do_handshake() == 1:
-	        self._handshakeDone = True
-	        return True # Handshake was successful
+    try:
+        if self._ssl.do_handshake() == 1:
+            self._handshakeDone = True
+            return True # Handshake was successful
 
-	except WantReadError:
+    except WantReadError:
+        # OpenSSL is expecting more data from the peer
+        # Send available handshake data to the peer
+        # In this heartbleed handshake we only send the client hello
+        lenToRead = self._networkBio.pending()
+        while lenToRead:
+            # Get the data from the SSL engine
+            handshakeDataOut = self._networkBio.read(lenToRead)
+            # Send it to the peer
+            self._sock.send(handshakeDataOut)
+            lenToRead = self._networkBio.pending()
 
-	    # OpenSSL is expecting more data from the peer
-	    # Send available handshake data to the peer
-	    lenToRead = self._networkBio.pending()
-	    while lenToRead:
-	        # Get the data from the SSL engine
-	        handshakeDataOut = self._networkBio.read(lenToRead)
-	        # Send it to the peer
-	        self._sock.send(handshakeDataOut)
-	        lenToRead = self._networkBio.pending()
+        # Send the heartbleed payload after the client hello
+        self._sock.send(heartbleed_payload(self.sslVersion))
 
-	    self._sock.send(heartbleed_payload(sslVersion)) # The heartbleed payload
+        # Recover the peer's encrypted response
+        # In this heartbleed handshake we only receive the server hello
+        handshakeDataIn = self._sock.recv(2048)
+        if len(handshakeDataIn) == 0:
+            raise IOError('Nassl SSL handshake failed: peer did not send data back.')
+        # Pass the data to the SSL engine
+        self._networkBio.write(handshakeDataIn)
 
-	    # Recover the peer's encrypted response
-	    handshakeDataIn = self._sock.recv(2048)
-	    if len(handshakeDataIn) == 0:
-	        raise IOError('Nassl SSL handshake failed: peer did not send data back.')
-	    # Pass the data to the SSL engine
-	    self._networkBio.write(handshakeDataIn)
+        # Signal that we sent the heartbleed payload and just stop the handshake
+        raise HeartbleedSent("")
 
 
+    except WantX509LookupError:
+        # Server asked for a client certificate and we didn't provide one
+        # Heartbleed should work anyway
+        self._sock.send(heartbleed_payload(self.sslVersion)) # The heartbleed payload
+        raise HeartbleedSent("") # Signal that we sent the heartbleed payload
 
-	except WantX509LookupError:
-	    # Server asked for a client certificate and we didn't provide one
-	    raise ClientCertificateRequested(self._ssl.get_client_CA_list())

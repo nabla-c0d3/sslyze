@@ -57,7 +57,7 @@ class PluginCertInfo(PluginBase.PluginBase):
     interface = PluginBase.PluginInterface(title="PluginCertInfo", description=(''))
     interface.add_command(
         command="certinfo",
-        help= "Verifies the target server's certificate validity against "
+        help= "Verifies the validity of the server(s) certificate(s) against "
             "various trust stores, checks for support for OCSP stapling, and "
             "prints relevant fields of "
             "the certificate. CERTINFO should be 'basic' or 'full'.",

@@ -43,7 +43,7 @@ class PluginHSTS(PluginBase.PluginBase):
         command="hsts",
         help="Checks support for HTTP Strict Transport Security "
              "(HSTS) by collecting any Strict-Transport-Security field present in "
-             "the HTTP response sent back by the server.",
+             "the HTTP response sent back by the server(s).",
         dest=None)
 
 

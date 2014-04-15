@@ -35,26 +35,26 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
     interface = PluginBase.PluginInterface(
         "PluginOpenSSLCipherSuites",
-        "Scans the target server for supported OpenSSL cipher suites.")
+        "Scans the server(s) for supported OpenSSL cipher suites.")
     interface.add_command(
         command="sslv2",
-        help="Lists the SSL 2.0 OpenSSL cipher suites supported by the server.",
+        help="Lists the SSL 2.0 OpenSSL cipher suites supported by the server(s).",
         aggressive=False)
     interface.add_command(
         command="sslv3",
-        help="Lists the SSL 3.0 OpenSSL cipher suites supported by the server.",
+        help="Lists the SSL 3.0 OpenSSL cipher suites supported by the server(s).",
         aggressive=True)
     interface.add_command(
         command="tlsv1",
-        help="Lists the TLS 1.0 OpenSSL cipher suites supported by the server.",
+        help="Lists the TLS 1.0 OpenSSL cipher suites supported by the server(s).",
         aggressive=True)
     interface.add_command(
         command="tlsv1_1",
-        help="Lists the TLS 1.1 OpenSSL cipher suites supported by the server.",
+        help="Lists the TLS 1.1 OpenSSL cipher suites supported by the server(s).",
         aggressive=True)
     interface.add_command(
         command="tlsv1_2",
-        help="Lists the TLS 1.2 OpenSSL cipher suites supported by the server.",
+        help="Lists the TLS 1.2 OpenSSL cipher suites supported by the server(s).",
         aggressive=True)
     interface.add_option(
         option='http_get',
@@ -63,7 +63,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
     interface.add_option(
         option='hide_rejected_ciphers',
         help="Option - Hides the (usually long) list of cipher suites that were"
-        " rejected by the server.")
+        " rejected by the server(s).")
 
 
     def process_task(self, target, command, args):

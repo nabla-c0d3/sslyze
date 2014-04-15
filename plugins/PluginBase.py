@@ -125,7 +125,7 @@ class PluginBase(object):
     _shared_settings = None
 
     # Formatting stuff
-    PLUGIN_TITLE_FORMAT = '  * {0} :'.format
+    PLUGIN_TITLE_FORMAT = '  * {0}:'.format
 
 
     @classmethod

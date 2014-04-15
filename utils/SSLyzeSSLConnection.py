@@ -432,11 +432,15 @@ class XMPPConnection(SSLConnection):
         # Open an XMPP stream
         self._sock = socket.create_connection((self._ip, self._port), self._timeout)
         self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
-        if '<stream:error>' in self._sock.recv(2048):
-            raise StartTLSError(self.ERR_XMPP_REJECTED)
 
-        # Get the server's features
-        self._sock.recv(4096)
+
+        # Get the server's features and check for an error
+        serverResp = self._sock.recv(4096)
+        if '<stream:error>' in serverResp:
+            raise StartTLSError(self.ERR_XMPP_REJECTED)
+        elif '</stream:features>' not in serverResp:
+            # Get all the server features before initiating startTLS
+            self._sock.recv(4096)
 
         # Send a STARTTLS message
         self._sock.send(self.XMPP_STARTTLS)

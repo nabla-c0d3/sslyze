@@ -41,6 +41,7 @@ class PluginHeartbleed(PluginBase.PluginBase):
 
     def process_task(self, target, command, args):
 
+        OUT_FORMAT = '      {0:<35}{1}'.format
         (host, ip, port, sslVersion) = target
 
         if sslVersion == SSLV23: # Could not determine the preferred  SSL version - client cert was required ?
@@ -54,6 +55,7 @@ class PluginHeartbleed(PluginBase.PluginBase):
         # (startTLS, proxy, etc.) still work
         sslConn.do_handshake = new.instancemethod(do_handshake_with_heartbleed, sslConn, None)
 
+        heartbleed = None
         try: # Perform the SSL handshake
             sslConn.connect()
         except HeartbleedSent:
@@ -65,10 +67,14 @@ class PluginHeartbleed(PluginBase.PluginBase):
             sslConn.close()
 
         # Text output
-        if heartbleed:
+        if heartbleed is None:
+            heartbleedTxt = 'Error'
+        elif '\x01\x01\x01\x01\x01\x01\x01\x01\x01' in heartbleed:
             heartbleedTxt = 'VULNERABLE'
         else:
             heartbleedTxt = 'NOT vulnerable'
+
+        print heartbleedTxt
 
         cmdTitle = 'Heartbleed'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
@@ -77,7 +83,7 @@ class PluginHeartbleed(PluginBase.PluginBase):
         # XML output
         xmlOutput = Element(command, title=cmdTitle)
         if heartbleed:
-            xmlNode = Element('heartbleed', type="DEFLATE")
+            xmlNode = Element('heartbleed', type="DEFLATE") #TBD
             xmlOutput.append(xmlNode)
 
         return PluginBase.PluginResult(txtOutput, xmlOutput)

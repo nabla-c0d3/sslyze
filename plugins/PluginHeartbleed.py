@@ -36,7 +36,7 @@ class PluginHeartbleed(PluginBase.PluginBase):
     interface.add_command(
         command="heartbleed",
         help=(
-            "Tests the server(s) for the OpenSSL Heartbleed vulnerability."))
+            "Tests the server(s) for the OpenSSL Heartbleed vulnerability (experimental)."))
 
 
     def process_task(self, target, command, args):
@@ -61,20 +61,20 @@ class PluginHeartbleed(PluginBase.PluginBase):
         except HeartbleedSent:
             # Awful hack #2: directly read the underlying network socket
             heartbleed = sslConn._sock.recv(16381)
-            print len(heartbleed)
             print repr(heartbleed)
         finally:
             sslConn.close()
 
         # Text output
         if heartbleed is None:
-            heartbleedTxt = 'Error'
+            raise Exception("Error: connection failed.")
         elif '\x01\x01\x01\x01\x01\x01\x01\x01\x01' in heartbleed:
+            # Server replied with our hearbeat payload
             heartbleedTxt = 'VULNERABLE'
+            heartbleedXml = 'True'
         else:
             heartbleedTxt = 'NOT vulnerable'
-
-        print heartbleedTxt
+            heartbleedXml = 'False'
 
         cmdTitle = 'Heartbleed'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
@@ -83,7 +83,7 @@ class PluginHeartbleed(PluginBase.PluginBase):
         # XML output
         xmlOutput = Element(command, title=cmdTitle)
         if heartbleed:
-            xmlNode = Element('heartbleed', type="DEFLATE") #TBD
+            xmlNode = Element('heartbleed', isVulnerable=heartbleedXml)
             xmlOutput.append(xmlNode)
 
         return PluginBase.PluginResult(txtOutput, xmlOutput)

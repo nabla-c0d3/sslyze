@@ -40,10 +40,10 @@ TRUST_STORES_PATH = join(join(dirname(PluginBase.__file__), 'data'), 'trust_stor
 MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')
 
 AVAILABLE_TRUST_STORES = \
-    { MOZILLA_STORE_PATH :                       'Mozilla NSS - 09/2013',
-      join(TRUST_STORES_PATH, 'microsoft.pem') : 'Microsoft - 11/2013',
-      join(TRUST_STORES_PATH, 'apple.pem') :     'Apple - OS X 10.9.0',
-      join(TRUST_STORES_PATH, 'java.pem') :      'Java 7 - Update 25'}
+    { MOZILLA_STORE_PATH :                       'Mozilla NSS - 01/2014',
+      join(TRUST_STORES_PATH, 'microsoft.pem') : 'Microsoft - 04/2014',
+      join(TRUST_STORES_PATH, 'apple.pem') :     'Apple - OS X 10.9.2',
+      join(TRUST_STORES_PATH, 'java.pem') :      'Java 6 - Update 65'}
 
 
 # Import Mozilla EV OIDs

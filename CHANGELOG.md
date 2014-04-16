@@ -1,6 +1,16 @@
 SSLyze Changelog
 ----------------
 
+## v0.9
+* Experimental support for Heartbleed detection; see --heartbleed. Heartbleed detection has also been added to --regular scans.
+* Capped the maximum number of concurrent connections to around 30 per server in order to avoid DOSing the scanned servers. Scans are slightly slower but a lot less aggressive, resulting in better scan results with less timeout and connection errors
+* Support for Basic Authentication when tunneling scans through an HTTPS proxy with --https_tunnel
+* Bug fixes for IPv6 and XMPP support
+* Updated OpenSSL to 1.0.1g
+* Updated the Apple, Microsoft, Mozilla and Java trust stores
+* Cleaned up the text output of PluginOpenSSLCipherSuites
+
+
 ## v0.8
 * Additional certificate chain validation using the Apple, Microsoft and Java trust stores in addition to Mozilla's
 * Added support for StartTLS RDP; see --starttls=rdp

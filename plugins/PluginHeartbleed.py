@@ -132,7 +132,7 @@ class HeartbleedSent(SSLHandshakeRejected):
 
 def do_handshake_with_heartbleed(self):
     # This is nassl's code for do_handshake() modified to send a heartbleed
-    # payload that will reveal 1 byte of the server's memory
+    # payload that will send the heartbleed checking payload
     # I copied nassl's code here so I could leave anything heartbleed-related
     # outside of the nassl code base
     try:

@@ -16,7 +16,7 @@ Key features include:
 * Multi-processed and multi-threaded scanning (it's fast)
 * SSL 2.0/3.0 and TLS 1.0/1.1/1.2 compatibility
 * Performance testing: session resumption and TLS tickets support
-* Security testing: weak cipher suites, insecure renegotiation, CRIME and more
+* Security testing: weak cipher suites, insecure renegotiation, CRIME, Heartbleed and more
 * Server certificate validation and revocation checking through OCSP stapling
 * Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP and FTP
 * Support for client certificates when scanning servers that perform mutual authentication

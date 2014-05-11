@@ -28,6 +28,9 @@ from xml.etree.ElementTree import Element, tostring
 from xml.dom import minidom
 import sys
 
+import xmltodict
+import json
+
 from plugins import PluginsFinder
 
 try:
@@ -260,7 +263,7 @@ def main():
             if len(result_dict[target]) == task_num: # Done with this target
                 # Print the results and update the xml doc
                 print _format_txt_target_result(target, result_dict[target])
-                if shared_settings['xml_file']:
+                if shared_settings['xml_file'] or shared_settings['json_file']:
                     xml_output_list.append(_format_xml_target_result(target, result_dict[target]))
 
         result_queue.task_done()
@@ -275,7 +278,7 @@ def main():
     exec_time = time()-start_time
 
     # Output XML doc to a file if needed
-    if shared_settings['xml_file']:
+    if shared_settings['xml_file'] or shared_settings['json_file']:
         result_xml_attr = {'httpsTunnel':str(shared_settings['https_tunnel_host']),
                            'totalScanTime' : str(exec_time),
                            'defaultTimeout' : str(shared_settings['timeout']),
@@ -298,9 +301,15 @@ def main():
 
         # Hack: Prettify the XML file so it's (somewhat) diff-able
         xml_final_pretty = minidom.parseString(tostring(xml_final_doc, encoding='UTF-8'))
-        with open(shared_settings['xml_file'],'w') as xml_file:
-            xml_file.write(xml_final_pretty.toprettyxml(indent="  ", encoding="utf-8" ))
+        if shared_settings['xml_file']:
+          with open(shared_settings['xml_file'],'w') as xml_file:
+              xml_file.write(xml_final_pretty.toprettyxml(indent="  ", encoding="utf-8" ))
 
+        if shared_settings['json_file']:
+          # convert XML to JSON
+          o = xmltodict.parse(xml_final_pretty.toprettyxml(indent="", encoding="utf-8" ))
+          with open(shared_settings['json_file'],'w') as json_file:
+            json_file.write(json.dumps(o, sort_keys=True, indent=4))
 
     print _format_title('Scan Completed in {0:.2f} s'.format(exec_time))
 

@@ -163,6 +163,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 # Add one line for each ciphers
                 for (cipherTxt, (msg, keysize)) in result_list:
                     if keysize:
+                        # Display ANON as the key size for anonymous ciphers
+                        if 'ADH' in cipherTxt or 'AECDH' in cipherTxt:
+                            keysize = 'ANON'
+                        else:
+                            keysize = str(keysize) + ' bits'
                         cipherTxt = keysizeFormat(cipherTxt, keysize)
 
                     txtOutput.append(cipherFormat(cipherTxt, msg))
@@ -191,8 +196,12 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             # Add one element for each ciphers
             for (sslCipher, (msg, keysize)) in resultList:
                 cipherXmlAttr = {'name' : sslCipher, 'connectionStatus' : msg}
+
                 if keysize:
-                    cipherXmlAttr['keySize'] = keysize
+                    cipherXmlAttr['keySize'] = str(keysize)
+
+                # Add an Anonymous attribute for anonymous ciphers
+                cipherXmlAttr['anonymous'] = str(True) if 'ADH' in sslCipher or 'AECDH' in sslCipher else str(False)
                 cipherXml = Element('cipherSuite', attrib = cipherXmlAttr)
 
                 xmlNode.append(cipherXml)
@@ -222,11 +231,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         else:
             ssl_cipher = sslConn.get_current_cipher_name()
-            if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
-                keysize = 'Anon' # Anonymous, let s not care about the key size
-            else:
-                keysize = str(sslConn.get_current_cipher_bits()) + ' bits'
-
+            keysize = sslConn.get_current_cipher_bits()
             status_msg = sslConn.post_handshake_check()
             return 'acceptedCipherSuites', ssl_cipher, keysize, status_msg
 
@@ -243,13 +248,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         try: # Perform the SSL handshake
             sslConn.connect()
-
             ssl_cipher = sslConn.get_current_cipher_name()
-            if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
-                keysize = 'Anon' # Anonymous, let s not care about the key size
-            else:
-                keysize = str(sslConn.get_current_cipher_bits())+' bits'
-
+            keysize = sslConn.get_current_cipher_bits()
             status_msg = sslConn.post_handshake_check()
             return 'preferredCipherSuite', ssl_cipher, keysize, status_msg
 

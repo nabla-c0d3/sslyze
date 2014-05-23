@@ -270,16 +270,16 @@ class CommandLineParser():
             raise CommandLineParsingError('No private key or certificate file were given. See --cert and --key.')
 
         # Private key and cert formats
-        if args_command_list.certform is'DER':
+        if args_command_list.certform == 'DER':
             args_command_list.certform = SSL_FILETYPE_ASN1
-        elif args_command_list.certform is 'PEM':
+        elif args_command_list.certform == 'PEM':
             args_command_list.certform = SSL_FILETYPE_PEM
         else:
             raise CommandLineParsingError('--certform should be DER or PEM.')
 
-        if args_command_list.keyform is'DER':
+        if args_command_list.keyform == 'DER':
             args_command_list.keyform = SSL_FILETYPE_ASN1
-        elif args_command_list.keyform is 'PEM':
+        elif args_command_list.keyform == 'PEM':
             args_command_list.keyform = SSL_FILETYPE_PEM
         else:
             raise CommandLineParsingError('--keyform should be DER or PEM.')

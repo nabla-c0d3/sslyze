@@ -38,7 +38,7 @@ class InvalidTargetError(Exception):
         self._error_msg = error_msg
 
     def get_error_txt(self):
-        return self.RESULT_FORMAT.format(self._target_str, self._error_msg )
+        return self.RESULT_FORMAT.format(self._target_str, self._error_msg)
 
     def get_error_xml(self):
         errorXml = Element('invalidTarget', error = self._error_msg)
@@ -213,6 +213,11 @@ class ServersConnectivityTester(object):
         # Proxy errors
         except ProxyError as e:
             raise InvalidTargetError(targetStr, e[0])
+
+        # Other errors
+        except Exception as e:
+            raise InvalidTargetError(targetStr, '{0}: {1}'.format(str(type(e).__name__), e[0]))
+
 
         finally:
             sslCon.close()

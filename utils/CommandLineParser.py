@@ -113,12 +113,15 @@ class CommandLineParser():
             if getattr(args_command_list, 'regular'):
                 setattr(args_command_list, 'regular', False)
                 for cmd in self.REGULAR_CMD:
-                    setattr(args_command_list, cmd, True)
-                setattr(args_command_list, 'certinfo', 'basic') # Special case
+                    if cmd=="certinfo":
+                        # Allow user to override certinfo when using --regular
+                        if getattr(args_command_list, 'certinfo') is None:
+                            setattr(args_command_list, 'certinfo', 'basic') # Special case
+                    else: 
+                        setattr(args_command_list, cmd, True)
 
         # Create the shared_settings object from looking at the command line
         shared_settings = self._process_parsing_results(args_command_list)
-
         return args_command_list, args_target_list, shared_settings
 
 

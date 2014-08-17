@@ -129,7 +129,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 # FORMATTING FUNCTIONS
     def _generate_text_output(self, resultDicts, sslVersion):
 
-        cipherFormat = '                 {0:<32}{1:<35}'.format
+        cipherFormat = '                 {0:<32}    {1:<35}'.format
         titleFormat =  '      {0:<32} '.format
         keysizeFormat = '{0:<30}{1:<15}{2:<10}'.format
 

@@ -162,11 +162,16 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
                 # Add one line for each ciphers
                 for (cipherTxt, (msg, keysize, dh_infos)) in result_list:
+
                     if keysize:
                         if dh_infos :
-                            cipherTxt = keysizeFormat(cipherTxt, "%s-%s bits"%(dh_infos["Type"], dh_infos["GroupSize"]), keysize)
+                            cipherTxt = keysizeFormat(cipherTxt, "%s-%s bits"%(dh_infos["Type"], dh_infos["GroupSize"]), str(keysize) + ' bits')
                         else :
-                            cipherTxt = keysizeFormat(cipherTxt, "-", keysize)
+                            cipherTxt = keysizeFormat(cipherTxt, "-",  str(keysize) + ' bits')
+
+                        # Always display ANON as the key size for anonymous ciphers to make it visible
+                        if 'ADH' in cipherTxt or 'AECDH' in cipherTxt:
+                            cipherTxt = keysizeFormat(cipherTxt, "-", 'ANON')
 
                     txtOutput.append(cipherFormat(cipherTxt, msg))
         if txtOutput == []:
@@ -195,10 +200,15 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             for (sslCipher, (msg, keysize, dh_infos)) in resultList:
                 cipherXmlAttr = {'name' : sslCipher, 'connectionStatus' : msg}
                 if keysize:
-                    cipherXmlAttr['keySize'] = keysize
+                    cipherXmlAttr['keySize'] = str(keysize)
+
+                # Add an Anonymous attribute for anonymous ciphers
+                cipherXmlAttr['anonymous'] = str(True) if 'ADH' in sslCipher or 'AECDH' in sslCipher else str(False)
+
                 cipherXml = Element('cipherSuite', attrib = cipherXmlAttr)
                 if dh_infos : 
                     cipherXml.append(Element('keyExchange', attrib=dh_infos))
+
                 xmlNode.append(cipherXml)
 
             xmlOutput.append(xmlNode)
@@ -226,10 +236,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         else:
             ssl_cipher = sslConn.get_current_cipher_name()
-            if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
-                keysize = 'Anon' # Anonymous, let s not care about the key size
-            else:
-                keysize = str(sslConn.get_current_cipher_bits()) + ' bits'
+            keysize = sslConn.get_current_cipher_bits()
                 
             if 'ECDH' in ssl_cipher :
                 dh_infos = sslConn.get_ecdh_param()
@@ -255,10 +262,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             sslConn.connect()
 
             ssl_cipher = sslConn.get_current_cipher_name()
-            if 'ADH' in ssl_cipher or 'AECDH' in ssl_cipher:
-                keysize = 'Anon' # Anonymous, let s not care about the key size
-            else:
-                keysize = str(sslConn.get_current_cipher_bits())+' bits'
+            keysize = sslConn.get_current_cipher_bits()
 
             if 'DH' in ssl_cipher :
                 dh_infos = sslConn.get_dh_param()

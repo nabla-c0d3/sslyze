@@ -1,6 +1,14 @@
 SSLyze Changelog
 ----------------
 
+## v0.10
+* PluginOpenSSLCipherSuites now displays the size of the handshake's Diffie-Hellmann parameters
+* SSLyze can now be packaged as a single .exe file for Windows
+* Updated OpenSSL to 1.0.1i
+* Updated Microsoft, Apple and Mozilla trust stores
+* Bug fixes for XML output and client certificate support
+
+
 ## v0.9
 * Experimental support for Heartbleed detection; see --heartbleed. Heartbleed detection has also been added to --regular scans.
 * Capped the maximum number of concurrent connections to around 30 per server in order to avoid DOSing the scanned servers. Scans are slightly slower but a lot less aggressive, resulting in better scan results with less timeout and connection errors

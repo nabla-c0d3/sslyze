@@ -40,8 +40,8 @@ except ImportError:
 
 
 PROJECT_VERSION = 'SSLyze v0.10'
-PROJECT_URL = "https://github.com/isecPartners/sslyze"
-PROJECT_EMAIL = 'sslyze@isecpartners.com'
+PROJECT_URL = "https://github.com/nabla-c0d3/sslyze"
+PROJECT_EMAIL = 'nabla.c0d3@gmail.com'
 PROJECT_DESC = 'Fast and full-featured SSL scanner'
 
 MAX_PROCESSES = 12

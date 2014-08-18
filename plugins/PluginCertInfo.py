@@ -23,9 +23,10 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-from os.path import join, dirname
+from os.path import join, dirname, realpath
 import imp
 from xml.etree.ElementTree import Element
+import sys
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
@@ -34,7 +35,7 @@ from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_C
 from nassl.SslClient import ClientCertificateRequested
 
 
-TRUST_STORES_PATH = join(join(dirname(PluginBase.__file__), 'data'), 'trust_stores')
+TRUST_STORES_PATH = join(realpath(dirname(sys.argv[0])), 'plugins', 'data', 'trust_stores')
 
 # We use the Mozilla store for additional things: OCSP and EV validation
 MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')
@@ -49,7 +50,6 @@ AVAILABLE_TRUST_STORES = \
 # Import Mozilla EV OIDs
 MOZILLA_EV_OIDS = imp.load_source('mozilla_ev_oids',
                                   join(TRUST_STORES_PATH,  'mozilla_ev_oids.py')).MOZILLA_EV_OIDS
-
 
 
 class PluginCertInfo(PluginBase.PluginBase):

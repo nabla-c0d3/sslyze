@@ -23,7 +23,7 @@
 
 from time import time
 from itertools import cycle
-from multiprocessing import Process, JoinableQueue
+from multiprocessing import Process, JoinableQueue, freeze_support
 from xml.etree.ElementTree import Element, tostring
 from xml.dom import minidom
 import sys
@@ -142,6 +142,7 @@ def _format_txt_target_result(target, result_list):
 
 
 def main():
+    freeze_support()
 
     #--PLUGINS INITIALIZATION--
     start_time = time()

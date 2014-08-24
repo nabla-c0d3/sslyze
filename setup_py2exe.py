@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+# C:\Python27_32\python.exe setup_py2exe.py py2exe
 from distutils.core import setup
 from glob import glob
 

@@ -264,10 +264,10 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             ssl_cipher = sslConn.get_current_cipher_name()
             keysize = sslConn.get_current_cipher_bits()
 
-            if 'DH' in ssl_cipher :
-                dh_infos = sslConn.get_dh_param()
-            elif 'ECDH' in ssl_cipher :
+            if 'ECDH' in ssl_cipher :
                 dh_infos = sslConn.get_ecdh_param()
+            elif 'DH' in ssl_cipher :
+                dh_infos = sslConn.get_dh_param()
             else :
                 dh_infos = None
 

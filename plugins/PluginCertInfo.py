@@ -41,9 +41,9 @@ TRUST_STORES_PATH = join(realpath(dirname(sys.argv[0])), 'plugins', 'data', 'tru
 MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')
 
 AVAILABLE_TRUST_STORES = \
-    { MOZILLA_STORE_PATH :                       'Mozilla NSS - 01/2014',
-      join(TRUST_STORES_PATH, 'microsoft.pem') : 'Microsoft - 04/2014',
-      join(TRUST_STORES_PATH, 'apple.pem') :     'Apple - OS X 10.9.2',
+    { MOZILLA_STORE_PATH :                       'Mozilla NSS - 08/2014',
+      join(TRUST_STORES_PATH, 'microsoft.pem') : 'Microsoft - 08/2014',
+      join(TRUST_STORES_PATH, 'apple.pem') :     'Apple - OS X 10.9.4',
       join(TRUST_STORES_PATH, 'java.pem') :      'Java 6 - Update 65'}
 
 

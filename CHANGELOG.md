@@ -6,6 +6,8 @@ SSLyze Changelog
 * SSLyze can now be packaged as a single .exe file for Windows
 * Updated OpenSSL to 1.0.1i
 * Updated Microsoft, Apple and Mozilla trust stores
+* PluginCertInfo now displays the server's full certificate chain in both the console and XML results
+* PluginHSTS now properly detects HSTS headers when receiving HTTP redirections
 * Bug fixes for XML output and client certificate support
 
 

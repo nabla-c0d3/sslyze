@@ -309,10 +309,16 @@ class PluginCertInfo(PluginBase.PluginBase):
         except KeyError:
             commonName = 'None'
 
+        try: # Extract the CN from the issuer if there's one
+            issuerName = certDict['issuer']['commonName']
+        except KeyError:
+            issuerName = str(certDict['issuer'])
+
+
         basicTxt = [
             self.FIELD_FORMAT("SHA1 Fingerprint:", cert.get_SHA1_fingerprint()),
             self.FIELD_FORMAT("Common Name:", commonName),
-            self.FIELD_FORMAT("Issuer:", certDict['issuer']),
+            self.FIELD_FORMAT("Issuer:", issuerName),
             self.FIELD_FORMAT("Serial Number:", certDict['serialNumber']),
             self.FIELD_FORMAT("Not Before:", certDict['validity']['notBefore']),
             self.FIELD_FORMAT("Not After:", certDict['validity']['notAfter']),

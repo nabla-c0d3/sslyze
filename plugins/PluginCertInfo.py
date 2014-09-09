@@ -261,11 +261,11 @@ class PluginCertInfo(PluginBase.PluginBase):
     def _get_ocsp_text(self, ocspResp):
 
         if ocspResp is None:
-            return [self.FIELD_FORMAT('Not supported: server did not send back an OCSP response.', '')]
+            return [self.FIELD_FORMAT('NOT SUPPORTED - Server did not send back an OCSP response.', '')]
 
         ocspRespDict = ocspResp.as_dict()
-        ocspRespTrustTxt = 'Response is Trusted' if ocspResp.verify(MOZILLA_STORE_PATH) \
-            else 'Response is NOT Trusted'
+        ocspRespTrustTxt = 'OK - Response is trusted' if ocspResp.verify(MOZILLA_STORE_PATH) \
+            else 'FAILED - Response is NOT trusted'
 
         ocspRespTxt = [
             self.FIELD_FORMAT('OCSP Response Status:', ocspRespDict['responseStatus']),

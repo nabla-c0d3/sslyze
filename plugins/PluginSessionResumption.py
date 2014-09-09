@@ -117,8 +117,8 @@ class PluginSessionResumption(PluginBase.PluginBase):
         if ticket_error:
             ticket_txt = 'ERROR: ' + ticket_error
         else:
-            ticket_txt = 'Supported' if ticket_supported \
-                                     else 'Not Supported - ' + ticket_reason+'.'
+            ticket_txt = 'OK - Supported' if ticket_supported \
+                                     else 'NOT SUPPORTED - ' + ticket_reason+'.'
 
         cmd_title = 'Session Resumption'
         txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
@@ -169,13 +169,13 @@ class PluginSessionResumption(PluginBase.PluginBase):
         SESSID_FORMAT = '{4} ({0} successful, {1} failed, {2} errors, {3} total attempts).{5}'.format
         sessid_try = ''
         if nb_resum == MAX_RESUM:
-            sessid_stat = 'Supported'
+            sessid_stat = 'OK - Supported'
         elif nb_failed == MAX_RESUM:
-            sessid_stat = 'Not supported'
+            sessid_stat = 'NOT SUPPORTED'
         elif nb_error == MAX_RESUM:
             sessid_stat = 'ERROR'
         else:
-            sessid_stat = 'Partially supported'
+            sessid_stat = 'PARTIALLY SUPPORTED'
             sessid_try = ' Try --resum_rate.'
         sessid_txt = SESSID_FORMAT(str(nb_resum), str(nb_failed), str(nb_error),
                                    str(MAX_RESUM), sessid_stat, sessid_try)

@@ -66,9 +66,9 @@ class PluginHSTS(PluginBase.PluginBase):
         cmd_title = 'HTTP Strict Transport Security'
         txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
         if hsts_supported:
-            txt_result.append(FIELD_FORMAT("Supported:", hsts_timeout))
+            txt_result.append(FIELD_FORMAT("OK - HSTS header received:", hsts_timeout))
         else:
-            txt_result.append(FIELD_FORMAT("Not supported: server did not send an HSTS header.", ""))
+            txt_result.append(FIELD_FORMAT("NOT SUPPORTED - Server did not send an HSTS header.", ""))
 
         # XML output
         xml_hsts_attr = {'sentHstsHeader': str(hsts_supported)}

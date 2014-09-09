@@ -8,6 +8,7 @@ SSLyze Changelog
 * Updated Microsoft, Apple and Mozilla trust stores
 * PluginCertInfo now displays the server's full certificate chain in both the console and XML results
 * PluginHSTS now properly detects HSTS headers when receiving HTTP redirections
+* Clarified the console output of most plugins and checks
 * Bug fixes for XML output and client certificate support
 
 

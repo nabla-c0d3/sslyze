@@ -154,9 +154,19 @@ class PluginCertInfo(PluginBase.PluginBase):
         # Print the Common Names within the certificate chain
         certChainCNs = []
         for cert in x509Chain:
-            certChainCNs.append(cert.as_dict()['subject']['commonName'])
+            try: # Extract the CN if there's one
+                certName = cert.as_dict()['subject']['commonName']
+            except KeyError:
+                # If no common name, display the organizational unit instead
+                try:
+                    certName = cert.as_dict()['subject']['organizationalUnitName']
+                except KeyError:
+                    # Give up
+                    certName = 'No Common Name'
 
-        outputTxt.append(self.FIELD_FORMAT('Certificate Chain CNs', str(certChainCNs)))
+            certChainCNs.append(certName)
+
+        outputTxt.append(self.FIELD_FORMAT('Certificate Chain:', str(certChainCNs)))
 
 
         # Text output - OCSP stapling

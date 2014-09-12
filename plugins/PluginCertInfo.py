@@ -91,8 +91,9 @@ class PluginCertInfo(PluginBase.PluginBase):
 
         for (job, result) in threadPool.get_result():
             (_, (_, storePath)) = job
-            (x509Cert, verifyStr, ocspResp) = result
+            (x509Chain, verifyStr, ocspResp) = result
             # Store the returned verify string for each trust store
+            x509Cert = x509Chain[0] # First cert is always the leaf cert
             storeName = AVAILABLE_TRUST_STORES[storePath]
             verifyDict[storeName] = verifyStr
 
@@ -117,7 +118,6 @@ class PluginCertInfo(PluginBase.PluginBase):
         # Text output - certificate info
         outputTxt = [self.PLUGIN_TITLE_FORMAT('Certificate - Content')]
         outputTxt.extend(textFunction(x509Cert))
-
 
         # Text output - trust validation
         outputTxt.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - Trust')])
@@ -151,6 +151,23 @@ class PluginCertInfo(PluginBase.PluginBase):
             verifyTxt = 'ERROR: ' + errorMsg
             outputTxt.append(self.FIELD_FORMAT(self.TRUST_FORMAT(storeName), verifyTxt))
 
+        # Print the Common Names within the certificate chain
+        certChainCNs = []
+        for cert in x509Chain:
+            try: # Extract the CN if there's one
+                certName = cert.as_dict()['subject']['commonName']
+            except KeyError:
+                # If no common name, display the organizational unit instead
+                try:
+                    certName = cert.as_dict()['subject']['organizationalUnitName']
+                except KeyError:
+                    # Give up
+                    certName = 'No Common Name'
+
+            certChainCNs.append(certName)
+
+        outputTxt.append(self.FIELD_FORMAT('Certificate Chain:', str(certChainCNs)))
+
 
         # Text output - OCSP stapling
         outputTxt.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - OCSP Stapling')])
@@ -160,22 +177,17 @@ class PluginCertInfo(PluginBase.PluginBase):
         # XML output
         outputXml = Element(command, argument = arg, title = 'Certificate Information')
 
-        # XML output - certificate info:  always return the full certificate
-        certAttrib = { 'sha1Fingerprint' : x509Cert.get_SHA1_fingerprint() }
-        if self._shared_settings['sni']:
-            certAttrib['suppliedServerNameIndication'] = self._shared_settings['sni']
+        # XML output - certificate chain:  always return the full certificate for each cert in the chain
+        chainXml = Element('certificateChain')
 
-        certXml = Element('certificate', attrib = certAttrib)
+        # First add the leaf certificate
+        chainXml.append(self._format_cert_to_xml(x509Chain[0], 'leaf'))
 
-        # Add certificate in PEM format
-        PEMcertXml = Element('asPEM')
-        PEMcertXml.text = x509Cert.as_pem().strip()
-        certXml.append(PEMcertXml)
+        # Then add every other cert in the chain
+        for cert in x509Chain[1:]:
+            chainXml.append(self._format_cert_to_xml(cert, 'intermediate'))
 
-        for (key, value) in x509Cert.as_dict().items():
-            certXml.append(_keyvalue_pair_to_xml(key, value))
-
-        outputXml.append(certXml)
+        outputXml.append(chainXml)
 
 
         # XML output - trust
@@ -228,14 +240,32 @@ class PluginCertInfo(PluginBase.PluginBase):
 
 # FORMATTING FUNCTIONS
 
+    def _format_cert_to_xml(self, x509Cert, x509CertPosition):
+        certAttrib = {
+            'sha1Fingerprint' : x509Cert.get_SHA1_fingerprint(),
+            'position' : x509CertPosition
+        }
+        if self._shared_settings['sni']:
+            certAttrib['suppliedServerNameIndication'] = self._shared_settings['sni']
+        certXml = Element('certificate', attrib = certAttrib)
+
+        PEMcertXml = Element('asPEM')
+        PEMcertXml.text = x509Cert.as_pem().strip()
+        certXml.append(PEMcertXml)
+
+        for (key, value) in x509Cert.as_dict().items():
+            certXml.append(_keyvalue_pair_to_xml(key, value))
+        return certXml
+
+
     def _get_ocsp_text(self, ocspResp):
 
         if ocspResp is None:
-            return [self.FIELD_FORMAT('Not supported: server did not send back an OCSP response.', '')]
+            return [self.FIELD_FORMAT('NOT SUPPORTED - Server did not send back an OCSP response.', '')]
 
         ocspRespDict = ocspResp.as_dict()
-        ocspRespTrustTxt = 'Response is Trusted' if ocspResp.verify(MOZILLA_STORE_PATH) \
-            else 'Response is NOT Trusted'
+        ocspRespTrustTxt = 'OK - Response is trusted' if ocspResp.verify(MOZILLA_STORE_PATH) \
+            else 'FAILED - Response is NOT trusted'
 
         ocspRespTxt = [
             self.FIELD_FORMAT('OCSP Response Status:', ocspRespDict['responseStatus']),
@@ -279,10 +309,16 @@ class PluginCertInfo(PluginBase.PluginBase):
         except KeyError:
             commonName = 'None'
 
+        try: # Extract the CN from the issuer if there's one
+            issuerName = certDict['issuer']['commonName']
+        except KeyError:
+            issuerName = str(certDict['issuer'])
+
+
         basicTxt = [
             self.FIELD_FORMAT("SHA1 Fingerprint:", cert.get_SHA1_fingerprint()),
             self.FIELD_FORMAT("Common Name:", commonName),
-            self.FIELD_FORMAT("Issuer:", certDict['issuer']),
+            self.FIELD_FORMAT("Issuer:", issuerName),
             self.FIELD_FORMAT("Serial Number:", certDict['serialNumber']),
             self.FIELD_FORMAT("Not Before:", certDict['validity']['notBefore']),
             self.FIELD_FORMAT("Not After:", certDict['validity']['notAfter']),
@@ -317,19 +353,19 @@ class PluginCertInfo(PluginBase.PluginBase):
             sslConn.connect()
 
             ocspResp = sslConn.get_tlsext_status_ocsp_resp()
-            x509Cert = sslConn.get_peer_certificate()
+            x509Chain = sslConn.get_peer_cert_chain()
             (_, verifyStr) = sslConn.get_certificate_chain_verify_result()
 
         except ClientCertificateRequested: # The server asked for a client cert
             # We can get the server cert anyway
             ocspResp = sslConn.get_tlsext_status_ocsp_resp()
-            x509Cert = sslConn.get_peer_certificate()
+            x509Chain = sslConn.get_peer_cert_chain()
             (_, verifyStr) = sslConn.get_certificate_chain_verify_result()
 
         finally:
             sslConn.close()
 
-        return (x509Cert, verifyStr, ocspResp)
+        return (x509Chain, verifyStr, ocspResp)
 
 
 # XML generation

@@ -70,15 +70,15 @@ class PluginHeartbleed(PluginBase.PluginBase):
             raise Exception("Error: connection failed.")
         elif '\x01\x01\x01\x01\x01\x01\x01\x01\x01' in heartbleed:
             # Server replied with our hearbeat payload
-            heartbleedTxt = 'VULNERABLE'
+            heartbleedTxt = 'VULNERABLE - Server is vulnerable to Heartbleed'
             heartbleedXml = 'True'
         else:
-            heartbleedTxt = 'NOT vulnerable'
+            heartbleedTxt = 'OK - Not vulnerable to Heartbleed'
             heartbleedXml = 'False'
 
-        cmdTitle = 'Heartbleed'
+        cmdTitle = 'OpenSSL Heartbleed'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-        txtOutput.append(OUT_FORMAT("OpenSSL Heartbleed:", heartbleedTxt))
+        txtOutput.append(OUT_FORMAT(heartbleedTxt, ""))
 
         # XML output
         xmlOutput = Element(command, title=cmdTitle)

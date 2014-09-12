@@ -63,16 +63,24 @@ class PluginsFinder:
                     # Checking if it's a subclass of PluginBase
                     # Discarding PluginBase as a subclass of PluginBase
                     if obj != plugins.PluginBase.PluginBase:
-                        if issubclass(obj, plugins.PluginBase.PluginBase):
-                            # A plugin was found, keep it
-                            self._plugin_classes.add(obj)
+                        for base in obj.__bases__:
+                            # H4ck because issubclass() doesn't seem to work as expected on Linux
+                            # It has to do with PluginBase being imported multiple times (within plugins) or something
+                            if base.__name__ == 'PluginBase':
+                                # A plugin was found, keep it
+                                self._plugin_classes.add(obj)
 
-                            # Store the plugin's commands
-                            for (cmd, is_aggressive) in obj.get_interface().get_commands_as_text():
-                                self._commands[cmd] = obj
-                                # Store a list of aggressive commands
-                                if is_aggressive:
-                                    self._aggressive_comands.append(cmd)
+                        #if issubclass(obj, plugins.PluginBase.PluginBase):
+                            # A plugin was found, keep it
+                        #    self._plugin_classes.add(obj)
+
+                                # Store the plugin's commands
+                                for (cmd, is_aggressive) in obj.get_interface().get_commands_as_text():
+                                    self._commands[cmd] = obj
+                                    # Store a list of aggressive commands
+                                    if is_aggressive:
+                                        self._aggressive_comands.append(cmd)
+
 
 
     def get_plugins(self):

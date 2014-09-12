@@ -44,8 +44,8 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         (clientReneg, secureReneg) = self._test_renegotiation(target)
 
         # Text output
-        clientTxt = 'Honored' if clientReneg else 'Rejected'
-        secureTxt = 'Supported' if secureReneg else 'Not supported'
+        clientTxt = 'VULNERABLE - Server honors client-initiated renegotiations' if clientReneg else 'OK - Rejected'
+        secureTxt = 'OK - Supported' if secureReneg else 'VULNERABLE - Secure renegotiation not supported'
         cmdTitle = 'Session Renegotiation'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
 

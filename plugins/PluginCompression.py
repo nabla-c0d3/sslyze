@@ -58,13 +58,13 @@ class PluginCompression(PluginBase.PluginBase):
 
         # Text output
         if compName:
-            compTxt = 'Supported'
+            compTxt = 'VULNERABLE - Server supports Deflate compression'
         else:
-            compTxt = 'Disabled'
+            compTxt = 'OK - Compression disabled'
 
-        cmdTitle = 'Compression'
+        cmdTitle = 'Deflate Compression'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-        txtOutput.append(OUT_FORMAT("DEFLATE Compression:", compTxt))
+        txtOutput.append(OUT_FORMAT(compTxt, ""))
 
         # XML output
         xmlOutput = Element(command, title=cmdTitle)

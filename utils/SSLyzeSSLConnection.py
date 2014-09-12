@@ -29,8 +29,8 @@ from urllib import quote, unquote
 import socket, struct, time, random
 from HTTPResponseParser import parse_http_response
 from nassl import _nassl, SSL_VERIFY_NONE
-from nassl.SslClient import SslClient, ClientCertificateRequested
-
+from nassl.DebugSslClient import DebugSslClient
+from nassl.SslClient import ClientCertificateRequested
 
 
 def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerifyLocations=None):
@@ -164,7 +164,7 @@ class ProxyError(IOError):
 
 
 
-class SSLConnection(SslClient):
+class SSLConnection(DebugSslClient):
     """Base SSL connection class."""
 
     # The following errors mean that the server explicitly rejected the

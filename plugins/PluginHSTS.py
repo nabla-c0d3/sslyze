@@ -66,9 +66,9 @@ class PluginHSTS(PluginBase.PluginBase):
         cmd_title = 'HTTP Strict Transport Security'
         txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
         if hsts_supported:
-            txt_result.append(FIELD_FORMAT("Supported:", hsts_timeout))
+            txt_result.append(FIELD_FORMAT("OK - HSTS header received:", hsts_timeout))
         else:
-            txt_result.append(FIELD_FORMAT("Not supported: server did not send an HSTS header.", ""))
+            txt_result.append(FIELD_FORMAT("NOT SUPPORTED - Server did not send an HSTS header.", ""))
 
         # XML output
         xml_hsts_attr = {'sentHstsHeader': str(hsts_supported)}
@@ -90,7 +90,7 @@ class PluginHSTS(PluginBase.PluginBase):
         nb_redirect = 0
         httpGetFormat = 'GET {0} HTTP/1.0\r\nHost: {1}\r\n{2}Connection: close\r\n\r\n'.format
         httpPath = '/'
-        httpAppend = ''    
+        httpAppend = ''
         
         while nb_redirect < MAX_REDIRECT:
             sslConn = create_sslyze_connection(target, self._shared_settings)
@@ -105,7 +105,12 @@ class PluginHSTS(PluginBase.PluginBase):
             if httpResp.version == 9 :
                 # HTTP 0.9 => Probably not an HTTP response
                 raise Exception('Server did not return an HTTP response')
-            elif 300 <= httpResp.status < 400:
+            else:
+                hstsHeader = httpResp.getheader('strict-transport-security', None)
+
+
+            # If there was no HSTS header, check if the server returned a redirection
+            if hstsHeader is None and 300 <= httpResp.status < 400:
                 redirectHeader = httpResp.getheader('Location', None)
                 cookieHeader = httpResp.getheader('Set-Cookie', None)
                 
@@ -129,18 +134,19 @@ class PluginHSTS(PluginBase.PluginBase):
                             port = target[2]
                         
                     target = (o.hostname, o.hostname, port, target[3])
-                
+
                 # Handle cookies
                 if cookieHeader:
                     cookie = Cookie.SimpleCookie(cookieHeader)
-                    
+
                     if cookie:
                         httpAppend = 'Cookie:' + cookie.output(attrs=[], header='', sep=';') + '\r\n'
-                
+
                 nb_redirect+=1
             else:
-                hstsHeader = httpResp.getheader('strict-transport-security', None)
+                # If the server did not return a redirection just give up
                 break
+
         
         return hstsHeader
 

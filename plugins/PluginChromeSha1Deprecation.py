@@ -36,7 +36,8 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
     interface = PluginBase.PluginInterface(title="PluginChromeSha1Deprecation", description=(''))
     interface.add_command(
         command = "chrome_sha1",
-        help = "Determines if the server will be affected by Google Chrome's SHA-1 deprecation plans.")
+        help = "Determines if the server will be affected by Google Chrome's SHA-1 deprecation plans. See "
+    "http://googleonlinesecurity.blogspot.com/2014/09/gradually-sunsetting-sha-1.html for more information")
 
     def process_task(self, target, command, arg):
         OUT_FORMAT = '      {0:<35}{1}'.format

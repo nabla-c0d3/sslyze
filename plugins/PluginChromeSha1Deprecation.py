@@ -29,7 +29,9 @@ import dateutil.parser, base64, hashlib
 from plugins import PluginBase
 from utils.SSLyzeSSLConnection import create_sslyze_connection
 from nassl.SslClient import ClientCertificateRequested
+from PluginCertInfo import MOZILLA_STORE_PATH
 
+ROOT_CERTS = []
 
 class PluginChromeSha1Deprecation(PluginBase.PluginBase):
 

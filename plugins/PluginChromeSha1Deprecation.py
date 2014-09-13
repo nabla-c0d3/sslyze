@@ -4,7 +4,7 @@
 # Purpose:      Determines if the certificate will be affected by Google 
 #               Chrome's SHA-1 Deprecation plans
 #
-# Author:       tritter
+# Author:       tritter, alban
 #
 # Copyright:    2014 SSLyze developers
 #
@@ -22,24 +22,14 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-from os.path import join, dirname, realpath
-import imp
+
 from xml.etree.ElementTree import Element
-import sys
 import dateutil.parser, base64, hashlib
 
 from plugins import PluginBase
-from utils.ThreadPool import ThreadPool
 from utils.SSLyzeSSLConnection import create_sslyze_connection
-from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
 from nassl.SslClient import ClientCertificateRequested
 
-
-TRUST_STORES_PATH = join(realpath(dirname(sys.argv[0])), 'plugins', 'data', 'trust_stores')
-MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')
-ROOT_CERTS = []
-MOZILLA_EV_OIDS = imp.load_source('mozilla_ev_oids',
-                                  join(TRUST_STORES_PATH,  'mozilla_ev_oids.py')).MOZILLA_EV_OIDS
 
 class PluginChromeSha1Deprecation(PluginBase.PluginBase):
 

@@ -165,11 +165,6 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
         # Supplemental Data
         outputTxt.append(OUT_FORMAT("Certificate Chain:", str(len(certs)) + " Certificate" + ("s" if len(certs) > 1 else "") + (", 1 of which is a Root" if sawRoot else "")))
         outputTxt.append(OUT_FORMAT("Leaf Certificate notAfter:", str(notAfter.month) + "/" + str(notAfter.year)))
-        
-        if self._is_ev_certificate(leaf):
-            outputTxt.append(OUT_FORMAT("EV Status:", "Is Extended Validation"))
-            xmlNode = Element('EV_Status', value="Is Extended Validation")
-            xmlOutput.append(xmlNode)
 
         if leafIsLongLived and sha1s:
             outputTxt.append(OUT_FORMAT("SHA-1 Certs:", ", ".join([c.get_SHA1_fingerprint()+":"+c.as_dict()['serialNumber'] for c in sha1s])))
@@ -196,14 +191,3 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
                 d = base64.b64decode(r)
                 ROOT_CERTS.append(hashlib.sha1(d).hexdigest())
         return cert.get_SHA1_fingerprint() in ROOT_CERTS
-
-    @staticmethod
-    def _is_ev_certificate(cert):
-        certDict = cert.as_dict()
-        try:
-            policy = certDict['extensions']['X509v3 Certificate Policies']['Policy']
-            if policy[0] in MOZILLA_EV_OIDS:
-                return True
-        except:
-            return False
-        return False

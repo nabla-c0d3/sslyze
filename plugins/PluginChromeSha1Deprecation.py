@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-------------------------------------------------------------------------------
-# Name:         PluginSha1.py
+# Name:         PluginChromeSha1Deprecation.py
 # Purpose:      Determines if the certificate will be affected by Google 
 #               Chrome's SHA-1 Deprecation plans
 #
@@ -41,9 +41,9 @@ ROOT_CERTS = []
 MOZILLA_EV_OIDS = imp.load_source('mozilla_ev_oids',
                                   join(TRUST_STORES_PATH,  'mozilla_ev_oids.py')).MOZILLA_EV_OIDS
 
-class PluginSha1(PluginBase.PluginBase):
+class PluginChromeSha1Deprecation(PluginBase.PluginBase):
 
-    interface = PluginBase.PluginInterface(title="PluginSha1", description=(''))
+    interface = PluginBase.PluginInterface(title="PluginChromeSha1Deprecation", description=(''))
     interface.add_command(
         command="sha1",
         help= "Determines if the site will be affected by Google Chrome's SHA-1 deprecation plans")

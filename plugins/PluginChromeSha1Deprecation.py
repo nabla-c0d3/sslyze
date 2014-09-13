@@ -40,15 +40,13 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
 
     def process_task(self, target, command, arg):
         OUT_FORMAT = '      {0:<35}{1}'.format
-        CMDTITLE="SHA-1 Deprecation Status"
+        CMDTITLE="Google Chrome SHA-1 Deprecation Status"
 
-        (host, _, _, sslVersion) = target
+        (_, _, _, sslVersion) = target
 
         # =====================================================================
         # Cert Cert Chain
         sslConn = create_sslyze_connection(target, self._shared_settings, sslVersion)
-        # Add SNI for the target domain
-        sslConn.set_tlsext_host_name(host)
         try: # Perform the SSL handshake
             sslConn.connect()
             leaf = sslConn.get_peer_certificate()

@@ -52,17 +52,16 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
         sslConn = create_sslyze_connection(target, self._shared_settings, sslVersion)
         try: # Perform the SSL handshake
             sslConn.connect()
-            leaf = sslConn.get_peer_certificate()
             certs = sslConn.get_peer_cert_chain()
         except ClientCertificateRequested: # The server asked for a client cert
-            # We can get the server cert anyway
-            leaf = sslConn.get_peer_certificate()
+            # We can get the server cert chain anyway
             certs = sslConn.get_peer_cert_chain()
         finally:
             sslConn.close()
 
         # =====================================================================
         # Process Certs
+        leaf = certs[0]
         sawRoot = False
         leafIsLongLived = False
         a2016_h1 = False

@@ -50,12 +50,8 @@ class PluginHSTS(PluginBase.PluginBase):
 
 
     def process_task(self, target, command, args):
-
-
         if self._shared_settings['starttls']:
             raise Exception('Cannot use --hsts with --starttls.')
-
-        FIELD_FORMAT = '      {0:<35}{1}'.format
 
         hsts_supported = self._get_hsts_header(target)
         if hsts_supported:
@@ -66,9 +62,9 @@ class PluginHSTS(PluginBase.PluginBase):
         cmd_title = 'HTTP Strict Transport Security'
         txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
         if hsts_supported:
-            txt_result.append(FIELD_FORMAT("OK - HSTS header received:", hsts_timeout))
+            txt_result.append(self.FIELD_FORMAT("OK - HSTS header received:", hsts_timeout))
         else:
-            txt_result.append(FIELD_FORMAT("NOT SUPPORTED - Server did not send an HSTS header.", ""))
+            txt_result.append(self.FIELD_FORMAT("NOT SUPPORTED - Server did not send an HSTS header.", ""))
 
         # XML output
         xml_hsts_attr = {'sentHstsHeader': str(hsts_supported)}

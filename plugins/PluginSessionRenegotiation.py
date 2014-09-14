@@ -49,9 +49,8 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         cmdTitle = 'Session Renegotiation'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
 
-        outFormat = '      {0:<35}{1}'.format
-        txtOutput.append(outFormat('Client-initiated Renegotiations:', clientTxt))
-        txtOutput.append(outFormat('Secure Renegotiation:', secureTxt))
+        txtOutput.append(self.FIELD_FORMAT('Client-initiated Renegotiations:', clientTxt))
+        txtOutput.append(self.FIELD_FORMAT('Secure Renegotiation:', secureTxt))
 
         # XML output
         xmlReneg = Element('sessionRenegotiation',

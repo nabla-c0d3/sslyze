@@ -40,8 +40,6 @@ class PluginCompression(PluginBase.PluginBase):
 
     def process_task(self, target, command, args):
 
-        OUT_FORMAT = '      {0:<35}{1}'.format
-
         sslConn = create_sslyze_connection(target, self._shared_settings)
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives
@@ -64,7 +62,7 @@ class PluginCompression(PluginBase.PluginBase):
 
         cmdTitle = 'Deflate Compression'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-        txtOutput.append(OUT_FORMAT(compTxt, ""))
+        txtOutput.append(self.FIELD_FORMAT(compTxt, ""))
 
         # XML output
         xmlOutput = Element(command, title=cmdTitle)

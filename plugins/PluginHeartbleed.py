@@ -40,8 +40,6 @@ class PluginHeartbleed(PluginBase.PluginBase):
 
 
     def process_task(self, target, command, args):
-
-        OUT_FORMAT = '      {0:<35}{1}'.format
         (host, ip, port, sslVersion) = target
 
         if sslVersion == SSLV23: # Could not determine the preferred  SSL version - client cert was required ?
@@ -78,7 +76,7 @@ class PluginHeartbleed(PluginBase.PluginBase):
 
         cmdTitle = 'OpenSSL Heartbleed'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-        txtOutput.append(OUT_FORMAT(heartbleedTxt, ""))
+        txtOutput.append(self.FIELD_FORMAT(heartbleedTxt, ""))
 
         # XML output
         xmlOutput = Element(command, title=cmdTitle)

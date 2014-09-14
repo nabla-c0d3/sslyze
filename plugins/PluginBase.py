@@ -126,6 +126,7 @@ class PluginBase(object):
 
     # Formatting stuff
     PLUGIN_TITLE_FORMAT = '  * {0}:'.format
+    FIELD_FORMAT = '      {0:<35}{1}'.format
 
 
     @classmethod

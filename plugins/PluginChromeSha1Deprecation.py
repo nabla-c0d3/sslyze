@@ -29,9 +29,10 @@ import dateutil.parser, base64, hashlib
 from plugins import PluginBase
 from utils.SSLyzeSSLConnection import create_sslyze_connection
 from nassl.SslClient import ClientCertificateRequested
-from PluginCertInfo import MOZILLA_STORE_PATH
+from PluginCertInfo import MOZILLA_STORE_PATH, PluginCertInfo
 
 ROOT_CERTS = []
+
 
 class PluginChromeSha1Deprecation(PluginBase.PluginBase):
 
@@ -41,140 +42,106 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
         help = "Determines if the server will be affected by Google Chrome's SHA-1 deprecation plans. See "
     "http://googleonlinesecurity.blogspot.com/2014/09/gradually-sunsetting-sha-1.html for more information")
 
+
+    CMD_TITLE = "Google Chrome SHA-1 Deprecation Status"
+
+    # Chrome icon descriptions
+    CHROME_MINOR_ERROR_TXT = 'AFFECTED - SHA1-signed certificate(s) will trigger the "Secure, but minor errors" icon.'
+    CHROME_NEUTRAL_TXT = 'AFFECTED - SHA1-signed certificate(s) will trigger the "Neutral, lacking security" icon.'
+    CHROME_INSECURE_TXT = 'AFFECTED - SHA1-signed certificate(s) will trigger the "Affirmatively insecure" icon.'
+
+
     def process_task(self, target, command, arg):
-        OUT_FORMAT = '      {0:<35}{1}'.format
-        CMDTITLE="Google Chrome SHA-1 Deprecation Status"
 
         (_, _, _, sslVersion) = target
 
-        # =====================================================================
-        # Cert Cert Chain
+        # Get the server's cert chain
         sslConn = create_sslyze_connection(target, self._shared_settings, sslVersion)
         try: # Perform the SSL handshake
             sslConn.connect()
-            certs = sslConn.get_peer_cert_chain()
+            certChain = sslConn.get_peer_cert_chain()
         except ClientCertificateRequested: # The server asked for a client cert
             # We can get the server cert chain anyway
-            certs = sslConn.get_peer_cert_chain()
+            certChain = sslConn.get_peer_cert_chain()
         finally:
             sslConn.close()
 
-        # =====================================================================
-        # Process Certs
-        leaf = certs[0]
-        sawRoot = False
-        leafIsLongLived = False
-        a2016_h1 = False
-        a2016_h2 = False
-        a2016 = False
-        a2017 = False
-        sha1s = []
+        outputXml = Element(command, title = self.CMD_TITLE)
+        outputTxt = [self.PLUGIN_TITLE_FORMAT(self.CMD_TITLE)]
 
-        certDict = leaf.as_dict()
-        notAfter = dateutil.parser.parse(certDict['validity']['notAfter'])
-        if notAfter.year >= 2016:
-            leafIsLongLived = True
-        if notAfter.year == 2016:
-            if notAfter.month < 6:
-                a2016_h1 = True
-            else:
-                a2016_h2 = True
-        if notAfter.year >= 2017:
-            a2017 = True
-        a2016 = a2016_h1 or a2016_h2
+        # Is this cert chain affected ?
+        leafNotAfter = dateutil.parser.parse(certChain[0].as_dict()['validity']['notAfter'])
+        if leafNotAfter.year < 2016:
+            # Not affected - the certificate expires before 2016
+            outputTxt.append(self.FIELD_FORMAT('OK - Leaf certificate expires before 2016.', ''))
+            outputXml.append(Element('chromeSha1Deprecation', isServerAffected = str(False)))
 
-        for c in certs:
-            if self._is_root_cert(c):
-                if sawRoot:
-                    raise Exception("Saw two root certificates?!")
-                sawRoot = True
-                continue
-
-            #Only care about SHA-1's if the cert is long-lived
-            if leafIsLongLived:
-                certDict = c.as_dict()
-                if "sha1" in certDict['signatureAlgorithm']:
-                    sha1s.append(c)
-                else:
+        else:
+            certsWithSha1 = []
+            for cert in certChain:
+                if self._is_root_cert(cert):
+                    # Ignore root certs as they are unaffected
                     continue
 
-        # =====================================================================
-        # Results formatting
-        # Text output - certificate info
-        xmlOutput = Element(command, title=CMDTITLE)
-        outputTxt = [self.PLUGIN_TITLE_FORMAT(CMDTITLE)]
+                if "sha1" in cert.as_dict()['signatureAlgorithm']:
+                    certsWithSha1.append(cert)
+
+            if certsWithSha1 == []:
+                # Not affected - no certificates used SHA-1 in the chain
+                outputTxt.append(self.FIELD_FORMAT('OK - Certificate chain does not contain any SHA-1 certificate.', ''))
+                outputXml.append(Element('chromeSha1Deprecation', isServerAffected = str(False)))
+
+            else:
+                # Server is affected
+                leafCertNotAfter = certChain[0].as_dict()['validity']['notAfter']
+                outputXml2 = Element('chromeSha1Deprecation', isServerAffected = str(True),
+                                     leafCertificateNotAfter = leafCertNotAfter)
+                chrome39Txt = 'OK'
+                chrome40Txt = 'OK'
+
+                if leafNotAfter.year == 2016 and leafNotAfter.month < 6:
+                    chrome41Txt = self.CHROME_MINOR_ERROR_TXT
 
 
-        # =====================================================================
-        # M39
-        if not leafIsLongLived:
-            status = "Not Affected (Leaf certificate expires before 2016)"
-        elif leafIsLongLived and not sha1s:
-            status = "Not Affected (Long lived leaf certificate, but no SHA-1 certificates in chain)"
+                elif leafNotAfter.year == 2016 and leafNotAfter.month >= 6:
+                    chrome40Txt = self.CHROME_MINOR_ERROR_TXT
+                    chrome41Txt = self.CHROME_MINOR_ERROR_TXT
 
-        elif a2017 and sha1s:
-            status = "Affected (" + str(len(sha1s)) + \
-                " Cert" + ("s" if len(sha1s) > 1 else "") + " will trigger 'Secure, but minor errors' icon)"
-        elif a2016:
-            status = "Not Affected (Leaf certificate expires in 2016)"
-        else:
-            status = "ohshit1"
-        outputTxt.append(OUT_FORMAT("Chrome 39 Behavior:", status))
-        xmlNode = Element('chome39status', value=status)
-        xmlOutput.append(xmlNode)
+                else:
+                    # Certificate expires in 2017
+                    chrome39Txt = self.CHROME_MINOR_ERROR_TXT
+                    chrome40Txt = self.CHROME_NEUTRAL_TXT
+                    chrome41Txt = self.CHROME_INSECURE_TXT
+
+                # Text output
+                certsWithSha1Txt = ['"{0}"'.format(PluginCertInfo._extract_subject_CN_or_OUN(cert)) for cert in certsWithSha1]
+                outputTxt.append(self.FIELD_FORMAT("Leaf certificate notAfter field:", leafCertNotAfter))
+                outputTxt.append(self.FIELD_FORMAT("SHA1-signed certificates:", certsWithSha1Txt))
+                outputTxt.append(self.FIELD_FORMAT("Chrome 39 behavior:", chrome39Txt))
+                outputTxt.append(self.FIELD_FORMAT("Chrome 40 behavior:", chrome40Txt))
+                outputTxt.append(self.FIELD_FORMAT("Chrome 41 behavior:", chrome41Txt))
+
+                # XML output
+                affectedCertsXml = Element('sha1SignedCertificates')
+                for cert in certsWithSha1:
+                    affectedCertsXml.append(PluginCertInfo._format_cert_to_xml(cert, '', self._shared_settings['sni']))
+                outputXml2.append(affectedCertsXml)
+
+                outputXml2.append(Element(
+                    'chrome39',
+                    behavior = chrome39Txt,
+                    isAffected = str(False) if chrome39Txt is 'OK' else str(True)))
+                outputXml2.append(Element(
+                    'chrome40',
+                    behavior = chrome40Txt,
+                    isAffected = str(False) if chrome40Txt is 'OK' else str(True)))
+                outputXml2.append(Element(
+                    'chrome41',
+                    behavior = chrome41Txt,
+                    isAffected = str(True)))
+                outputXml.append(outputXml2)
         
-        # =====================================================================
-        # M40
-        if not leafIsLongLived:
-            status = "Not Affected (Leaf certificate expires before 2016)"
-        elif leafIsLongLived and not sha1s:
-            status = "Not Affected (Long lived leaf certificate, but no SHA-1 certificates in chain)"
-
-        elif a2017 and sha1s:
-            status = "Affected (" + str(len(sha1s)) + \
-                " Cert" + ("s" if len(sha1s) > 1 else "") + " will trigger 'Neutral, no security' icon)"
-        elif a2016_h2:
-            status = "Affected (" + str(len(sha1s)) + \
-                " Cert" + ("s" if len(sha1s) > 1 else "") + " will trigger 'Secure, but minor errors' icon)"
-        elif a2016_h1:
-            status = "Not Affected (Leaf certificate expires in first half of 2016)"
-        else:
-            status = "ohshit2"
-        outputTxt.append(OUT_FORMAT("Chrome 40 Behavior:", status))
-        xmlNode = Element('chome40status', value=status)
-        xmlOutput.append(xmlNode)
-
-        # =====================================================================
-        # M41
-        if not leafIsLongLived:
-            status = "Not Affected (Leaf certificate expires before 2016)"
-        elif leafIsLongLived and not sha1s:
-            status = "Not Affected (Long lived leaf certificate, but no SHA-1 certificates in chain)"
-        
-        elif a2017 and sha1s:
-            status = "Affected (" + str(len(sha1s)) + \
-                " Cert" + ("s" if len(sha1s) > 1 else "") + " will trigger 'Lock with Red X' icon  and Mixed Content causes such an icon)"
-        elif a2016 and sha1s:
-            status = "Affected (" + str(len(sha1s)) + \
-                " Cert" + ("s" if len(sha1s) > 1 else "") + " will trigger 'Secure, but minor errors' icon  and Mixed Content causes such an icon)"
-        else:
-            status = "ohshit3"
-        outputTxt.append(OUT_FORMAT("Chrome 41 Behavior:", status))
-        xmlNode = Element('chome41status', value=status)
-        xmlOutput.append(xmlNode)
-
-        # =====================================================================
-        # Supplemental Data
-        outputTxt.append(OUT_FORMAT("Certificate Chain:", str(len(certs)) + " Certificate" + ("s" if len(certs) > 1 else "") + (", 1 of which is a Root" if sawRoot else "")))
-        outputTxt.append(OUT_FORMAT("Leaf Certificate notAfter:", str(notAfter.month) + "/" + str(notAfter.year)))
-
-        if leafIsLongLived and sha1s:
-            outputTxt.append(OUT_FORMAT("SHA-1 Certs:", ", ".join([c.get_SHA1_fingerprint()+":"+c.as_dict()['serialNumber'] for c in sha1s])))
-            xmlNode = Element('sha-1_certs', value=", ".join([c.get_SHA1_fingerprint()+":"+c.as_dict()['serialNumber'] for c in sha1s]))
-            xmlOutput.append(xmlNode)
-
-        
-        return PluginBase.PluginResult(outputTxt, xmlOutput)
+        return PluginBase.PluginResult(outputTxt, outputXml)
 
 
     @staticmethod

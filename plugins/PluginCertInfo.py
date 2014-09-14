@@ -63,7 +63,7 @@ class PluginCertInfo(PluginBase.PluginBase):
             "the certificate. CERTINFO should be 'basic' or 'full'.",
         dest="certinfo")
 
-    FIELD_FORMAT = '      {0:<35}{1}'.format
+
     TRUST_FORMAT = '\"{0}\" CA Store:'.format
 
 
@@ -154,19 +154,10 @@ class PluginCertInfo(PluginBase.PluginBase):
         # Print the Common Names within the certificate chain
         certChainCNs = []
         for cert in x509Chain:
-            try: # Extract the CN if there's one
-                certName = cert.as_dict()['subject']['commonName']
-            except KeyError:
-                # If no common name, display the organizational unit instead
-                try:
-                    certName = cert.as_dict()['subject']['organizationalUnitName']
-                except KeyError:
-                    # Give up
-                    certName = 'No Common Name'
+            certIdentity = self._extract_subject_CN_or_OUN(cert)
+            certChainCNs.append(certIdentity)
 
-            certChainCNs.append(certName)
-
-        outputTxt.append(self.FIELD_FORMAT('Certificate Chain:', str(certChainCNs)))
+        outputTxt.append(self.FIELD_FORMAT('Certificate Chain Received:', str(certChainCNs)))
 
 
         # Text output - OCSP stapling
@@ -181,11 +172,11 @@ class PluginCertInfo(PluginBase.PluginBase):
         chainXml = Element('certificateChain')
 
         # First add the leaf certificate
-        chainXml.append(self._format_cert_to_xml(x509Chain[0], 'leaf'))
+        chainXml.append(self._format_cert_to_xml(x509Chain[0], 'leaf', self._shared_settings['sni']))
 
         # Then add every other cert in the chain
         for cert in x509Chain[1:]:
-            chainXml.append(self._format_cert_to_xml(cert, 'intermediate'))
+            chainXml.append(self._format_cert_to_xml(cert, 'intermediate', self._shared_settings['sni']))
 
         outputXml.append(chainXml)
 
@@ -240,13 +231,17 @@ class PluginCertInfo(PluginBase.PluginBase):
 
 # FORMATTING FUNCTIONS
 
-    def _format_cert_to_xml(self, x509Cert, x509CertPosition):
+    @staticmethod
+    def _format_cert_to_xml(x509Cert, x509CertPositionTxt, sniTxt):
         certAttrib = {
-            'sha1Fingerprint' : x509Cert.get_SHA1_fingerprint(),
-            'position' : x509CertPosition
+            'sha1Fingerprint' : x509Cert.get_SHA1_fingerprint()
         }
-        if self._shared_settings['sni']:
-            certAttrib['suppliedServerNameIndication'] = self._shared_settings['sni']
+
+        if x509CertPositionTxt:
+            certAttrib['position'] = x509CertPositionTxt
+
+        if sniTxt:
+            certAttrib['suppliedServerNameIndication'] = sniTxt
         certXml = Element('certificate', attrib = certAttrib)
 
         PEMcertXml = Element('asPEM')
@@ -299,6 +294,21 @@ class PluginCertInfo(PluginBase.PluginBase):
     @staticmethod
     def _get_full_text(cert):
         return [cert.as_text()]
+
+
+    @staticmethod
+    def _extract_subject_CN_or_OUN(cert):
+        try: # Extract the CN if there's one
+            certName = cert.as_dict()['subject']['commonName']
+        except KeyError:
+            # If no common name, display the organizational unit instead
+            try:
+                certName = cert.as_dict()['subject']['organizationalUnitName']
+            except KeyError:
+                # Give up
+                certName = 'No Common Name'
+
+        return certName
 
 
     def _get_basic_text(self, cert):

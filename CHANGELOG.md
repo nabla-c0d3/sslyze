@@ -3,13 +3,14 @@ SSLyze Changelog
 
 ## v0.10
 * PluginOpenSSLCipherSuites now displays the size of the handshake's Diffie-Hellmann parameters
-* SSLyze can now be packaged as a single .exe file for Windows
-* Updated OpenSSL to 1.0.1i
-* Updated Microsoft, Apple and Mozilla trust stores
-* PluginCertInfo now displays the server's full certificate chain in both the console and XML results
+* SSLyze on Windows is now packaged as a single .exe file
+* PluginCertInfo now displays the server's full certificate chain instead of its leaf certificate only, in both the console and XML results
 * PluginHSTS now properly detects HSTS headers when receiving HTTP redirections
+* New plugin to check if a server is affected by Chrome's deprecation of SHA1-signed certificates. See --chrome_sha1
 * Clarified the console output of most plugins and checks
 * Bug fixes for XML output and client certificate support
+* Updated OpenSSL to 1.0.1i
+* Updated Microsoft, Apple and Mozilla trust stores
 
 
 ## v0.9

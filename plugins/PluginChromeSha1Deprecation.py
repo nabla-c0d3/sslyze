@@ -115,11 +115,11 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
 
                 # Text output
                 certsWithSha1Txt = ['"{0}"'.format(PluginCertInfo._extract_subject_CN_or_OUN(cert)) for cert in certsWithSha1]
-                outputTxt.append(self.FIELD_FORMAT("Leaf certificate notAfter field:", leafCertNotAfter))
-                outputTxt.append(self.FIELD_FORMAT("SHA1-signed certificates:", certsWithSha1Txt))
                 outputTxt.append(self.FIELD_FORMAT("Chrome 39 behavior:", chrome39Txt))
                 outputTxt.append(self.FIELD_FORMAT("Chrome 40 behavior:", chrome40Txt))
                 outputTxt.append(self.FIELD_FORMAT("Chrome 41 behavior:", chrome41Txt))
+                outputTxt.append(self.FIELD_FORMAT("Leaf certificate notAfter field:", leafCertNotAfter))
+                outputTxt.append(self.FIELD_FORMAT("SHA1-signed certificates:", certsWithSha1Txt))
 
                 # XML output
                 affectedCertsXml = Element('sha1SignedCertificates')
@@ -146,6 +146,8 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
 
     @staticmethod
     def _is_root_cert(cert):
+        # Root certificates are not affected by the deprecation of SHA1
+        # However a properly configured server should not send the CA cert in the chain so I'm not using this for now
         if not ROOT_CERTS:
             #Parse the Mozilla Store into roots
             f = open(MOZILLA_STORE_PATH, 'r')

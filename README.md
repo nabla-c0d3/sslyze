@@ -65,6 +65,14 @@ SSLyze to run.
 The source code for nassl is hosted at https://github.com/nabla-c0d3/nassl.
 
 
+Py2exe Build
+------------
+
+SSLyze can be packaged as a Windows executable by running the following command:
+
+    $ python.exe setup_py2exe.py py2exe
+
+
 License
 --------
 

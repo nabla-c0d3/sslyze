@@ -164,14 +164,16 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 for (cipherTxt, (msg, keysize, dh_infos)) in result_list:
 
                     if keysize:
-                        if dh_infos :
-                            cipherTxt = keysizeFormat(cipherTxt, "%s-%s bits"%(dh_infos["Type"], dh_infos["GroupSize"]), str(keysize) + ' bits')
-                        else :
-                            cipherTxt = keysizeFormat(cipherTxt, "-",  str(keysize) + ' bits')
-
-                        # Always display ANON as the key size for anonymous ciphers to make it visible
                         if 'ADH' in cipherTxt or 'AECDH' in cipherTxt:
-                            cipherTxt = keysizeFormat(cipherTxt, "-", 'ANON')
+                            # Always display ANON as the key size for anonymous ciphers to make it visible
+                            keysizeStr = 'ANONYMOUS'
+                        else:
+                            keysizeStr = str(keysize) + ' bits'
+
+                        if dh_infos :
+                            cipherTxt = keysizeFormat(cipherTxt, "%s-%s bits"%(dh_infos["Type"], dh_infos["GroupSize"]), keysizeStr)
+                        else :
+                            cipherTxt = keysizeFormat(cipherTxt, "-",  keysizeStr)
 
                     txtOutput.append(cipherFormat(cipherTxt, msg))
         if txtOutput == []:

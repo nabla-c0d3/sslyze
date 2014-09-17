@@ -24,7 +24,9 @@
 
 
 from xml.etree.ElementTree import Element
-import dateutil.parser, base64, hashlib
+import base64
+import hashlib
+import datetime
 
 from plugins import PluginBase
 from utils.SSLyzeSSLConnection import create_sslyze_connection
@@ -70,7 +72,7 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
         outputTxt = [self.PLUGIN_TITLE_FORMAT(self.CMD_TITLE)]
 
         # Is this cert chain affected ?
-        leafNotAfter = dateutil.parser.parse(certChain[0].as_dict()['validity']['notAfter'])
+        leafNotAfter = datetime.datetime.strptime(certChain[0].as_dict()['validity']['notAfter'], "%b %d %H:%M:%S %Y %Z")
         if leafNotAfter.year < 2016:
             # Not affected - the certificate expires before 2016
             outputTxt.append(self.FIELD_FORMAT('OK - Leaf certificate expires before 2016.', ''))

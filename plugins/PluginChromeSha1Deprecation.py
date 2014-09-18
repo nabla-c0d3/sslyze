@@ -31,7 +31,10 @@ import datetime
 from plugins import PluginBase
 from utils.SSLyzeSSLConnection import create_sslyze_connection
 from nassl.SslClient import ClientCertificateRequested
-from PluginCertInfo import MOZILLA_STORE_PATH, PluginCertInfo
+
+# We have to import it this way or PluginCertInfo gets detected twice by SSLyze
+import plugins.PluginCertInfo
+
 
 ROOT_CERTS = []
 
@@ -116,7 +119,7 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
                     chrome41Txt = self.CHROME_INSECURE_TXT
 
                 # Text output
-                certsWithSha1Txt = ['"{0}"'.format(PluginCertInfo._extract_subject_CN_or_OUN(cert)) for cert in certsWithSha1]
+                certsWithSha1Txt = ['"{0}"'.format(plugins.PluginCertInfo.PluginCertInfo._extract_subject_CN_or_OUN(cert)) for cert in certsWithSha1]
                 outputTxt.append(self.FIELD_FORMAT("Chrome 39 behavior:", chrome39Txt))
                 outputTxt.append(self.FIELD_FORMAT("Chrome 40 behavior:", chrome40Txt))
                 outputTxt.append(self.FIELD_FORMAT("Chrome 41 behavior:", chrome41Txt))
@@ -126,7 +129,7 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
                 # XML output
                 affectedCertsXml = Element('sha1SignedCertificates')
                 for cert in certsWithSha1:
-                    affectedCertsXml.append(PluginCertInfo._format_cert_to_xml(cert, '', self._shared_settings['sni']))
+                    affectedCertsXml.append(plugins.PluginCertInfo.PluginCertInfo._format_cert_to_xml(cert, '', self._shared_settings['sni']))
                 outputXml2.append(affectedCertsXml)
 
                 outputXml2.append(Element(
@@ -152,7 +155,7 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
         # However a properly configured server should not send the CA cert in the chain so I'm not using this for now
         if not ROOT_CERTS:
             #Parse the Mozilla Store into roots
-            f = open(MOZILLA_STORE_PATH, 'r')
+            f = open(plugins.PluginCertInfo.PluginCertInfo.MOZILLA_STORE_PATH, 'r')
             f_contents = "\n".join(f.readlines())
             root_certs = f_contents.split("-----BEGIN CERTIFICATE-----")
             for r in root_certs:

@@ -32,9 +32,8 @@ from plugins import PluginBase
 from utils.SSLyzeSSLConnection import create_sslyze_connection
 from nassl.SslClient import ClientCertificateRequested
 
-# We have to import it this way or PluginCertInfo gets detected twice by SSLyze on Linux
-import plugins.PluginCertInfo
-from plugins.PluginCertInfo import MOZILLA_STORE_PATH
+
+from plugins.PluginCertInfo import MOZILLA_STORE_PATH, PluginCertInfo
 
 ROOT_CERTS = []
 

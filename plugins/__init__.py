@@ -57,6 +57,10 @@ class PluginsFinder:
             # Check every declaration in that module
             for name in dir(module):
                 obj = getattr(module, name)
+                if name not in module.__name__:
+                    # Plugins have to have the same class name as their module name
+                    # This prevents Plugin B from being detected twice when there is a Plugin A that imports Plugin B
+                    continue
 
                 if inspect.isclass(obj):
                     # A class declaration was found in that module

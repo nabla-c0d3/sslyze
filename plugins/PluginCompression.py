@@ -67,7 +67,10 @@ class PluginCompression(PluginBase.PluginBase):
         # XML output
         xmlOutput = Element(command, title=cmdTitle)
         if compName:
-            xmlNode = Element('compressionMethod', type="DEFLATE")
+            xmlNode = Element('compressionMethod', type="DEFLATE", isSupported="True")
+            xmlOutput.append(xmlNode)
+        else:
+            xmlNode = Element('compressionMethod', type="DEFLATE", isSupported="False")
             xmlOutput.append(xmlNode)
 
         return PluginBase.PluginResult(txtOutput, xmlOutput)

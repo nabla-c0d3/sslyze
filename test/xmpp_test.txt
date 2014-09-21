@@ -1,1 +1,0 @@
-# python sslyze.py --tlsv1 --sslv2 --sslv3 --tlsv1_1 --tlsv1_2 --hide_rejected_ciphers --certinfo=basic --reneg --resum --starttls=xmpp --xmpp_to=gmail.com talk.google.com

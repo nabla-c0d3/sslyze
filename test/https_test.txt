@@ -1,0 +1,11 @@
+# python sslyze.py --regular --xml_out https_test.xml --targets_in test/https_test.txt
+www.google.fr
+www.bankofamerica.com
+store.steampowered.com
+www.facebook.com
+www.google.com
+www.isecpartners.com
+
+# IPV6 test cases
+www.ietf.org
+[2001:1890:126c::1:1e]

@@ -67,7 +67,9 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
                           3268 :    LDAPConnection,
                           389 :     LDAPConnection,
                           'rdp' :   RDPConnection,
-                          3389 :    RDPConnection }
+                          3389 :    RDPConnection,
+                          5432 :    PGConnection,
+                          'postgres' : PGConnection }
 
     if shared_settings['starttls']:
 
@@ -476,6 +478,26 @@ class LDAPConnection(SSLConnection):
         if self.START_TLS_OK  not in self._sock.recv(2048):
             raise StartTLSError(self.ERR_NO_STARTTLS)
 
+
+class PGConnection(SSLConnection):
+    """PostgreSQL SSL Connection."""
+
+    ERR_NO_STARTTLS = 'Postgres AUTH TLS was rejected'
+
+    START_TLS_CMD = bytearray(b'\x00\x00\x00\x08\x04\xD2\x16\x2F')
+    START_TLS_OK = 'Start TLS request accepted.'
+
+    def do_pre_handshake(self):
+        """
+        Connect to a host on a given (SSL) port, send a STARTTLS command,
+        and perform the SSL handshake.
+        """
+        self._sock = socket.create_connection((self._host, self._port), self._timeout)
+
+        self._sock.send(self.START_TLS_CMD)
+        data = self._sock.recv(1)
+        if not data or len(data) != 1 or data != 'S' :
+            raise StartTLSError(self.ERR_NO_STARTTLS)
 
 
 class RDPConnection(SSLConnection):

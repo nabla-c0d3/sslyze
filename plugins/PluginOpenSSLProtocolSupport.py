@@ -36,7 +36,7 @@ class PluginOpenSSLProtocolSupport(PluginBase.PluginBase):
         help="Checks the support for the available SSL and TLS protocols.")
     interface.add_option(
             option="fallback",
-            help="Check the support for the TLS_FALLBACK_SCSV cipher suite")
+            help="Check the support for the TLS_FALLBACK_SCSV cipher suite.")
 
 
     def process_task(self, target, command, args):
@@ -61,7 +61,7 @@ class PluginOpenSSLProtocolSupport(PluginBase.PluginBase):
             sslConn = create_sslyze_connection(target, self._shared_settings, sslVersion)
             sslConn.set_cipher_list('ALL:COMPLEMENTOFALL')
             if self._shared_settings['fallback']:
-                sslConn.set_mode(SSL_MODE_SEND_FALLBACK_SCSV
+                sslConn.set_mode(SSL_MODE_SEND_FALLBACK_SCSV)
             
             try: # Perform the SSL handshake
                 sslConn.connect()

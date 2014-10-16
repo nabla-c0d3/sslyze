@@ -175,7 +175,8 @@ class SSLConnection(DebugSslClient):
          'reset by peer' : 'Received RST'}
 
     HANDSHAKE_REJECTED_SSL_ERRORS = \
-        {'sslv3 alert handshake failure' : 'Alert handshake failure',
+        {'tlsv1 alert inappropriate fallback' : 'Alert inappropriate fallback',
+         'sslv3 alert handshake failure' : 'Alert handshake failure',
          'no ciphers available' : 'No ciphers available',
          'excessive message size' : 'Excessive message size',
          'bad mac decode' : 'Bad mac decode',

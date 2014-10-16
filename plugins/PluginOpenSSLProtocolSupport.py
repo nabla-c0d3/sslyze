@@ -25,7 +25,7 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.SSLyzeSSLConnection import create_sslyze_connection, SSLHandshakeRejected
-from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
+from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2, SSL_MODE_SEND_FALLBACK_SCSV
 
 
 class PluginOpenSSLProtocolSupport(PluginBase.PluginBase):
@@ -33,8 +33,10 @@ class PluginOpenSSLProtocolSupport(PluginBase.PluginBase):
     interface = PluginBase.PluginInterface(title="PluginOpenSSLProtocolSupport", description="")
     interface.add_command(
         command="protocols",
-        help="Checks the support for the available SSL and TLS protocols.",
-        dest=None)
+        help="Checks the support for the available SSL and TLS protocols.")
+    interface.add_option(
+            option="fallback",
+            help="Check the support for the TLS_FALLBACK_SCSV cipher suite")
 
 
     def process_task(self, target, command, args):
@@ -48,6 +50,8 @@ class PluginOpenSSLProtocolSupport(PluginBase.PluginBase):
                         ('TLSv1.2', TLSV1_2)]
         
         cmdTitle = 'Protocol Version'
+        if self._shared_settings['fallback']:
+            cmdTitle+=' (using TLS_FALLBACK_SCSV)'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
         xmlOutput = Element(command, title=cmdTitle)
         
@@ -56,15 +60,17 @@ class PluginOpenSSLProtocolSupport(PluginBase.PluginBase):
             
             sslConn = create_sslyze_connection(target, self._shared_settings, sslVersion)
             sslConn.set_cipher_list('ALL:COMPLEMENTOFALL')
+            if self._shared_settings['fallback']:
+                sslConn.set_mode(SSL_MODE_SEND_FALLBACK_SCSV
             
             try: # Perform the SSL handshake
                 sslConn.connect()
                 isSupported = 'Supported'
                 xmlNode = Element(sslVersionName)
-
+            
             except SSLHandshakeRejected as e:
                 isSupported = 'Not Supported - ' + str(e)
-
+            
             except:
                 raise
             

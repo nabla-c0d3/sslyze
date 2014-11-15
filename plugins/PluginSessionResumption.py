@@ -216,6 +216,9 @@ class PluginSessionResumption(PluginBase.PluginBase):
         except IndexError:
             return False, 'Session ID not assigned'
 
+        if session1_id == '':
+            return False, 'Session ID empty'
+        
         # Try to resume that SSL session
         session2 = self._resume_ssl_session(target, session1)
         try: # Recover the session ID
@@ -263,7 +266,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         if the session ID was not set.
         """
         session_string = ( (ssl_session.as_text()).split("Session-ID:") )[1]
-        session_id = ( session_string.split("Session-ID-ctx:") )[0]
+        session_id = ( session_string.split("Session-ID-ctx:") )[0].strip()
         return session_id
 
 

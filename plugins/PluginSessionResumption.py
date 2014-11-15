@@ -39,7 +39,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
     interface.add_command(
         command="resum",
         help=(
-            "Tests the server(s) for session ressumption support using "
+            "Tests the server(s) for session resumption support using "
             "session IDs and TLS session tickets (RFC 5077)."))
     interface.add_command(
         command="resum_rate",
@@ -218,7 +218,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
 
         if session1_id == '':
             return False, 'Session ID empty'
-        
+
         # Try to resume that SSL session
         session2 = self._resume_ssl_session(target, session1)
         try: # Recover the session ID

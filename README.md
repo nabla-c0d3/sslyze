@@ -73,6 +73,13 @@ SSLyze can be packaged as a Windows executable by running the following command:
     $ python.exe setup_py2exe.py py2exe
 
 
+Where do the trust stores come from?
+------------------------------------
+
+The Mozilla, Microsoft, Apple and Java trust stores are downloaded using the 
+following tool: https://github.com/kirei/catt.
+
+
 License
 --------
 

@@ -387,6 +387,8 @@ class PluginCertInfo(PluginBase.PluginBase):
 def _create_xml_node(key, value=''):
     key = key.replace(' ', '').strip() # Remove spaces
     key = key.replace('/', '').strip() # Remove slashes (S/MIME Capabilities)
+    key = key.replace('<' , '_')
+    key = key.replace('>' , '_')
 
     # Things that would generate invalid XML
     if key[0].isdigit(): # Tags cannot start with a digit

@@ -93,6 +93,9 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
                     clientReneg = False
                 elif 'no renegotiation' in str(e.args):
                     clientReneg = False
+                elif 'tlsv1 unrecognized name' in str(e.args):
+                    # Yahoo's very own way of rejecting a renegotiation
+                    clientReneg = False
                 else:
                     raise
 

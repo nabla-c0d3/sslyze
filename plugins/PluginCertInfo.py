@@ -40,11 +40,12 @@ TRUST_STORES_PATH = join(realpath(dirname(sys.argv[0])), 'plugins', 'data', 'tru
 # We use the Mozilla store for additional things: OCSP and EV validation
 MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')
 
-AVAILABLE_TRUST_STORES = \
-    { MOZILLA_STORE_PATH :                       'Mozilla NSS - 08/2014',
-      join(TRUST_STORES_PATH, 'microsoft.pem') : 'Microsoft - 08/2014',
-      join(TRUST_STORES_PATH, 'apple.pem') :     'Apple - OS X 10.9.4',
-      join(TRUST_STORES_PATH, 'java.pem') :      'Java 6 - Update 65'}
+AVAILABLE_TRUST_STORES = {
+    MOZILLA_STORE_PATH:                       'Mozilla NSS - 08/2014',
+    join(TRUST_STORES_PATH, 'microsoft.pem'): 'Microsoft - 08/2014',
+    join(TRUST_STORES_PATH, 'apple.pem'):     'Apple - OS X 10.9.4',
+    join(TRUST_STORES_PATH, 'java.pem'):      'Java 6 - Update 65'
+}
 
 
 # Import Mozilla EV OIDs
@@ -57,10 +58,10 @@ class PluginCertInfo(PluginBase.PluginBase):
     interface = PluginBase.PluginInterface(title="PluginCertInfo", description=(''))
     interface.add_command(
         command="certinfo",
-        help= "Verifies the validity of the server(s) certificate(s) against "
-            "various trust stores, checks for support for OCSP stapling, and "
-            "prints relevant fields of "
-            "the certificate. CERTINFO should be 'basic' or 'full'.",
+        help="Verifies the validity of the server(s) certificate(s) against "
+             "various trust stores, checks for support for OCSP stapling, and "
+             "prints relevant fields of "
+             "the certificate. CERTINFO should be 'basic' or 'full'.",
         dest="certinfo")
 
 

@@ -81,7 +81,7 @@ class PluginHeartbleed(PluginBase.PluginBase):
         # XML output
         xmlOutput = Element(command, title=cmdTitle)
         if heartbleed:
-            xmlNode = Element('heartbleed', isVulnerable=heartbleedXml)
+            xmlNode = Element('openSslHeartbleed', isVulnerable=heartbleedXml)
             xmlOutput.append(xmlNode)
 
         return PluginBase.PluginResult(txtOutput, xmlOutput)

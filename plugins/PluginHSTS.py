@@ -53,26 +53,34 @@ class PluginHSTS(PluginBase.PluginBase):
         if self._shared_settings['starttls']:
             raise Exception('Cannot use --hsts with --starttls.')
 
-        hsts_supported = self._get_hsts_header(target)
-        if hsts_supported:
-            hsts_timeout = hsts_supported
+        hsts_header = self._get_hsts_header(target)
+        hsts_supported = False
+        if hsts_header:
             hsts_supported = True
 
         # Text output
         cmd_title = 'HTTP Strict Transport Security'
         txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
         if hsts_supported:
-            txt_result.append(self.FIELD_FORMAT("OK - HSTS header received:", hsts_timeout))
+            txt_result.append(self.FIELD_FORMAT("OK - HSTS header received:", hsts_header))
         else:
             txt_result.append(self.FIELD_FORMAT("NOT SUPPORTED - Server did not send an HSTS header.", ""))
 
         # XML output
-        xml_hsts_attr = {'sentHstsHeader': str(hsts_supported)}
+        xml_hsts_attr = {'isSupported': str(hsts_supported)}
         if hsts_supported:
-            xml_hsts_attr['hstsHeaderValue'] = hsts_timeout
-        xml_hsts = Element('hsts', attrib = xml_hsts_attr)
+            # Do some light parsing of the HSTS header
+            hsts_header_split = hsts_header.split('max-age=')[1].split(';')
+            hsts_max_age = hsts_header_split[0].strip()
+            hsts_subdomains = False
+            if len(hsts_header_split) > 1 and 'includeSubdomains' in hsts_header_split[1]:
+                hsts_subdomains = True
 
-        xml_result = Element('hsts', title = cmd_title)
+            xml_hsts_attr['maxAge'] = hsts_max_age
+            xml_hsts_attr['includeSubdomains'] = str(hsts_subdomains)
+
+        xml_hsts = Element('httpStrictTransportSecurity', attrib=xml_hsts_attr)
+        xml_result = Element('hsts', title=cmd_title)
         xml_result.append(xml_hsts)
 
         return PluginBase.PluginResult(txt_result, xml_result)
@@ -102,7 +110,7 @@ class PluginHSTS(PluginBase.PluginBase):
                 # HTTP 0.9 => Probably not an HTTP response
                 raise Exception('Server did not return an HTTP response')
             else:
-                hstsHeader = httpResp.getheader('strict-transport-security', None)
+                hstsHeader = httpResp.getheader('strict-transport-security', False)
 
 
             # If there was no HSTS header, check if the server returned a redirection

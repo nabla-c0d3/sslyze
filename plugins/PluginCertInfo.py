@@ -216,14 +216,17 @@ class PluginCertInfo(PluginBase.PluginBase):
 
         # XML output - OCSP Stapling
         if ocspResp is None:
-            oscpAttr =  {'error' : 'Server did not send back an OCSP response'}
-            ocspXml = Element('ocspStapling', attrib = oscpAttr)
+            oscpAttr = {'isSupported': 'False'}
+            ocspXml = Element('ocspStapling', attrib=oscpAttr)
         else:
-            oscpAttr =  {'isTrustedByMozillaCAStore' : str(ocspResp.verify(MOZILLA_STORE_PATH))}
-            ocspXml = Element('ocspResponse', attrib = oscpAttr)
+            oscpAttr = {'isSupported': 'True'}
+            ocspXml = Element('ocspStapling', attrib=oscpAttr)
 
+            oscpRespAttr = {'isTrustedByMozillaCAStore': str(ocspResp.verify(MOZILLA_STORE_PATH))}
+            ocspRespXml = Element('ocspResponse', attrib=oscpRespAttr)
             for (key, value) in ocspResp.as_dict().items():
-                ocspXml.append(_keyvalue_pair_to_xml(key,value))
+                ocspRespXml.append(_keyvalue_pair_to_xml(key,value))
+            ocspXml.append(ocspRespXml)
 
         outputXml.append(ocspXml)
 

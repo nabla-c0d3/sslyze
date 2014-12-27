@@ -118,7 +118,7 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
                     chrome41Txt = self.CHROME_INSECURE_TXT
 
                 # Text output
-                certsWithSha1Txt = ['"{0}"'.format(PluginCertInfo._extract_subject_CN_or_OUN(cert)) for cert in certsWithSha1]
+                certsWithSha1Txt = ['"{0}"'.format(PluginCertInfo._extract_subject_cn_or_oun(cert)) for cert in certsWithSha1]
                 outputTxt.append(self.FIELD_FORMAT("Chrome 39 behavior:", chrome39Txt))
                 outputTxt.append(self.FIELD_FORMAT("Chrome 40 behavior:", chrome40Txt))
                 outputTxt.append(self.FIELD_FORMAT("Chrome 41 behavior:", chrome41Txt))

@@ -41,10 +41,10 @@ TRUST_STORES_PATH = join(realpath(dirname(sys.argv[0])), 'plugins', 'data', 'tru
 MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')
 
 AVAILABLE_TRUST_STORES = {
-    MOZILLA_STORE_PATH: 'Mozilla NSS - 08/2014',
-    join(TRUST_STORES_PATH, 'microsoft.pem'): 'Microsoft - 08/2014',
-    join(TRUST_STORES_PATH, 'apple.pem'): 'Apple - OS X 10.9.4',
-    join(TRUST_STORES_PATH, 'java.pem'): 'Java 6 - Update 65'
+    MOZILLA_STORE_PATH: ('Mozilla NSS', '08/2014'),
+    join(TRUST_STORES_PATH, 'microsoft.pem'): ('Microsoft', '08/2014'),
+    join(TRUST_STORES_PATH, 'apple.pem'): ('Apple', 'OS X 10.9.4'),
+    join(TRUST_STORES_PATH, 'java.pem'): ('Java 6', 'Update 65')
 }
 
 
@@ -64,7 +64,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         dest="certinfo")
 
 
-    TRUST_FORMAT = '\"{0}\" CA Store:'.format
+    TRUST_FORMAT = '{store_name} CA Store ({store_version}):'.format
 
 
     def process_task(self, target, command, arg):
@@ -95,8 +95,8 @@ class PluginCertInfo(PluginBase.PluginBase):
             (x509_cert_chain, verify_str, ocsp_response) = result
             # Store the returned verify string for each trust store
             x509_cert = x509_cert_chain[0]  # First cert is always the leaf cert
-            store_name = AVAILABLE_TRUST_STORES[store_path]
-            verify_dict[store_name] = verify_str
+            store_info = AVAILABLE_TRUST_STORES[store_path]
+            verify_dict[store_info] = verify_str
 
         if x509_cert is None:
             # This means none of the connections were successful. Get out
@@ -108,8 +108,8 @@ class PluginCertInfo(PluginBase.PluginBase):
             (_, (_, store_path)) = job
             error_msg = str(exception.__class__.__name__) + ' - ' + str(exception)
 
-            store_name = AVAILABLE_TRUST_STORES[store_path]
-            verify_dict_error[store_name] = error_msg
+            store_info = AVAILABLE_TRUST_STORES[store_path]
+            verify_dict_error[store_info] = error_msg
 
         thread_pool.join()
 
@@ -134,21 +134,26 @@ class PluginCertInfo(PluginBase.PluginBase):
         text_output.append(self.FIELD_FORMAT("Hostname Validation:", host_val_dict[x509_cert.matches_hostname(host)]))
 
         # Path validation that was successful
-        for (store_name, verify_str) in verify_dict.iteritems():
+        for ((store_name, store_version), verify_str) in verify_dict.iteritems():
             verify_txt = 'OK - Certificate is trusted' if (verify_str in 'ok') \
                 else 'FAILED - Certificate is NOT Trusted: ' + verify_str
 
             # EV certs - Only Mozilla supported for now
-            if (verify_str in 'ok') and ('Mozilla' in store_name):
+            if (verify_str in 'ok') and ('Mozilla' in store_info):
                 if self._is_ev_certificate(x509_cert):
                     verify_txt += ', Extended Validation'
-            text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name), verify_txt))
+
+            text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name=store_name,
+                                                                   store_version=store_version),
+                                                 verify_txt))
 
 
         # Path validation that ran into errors
-        for (store_name, error_msg) in verify_dict_error.iteritems():
+        for ((store_name, store_version), error_msg) in verify_dict_error.iteritems():
             verify_txt = 'ERROR: ' + error_msg
-            text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name), verify_txt))
+            text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name=store_name,
+                                                                   store_version=store_version),
+                                                 verify_txt))
 
         # Print the Common Names within the certificate chain
         cns_in_cert_chain = []
@@ -190,22 +195,24 @@ class PluginCertInfo(PluginBase.PluginBase):
         trust_validation_xml.append(host_validation_xml)
 
         # Path validation - OK
-        for (store_name, verify_str) in verify_dict.iteritems():
+        for ((store_name, store_version), verify_str) in verify_dict.iteritems():
             path_attrib_xml = {
                 'usingTrustStore': store_name,
+                'trustStoreVersion': store_version,
                 'validationResult': verify_str
             }
 
             # EV certs - Only Mozilla supported for now
-            if (verify_str in 'ok') and ('Mozilla' in store_name):
+            if (verify_str in 'ok') and ('Mozilla' in store_info):
                     path_attrib_xml['isExtendedValidationCertificate'] = str(self._is_ev_certificate(x509_cert))
 
             trust_validation_xml.append(Element('pathValidation', attrib=path_attrib_xml))
 
         # Path validation - Errors
-        for (store_name, error_msg) in verify_dict_error.iteritems():
+        for ((store_name, store_version), error_msg) in verify_dict_error.iteritems():
             path_attrib_xml = {
                 'usingTrustStore': store_name,
+                'trustStoreVersion': store_version,
                 'error': error_msg
             }
 

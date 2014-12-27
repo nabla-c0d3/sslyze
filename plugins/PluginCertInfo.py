@@ -251,7 +251,16 @@ class PluginCertInfo(PluginBase.PluginBase):
         PEMcertXml.text = x509Cert.as_pem().strip()
         certXml.append(PEMcertXml)
 
+
         for (key, value) in x509Cert.as_dict().items():
+
+            # Sanitize OpenSSL's output
+            if 'subjectPublicKeyInfo' in key:
+                # Remove the bit suffix so the element is just a number for the key size
+                if 'publicKeySize' in value.keys():
+                    value['publicKeySize'] = value['publicKeySize'].split(' bit')[0]
+
+            # Add the XML element
             certXml.append(_keyvalue_pair_to_xml(key, value))
         return certXml
 

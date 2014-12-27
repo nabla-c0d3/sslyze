@@ -26,6 +26,7 @@ from itertools import cycle
 from multiprocessing import Process, JoinableQueue, freeze_support
 from xml.etree.ElementTree import Element, tostring
 from xml.dom import minidom
+import signal
 import sys
 
 from plugins import PluginsFinder
@@ -46,6 +47,9 @@ PROJECT_DESC = 'Fast and full-featured SSL scanner'
 
 MAX_PROCESSES = 12
 MIN_PROCESSES = 3
+
+# Global so we can terminate processes when catching SIGINT
+process_list = []
 
 
 # Todo: Move formatting stuff to another file
@@ -141,8 +145,21 @@ def _format_txt_target_result(target, result_list):
     return _format_title(scan_txt) + '\n' + target_result_str + '\n\n'
 
 
+def sigint_handler(signum, frame):
+
+    print 'Scan interrupted... shutting down.'
+    for (proc, _) in process_list:
+        # Terminating a process this way will corrupt the queues but we're shutting down anyway
+        proc.terminate()
+    sys.exit()
+
+
 def main():
+    # For py2exe builds
     freeze_support()
+
+    # Handle SIGINT to terminate processes
+    signal.signal(signal.SIGINT, sigint_handler)
 
     #--PLUGINS INITIALIZATION--
     start_time = time()
@@ -175,7 +192,6 @@ def main():
     result_queue = JoinableQueue() # put the result of each task in result_queue
 
     # Spawn a pool of processes, and pass them the queues
-    process_list = []
     for _ in xrange(nb_processes):
         priority_queue = JoinableQueue() # Each process gets a priority queue
         p = WorkerProcess(priority_queue, task_queue, result_queue, available_commands, \

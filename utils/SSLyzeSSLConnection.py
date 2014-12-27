@@ -127,15 +127,22 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
         sslConn.use_private_key(shared_settings['cert'], shared_settings['certform'],
             shared_settings['key'], shared_settings['keyform'], shared_settings['keypass'])
 
-    # Add Server Name Indication
-    if shared_settings['sni']:
-        try:
-            sslConn.set_tlsext_host_name(shared_settings['sni'])
-        except ValueError:
-            # This gets raised if we're using SSLv2 which doesn't support SNI (or TLS extensions in general)
-            pass
 
-    # Restrict cipher list to make the client hello smaller
+    # Add Server Name Indication
+    try:
+        if shared_settings['sni']:
+                sslConn.set_tlsext_host_name(shared_settings['sni'])
+
+        else:
+            # Always specify SNI as servers like Cloudflare require it
+            sslConn.set_tlsext_host_name(host)
+    except ValueError:
+        # This gets raised if we're using SSLv2 which doesn't support SNI (or TLS extensions in general)
+        pass
+
+
+    # Restrict cipher list to make the client hello smaller so we don't run into
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
     sslConn.set_cipher_list('HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA')
 
     return sslConn

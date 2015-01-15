@@ -49,12 +49,14 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
     timeout = shared_settings['timeout']
     startTls = shared_settings['starttls']
 
+<<<<<<< HEAD
     STARTTLS_DISPATCH = { 'smtp' :  SMTPConnection,
                           587 :     SMTPConnection,
                           25 :      SMTPConnection,
                           'xmpp':   XMPPConnection,
                           5222 :    XMPPConnection,
-                          5269 :    XMPPConnection,
+                          'xmpp_server': XMPPServerConnection,
+                          5269 :         XMPPServerConnection,
                           'pop3' :  POP3Connection,
                           109 :     POP3Connection,
                           110 :     POP3Connection,
@@ -461,6 +463,11 @@ class XMPPConnection(SSLConnection):
         if 'proceed'  not in xmpp_resp:
             raise StartTLSError(self.ERR_XMPP_NO_STARTTLS)
 
+
+class XMPPServerConnection(XMPPConnection):
+    XMPP_OPEN_STREAM = ("<stream:stream xmlns='jabber:server' xmlns:stream='"
+        "http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
+        "rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>" )
 
 
 class LDAPConnection(SSLConnection):

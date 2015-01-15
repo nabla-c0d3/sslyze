@@ -107,14 +107,15 @@ class ServersConnectivityTester(object):
 
     MAX_THREADS = 50
 
-    DEFAULT_PORTS = {'smtp'     : 25,
-                     'xmpp'     : 5222,
-                     'ftp'      : 21,
-                     'pop3'     : 110,
-                     'ldap'     : 389,
-                     'imap'     : 143,
-                     'rdp'      : 3389,
-                     'default'  : 443}
+    DEFAULT_PORTS = {'smtp'       : 25,
+                     'xmpp'       : 5222,
+                     'xmpp_server': 5269,
+                     'ftp'        : 21,
+                     'pop3'       : 110,
+                     'ldap'       : 389,
+                     'imap'       : 143,
+                     'rdp'        : 3389,
+                     'default'    : 443}
 
     ERR_TIMEOUT = 'Could not connect (timeout)'
     ERR_NAME_NOT_RESOLVED = 'Could not resolve hostname'

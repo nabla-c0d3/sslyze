@@ -46,7 +46,7 @@ class CommandLineParser():
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 etc...'
 
     # StartTLS options
-    START_TLS_PROTS = ['smtp', 'xmpp', 'pop3', 'ftp', 'imap', 'ldap', 'rdp', 'postgres', 'auto']
+    START_TLS_PROTS = ['smtp', 'xmpp', 'xmpp_server', 'pop3', 'ftp', 'imap', 'ldap', 'rdp', 'postgres', 'auto']
     START_TLS_USAGE = 'STARTTLS should be one of: ' + str(START_TLS_PROTS) +  \
         '. The \'auto\' option will cause SSLyze to deduce the protocol' + \
         ' (ftp, imap, etc.) from the supplied port number, for each target servers.'

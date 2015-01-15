@@ -87,7 +87,7 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
                 connectionClass = SSLConnection
 
         # XMPP configuration
-        if connectionClass == XMPPConnection:
+        if connectionClass in (XMPPConnection, XMPPServerConnection):
             sslConn = connectionClass(target, sslVerifyLocations, timeout,
                                       shared_settings['nb_retries'],
                                       shared_settings['xmpp_to'])

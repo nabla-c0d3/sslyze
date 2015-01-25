@@ -470,7 +470,8 @@ class LDAPConnection(SSLConnection):
     ERR_NO_STARTTLS = 'LDAP AUTH TLS was rejected'
 
     START_TLS_CMD = bytearray(b'0\x1d\x02\x01\x01w\x18\x80\x161.3.6.1.4.1.1466.20037')
-    START_TLS_OK = 'Start TLS request accepted.'
+    START_TLS_OK = '\x30\x0c\x02\x01\x01\x78\x07\x0a\x01\x00\x04\x00\x04'
+    START_TLS_OK_APACHEDS = '\x30\x26\x02\x01\x01\x78\x21\x0a\x01\x00\x04\x00\x04\x00\x8a\x16\x31\x2e\x33\x2e\x36\x2e\x31\x2e\x34\x2e\x31\x2e\x31\x34\x36\x36\x2e\x32\x30\x30\x33\x37\x8b\x00'
 
 
     def do_pre_handshake(self):
@@ -482,8 +483,10 @@ class LDAPConnection(SSLConnection):
 
         # Send Start TLS
         self._sock.send(self.START_TLS_CMD)
-        if self.START_TLS_OK  not in self._sock.recv(2048):
-            raise StartTLSError(self.ERR_NO_STARTTLS)
+        data = self._sock.recv(2048)
+        if self.START_TLS_OK not in data and \
+           self.START_TLS_OK_APACHEDS not in data:
+            raise StartTLSError(self.ERR_NO_STARTTLS + ', returned: "' + data + '" (hex: "' + data.encode('hex') + '")')
 
 
 class PGConnection(SSLConnection):

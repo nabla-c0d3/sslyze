@@ -14,7 +14,7 @@
     <xs:element name="invalidTargets">
         <xs:complexType>
             <xs:sequence>
-                <xs:element minOccurs="0" ref="invalidTarget"/>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="invalidTarget"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -390,7 +390,12 @@
                 <xs:element minOccurs="0" ref="X509v3CRLDistributionPoints"/>
                 <xs:element minOccurs="0" ref="X509v3KeyUsage"/>
                 <xs:element minOccurs="0" ref="X509v3SubjectAlternativeName"/>
+                <xs:element minOccurs="0" ref="oid-1.3.6.1.4.1.311.21.1"/>
+                <xs:element minOccurs="0" ref="oid-1.3.6.1.4.1.311.21.2"/>
+                <xs:element minOccurs="0" ref="oid-1.3.6.1.4.1.311.21.7"/>
+                <xs:element minOccurs="0" ref="oid-1.3.6.1.4.1.311.20.2"/>
                 <xs:element minOccurs="0" ref="oid-1.3.6.1.4.1.11129.2.4.2"/>
+                <xs:element minOccurs="0" ref="oid-1.3.6.1.4.1.311.21.10"/>
                 <xs:element minOccurs="0" ref="oid-1.3.6.1.5.5.7.1.12"/>
                 <xs:element minOccurs="0" ref="X509v3AuthorityKeyIdentifier"/>
                 <xs:element minOccurs="0" ref="X509v3CertificatePolicies"/>
@@ -398,7 +403,12 @@
         </xs:complexType>
     </xs:element>
     <xs:element name="X509v3SubjectKeyIdentifier" type="xs:string"/>
+    <xs:element name="oid-1.3.6.1.4.1.311.21.1" type="xs:string"/>
+    <xs:element name="oid-1.3.6.1.4.1.311.21.2" type="xs:string"/>
+    <xs:element name="oid-1.3.6.1.4.1.311.20.2" type="xs:string"/>
+    <xs:element name="oid-1.3.6.1.4.1.311.21.7" type="xs:string"/>
     <xs:element name="oid-1.3.6.1.4.1.11129.2.4.2" type="xs:string"/>
+    <xs:element name="oid-1.3.6.1.4.1.311.21.10" type="xs:string"/>
     <xs:element name="AuthorityInformationAccess">
         <xs:complexType>
             <xs:sequence>
@@ -424,6 +434,7 @@
     <xs:element name="X509v3ExtendedKeyUsage">
         <xs:complexType>
             <xs:all>
+                <xs:element minOccurs="0" ref="OCSPSigning"/>
                 <xs:element minOccurs="0" ref="TimeStamping"/>
                 <xs:element minOccurs="0" ref="E-mailProtection"/>
                 <xs:element minOccurs="0" ref="MicrosoftServerGatedCrypto"/>
@@ -436,6 +447,9 @@
         </xs:complexType>
     </xs:element>
     <xs:element name="TimeStamping">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="OCSPSigning">
         <xs:complexType/>
     </xs:element>
     <xs:element name="E-mailProtection">
@@ -484,6 +498,7 @@
                 <xs:element minOccurs="0" ref="CRLSign"/>
                 <xs:element minOccurs="0" ref="CertificateSign"/>
                 <xs:element minOccurs="0" ref="KeyEncipherment"/>
+                <xs:element minOccurs="0" ref="DataEncipherment"/>
                 <xs:element minOccurs="0" ref="DigitalSignature"/>
             </xs:all>
         </xs:complexType>
@@ -498,6 +513,9 @@
         <xs:complexType/>
     </xs:element>
     <xs:element name="KeyEncipherment">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="DataEncipherment">
         <xs:complexType/>
     </xs:element>
     <xs:element name="DigitalSignature">
@@ -521,7 +539,7 @@
     <xs:element name="DirName">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="listEntry"/>
+                <xs:element maxOccurs="unbounded" ref="listEntry"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -546,21 +564,21 @@
     <xs:element name="ExplicitText">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="listEntry"/>
+                <xs:element maxOccurs="unbounded" ref="listEntry"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
     <xs:element name="CPS">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="listEntry"/>
+                <xs:element maxOccurs="unbounded" ref="listEntry"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
     <xs:element name="UserNotice">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="listEntry"/>
+                <xs:element maxOccurs="unbounded" ref="listEntry"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -571,8 +589,10 @@
             <xs:all>
                 <xs:element minOccurs="0" ref="commonName"/>
                 <xs:element minOccurs="0" ref="countryName"/>
+                <xs:element minOccurs="0" ref="domainComponent"/>
                 <xs:element minOccurs="0" ref="localityName"/>
                 <xs:element minOccurs="0" ref="organizationName"/>
+                <xs:element minOccurs="0" ref="emailAddress"/>
                 <xs:element minOccurs="0" ref="organizationalUnitName"/>
                 <xs:element minOccurs="0" ref="serialNumber"/>
                 <xs:element minOccurs="0" ref="stateOrProvinceName"/>
@@ -585,9 +605,11 @@
         </xs:complexType>
     </xs:element>
     <xs:element name="businessCategory" type="xs:string"/>
+    <xs:element name="domainComponent" type="xs:string"/>
     <xs:element name="oid-1.3.6.1.4.1.311.60.2.1.2" type="xs:string"/>
     <xs:element name="oid-1.3.6.1.4.1.311.60.2.1.3" type="xs:string"/>
     <xs:element name="streetAddress" type="xs:string"/>
+    <xs:element name="emailAddress" type="xs:string"/>
     <xs:element name="postalCode" type="xs:string"/>
     <xs:element name="validity">
         <xs:complexType>
@@ -606,7 +628,9 @@
                 <xs:element minOccurs="0" ref="commonName"/>
                 <xs:element minOccurs="0" ref="organizationalUnitName"/>
                 <xs:element minOccurs="0" ref="organizationName"/>
+                <xs:element minOccurs="0" ref="domainComponent"/>
                 <xs:element minOccurs="0" ref="localityName"/>
+                <xs:element minOccurs="0" ref="emailAddress"/>
                 <xs:element minOccurs="0" ref="stateOrProvinceName"/>
             </xs:all>
         </xs:complexType>
@@ -666,7 +690,7 @@
     <xs:element name="rejectedCipherSuites">
         <xs:complexType>
             <xs:sequence>
-                <xs:element maxOccurs="unbounded" ref="cipherSuite"/>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="cipherSuite"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

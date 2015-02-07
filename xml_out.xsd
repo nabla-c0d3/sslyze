@@ -84,7 +84,8 @@
         <xs:complexType>
             <xs:attribute name="trustStoreVersion" use="required"/>
             <xs:attribute name="usingTrustStore" use="required"/>
-            <xs:attribute name="validationResult" use="required"/>
+            <xs:attribute name="validationResult"/>
+            <xs:attribute name="error"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="ocspStapling">

@@ -28,19 +28,19 @@
     <xs:element name="target">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="certinfo"/>
-                <xs:element ref="chrome_sha1"/>
-                <xs:element ref="compression"/>
-                <xs:element ref="heartbleed"/>
-                <xs:element ref="hsts"/>
-                <xs:element ref="reneg"/>
-                <xs:element ref="resum"/>
-                <xs:element ref="resum_rate"/>
-                <xs:element ref="sslv2"/>
-                <xs:element ref="sslv3"/>
-                <xs:element ref="tlsv1"/>
-                <xs:element ref="tlsv1_1"/>
-                <xs:element ref="tlsv1_2"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="certinfo"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="chrome_sha1"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="compression"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="heartbleed"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="hsts"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="reneg"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="resum"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="resum_rate"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="sslv2"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="sslv3"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="tlsv1"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="tlsv1_1"/>
+                <xs:element minOccurs="0" maxOccurs="1" ref="tlsv1_2"/>
             </xs:sequence>
             <xs:attribute name="host" use="required"/>
             <xs:attribute name="ip" use="required"/>

@@ -197,7 +197,7 @@
     <xs:element name="hsts">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="httpStrictTransportSecurity"/>
+                <xs:element minOccurs="0" ref="httpStrictTransportSecurity"/>
             </xs:sequence>
             <xs:attribute name="title" use="required"/>
             <xs:attribute name="exception"/>
@@ -217,7 +217,7 @@
                 <xs:element minOccurs="0" ref="sessionRenegotiation"/>
             </xs:sequence>
             <xs:attribute name="exception"/>
-            <xs:attribute name="title"/>
+            <xs:attribute name="title" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="sessionRenegotiation">

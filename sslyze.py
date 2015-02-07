@@ -106,7 +106,7 @@ class WorkerProcess(Process):
                 txt_result = ['Unhandled exception when processing --' +
                               command + ': ', str(e.__class__.__module__) +
                               '.' + str(e.__class__.__name__) + ' - ' + str(e)]
-                xml_result = Element(command, exception=txt_result[1])
+                xml_result = Element(command, exception=txt_result[1], title=plugin_instance.interface.title)
                 result = PluginResult(txt_result, xml_result)
 
             # Send the result to queue_out

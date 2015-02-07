@@ -189,17 +189,22 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
     @staticmethod
     def _generate_xml_output(result_dicts, command):
 
-        xmlOutput = Element(command, title=command.upper() + ' Cipher Suites')
+        xmlNodeList = []
+        isProtocolSupported = False
 
         for (resultKey, resultDict) in result_dicts.items():
             xmlNode = Element(resultKey)
 
             # Sort the cipher suites by name to make the XML diff-able
-            resultList = sorted(resultDict.items(),
-                                 key=lambda (k,v): (k,v), reverse=False)
+            resultList = sorted(resultDict.items(), key=lambda (k,v): (k,v), reverse=False)
 
             # Add one element for each ciphers
             for (sslCipher, (msg, keysize, dh_infos)) in resultList:
+
+                # The protocol is supported if at least one cipher suite was successfully negotiated
+                if resultKey == 'acceptedCipherSuites':
+                    isProtocolSupported = True
+
                 cipherXmlAttr = {'name' : sslCipher, 'connectionStatus' : msg}
                 if keysize:
                     cipherXmlAttr['keySize'] = str(keysize)
@@ -211,8 +216,14 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 if dh_infos : 
                     cipherXml.append(Element('keyExchange', attrib=dh_infos))
 
+
                 xmlNode.append(cipherXml)
 
+            xmlNodeList.append(xmlNode)
+
+        # Create the final node and specify if the protocol was supported
+        xmlOutput = Element(command, title=command.upper() + ' Cipher Suites', isProtocolSupported=str(isProtocolSupported))
+        for xmlNode in xmlNodeList:
             xmlOutput.append(xmlNode)
 
         return xmlOutput

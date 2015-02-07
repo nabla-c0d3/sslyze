@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:element name="document">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="invalidTargets"/>
+                <xs:element ref="results"/>
+            </xs:sequence>
+            <xs:attribute name="SSLyzeVersion" use="required"/>
+            <xs:attribute name="SSLyzeWeb" use="required"/>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="invalidTargets">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="results">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="target"/>
+            </xs:sequence>
+            <xs:attribute name="defaultTimeout" use="required"/>
+            <xs:attribute name="httpsTunnel" use="required"/>
+            <xs:attribute name="startTLS" use="required"/>
+            <xs:attribute name="totalScanTime" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="target">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="certinfo"/>
+                <xs:element ref="chrome_sha1"/>
+                <xs:element ref="compression"/>
+                <xs:element ref="heartbleed"/>
+                <xs:element ref="hsts"/>
+                <xs:element ref="reneg"/>
+                <xs:element ref="resum"/>
+                <xs:element ref="resum_rate"/>
+                <xs:element ref="sslv2"/>
+                <xs:element ref="sslv3"/>
+                <xs:element ref="tlsv1"/>
+                <xs:element ref="tlsv1_1"/>
+                <xs:element ref="tlsv1_2"/>
+            </xs:sequence>
+            <xs:attribute name="host" use="required"/>
+            <xs:attribute name="ip" use="required"/>
+            <xs:attribute name="port" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="certinfo">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="certificateChain"/>
+                <xs:element ref="certificateValidation"/>
+                <xs:element ref="ocspStapling"/>
+            </xs:sequence>
+            <xs:attribute name="argument" use="required"/>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="certificateChain">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="certificate"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="certificateValidation">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="hostnameValidation"/>
+                <xs:element maxOccurs="unbounded" ref="pathValidation"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="hostnameValidation">
+        <xs:complexType>
+            <xs:attribute name="certificateMatchesServerHostname" use="required"/>
+            <xs:attribute name="serverHostname" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="pathValidation">
+        <xs:complexType>
+            <xs:attribute name="trustStoreVersion" use="required"/>
+            <xs:attribute name="usingTrustStore" use="required"/>
+            <xs:attribute name="validationResult" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ocspStapling">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="ocspResponse"/>
+            </xs:sequence>
+            <xs:attribute name="isSupported" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ocspResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="responseType"/>
+                <xs:element ref="responderID"/>
+                <xs:element ref="responses"/>
+                <xs:element ref="version"/>
+                <xs:element ref="responseStatus"/>
+                <xs:element ref="producedAt"/>
+            </xs:sequence>
+            <xs:attribute name="isTrustedByMozillaCAStore" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="responseType" type="xs:string"/>
+    <xs:element name="responderID" type="xs:string"/>
+    <xs:element name="responses">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="listEntry"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="responseStatus" type="xs:string"/>
+    <xs:element name="producedAt" type="xs:string"/>
+    <xs:element name="chrome_sha1">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="chromeSha1Deprecation"/>
+            </xs:sequence>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="chromeSha1Deprecation">
+        <xs:complexType>
+            <xs:sequence minOccurs="0">
+                <xs:element ref="sha1SignedCertificates"/>
+                <xs:element ref="chrome39"/>
+                <xs:element ref="chrome40"/>
+                <xs:element ref="chrome41"/>
+            </xs:sequence>
+            <xs:attribute name="isServerAffected" use="required"/>
+            <xs:attribute name="leafCertificateNotAfter"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="sha1SignedCertificates">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="certificate"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="chrome39">
+        <xs:complexType>
+            <xs:attribute name="behavior" use="required"/>
+            <xs:attribute name="isAffected" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="chrome40">
+        <xs:complexType>
+            <xs:attribute name="behavior" use="required"/>
+            <xs:attribute name="isAffected" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="chrome41">
+        <xs:complexType>
+            <xs:attribute name="behavior" use="required"/>
+            <xs:attribute name="isAffected" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="compression">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="compressionMethod"/>
+            </xs:sequence>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="compressionMethod">
+        <xs:complexType>
+            <xs:attribute name="isSupported" use="required"/>
+            <xs:attribute name="type" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="heartbleed">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="openSslHeartbleed"/>
+            </xs:sequence>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="openSslHeartbleed">
+        <xs:complexType>
+            <xs:attribute name="isVulnerable" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="hsts">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="httpStrictTransportSecurity"/>
+            </xs:sequence>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="httpStrictTransportSecurity">
+        <xs:complexType>
+            <xs:attribute name="includeSubdomains"/>
+            <xs:attribute name="isSupported" use="required"/>
+            <xs:attribute name="maxAge"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="reneg">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="sessionRenegotiation"/>
+            </xs:sequence>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="sessionRenegotiation">
+        <xs:complexType>
+            <xs:attribute name="canBeClientInitiated" use="required"/>
+            <xs:attribute name="isSecure" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="resum">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="sessionResumptionWithSessionIDs">
+                    <xs:sequence>
+                        <xs:element ref="sessionResumptionWithTLSTickets"/>
+                    </xs:sequence>
+                    <xs:attribute name="title" use="required"/>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="sessionResumptionWithTLSTickets">
+        <xs:complexType>
+            <xs:attribute name="isSupported" use="required"/>
+            <xs:attribute name="reason"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="resum_rate">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="sessionResumptionWithSessionIDs">
+                    <xs:attribute name="title" use="required"/>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="sslv2">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="errors"/>
+                <xs:element ref="rejectedCipherSuites"/>
+                <xs:element ref="acceptedCipherSuites"/>
+                <xs:element ref="preferredCipherSuite"/>
+            </xs:sequence>
+            <xs:attribute name="isProtocolSupported" use="required"/>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="sslv3">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="errors"/>
+                <xs:element ref="rejectedCipherSuites"/>
+                <xs:element ref="acceptedCipherSuites"/>
+                <xs:element ref="preferredCipherSuite"/>
+            </xs:sequence>
+            <xs:attribute name="isProtocolSupported" use="required"/>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="tlsv1">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="errors"/>
+                <xs:element ref="rejectedCipherSuites"/>
+                <xs:element ref="acceptedCipherSuites"/>
+                <xs:element ref="preferredCipherSuite"/>
+            </xs:sequence>
+            <xs:attribute name="isProtocolSupported" use="required"/>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="tlsv1_1">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="errors"/>
+                <xs:element ref="rejectedCipherSuites"/>
+                <xs:element ref="acceptedCipherSuites"/>
+                <xs:element ref="preferredCipherSuite"/>
+            </xs:sequence>
+            <xs:attribute name="isProtocolSupported" use="required"/>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="tlsv1_2">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="errors"/>
+                <xs:element ref="rejectedCipherSuites"/>
+                <xs:element ref="acceptedCipherSuites"/>
+                <xs:element ref="preferredCipherSuite"/>
+            </xs:sequence>
+            <xs:attribute name="isProtocolSupported" use="required"/>
+            <xs:attribute name="title" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="certificate">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="asPEM"/>
+                <xs:element ref="subjectPublicKeyInfo"/>
+                <xs:element ref="version"/>
+                <xs:element ref="extensions"/>
+                <xs:element ref="signatureValue"/>
+                <xs:element ref="signatureAlgorithm"/>
+                <xs:element ref="serialNumber"/>
+                <xs:element ref="subject"/>
+                <xs:element ref="validity"/>
+                <xs:element ref="issuer"/>
+            </xs:sequence>
+            <xs:attribute name="position"/>
+            <xs:attribute name="sha1Fingerprint" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="asPEM" type="xs:string"/>
+    <xs:element name="subjectPublicKeyInfo">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="publicKey"/>
+                <xs:element ref="publicKeyAlgorithm"/>
+                <xs:element ref="publicKeySize"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="publicKey">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="modulus"/>
+                <xs:element ref="exponent"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="modulus" type="xs:string"/>
+    <xs:element name="exponent" type="xs:string"/>
+    <xs:element name="publicKeyAlgorithm" type="xs:string"/>
+    <xs:element name="publicKeySize" type="xs:string"/>
+    <xs:element name="extensions">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="X509v3SubjectKeyIdentifier"/>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element ref="AuthorityInformationAccess"/>
+                    <xs:element ref="X509v3ExtendedKeyUsage"/>
+                </xs:choice>
+                <xs:choice maxOccurs="unbounded">
+                    <xs:element ref="NetscapeCertType"/>
+                    <xs:element ref="X509v3BasicConstraints"/>
+                    <xs:element ref="X509v3CRLDistributionPoints"/>
+                    <xs:element ref="X509v3KeyUsage"/>
+                    <xs:element ref="X509v3SubjectAlternativeName"/>
+                </xs:choice>
+                <xs:element minOccurs="0" ref="oid-1.3.6.1.5.5.7.1.12"/>
+                <xs:element minOccurs="0" ref="X509v3AuthorityKeyIdentifier"/>
+                <xs:element ref="X509v3CertificatePolicies"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="X509v3SubjectKeyIdentifier" type="xs:string"/>
+    <xs:element name="AuthorityInformationAccess">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="CAIssuers"/>
+                <xs:element ref="OCSP"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CAIssuers">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="URI"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="OCSP">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="URI"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="X509v3ExtendedKeyUsage">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="MicrosoftServerGatedCrypto"/>
+                <xs:element ref="TLSWebClientAuthentication"/>
+                <xs:element minOccurs="0" ref="NetscapeServerGatedCrypto"/>
+                <xs:element minOccurs="0" ref="oid-2.16.840.1.113733.1.8.1"/>
+                <xs:element minOccurs="0" ref="CodeSigning"/>
+                <xs:element ref="TLSWebServerAuthentication"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="MicrosoftServerGatedCrypto">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="TLSWebClientAuthentication">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="NetscapeServerGatedCrypto">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="oid-2.16.840.1.113733.1.8.1">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="CodeSigning">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="TLSWebServerAuthentication">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="NetscapeCertType" type="xs:string"/>
+    <xs:element name="X509v3BasicConstraints" type="xs:string"/>
+    <xs:element name="X509v3CRLDistributionPoints">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="FullName"/>
+                <xs:element ref="URI"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="FullName">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="listEntry"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="X509v3KeyUsage">
+        <xs:complexType>
+            <xs:choice>
+                <xs:sequence>
+                    <xs:element ref="KeyEncipherment"/>
+                    <xs:element ref="DigitalSignature"/>
+                </xs:sequence>
+                <xs:sequence>
+                    <xs:element ref="CRLSign"/>
+                    <xs:element ref="CertificateSign"/>
+                </xs:sequence>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="KeyEncipherment">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="DigitalSignature">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="CRLSign">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="CertificateSign">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="X509v3SubjectAlternativeName">
+        <xs:complexType>
+            <xs:choice>
+                <xs:element ref="DNS"/>
+                <xs:element ref="DirName"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="DNS">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="listEntry"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="DirName">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="listEntry"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="oid-1.3.6.1.5.5.7.1.12" type="xs:string"/>
+    <xs:element name="X509v3AuthorityKeyIdentifier" type="xs:string"/>
+    <xs:element name="X509v3CertificatePolicies">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="Policy"/>
+                <xs:element minOccurs="0" ref="ExplicitText"/>
+                <xs:element minOccurs="0" ref="CPS"/>
+                <xs:element minOccurs="0" ref="UserNotice"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="Policy">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="listEntry"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ExplicitText">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="listEntry"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CPS">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="listEntry"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="UserNotice">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="listEntry"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="signatureValue" type="xs:string"/>
+    <xs:element name="signatureAlgorithm" type="xs:string"/>
+    <xs:element name="subject">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:choice maxOccurs="unbounded">
+                    <xs:element ref="commonName"/>
+                    <xs:element ref="countryName"/>
+                    <xs:element ref="organizationName"/>
+                    <xs:element ref="organizationalUnitName"/>
+                    <xs:element ref="serialNumber"/>
+                    <xs:element ref="businessCategory"/>
+                    <xs:element ref="localityName"/>
+                    <xs:element ref="oid-1.3.6.1.4.1.311.60.2.1.2"/>
+                    <xs:element ref="oid-1.3.6.1.4.1.311.60.2.1.3"/>
+                    <xs:element ref="stateOrProvinceName"/>
+                    <xs:element ref="streetAddress"/>
+                </xs:choice>
+                <xs:element minOccurs="0" ref="postalCode"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="businessCategory" type="xs:string"/>
+    <xs:element name="localityName" type="xs:string"/>
+    <xs:element name="oid-1.3.6.1.4.1.311.60.2.1.2" type="xs:string"/>
+    <xs:element name="oid-1.3.6.1.4.1.311.60.2.1.3" type="xs:string"/>
+    <xs:element name="stateOrProvinceName" type="xs:string"/>
+    <xs:element name="streetAddress" type="xs:string"/>
+    <xs:element name="postalCode" type="xs:string"/>
+    <xs:element name="validity">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="notAfter"/>
+                <xs:element ref="notBefore"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="notAfter" type="xs:string"/>
+    <xs:element name="notBefore" type="xs:string"/>
+    <xs:element name="issuer">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="countryName"/>
+                <xs:element minOccurs="0" ref="commonName"/>
+                <xs:element minOccurs="0" ref="organizationalUnitName"/>
+                <xs:element ref="organizationName"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="listEntry">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element ref="certID"/>
+                <xs:element ref="certStatus"/>
+                <xs:element ref="nextUpdate"/>
+                <xs:element ref="thisUpdate"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="certID">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="hashAlgorithm"/>
+                <xs:element ref="serialNumber"/>
+                <xs:element ref="issuerNameHash"/>
+                <xs:element ref="issuerKeyHash"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="hashAlgorithm" type="xs:string"/>
+    <xs:element name="issuerNameHash" type="xs:string"/>
+    <xs:element name="issuerKeyHash" type="xs:string"/>
+    <xs:element name="certStatus" type="xs:string"/>
+    <xs:element name="nextUpdate" type="xs:string"/>
+    <xs:element name="thisUpdate" type="xs:string"/>
+    <xs:element name="version" type="xs:string"/>
+    <xs:complexType name="sessionResumptionWithSessionIDs">
+        <xs:sequence>
+            <xs:element ref="sessionResumptionWithSessionIDs"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="sessionResumptionWithSessionIDs">
+        <xs:complexType>
+            <xs:attribute name="errors" use="required"/>
+            <xs:attribute name="failedAttempts" use="required"/>
+            <xs:attribute name="isSupported" use="required"/>
+            <xs:attribute name="successfulAttempts" use="required"/>
+            <xs:attribute name="totalAttempts" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="errors">
+        <xs:complexType/>
+    </xs:element>
+    <xs:element name="rejectedCipherSuites">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="cipherSuite"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="acceptedCipherSuites">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="cipherSuite"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="preferredCipherSuite">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="cipherSuite"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="URI">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="listEntry"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="serialNumber" type="xs:string"/>
+    <xs:element name="organizationalUnitName" type="xs:string"/>
+    <xs:element name="organizationName" type="xs:string"/>
+    <xs:element name="countryName" type="xs:string"/>
+    <xs:element name="commonName" type="xs:string"/>
+    <xs:element name="cipherSuite">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="keyExchange"/>
+            </xs:sequence>
+            <xs:attribute name="anonymous" use="required"/>
+            <xs:attribute name="connectionStatus" use="required"/>
+            <xs:attribute name="keySize"/>
+            <xs:attribute name="name" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="keyExchange">
+        <xs:complexType>
+            <xs:attribute name="A" use="required"/>
+            <xs:attribute name="B" use="required"/>
+            <xs:attribute name="Cofactor" use="required"/>
+            <xs:attribute name="Field_Type" use="required"/>
+            <xs:attribute name="Generator" use="required"/>
+            <xs:attribute name="GeneratorType" use="required"/>
+            <xs:attribute name="GroupSize" use="required"/>
+            <xs:attribute name="Order" use="required"/>
+            <xs:attribute name="Prime" use="required"/>
+            <xs:attribute name="Seed" use="required"/>
+            <xs:attribute name="Type" use="required"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

@@ -28,6 +28,7 @@ import imp
 from xml.etree.ElementTree import Element
 import sys
 
+import plugins
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.SSLyzeSSLConnection import create_sslyze_connection
@@ -35,7 +36,7 @@ from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_C
 from nassl.SslClient import ClientCertificateRequested
 
 
-TRUST_STORES_PATH = join(realpath(dirname(sys.argv[0])), 'plugins', 'data', 'trust_stores')
+TRUST_STORES_PATH = join(plugins.__path__[0], 'data', 'trust_stores')
 
 # We use the Mozilla store for additional things: OCSP and EV validation
 MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')

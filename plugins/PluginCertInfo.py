@@ -85,7 +85,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         thread_pool = ThreadPool()
 
         if self._shared_settings['ca_file']:
-            AVAILABLE_TRUST_STORES[self._shared_settings['ca_file']] = ('ca_file', 'N/A')
+            AVAILABLE_TRUST_STORES[self._shared_settings['ca_file']] = ('Custom --ca_file', 'N/A')
 
         for (store_path, _) in AVAILABLE_TRUST_STORES.iteritems():
             # Try to connect with each trust store

@@ -84,7 +84,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         (host, _, _, _) = target
         thread_pool = ThreadPool()
 
-        if self._shared_settings['ca_file']:
+        if 'ca_file' in self._shared_settings and self._shared_settings['ca_file']:
             AVAILABLE_TRUST_STORES[self._shared_settings['ca_file']] = ('Custom --ca_file', 'N/A')
 
         for (store_path, _) in AVAILABLE_TRUST_STORES.iteritems():

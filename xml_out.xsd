@@ -353,19 +353,13 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element minOccurs="0" ref="X509v3SubjectKeyIdentifier"/>
-                <xs:choice minOccurs="0" maxOccurs="unbounded">
-                    <xs:element ref="AuthorityInformationAccess"/>
-                    <xs:element ref="X509v3ExtendedKeyUsage"/>
-                </xs:choice>
-                <xs:choice minOccurs="0" maxOccurs="unbounded">
-                    <xs:element ref="NetscapeCertType"/>
-                    <xs:element ref="X509v3AuthorityKeyIdentifier"/>
-                    <xs:element ref="X509v3BasicConstraints"/>
-                    <xs:element ref="X509v3CRLDistributionPoints"/>
-                    <xs:element ref="X509v3KeyUsage"/>
-                    <xs:element ref="X509v3SubjectAlternativeName"/>
-                    <xs:element ref="oid-1.3.6.1.5.5.7.1.12"/>
-                </xs:choice>
+                <xs:element minOccurs="0" ref="AuthorityInformationAccess"/>
+                <xs:element minOccurs="0" ref="X509v3ExtendedKeyUsage"/>
+                <xs:element minOccurs="0" ref="NetscapeCertType"/>
+                <xs:element minOccurs="0" ref="X509v3BasicConstraints"/>
+                <xs:element minOccurs="0" ref="X509v3CRLDistributionPoints"/>
+                <xs:element minOccurs="0" ref="X509v3KeyUsage"/>
+                <xs:element minOccurs="0" ref="X509v3SubjectAlternativeName"/>
                 <xs:element minOccurs="0" ref="oid-1.3.6.1.5.5.7.1.12"/>
                 <xs:element minOccurs="0" ref="X509v3AuthorityKeyIdentifier"/>
                 <xs:element minOccurs="0" ref="X509v3CertificatePolicies"/>
@@ -492,7 +486,6 @@
         </xs:complexType>
     </xs:element>
     <xs:element name="oid-1.3.6.1.5.5.7.1.12" type="xs:string"/>
-    <xs:element name="X509v3AuthorityKeyIdentifier" type="xs:string"/>
     <xs:element name="X509v3CertificatePolicies">
         <xs:complexType>
             <xs:sequence>
@@ -536,28 +529,24 @@
     <xs:element name="subject">
         <xs:complexType>
             <xs:sequence>
-                <xs:choice maxOccurs="unbounded">
-                    <xs:element ref="commonName"/>
-                    <xs:element ref="countryName"/>
-                    <xs:element ref="localityName"/>
-                    <xs:element ref="organizationName"/>
-                    <xs:element ref="organizationalUnitName"/>
-                    <xs:element ref="serialNumber"/>
-                    <xs:element ref="stateOrProvinceName"/>
-                    <xs:element ref="businessCategory"/>
-                    <xs:element ref="oid-1.3.6.1.4.1.311.60.2.1.2"/>
-                    <xs:element ref="oid-1.3.6.1.4.1.311.60.2.1.3"/>
-                    <xs:element ref="streetAddress"/>
-                </xs:choice>
+                <xs:element minOccurs="0" ref="commonName"/>
+                <xs:element minOccurs="0" ref="countryName"/>
+                <xs:element minOccurs="0" ref="localityName"/>
+                <xs:element minOccurs="0" ref="organizationName"/>
+                <xs:element minOccurs="0" ref="organizationalUnitName"/>
+                <xs:element minOccurs="0" ref="serialNumber"/>
+                <xs:element minOccurs="0" ref="stateOrProvinceName"/>
+                <xs:element minOccurs="0" ref="businessCategory"/>
+                <xs:element minOccurs="0" ref="oid-1.3.6.1.4.1.311.60.2.1.2"/>
+                <xs:element minOccurs="0" ref="oid-1.3.6.1.4.1.311.60.2.1.3"/>
+                <xs:element minOccurs="0" ref="streetAddress"/>
                 <xs:element minOccurs="0" ref="postalCode"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
     <xs:element name="businessCategory" type="xs:string"/>
-    <xs:element name="localityName" type="xs:string"/>
     <xs:element name="oid-1.3.6.1.4.1.311.60.2.1.2" type="xs:string"/>
     <xs:element name="oid-1.3.6.1.4.1.311.60.2.1.3" type="xs:string"/>
-    <xs:element name="stateOrProvinceName" type="xs:string"/>
     <xs:element name="streetAddress" type="xs:string"/>
     <xs:element name="postalCode" type="xs:string"/>
     <xs:element name="validity">

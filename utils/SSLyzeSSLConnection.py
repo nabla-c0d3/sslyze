@@ -49,7 +49,6 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
     timeout = shared_settings['timeout']
     startTls = shared_settings['starttls']
 
-<<<<<<< HEAD
     STARTTLS_DISPATCH = { 'smtp' :  SMTPConnection,
                           587 :     SMTPConnection,
                           25 :      SMTPConnection,
@@ -87,7 +86,7 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
                 connectionClass = SSLConnection
 
         # XMPP configuration
-        if connectionClass in (XMPPConnection, XMPPServerConnection):
+        if connectionClass in [XMPPConnection, XMPPServerConnection]:
             sslConn = connectionClass(target, sslVerifyLocations, timeout,
                                       shared_settings['nb_retries'],
                                       shared_settings['xmpp_to'])

@@ -56,6 +56,7 @@
             </xs:sequence>
             <xs:attribute name="argument" use="required"/>
             <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="certificateChain">
@@ -124,6 +125,7 @@
                 <xs:element ref="chromeSha1Deprecation"/>
             </xs:sequence>
             <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="chromeSha1Deprecation">
@@ -169,6 +171,7 @@
                 <xs:element ref="compressionMethod"/>
             </xs:sequence>
             <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="compressionMethod">
@@ -183,6 +186,7 @@
                 <xs:element minOccurs="0" ref="openSslHeartbleed"/>
             </xs:sequence>
             <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="openSslHeartbleed">
@@ -196,6 +200,7 @@
                 <xs:element ref="httpStrictTransportSecurity"/>
             </xs:sequence>
             <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="httpStrictTransportSecurity">
@@ -229,6 +234,7 @@
                         <xs:element ref="sessionResumptionWithTLSTickets"/>
                     </xs:sequence>
                     <xs:attribute name="title" use="required"/>
+                    <xs:attribute name="exception"/>
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>
@@ -245,6 +251,7 @@
             <xs:complexContent>
                 <xs:extension base="sessionResumptionWithSessionIDs">
                     <xs:attribute name="title" use="required"/>
+                    <xs:attribute name="exception"/>
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>
@@ -257,8 +264,9 @@
                 <xs:element ref="acceptedCipherSuites"/>
                 <xs:element ref="preferredCipherSuite"/>
             </xs:sequence>
-            <xs:attribute name="isProtocolSupported" use="required"/>
+            <xs:attribute name="isProtocolSupported"/>
             <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="sslv3">
@@ -269,8 +277,9 @@
                 <xs:element ref="acceptedCipherSuites"/>
                 <xs:element ref="preferredCipherSuite"/>
             </xs:sequence>
-            <xs:attribute name="isProtocolSupported" use="required"/>
+            <xs:attribute name="isProtocolSupported"/>
             <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="tlsv1">
@@ -281,8 +290,9 @@
                 <xs:element ref="acceptedCipherSuites"/>
                 <xs:element ref="preferredCipherSuite"/>
             </xs:sequence>
-            <xs:attribute name="isProtocolSupported" use="required"/>
+            <xs:attribute name="isProtocolSupported"/>
             <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="tlsv1_1">
@@ -293,8 +303,9 @@
                 <xs:element ref="acceptedCipherSuites"/>
                 <xs:element ref="preferredCipherSuite"/>
             </xs:sequence>
-            <xs:attribute name="isProtocolSupported" use="required"/>
+            <xs:attribute name="isProtocolSupported"/>
             <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="tlsv1_2">
@@ -305,8 +316,9 @@
                 <xs:element ref="acceptedCipherSuites"/>
                 <xs:element ref="preferredCipherSuite"/>
             </xs:sequence>
-            <xs:attribute name="isProtocolSupported" use="required"/>
+            <xs:attribute name="isProtocolSupported"/>
             <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="certificate">

@@ -63,10 +63,10 @@ class PluginCertInfo(PluginBase.PluginBase):
              "the certificate. CERTINFO should be 'basic' or 'full'.",
         dest="certinfo")
     interface.add_option(
-        option="ca-file",
+        option="ca_file",
         help="Local Certificate Authority file (in PEM format), to verify the "
              "validity of the server(s) certificate(s) against.",
-        dest="ca-file")
+        dest="ca_file")
 
 
     TRUST_FORMAT = '{store_name} CA Store ({store_version}):'.format
@@ -84,8 +84,8 @@ class PluginCertInfo(PluginBase.PluginBase):
         (host, _, _, _) = target
         thread_pool = ThreadPool()
 
-        if self._shared_settings['ca-file']:
-            AVAILABLE_TRUST_STORES[self._shared_settings['ca-file']] = ('ca-file', 'N/A')
+        if self._shared_settings['ca_file']:
+            AVAILABLE_TRUST_STORES[self._shared_settings['ca_file']] = ('ca_file', 'N/A')
 
         for (store_path, _) in AVAILABLE_TRUST_STORES.iteritems():
             # Try to connect with each trust store

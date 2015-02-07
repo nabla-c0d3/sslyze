@@ -23,7 +23,8 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-from os.path import join, dirname, realpath
+from os.path import join, dirname, realpath, abspath
+import inspect
 import imp
 from xml.etree.ElementTree import Element
 import sys
@@ -35,7 +36,18 @@ from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_C
 from nassl.SslClient import ClientCertificateRequested
 
 
-TRUST_STORES_PATH = join(realpath(dirname(sys.argv[0])), 'plugins', 'data', 'trust_stores')
+# Getting the path to the trust stores is trickier than it sounds due to subtle differences on OS X, Linux and Windows
+def get_script_dir(follow_symlinks=True):
+    if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
+        path = abspath(sys.executable)
+    else:
+        path = inspect.getabsfile(get_script_dir)
+    if follow_symlinks:
+        path = realpath(path)
+    return dirname(path)
+
+
+TRUST_STORES_PATH = join(get_script_dir(), 'data', 'trust_stores')
 
 # We use the Mozilla store for additional things: OCSP and EV validation
 MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')

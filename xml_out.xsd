@@ -14,7 +14,7 @@
     <xs:element name="invalidTargets">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="invalidTarget"/>
+                <xs:element minOccurs="0" ref="invalidTarget"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

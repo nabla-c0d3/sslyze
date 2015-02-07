@@ -27,21 +27,21 @@
     </xs:element>
     <xs:element name="target">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element minOccurs="0" maxOccurs="1" ref="certinfo"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="chrome_sha1"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="compression"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="heartbleed"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="hsts"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="reneg"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="resum"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="resum_rate"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="sslv2"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="sslv3"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="tlsv1"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="tlsv1_1"/>
-                <xs:element minOccurs="0" maxOccurs="1" ref="tlsv1_2"/>
-            </xs:sequence>
+            <xs:all>
+                <xs:element minOccurs="0" ref="certinfo"/>
+                <xs:element minOccurs="0" ref="chrome_sha1"/>
+                <xs:element minOccurs="0" ref="compression"/>
+                <xs:element minOccurs="0" ref="heartbleed"/>
+                <xs:element minOccurs="0" ref="hsts"/>
+                <xs:element minOccurs="0" ref="reneg"/>
+                <xs:element minOccurs="0" ref="resum"/>
+                <xs:element minOccurs="0" ref="resum_rate"/>
+                <xs:element minOccurs="0" ref="sslv2"/>
+                <xs:element minOccurs="0" ref="sslv3"/>
+                <xs:element minOccurs="0" ref="tlsv1"/>
+                <xs:element minOccurs="0" ref="tlsv1_1"/>
+                <xs:element minOccurs="0" ref="tlsv1_2"/>
+            </xs:all>
             <xs:attribute name="host" use="required"/>
             <xs:attribute name="ip" use="required"/>
             <xs:attribute name="port" use="required"/>
@@ -197,9 +197,9 @@
     </xs:element>
     <xs:element name="hsts">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element minOccurs="0" ref="httpStrictTransportSecurity"/>
-            </xs:sequence>
+            </xs:all>
             <xs:attribute name="title" use="required"/>
             <xs:attribute name="exception"/>
         </xs:complexType>
@@ -209,7 +209,7 @@
             <xs:attribute name="includeSubdomains"/>
             <xs:attribute name="isSupported" use="required"/>
             <xs:attribute name="maxAge"/>
-            <xs:attribute name="exception" use="required"/>
+            <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="reneg">
@@ -364,7 +364,7 @@
     <xs:element name="publicKeySize" type="xs:string"/>
     <xs:element name="extensions">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element minOccurs="0" ref="X509v3SubjectKeyIdentifier"/>
                 <xs:element minOccurs="0" ref="AuthorityInformationAccess"/>
                 <xs:element minOccurs="0" ref="X509v3ExtendedKeyUsage"/>
@@ -376,7 +376,7 @@
                 <xs:element minOccurs="0" ref="oid-1.3.6.1.5.5.7.1.12"/>
                 <xs:element minOccurs="0" ref="X509v3AuthorityKeyIdentifier"/>
                 <xs:element minOccurs="0" ref="X509v3CertificatePolicies"/>
-            </xs:sequence>
+            </xs:all>
         </xs:complexType>
     </xs:element>
     <xs:element name="X509v3SubjectKeyIdentifier" type="xs:string"/>
@@ -384,7 +384,7 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element minOccurs="0" ref="CAIssuers"/>
-                <xs:element ref="OCSP"/>
+                <xs:element minOccurs="0" ref="OCSP"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -541,7 +541,7 @@
     <xs:element name="signatureAlgorithm" type="xs:string"/>
     <xs:element name="subject">
         <xs:complexType>
-            <xs:sequence>
+            <xs:all>
                 <xs:element minOccurs="0" ref="commonName"/>
                 <xs:element minOccurs="0" ref="countryName"/>
                 <xs:element minOccurs="0" ref="localityName"/>
@@ -554,7 +554,7 @@
                 <xs:element minOccurs="0" ref="oid-1.3.6.1.4.1.311.60.2.1.3"/>
                 <xs:element minOccurs="0" ref="streetAddress"/>
                 <xs:element minOccurs="0" ref="postalCode"/>
-            </xs:sequence>
+            </xs:all>
         </xs:complexType>
     </xs:element>
     <xs:element name="businessCategory" type="xs:string"/>
@@ -578,7 +578,7 @@
                 <xs:element minOccurs="0" ref="countryName"/>
                 <xs:element minOccurs="0" ref="commonName"/>
                 <xs:element minOccurs="0" ref="organizationalUnitName"/>
-                <xs:element ref="organizationName"/>
+                <xs:element minOccurs="0" ref="organizationName"/>
                 <xs:sequence minOccurs="0">
                     <xs:element ref="localityName"/>
                     <xs:element ref="stateOrProvinceName"/>

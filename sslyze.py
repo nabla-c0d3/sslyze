@@ -161,17 +161,11 @@ def main():
     # Handle SIGINT to terminate processes
     signal.signal(signal.SIGINT, sigint_handler)
 
-    #--PLUGINS INITIALIZATION--
     start_time = time()
-    print '\n\n\n' + _format_title('Registering available plugins')
+    #--PLUGINS INITIALIZATION--
     sslyze_plugins = PluginsFinder()
     available_plugins = sslyze_plugins.get_plugins()
     available_commands = sslyze_plugins.get_commands()
-    print ''
-    for plugin in available_plugins:
-        print '  ' + plugin.__name__
-    print '\n\n'
-
     # Create the command line parser and the list of available options
     sslyze_parser = CommandLineParser(available_plugins, PROJECT_VERSION)
 
@@ -180,6 +174,14 @@ def main():
     except CommandLineParsingError as e:
         print e.get_error_msg()
         return
+
+    if not shared_settings['quiet'] or (shared_settings['quiet'] and not shared_settings['xml_file']):
+        print '\n\n\n' + _format_title('Available plugins')
+        print ''
+        for plugin in available_plugins:
+            print '  ' + plugin.__name__
+        print '\n\n'
+
 
 
     #--PROCESSES INITIALIZATION--
@@ -202,7 +204,8 @@ def main():
 
     #--TESTING SECTION--
     # Figure out which hosts are up and fill the task queue with work to do
-    print _format_title('Checking host(s) availability')
+    if not shared_settings['quiet'] or (shared_settings['quiet'] and not shared_settings['xml_file']):
+        print _format_title('Checking host(s) availability')
 
 
     targets_OK = []
@@ -236,8 +239,9 @@ def main():
     for exception in target_results:
         targets_ERR.append(exception)
 
-    print ServersConnectivityTester.get_printable_result(targets_OK, targets_ERR)
-    print '\n\n'
+    if not shared_settings['quiet'] or (shared_settings['quiet'] and not shared_settings['xml_file']):
+        print ServersConnectivityTester.get_printable_result(targets_OK, targets_ERR)
+        print '\n\n'
 
     # Put a 'None' sentinel in the queue to let the each process know when every
     # task has been completed
@@ -276,9 +280,13 @@ def main():
 
             if len(result_dict[target]) == task_num: # Done with this target
                 # Print the results and update the xml doc
-                print _format_txt_target_result(target, result_dict[target])
                 if shared_settings['xml_file']:
                     xml_output_list.append(_format_xml_target_result(target, result_dict[target]))
+                    if not shared_settings['quiet']:
+                        print _format_txt_target_result(target, result_dict[target])
+                else:
+                    print _format_txt_target_result(target, result_dict[target])
+
 
         result_queue.task_done()
 
@@ -319,7 +327,8 @@ def main():
             xml_file.write(xml_final_pretty.toprettyxml(indent="  ", encoding="utf-8" ))
 
 
-    print _format_title('Scan Completed in {0:.2f} s'.format(exec_time))
+    if not shared_settings['quiet'] or (shared_settings['quiet'] and not shared_settings['xml_file']):
+        print _format_title('Scan Completed in {0:.2f} s'.format(exec_time))
 
 
 if __name__ == "__main__":

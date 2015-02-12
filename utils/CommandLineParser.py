@@ -238,6 +238,16 @@ class CommandLineParser():
             dest='sni',
             default=None)
 
+        # No output
+        self._parser.add_option(
+            '--quiet',
+            action = "store_true",
+            dest = 'quiet',
+            help = (
+                'Hide script standard outputs.'
+                ' Will only affect script output if --xml_out is set.')
+            )
+
     def _add_plugin_options(self, available_plugins):
         """
         Recovers the list of command line options implemented by the available

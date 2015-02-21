@@ -42,9 +42,6 @@ class PluginSNI(PluginBase.PluginBase):
 
 
     def process_task(self, target, command, args):
-        if self._shared_settings['sni']:
-            raise Exception('Cannot use --snitest with --sni.')
-
         sni_supported = self._get_sni_support(target)
         if sni_supported:
             sni_timeout = sni_supported
@@ -74,8 +71,11 @@ class PluginSNI(PluginBase.PluginBase):
     def _get_sni_support(self, target):
         (host, _, _, _) = target
 
+        # Save
+        stored_val = self._shared_settings['sni']
 
-        # Without SNI
+        # With normal SNI
+        self._shared_settings['sni'] = host
         sslConn = create_sslyze_connection(target, self._shared_settings)
 
         # Perform the SSL handshake
@@ -84,14 +84,18 @@ class PluginSNI(PluginBase.PluginBase):
         x509Cert1 = x509Chain1[0] # First cert is always the leaf cert
         sslConn.close()
 
+        # Debug
+        # for (key, value) in x509Cert1.as_dict().items():
+        #    print key, value
 
-        # Without SNI
+
+        # With faked SNI - expecting a different value
+        #                  Forcing a fake SNI will serve equal to serving none.
+        #                  Serving None is not an option due to default served
+        #                  SNI value from the create_sslyze_connection when none
+        #                  is provided.
+        self._shared_settings['sni'] = 'fake_SNI'
         sslConn = create_sslyze_connection(target, self._shared_settings)
-        if self._shared_settings['sni']:
-            sslConn.set_tlsext_host_name(shared_settings['sni'])
-        else:
-            sslConn.set_tlsext_host_name(host)
-
 
         # Perform the SSL handshake
         sslConn.connect()
@@ -99,6 +103,13 @@ class PluginSNI(PluginBase.PluginBase):
         x509Cert2 = x509Chain2[0] # First cert is always the leaf cert
         sslConn.close()
 
+        # Debug
+        # for (key, value) in x509Cert2.as_dict().items():
+        #    print key, value
+
+
+        # Restore
+        self._shared_settings['sni'] = stored_val
 
         # Match fingerprints
         if x509Cert1.get_SHA1_fingerprint() == x509Cert2.get_SHA1_fingerprint():

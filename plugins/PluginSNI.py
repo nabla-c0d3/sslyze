@@ -53,7 +53,7 @@ class PluginSNI(PluginBase.PluginBase):
         if sni_supported:
             txt_result.append(self.FIELD_FORMAT("YES - SNI is in use.", ""))
         else:
-            txt_result.append(self.FIELD_FORMAT("NO - SNI was not detected/activated. Could be a false-negative if this is the default SSL Virtual Host.", ""))
+            txt_result.append(self.FIELD_FORMAT("NO - SNI was not detected/activated. Could be a false-negative if the target host provides the same certificate for the default SSL Virtual Host.", ""))
 
         # XML output
         xml_sni_attr = {'has_SniSupport': str(sni_supported)}

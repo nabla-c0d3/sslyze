@@ -89,10 +89,12 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
         if connectionClass in [XMPPConnection, XMPPServerConnection]:
             sslConn = connectionClass(target, sslVerifyLocations, timeout,
                                       shared_settings['nb_retries'],
-                                      shared_settings['xmpp_to'])
+                                      shared_settings['xmpp_to'],
+                                      shared_settings['ignore_requests'])
         else:
             sslConn = connectionClass(target, sslVerifyLocations, timeout,
-                                      shared_settings['nb_retries'])
+                                      shared_settings['nb_retries'],
+                                      shared_settings['ignore_requests'])
 
 
     elif shared_settings['https_tunnel_host']:
@@ -103,7 +105,8 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
                                             shared_settings['https_tunnel_host'],
                                             shared_settings['https_tunnel_port'],
                                             shared_settings['https_tunnel_user'],
-                                            shared_settings['https_tunnel_password']
+                                            shared_settings['https_tunnel_password'],
+                                            shared_settings['ignore_requests']
                                             )
         else:
             sslConn = SSLTunnelConnection(target, sslVerifyLocations, timeout,
@@ -111,15 +114,18 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
                                           shared_settings['https_tunnel_host'],
                                           shared_settings['https_tunnel_port'],
                                           shared_settings['https_tunnel_user'],
-                                          shared_settings['https_tunnel_password']
+                                          shared_settings['https_tunnel_password'],
+                                          shared_settings['ignore_requests']
                                           )
 
     elif shared_settings['http_get']:
         sslConn = HTTPSConnection(target, sslVerifyLocations, timeout,
-                                  shared_settings['nb_retries'])
+                                  shared_settings['nb_retries'],
+                                  shared_settings['ignore_requests'])
     else:
         sslConn = SSLConnection(target, sslVerifyLocations, timeout,
-                                shared_settings['nb_retries'])
+                                shared_settings['nb_retries'],
+                                shared_settings['ignore_requests'])
 
 
     # Load client certificate and private key
@@ -199,9 +205,9 @@ class SSLConnection(DebugSslClient):
 
 
     def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations,
-                 timeout, maxAttempts):
+                 timeout, maxAttempts, ignoreClientCertificateRequests=False):
         super(SSLConnection, self).__init__(None, sslVersion, SSL_VERIFY_NONE,
-                                            sslVerifyLocations)
+                                            sslVerifyLocations, ignoreClientCertificateRequests)
         self._timeout = timeout
         self._sock = None
         self._host = host
@@ -330,11 +336,11 @@ class SSLTunnelConnection(SSLConnection):
 
 
     def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout, 
-                    maxAttempts, tunnelHost, tunnelPort, tunnelUser=None, tunnelPassword=None):
+                    maxAttempts, tunnelHost, tunnelPort, tunnelUser=None, tunnelPassword=None, ignoreClientCertificateRequests=False):
 
         super(SSLTunnelConnection, self).__init__((host, ip, port, sslVersion),
                                                   sslVerifyLocations, timeout,
-                                                  maxAttempts)
+                                                  maxAttempts, ignoreClientCertificateRequests)
         self._tunnelHost = tunnelHost
         self._tunnelPort = tunnelPort
         self._tunnelBasicAuth = None
@@ -423,11 +429,11 @@ class XMPPConnection(SSLConnection):
 
 
     def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations,
-                 timeout, maxAttempts, xmpp_to=None):
+                 timeout, maxAttempts, xmpp_to=None, ignoreClientCertificateRequests=False):
 
         super(XMPPConnection, self).__init__((host, ip, port, sslVersion),
                                                   sslVerifyLocations, timeout,
-                                                  maxAttempts)
+                                                  maxAttempts, ignoreClientCertificateRequests)
 
         self._xmpp_to = xmpp_to
         if xmpp_to is None:

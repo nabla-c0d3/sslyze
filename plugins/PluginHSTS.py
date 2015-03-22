@@ -103,7 +103,7 @@ class PluginHSTS(PluginBase.PluginBase):
             sslConn.connect()
             
             sslConn.write(httpGetFormat(httpPath, target[0], httpAppend))
-            httpResp = parse_http_response(sslConn.read(2048))
+            httpResp = parse_http_response(sslConn)
             sslConn.close()
             
             if httpResp.version == 9 :

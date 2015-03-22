@@ -299,7 +299,7 @@ class HTTPSConnection(SSLConnection):
         try: # Send an HTTP GET to the server and store the HTTP Status Code
             self.write(self.HTTP_GET_REQ.format(self._host))
             # Parse the response and print the Location header
-            httpResp = parse_http_response(self.read(2048))
+            httpResp = parse_http_response(self)
             if httpResp.version == 9 :
                 # HTTP 0.9 => Probably not an HTTP response
                 result = self.ERR_NOT_HTTP
@@ -359,7 +359,7 @@ class SSLTunnelConnection(SSLConnection):
         else:
             self._sock.send(self.HTTP_CONNECT_REQ_PROXY_AUTH_BASIC.format(self._host, self._port,
                                         self._tunnelBasicAuth))
-        httpResp = parse_http_response(self._sock.recv(2048))
+        httpResp = parse_http_response(self._sock)
 
         # Check if the proxy was able to connect to the host
         if httpResp.status != 200:

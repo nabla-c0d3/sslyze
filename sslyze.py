@@ -175,7 +175,7 @@ def main():
         print e.get_error_msg()
         return
 
-    if not shared_settings['quiet'] or (shared_settings['quiet'] and not shared_settings['xml_file']):
+    if not shared_settings['quiet']:
         print '\n\n\n' + _format_title('Available plugins')
         print ''
         for plugin in available_plugins:
@@ -204,7 +204,7 @@ def main():
 
     #--TESTING SECTION--
     # Figure out which hosts are up and fill the task queue with work to do
-    if not shared_settings['quiet'] or (shared_settings['quiet'] and not shared_settings['xml_file']):
+    if not shared_settings['quiet']:
         print _format_title('Checking host(s) availability')
 
 
@@ -239,7 +239,7 @@ def main():
     for exception in target_results:
         targets_ERR.append(exception)
 
-    if not shared_settings['quiet'] or (shared_settings['quiet'] and not shared_settings['xml_file']):
+    if not shared_settings['quiet']:
         print ServersConnectivityTester.get_printable_result(targets_OK, targets_ERR)
         print '\n\n'
 
@@ -327,7 +327,7 @@ def main():
             xml_file.write(xml_final_pretty.toprettyxml(indent="  ", encoding="utf-8" ))
 
 
-    if not shared_settings['quiet'] or (shared_settings['quiet'] and not shared_settings['xml_file']):
+    if not shared_settings['quiet']:
         print _format_title('Scan Completed in {0:.2f} s'.format(exec_time))
 
 

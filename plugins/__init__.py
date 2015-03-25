@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #-------------------------------------------------------------------------------
 # Name:         __init__.py
 # Purpose:      PluginsFinder class for the SSLyze plugins package.

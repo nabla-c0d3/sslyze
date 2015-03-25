@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #-------------------------------------------------------------------------------
 # Name:         PluginOpenSSLCipherSuites.py
 # Purpose:      Scans the target server for supported OpenSSL cipher suites.

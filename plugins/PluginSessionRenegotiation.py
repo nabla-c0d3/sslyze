@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #-------------------------------------------------------------------------------
 # Name:         PluginSessionRenegotiation.py
 # Purpose:      Tests the target server for insecure renegotiation.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #-------------------------------------------------------------------------------
 # Name:         PluginSessionResumption.py
 # Purpose:      Analyzes the server's SSL session resumption capabilities.

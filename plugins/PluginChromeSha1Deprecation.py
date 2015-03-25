@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #-------------------------------------------------------------------------------
 # Name:         PluginChromeSha1Deprecation.py
 # Purpose:      Determines if the certificate will be affected by Google 

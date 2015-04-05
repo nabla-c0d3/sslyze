@@ -13,16 +13,16 @@ def parse_http_response(sock):
 
     try:
         # H4ck to standardize the API between sockets and SSLConnection objects
-        # sock is a Python socket
-        sock.read = sock.recv
+        response = sock.read(4096)
     except AttributeError:
-        # sock is an SSLConnection
-        pass
+        response = sock.recv(4096)
 
-    response = sock.read(4096)
     if 'HTTP/' not in response:
         # Try to get the rest of the response
-        response += sock.read(4096)
+        try:
+            response += sock.read(4096)
+        except AttributeError:
+            response += sock.recv(4096)
 
     fake_sock = FakeSocket(response)
     response = HTTPResponse(fake_sock)

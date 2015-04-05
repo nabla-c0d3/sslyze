@@ -204,13 +204,10 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         return txtOutput
 
 
-#    @staticmethod
     def _generate_xml_output(self, result_dicts, command):
 
         xmlNodeList = []
         isProtocolSupported = False
-
-        xmlNode = Element('ssl_cipher_list')
 
         for (resultKey, resultDict) in result_dicts.items():
             xmlNode = Element(resultKey)

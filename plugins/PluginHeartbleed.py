@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
 # Name:         PluginHeartbleed.py
 # Purpose:      Tests the target server for CVE-2014-0160.

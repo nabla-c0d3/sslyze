@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
 # Name:         sslyze.py
 # Purpose:      Main module of SSLyze.

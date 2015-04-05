@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
 # Name:         CommandLineParser.py
 # Purpose:      Command line parsing utilities for SSLyze.

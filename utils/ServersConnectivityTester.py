@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
 # Name:         ServersConnectivityTester.py
 # Purpose:      Initial checks to figure out which servers supplied by the

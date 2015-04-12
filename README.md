@@ -77,7 +77,7 @@ Where do the trust stores come from?
 ------------------------------------
 
 The Mozilla, Microsoft, Apple and Java trust stores are downloaded using the 
-following tool: https://github.com/nabla-c0d3/catt.
+following tool: https://github.com/nabla-c0d3/catt/blob/master/sslyze.md.
 
 
 License

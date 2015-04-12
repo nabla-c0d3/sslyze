@@ -1,6 +1,16 @@
 SSLyze Changelog
 ----------------
 
+## v0.11
+* Added support for Postgres StartTLS
+* Added the --ca_file option for specifying a local trust store to validate the server's certificate
+* Added the --quiet option to hide any text output when using --xml_out
+* Improved the formatting of the XML output to make it easier to parse and more useful; this will break any tool that was processing the XML output from previous versions, but an XML Schema Definition is now available in SSLyze's root folder
+* Bug fixes for EC certificates, HSTS, XMPP and LDAP
+* Updated OpenSSL to 1.0.2a
+* Updated Microsoft, Apple and Mozilla trust stores
+
+
 ## v0.10
 * PluginOpenSSLCipherSuites now displays the size of the handshake's Diffie-Hellmann parameters
 * SSLyze on Windows is now packaged as a single .exe file

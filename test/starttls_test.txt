@@ -1,1 +1,1 @@
-# python sslyze.py --regular --starttls=auto imap.comcast.net:143 pop.comcast.net:110 ldap.virginia.edu:389 www.google.com
+# python sslyze.py --xml_out=starttls.xml --regular --starttls=auto imap.comcast.net:143 pop.comcast.net:110 ldap.virginia.edu:389 www.google.com

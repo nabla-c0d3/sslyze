@@ -170,13 +170,14 @@ class PluginSessionResumption(PluginBase.PluginBase):
         sessid_try = ''
         if nb_resum == MAX_RESUM:
             sessid_stat = 'OK - Supported'
-        elif nb_failed == MAX_RESUM:
-            sessid_stat = 'NOT SUPPORTED'
-        elif nb_error == MAX_RESUM:
-            sessid_stat = 'ERROR'
-        else:
+        elif nb_resum > 0:
             sessid_stat = 'PARTIALLY SUPPORTED'
             sessid_try = ' Try --resum_rate.'
+        elif nb_failed == MAX_RESUM:
+            sessid_stat = 'NOT SUPPORTED'
+        else:
+            sessid_stat = 'ERROR'
+
         sessid_txt = SESSID_FORMAT(str(nb_resum), str(nb_failed), str(nb_error),
                                    str(MAX_RESUM), sessid_stat, sessid_try)
 

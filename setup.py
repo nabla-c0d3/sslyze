@@ -18,7 +18,7 @@ SSLYZE_SETUP = {
     'url' : PROJECT_URL,
     'scripts' : ['sslyze.py'],
     'packages' : ['plugins', 'utils', 'nassl'],
-    'package_data' : {'plugins' : ['data/trust_stores/*.pem','data/trust_stores/mozilla_ev_oids.py'],
+    'package_data' : {'plugins' : ['data/trust_stores/*.pem'],
                      'nassl' : [NASSL_BINARY]},
     'license' : open('LICENSE.txt').read()
 }

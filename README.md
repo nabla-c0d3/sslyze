@@ -1,7 +1,7 @@
 SSLyze
 ======
 
-Fast and full-featured SSL scanner. Continuation of https://github.com/iSECPartners/sslyze.
+Fast and full-featured SSL scanner.
 
 
 Description
@@ -26,6 +26,15 @@ Key features include:
 
 Installation
 ------------
+
+### Mac OS X
+
+SSLyze can be installed using Homebrew:
+
+    brew install sslyze
+
+
+### Other Platforms
 
 SSLyze requires Python 2.7; the supported platforms are Windows 7 32/64 bits,
 Linux 32/64 bits and OS X 64 bits.

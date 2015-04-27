@@ -22,16 +22,9 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-from os.path import join, dirname, realpath, abspath
-import inspect
-import imp
 from xml.etree.ElementTree import Element
-import sys
-
 from plugins import PluginBase
-from utils.ThreadPool import ThreadPool
 from utils.SSLyzeSSLConnection import create_sslyze_connection
-from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
 from nassl.SslClient import ClientCertificateRequested
 
 
@@ -44,7 +37,7 @@ class PluginClientCertReqCA(PluginBase.PluginBase):
 
     CMD_TITLE = "Client cerificate request CAs"
 
-    def process_task(self, target, command, arg):
+    def process_task(self, target, command):
         """
         Connects to the target server and tries to get acceptable CAs for client cert
         """

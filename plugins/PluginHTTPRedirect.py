@@ -93,7 +93,7 @@ class PluginHTTPRedirect(PluginBase.PluginBase):
         try:
             conn = socket.create_connection((self._ip, 80), self._timeout)
         except Exception as e:
-            return (-1, 'Error connecting to %s:80 (%s)' % (self._ip, e)
+            return (-1, 'Error connecting to %s:80 (%s)' % (self._ip, e))
         conn.sendall(httpGetFormat(httpPath, self._target[0], httpAppend))
         httpResp = parse_http_response(conn)
         conn.close()

@@ -25,13 +25,13 @@
 
 from os.path import join, dirname, realpath, abspath
 import inspect
-import imp
 from xml.etree.ElementTree import Element
 import sys
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.SSLyzeSSLConnection import create_sslyze_connection
+from nassl._nassl import OpenSSLError
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
 from nassl.SslClient import ClientCertificateRequested
 
@@ -247,17 +247,24 @@ class PluginCertInfo(PluginBase.PluginBase):
         # XML output - OCSP Stapling
         if ocsp_response is None:
             ocsp_attr_xml = {'isSupported': 'False'}
-            ocsp_xml = Element('ocspStapling', attrib=ocsp_attr_xml)
         else:
             ocsp_attr_xml = {'isSupported': 'True'}
-            ocsp_xml = Element('ocspStapling', attrib=ocsp_attr_xml)
+        ocsp_xml = Element('ocspStapling', attrib=ocsp_attr_xml)
 
-            ocsp_resp_attr_xml = {'isTrustedByMozillaCAStore': str(ocsp_response.verify(MOZILLA_STORE_PATH))}
-            ocsp_resp_xmp = Element('ocspResponse', attrib=ocsp_resp_attr_xml)
-            for (key, value) in ocsp_response.as_dict().items():
-                ocsp_resp_xmp.append(_keyvalue_pair_to_xml(key, value))
-            ocsp_xml.append(ocsp_resp_xmp)
+        try:
+            ocsp_resp_trusted = str(ocsp_response.verify(MOZILLA_STORE_PATH))
 
+        except OpenSSLError as e:
+            if 'certificate verify error' in str(e):
+                ocsp_resp_trusted = 'False'
+            else:
+                raise
+
+        ocsp_resp_attr_xml = {'isTrustedByMozillaCAStore': ocsp_resp_trusted}
+        ocsp_resp_xmp = Element('ocspResponse', attrib=ocsp_resp_attr_xml)
+        for (key, value) in ocsp_response.as_dict().items():
+            ocsp_resp_xmp.append(_keyvalue_pair_to_xml(key, value))
+        ocsp_xml.append(ocsp_resp_xmp)
         xml_output.append(ocsp_xml)
 
         return PluginBase.PluginResult(text_output, xml_output)
@@ -301,8 +308,14 @@ class PluginCertInfo(PluginBase.PluginBase):
             return [self.FIELD_FORMAT('NOT SUPPORTED - Server did not send back an OCSP response.', '')]
 
         ocsp_resp_dict = ocsp_resp.as_dict()
-        ocsp_trust_txt = 'OK - Response is trusted' if ocsp_resp.verify(MOZILLA_STORE_PATH) \
-            else 'FAILED - Response is NOT trusted'
+        try:
+            ocsp_trust_txt = 'OK - Response is trusted' if ocsp_resp.verify(MOZILLA_STORE_PATH) \
+                else 'FAILED - Response is NOT trusted'
+        except OpenSSLError as e:
+            if 'certificate verify error' in str(e):
+                ocsp_trust_txt = 'FAILED - Response is NOT trusted'
+            else:
+                raise
 
         ocsp_resp_txt = [
             self.FIELD_FORMAT('OCSP Response Status:', ocsp_resp_dict['responseStatus']),

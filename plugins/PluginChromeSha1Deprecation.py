@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-------------------------------------------------------------------------------
 # Name:         PluginChromeSha1Deprecation.py
-# Purpose:      Determines if the certificate will be affected by Google 
+# Purpose:      Determines if the certificate will be affected by Google
 #               Chrome's SHA-1 Deprecation plans
 #
 # Author:       tritter, alban
@@ -27,6 +27,7 @@ from xml.etree.ElementTree import Element
 import base64
 import hashlib
 import datetime
+import re
 
 from plugins import PluginBase
 from utils.SSLyzeSSLConnection import create_sslyze_connection
@@ -144,7 +145,7 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
                     behavior = chrome41Txt,
                     isAffected = str(True)))
                 outputXml.append(outputXml2)
-        
+
         return PluginBase.PluginResult(outputTxt, outputXml)
 
 
@@ -155,12 +156,13 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
         if not ROOT_CERTS:
             #Parse the Mozilla Store into roots
             f = open(MOZILLA_STORE_PATH, 'r')
-            f_contents = "\n".join(f.readlines())
-            root_certs = f_contents.split("-----BEGIN CERTIFICATE-----")
+            f_contents = f.read()
+            f.close()
+            regex = re.compile("-----BEGIN CERTIFICATE-----(.*?)-----END CERTIFICATE-----", re.DOTALL)
+            root_certs = re.findall(regex, f_contents)
             for r in root_certs:
                 if not r.strip():
                     continue
-                r = r.replace("-----END CERTIFICATE-----", "")
                 r = r.replace("\n", "")
                 r = r.replace("\r", "")
                 d = base64.b64decode(r)

@@ -251,20 +251,23 @@ class PluginCertInfo(PluginBase.PluginBase):
             ocsp_attr_xml = {'isSupported': 'True'}
         ocsp_xml = Element('ocspStapling', attrib=ocsp_attr_xml)
 
-        try:
-            ocsp_resp_trusted = str(ocsp_response.verify(MOZILLA_STORE_PATH))
+        if ocsp_response:
+            try:
+                ocsp_resp_trusted = str(ocsp_response.verify(MOZILLA_STORE_PATH))
 
-        except OpenSSLError as e:
-            if 'certificate verify error' in str(e):
-                ocsp_resp_trusted = 'False'
-            else:
-                raise
+            except OpenSSLError as e:
+                if 'certificate verify error' in str(e):
+                    ocsp_resp_trusted = 'False'
+                else:
+                    raise
 
-        ocsp_resp_attr_xml = {'isTrustedByMozillaCAStore': ocsp_resp_trusted}
-        ocsp_resp_xmp = Element('ocspResponse', attrib=ocsp_resp_attr_xml)
-        for (key, value) in ocsp_response.as_dict().items():
-            ocsp_resp_xmp.append(_keyvalue_pair_to_xml(key, value))
-        ocsp_xml.append(ocsp_resp_xmp)
+            ocsp_resp_attr_xml = {'isTrustedByMozillaCAStore': ocsp_resp_trusted}
+            ocsp_resp_xmp = Element('ocspResponse', attrib=ocsp_resp_attr_xml)
+            for (key, value) in ocsp_response.as_dict().items():
+                ocsp_resp_xmp.append(_keyvalue_pair_to_xml(key, value))
+
+            ocsp_xml.append(ocsp_resp_xmp)
+            
         xml_output.append(ocsp_xml)
 
         return PluginBase.PluginResult(text_output, xml_output)

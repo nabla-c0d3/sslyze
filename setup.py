@@ -38,18 +38,18 @@ def setup():
         from sslyze import PROJECT_VERSION, PROJECT_URL, PROJECT_EMAIL, PROJECT_DESC
         
         distutils_setup(
-            'name' : 'SSLyze',
-            'version' : PROJECT_VERSION,
-            'description' : PROJECT_DESC,
-            'long_description' : open('README.md').read() + '\n' + open('AUTHORS.txt').read(),
-            'author_email' : PROJECT_EMAIL,
-            'url' : PROJECT_URL,
-            'scripts' : ['sslyze.py'],
-            'packages' : ['plugins', 'utils', 'nassl'],
-            'package_data' : {'plugins' : ['data/trust_stores/*.pem'],
-            'nassl' : [NASSL_BINARY]},
-            'license' : open('LICENSE.txt').read()
-        }
+            name='SSLyze',
+            version=PROJECT_VERSION,
+            description=PROJECT_DESC,
+            long_description=open('README.md').read() + '\n' + open('AUTHORS.txt').read(),
+            author_email=PROJECT_EMAIL,
+            url=PROJECT_URL,
+            scripts=['sslyze.py'],
+            packages=['plugins', 'utils', 'nassl'],
+            package_data={'plugins' : ['data/trust_stores/*.pem'],
+            nassl=[NASSL_BINARY]},
+            license=open('LICENSE.txt').read()
+        )
 
     except Exception as exception:
         print('{} - {}'.format(exception.__class__.__name__, exception))

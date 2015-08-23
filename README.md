@@ -30,6 +30,7 @@ Installation
 ### Common install
 
 You'll have to follow these steps:
+
     $ pip install git+https://github.com/ZenSecurity/sslyze.git
 
 
@@ -50,6 +51,7 @@ Usage
 ### Command line options
 
 The following command will provide the list of available command line options:
+
     $ python sslyze.py -h
 
 

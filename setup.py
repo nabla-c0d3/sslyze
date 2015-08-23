@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from distutils.core import setup as distutils_setup
 from os import walk, getcwd
 from os.path import join as path_join
+from setuptools import setup as setuptools_setup
 from shutil import move
 from subprocess import Popen, PIPE
 from sys import platform
@@ -37,7 +37,7 @@ def setup():
 
         from sslyze import PROJECT_VERSION, PROJECT_URL, PROJECT_EMAIL, PROJECT_DESC
         
-        distutils_setup(
+        setuptools_setup(
             name='SSLyze',
             version=PROJECT_VERSION,
             description=PROJECT_DESC,

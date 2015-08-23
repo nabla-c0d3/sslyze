@@ -32,6 +32,7 @@ Installation
 You'll have to follow these steps:
     $ pip install git+https://github.com/ZenSecurity/sslyze.git
 
+
 ### Other Platforms
 
 SSLyze requires Python 2.7; the supported platforms are Windows 7 32/64 bits,

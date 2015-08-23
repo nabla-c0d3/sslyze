@@ -28,7 +28,7 @@ Installation
 ------------
 
 You'll have to follow these steps:
-    pip install git+https://github.com/ZenSecurity/sslyze.git
+        pip install git+https://github.com/ZenSecurity/sslyze.git
 
 ### Other Platforms
 
@@ -47,12 +47,12 @@ Usage
 ### Command line options
 
 The following command will provide the list of available command line options:
-	$ python sslyze.py -h
+        $ python sslyze.py -h
 
 
 ### Sample command line:
 
-	$ python sslyze.py --regular www.isecpartners.com:443 www.google.com
+        $ python sslyze.py --regular www.isecpartners.com:443 www.google.com
 
 See the test folder for additional examples.
 

@@ -27,12 +27,8 @@ Key features include:
 Installation
 ------------
 
-### Mac OS X
-
-SSLyze can be installed using Homebrew:
-
-    brew install sslyze
-
+You'll have to follow these steps:
+    pip install git+https://github.com/ZenSecurity/sslyze.git
 
 ### Other Platforms
 

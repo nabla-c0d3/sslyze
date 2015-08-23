@@ -5,7 +5,7 @@ from os import walk, getcwd
 from os.path import join as path_join
 from shutil import move
 from subprocess import Popen, PIPE
-from sys import platform, argv
+from sys import argv, platform
 from tarfile import open as tarfile_open
 from urllib import urlretrieve
 

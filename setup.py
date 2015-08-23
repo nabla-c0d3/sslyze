@@ -10,7 +10,7 @@ from tarfile import open as tarfile_open
 from urllib import urlretrieve
 
 
-def setup(**kwargs):
+def setup():
     temp_dir = getcwd()
     zlib_arch = 'zlib-1.2.8.tar.gz'
     openssl_arch = 'openssl-1.0.2a.tar.gz'
@@ -31,27 +31,26 @@ def setup(**kwargs):
         
         move(nassl_build_dir, "{}/nassl".format(temp_dir))
 
-        distutils_setup(**kwargs)
+        NASSL_BINARY = '_nassl.so'
+        if platform == 'win32':
+                NASSL_BINARY = '_nassl.pyd'
+
+        from sslyze import PROJECT_VERSION, PROJECT_URL, PROJECT_EMAIL, PROJECT_DESC
+        
+        SSLYZE_SETUP = {
+            'name' : 'SSLyze',
+            'version' : PROJECT_VERSION,
+            'description' : PROJECT_DESC,
+            'long_description' : open('README.md').read() + '\n' + open('AUTHORS.txt').read(),
+            'author_email' : PROJECT_EMAIL,
+            'url' : PROJECT_URL,
+            'scripts' : ['sslyze.py'],
+            'packages' : ['plugins', 'utils', 'nassl'],
+            'package_data' : {'plugins' : ['data/trust_stores/*.pem'],
+            'nassl' : [NASSL_BINARY]},
+            'license' : open('LICENSE.txt').read()
+        }
+
+        distutils_setup(**SSLYZE_SETUP)
     except Exception as exception:
         print('{} - {}'.format(exception.__class__.__name__, exception))
-
-
-NASSL_BINARY = '_nassl.so'
-if platform == 'win32':
-    NASSL_BINARY = '_nassl.pyd'
-
-SSLYZE_SETUP = {
-    'name' : 'SSLyze',
-    'version' : '0.11.0',
-    'description' : 'Fast and full-featured SSL scanner',
-    'long_description' : open('README.md').read() + '\n' + open('AUTHORS.txt').read(),
-    'author_email' : 'nabla.c0d3@gmail.com',
-    'url' : 'https://github.com/nabla-c0d3/sslyze',
-    'scripts' : ['sslyze.py'],
-    'packages' : ['plugins', 'utils', 'nassl'],
-    'package_data' : {'plugins' : ['data/trust_stores/*.pem'],
-                     'nassl' : [NASSL_BINARY]},
-    'license' : open('LICENSE.txt').read()
-}
-
-setup(**SSLYZE_SETUP)

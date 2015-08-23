@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-from distutils.core import setup
+
+from distutils.core import setup as distutils_setup
 from os import walk, getcwd
 from os.path import join as path_join
 from shutil import move
@@ -9,7 +10,7 @@ from tarfile import open as tarfile_open
 from urllib import urlretrieve
 
 
-def pre_install():
+def setup(**kwargs):
     temp_dir = getcwd()
     zlib_arch = 'zlib-1.2.8.tar.gz'
     openssl_arch = 'openssl-1.0.2a.tar.gz'
@@ -27,28 +28,25 @@ def pre_install():
         for root, dirs, files in walk('{}/build'.format(nassl_dir)):
             if 'nassl' in dirs:
                 nassl_build_dir = path_join(root, 'nassl')
-
+        
         move(nassl_build_dir, "{}/nassl".format(temp_dir))
 
+        distutils_setup(**kwargs)
     except Exception as exception:
         print('{} - {}'.format(exception.__class__.__name__, exception))
 
-pre_install()
-
-from sslyze import PROJECT_VERSION, PROJECT_URL, PROJECT_EMAIL, PROJECT_DESC
 
 NASSL_BINARY = '_nassl.so'
 if platform == 'win32':
     NASSL_BINARY = '_nassl.pyd'
 
-
 SSLYZE_SETUP = {
     'name' : 'SSLyze',
-    'version' : PROJECT_VERSION,
-    'description' : PROJECT_DESC,
+    'version' : '0.11.0',
+    'description' : 'Fast and full-featured SSL scanner',
     'long_description' : open('README.md').read() + '\n' + open('AUTHORS.txt').read(),
-    'author_email' : PROJECT_EMAIL,
-    'url' : PROJECT_URL,
+    'author_email' : 'nabla.c0d3@gmail.com',
+    'url' : 'https://github.com/nabla-c0d3/sslyze',
     'scripts' : ['sslyze.py'],
     'packages' : ['plugins', 'utils', 'nassl'],
     'package_data' : {'plugins' : ['data/trust_stores/*.pem'],

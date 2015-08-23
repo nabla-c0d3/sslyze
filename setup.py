@@ -54,3 +54,5 @@ def setup():
         distutils_setup(**SSLYZE_SETUP)
     except Exception as exception:
         print('{} - {}'.format(exception.__class__.__name__, exception))
+
+setup()

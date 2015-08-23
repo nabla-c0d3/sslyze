@@ -17,7 +17,7 @@ def pre_install():
     nassl_build_dir = ''
     
     try:
-        Popen(['git', 'clone', 'https://github.com/ZenSecurity/nassl.git', nassl_dir]).wait()
+        Popen(['git', 'clone', 'https://github.com/nabla-c0d3/nassl.git', nassl_dir]).wait()
         urlretrieve('http://zlib.net/{}'.format(zlib_arch), '{}/{}'.format(nassl_dir, zlib_arch))
         tarfile_open('{}/{}'.format(nassl_dir, zlib_arch)).extractall(nassl_dir)
         urlretrieve('http://www.openssl.org/source/old/1.0.2/{}'.format(openssl_arch), '{}/{}'.format(nassl_dir, openssl_arch))

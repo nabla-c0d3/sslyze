@@ -37,7 +37,7 @@ def setup():
 
         from sslyze import PROJECT_VERSION, PROJECT_URL, PROJECT_EMAIL, PROJECT_DESC
         
-        SSLYZE_SETUP = {
+        distutils_setup(
             'name' : 'SSLyze',
             'version' : PROJECT_VERSION,
             'description' : PROJECT_DESC,
@@ -51,7 +51,6 @@ def setup():
             'license' : open('LICENSE.txt').read()
         }
 
-        distutils_setup(**SSLYZE_SETUP)
     except Exception as exception:
         print('{} - {}'.format(exception.__class__.__name__, exception))
 

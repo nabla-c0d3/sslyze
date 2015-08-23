@@ -11,10 +11,6 @@ from urllib import urlretrieve
 
 
 def pre_install():
-    print 'x'*32
-    print get_installed_distributions()
-    print 'x'*32
-
     temp_dir = getcwd()
     zlib_arch = 'zlib-1.2.8.tar.gz'
     openssl_arch = 'openssl-1.0.2a.tar.gz'

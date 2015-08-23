@@ -2,7 +2,6 @@
 from distutils.core import setup
 from os import walk, getcwd
 from os.path import join as path_join
-from pip import get_installed_distributions
 from shutil import move
 from subprocess import Popen, PIPE
 from sys import platform
@@ -21,7 +20,7 @@ def pre_install():
         Popen(['git', 'clone', 'https://github.com/ZenSecurity/nassl.git', nassl_dir]).wait()
         urlretrieve('http://zlib.net/{}'.format(zlib_arch), '{}/{}'.format(nassl_dir, zlib_arch))
         tarfile_open('{}/{}'.format(nassl_dir, zlib_arch)).extractall(nassl_dir)
-        urlretrieve('https://www.openssl.org/source/old/1.0.2/{}'.format(openssl_arch), '{}/{}'.format(nassl_dir, openssl_arch))
+        urlretrieve('http://www.openssl.org/source/old/1.0.2/{}'.format(openssl_arch), '{}/{}'.format(nassl_dir, openssl_arch))
         tarfile_open('{}/{}'.format(nassl_dir, openssl_arch)).extractall(nassl_dir)
         Popen(['python', 'buildAll_unix.py'], cwd=nassl_dir).wait()
 

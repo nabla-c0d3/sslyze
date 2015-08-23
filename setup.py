@@ -2,6 +2,7 @@
 from distutils.core import setup
 from os import walk, getcwd
 from os.path import join as path_join
+from pip import get_installed_distributions
 from shutil import move
 from subprocess import Popen, PIPE
 from sys import platform
@@ -10,6 +11,10 @@ from urllib import urlretrieve
 
 
 def pre_install():
+    print 'x'*32
+    print get_installed_distributions()
+    print 'x'*32
+
     temp_dir = getcwd()
     zlib_arch = 'zlib-1.2.8.tar.gz'
     openssl_arch = 'openssl-1.0.2a.tar.gz'

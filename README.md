@@ -32,6 +32,9 @@ Installation
 You'll have to follow these steps:
 
     $ pip install git+https://github.com/ZenSecurity/sslyze.git
+    or
+    $ git clone https://github.com/ZenSecurity/sslyze.git
+    $ python setup.py install
 
 
 ### Other Platforms

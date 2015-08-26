@@ -27,11 +27,17 @@ Key features include:
 Installation
 ------------
 
-### Mac OS X
+### Common install
 
-SSLyze can be installed using Homebrew:
+You'll have to follow these steps:
 
-    brew install sslyze
+    $ pip install git+https://github.com/ZenSecurity/sslyze.git
+
+    or
+
+    $ git clone https://github.com/ZenSecurity/sslyze.git
+    $ cd sslyze
+    $ python setup.py install
 
 
 ### Other Platforms
@@ -51,12 +57,13 @@ Usage
 ### Command line options
 
 The following command will provide the list of available command line options:
-	$ python sslyze.py -h
+
+    $ python sslyze.py -h
 
 
 ### Sample command line:
 
-	$ python sslyze.py --regular www.isecpartners.com:443 www.google.com
+    $ python sslyze.py --regular www.isecpartners.com:443 www.google.com
 
 See the test folder for additional examples.
 

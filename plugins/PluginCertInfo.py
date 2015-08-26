@@ -25,7 +25,6 @@
 
 from os.path import join, dirname, realpath, abspath
 import inspect
-import imp
 from xml.etree.ElementTree import Element
 import sys
 
@@ -34,7 +33,7 @@ from utils.ThreadPool import ThreadPool
 from utils.SSLyzeSSLConnection import create_sslyze_connection
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
 from nassl.SslClient import ClientCertificateRequested
-from time import gmtime, strftime
+from time import gmtime
 from datetime import date
 from ssl import cert_time_to_seconds
 
@@ -449,7 +448,7 @@ def _create_xml_node(key, value=''):
 
     # Things that would generate invalid XML
     if key[0].isdigit():  # Tags cannot start with a digit
-            key = 'oid-' + key
+        key = 'oid-' + key
 
     xml_node = Element(key)
     xml_node.text = value.decode("utf-8").strip()

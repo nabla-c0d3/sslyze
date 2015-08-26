@@ -151,23 +151,18 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
     @staticmethod
     def _is_root_cert(cert):
         # Root certificates are not affected by the deprecation of SHA1
-        # However a properly configured server should not send the CA cert in the chain
+        # However a properly configured server should not send the CA cert in the chain so I'm not using this for now
         if not ROOT_CERTS:
-
-            # Parse the Mozilla Store into individual certificates
+            #Parse the Mozilla Store into roots
             f = open(MOZILLA_STORE_PATH, 'r')
             f_contents = "\n".join(f.readlines())
             root_certs = f_contents.split("-----BEGIN CERTIFICATE-----")
-            for value in root_certs:
-                if not value.strip(' \r\n'):
+            for r in root_certs:
+                if not r.strip():
                     continue
-
-                cert_b64 = value.split("-----END CERTIFICATE-----")[0].strip()
-                cert_b64 = cert_b64.replace('\n', '')
-                cert_b64 = cert_b64.replace('\r', '')
-
-                # Generate and store the SHA1 of the certificate
-                cert_der = base64.b64decode(cert_b64)
-                ROOT_CERTS.append(hashlib.sha1(cert_der).hexdigest())
-
+                r = r.replace("-----END CERTIFICATE-----", "")
+                r = r.replace("\n", "")
+                r = r.replace("\r", "")
+                d = base64.b64decode(r)
+                ROOT_CERTS.append(hashlib.sha1(d).hexdigest())
         return cert.get_SHA1_fingerprint() in ROOT_CERTS

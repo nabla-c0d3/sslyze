@@ -20,6 +20,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
+import re
 
 from time import time
 from itertools import cycle
@@ -321,8 +322,14 @@ def main():
         # Add the output of the plugins
         xml_final_doc.append(result_xml)
 
+        # Remove characters that are illegal for XML
+        # https://lsimons.wordpress.com/2011/03/17/stripping-illegal-characters-out-of-xml-in-python/
+        xml_final_string = tostring(xml_final_doc, encoding='UTF-8')
+        illegal_xml_chars_RE = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]')
+        xml_sanitized_final_string = illegal_xml_chars_RE.sub('', xml_final_string)
+
         # Hack: Prettify the XML file so it's (somewhat) diff-able
-        xml_final_pretty = minidom.parseString(tostring(xml_final_doc, encoding='UTF-8'))
+        xml_final_pretty = minidom.parseString(xml_sanitized_final_string)
         with open(shared_settings['xml_file'],'w') as xml_file:
             xml_file.write(xml_final_pretty.toprettyxml(indent="  ", encoding="utf-8" ))
 

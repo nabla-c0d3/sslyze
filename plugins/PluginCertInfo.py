@@ -53,9 +53,9 @@ TRUST_STORES_PATH = join(get_script_dir(), 'data', 'trust_stores')
 MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')
 
 AVAILABLE_TRUST_STORES = {
-    MOZILLA_STORE_PATH: ('Mozilla NSS', '04/2015'),
-    join(TRUST_STORES_PATH, 'microsoft.pem'): ('Microsoft', '04/2015'),
-    join(TRUST_STORES_PATH, 'apple.pem'): ('Apple', 'OS X 10.10.3'),
+    MOZILLA_STORE_PATH: ('Mozilla NSS', '09/2015'),
+    join(TRUST_STORES_PATH, 'microsoft.pem'): ('Microsoft', '09/2015'),
+    join(TRUST_STORES_PATH, 'apple.pem'): ('Apple', 'OS X 10.10.5'),
     join(TRUST_STORES_PATH, 'java.pem'): ('Java 6', 'Update 65'),
     join(TRUST_STORES_PATH, 'google.pem'): ('Google', '09/2015')
 }

@@ -135,13 +135,10 @@ class CommandLineParser():
             'Client certificate support', '')
         clientcert_group.add_option(
             '--cert',
-            help='Client certificate filename.',
+            help='Client certificate chain filename. The certificates must be in PEM format and must be sorted '
+                 'starting with the subject\'s client certificate, followed by intermediate CA certificates if '
+                 'applicable.',
             dest='cert')
-        clientcert_group.add_option(
-            '--certform',
-            help= 'Client certificate format. DER or PEM (default).',
-            dest='certform',
-            default='PEM')
         clientcert_group.add_option(
             '--key',
             help= 'Client private key filename.',
@@ -290,14 +287,7 @@ class CommandLineParser():
         if bool(args_command_list.cert) ^ bool(args_command_list.key):
             raise CommandLineParsingError('No private key or certificate file were given. See --cert and --key.')
 
-        # Private key and cert formats
-        if args_command_list.certform == 'DER':
-            args_command_list.certform = SSL_FILETYPE_ASN1
-        elif args_command_list.certform == 'PEM':
-            args_command_list.certform = SSL_FILETYPE_PEM
-        else:
-            raise CommandLineParsingError('--certform should be DER or PEM.')
-
+        # Private key formats
         if args_command_list.keyform == 'DER':
             args_command_list.keyform = SSL_FILETYPE_ASN1
         elif args_command_list.keyform == 'PEM':
@@ -321,11 +311,8 @@ class CommandLineParser():
             # Try to load the cert and key in OpenSSL
             try:
                 sslClient = SslClient()
-                sslClient.use_private_key(args_command_list.cert,
-                                        args_command_list.certform,
-                                        args_command_list.key,
-                                        args_command_list.keyform,
-                                        args_command_list.keypass)
+                sslClient.use_private_key(args_command_list.cert, args_command_list.key, args_command_list.keyform,
+                                          args_command_list.keypass)
             except _nassl.OpenSSLError as e:
                 if 'bad decrypt' in str(e.args):
                     raise CommandLineParsingError('Could not decrypt the private key. Wrong passphrase ?')

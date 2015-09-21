@@ -125,8 +125,8 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
     # Load client certificate and private key
     # These parameters should have been validated when parsing the command line
     if shared_settings['cert']:
-        sslConn.use_private_key(shared_settings['cert'], shared_settings['certform'],
-            shared_settings['key'], shared_settings['keyform'], shared_settings['keypass'])
+        sslConn.use_private_key(shared_settings['cert'], shared_settings['key'], shared_settings['keyform'],
+                                shared_settings['keypass'])
 
 
     # Add Server Name Indication

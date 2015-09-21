@@ -31,9 +31,11 @@ import sys
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
 from utils.SSLyzeSSLConnection import create_sslyze_connection
-from nassl._nassl import OpenSSLError
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
 from nassl.SslClient import ClientCertificateRequested
+from time import gmtime
+from datetime import date
+from ssl import cert_time_to_seconds
 
 
 # Getting the path to the trust stores is trickier than it sounds due to subtle differences on OS X, Linux and Windows
@@ -193,6 +195,17 @@ class PluginCertInfo(PluginBase.PluginBase):
         # XML output - certificate chain:  always return the full certificate for each cert in the chain
         cert_chain_xml = Element('certificateChain')
 
+        # XML output - expiration date
+
+        # em begin
+        cert_dict = x509_cert.as_dict()
+        expiration_date = gmtime(cert_time_to_seconds(cert_dict['validity']['notAfter']))
+        expire_days = (date(expiration_date.tm_year, expiration_date.tm_mon, expiration_date.tm_mday) - date.today()).days
+        expiration_date_xml = Element("expirationDate", notAfter=cert_dict['validity']['notAfter'],
+                                      expiresDays=expire_days)
+        xml_output.append(expiration_date_xml)
+        # em end
+
         # First add the leaf certificate
         cert_chain_xml.append(self._format_cert_to_xml(x509_cert_chain[0], 'leaf', self._shared_settings['sni']))
 
@@ -201,7 +214,6 @@ class PluginCertInfo(PluginBase.PluginBase):
             cert_chain_xml.append(self._format_cert_to_xml(cert, 'intermediate', self._shared_settings['sni']))
 
         xml_output.append(cert_chain_xml)
-
 
         # XML output - trust
         trust_validation_xml = Element('certificateValidation')
@@ -243,27 +255,17 @@ class PluginCertInfo(PluginBase.PluginBase):
         # XML output - OCSP Stapling
         if ocsp_response is None:
             ocsp_attr_xml = {'isSupported': 'False'}
+            ocsp_xml = Element('ocspStapling', attrib=ocsp_attr_xml)
         else:
             ocsp_attr_xml = {'isSupported': 'True'}
-        ocsp_xml = Element('ocspStapling', attrib=ocsp_attr_xml)
+            ocsp_xml = Element('ocspStapling', attrib=ocsp_attr_xml)
 
-        if ocsp_response:
-            try:
-                ocsp_resp_trusted = str(ocsp_response.verify(MOZILLA_STORE_PATH))
-
-            except OpenSSLError as e:
-                if 'certificate verify error' in str(e):
-                    ocsp_resp_trusted = 'False'
-                else:
-                    raise
-
-            ocsp_resp_attr_xml = {'isTrustedByMozillaCAStore': ocsp_resp_trusted}
+            ocsp_resp_attr_xml = {'isTrustedByMozillaCAStore': str(ocsp_response.verify(MOZILLA_STORE_PATH))}
             ocsp_resp_xmp = Element('ocspResponse', attrib=ocsp_resp_attr_xml)
             for (key, value) in ocsp_response.as_dict().items():
                 ocsp_resp_xmp.append(_keyvalue_pair_to_xml(key, value))
-
             ocsp_xml.append(ocsp_resp_xmp)
-            
+
         xml_output.append(ocsp_xml)
 
         return PluginBase.PluginResult(text_output, xml_output)
@@ -307,14 +309,8 @@ class PluginCertInfo(PluginBase.PluginBase):
             return [self.FIELD_FORMAT('NOT SUPPORTED - Server did not send back an OCSP response.', '')]
 
         ocsp_resp_dict = ocsp_resp.as_dict()
-        try:
-            ocsp_trust_txt = 'OK - Response is trusted' if ocsp_resp.verify(MOZILLA_STORE_PATH) \
-                else 'FAILED - Response is NOT trusted'
-        except OpenSSLError as e:
-            if 'certificate verify error' in str(e):
-                ocsp_trust_txt = 'FAILED - Response is NOT trusted'
-            else:
-                raise
+        ocsp_trust_txt = 'OK - Response is trusted' if ocsp_resp.verify(MOZILLA_STORE_PATH) \
+            else 'FAILED - Response is NOT trusted'
 
         ocsp_resp_txt = [
             self.FIELD_FORMAT('OCSP Response Status:', ocsp_resp_dict['responseStatus']),
@@ -448,7 +444,7 @@ def _create_xml_node(key, value=''):
 
     # Things that would generate invalid XML
     if key[0].isdigit():  # Tags cannot start with a digit
-            key = 'oid-' + key
+        key = 'oid-' + key
 
     xml_node = Element(key)
     xml_node.text = value.decode("utf-8").strip()

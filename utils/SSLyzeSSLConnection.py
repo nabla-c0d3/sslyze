@@ -195,7 +195,8 @@ class SSLConnection(DebugSslClient):
          'peer error no cipher' : 'Peer error no cipher',
          'no cipher list' : 'No ciphers list',
          'insufficient security' : 'Insufficient security',
-         'block type is not 01' : 'block type is not 01'} # Actually an RSA error
+         'block type is not 01' : 'block type is not 01',  # Actually an RSA error
+         'tlsv1 alert protocol version': 'Alert: protocol version '}
 
 
     def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations,
@@ -254,6 +255,10 @@ class SSLConnection(DebugSslClient):
             except SSLHandshakeRejected:
                 raise
             except ClientCertificateRequested:
+                raise
+
+            except _nassl.OpenSSLError:
+                # Raise unknown OpenSSL errors
                 raise
 
             # Attempt to retry connection if a network error occurred

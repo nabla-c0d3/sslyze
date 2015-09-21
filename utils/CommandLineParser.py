@@ -161,7 +161,8 @@ class CommandLineParser():
         # XML output
         self._parser.add_option(
             '--xml_out',
-            help='Writes the scan results as an XML document to the file XML_FILE.',
+            help='Writes the scan results as an XML document to the file XML_FILE. If XML_FILE is set to "-", the XML '
+                 'output will instead be printed to stdout.',
             dest='xml_file',
             default=None)
 
@@ -280,6 +281,10 @@ class CommandLineParser():
         # Prevent --quiet without --xml_out
         if not args_command_list.xml_file and args_command_list.quiet:
                 raise CommandLineParsingError('Cannot use --quiet without --xml_out.')
+
+        # Prevent --quiet and --xml_out -
+        if args_command_list.xml_file and args_command_list.xml_file == '-' and args_command_list.quiet:
+                raise CommandLineParsingError('Cannot use --quiet with --xml_out -.')
 
         # Sanity checks on the client cert options
         if bool(args_command_list.cert) ^ bool(args_command_list.key):

@@ -337,7 +337,7 @@ def main():
         else:
             # Otherwise save the XML output to the console
             with open(shared_settings['xml_file'],'w') as xml_file:
-                xml_file.write(xml_final_pretty.toprettyxml(indent="  ", encoding="utf-8" ))
+                xml_file.write(xml_final_pretty)
 
 
     if not shared_settings['quiet'] and shared_settings['xml_file'] != '-':

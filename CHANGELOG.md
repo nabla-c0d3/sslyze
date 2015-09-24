@@ -1,6 +1,15 @@
 SSLyze Changelog
 ----------------
 
+## v0.12
+* Added the Google trust store for certificate validation and updated the Apple, Microsoft and Mozilla stores.
+* A full (client) certificate chain can now be supplied when using client certificates.
+* Added the ability to print the XML output to the console using --xml_out -.
+* Various bug fixes including TLS errors that were mistakenly reported as network timeouts.
+* Updated list of OIDs for identifying EV certificates.
+* Updated OpenSSL to 1.0.2d, which fixes issues with certificate path validation when using --certinfo.
+
+
 ## v0.11
 * Added support for Postgres StartTLS
 * Added the --ca_file option for specifying a local trust store to validate the server's certificate

@@ -11,14 +11,13 @@ from setup import SSLYZE_SETUP
 data_files = [("Microsoft.VC90.CRT", glob(r'C:\Program Files\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\*.*'))]
 
 # Trust Stores
-plugin_data_path = 'plugins\\data\\trust_stores'
 plugin_data_files = []
-for file in os.listdir(plugin_data_path):
-    file = os.path.join(plugin_data_path, file)
+for file in os.listdir('plugins\\data\\trust_stores'):
+    file = os.path.join('plugins\\data\\trust_stores', file)
     if os.path.isfile(file): # skip directories
         plugin_data_files.append( file)
 
-data_files.append((plugin_data_path, plugin_data_files))
+data_files.append(('data\\trust_stores', plugin_data_files))
 
 
 sslyze_setup_py2exe = SSLYZE_SETUP.copy()

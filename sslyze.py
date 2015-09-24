@@ -41,7 +41,7 @@ except ImportError as e:
     sys.exit()
 
 
-PROJECT_VERSION = '0.11.0'
+PROJECT_VERSION = '0.12.0'
 PROJECT_URL = "https://github.com/nabla-c0d3/sslyze"
 PROJECT_EMAIL = 'nabla.c0d3@gmail.com'
 PROJECT_DESC = 'Fast and full-featured SSL scanner'

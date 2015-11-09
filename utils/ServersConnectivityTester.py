@@ -48,24 +48,14 @@ class InvalidTargetError(Exception):
 
 
 class TargetStringParser(object):
-    """Utility class to parse a 'host:port' string taken from the command line
-    into a valid (host,port) tuple. Supports IPV6 addresses."""
+    """Utility class to parse a 'host:port{ip}' string taken from the command line
+    into a valid (host,ip, port) tuple. Supports IPV6 addresses."""
 
     ERR_BAD_PORT = 'Not a valid host:port'
     ERR_NO_IPV6 = 'IPv6 is not supported on this platform'
 
     @classmethod
     def parse_target_str(cls, target_str, default_port):
-
-
-        if '[' in target_str:
-            return cls._parse_ipv6_target_str(target_str, default_port)
-        else: # Fallback to ipv4
-            return cls._parse_ipv4_target_str(target_str, default_port)
-
-
-    @classmethod
-    def _parse_ipv4_target_str(cls, target_str, default_port):
         # extract ip from target
         if '{' in target_str and '}' in target_str:
             raw_target = target_str.split('{')
@@ -78,6 +68,23 @@ class TargetStringParser(object):
         else:
             ip = None
 
+        # Look for ipv6 hint in target
+        if '[' in target_str:
+            (host, port) = cls._parse_ipv6_target_str(target_str, default_port)
+        else:
+            # Look for ipv6 hint in the ip
+            if ip is not None and '[' in ip:
+                (ip, port) = cls._parse_ipv6_target_str(ip, default_port)
+
+            # Fallback to ipv4
+            (host, port) = cls._parse_ipv4_target_str(target_str, default_port)
+
+        return host, ip, port
+
+
+    @classmethod
+    def _parse_ipv4_target_str(cls, target_str, default_port):
+
         if ':' in target_str:
             host = (target_str.split(':'))[0] # hostname or ipv4 address
             try:
@@ -88,7 +95,7 @@ class TargetStringParser(object):
             host = target_str
             port = default_port
 
-        return host, ip, port
+        return host, port
 
     @classmethod
     def _parse_ipv6_target_str(cls, target_str, default_port):
@@ -104,7 +111,7 @@ class TargetStringParser(object):
                 port = int(target_split[1].rsplit(':')[1])
             except: # Port is not an int
                 raise InvalidTargetError(target_str, cls.ERR_BAD_PORT)
-        return ipv6_addr, None, port
+        return ipv6_addr, port
 
 
 

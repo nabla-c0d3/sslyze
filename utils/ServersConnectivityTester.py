@@ -48,20 +48,38 @@ class InvalidTargetError(Exception):
 
 
 class TargetStringParser(object):
-    """Utility class to parse a 'host:port' string taken from the command line
-    into a valid (host,port) tuple. Supports IPV6 addresses."""
+    """Utility class to parse a 'host:port{ip}' string taken from the command line
+    into a valid (host,ip, port) tuple. Supports IPV6 addresses."""
 
     ERR_BAD_PORT = 'Not a valid host:port'
     ERR_NO_IPV6 = 'IPv6 is not supported on this platform'
 
     @classmethod
     def parse_target_str(cls, target_str, default_port):
+        # extract ip from target
+        if '{' in target_str and '}' in target_str:
+            raw_target = target_str.split('{')
+            raw_ip = raw_target[1]
 
+            ip = raw_ip.replace('}', '')
 
+            # clean the target
+            target_str = raw_target[0]
+        else:
+            ip = None
+
+        # Look for ipv6 hint in target
         if '[' in target_str:
-            return cls._parse_ipv6_target_str(target_str, default_port)
-        else: # Fallback to ipv4
-            return cls._parse_ipv4_target_str(target_str, default_port)
+            (host, port) = cls._parse_ipv6_target_str(target_str, default_port)
+        else:
+            # Look for ipv6 hint in the ip
+            if ip is not None and '[' in ip:
+                (ip, port) = cls._parse_ipv6_target_str(ip, default_port)
+
+            # Fallback to ipv4
+            (host, port) = cls._parse_ipv4_target_str(target_str, default_port)
+
+        return host, ip, port
 
 
     @classmethod
@@ -190,11 +208,14 @@ class ServersConnectivityTester(object):
             defaultPort = cls.DEFAULT_PORTS[shared_settings['starttls']]
         except KeyError:
             defaultPort = cls.DEFAULT_PORTS['default']
-        (host, port) = TargetStringParser.parse_target_str(targetStr, defaultPort)
+        (host, ip, port) = TargetStringParser.parse_target_str(targetStr, defaultPort)
 
+        # Check if the ip was specified
+        if not ip:
+            ip = host
 
         # First try to connect and do StartTLS if needed
-        sslCon = create_sslyze_connection((host, host, port, SSLV23), shared_settings)
+        sslCon = create_sslyze_connection((host, ip, port, SSLV23), shared_settings)
         try:
             sslCon.do_pre_handshake()
             ipAddr = sslCon._sock.getpeername()[0]

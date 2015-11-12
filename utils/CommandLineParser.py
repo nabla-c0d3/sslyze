@@ -43,7 +43,7 @@ class CommandLineParser():
     REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'reneg',
                    'resum', 'certinfo', 'http_get', 'hide_rejected_ciphers',
                    'compression', 'heartbleed']
-    SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 etc...'
+    SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 target3.com:443{ip} etc...'
 
     # StartTLS options
     START_TLS_PROTS = ['smtp', 'xmpp', 'xmpp_server', 'pop3', 'ftp', 'imap', 'ldap', 'rdp', 'postgres', 'auto']

@@ -200,6 +200,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
             # Add one element for each ciphers
             for (sslCipher, (msg, keysize, dh_infos)) in resultList:
+                # Msg contains the server's HTTP status response, which could have unicode characters
+                msg=msg.decode("utf-8")
 
                 # The protocol is supported if at least one cipher suite was successfully negotiated
                 if resultKey == 'acceptedCipherSuites':

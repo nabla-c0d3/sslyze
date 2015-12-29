@@ -32,6 +32,7 @@ from nassl.SslClient import SslClient
 
 class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
+    DEFAULT_CIPHERLIST = "ALL:COMPLEMENTOFALL"
 
     interface = PluginBase.PluginInterface(
         "PluginOpenSSLCipherSuites",
@@ -64,6 +65,13 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         option='hide_rejected_ciphers',
         help="Option - Hides the (usually long) list of cipher suites that were"
         " rejected by the server(s).")
+    interface.add_option(
+        option='cipherlist',
+        help="Option - Test only these ciphers. Default: \"" + DEFAULT_CIPHERLIST +
+            "\" (This tests all ciphers). See "
+            "https://www.openssl.org/docs/apps/ciphers.html for the format of "
+            "the cipherlist string.",
+        dest='test_cipherlist')
 
 
     def process_task(self, target, command, args):
@@ -81,7 +89,15 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         # Get the list of available cipher suites for the given ssl version
         sslClient = SslClient(sslVersion=sslVersion)
-        sslClient.set_cipher_list('ALL:COMPLEMENTOFALL')
+
+	if not self._shared_settings['test_cipherlist']:
+	    self._shared_settings['test_cipherlist'] = PluginOpenSSLCipherSuites.DEFAULT_CIPHERLIST
+        try:
+            sslClient.set_cipher_list(self._shared_settings['test_cipherlist'])
+        except Exception as e:
+	    raise Exception("PluginOpenSSLCipherSuites: Bad cipherlist. "
+                    "See https://www.openssl.org/docs/apps/ciphers.html for syntax.")
+
         cipher_list = sslClient.get_cipher_list()
 
         # Create a thread pool
@@ -146,6 +162,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             #txtOutput.append('')
             #txtOutput.append(titleFormat('Rejected:  Hidden'))
 
+        txtOutput.append(titleFormat('Attempted Cipher List: ' + self._shared_settings['test_cipherlist']))
+
         for (resultKey, resultTitle) in dictTitles:
 
             # Sort the cipher suites by results
@@ -186,8 +204,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         return txtOutput
 
 
-    @staticmethod
-    def _generate_xml_output(result_dicts, command):
+    def _generate_xml_output(self, result_dicts, command):
 
         xmlNodeList = []
         isProtocolSupported = False
@@ -224,7 +241,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             xmlNodeList.append(xmlNode)
 
         # Create the final node and specify if the protocol was supported
-        xmlOutput = Element(command, title=command.upper() + ' Cipher Suites', isProtocolSupported=str(isProtocolSupported))
+        xmlOutput = Element(command, title=command.upper() + ' Cipher Suites', isProtocolSupported=str(isProtocolSupported), cipher_list=self._shared_settings['test_cipherlist'])
         for xmlNode in xmlNodeList:
             xmlOutput.append(xmlNode)
 

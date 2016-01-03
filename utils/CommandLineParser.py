@@ -153,6 +153,12 @@ class CommandLineParser():
             help= 'Client private key passphrase.',
             dest='keypass',
             default='')
+        clientcert_group.add_option(
+            '--ignore_requests',
+            help= 'Ignore client certificate requests',
+            dest='ignore_requests',
+            action='store_true',
+            default=False)
         self._parser.add_option_group(clientcert_group)
 
         # XML output

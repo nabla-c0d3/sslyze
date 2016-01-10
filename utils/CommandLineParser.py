@@ -302,21 +302,16 @@ class CommandLineParser():
             except:
                 raise CommandLineParsingError('Could not open the client certificate file "' + str(args_command_list.cert) + '".')
 
-        if args_command_list.key:
             try:
                 open(args_command_list.key,"r")
             except:
                 raise CommandLineParsingError('Could not open the client private key file "' + str(args_command_list.key) + '"')
 
-            # Try to load the cert and key in OpenSSL
-            try:
-                sslClient = SslClient()
-                sslClient.use_private_key(args_command_list.cert, args_command_list.key, args_command_list.keyform,
-                                          args_command_list.keypass)
-            except _nassl.OpenSSLError as e:
-                if 'bad decrypt' in str(e.args):
-                    raise CommandLineParsingError('Could not decrypt the private key. Wrong passphrase ?')
-                raise CommandLineParsingError('Could not load the certificate or the private key. Passphrase needed ?')
+            # Try to load the cert and key in OpenSSL; will raise an exception if something is wrong
+            SslClient(client_certchain_file=args_command_list.cert,
+                      client_key_file=args_command_list.key,
+                      client_key_type=args_command_list.keyform,
+                      client_key_password=args_command_list.keypass)
 
 
 

@@ -180,29 +180,27 @@ class SSLConnection(DebugSslClient):
     # The following errors mean that the server explicitly rejected the
     # handshake. The goal to differentiate rejected handshakes from random
     # network errors such as the server going offline, etc.
-    HANDSHAKE_REJECTED_SOCKET_ERRORS = \
-        {'was forcibly closed' : 'Received FIN',
-         'reset by peer' : 'Received RST'}
+    HANDSHAKE_REJECTED_SOCKET_ERRORS = {'was forcibly closed' : 'Received FIN',
+                                        'reset by peer' : 'Received RST'}
 
-    HANDSHAKE_REJECTED_SSL_ERRORS = \
-        {'sslv3 alert handshake failure' : 'Alert handshake failure',
-         'no ciphers available' : 'No ciphers available',
-         'excessive message size' : 'Excessive message size',
-         'bad mac decode' : 'Bad mac decode',
-         'wrong version number' : 'Wrong version number',
-         'no cipher match' : 'No cipher match',
-         'bad decompression' : 'Bad decompression',
-         'peer error no cipher' : 'Peer error no cipher',
-         'no cipher list' : 'No ciphers list',
-         'insufficient security' : 'Insufficient security',
-         'block type is not 01' : 'block type is not 01',  # Actually an RSA error
-         'tlsv1 alert protocol version': 'Alert: protocol version '}
+    HANDSHAKE_REJECTED_SSL_ERRORS = {'sslv3 alert handshake failure' : 'Alert handshake failure',
+                                     'no ciphers available' : 'No ciphers available',
+                                     'excessive message size' : 'Excessive message size',
+                                     'bad mac decode' : 'Bad mac decode',
+                                     'wrong version number' : 'Wrong version number',
+                                     'no cipher match' : 'No cipher match',
+                                     'bad decompression' : 'Bad decompression',
+                                     'peer error no cipher' : 'Peer error no cipher',
+                                     'no cipher list' : 'No ciphers list',
+                                     'insufficient security' : 'Insufficient security',
+                                     'block type is not 01' : 'block type is not 01',  # Actually an RSA error
+                                     'tlsv1 alert protocol version': 'Alert: protocol version '}
 
 
     def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations,
                  timeout, maxAttempts):
-        super(SSLConnection, self).__init__(None, sslVersion, SSL_VERIFY_NONE,
-                                            sslVerifyLocations)
+        super(SSLConnection, self).__init__(ssl_version=sslVersion, ssl_verify=SSL_VERIFY_NONE,
+                                            ssl_verify_locations=sslVerifyLocations)
         self._timeout = timeout
         self._sock = None
         self._host = host

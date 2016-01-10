@@ -80,7 +80,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             raise Exception("PluginOpenSSLCipherSuites: Unknown command.")
 
         # Get the list of available cipher suites for the given ssl version
-        sslClient = SslClient(sslVersion=sslVersion)
+        sslClient = SslClient(ssl_version=sslVersion)
         sslClient.set_cipher_list('ALL:COMPLEMENTOFALL')
         cipher_list = sslClient.get_cipher_list()
 

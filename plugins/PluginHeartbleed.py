@@ -137,13 +137,13 @@ def do_handshake_with_heartbleed(self):
         # OpenSSL is expecting more data from the peer
         # Send available handshake data to the peer
         # In this heartbleed handshake we only send the client hello
-        lenToRead = self._networkBio.pending()
+        lenToRead = self._network_bio.pending()
         while lenToRead:
             # Get the data from the SSL engine
-            handshakeDataOut = self._networkBio.read(lenToRead)
+            handshakeDataOut = self._network_bio.read(lenToRead)
             # Send it to the peer
             self._sock.send(handshakeDataOut)
-            lenToRead = self._networkBio.pending()
+            lenToRead = self._network_bio.pending()
 
         # Send the heartbleed payload after the client hello
         self._sock.send(heartbleed_payload(self.sslVersion))
@@ -154,7 +154,7 @@ def do_handshake_with_heartbleed(self):
         if len(handshakeDataIn) == 0:
             raise IOError('Nassl SSL handshake failed: peer did not send data back.')
         # Pass the data to the SSL engine
-        self._networkBio.write(handshakeDataIn)
+        self._network_bio.write(handshakeDataIn)
 
         # Signal that we sent the heartbleed payload and just stop the handshake
         raise HeartbleedSent("")

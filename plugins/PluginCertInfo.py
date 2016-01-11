@@ -415,7 +415,7 @@ class PluginCertInfo(PluginBase.PluginBase):
         OCSP response.
         """
         (_, _, _, ssl_version) = target
-        ssl_conn = create_sslyze_connection(target, self._shared_settings, ssl_version, sslVerifyLocations=store_path)
+        ssl_conn = create_sslyze_connection(target, self._shared_settings, ssl_version, ssl_verify_locations=store_path)
 
         # Enable OCSP stapling
         ssl_conn.set_tlsext_status_ocsp()

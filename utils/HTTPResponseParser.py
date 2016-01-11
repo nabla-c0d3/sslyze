@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python2.7
 # Utility to parse HTTP responses
 # http://pythonwise.blogspot.com/2010/02/parse-http-response.html
 from StringIO import StringIO

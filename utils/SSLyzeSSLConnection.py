@@ -39,9 +39,8 @@ def create_sslyze_connection(target, shared_settings, ssl_version=None, ssl_veri
     in the shared_settings. All plugins should use this for their SSL
     connections.
     """
-    (host, ip, port, ssl_support) = target
-    # Override SSL version if one was specified
-    # Otherwise use the one supported by the server
+    (host, ip, port, ssl_version_supported) = target
+    # Override SSL version if one was specified; otherwise use the one supported by the server
     if ssl_version is not None:
         target = (host, ip, port, ssl_version)
 

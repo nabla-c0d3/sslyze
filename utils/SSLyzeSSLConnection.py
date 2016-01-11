@@ -23,8 +23,8 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-from base64 import b64decode, b64encode
-from urllib import quote, unquote
+from base64 import b64encode
+from urllib import quote
 
 import socket, struct, time, random
 from HTTPResponseParser import parse_http_response
@@ -85,41 +85,26 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
             else:
                 connectionClass = SSLConnection
 
-        # XMPP configuration
-        if connectionClass in [XMPPConnection, XMPPServerConnection]:
-            sslConn = connectionClass(target, sslVerifyLocations, timeout,
-                                      shared_settings['nb_retries'],
-                                      shared_settings['xmpp_to'])
-        else:
-            sslConn = connectionClass(target, sslVerifyLocations, timeout,
-                                      shared_settings['nb_retries'])
+        # Create the right StartTLS connection
+        sslConn = connectionClass(target, sslVerifyLocations, timeout, shared_settings['nb_retries'])
 
-
-    elif shared_settings['https_tunnel_host']:
-        # Using an HTTP CONNECT proxy to tunnel SSL traffic
-        if shared_settings['http_get']:
-            sslConn = HTTPSTunnelConnection(target, sslVerifyLocations, timeout,
-                                            shared_settings['nb_retries'],
-                                            shared_settings['https_tunnel_host'],
-                                            shared_settings['https_tunnel_port'],
-                                            shared_settings['https_tunnel_user'],
-                                            shared_settings['https_tunnel_password']
-                                            )
-        else:
-            sslConn = SSLTunnelConnection(target, sslVerifyLocations, timeout,
-                                          shared_settings['nb_retries'],
-                                          shared_settings['https_tunnel_host'],
-                                          shared_settings['https_tunnel_port'],
-                                          shared_settings['https_tunnel_user'],
-                                          shared_settings['https_tunnel_password']
-                                          )
+        # Add XMPP configuration
+        if connectionClass in [XMPPConnection, XMPPServerConnection] and shared_settings['xmpp_to']:
+            sslConn.set_xmpp_to(shared_settings['xmpp_to'])
 
     elif shared_settings['http_get']:
-        sslConn = HTTPSConnection(target, sslVerifyLocations, timeout,
-                                  shared_settings['nb_retries'])
+        sslConn = HTTPSConnection(target, sslVerifyLocations, timeout, shared_settings['nb_retries'])
+
     else:
-        sslConn = SSLConnection(target, sslVerifyLocations, timeout,
-                                shared_settings['nb_retries'])
+        sslConn = SSLConnection(target, sslVerifyLocations, timeout, shared_settings['nb_retries'])
+
+
+    if shared_settings['https_tunnel_host']:
+        # Using an HTTP CONNECT proxy to tunnel SSL traffic
+        sslConn.enable_http_connect_tunneling(tunnel_host=shared_settings['https_tunnel_host'],
+                                              tunnel_port=shared_settings['https_tunnel_port'],
+                                              tunnel_user=shared_settings['https_tunnel_user'],
+                                              tunnel_password=shared_settings['https_tunnel_password'])
 
 
     # Load client certificate and private key
@@ -132,8 +117,7 @@ def create_sslyze_connection(target, shared_settings, sslVersion=None, sslVerify
     # Add Server Name Indication
     try:
         if shared_settings['sni']:
-                sslConn.set_tlsext_host_name(shared_settings['sni'])
-
+            sslConn.set_tlsext_host_name(shared_settings['sni'])
         else:
             # Always specify SNI as servers like Cloudflare require it
             sslConn.set_tlsext_host_name(host)
@@ -197,9 +181,17 @@ class SSLConnection(DebugSslClient):
                                      'tlsv1 alert protocol version': 'Alert: protocol version '}
 
 
-    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations,
-                 timeout, maxAttempts):
-        super(SSLConnection, self).__init__(ssl_version=sslVersion, ssl_verify=SSL_VERIFY_NONE,
+    # Constants for tunneling the traffic through a proxy
+    HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
+    HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = 'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {2}\r\n\r\n'
+
+    ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
+    ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
+
+
+    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout, maxAttempts):
+        super(SSLConnection, self).__init__(ssl_version=sslVersion,
+                                            ssl_verify=SSL_VERIFY_NONE,
                                             ssl_verify_locations=sslVerifyLocations)
         self._timeout = timeout
         self._sock = None
@@ -207,11 +199,44 @@ class SSLConnection(DebugSslClient):
         self._ip = ip
         self._port = port
         self._maxAttempts = maxAttempts
+        self._tunnel_host = None
+
+
+    def enable_http_connect_tunneling(self, tunnel_host, tunnel_port, tunnel_user=None, tunnel_password=None):
+        """Proxy the traffic through an HTTP Connect proxy."""
+        self._tunnel_host = tunnel_host
+        self._tunnel_port = tunnel_port
+        self._tunnel_basic_auth_token = None
+        if tunnel_user is not None:
+            self._tunnel_basic_auth_token = b64encode('{0}:{1}'.format(quote(tunnel_user), quote(tunnel_password)))
 
 
     def do_pre_handshake(self):
-        # Just a TCP connection
-        self._sock = socket.create_connection((self._ip, self._port), self._timeout)
+        """Open a socket to the server; setup HTTP tunneling if a proxy was configured."""
+
+        if self._tunnel_host:
+            # Proxy configured; setup HTTP tunneling
+            try:
+                self._sock = socket.create_connection((self._tunnel_host, self._tunnel_port), self._timeout)
+            except socket.timeout as e:
+                raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[0]))
+            except socket.error as e:
+                raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[1]))
+
+            # Send a CONNECT request with the host we want to tunnel to
+            if self._tunnel_basic_auth_token is None:
+                self._sock.send(self.HTTP_CONNECT_REQ.format(self._host, self._port))
+            else:
+                self._sock.send(self.HTTP_CONNECT_REQ_PROXY_AUTH_BASIC.format(self._host, self._port,
+                                                                              self._tunnel_basic_auth_token))
+            httpResp = parse_http_response(self._sock)
+
+            # Check if the proxy was able to connect to the host
+            if httpResp.status != 200:
+                raise ProxyError(self.ERR_CONNECT_REJECTED)
+        else:
+            # No proxy; connect directly to the server
+            self._sock = socket.create_connection((self._ip, self._port), self._timeout)
 
 
     def connect(self):
@@ -321,61 +346,6 @@ class HTTPSConnection(SSLConnection):
         return result
 
 
-
-class SSLTunnelConnection(SSLConnection):
-    """SSL connection class that connects to a server through a CONNECT proxy."""
-
-    HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
-    HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = 'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {2}\r\n\r\n'
-
-    ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
-    ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
-
-
-    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout, 
-                    maxAttempts, tunnelHost, tunnelPort, tunnelUser=None, tunnelPassword=None):
-
-        super(SSLTunnelConnection, self).__init__((host, ip, port, sslVersion),
-                                                  sslVerifyLocations, timeout,
-                                                  maxAttempts)
-        self._tunnelHost = tunnelHost
-        self._tunnelPort = tunnelPort
-        self._tunnelBasicAuth = None
-        if tunnelUser is not None:
-            self._tunnelBasicAuth = b64encode('%s:%s' % (quote(tunnelUser), quote(tunnelPassword)))
-
-
-    def do_pre_handshake(self):
-
-        try: # Connect to the proxy first
-            self._sock = socket.create_connection((self._tunnelHost,
-                                                   self._tunnelPort),
-                                                   self._timeout)
-        except socket.timeout as e:
-            raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[0]))
-        except socket.error as e:
-            raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[1]))
-
-        # Send a CONNECT request with the host we want to tunnel to
-        if self._tunnelBasicAuth is None:
-            self._sock.send(self.HTTP_CONNECT_REQ.format(self._host, self._port))
-        else:
-            self._sock.send(self.HTTP_CONNECT_REQ_PROXY_AUTH_BASIC.format(self._host, self._port,
-                                        self._tunnelBasicAuth))
-        httpResp = parse_http_response(self._sock)
-
-        # Check if the proxy was able to connect to the host
-        if httpResp.status != 200:
-            raise ProxyError(self.ERR_CONNECT_REJECTED)
-
-
-
-class HTTPSTunnelConnection(SSLTunnelConnection, HTTPSConnection):
-    """SSL connection class that connects to a server through a CONNECT proxy
-    and sends an HTTP GET request after the SSL handshake."""
-
-
-
 class SMTPConnection(SSLConnection):
     """SSL connection class that performs an SMTP StartTLS negotiation
     before the SSL handshake and sends a NOOP after the handshake."""
@@ -385,8 +355,8 @@ class SMTPConnection(SSLConnection):
 
 
     def do_pre_handshake(self):
+        super(SMTPConnection, self).do_pre_handshake()
 
-        self._sock = socket.create_connection((self._ip, self._port), self._timeout)
         # Get the SMTP banner
         self._sock.recv(2048)
 
@@ -425,16 +395,15 @@ class XMPPConnection(SSLConnection):
     XMPP_STARTTLS = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
 
-    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations,
-                 timeout, maxAttempts, xmpp_to=None):
+    def __init__(self, (host, ip, port, sslVersion), sslVerifyLocations, timeout, maxAttempts):
 
-        super(XMPPConnection, self).__init__((host, ip, port, sslVersion),
-                                                  sslVerifyLocations, timeout,
-                                                  maxAttempts)
+        super(XMPPConnection, self).__init__((host, ip, port, sslVersion), sslVerifyLocations, timeout, maxAttempts)
+        self._xmpp_to = host
 
+
+    def set_xmpp_to(self, xmpp_to):
+        """XMPP host specified with the XMPP handshake."""
         self._xmpp_to = xmpp_to
-        if xmpp_to is None:
-            self._xmpp_to = host
 
 
     def do_pre_handshake(self):
@@ -442,10 +411,10 @@ class XMPPConnection(SSLConnection):
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
         """
-        # Open an XMPP stream
-        self._sock = socket.create_connection((self._ip, self._port), self._timeout)
-        self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
+        super(XMPPConnection, self).do_pre_handshake()
 
+        # Open an XMPP stream
+        self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
 
         # Get the server's features and check for an error
         serverResp = self._sock.recv(4096)
@@ -489,7 +458,7 @@ class LDAPConnection(SSLConnection):
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
         """
-        self._sock = socket.create_connection((self._ip, self._port), self._timeout)
+        super(LDAPConnection, self).do_pre_handshake()
 
         # Send Start TLS
         self._sock.send(self.START_TLS_CMD)
@@ -511,7 +480,7 @@ class PGConnection(SSLConnection):
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
         """
-        self._sock = socket.create_connection((self._host, self._port), self._timeout)
+        super(PGConnection, self).do_pre_handshake()
 
         self._sock.send(self.START_TLS_CMD)
         data = self._sock.recv(1)
@@ -533,7 +502,7 @@ class RDPConnection(SSLConnection):
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
         """
-        self._sock = socket.create_connection((self._host, self._port), self._timeout)
+        super(RDPConnection, self).do_pre_handshake()
 
         self._sock.send(self.START_TLS_CMD)
         data = self._sock.recv(4)
@@ -561,7 +530,7 @@ class GenericStartTLSConnection(SSLConnection):
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
         """
-        self._sock = socket.create_connection((self._ip, self._port), self._timeout)
+        super(GenericStartTLSConnection, self).do_pre_handshake()
 
         # Grab the banner
         self._sock.recv(2048)

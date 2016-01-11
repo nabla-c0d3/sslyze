@@ -354,10 +354,6 @@ class CommandLineParser():
             if args_command_list.starttls not in self.START_TLS_PROTS:
                 raise CommandLineParsingError(self.START_TLS_USAGE)
 
-        if args_command_list.starttls and args_command_list.https_tunnel:
-            raise CommandLineParsingError(
-                'Cannot have --https_tunnel and --starttls at the same time.')
-
         # Number of connection retries
         if args_command_list.nb_retries < 1:
             raise CommandLineParsingError(

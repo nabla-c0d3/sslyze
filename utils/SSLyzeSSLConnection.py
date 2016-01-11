@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
 # Name:         SSLyzeSSLConnection.py
 # Purpose:      The SSL connection class that all SSLyze Plugins should be

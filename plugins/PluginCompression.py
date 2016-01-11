@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
 # Name:         PluginCompression.py
 # Purpose:      Tests the server for Zlib compression support.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # C:\Python27_32\python.exe setup_py2exe.py py2exe
 from distutils.core import setup
 from glob import glob

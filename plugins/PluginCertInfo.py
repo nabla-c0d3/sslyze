@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
 # Name:         PluginCertInfo.py
 # Purpose:      Verifies the target server's certificate validity against

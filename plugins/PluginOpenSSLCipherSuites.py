@@ -127,67 +127,66 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 # == INTERNAL FUNCTIONS ==
 
 # FORMATTING FUNCTIONS
-    def _generate_text_output(self, resultDicts, sslVersion):
+    def _generate_text_output(self, result_dict_list, ssl_version):
 
-        cipherFormat = '                 {0:<32}    {1:<35}'.format
-        titleFormat =  '      {0:<32} '.format
-        keysizeFormat = '{0:<30}{1:<15}{2:<10}'.format
+        ACCEPTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {message:<60}'.format
+        REJECTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}    {message:<60}'.format
+        CIPHER_LIST_TITLE_FORMAT = u'      {section_title:<32} '.format
 
-        txtTitle = self.PLUGIN_TITLE_FORMAT(sslVersion.upper() + ' Cipher Suites')
-        txtOutput = []
+        final_output_txt = [self.PLUGIN_TITLE_FORMAT(ssl_version.upper() + ' Cipher Suites')]
 
-        dictTitles = [('preferredCipherSuite', 'Preferred:'),
-                      ('acceptedCipherSuites', 'Accepted:'),
-                      ('errors', 'Undefined - An unexpected error happened:'),
-                      ('rejectedCipherSuites', 'Rejected:')]
 
-        if self._shared_settings['hide_rejected_ciphers']:
-            dictTitles.pop(3)
-            #txtOutput.append('')
-            #txtOutput.append(titleFormat('Rejected:  Hidden'))
+        # Not using a dict here as we want to sort the sections in the output
+        dict_title_list = [('preferredCipherSuite', 'Preferred:'),
+                       ('acceptedCipherSuites', 'Accepted:'),
+                       ('errors', 'Undefined - An unexpected error happened:')]
 
-        for (resultKey, resultTitle) in dictTitles:
+        if not self._shared_settings['hide_rejected_ciphers']:
+            dict_title_list.append(('rejectedCipherSuites', 'Rejected:'))
+
+        for result_key, result_title in dict_title_list:
 
             # Sort the cipher suites by results
-            result_list = sorted(resultDicts[resultKey].iteritems(),
-                                 key=lambda (k,v): (v,k), reverse=True)
+            result_list = sorted(result_dict_list[result_key].iteritems(), key=lambda (k,v): (v, k), reverse=True)
 
             # Add a new line and title
-            if len(resultDicts[resultKey]) == 0: # No ciphers
-                pass # Hide empty results
-                # txtOutput.append(titleFormat(resultTitle + ' None'))
+            if len(result_dict_list[result_key]) == 0:  # No ciphers
+                pass  # Hide empty results
             else:
-                #txtOutput.append('')
-                txtOutput.append(titleFormat(resultTitle))
+                final_output_txt.append(CIPHER_LIST_TITLE_FORMAT(section_title=result_title))
 
                 # Add one line for each ciphers
-                for (cipherTxt, (msg, keysize, dh_infos)) in result_list:
+                for (cipher_name, (msg, keysize, dh_infos)) in result_list:
+
+                    # Replace the OpenSSL name with the RFC name if we have it
+                    cipher_name = self.OPENSSL_TO_RFC_NAMES_MAPPING[ssl_version].get(cipher_name, cipher_name)
 
                     if keysize:
-                        if 'ADH' in cipherTxt or 'AECDH' in cipherTxt:
+                        # Cipher suite was accepted
+                        keysize_str = str(keysize) + ' bits'
+                        if 'anon' in cipher_name:
                             # Always display ANON as the key size for anonymous ciphers to make it visible
-                            keysizeStr = 'ANONYMOUS'
-                        else:
-                            keysizeStr = str(keysize) + ' bits'
+                            keysize_str = 'ANONYMOUS'
 
-                        if dh_infos :
-                            cipherTxt = keysizeFormat(cipherTxt, "%s-%s bits"%(dh_infos["Type"], dh_infos["GroupSize"]), keysizeStr)
-                        else :
-                            cipherTxt = keysizeFormat(cipherTxt, "-",  keysizeStr)
+                        dh_txt = "{}-{} bits".format(dh_infos["Type"], dh_infos["GroupSize"]) if dh_infos else '-'
 
-                    txtOutput.append(cipherFormat(cipherTxt, msg))
-        if txtOutput == []:
+                        cipher_line_txt = ACCEPTED_CIPHER_LINE_FORMAT(cipher_name=cipher_name, dh_size=dh_txt,
+                                                                      key_size=keysize_str, message=msg)
+                    else:
+                        # Cipher suite was rejected
+                        cipher_line_txt = REJECTED_CIPHER_LINE_FORMAT(cipher_name=cipher_name, message=msg)
+
+                    final_output_txt.append(cipher_line_txt)
+
+        if len(final_output_txt) == 1:
             # Server rejected all cipher suites
-            txtOutput = [txtTitle, '      Server rejected all cipher suites.']
-        else:
-            txtOutput = [txtTitle] + txtOutput
+            final_output_txt.append('      Server rejected all cipher suites.')
+
+        return final_output_txt
 
 
-        return txtOutput
-
-
-    @staticmethod
-    def _generate_xml_output(result_dicts, command):
+    @classmethod
+    def _generate_xml_output(cls, result_dicts, command):
 
         xmlNodeList = []
         isProtocolSupported = False
@@ -203,16 +202,19 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
                 # Msg contains the server's HTTP status response, which could have unicode characters
                 msg=msg.decode("utf-8")
 
+                # Replace the OpenSSL name with the RFC name if we have it
+                sslCipher = cls.OPENSSL_TO_RFC_NAMES_MAPPING[command].get(sslCipher, sslCipher)
+
                 # The protocol is supported if at least one cipher suite was successfully negotiated
                 if resultKey == 'acceptedCipherSuites':
                     isProtocolSupported = True
 
-                cipherXmlAttr = {'name' : sslCipher, 'connectionStatus' : msg}
+                cipherXmlAttr = {'name': sslCipher, 'connectionStatus': msg}
                 if keysize:
                     cipherXmlAttr['keySize'] = str(keysize)
 
                 # Add an Anonymous attribute for anonymous ciphers
-                cipherXmlAttr['anonymous'] = str(True) if 'ADH' in sslCipher or 'AECDH' in sslCipher else str(False)
+                cipherXmlAttr['anonymous'] = str(True) if 'anon' in sslCipher else str(False)
 
                 cipherXml = Element('cipherSuite', attrib = cipherXmlAttr)
                 if dh_infos : 
@@ -224,7 +226,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             xmlNodeList.append(xmlNode)
 
         # Create the final node and specify if the protocol was supported
-        xmlOutput = Element(command, title=command.upper() + ' Cipher Suites', isProtocolSupported=str(isProtocolSupported))
+        xmlOutput = Element(command, title='{0} Cipher Suites'.format(command.upper()),
+                            isProtocolSupported=str(isProtocolSupported))
         for xmlNode in xmlNodeList:
             xmlOutput.append(xmlNode)
 
@@ -294,3 +297,189 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         finally:
             sslConn.close()
+
+
+    # Cipher suite name mappings so we can return the RFC names, instead of the OpenSSL names
+    # Based on https://testssl.sh/openssl-rfc.mappping.html
+    SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING = {
+        "RC4-MD5": "SSL_CK_RC4_128_WITH_MD5",
+        "EXP-RC4-MD5": "SSL_CK_RC4_128_EXPORT40_WITH_MD5",
+        "RC2-CBC-MD5": "SSL_CK_RC2_128_CBC_WITH_MD5",
+        "EXP-RC2-CBC-MD5": "SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5",
+        "IDEA-CBC-MD5": "SSL_CK_IDEA_128_CBC_WITH_MD5",
+        "DES-CBC-MD5": "SSL_CK_DES_64_CBC_WITH_MD5",
+        "DES-CBC3-MD5": "SSL_CK_DES_192_EDE3_CBC_WITH_MD5",
+        "RC4-64-MD5": "SSL_CK_RC4_64_WITH_MD5"
+    }
+
+    TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
+        "NULL-MD5": "TLS_RSA_WITH_NULL_MD5",
+        "NULL-SHA": "TLS_RSA_WITH_NULL_SHA",
+        "EXP-RC4-MD5": "TLS_RSA_EXPORT_WITH_RC4_40_MD5",
+        "RC4-MD5": "TLS_RSA_WITH_RC4_128_MD5",
+        "RC4-SHA": "TLS_RSA_WITH_RC4_128_SHA",
+        "EXP-RC2-CBC-MD5": "TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5",
+        "IDEA-CBC-SHA": "TLS_RSA_WITH_IDEA_CBC_SHA",
+        "EXP-DES-CBC-SHA": "TLS_RSA_EXPORT_WITH_DES40_CBC_SHA",
+        "DES-CBC-SHA": "TLS_RSA_WITH_DES_CBC_SHA",
+        "DES-CBC3-SHA": "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+        "EXP-DH-DSS-DES-CBC-SHA": "TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA",
+        "DH-DSS-DES-CBC-SHA": "TLS_DH_DSS_WITH_DES_CBC_SHA",
+        "DH-DSS-DES-CBC3-SHA": "TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA",
+        "EXP-DH-RSA-DES-CBC-SHA": "TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA",
+        "DH-RSA-DES-CBC-SHA": "TLS_DH_RSA_WITH_DES_CBC_SHA",
+        "DH-RSA-DES-CBC3-SHA": "TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA",
+        "EXP-EDH-DSS-DES-CBC-SHA": "TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA",
+        "EDH-DSS-DES-CBC-SHA": "TLS_DHE_DSS_WITH_DES_CBC_SHA",
+        "EDH-DSS-DES-CBC3-SHA": "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+        "EXP-EDH-RSA-DES-CBC-SHA": "TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
+        "EDH-RSA-DES-CBC-SHA": "TLS_DHE_RSA_WITH_DES_CBC_SHA",
+        "EDH-RSA-DES-CBC3-SHA": "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+        "EXP-ADH-RC4-MD5": "TLS_DH_anon_EXPORT_WITH_RC4_40_MD5",
+        "ADH-RC4-MD5": "TLS_DH_anon_WITH_RC4_128_MD5",
+        "EXP-ADH-DES-CBC-SHA": "TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
+        "ADH-DES-CBC-SHA": "TLS_DH_anon_WITH_DES_CBC_SHA",
+        "ADH-DES-CBC3-SHA": "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA",
+        "KRB5-DES-CBC-SHA": "TLS_KRB5_WITH_DES_CBC_SHA",
+        "KRB5-DES-CBC3-SHA": "TLS_KRB5_WITH_3DES_EDE_CBC_SHA",
+        "KRB5-RC4-SHA": "TLS_KRB5_WITH_RC4_128_SHA",
+        "KRB5-IDEA-CBC-SHA": "TLS_KRB5_WITH_IDEA_CBC_SHA",
+        "KRB5-DES-CBC-MD5": "TLS_KRB5_WITH_DES_CBC_MD5",
+        "KRB5-DES-CBC3-MD5": "TLS_KRB5_WITH_3DES_EDE_CBC_MD5",
+        "KRB5-RC4-MD5": "TLS_KRB5_WITH_RC4_128_MD5",
+        "KRB5-IDEA-CBC-MD5": "TLS_KRB5_WITH_IDEA_CBC_MD5",
+        "EXP-KRB5-DES-CBC-SHA": "TLS_KRB5_EXPORT_WITH_DES_CBC_40_SHA",
+        "EXP-KRB5-RC2-CBC-SHA": "TLS_KRB5_EXPORT_WITH_RC2_CBC_40_SHA",
+        "EXP-KRB5-RC4-SHA": "TLS_KRB5_EXPORT_WITH_RC4_40_SHA",
+        "EXP-KRB5-DES-CBC-MD5": "TLS_KRB5_EXPORT_WITH_DES_CBC_40_MD5",
+        "EXP-KRB5-RC2-CBC-MD5": "TLS_KRB5_EXPORT_WITH_RC2_CBC_40_MD5",
+        "EXP-KRB5-RC4-MD5": "TLS_KRB5_EXPORT_WITH_RC4_40_MD5",
+        "AES128-SHA": "TLS_RSA_WITH_AES_128_CBC_SHA",
+        "DH-DSS-AES128-SHA": "TLS_DH_DSS_WITH_AES_128_CBC_SHA",
+        "DH-RSA-AES128-SHA": "TLS_DH_RSA_WITH_AES_128_CBC_SHA",
+        "DHE-DSS-AES128-SHA": "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+        "DHE-RSA-AES128-SHA": "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+        "ADH-AES128-SHA": "TLS_DH_anon_WITH_AES_128_CBC_SHA",
+        "AES256-SHA": "TLS_RSA_WITH_AES_256_CBC_SHA",
+        "DH-DSS-AES256-SHA": "TLS_DH_DSS_WITH_AES_256_CBC_SHA",
+        "DH-RSA-AES256-SHA": "TLS_DH_RSA_WITH_AES_256_CBC_SHA",
+        "DHE-DSS-AES256-SHA": "TLS_DHE_DSS_WITH_AES_256_CBC_SHA",
+        "DHE-RSA-AES256-SHA": "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
+        "ADH-AES256-SHA": "TLS_DH_anon_WITH_AES_256_CBC_SHA",
+        "NULL-SHA256": "TLS_RSA_WITH_NULL_SHA256",
+        "AES128-SHA256": "TLS_RSA_WITH_AES_128_CBC_SHA256",
+        "AES256-SHA256": "TLS_RSA_WITH_AES_256_CBC_SHA256",
+        "DH-DSS-AES128-SHA256": "TLS_DH_DSS_WITH_AES_128_CBC_SHA256",
+        "DH-RSA-AES128-SHA256": "TLS_DH_RSA_WITH_AES_128_CBC_SHA256",
+        "DHE-DSS-AES128-SHA256": "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256",
+        "CAMELLIA128-SHA": "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA",
+        "DH-DSS-CAMELLIA128-SHA": "TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA",
+        "DH-RSA-CAMELLIA128-SHA": "TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA",
+        "DHE-DSS-CAMELLIA128-SHA": "TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA",
+        "DHE-RSA-CAMELLIA128-SHA": "TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA",
+        "ADH-CAMELLIA128-SHA": "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA",
+        "EXP1024-DES-CBC-SHA": "TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA",
+        "EXP1024-DHE-DSS-DES-CBC-SHA": "TLS_DHE_DSS_EXPORT1024_WITH_DES_CBC_SHA",
+        "EXP1024-RC4-SHA": "TLS_RSA_EXPORT1024_WITH_RC4_56_SHA",
+        "EXP1024-DHE-DSS-RC4-SHA": "TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA",
+        "DHE-DSS-RC4-SHA": "TLS_DHE_DSS_WITH_RC4_128_SHA",
+        "DHE-RSA-AES128-SHA256": "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
+        "DH-DSS-AES256-SHA256": "TLS_DH_DSS_WITH_AES_256_CBC_SHA256",
+        "DH-RSA-AES256-SHA256": "TLS_DH_RSA_WITH_AES_256_CBC_SHA256",
+        "DHE-DSS-AES256-SHA256": "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
+        "DHE-RSA-AES256-SHA256": "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
+        "ADH-AES128-SHA256": "TLS_DH_anon_WITH_AES_128_CBC_SHA256",
+        "ADH-AES256-SHA256": "TLS_DH_anon_WITH_AES_256_CBC_SHA256",
+        "GOST94-GOST89-GOST89": "TLS_GOSTR341094_WITH_28147_CNT_IMIT",
+        "GOST2001-GOST89-GOST89": "TLS_GOSTR341001_WITH_28147_CNT_IMIT",
+        "CAMELLIA256-SHA": "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA",
+        "DH-DSS-CAMELLIA256-SHA": "TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA",
+        "DH-RSA-CAMELLIA256-SHA": "TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA",
+        "DHE-DSS-CAMELLIA256-SHA": "TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA",
+        "DHE-RSA-CAMELLIA256-SHA": "TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA",
+        "ADH-CAMELLIA256-SHA": "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA",
+        "PSK-RC4-SHA": "TLS_PSK_WITH_RC4_128_SHA",
+        "PSK-3DES-EDE-CBC-SHA": "TLS_PSK_WITH_3DES_EDE_CBC_SHA",
+        "PSK-AES128-CBC-SHA": "TLS_PSK_WITH_AES_128_CBC_SHA",
+        "PSK-AES256-CBC-SHA": "TLS_PSK_WITH_AES_256_CBC_SHA",
+        "SEED-SHA": "TLS_RSA_WITH_SEED_CBC_SHA",
+        "DH-DSS-SEED-SHA": "TLS_DH_DSS_WITH_SEED_CBC_SHA",
+        "DH-RSA-SEED-SHA": "TLS_DH_RSA_WITH_SEED_CBC_SHA",
+        "DHE-DSS-SEED-SHA": "TLS_DHE_DSS_WITH_SEED_CBC_SHA",
+        "DHE-RSA-SEED-SHA": "TLS_DHE_RSA_WITH_SEED_CBC_SHA",
+        "ADH-SEED-SHA": "TLS_DH_anon_WITH_SEED_CBC_SHA",
+        "AES128-GCM-SHA256": "TLS_RSA_WITH_AES_128_GCM_SHA256",
+        "AES256-GCM-SHA384": "TLS_RSA_WITH_AES_256_GCM_SHA384",
+        "DHE-RSA-AES128-GCM-SHA256": "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256",
+        "DHE-RSA-AES256-GCM-SHA384": "TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
+        "DH-RSA-AES128-GCM-SHA256": "TLS_DH_RSA_WITH_AES_128_GCM_SHA256",
+        "DH-RSA-AES256-GCM-SHA384": "TLS_DH_RSA_WITH_AES_256_GCM_SHA384",
+        "DHE-DSS-AES128-GCM-SHA256": "TLS_DHE_DSS_WITH_AES_128_GCM_SHA256",
+        "DHE-DSS-AES256-GCM-SHA384": "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384",
+        "DH-DSS-AES128-GCM-SHA256": "TLS_DH_DSS_WITH_AES_128_GCM_SHA256",
+        "DH-DSS-AES256-GCM-SHA384": "TLS_DH_DSS_WITH_AES_256_GCM_SHA384",
+        "ADH-AES128-GCM-SHA256": "TLS_DH_anon_WITH_AES_128_GCM_SHA256",
+        "ADH-AES256-GCM-SHA384": "TLS_DH_anon_WITH_AES_256_GCM_SHA384",
+        "TLS_FALLBACK_SCSV": "TLS_FALLBACK_SCSV",
+        "ECDH-ECDSA-NULL-SHA": "TLS_ECDH_ECDSA_WITH_NULL_SHA",
+        "ECDH-ECDSA-RC4-SHA": "TLS_ECDH_ECDSA_WITH_RC4_128_SHA",
+        "ECDH-ECDSA-DES-CBC3-SHA": "TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA",
+        "ECDH-ECDSA-AES128-SHA": "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+        "ECDH-ECDSA-AES256-SHA": "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
+        "ECDHE-ECDSA-NULL-SHA": "TLS_ECDHE_ECDSA_WITH_NULL_SHA",
+        "ECDHE-ECDSA-RC4-SHA": "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
+        "ECDHE-ECDSA-DES-CBC3-SHA": "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+        "ECDHE-ECDSA-AES128-SHA": "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+        "ECDHE-ECDSA-AES256-SHA": "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+        "ECDH-RSA-NULL-SHA": "TLS_ECDH_RSA_WITH_NULL_SHA",
+        "ECDH-RSA-RC4-SHA": "TLS_ECDH_RSA_WITH_RC4_128_SHA",
+        "ECDH-RSA-DES-CBC3-SHA": "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+        "ECDH-RSA-AES128-SHA": "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
+        "ECDH-RSA-AES256-SHA": "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
+        "ECDHE-RSA-NULL-SHA": "TLS_ECDHE_RSA_WITH_NULL_SHA",
+        "ECDHE-RSA-RC4-SHA": "TLS_ECDHE_RSA_WITH_RC4_128_SHA",
+        "ECDHE-RSA-DES-CBC3-SHA": "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+        "ECDHE-RSA-AES128-SHA": "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+        "ECDHE-RSA-AES256-SHA": "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+        "AECDH-NULL-SHA": "TLS_ECDH_anon_WITH_NULL_SHA",
+        "AECDH-RC4-SHA": "TLS_ECDH_anon_WITH_RC4_128_SHA",
+        "AECDH-DES-CBC3-SHA": "TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA",
+        "AECDH-AES128-SHA": "TLS_ECDH_anon_WITH_AES_128_CBC_SHA",
+        "AECDH-AES256-SHA": "TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
+        "SRP-3DES-EDE-CBC-SHA": "TLS_SRP_SHA_WITH_3DES_EDE_CBC_SHA",
+        "SRP-RSA-3DES-EDE-CBC-SHA": "TLS_SRP_SHA_RSA_WITH_3DES_EDE_CBC_SHA",
+        "SRP-DSS-3DES-EDE-CBC-SHA": "TLS_SRP_SHA_DSS_WITH_3DES_EDE_CBC_SHA",
+        "SRP-AES-128-CBC-SHA": "TLS_SRP_SHA_WITH_AES_128_CBC_SHA",
+        "SRP-RSA-AES-128-CBC-SHA": "TLS_SRP_SHA_RSA_WITH_AES_128_CBC_SHA",
+        "SRP-DSS-AES-128-CBC-SHA": "TLS_SRP_SHA_DSS_WITH_AES_128_CBC_SHA",
+        "SRP-AES-256-CBC-SHA": "TLS_SRP_SHA_WITH_AES_256_CBC_SHA",
+        "SRP-RSA-AES-256-CBC-SHA": "TLS_SRP_SHA_RSA_WITH_AES_256_CBC_SHA",
+        "SRP-DSS-AES-256-CBC-SHA": "TLS_SRP_SHA_DSS_WITH_AES_256_CBC_SHA",
+        "ECDHE-ECDSA-AES128-SHA256": "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+        "ECDHE-ECDSA-AES256-SHA384": "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+        "ECDH-ECDSA-AES128-SHA256": "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256",
+        "ECDH-ECDSA-AES256-SHA384": "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384",
+        "ECDHE-RSA-AES128-SHA256": "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+        "ECDHE-RSA-AES256-SHA384": "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+        "ECDH-RSA-AES128-SHA256": "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256",
+        "ECDH-RSA-AES256-SHA384": "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384",
+        "ECDHE-ECDSA-AES128-GCM-SHA256": "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+        "ECDHE-ECDSA-AES256-GCM-SHA384": "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+        "ECDH-ECDSA-AES128-GCM-SHA256": "TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256",
+        "ECDH-ECDSA-AES256-GCM-SHA384": "TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384",
+        "ECDHE-RSA-AES128-GCM-SHA256": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+        "ECDHE-RSA-AES256-GCM-SHA384": "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+        "ECDH-RSA-AES128-GCM-SHA256": "TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256",
+        "ECDH-RSA-AES256-GCM-SHA384": "TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384",
+        "ECDHE-RSA-CHACHA20-POLY1305": "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+        "ECDHE-ECDSA-CHACHA20-POLY1305": "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+        "DHE-RSA-CHACHA20-POLY1305": "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+    }
+
+    OPENSSL_TO_RFC_NAMES_MAPPING = {
+        'sslv2': SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING,
+        'sslv3': TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+        'tlsv1': TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+        'tlsv1_1': TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+        'tlsv1_2': TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    }

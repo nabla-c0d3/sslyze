@@ -113,8 +113,8 @@ class TargetStringParser(object):
 
 
 class ServersConnectivityTester(object):
-    """Utility class to connect to a list of servers and return a list of
-    online and offline servers."""
+    """Utility class to connect to a list of servers and return a list of online and offline servers.
+    """
 
     HOST_FORMAT = '{0[0]}:{0[2]}'
     IP_FORMAT = '{0[1]}:{0[2]}'
@@ -166,97 +166,92 @@ class ServersConnectivityTester(object):
         return
 
     @classmethod
-    def get_printable_result(cls, targets_OK, targets_ERR):
+    def get_printable_result(cls, targets_ok, targets_err):
         """
         Returns a text meant to be displayed to the user and presenting the
         results of the connectivity testing.
         """
         result_str = ''
-        for target in targets_OK:
-            result_str += cls.TARGET_OK_FORMAT.format(cls.HOST_FORMAT.format(target),
-                                                      cls.IP_FORMAT.format(target))
+        for target in targets_ok:
+            result_str += cls.TARGET_OK_FORMAT.format(cls.HOST_FORMAT.format(target), cls.IP_FORMAT.format(target))
 
-        for exception in targets_ERR:
+        for exception in targets_err:
             result_str += exception.get_error_txt()
 
         return result_str
 
     @classmethod
-    def get_xml_result(cls, targets_ERR):
+    def get_xml_result(cls, targets_err):
         """
         Returns XML containing the list of every target that returned an error
         during the connectivity testing.
         """
-        resultXml = Element('invalidTargets')
-        for exception in targets_ERR:
-            resultXml.append(exception.get_error_xml())
+        result_xml = Element('invalidTargets')
+        for exception in targets_err:
+            result_xml.append(exception.get_error_xml())
 
-        return resultXml
+        return result_xml
 
     @classmethod
-    def _test_server(cls, targetStr, shared_settings):
+    def _test_server(cls, target_from_cmd_line, shared_settings):
         """Test connectivity to one single server."""
 
         # Parse the target string
-        try:
-            defaultPort = cls.DEFAULT_PORTS[shared_settings['starttls']]
-        except KeyError:
-            defaultPort = cls.DEFAULT_PORTS['default']
-        (host, ip, port) = TargetStringParser.parse_target_str(targetStr, defaultPort)
+        default_port = cls.DEFAULT_PORTS.get(shared_settings['starttls'], default=cls.DEFAULT_PORTS['default'])
+        (host, ip, port) = TargetStringParser.parse_target_str(target_from_cmd_line, default_port)
 
         # Check if the ip was specified
         if not ip:
             ip = host
 
         # First try to connect and do StartTLS if needed
-        sslCon = create_sslyze_connection((host, ip, port, SSLV23), shared_settings)
+        ssl_connection = create_sslyze_connection((host, ip, port, SSLV23), shared_settings)
         try:
-            sslCon.do_pre_handshake()
-            ipAddr = sslCon._sock.getpeername()[0]
+            ssl_connection.do_pre_handshake()
+            ip_address = ssl_connection._sock.getpeername()[0]
 
         # Socket errors
         except socket.timeout:  # Host is down
-            raise InvalidTargetError(targetStr, cls.ERR_TIMEOUT)
+            raise InvalidTargetError(target_from_cmd_line, cls.ERR_TIMEOUT)
         except socket.gaierror:
-            raise InvalidTargetError(targetStr, cls.ERR_NAME_NOT_RESOLVED)
+            raise InvalidTargetError(target_from_cmd_line, cls.ERR_NAME_NOT_RESOLVED)
         except socket.error:  # Connection Refused
-            raise InvalidTargetError(targetStr, cls.ERR_REJECTED)
+            raise InvalidTargetError(target_from_cmd_line, cls.ERR_REJECTED)
 
         # StartTLS errors
         except StartTLSError as e:
-            raise InvalidTargetError(targetStr, e[0])
+            raise InvalidTargetError(target_from_cmd_line, e[0])
 
         # Proxy errors
         except ProxyError as e:
-            raise InvalidTargetError(targetStr, e[0])
+            raise InvalidTargetError(target_from_cmd_line, e[0])
 
         # Other errors
         except Exception as e:
-            raise InvalidTargetError(targetStr, '{0}: {1}'.format(str(type(e).__name__), e[0]))
+            raise InvalidTargetError(target_from_cmd_line, '{0}: {1}'.format(str(type(e).__name__), e[0]))
 
 
         finally:
-            sslCon.close()
+            ssl_connection.close()
 
         # Then try to do SSL handshakes just to figure out the SSL version
         # supported by the server; the plugins need to know this in advance.
         # If the handshakes fail, we keep going anyway; maybe the server
         # only supports exotic cipher suites
-        sslSupport = SSLV23
+        ssl_version_supported = SSLV23
         # No connection retry when testing connectivity
-        tweak_shared_settings = shared_settings.copy()
-        tweak_shared_settings['nb_retries'] = 1
-        for sslVersion in [TLSV1, SSLV23, SSLV3, TLSV1_2]:
-            sslCon = create_sslyze_connection((host, ipAddr, port, sslVersion),
-                                              tweak_shared_settings)
+        local_shared_settings = shared_settings.copy()
+        local_shared_settings['nb_retries'] = 1
+        for ssl_version in [TLSV1, SSLV23, SSLV3, TLSV1_2]:
+            ssl_connection = create_sslyze_connection((host, ip_address, port, ssl_version), local_shared_settings)
             try:
-                sslCon.connect()
+                ssl_connection.connect()
             except:
                 pass
             else:
-                sslSupport = sslVersion
+                ssl_version_supported = ssl_version
                 break
             finally:
-                sslCon.close()
+                ssl_connection.close()
 
-        return host, ipAddr, port, sslSupport
+        return host, ip_address, port, ssl_version_supported

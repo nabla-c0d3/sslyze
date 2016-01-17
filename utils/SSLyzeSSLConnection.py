@@ -113,11 +113,6 @@ def create_sslyze_connection(target, shared_settings, ssl_version=None, ssl_veri
         # This gets raised if we're using SSLv2 which doesn't support SNI (or TLS extensions in general)
         pass
 
-
-    # Restrict cipher list to make the client hello smaller so we don't run into
-    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
-    ssl_connection.set_cipher_list('HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA')
-
     return ssl_connection
 
 
@@ -175,6 +170,11 @@ class SSLConnection(DebugSslClient):
 
     ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
+
+
+    # Restrict cipher list to make the client hello smaller so we don't run into
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
+    DEFAULT_SSL_CIPHER_LIST = 'HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA'
 
 
     def __init__(self, (host, ip, port, ssl_version), ssl_verify_locations, timeout, max_attempts,

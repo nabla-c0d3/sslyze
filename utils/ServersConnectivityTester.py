@@ -167,9 +167,7 @@ class ServersConnectivityTester(object):
 
     @classmethod
     def get_printable_result(cls, targets_ok, targets_err):
-        """
-        Returns a text meant to be displayed to the user and presenting the
-        results of the connectivity testing.
+        """Returns a text meant to be displayed to the user and presenting the results of the connectivity testing.
         """
         result_str = ''
         for target in targets_ok:
@@ -182,9 +180,7 @@ class ServersConnectivityTester(object):
 
     @classmethod
     def get_xml_result(cls, targets_err):
-        """
-        Returns XML containing the list of every target that returned an error
-        during the connectivity testing.
+        """Returns XML containing the list of every target that returned an error during the connectivity testing.
         """
         result_xml = Element('invalidTargets')
         for exception in targets_err:
@@ -194,7 +190,8 @@ class ServersConnectivityTester(object):
 
     @classmethod
     def _test_server(cls, target_from_cmd_line, shared_settings):
-        """Test connectivity to one single server."""
+        """Test connectivity to one single server.
+        """
 
         # Parse the target string
         default_port = cls.DEFAULT_PORTS.get(shared_settings['starttls'], default=cls.DEFAULT_PORTS['default'])

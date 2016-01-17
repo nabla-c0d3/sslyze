@@ -29,20 +29,10 @@ from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2
 from SSLyzeSSLConnection import create_sslyze_connection, StartTLSError, ProxyError
 
 
-class InvalidTargetError(Exception):
-    RESULT_FORMAT = '\n   {0:<35} => WARNING: {1}; discarding corresponding tasks.'
-
+class InvalidTargetError(ValueError):
     def __init__(self, target_str, error_msg):
-        self._target_str = target_str
-        self._error_msg = error_msg
-
-    def get_error_txt(self):
-        return self.RESULT_FORMAT.format(self._target_str, self._error_msg)
-
-    def get_error_xml(self):
-        errorXml = Element('invalidTarget', error=self._error_msg)
-        errorXml.text = self._target_str
-        return errorXml
+        self.target_str = target_str
+        self.error_msg = error_msg
 
 
 class TargetStringParser(object):
@@ -76,7 +66,7 @@ class TargetStringParser(object):
                 (ip, port) = cls._parse_ipv6_target_str(ip, default_port)
 
             # Fallback to ipv4
-            (host, port) = cls._parse_ipv4_target_str(target_str)
+            (host, port) = cls._parse_ipv4_target_str(target_str, default_port)
 
         return host, ip, port
 
@@ -116,9 +106,8 @@ class ServersConnectivityTester(object):
     """Utility class to connect to a list of servers and return a list of online and offline servers.
     """
 
-    HOST_FORMAT = '{0[0]}:{0[2]}'
-    IP_FORMAT = '{0[1]}:{0[2]}'
-    TARGET_OK_FORMAT = '\n   {0:<35} => {1}'
+    TARGET_OK_FORMAT = '\n   {host}:{port:<25} => {ip_address}'
+    TARGET_ERROR_FORMAT = '\n   {target_from_cmd_line:<35} => WARNING: {error_msg}; discarding corresponding tasks.'
 
     MAX_THREADS = 50
 
@@ -138,9 +127,7 @@ class ServersConnectivityTester(object):
 
     @classmethod
     def test_server_list(cls, target_list, shared_settings):
-        """
-        Tests connectivity with each server of the target_list and returns
-        the list of online servers.
+        """Tests connectivity with each server of the target_list and returns the list of online servers.
         """
 
         # Use a thread pool to connect to each server
@@ -171,10 +158,16 @@ class ServersConnectivityTester(object):
         """
         result_str = ''
         for target in targets_ok:
-            result_str += cls.TARGET_OK_FORMAT.format(cls.HOST_FORMAT.format(target), cls.IP_FORMAT.format(target))
+            result_str += cls.TARGET_OK_FORMAT.format(host=target[0], port=target[2], ip_address=target[1])
 
         for exception in targets_err:
-            result_str += exception.get_error_txt()
+            print exception
+            if isinstance(exception, InvalidTargetError):
+                result_str += cls.TARGET_ERROR_FORMAT.format(target_from_cmd_line=exception.target_str,
+                                                             error_msg=exception.error_msg)
+            else:
+                # Unexpected bug in SSLyze
+                raise exception
 
         return result_str
 
@@ -184,7 +177,13 @@ class ServersConnectivityTester(object):
         """
         result_xml = Element('invalidTargets')
         for exception in targets_err:
-            result_xml.append(exception.get_error_xml())
+            if isinstance(exception, InvalidTargetError):
+                error_xml = Element('invalidTarget', error=exception.error_msg)
+                error_xml.text = exception.target_str
+                result_xml.append(error_xml)
+            else:
+                # Unexpected bug in SSLyze
+                raise exception
 
         return result_xml
 
@@ -194,7 +193,7 @@ class ServersConnectivityTester(object):
         """
 
         # Parse the target string
-        default_port = cls.DEFAULT_PORTS.get(shared_settings['starttls'], default=cls.DEFAULT_PORTS['default'])
+        default_port = cls.DEFAULT_PORTS.get(shared_settings['starttls'], cls.DEFAULT_PORTS['default'])
         (host, ip, port) = TargetStringParser.parse_target_from_cmd_line(target_from_cmd_line, default_port)
 
         # Check if the ip was specified

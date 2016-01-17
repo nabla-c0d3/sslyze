@@ -25,7 +25,6 @@ import socket
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
-from utils.SSLyzeSSLConnection import create_sslyze_connection
 from nassl._nassl import OpenSSLError
 
 
@@ -34,25 +33,24 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
     interface = PluginBase.PluginInterface("PluginSessionRenegotiation",  "")
     interface.add_command(
         command="reneg",
-        help=(
-            "Tests the server(s) for client-initiated "
-            'renegotiation and secure renegotiation support.'))
+        help='Tests the server(s) for client-initiated renegotiation and secure renegotiation support.'
+    )
 
 
-    def process_task(self, target, command, args):
+    def process_task(self, server_info, command, args):
 
         # Text output
         cmdTitle = 'Session Renegotiation'
         txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
 
         # Check for client-initiated renegotiation
-        clientReneg = self._test_client_renegotiation(target)
+        clientReneg = self._test_client_renegotiation(server_info)
         xmlStrClientReneg = str(clientReneg)
         clientTxt = 'VULNERABLE - Server honors client-initiated renegotiations' if clientReneg else 'OK - Rejected'
         txtOutput.append(self.FIELD_FORMAT('Client-initiated Renegotiations:', clientTxt))
 
         # Check for secure renegotiation
-        secureReneg = self._test_secure_renegotiation(target)
+        secureReneg = self._test_secure_renegotiation(server_info)
         xmlStrSecureReneg = str(secureReneg)
         secureTxt = 'OK - Supported' if secureReneg else 'VULNERABLE - Secure renegotiation not supported'
         txtOutput.append(self.FIELD_FORMAT('Secure Renegotiation:', secureTxt))
@@ -67,11 +65,11 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         return PluginBase.PluginResult(txtOutput, xmlOutput)
 
 
-    def _test_secure_renegotiation(self, target):
+    def _test_secure_renegotiation(self, server_info):
         """
         Checks whether the server supports secure renegotiation.
         """	
-        sslConn = create_sslyze_connection(target, self._shared_settings)
+        sslConn = server_info.get_preconfigured_ssl_connection()
 
         try: # Perform the SSL handshake
             sslConn.connect()
@@ -83,11 +81,11 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         return secureReneg
 
 
-    def _test_client_renegotiation(self, target):
+    def _test_client_renegotiation(self, server_info):
         """
         Checks whether the server honors session renegotiation requests.
         """
-        sslConn = create_sslyze_connection(target, self._shared_settings)
+        sslConn = server_info.get_preconfigured_ssl_connection()
 
         try: # Perform the SSL handshake
             sslConn.connect()

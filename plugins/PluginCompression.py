@@ -26,7 +26,6 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 
-from utils.SSLyzeSSLConnection import create_sslyze_connection
 from nassl.SslClient import ClientCertificateRequested
 
 
@@ -38,9 +37,9 @@ class PluginCompression(PluginBase.PluginBase):
         help="Tests the server(s) for Zlib compression support.")
 
 
-    def process_task(self, target, command, args):
+    def process_task(self, server_info, command, args):
 
-        sslConn = create_sslyze_connection(target, self._shared_settings)
+        sslConn = server_info.get_preconfigured_ssl_connection()
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives
         if 'zlib compression' not in sslConn.get_available_compression_methods():

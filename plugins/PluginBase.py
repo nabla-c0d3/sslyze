@@ -46,7 +46,6 @@ class PluginInterface:
     def add_option(self, option, help, dest=None):
         """
         Options are settings specific to one single plugin.
-        They are sent to PluginBase._shared_settings.
         """
 
         self._options.append(self._make_option(option, help, dest))
@@ -118,11 +117,6 @@ class PluginBase(object):
     Base plugin abstract class. All plugins have to inherit from it.
     """
     __metaclass__ = abc.ABCMeta
-
-    # _shared_settings contains read-only info available to all the plugins:
-    # client certificate, timeoutvalue, etc...
-    # TODO: Document it
-    _shared_settings = None
 
     # Formatting stuff
     PLUGIN_TITLE_FORMAT = '  * {0}:'.format

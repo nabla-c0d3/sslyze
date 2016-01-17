@@ -22,11 +22,9 @@
 #-------------------------------------------------------------------------------
 
 from optparse import OptionParser, OptionGroup
-from urlparse import urlparse
-
-# Client cert/key checking
-from nassl.SslClient import SslClient
 from nassl import _nassl, SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
+from utils.ServersConnectivityTester import ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
+    ServerConnectivityInfo, StartTlsProtocolEnum, InvalidTargetError
 
 
 class CommandLineParsingError(Exception):
@@ -40,16 +38,39 @@ class CommandLineParsingError(Exception):
 class CommandLineParser():
 
     # Defines what --regular means
-    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'reneg',
-                   'resum', 'certinfo', 'http_get', 'hide_rejected_ciphers',
-                   'compression', 'heartbleed']
+    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'reneg', 'resum', 'certinfo=basic', 'http_get',
+                   'hide_rejected_ciphers', 'compression', 'heartbleed']
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 target3.com:443{ip} etc...'
 
     # StartTLS options
-    START_TLS_PROTS = ['smtp', 'xmpp', 'xmpp_server', 'pop3', 'ftp', 'imap', 'ldap', 'rdp', 'postgres', 'auto']
-    START_TLS_USAGE = 'STARTTLS should be one of: ' + str(START_TLS_PROTS) +  \
-        '. The \'auto\' option will cause SSLyze to deduce the protocol' + \
-        ' (ftp, imap, etc.) from the supplied port number, for each target servers.'
+    START_TLS_PROTOCOLS = ['smtp', 'xmpp', 'xmpp_server', 'pop3', 'ftp', 'imap', 'ldap', 'rdp', 'postgres', 'auto']
+    START_TLS_USAGE = 'STARTTLS should be one of: {}. The \'auto\' option will cause SSLyze to deduce the protocol ' \
+                      '(ftp, imap, etc.) from the supplied port number, ' \
+                      'for each target servers.'.format(' , '.join(START_TLS_PROTOCOLS))
+
+    # Mapping of StartTls protocols and ports; useful for starttls=auto
+    STARTTLS_PROTOCOL_DICT = {'smtp': StartTlsProtocolEnum.SMTP,
+                              587: StartTlsProtocolEnum.SMTP,
+                              25: StartTlsProtocolEnum.SMTP,
+                              'xmpp': StartTlsProtocolEnum.XMPP,
+                              5222 : StartTlsProtocolEnum.XMPP,
+                              'xmpp_server': StartTlsProtocolEnum.XMPP_SERVER,
+                              5269: StartTlsProtocolEnum.XMPP_SERVER,
+                              'pop3': StartTlsProtocolEnum.POP3,
+                              109: StartTlsProtocolEnum.POP3,
+                              110: StartTlsProtocolEnum.POP3,
+                              'imap': StartTlsProtocolEnum.IMAP,
+                              143: StartTlsProtocolEnum.IMAP,
+                              220: StartTlsProtocolEnum.IMAP,
+                              'ftp': StartTlsProtocolEnum.FTP,
+                              21: StartTlsProtocolEnum.FTP,
+                              'ldap': StartTlsProtocolEnum.LDAP,
+                              3268: StartTlsProtocolEnum.LDAP,
+                              389: StartTlsProtocolEnum.LDAP,
+                              'rdp': StartTlsProtocolEnum.RDP,
+                              3389: StartTlsProtocolEnum.RDP,
+                              'postgres': StartTlsProtocolEnum.POSTGRES,
+                              5432: StartTlsProtocolEnum.POSTGRES}
 
     # Default values
     DEFAULT_RETRY_ATTEMPTS = 4
@@ -57,12 +78,10 @@ class CommandLineParser():
 
 
     def __init__(self, available_plugins, sslyze_version):
-        """
-        Generates SSLyze's command line parser.
+        """Generates SSLyze's command line parser.
         """
 
-        self._parser = OptionParser(version=sslyze_version,
-                                    usage=self.SSLYZE_USAGE)
+        self._parser = OptionParser(version=sslyze_version, usage=self.SSLYZE_USAGE)
 
         # Add generic command line options to the parser
         self._add_default_options()
@@ -71,22 +90,12 @@ class CommandLineParser():
         self._add_plugin_options(available_plugins)
 
         # Add the --regular command line parameter as a shortcut if possible
-        regular_help = 'Regular HTTPS scan; shortcut for'
-        for cmd in self.REGULAR_CMD:
-            regular_help += ' --' + cmd
-            if cmd == 'certinfo': # gah
-                regular_help += '=basic'
-
-            if not self._parser.has_option('--' + cmd):
-                return
-
-        self._parser.add_option('--regular', action="store_true", dest=None,
-                    help=regular_help)
+        regular_help = 'Regular HTTPS scan; shortcut for --{}'.format(' --'.join(self.REGULAR_CMD))
+        self._parser.add_option('--regular', action="store_true", dest=None, help=regular_help)
 
 
     def parse_command_line(self):
-        """
-        Parses the command line used to launch SSLyze.
+        """Parses the command line used to launch SSLyze.
         """
 
         (args_command_list, args_target_list) = self._parser.parse_args()
@@ -96,33 +105,125 @@ class CommandLineParser():
             if args_target_list:
                 raise CommandLineParsingError("Cannot use --targets_list and specify targets within the command line.")
 
-            try: # Read targets from a file
+            try:  # Read targets from a file
                 with open(args_command_list.targets_in) as f:
                     for target in f.readlines():
-                        if target.strip(): # Ignore empty lines
-                            if not target.startswith('#'): # Ignore comment lines
+                        if target.strip():  # Ignore empty lines
+                            if not target.startswith('#'):  # Ignore comment lines
                                 args_target_list.append(target.strip())
             except IOError:
-                raise CommandLineParsingError("Can't read targets from input file '%s'." %  args_command_list.targets_in)
+                raise CommandLineParsingError("Can't read targets from input file '{}.".format(
+                        args_command_list.targets_in))
 
         if not args_target_list:
             raise CommandLineParsingError('No targets to scan.')
+
 
         # Handle the --regular command line parameter as a shortcut
         if self._parser.has_option('--regular'):
             if getattr(args_command_list, 'regular'):
                 setattr(args_command_list, 'regular', False)
                 for cmd in self.REGULAR_CMD:
-                    if cmd=="certinfo":
+                    if 'certinfo' in cmd:
                         # Allow user to override certinfo when using --regular
                         if getattr(args_command_list, 'certinfo') is None:
-                            setattr(args_command_list, 'certinfo', 'basic') # Special case
+                            setattr(args_command_list, 'certinfo', 'basic')  # Special case
                     else: 
                         setattr(args_command_list, cmd, True)
 
-        # Create the shared_settings object from looking at the command line
-        shared_settings = self._process_parsing_results(args_command_list)
-        return args_command_list, args_target_list, shared_settings
+
+        # Sanity checks on the command line options
+        # Prevent --quiet without --xml_out
+        if not args_command_list.xml_file and args_command_list.quiet:
+                raise CommandLineParsingError('Cannot use --quiet without --xml_out.')
+
+        # Prevent --quiet and --xml_out -
+        if args_command_list.xml_file and args_command_list.xml_file == '-' and args_command_list.quiet:
+                raise CommandLineParsingError('Cannot use --quiet with --xml_out -.')
+
+        # Sanity checks on the client cert options
+        client_auth_creds = None
+        if bool(args_command_list.cert) ^ bool(args_command_list.key):
+            raise CommandLineParsingError('No private key or certificate file were given. See --cert and --key.')
+
+        elif args_command_list.cert:
+            # Private key formats
+            if args_command_list.keyform == 'DER':
+                key_type = SSL_FILETYPE_ASN1
+            elif args_command_list.keyform == 'PEM':
+                key_type = SSL_FILETYPE_PEM
+            else:
+                raise CommandLineParsingError('--keyform should be DER or PEM.')
+
+            # Let's try to open the cert and key files
+            try:
+                client_auth_creds = ClientAuthenticationCredentials(args_command_list.cert,
+                                                                    args_command_list.key,
+                                                                    key_type,
+                                                                    args_command_list.keypass)
+            except ValueError as e:
+                    raise CommandLineParsingError('Invalid client authentication settings: {}.'.format(e[0]))
+
+
+        # HTTP CONNECT proxy
+        http_tunneling_settings = None
+        if args_command_list.https_tunnel:
+            try:
+                http_tunneling_settings = HttpConnectTunnelingSettings.from_url(args_command_list.https_tunnel)
+            except ValueError as e:
+                raise CommandLineParsingError('Invalid proxy URL for --https_tunnel: {}.'.format(e[0]))
+
+
+        # STARTTLS
+        starttls_protocol = StartTlsProtocolEnum.NO_STARTTLS
+        if args_command_list.starttls:
+            if args_command_list.starttls not in self.START_TLS_PROTOCOLS:
+                raise CommandLineParsingError(self.START_TLS_USAGE)
+            else:
+                # StartTLS was specified
+                if args_command_list.starttls in self.STARTTLS_PROTOCOL_DICT.keys():
+                    # Protocol was given in the command line
+                    starttls_protocol = self.STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
+
+
+        # Number of connection retries
+        if args_command_list.nb_retries < 1:
+            raise CommandLineParsingError('Cannot have a number smaller than 1 for --nb_retries.')
+
+
+        # Create the server connectivity info for each specifed servers
+        # A limitation when using the command line is that only one client_auth_credentials and http_tunneling_settings
+        # can be specified, for all the servers to scan
+        good_server_list = []
+        bad_server_list = []
+        for server_string in args_target_list:
+            try:
+                good_server_list.append(ServerConnectivityInfo.from_command_line(
+                    server_string=server_string,
+                    starttls_protocol=starttls_protocol,
+                    tls_server_name_indication=args_command_list.sni,
+                    xmpp_to_hostname=args_command_list.xmpp_to,
+                    client_auth_credentials=client_auth_creds,
+                    http_tunneling_settings=http_tunneling_settings)
+                )
+            except InvalidTargetError as e:
+                # Will happen for example if the DNS lookup failed or the server string is malformed
+                bad_server_list.append((server_string, e))
+            except ValueError as e:
+                # Will happen for example if xmpp_to is specified for a non-XMPP connection
+                raise CommandLineParsingError(e[0])
+
+
+        # Handle --starttls=auto now that we parsed the server strings
+        if args_command_list.starttls == 'auto':
+            for server_info in good_server_list:
+                # We use the port number to deduce the protocol
+                if server_info.port in self.STARTTLS_PROTOCOL_DICT.keys():
+                    server_info.starttls_protocol = self.STARTTLS_PROTOCOL_DICT[server_info.port]
+
+
+        return good_server_list, bad_server_list, args_command_list
+
 
 
     def _add_default_options(self):
@@ -247,17 +348,14 @@ class CommandLineParser():
 
 
     def _add_plugin_options(self, available_plugins):
+        """Recovers the list of command line options implemented by the available plugins and adds them to the command
+        line parser.
         """
-        Recovers the list of command line options implemented by the available
-        plugins and adds them to the command line parser.
-        """
-
         for plugin_class in available_plugins:
             plugin_desc = plugin_class.get_interface()
 
             # Add the current plugin's commands to the parser
-            group = OptionGroup(self._parser, plugin_desc.title,
-                                plugin_desc.description)
+            group = OptionGroup(self._parser, plugin_desc.title, plugin_desc.description)
             for cmd in plugin_desc.get_commands():
                     group.add_option(cmd)
 
@@ -266,102 +364,3 @@ class CommandLineParser():
                     group.add_option(option)
 
             self._parser.add_option_group(group)
-
-
-    def _process_parsing_results(self, args_command_list):
-        """Performs various sanity checks on the command line that was used to launch SSLyze.
-        Returns the shared_settings object to be fed to plugins.
-        """
-
-        shared_settings = {}
-
-        # Prevent --quiet without --xml_out
-        if not args_command_list.xml_file and args_command_list.quiet:
-                raise CommandLineParsingError('Cannot use --quiet without --xml_out.')
-
-        # Prevent --quiet and --xml_out -
-        if args_command_list.xml_file and args_command_list.xml_file == '-' and args_command_list.quiet:
-                raise CommandLineParsingError('Cannot use --quiet with --xml_out -.')
-
-        # Sanity checks on the client cert options
-        if bool(args_command_list.cert) ^ bool(args_command_list.key):
-            raise CommandLineParsingError('No private key or certificate file were given. See --cert and --key.')
-
-        # Private key formats
-        if args_command_list.keyform == 'DER':
-            args_command_list.keyform = SSL_FILETYPE_ASN1
-        elif args_command_list.keyform == 'PEM':
-            args_command_list.keyform = SSL_FILETYPE_PEM
-        else:
-            raise CommandLineParsingError('--keyform should be DER or PEM.')
-
-        # Let's try to open the cert and key files
-        if args_command_list.cert:
-            try:
-                open(args_command_list.cert,"r")
-            except:
-                raise CommandLineParsingError('Could not open the client certificate file "' + str(args_command_list.cert) + '".')
-
-            try:
-                open(args_command_list.key,"r")
-            except:
-                raise CommandLineParsingError('Could not open the client private key file "' + str(args_command_list.key) + '"')
-
-            # Try to load the cert and key in OpenSSL; will raise an exception if something is wrong
-            SslClient(client_certchain_file=args_command_list.cert,
-                      client_key_file=args_command_list.key,
-                      client_key_type=args_command_list.keyform,
-                      client_key_password=args_command_list.keypass)
-
-
-
-        # HTTP CONNECT proxy
-        shared_settings['https_tunnel_host'] = None
-        if args_command_list.https_tunnel:
-
-            # Parse the proxy URL
-            parsedUrl = urlparse(args_command_list.https_tunnel)
-
-            if not parsedUrl.netloc:
-                raise CommandLineParsingError(
-                    'Invalid Proxy URL for --https_tunnel, discarding all tasks.')
-
-            if parsedUrl.scheme in 'http':
-               defaultPort = 80
-            elif parsedUrl.scheme in 'https':
-               defaultPort = 443
-            else:
-                raise CommandLineParsingError(
-                    'Invalid URL scheme for --https_tunnel, discarding all tasks.')
-
-            if not parsedUrl.hostname:
-                raise CommandLineParsingError(
-                    'Invalid Proxy URL for --https_tunnel, discarding all tasks.')
-
-            try :
-                shared_settings['https_tunnel_port'] = parsedUrl.port if parsedUrl.port else defaultPort
-            except ValueError: # The supplied port was not a number
-                raise CommandLineParsingError(
-                    'Invalid Proxy URL for --https_tunnel, discarding all tasks.')
-
-            shared_settings['https_tunnel_host'] = parsedUrl.hostname
-            shared_settings['https_tunnel_user'] = parsedUrl.username
-            shared_settings['https_tunnel_password'] = parsedUrl.password
-
-
-        # STARTTLS
-        if args_command_list.starttls:
-            if args_command_list.starttls not in self.START_TLS_PROTS:
-                raise CommandLineParsingError(self.START_TLS_USAGE)
-
-        # Number of connection retries
-        if args_command_list.nb_retries < 1:
-            raise CommandLineParsingError(
-                'Cannot have a number smaller than 1 for --nb_retries.')
-
-        # All good, let's save the data
-        for key, value in args_command_list.__dict__.iteritems():
-            shared_settings[key] = value
-
-        return shared_settings
-

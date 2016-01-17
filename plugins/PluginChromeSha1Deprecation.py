@@ -29,7 +29,6 @@ import hashlib
 import datetime
 
 from plugins import PluginBase
-from utils.SSLyzeSSLConnection import create_sslyze_connection
 from nassl.SslClient import ClientCertificateRequested
 
 
@@ -55,12 +54,10 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
     CHROME_INSECURE_TXT = 'AFFECTED - SHA1-signed certificate(s) will trigger the "Affirmatively insecure" icon.'
 
 
-    def process_task(self, target, command, arg):
-
-        (_, _, _, sslVersion) = target
-
+    def process_task(self, server_info, command, arg):
         # Get the server's cert chain
-        sslConn = create_sslyze_connection(target, self._shared_settings, sslVersion)
+        sslConn = server_info.get_preconfigured_ssl_connection()
+
         try: # Perform the SSL handshake
             sslConn.connect()
             certChain = sslConn.get_peer_cert_chain()
@@ -128,7 +125,13 @@ class PluginChromeSha1Deprecation(PluginBase.PluginBase):
                 # XML output
                 affectedCertsXml = Element('sha1SignedCertificates')
                 for cert in certsWithSha1:
-                    affectedCertsXml.append(PluginCertInfo._format_cert_to_xml(cert, '', self._shared_settings['sni']))
+
+                    supplied_sni = server_info.tls_server_name_indication \
+                        if server_info.tls_server_name_indication != server_info.hostname \
+                        else None
+
+                    affectedCertsXml.append(PluginCertInfo._format_cert_to_xml(cert, '', supplied_sni))
+
                 outputXml2.append(affectedCertsXml)
 
                 outputXml2.append(Element(

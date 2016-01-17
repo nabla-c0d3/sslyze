@@ -21,13 +21,13 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-import socket, new
+import new
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
-from utils.SSLyzeSSLConnection import create_sslyze_connection, SSLHandshakeRejected
+from utils.SSLyzeSSLConnection import SSLHandshakeRejected
 from nassl._nassl import OpenSSLError, WantX509LookupError, WantReadError
-from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV23, SSLV3
+from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
 
 
 class PluginHeartbleed(PluginBase.PluginBase):
@@ -35,19 +35,13 @@ class PluginHeartbleed(PluginBase.PluginBase):
     interface = PluginBase.PluginInterface("PluginHeartbleed",  "")
     interface.add_command(
         command="heartbleed",
-        help=(
-            "Tests the server(s) for the OpenSSL Heartbleed vulnerability (experimental)."))
+        help=("Tests the server(s) for the OpenSSL Heartbleed vulnerability (experimental).")
+    )
 
 
-    def process_task(self, target, command, args):
-        (host, ip, port, sslVersion) = target
-
-        if sslVersion == SSLV23: # Could not determine the preferred  SSL version - client cert was required ?
-            sslVersion = TLSV1 # Default to TLS 1.0
-            target = (host, ip, port, sslVersion)
-
-        sslConn = create_sslyze_connection(target, self._shared_settings)
-        sslConn.sslVersion = sslVersion # Needed by the heartbleed payload
+    def process_task(self, server_info, command, args):
+        sslConn = server_info.get_preconfigured_ssl_connection()
+        sslConn.sslVersion = server_info.ssl_version_supported  # Needed by the heartbleed payload
 
         # Awful hack #1: replace nassl.sslClient.do_handshake() with a heartbleed
         # checking SSL handshake so that all the SSLyze options

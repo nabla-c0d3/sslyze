@@ -33,116 +33,31 @@ from nassl.DebugSslClient import DebugSslClient
 from nassl.SslClient import ClientCertificateRequested
 
 
-def create_sslyze_connection(target, shared_settings, ssl_version=None, ssl_verify_locations=None):
-    """
-    Utility function to create the proper SSLConnection based on what's
-    in the shared_settings. All plugins should use this for their SSL
-    connections.
-    """
-    (host, ip, port, ssl_version_supported) = target
-    # Override SSL version if one was specified; otherwise use the one supported by the server
-    if ssl_version is not None:
-        target = (host, ip, port, ssl_version)
-
-    # Create the proper connection
-    connection_class = SSLConnection  # Default to SSLConnection
-
-    STARTTLS_DISPATCH = { 'smtp' :  SMTPConnection,
-                          587 :     SMTPConnection,
-                          25 :      SMTPConnection,
-                          'xmpp':   XMPPConnection,
-                          5222 :    XMPPConnection,
-                          'xmpp_server': XMPPServerConnection,
-                          5269 :         XMPPServerConnection,
-                          'pop3' :  POP3Connection,
-                          109 :     POP3Connection,
-                          110 :     POP3Connection,
-                          'imap' :  IMAPConnection,
-                          143 :     IMAPConnection,
-                          220 :     IMAPConnection,
-                          'ftp' :   FTPConnection,
-                          21 :      FTPConnection,
-                          'ldap' :  LDAPConnection,
-                          3268 :    LDAPConnection,
-                          389 :     LDAPConnection,
-                          'rdp' :   RDPConnection,
-                          3389 :    RDPConnection,
-                          5432 :    PGConnection,
-                          'postgres' : PGConnection }
-
-    if shared_settings['starttls']:
-        if shared_settings['starttls'] in STARTTLS_DISPATCH.keys():
-            # Protocol was given in the command line
-            connection_class = STARTTLS_DISPATCH[shared_settings['starttls']]
-        elif shared_settings['starttls'] == 'auto':
-            # We use the port number to deduce the protocol
-            if port in STARTTLS_DISPATCH.keys():
-                connection_class = STARTTLS_DISPATCH[port]
-
-    elif shared_settings['http_get']:
-        connection_class = HTTPSConnection
-
-
-    # Create the right (Start)TLS connection
-    # Load client certificate and private key which should have been validated when parsing the command line
-    ssl_connection = connection_class(target, ssl_verify_locations, shared_settings['timeout'],
-                                      shared_settings['nb_retries'], shared_settings['cert'], shared_settings['key'],
-                                      shared_settings['keyform'], shared_settings['keypass'])
-
-
-    # Add XMPP configuration
-    if connection_class in [XMPPConnection, XMPPServerConnection] and shared_settings['xmpp_to']:
-        ssl_connection.set_xmpp_to(shared_settings['xmpp_to'])
-
-
-    # Add HTTP CONNECT proxy configuration to tunnel SSL traffic
-    if shared_settings['https_tunnel_host']:
-        ssl_connection.enable_http_connect_tunneling(tunnel_host=shared_settings['https_tunnel_host'],
-                                                     tunnel_port=shared_settings['https_tunnel_port'],
-                                                     tunnel_user=shared_settings['https_tunnel_user'],
-                                                     tunnel_password=shared_settings['https_tunnel_password'])
-
-    # Add Server Name Indication
-    try:
-        if shared_settings['sni']:
-            ssl_connection.set_tlsext_host_name(shared_settings['sni'])
-        else:
-            # Always specify SNI as servers like Cloudflare require it
-            ssl_connection.set_tlsext_host_name(host)
-    except ValueError:
-        # This gets raised if we're using SSLv2 which doesn't support SNI (or TLS extensions in general)
-        pass
-
-    return ssl_connection
-
-
 
 class SSLHandshakeRejected(IOError):
-    """
-    The server explicitly rejected the SSL handshake.
+    """The server explicitly rejected the SSL handshake.
     """
     pass
 
 
 
 class StartTLSError(IOError):
-    """
-    The server rejected the StartTLS negotiation.
+    """The server rejected the StartTLS negotiation.
     """
     pass
 
 
 
 class ProxyError(IOError):
-    """
-    The proxy was offline or did not return HTTP 200 to our CONNECT request.
+    """The proxy was offline or did not return HTTP 200 to our CONNECT request.
     """
     pass
 
 
 
 class SSLConnection(DebugSslClient):
-    """Base SSL connection class."""
+    """Base SSL connection class.
+    """
 
     # The following errors mean that the server explicitly rejected the
     # handshake. The goal to differentiate rejected handshakes from random
@@ -177,9 +92,18 @@ class SSLConnection(DebugSslClient):
     DEFAULT_SSL_CIPHER_LIST = 'HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA'
 
 
-    def __init__(self, (host, ip, port, ssl_version), ssl_verify_locations, timeout, max_attempts,
-                 client_certchain_file=None, client_key_file=None, client_key_type=None,
-                 client_key_password=''):
+    # Socket settings global to all SSLyze connections
+    NETWORK_MAX_RETRIES = 3
+    NETWORK_TIMEOUT = 5
+
+    @classmethod
+    def set_global_network_settings(cls, network_max_retries, network_timeout):
+        cls.NETWORK_MAX_RETRIES = network_max_retries
+        cls.NETWORK_TIMEOUT = network_timeout
+
+
+    def __init__(self, host, ip, port, ssl_version, ssl_verify_locations=None, client_certchain_file=None,
+                 client_key_file=None, client_key_type=None, client_key_password=''):
         if client_certchain_file:
             # A client certificate and private key were provided
             super(SSLConnection, self).__init__(ssl_version=ssl_version,
@@ -196,12 +120,10 @@ class SSLConnection(DebugSslClient):
                                                 ssl_verify_locations=ssl_verify_locations,
                                                 ignore_client_authentication_requests=True)
 
-        self._timeout = timeout
         self._sock = None
         self._host = host
         self._ip = ip
         self._port = port
-        self._max_attempts = max_attempts
         self._tunnel_host = None
         self.set_cipher_list(self.DEFAULT_SSL_CIPHER_LIST)
 
@@ -221,7 +143,7 @@ class SSLConnection(DebugSslClient):
         if self._tunnel_host:
             # Proxy configured; setup HTTP tunneling
             try:
-                self._sock = socket.create_connection((self._tunnel_host, self._tunnel_port), self._timeout)
+                self._sock = socket.create_connection((self._tunnel_host, self._tunnel_port), self.NETWORK_TIMEOUT)
             except socket.timeout as e:
                 raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[0]))
             except socket.error as e:
@@ -240,11 +162,10 @@ class SSLConnection(DebugSslClient):
                 raise ProxyError(self.ERR_CONNECT_REJECTED)
         else:
             # No proxy; connect directly to the server
-            self._sock = socket.create_connection((self._ip, self._port), self._timeout)
+            self._sock = socket.create_connection((self._ip, self._port), self.NETWORK_TIMEOUT)
 
 
-    def connect(self):
-
+    def connect(self, network_max_retries=NETWORK_MAX_RETRIES):
         retry_attempts = 0
         delay = 0
         while True:
@@ -291,7 +212,7 @@ class SSLConnection(DebugSslClient):
             # Attempt to retry connection if a network error occurred
             except:
                 retry_attempts += 1
-                if retry_attempts == self._max_attempts:
+                if retry_attempts == network_max_retries:
                     # Exhausted the number of retry attempts, give up
                     raise
                 elif retry_attempts == 1:

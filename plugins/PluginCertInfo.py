@@ -30,7 +30,6 @@ import sys
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
-from utils.SSLyzeSSLConnection import create_sslyze_connection
 from nassl._nassl import OpenSSLError
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
 from nassl.SslClient import ClientCertificateRequested
@@ -82,7 +81,7 @@ class PluginCertInfo(PluginBase.PluginBase):
     TRUST_FORMAT = '{store_name} CA Store ({store_version}):'.format
 
 
-    def process_task(self, target, command, arg):
+    def process_task(self, server_info, command, arg):
 
         if arg == 'basic':
             txt_output_generator = self._get_basic_text
@@ -91,15 +90,15 @@ class PluginCertInfo(PluginBase.PluginBase):
         else:
             raise Exception("PluginCertInfo: Unknown command.")
 
-        (host, _, _, _) = target
         thread_pool = ThreadPool()
 
-        if 'ca_file' in self._shared_settings and self._shared_settings['ca_file']:
-            AVAILABLE_TRUST_STORES[self._shared_settings['ca_file']] = ('Custom --ca_file', 'N/A')
+        # TODO: Fix this
+        #if 'ca_file' in self._shared_settings and self._shared_settings['ca_file']:
+        #    AVAILABLE_TRUST_STORES[self._shared_settings['ca_file']] = ('Custom --ca_file', 'N/A')
 
         for (store_path, _) in AVAILABLE_TRUST_STORES.iteritems():
             # Try to connect with each trust store
-            thread_pool.add_job((self._get_cert, (target, store_path)))
+            thread_pool.add_job((self._get_cert, (server_info, store_path)))
 
         # Start processing the jobs
         thread_pool.start(len(AVAILABLE_TRUST_STORES))
@@ -141,15 +140,19 @@ class PluginCertInfo(PluginBase.PluginBase):
         text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - Trust')])
 
         # Hostname validation
-        if self._shared_settings['sni']:
-            text_output.append(self.FIELD_FORMAT("SNI enabled with virtual domain:", self._shared_settings['sni']))
-        # TODO: Use SNI name for validation when --sni was used
+        if server_info.tls_server_name_indication != server_info.hostname:
+            text_output.append(self.FIELD_FORMAT("SNI enabled with virtual domain:",
+                                                 server_info.tls_server_name_indication))
+
         host_val_dict = {
             X509_NAME_MATCHES_SAN: 'OK - Subject Alternative Name matches',
             X509_NAME_MATCHES_CN: 'OK - Common Name matches',
-            X509_NAME_MISMATCH: 'FAILED - Certificate does NOT match ' + host
+            X509_NAME_MISMATCH: 'FAILED - Certificate does NOT match {}'.format(server_info.tls_server_name_indication)
         }
-        text_output.append(self.FIELD_FORMAT("Hostname Validation:", host_val_dict[x509_cert.matches_hostname(host)]))
+        text_output.append(
+                self.FIELD_FORMAT("Hostname Validation:",
+                                  host_val_dict[x509_cert.matches_hostname(server_info.tls_server_name_indication)])
+        )
 
         # Path validation that was successful
         for ((store_name, store_version), verify_str) in verify_dict.iteritems():
@@ -194,11 +197,15 @@ class PluginCertInfo(PluginBase.PluginBase):
         cert_chain_xml = Element('certificateChain')
 
         # First add the leaf certificate
-        cert_chain_xml.append(self._format_cert_to_xml(x509_cert_chain[0], 'leaf', self._shared_settings['sni']))
+        supplied_sni = server_info.tls_server_name_indication \
+            if server_info.tls_server_name_indication != server_info.hostname \
+            else None
+
+        cert_chain_xml.append(self._format_cert_to_xml(x509_cert_chain[0], 'leaf', supplied_sni))
 
         # Then add every other cert in the chain
         for cert in x509_cert_chain[1:]:
-            cert_chain_xml.append(self._format_cert_to_xml(cert, 'intermediate', self._shared_settings['sni']))
+            cert_chain_xml.append(self._format_cert_to_xml(cert, 'intermediate', supplied_sni))
 
         xml_output.append(cert_chain_xml)
 
@@ -207,8 +214,10 @@ class PluginCertInfo(PluginBase.PluginBase):
         trust_validation_xml = Element('certificateValidation')
 
         # Hostname validation
-        is_hostname_valid = 'False' if (x509_cert.matches_hostname(host) == X509_NAME_MISMATCH) else 'True'
-        host_validation_xml = Element('hostnameValidation', serverHostname=host,
+        is_hostname_valid = 'False' \
+            if (x509_cert.matches_hostname(server_info.tls_server_name_indication) == X509_NAME_MISMATCH) else 'True'
+
+        host_validation_xml = Element('hostnameValidation', serverHostname=server_info.tls_server_name_indication,
                                       certificateMatchesServerHostname=is_hostname_valid)
         trust_validation_xml.append(host_validation_xml)
 
@@ -408,14 +417,13 @@ class PluginCertInfo(PluginBase.PluginBase):
         return text_output
 
 
-    def _get_cert(self, target, store_path):
+    def _get_cert(self, server_info, store_path):
         """
         Connects to the target server and uses the supplied trust store to
         validate the server's certificate. Returns the server's certificate and
         OCSP response.
         """
-        (_, _, _, ssl_version) = target
-        ssl_conn = create_sslyze_connection(target, self._shared_settings, ssl_version, ssl_verify_locations=store_path)
+        ssl_conn = server_info.get_preconfigured_ssl_connection(ssl_verify_locations=store_path)
 
         # Enable OCSP stapling
         ssl_conn.set_tlsext_status_ocsp()

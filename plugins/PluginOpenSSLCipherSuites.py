@@ -25,7 +25,7 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
-from utils.SSLyzeSSLConnection import create_sslyze_connection, SSLHandshakeRejected
+from utils.SSLyzeSSLConnection import SSLHandshakeRejected
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
 from nassl.SslClient import SslClient
 
@@ -39,69 +39,72 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
     interface.add_command(
         command="sslv2",
         help="Lists the SSL 2.0 OpenSSL cipher suites supported by the server(s).",
-        aggressive=False)
+        aggressive=False
+    )
     interface.add_command(
         command="sslv3",
         help="Lists the SSL 3.0 OpenSSL cipher suites supported by the server(s).",
-        aggressive=True)
+        aggressive=True
+    )
     interface.add_command(
         command="tlsv1",
         help="Lists the TLS 1.0 OpenSSL cipher suites supported by the server(s).",
-        aggressive=True)
+        aggressive=True
+    )
     interface.add_command(
         command="tlsv1_1",
         help="Lists the TLS 1.1 OpenSSL cipher suites supported by the server(s).",
-        aggressive=True)
+        aggressive=True
+    )
     interface.add_command(
         command="tlsv1_2",
         help="Lists the TLS 1.2 OpenSSL cipher suites supported by the server(s).",
-        aggressive=True)
+        aggressive=True
+    )
     interface.add_option(
         option='http_get',
         help="Option - For each cipher suite, sends an HTTP GET request after "
-        "completing the SSL handshake and returns the HTTP status code.")
+        "completing the SSL handshake and returns the HTTP status code."
+    )
     interface.add_option(
         option='hide_rejected_ciphers',
         help="Option - Hides the (usually long) list of cipher suites that were"
-        " rejected by the server(s).")
+        " rejected by the server(s)."
+    )
 
 
-    def process_task(self, target, command, args):
+    def process_task(self, server_connectivity_info, command, args):
 
         MAX_THREADS = 15
-        sslVersionDict = {'sslv2': SSLV2,
-                       'sslv3': SSLV3,
-                       'tlsv1': TLSV1,
-                       'tlsv1_1': TLSV1_1,
-                       'tlsv1_2': TLSV1_2}
+        ssl_version_dict = {'sslv2': SSLV2,
+                            'sslv3': SSLV3,
+                            'tlsv1': TLSV1,
+                            'tlsv1_1': TLSV1_1,
+                            'tlsv1_2': TLSV1_2}
         try:
-            sslVersion = sslVersionDict[command]
+            ssl_version = ssl_version_dict[command]
         except KeyError:
-            raise Exception("PluginOpenSSLCipherSuites: Unknown command.")
+            raise ValueError("PluginOpenSSLCipherSuites: Unknown command.")
 
         # Get the list of available cipher suites for the given ssl version
-        sslClient = SslClient(ssl_version=sslVersion)
-        sslClient.set_cipher_list('ALL:COMPLEMENTOFALL')
-        cipher_list = sslClient.get_cipher_list()
+        ssl_client = SslClient(ssl_version=ssl_version)
+        ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
+        cipher_list = ssl_client.get_cipher_list()
 
         # Create a thread pool
-        NB_THREADS = min(len(cipher_list), MAX_THREADS) # One thread per cipher
         thread_pool = ThreadPool()
 
         # Scan for every available cipher suite
         for cipher in cipher_list:
-            thread_pool.add_job((self._test_ciphersuite,
-                                 (target, sslVersion, cipher)))
+            thread_pool.add_job((self._test_ciphersuite, (server_connectivity_info, ssl_version, cipher)))
 
         # Scan for the preferred cipher suite
-        thread_pool.add_job((self._pref_ciphersuite,
-                             (target, sslVersion)))
+        thread_pool.add_job((self._pref_ciphersuite, (server_connectivity_info, ssl_version)))
 
         # Start processing the jobs
-        thread_pool.start(NB_THREADS)
+        thread_pool.start(nb_threads=min(len(cipher_list), MAX_THREADS))  # One thread per cipher
 
-        result_dicts = {'preferredCipherSuite':{}, 'acceptedCipherSuites':{},
-                        'rejectedCipherSuites':{}, 'errors':{}}
+        result_dicts = {'preferredCipherSuite':{}, 'acceptedCipherSuites':{}, 'rejectedCipherSuites':{}, 'errors':{}}
 
         # Store the results as they come
         for completed_job in thread_pool.get_result():
@@ -113,6 +116,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         # Store thread pool errors
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
+            print job
+            print exception
             ssl_cipher = str(job[1][2])
             error_msg = str(exception.__class__.__name__) + ' - ' + str(exception)
             result_dicts['errors'][ssl_cipher] = (error_msg, None, None)
@@ -140,9 +145,9 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         dict_title_list = [('preferredCipherSuite', 'Preferred:'),
                        ('acceptedCipherSuites', 'Accepted:'),
                        ('errors', 'Undefined - An unexpected error happened:')]
-
-        if not self._shared_settings['hide_rejected_ciphers']:
-            dict_title_list.append(('rejectedCipherSuites', 'Rejected:'))
+        # TODO: fix this
+#        if not self._shared_settings['hide_rejected_ciphers']:
+#            dict_title_list.append(('rejectedCipherSuites', 'Rejected:'))
 
         for result_key, result_title in dict_title_list:
 
@@ -235,12 +240,12 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
 
 # SSL FUNCTIONS
-    def _test_ciphersuite(self, target, ssl_version, ssl_cipher):
+    def _test_ciphersuite(self, server_connectivity_info, ssl_version, ssl_cipher):
         """
         Initiates a SSL handshake with the server, using the SSL version and
         cipher suite specified.
         """
-        sslConn = create_sslyze_connection(target, self._shared_settings, ssl_version)
+        sslConn = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
         sslConn.set_cipher_list(ssl_cipher)
 
         try: # Perform the SSL handshake
@@ -269,12 +274,13 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
             sslConn.close()
 
 
-    def _pref_ciphersuite(self, target, ssl_version):
+    def _pref_ciphersuite(self, server_connectivity_info, ssl_version):
         """
         Initiates a SSL handshake with the server, using the SSL version and cipher
         suite specified.
         """
-        sslConn = create_sslyze_connection(target, self._shared_settings, ssl_version)
+
+        sslConn = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
 
         try: # Perform the SSL handshake
             sslConn.connect()

@@ -24,44 +24,39 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
-
 from nassl import SSL_OP_NO_TICKET
-from utils.SSLyzeSSLConnection import create_sslyze_connection
 
 
 class PluginSessionResumption(PluginBase.PluginBase):
 
     interface = PluginBase.PluginInterface(
         title="PluginSessionResumption",
-        description=(
-            "Analyzes the target server's SSL session "
-            "resumption capabilities."))
+        description="Analyzes the target server's SSL session resumption capabilities."
+    )
     interface.add_command(
         command="resum",
-        help=(
-            "Tests the server(s) for session resumption support using "
-            "session IDs and TLS session tickets (RFC 5077)."))
+        help="Tests the server(s) for session resumption support using session IDs and TLS session tickets (RFC 5077)."
+    )
     interface.add_command(
         command="resum_rate",
-        help=(
-            "Performs 100 session resumptions with the server(s), "
-            "in order to estimate the session resumption rate."),
-        aggressive=True)
+        help="Performs 100 session resumptions with the server(s), in order to estimate the session resumption rate.",
+        aggressive=True
+    )
 
 
-    def process_task(self, target, command, args):
+    def process_task(self, server_info, command, args):
 
         if command == 'resum':
-            result = self._command_resum(target)
+            result = self._command_resum(server_info)
         elif command == 'resum_rate':
-            result = self._command_resum_rate(target)
+            result = self._command_resum_rate(server_info)
         else:
-            raise Exception("PluginSessionResumption: Unknown command.")
+            raise ValueError("PluginSessionResumption: Unknown command.")
 
         return result
 
 
-    def _command_resum_rate(self, target):
+    def _command_resum_rate(self, server_info):
         """
         Performs 100 session resumptions with the server in order to estimate
         the session resumption rate.
@@ -71,7 +66,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         MAX_RESUM = 100
         thread_pool = ThreadPool()
         for _ in xrange(MAX_RESUM):
-            thread_pool.add_job((self._resume_with_session_id, (target, )))
+            thread_pool.add_job((self._resume_with_session_id, (server_info, )))
         thread_pool.start(NB_THREADS)
 
         # Format session ID results
@@ -90,7 +85,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         return PluginBase.PluginResult(txt_result, xml_result)
 
 
-    def _command_resum(self, target):
+    def _command_resum(self, server_info):
         """
         Tests the server for session resumption support using session IDs and
         TLS session tickets (RFC 5077).
@@ -100,13 +95,12 @@ class PluginSessionResumption(PluginBase.PluginBase):
         thread_pool = ThreadPool()
 
         for _ in xrange(MAX_RESUM): # Test 5 resumptions with session IDs
-            thread_pool.add_job((self._resume_with_session_id,
-                                 (target,), 'session_id'))
+            thread_pool.add_job((self._resume_with_session_id, (server_info,), 'session_id'))
         thread_pool.start(NB_THREADS)
 
         # Test TLS tickets support while threads are running
         try:
-            (ticket_supported, ticket_reason) = self._resume_with_session_ticket(target)
+            (ticket_supported, ticket_reason) = self._resume_with_session_ticket(server_info)
             ticket_error = None
         except Exception as e:
             ticket_error = str(e.__class__.__name__) + ' - ' + str(e)
@@ -117,8 +111,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         if ticket_error:
             ticket_txt = 'ERROR: ' + ticket_error
         else:
-            ticket_txt = 'OK - Supported' if ticket_supported \
-                                     else 'NOT SUPPORTED - ' + ticket_reason+'.'
+            ticket_txt = 'OK - Supported' if ticket_supported else 'NOT SUPPORTED - ' + ticket_reason+'.'
 
         cmd_title = 'Session Resumption'
         txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
@@ -181,7 +174,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
         sessid_txt = SESSID_FORMAT(str(nb_resum), str(nb_failed), str(nb_error),
                                    str(MAX_RESUM), sessid_stat, sessid_try)
 
-        ERRORS_FORMAT ='        ERROR #{0}: {1}'.format
+        ERRORS_FORMAT = '        ERROR #{0}: {1}'.format
         txt_result = [sessid_txt]
         # Add error messages
         if error_list:
@@ -206,12 +199,12 @@ class PluginSessionResumption(PluginBase.PluginBase):
         return txt_result, xml_resum_id
 
 
-    def _resume_with_session_id(self, target):
+    def _resume_with_session_id(self, server_info):
         """
         Performs one session resumption using Session IDs.
         """
 
-        session1 = self._resume_ssl_session(target)
+        session1 = self._resume_ssl_session(server_info)
         try: # Recover the session ID
             session1_id = self._extract_session_id(session1)
         except IndexError:
@@ -221,7 +214,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
             return False, 'Session ID empty'
 
         # Try to resume that SSL session
-        session2 = self._resume_ssl_session(target, session1)
+        session2 = self._resume_ssl_session(server_info, session1)
         try: # Recover the session ID
             session2_id = self._extract_session_id(session2)
         except IndexError:
@@ -234,20 +227,20 @@ class PluginSessionResumption(PluginBase.PluginBase):
         return True, ''
 
 
-    def _resume_with_session_ticket(self, target):
+    def _resume_with_session_ticket(self, server_info):
         """
         Performs one session resumption using TLS Session Tickets.
         """
 
         # Connect to the server and keep the SSL session
-        session1 = self._resume_ssl_session(target, tlsTicket=True)
+        session1 = self._resume_ssl_session(server_info, tlsTicket=True)
         try: # Recover the TLS ticket
             session1_tls_ticket = self._extract_tls_session_ticket(session1)
         except IndexError:
             return False, 'TLS ticket not assigned'
 
         # Try to resume that session using the TLS ticket
-        session2 = self._resume_ssl_session(target, session1, tlsTicket=True)
+        session2 = self._resume_ssl_session(server_info, session1, tlsTicket=True)
         try: # Recover the TLS ticket
             session2_tls_ticket = self._extract_tls_session_ticket(session2)
         except IndexError:
@@ -277,18 +270,18 @@ class PluginSessionResumption(PluginBase.PluginBase):
         Extracts the TLS session ticket from a SSL session object or raises
         IndexError if the ticket was not set.
         """
-        session_string = ( (ssl_session.as_text()).split("TLS session ticket:") )[1]
-        session_tls_ticket = ( session_string.split("Compression:") )[0]
+        session_string = ((ssl_session.as_text()).split("TLS session ticket:"))[1]
+        session_tls_ticket = (session_string.split("Compression:"))[0]
         return session_tls_ticket
 
 
-    def _resume_ssl_session(self, target, sslSession=None, tlsTicket=False):
+    def _resume_ssl_session(self, server_info, sslSession=None, tlsTicket=False):
         """
         Connect to the server and returns the session object that was assigned
         for that connection.
         If ssl_session is given, tries to resume that session.
         """
-        sslConn = create_sslyze_connection(target, self._shared_settings)
+        sslConn = server_info.get_preconfigured_ssl_connection()
         if not tlsTicket:
         # Need to disable TLS tickets to test session IDs, according to rfc5077:
         # If a ticket is presented by the client, the server MUST NOT attempt

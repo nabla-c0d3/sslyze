@@ -32,10 +32,11 @@
 
 from xml.etree.ElementTree import Element
 from utils.HTTPResponseParser import parse_http_response
-from utils.SSLyzeSSLConnection import create_sslyze_connection
 from plugins import PluginBase
 from urlparse import urlparse
 import Cookie
+
+from utils.ServersConnectivityTester import StartTlsProtocolEnum
 
 
 class PluginHSTS(PluginBase.PluginBase):
@@ -49,11 +50,11 @@ class PluginHSTS(PluginBase.PluginBase):
         dest=None)
 
 
-    def process_task(self, target, command, args):
-        if self._shared_settings['starttls']:
-            raise Exception('Cannot use --hsts with --starttls.')
+    def process_task(self, server_info, command, args):
+        if server_info.starttls_protocol != StartTlsProtocolEnum.NO_STARTTLS:
+            raise ValueError('Cannot test for HSTS on a StartTLS connection.')
 
-        hsts_header = self._get_hsts_header(target)
+        hsts_header = self._get_hsts_header(server_info)
         hsts_supported = False
         if hsts_header:
             hsts_supported = True
@@ -86,8 +87,7 @@ class PluginHSTS(PluginBase.PluginBase):
         return PluginBase.PluginResult(txt_result, xml_result)
 
 
-
-    def _get_hsts_header(self, target):
+    def _get_hsts_header(self, server_info):
 
         hstsHeader = None
         MAX_REDIRECT = 5
@@ -95,23 +95,21 @@ class PluginHSTS(PluginBase.PluginBase):
         httpGetFormat = 'GET {0} HTTP/1.0\r\nHost: {1}\r\n{2}Connection: close\r\n\r\n'.format
         httpPath = '/'
         httpAppend = ''
-        
+
+        sslConn = server_info.get_preconfigured_ssl_connection()
+        # Perform the SSL handshake
+        sslConn.connect()
+
         while nb_redirect < MAX_REDIRECT:
-            sslConn = create_sslyze_connection(target, self._shared_settings)
-            
-            # Perform the SSL handshake
-            sslConn.connect()
-            
-            sslConn.write(httpGetFormat(httpPath, target[0], httpAppend))
+
+            sslConn.write(httpGetFormat(httpPath, server_info.hostname, httpAppend))
             httpResp = parse_http_response(sslConn)
-            sslConn.close()
             
             if httpResp.version == 9 :
                 # HTTP 0.9 => Probably not an HTTP response
-                raise Exception('Server did not return an HTTP response')
+                raise ValueError('Server did not return an HTTP response')
             else:
                 hstsHeader = httpResp.getheader('strict-transport-security', False)
-
 
             # If there was no HSTS header, check if the server returned a redirection
             if hstsHeader is None and 300 <= httpResp.status < 400:
@@ -120,29 +118,21 @@ class PluginHSTS(PluginBase.PluginBase):
                 
                 if redirectHeader is None:
                     break
-                
                 o = urlparse(redirectHeader)
-                httpPath = o.path
+                print 'redirection'
                 
-                # Handle absolute redirection URL
-                if o.hostname:
-                    if o.port:
-                        port = o.port
-                    else:
-                        if o.scheme == 'https':
-                            port = 443
-                        elif o.scheme == 'http':
-                            # We would have to use urllib for http: URLs
-                            raise Exception("Error: server sent a redirection to HTTP.")
-                        else:
-                            port = target[2]
-                        
-                    target = (o.hostname, o.hostname, port, target[3])
+                # Handle absolute redirection URL but only allow redirections to the same domain and port
+                if o.hostname and o.hostname != server_info.hostname:
+                    break
+                else:
+                    httpPath = o.path
+                    if o.scheme == 'http':
+                        # We would have to use urllib for http: URLs
+                        raise ValueError("Error: server sent a redirection to HTTP.")
 
                 # Handle cookies
                 if cookieHeader:
                     cookie = Cookie.SimpleCookie(cookieHeader)
-
                     if cookie:
                         httpAppend = 'Cookie:' + cookie.output(attrs=[], header='', sep=';') + '\r\n'
 
@@ -151,7 +141,7 @@ class PluginHSTS(PluginBase.PluginBase):
                 # If the server did not return a redirection just give up
                 break
 
-        
+        sslConn.close()
         return hstsHeader
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.7
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:         ServersConnectivityTester.py
 # Purpose:      Initial checks to figure out which servers supplied by the
 #               user are actually reachable.
@@ -20,7 +20,7 @@
 #
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 import socket
 from xml.etree.ElementTree import Element
@@ -30,7 +30,6 @@ from SSLyzeSSLConnection import create_sslyze_connection, StartTLSError, ProxyEr
 
 
 class InvalidTargetError(Exception):
-
     RESULT_FORMAT = '\n   {0:<35} => WARNING: {1}; discarding corresponding tasks.'
 
     def __init__(self, target_str, error_msg):
@@ -41,15 +40,15 @@ class InvalidTargetError(Exception):
         return self.RESULT_FORMAT.format(self._target_str, self._error_msg)
 
     def get_error_xml(self):
-        errorXml = Element('invalidTarget', error = self._error_msg)
+        errorXml = Element('invalidTarget', error=self._error_msg)
         errorXml.text = self._target_str
         return errorXml
 
 
-
 class TargetStringParser(object):
-    """Utility class to parse a 'host:port{ip}' string taken from the command line
-    into a valid (host,ip, port) tuple. Supports IPV6 addresses."""
+    """Utility class to parse a 'host:port{ip}' string taken from the command line into a valid (host,ip, port) tuple.
+    Supports IPV6 addresses.
+    """
 
     ERR_BAD_PORT = 'Not a valid host:port'
     ERR_NO_IPV6 = 'IPv6 is not supported on this platform'
@@ -81,15 +80,14 @@ class TargetStringParser(object):
 
         return host, ip, port
 
-
     @classmethod
     def _parse_ipv4_target_str(cls, target_str, default_port):
 
         if ':' in target_str:
-            host = (target_str.split(':'))[0] # hostname or ipv4 address
+            host = (target_str.split(':'))[0]  # hostname or ipv4 address
             try:
                 port = int((target_str.split(':'))[1])
-            except: # Port is not an int
+            except:  # Port is not an int
                 raise InvalidTargetError(target_str, cls.ERR_BAD_PORT)
         else:
             host = target_str
@@ -106,13 +104,12 @@ class TargetStringParser(object):
         port = default_port
         target_split = (target_str.split(']'))
         ipv6_addr = target_split[0].split('[')[1]
-        if ':' in target_split[1]: # port was specified
+        if ':' in target_split[1]:  # port was specified
             try:
                 port = int(target_split[1].rsplit(':')[1])
-            except: # Port is not an int
+            except:  # Port is not an int
                 raise InvalidTargetError(target_str, cls.ERR_BAD_PORT)
         return ipv6_addr, port
-
 
 
 class ServersConnectivityTester(object):
@@ -125,15 +122,15 @@ class ServersConnectivityTester(object):
 
     MAX_THREADS = 50
 
-    DEFAULT_PORTS = {'smtp'       : 25,
-                     'xmpp'       : 5222,
+    DEFAULT_PORTS = {'smtp': 25,
+                     'xmpp': 5222,
                      'xmpp_server': 5269,
-                     'ftp'        : 21,
-                     'pop3'       : 110,
-                     'ldap'       : 389,
-                     'imap'       : 143,
-                     'rdp'        : 3389,
-                     'default'    : 443}
+                     'ftp': 21,
+                     'pop3': 110,
+                     'ldap': 389,
+                     'imap': 143,
+                     'rdp': 3389,
+                     'default': 443}
 
     ERR_TIMEOUT = 'Could not connect (timeout)'
     ERR_NAME_NOT_RESOLVED = 'Could not resolve hostname'
@@ -168,7 +165,6 @@ class ServersConnectivityTester(object):
         thread_pool.join()
         return
 
-
     @classmethod
     def get_printable_result(cls, targets_OK, targets_ERR):
         """
@@ -178,13 +174,12 @@ class ServersConnectivityTester(object):
         result_str = ''
         for target in targets_OK:
             result_str += cls.TARGET_OK_FORMAT.format(cls.HOST_FORMAT.format(target),
-                                                       cls.IP_FORMAT.format(target))
+                                                      cls.IP_FORMAT.format(target))
 
         for exception in targets_ERR:
             result_str += exception.get_error_txt()
 
         return result_str
-
 
     @classmethod
     def get_xml_result(cls, targets_ERR):
@@ -197,7 +192,6 @@ class ServersConnectivityTester(object):
             resultXml.append(exception.get_error_xml())
 
         return resultXml
-
 
     @classmethod
     def _test_server(cls, targetStr, shared_settings):
@@ -221,11 +215,11 @@ class ServersConnectivityTester(object):
             ipAddr = sslCon._sock.getpeername()[0]
 
         # Socket errors
-        except socket.timeout: # Host is down
+        except socket.timeout:  # Host is down
             raise InvalidTargetError(targetStr, cls.ERR_TIMEOUT)
         except socket.gaierror:
             raise InvalidTargetError(targetStr, cls.ERR_NAME_NOT_RESOLVED)
-        except socket.error: # Connection Refused
+        except socket.error:  # Connection Refused
             raise InvalidTargetError(targetStr, cls.ERR_REJECTED)
 
         # StartTLS errors
@@ -243,7 +237,6 @@ class ServersConnectivityTester(object):
 
         finally:
             sslCon.close()
-
 
         # Then try to do SSL handshakes just to figure out the SSL version
         # supported by the server; the plugins need to know this in advance.
@@ -265,6 +258,5 @@ class ServersConnectivityTester(object):
                 break
             finally:
                 sslCon.close()
-
 
         return host, ipAddr, port, sslSupport

@@ -54,15 +54,15 @@ class TargetStringParser(object):
     ERR_NO_IPV6 = 'IPv6 is not supported on this platform'
 
     @classmethod
-    def parse_target_str(cls, target_str, default_port):
-        # extract ip from target
+    def parse_target_from_cmd_line(cls, target_str, default_port):
+        # Extract ip from target
         if '{' in target_str and '}' in target_str:
             raw_target = target_str.split('{')
             raw_ip = raw_target[1]
 
             ip = raw_ip.replace('}', '')
 
-            # clean the target
+            # Clean the target
             target_str = raw_target[0]
         else:
             ip = None
@@ -76,7 +76,7 @@ class TargetStringParser(object):
                 (ip, port) = cls._parse_ipv6_target_str(ip, default_port)
 
             # Fallback to ipv4
-            (host, port) = cls._parse_ipv4_target_str(target_str, default_port)
+            (host, port) = cls._parse_ipv4_target_str(target_str)
 
         return host, ip, port
 
@@ -195,7 +195,7 @@ class ServersConnectivityTester(object):
 
         # Parse the target string
         default_port = cls.DEFAULT_PORTS.get(shared_settings['starttls'], default=cls.DEFAULT_PORTS['default'])
-        (host, ip, port) = TargetStringParser.parse_target_str(target_from_cmd_line, default_port)
+        (host, ip, port) = TargetStringParser.parse_target_from_cmd_line(target_from_cmd_line, default_port)
 
         # Check if the ip was specified
         if not ip:

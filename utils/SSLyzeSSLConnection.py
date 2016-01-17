@@ -203,6 +203,7 @@ class SSLConnection(DebugSslClient):
         self._port = port
         self._max_attempts = max_attempts
         self._tunnel_host = None
+        self.set_cipher_list(self.DEFAULT_SSL_CIPHER_LIST)
 
 
     def enable_http_connect_tunneling(self, tunnel_host, tunnel_port, tunnel_user=None, tunnel_password=None):

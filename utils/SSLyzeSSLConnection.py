@@ -475,27 +475,6 @@ class LDAPConnection(SSLConnection):
             raise StartTLSError(self.ERR_NO_STARTTLS + ', returned: "' + data + '" (hex: "' + data.encode('hex') + '")')
 
 
-class PGConnection(SSLConnection):
-    """PostgreSQL SSL Connection."""
-
-    ERR_NO_STARTTLS = 'Postgres AUTH TLS was rejected'
-
-    START_TLS_CMD = bytearray(b'\x00\x00\x00\x08\x04\xD2\x16\x2F')
-    START_TLS_OK = 'Start TLS request accepted.'
-
-    def do_pre_handshake(self):
-        """
-        Connect to a host on a given (SSL) port, send a STARTTLS command,
-        and perform the SSL handshake.
-        """
-        super(PGConnection, self).do_pre_handshake()
-
-        self._sock.send(self.START_TLS_CMD)
-        data = self._sock.recv(1)
-        if not data or len(data) != 1 or data != 'S' :
-            raise StartTLSError(self.ERR_NO_STARTTLS)
-
-
 class RDPConnection(SSLConnection):
     """SSL connection class that performs an RDP StartTLS negotiation
     before the SSL handshake."""
@@ -532,6 +511,7 @@ class GenericStartTLSConnection(SSLConnection):
     ERR_NO_STARTTLS = ''
     START_TLS_CMD = ''
     START_TLS_OK = ''
+    SHOULD_WAIT_FOR_SERVER_BANNER = True
 
     def do_pre_handshake(self):
         """
@@ -541,11 +521,12 @@ class GenericStartTLSConnection(SSLConnection):
         super(GenericStartTLSConnection, self).do_pre_handshake()
 
         # Grab the banner
-        self._sock.recv(2048)
+        if self.SHOULD_WAIT_FOR_SERVER_BANNER:
+            self._sock.recv(2048)
 
         # Send Start TLS
         self._sock.send(self.START_TLS_CMD)
-        if self.START_TLS_OK  not in self._sock.recv(2048):
+        if self.START_TLS_OK not in self._sock.recv(2048):
             raise StartTLSError(self.ERR_NO_STARTTLS)
 
 
@@ -582,3 +563,12 @@ class FTPConnection(GenericStartTLSConnection):
     START_TLS_OK = '234'
 
 
+
+class PostgresConnection(GenericStartTLSConnection):
+    """PostgreSQL SSL Connection."""
+
+    ERR_NO_STARTTLS = 'Postgres AUTH TLS was rejected'
+
+    START_TLS_CMD = bytearray(b'\x00\x00\x00\x08\x04\xD2\x16\x2F')
+    START_TLS_OK = 'Start TLS request accepted.'
+    SHOULD_WAIT_FOR_SERVER_BANNER = False

@@ -24,7 +24,7 @@
 from optparse import OptionParser, OptionGroup
 from nassl import _nassl, SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
 from utils.ServersConnectivityTester import ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
-    ServerConnectivityInfo, StartTlsProtocolEnum, InvalidTargetError
+    ServerConnectivityInfo, StartTlsProtocolEnum, ServerConnectivityError
 
 
 class CommandLineParsingError(Exception):
@@ -206,7 +206,7 @@ class CommandLineParser():
                     client_auth_credentials=client_auth_creds,
                     http_tunneling_settings=http_tunneling_settings)
                 )
-            except InvalidTargetError as e:
+            except ServerConnectivityError as e:
                 # Will happen for example if the DNS lookup failed or the server string is malformed
                 bad_server_list.append((server_string, e))
             except ValueError as e:

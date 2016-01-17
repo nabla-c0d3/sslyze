@@ -35,7 +35,7 @@ from utils.SSLyzeSSLConnection import SSLConnection
 
 try:
     from utils.CommandLineParser import CommandLineParser, CommandLineParsingError
-    from utils.ServersConnectivityTester import ServersConnectivityTester, InvalidTargetError
+    from utils.ServersConnectivityTester import ServersConnectivityTester, ServerConnectivityError
 except ImportError as e:
     print str(e) + '\nERROR: Could not import nassl Python module. Did you clone SSLyze\'s repo ? \n' +\
     'Please download the right pre-compiled package as described in the README.\n'
@@ -248,7 +248,7 @@ def main():
 
     if should_print_text_results:
         for server_string, exception in targets_ERR:
-            if isinstance(exception, InvalidTargetError):
+            if isinstance(exception, ServerConnectivityError):
                 print SERVER_INVALID_FORMAT.format(server_string=server_string, error_msg=exception.error_msg)
             else:
                 # Unexpected bug in SSLyze
@@ -341,7 +341,7 @@ def main():
         # Add the list of invalid targets
         invalid_targets_xml = Element('invalidTargets')
         for server_string, exception in targets_ERR:
-            if isinstance(exception, InvalidTargetError):
+            if isinstance(exception, ServerConnectivityError):
                 error_xml = Element('invalidTarget', error=exception.error_msg)
                 error_xml.text = server_string
                 invalid_targets_xml.append(error_xml)

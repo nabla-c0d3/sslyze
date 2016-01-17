@@ -34,7 +34,7 @@ from SSLyzeSSLConnection import StartTLSError, ProxyError, SSLConnection, SMTPCo
 from nassl.SslClient import SslClient
 
 
-class InvalidTargetError(ValueError):
+class ServerConnectivityError(ValueError):
     def __init__(self, error_msg):
         self.error_msg = error_msg
 
@@ -82,7 +82,7 @@ class CommandLineServerStringParser(object):
             try:
                 port = int((server_str.split(':'))[1])
             except:  # Port is not an int
-                raise InvalidTargetError(cls.SERVER_STRING_ERROR_BAD_PORT)
+                raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
         else:
             host = server_str
             port = None
@@ -93,7 +93,7 @@ class CommandLineServerStringParser(object):
     def _parse_ipv6_server_string(cls, server_str):
 
         if not socket.has_ipv6:
-            raise InvalidTargetError(cls.SERVER_STRING_ERROR_NO_IPV6)
+            raise ServerConnectivityError(cls.SERVER_STRING_ERROR_NO_IPV6)
 
         port = None
         target_split = (server_str.split(']'))
@@ -102,7 +102,7 @@ class CommandLineServerStringParser(object):
             try:
                 port = int(target_split[1].rsplit(':')[1])
             except:  # Port is not an int
-                raise InvalidTargetError(cls.SERVER_STRING_ERROR_BAD_PORT)
+                raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
         return ipv6_addr, port
 
 
@@ -233,7 +233,7 @@ class ServerConnectivityInfo(object):
             try:
                 self.ip_address = socket.gethostbyname(self.hostname)
             except socket.gaierror:
-                raise InvalidTargetError(self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED.format(hostname=self.hostname))
+                raise ServerConnectivityError(self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED.format(hostname=self.hostname))
 
         self.tls_server_name_indication = tls_server_name_indication
         if not self.tls_server_name_indication:
@@ -284,21 +284,21 @@ class ServerConnectivityInfo(object):
 
         # Socket errors
         except socket.timeout:  # Host is down
-            raise InvalidTargetError(self.CONNECTIVITY_ERROR_TIMEOUT)
+            raise ServerConnectivityError(self.CONNECTIVITY_ERROR_TIMEOUT)
         except socket.error:  # Connection Refused
-            raise InvalidTargetError(self.CONNECTIVITY_ERROR_REJECTED)
+            raise ServerConnectivityError(self.CONNECTIVITY_ERROR_REJECTED)
 
         # StartTLS errors
         except StartTLSError as e:
-            raise InvalidTargetError(e[0])
+            raise ServerConnectivityError(e[0])
 
         # Proxy errors
         except ProxyError as e:
-            raise InvalidTargetError(e[0])
+            raise ServerConnectivityError(e[0])
 
         # Other errors
         except Exception as e:
-            raise InvalidTargetError('{0}: {1}'.format(str(type(e).__name__), e[0]))
+            raise ServerConnectivityError('{0}: {1}'.format(str(type(e).__name__), e[0]))
 
         finally:
             ssl_connection.close()
@@ -333,7 +333,7 @@ class ServerConnectivityInfo(object):
                 ssl_connection.close()
 
         if ssl_version_supported is None or ssl_cipher_supported is None:
-            raise InvalidTargetError(self.CONNECTIVITY_ERROR_HANDSHAKE_ERROR)
+            raise ServerConnectivityError(self.CONNECTIVITY_ERROR_HANDSHAKE_ERROR)
 
         self.ssl_version_supported = ssl_version_supported
         self.ssl_cipher_supported = ssl_cipher_supported

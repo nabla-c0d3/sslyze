@@ -26,17 +26,17 @@ class WorkerProcess(Process):
         current_queue_in = self.priority_queue_in
         while True:
 
-            task = current_queue_in.get() # Grab a task from queue_in
-            if task is None: # All tasks have been completed
+            task = current_queue_in.get()  # Grab a task from queue_in
+            if task is None:  # All tasks have been completed
                 current_queue_in.task_done()
 
-                if (current_queue_in == self.priority_queue_in):
-                    # All high priority tasks have been completed
-                    current_queue_in = self.queue_in # Switch to low priority tasks
+                if current_queue_in == self.priority_queue_in:
+                    # All high priority tasks have been completed; switch to low priority tasks
+                    current_queue_in = self.queue_in
                     continue
                 else:
-                    # All the tasks have been completed
-                    self.queue_out.put(None) # Pass on the sentinel to result_queue and exit
+                    # All the tasks have been completed; pass on the sentinel to result_queue and exit
+                    self.queue_out.put(None)
                     break
 
             server_info, command, options_dict = task

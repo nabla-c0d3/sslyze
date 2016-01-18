@@ -23,13 +23,12 @@
 import re
 import signal
 import sys
-from itertools import cycle
-from multiprocessing import JoinableQueue, freeze_support
+from multiprocessing import freeze_support
 from time import time
 from xml.dom import minidom
 from xml.etree.ElementTree import Element, tostring
 
-from utils.worker_process import WorkerProcess
+from utils.plugins_process_pool import PluginsProcessPool
 
 try:
     import nassl
@@ -43,18 +42,14 @@ from utils.command_line_parser import CommandLineParser, CommandLineParsingError
 from utils.server_connectivity import ServersConnectivityTester, ServerConnectivityError
 
 
-
-
 PROJECT_VERSION = '0.13.0'
 PROJECT_URL = "https://github.com/nabla-c0d3/sslyze"
 PROJECT_EMAIL = 'nabla.c0d3@gmail.com'
 PROJECT_DESC = 'Fast and full-featured SSL scanner'
 
-MAX_PROCESSES = 12
-MIN_PROCESSES = 3
 
 # Global so we can terminate processes when catching SIGINT
-process_list = []
+plugins_process_pool = None
 
 
 # Todo: Move formatting stuff to another file
@@ -89,11 +84,9 @@ def _format_txt_target_result(server_info, result_list):
 
 
 def sigint_handler(signum, frame):
-
     print 'Scan interrupted... shutting down.'
-    for (proc, _) in process_list:
-        # Terminating a process this way will corrupt the queues but we're shutting down anyway
-        proc.terminate()
+    if plugins_process_pool:
+        plugins_process_pool.emergency_shutdown()
     sys.exit()
 
 
@@ -113,13 +106,13 @@ def main():
     # Create the command line parser and the list of available options
     sslyze_parser = CommandLineParser(available_plugins, PROJECT_VERSION)
 
-    targets_OK = []
-    targets_ERR = []
+    online_servers_list = []
+    invalid_servers_list = []
 
     # Parse the command line
     try:
         good_server_list, bad_server_list, args_command_list = sslyze_parser.parse_command_line()
-        targets_ERR.extend(bad_server_list)
+        invalid_servers_list.extend(bad_server_list)
     except CommandLineParsingError as e:
         print e.get_error_msg()
         return
@@ -132,85 +125,60 @@ def main():
         print '\n\n'
 
 
-
     #--PROCESSES INITIALIZATION--
-    # Three processes per target from MIN_PROCESSES up to MAX_PROCESSES
-    nb_processes = max(MIN_PROCESSES, min(MAX_PROCESSES, len(good_server_list)*3))
     if args_command_list.https_tunnel:
-        nb_processes = 1  # Let's not kill the proxy
-
-    task_queue = JoinableQueue()  # Processes get tasks from task_queue and
-    result_queue = JoinableQueue()  # put the result of each task in result_queue
-
-    # Spawn a pool of processes, and pass them the queues
-    for _ in xrange(nb_processes):
-        priority_queue = JoinableQueue()  # Each process gets a priority queue
-        p = WorkerProcess(priority_queue, task_queue, result_queue, available_commands, args_command_list.nb_retries,
-                          args_command_list.timeout)
-        p.start()
-        process_list.append((p, priority_queue)) # Keep track of each process and priority_queue
-
+        # Maximum one process to not kill the proxy
+        plugins_process_pool = PluginsProcessPool(sslyze_plugins, args_command_list.nb_retries,
+                                                  args_command_list.timeout, max_processes_nb=1)
+    else:
+        plugins_process_pool = PluginsProcessPool(sslyze_plugins, args_command_list.nb_retries,
+                                                  args_command_list.timeout)
 
     #--TESTING SECTION--
     # Figure out which hosts are up and fill the task queue with work to do
     if should_print_text_results:
         print _format_title('Checking host(s) availability')
 
-
-    # Each server gets assigned a priority queue for aggressive commands
-    # so that they're never run in parallel against this single server
-    cycle_priority_queues = cycle(process_list)
     connectivity_tester = ServersConnectivityTester(good_server_list)
     connectivity_tester.start_connectivity_testing()
 
     SERVER_OK_FORMAT = '   {host}:{port:<25} => {ip_address}'
     SERVER_INVALID_FORMAT = '   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.'
 
+    # Store and print servers we were able to connect to
     for server_connectivity_info in connectivity_tester.get_reachable_servers():
-        targets_OK.append(server_connectivity_info)
+        online_servers_list.append(server_connectivity_info)
         if should_print_text_results:
             print SERVER_OK_FORMAT.format(host=server_connectivity_info.hostname, port=server_connectivity_info.port,
                                           ip_address=server_connectivity_info.ip_address)
 
         # Send tasks to worker processes
-        (_, current_priority_queue) = cycle_priority_queues.next()
-        for command in available_commands:
-            if getattr(args_command_list, command):
+        for plugin_command in available_commands:
+            if getattr(args_command_list, plugin_command):
                 # Get this plugin's options if there's any
-                options_dict = {}
-                for option in available_commands[command].get_interface().get_options():
+                plugin_options_dict = {}
+                for option in available_commands[plugin_command].get_interface().get_options():
                     # Was this option set ?
                     if getattr(args_command_list,option.dest):
-                        options_dict[option.dest] = getattr(args_command_list, option.dest)
+                        plugin_options_dict[option.dest] = getattr(args_command_list, option.dest)
 
-                # Add the task to the right queue
-                if command in sslyze_plugins.get_aggressive_commands():
-                    # Aggressive commands should not be run in parallel against
-                    # a given server so we use the priority queues to prevent this
-                    current_priority_queue.put((server_connectivity_info, command, options_dict))
-                else:
-                    # Normal commands get put in the standard/shared queue
-                    task_queue.put((server_connectivity_info, command, options_dict))
+                plugins_process_pool.queue_plugin_task(server_connectivity_info, plugin_command, plugin_options_dict)
 
 
     for tentative_server_info, exception in connectivity_tester.get_invalid_servers():
-        targets_ERR.append(('{}:{}'.format(tentative_server_info.hostname, tentative_server_info.port), exception))
+        invalid_servers_list.append(('{}:{}'.format(tentative_server_info.hostname, tentative_server_info.port),
+                                     exception))
 
 
+    # Print servers we were NOT able to connect to
     if should_print_text_results:
-        for server_string, exception in targets_ERR:
+        for server_string, exception in invalid_servers_list:
             if isinstance(exception, ServerConnectivityError):
                 print SERVER_INVALID_FORMAT.format(server_string=server_string, error_msg=exception.error_msg)
             else:
                 # Unexpected bug in SSLyze
                 raise exception
         print '\n\n'
-
-    # Put a 'None' sentinel in the queue to let the each process know when every
-    # task has been completed
-    for (proc, priority_queue) in process_list:
-        task_queue.put(None) # One sentinel in the task_queue per proc
-        priority_queue.put(None) # One sentinel in each priority_queue
 
     # Keep track of how many tasks have to be performed for each target
     task_num = 0
@@ -220,8 +188,6 @@ def main():
 
 
     # --REPORTING SECTION--
-    processes_running = nb_processes
-
     # XML output
     xml_output_list = []
 
@@ -229,43 +195,29 @@ def main():
     result_dict = {}
     # We cannot use the server_info object directly as its address will change due to multiprocessing
     RESULT_DICT_KEY_FORMAT = '{hostname}:{port}'
-    for server_info in targets_OK:
+    for server_info in online_servers_list:
         result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname, port=server_info.port)] = []
 
-    # If all processes have stopped, all the work is done
-    while processes_running:
-        result = result_queue.get()
+    # Process the results as they come
+    for server_info, plugin_command, plugin_result in plugins_process_pool.get_results():
+        result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
+                                                  port=server_info.port)].append((plugin_command, plugin_result))
 
-        if result is None: # Getting None means that one process was done
-            processes_running -= 1
+        if len(result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
+                                                         port=server_info.port)]) == task_num:
+            # Done with this server; print the results and update the xml doc
+            if args_command_list.xml_file:
+                xml_output_list.append(_format_xml_target_result(
+                        server_info, result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
+                                                                               port=server_info.port)]))
 
-        else:  # Getting an actual result
-            (server_info, command, plugin_result) = result
-            result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
-                                                      port=server_info.port)].append((command, plugin_result))
-
-            if len(result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
-                                                             port=server_info.port)]) == task_num:
-                # Done with this server; print the results and update the xml doc
-                if args_command_list.xml_file:
-                    xml_output_list.append(_format_xml_target_result(
-                            server_info, result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
-                                                                                   port=server_info.port)]))
-
-                if should_print_text_results:
-                    print _format_txt_target_result(
-                            server_info, result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
-                                                                                   port=server_info.port)])
-
-        result_queue.task_done()
+            if should_print_text_results:
+                print _format_txt_target_result(
+                        server_info, result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
+                                                                               port=server_info.port)])
 
 
     # --TERMINATE--
-
-    # Make sure all the processes had time to terminate
-    task_queue.join()
-    result_queue.join()
-    #[process.join() for process in process_list] # Causes interpreter shutdown errors
     exec_time = time()-start_time
 
     # Output XML doc to a file if needed
@@ -291,7 +243,7 @@ def main():
 
         # Add the list of invalid targets
         invalid_targets_xml = Element('invalidTargets')
-        for server_string, exception in targets_ERR:
+        for server_string, exception in invalid_servers_list:
             if isinstance(exception, ServerConnectivityError):
                 error_xml = Element('invalidTarget', error=exception.error_msg)
                 error_xml.text = server_string

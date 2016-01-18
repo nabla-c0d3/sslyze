@@ -68,13 +68,11 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
     )
     interface.add_option(
         option='hide_rejected_ciphers',
-        help="Option - Hides the (usually long) list of cipher suites that were"
-        " rejected by the server(s)."
+        help="Option - Hides the (usually long) list of cipher suites that were rejected by the server(s)."
     )
 
 
-    def process_task(self, server_connectivity_info, command, args):
-
+    def process_task(self, server_connectivity_info, command, options_dict=None):
         MAX_THREADS = 15
         ssl_version_dict = {'sslv2': SSLV2,
                             'sslv3': SSLV3,
@@ -125,14 +123,18 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         thread_pool.join()
 
         # Generate results
-        return PluginBase.PluginResult(self._generate_text_output(result_dicts, command),
+        should_hide_rejected_ciphers = options_dict['hide_rejected_ciphers'] \
+            if options_dict and 'hide_rejected_ciphers' in options_dict.keys() \
+            else False
+
+        return PluginBase.PluginResult(self._generate_text_output(result_dicts, command, should_hide_rejected_ciphers),
                                        self._generate_xml_output(result_dicts, command))
 
 
 # == INTERNAL FUNCTIONS ==
 
 # FORMATTING FUNCTIONS
-    def _generate_text_output(self, result_dict_list, ssl_version):
+    def _generate_text_output(self, result_dict_list, ssl_version, should_hide_rejected_ciphers):
 
         ACCEPTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {message:<60}'.format
         REJECTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}    {message:<60}'.format
@@ -145,9 +147,9 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         dict_title_list = [('preferredCipherSuite', 'Preferred:'),
                        ('acceptedCipherSuites', 'Accepted:'),
                        ('errors', 'Undefined - An unexpected error happened:')]
-        # TODO: fix this
-#        if not self._shared_settings['hide_rejected_ciphers']:
-#            dict_title_list.append(('rejectedCipherSuites', 'Rejected:'))
+
+        if not should_hide_rejected_ciphers:
+            dict_title_list.append(('rejectedCipherSuites', 'Rejected:'))
 
         for result_key, result_title in dict_title_list:
 
@@ -315,7 +317,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         "IDEA-CBC-MD5": "SSL_CK_IDEA_128_CBC_WITH_MD5",
         "DES-CBC-MD5": "SSL_CK_DES_64_CBC_WITH_MD5",
         "DES-CBC3-MD5": "SSL_CK_DES_192_EDE3_CBC_WITH_MD5",
-        "RC4-64-MD5": "SSL_CK_RC4_64_WITH_MD5"
+        "RC4-64-MD5": "SSL_CK_RC4_64_WITH_MD5",
+        "NULL-MD5": "TLS_RSA_WITH_NULL_MD5",
     }
 
     TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {

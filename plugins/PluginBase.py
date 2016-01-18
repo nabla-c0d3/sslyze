@@ -25,12 +25,12 @@
 import abc
 from optparse import make_option
 
-class PluginInterface:
-    """
-    This object tells SSLyze what the plugin does: its title, description, and
-    which command line option(s) it implements.
-    Every plugin should have a class attribute called interface that is an
-    instance of PluginInterface.
+
+class PluginInterface(object):
+    """This object tells SSLyze what the plugin does: its title, description, and which command line option(s) it
+    implements.
+
+    Every plugin should have a class attribute called interface that is an instance of PluginInterface.
     """
 
     def __init__(self, title, description):
@@ -44,26 +44,34 @@ class PluginInterface:
         self._commands_as_text = []
 
     def add_option(self, option, help, dest=None):
+        """Options are settings specific to one single plugin; they will passed to process_task() in the options_dict.
         """
-        Options are settings specific to one single plugin.
+        # If dest is something, store it, otherwise just use store_true
+        action="store_true"
+        if dest is not None:
+            action="store"
+
+        self._options.append(make_option('--{}'.format(option), action=action, help=help, dest=dest))
+
+
+    def add_command(self, command, help, aggressive=False):
+        """Commands are actions/scans the plugin implements, with PluginXXX.process_task().
+
+        Setting aggressive to True is a warning that the command will open many simultaneous connections to the server
+        and should therefore not be run concurrently with other `aggressive` commands against a given server.
         """
 
-        self._options.append(self._make_option(option, help, dest))
-
-
-    def add_command(self, command, help, dest=None, aggressive=False):
-        """
-        Commands are actions/scans the plugin implements, with
-        PluginXXX.process_task().
-        Note: dest to None if you don't need arguments.
-        Setting aggressive to True means that the command will open
-        many simultaneous connections to the server and should therefore
-        not be run concurrently with other `aggressive` commands against
-        a given server.
-        """
-
-        self._commands.append(self._make_option(command, help, dest))
+        self._commands.append(make_option('--{}'.format(command), action='store_true', help=help))
         self._commands_as_text.append((command, aggressive))
+
+    @staticmethod
+    def _make_option(command, help, dest):
+        # If dest is something, store it, otherwise just use store_true
+        action="store_true"
+        if dest is not None:
+            action="store"
+
+        return make_option('--' + command, action=action, help=help, dest=dest)
 
 
     def get_commands(self):
@@ -78,19 +86,8 @@ class PluginInterface:
         return self._options
 
 
-    @staticmethod
-    def _make_option(command, help, dest):
-        # If dest is something, store it, otherwise just use store_true
-        action="store_true"
-        if dest is not None:
-            action="store"
-
-        return make_option('--' + command, action=action, help=help, dest=dest)
-
-
-class PluginResult:
-    """
-    Plugin.process_task() should return an instance of this class.
+class PluginResult(object):
+    """Plugin.process_task() should return an instance of this class.
     """
     def __init__(self, text_result, xml_result):
         """
@@ -113,8 +110,7 @@ class PluginResult:
 
 
 class PluginBase(object):
-    """
-    Base plugin abstract class. All plugins have to inherit from it.
+    """Base plugin abstract class. All plugins have to inherit from it.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -125,17 +121,11 @@ class PluginBase(object):
 
     @classmethod
     def get_interface(plugin_class):
-        """
-        This method returns the AvailableCommands object for the current plugin.
+        """Returns the AvailableCommands object for the current plugin.
         """
         return plugin_class.interface
 
     @abc.abstractmethod
-    def process_task(self, target, command, args):
-        """
-        This method should implement what the plugin is expected to do / test
-        when given a target=(host, ip_addr, port), a command line option, and
-        a command line argument. It has to be defined in each plugin class.
-        """
+    def process_task(self, server_connectivity_info, command, options_dict=None):
+        """Completes the task specified by command on the server."""
         return
-

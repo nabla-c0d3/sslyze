@@ -65,36 +65,38 @@ class PluginCertInfo(PluginBase.PluginBase):
 
     interface = PluginBase.PluginInterface(title="PluginCertInfo", description='')
     interface.add_command(
-        command="certinfo",
-        help="Verifies the validity of the server(s) certificate(s) against "
-             "various trust stores, checks for support for OCSP stapling, and "
-             "prints relevant fields of "
-             "the certificate. CERTINFO should be 'basic' or 'full'.",
-        dest="certinfo")
+        command="certinfo_basic",
+        help="Verifies the validity of the server(s) certificate(s) against various trust stores, checks for support "
+             "for OCSP stapling, and prints relevant fields of the certificate."
+    )
+    interface.add_command(
+        command="certinfo_full",
+        help="Same as --certinfo_basic but also prints the full server certificate."
+    )
     interface.add_option(
         option="ca_file",
         help="Local Certificate Authority file (in PEM format), to verify the "
              "validity of the server(s) certificate(s) against.",
-        dest="ca_file")
+        dest="ca_file"
+    )
 
 
     TRUST_FORMAT = '{store_name} CA Store ({store_version}):'.format
 
 
-    def process_task(self, server_info, command, arg):
+    def process_task(self, server_info, command, options_dict=None):
 
-        if arg == 'basic':
+        if command == 'certinfo_basic':
             txt_output_generator = self._get_basic_text
-        elif arg == 'full':
+        elif command == 'certinfo_full':
             txt_output_generator = self._get_full_text
         else:
-            raise Exception("PluginCertInfo: Unknown command.")
+            raise ValueError("PluginCertInfo: Unknown command.")
 
         thread_pool = ThreadPool()
 
-        # TODO: Fix this
-        #if 'ca_file' in self._shared_settings and self._shared_settings['ca_file']:
-        #    AVAILABLE_TRUST_STORES[self._shared_settings['ca_file']] = ('Custom --ca_file', 'N/A')
+        if options_dict and 'ca_file' in options_dict.keys():
+            AVAILABLE_TRUST_STORES[options_dict['ca_file']] = ('Custom --ca_file', 'N/A')
 
         for (store_path, _) in AVAILABLE_TRUST_STORES.iteritems():
             # Try to connect with each trust store
@@ -191,7 +193,7 @@ class PluginCertInfo(PluginBase.PluginBase):
 
 
         # XML output
-        xml_output = Element(command, argument=arg, title='Certificate Information')
+        xml_output = Element(command, title='Certificate Information')
 
         # XML output - certificate chain:  always return the full certificate for each cert in the chain
         cert_chain_xml = Element('certificateChain')

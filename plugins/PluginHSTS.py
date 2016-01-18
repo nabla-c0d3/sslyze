@@ -41,16 +41,15 @@ from utils.ServersConnectivityTester import StartTlsProtocolEnum
 
 class PluginHSTS(PluginBase.PluginBase):
 
-    interface = PluginBase.PluginInterface(title="PluginHSTS", description=(''))
+    interface = PluginBase.PluginInterface(title="PluginHSTS", description='')
     interface.add_command(
         command="hsts",
-        help="Checks support for HTTP Strict Transport Security "
-             "(HSTS) by collecting any Strict-Transport-Security field present in "
-             "the HTTP response sent back by the server(s).",
-        dest=None)
+        help="Checks support for HTTP Strict Transport Security (HSTS) by collecting any Strict-Transport-Security "
+             "field present in the HTTP response sent back by the server(s)."
+    )
 
 
-    def process_task(self, server_info, command, args):
+    def process_task(self, server_info, command, options=None):
         if server_info.starttls_protocol != StartTlsProtocolEnum.NO_STARTTLS:
             raise ValueError('Cannot test for HSTS on a StartTLS connection.')
 

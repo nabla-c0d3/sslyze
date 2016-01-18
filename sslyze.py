@@ -60,18 +60,19 @@ SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
 
 class WorkerProcess(Process):
 
-    def __init__(self, priority_queue_in, queue_in, queue_out, available_commands):
+    def __init__(self, priority_queue_in, queue_in, queue_out, available_commands, network_retries, network_timeout):
         Process.__init__(self)
         self.priority_queue_in = priority_queue_in
         self.queue_in = queue_in
         self.queue_out = queue_out
         self.available_commands = available_commands
 
+        # Set global network settings; needs to be done in each process
+        SSLConnection.set_global_network_settings(network_retries, network_timeout)
+
     def run(self):
-        """
-        The process will first complete tasks it gets from self.queue_in.
-        Once it gets notified that all the tasks have been completed,
-        it terminates.
+        """The process will first complete tasks it gets from self.queue_in.
+        Once it gets notified that all the tasks have been completed, it terminates.
         """
         from plugins.PluginBase import PluginResult
 
@@ -92,12 +93,12 @@ class WorkerProcess(Process):
                     self.queue_out.put(None) # Pass on the sentinel to result_queue and exit
                     break
 
-            (target, command, args) = task
+            server_info, command, options_dict = task
             # Instantiate the proper plugin
             plugin_instance = self.available_commands[command]()
 
             try: # Process the task
-                result = plugin_instance.process_task(target, command, args)
+                result = plugin_instance.process_task(server_info, command, options_dict)
             except Exception as e: # Generate txt and xml results
                 # raise
                 txt_result = ['Unhandled exception when processing --' +
@@ -107,7 +108,7 @@ class WorkerProcess(Process):
                 result = PluginResult(txt_result, xml_result)
 
             # Send the result to queue_out
-            self.queue_out.put((target, command, result))
+            self.queue_out.put((server_info, command, result))
             current_queue_in.task_done()
 
         return
@@ -137,7 +138,7 @@ def _format_txt_target_result(server_info, result_list):
             target_result_str += line + '\n'
 
     scan_txt = SCAN_FORMAT.format(server_info.hostname, str(server_info.port), server_info.ip_address)
-    return _format_title(scan_txt) + '\n' + target_result_str + '\n\n'
+    return _format_title(scan_txt) + target_result_str + '\n\n'
 
 
 def sigint_handler(signum, frame):
@@ -197,7 +198,8 @@ def main():
     # Spawn a pool of processes, and pass them the queues
     for _ in xrange(nb_processes):
         priority_queue = JoinableQueue()  # Each process gets a priority queue
-        p = WorkerProcess(priority_queue, task_queue, result_queue, available_commands)
+        p = WorkerProcess(priority_queue, task_queue, result_queue, available_commands, args_command_list.nb_retries,
+                          args_command_list.timeout)
         p.start()
         process_list.append((p, priority_queue)) # Keep track of each process and priority_queue
 
@@ -206,10 +208,6 @@ def main():
     # Figure out which hosts are up and fill the task queue with work to do
     if should_print_text_results:
         print _format_title('Checking host(s) availability')
-
-    # Set global network settings
-    # TODO: Do this in every processes
-    SSLConnection.set_global_network_settings(args_command_list.nb_retries, args_command_list.timeout)
 
 
     # Each server gets assigned a priority queue for aggressive commands
@@ -231,15 +229,21 @@ def main():
         (_, current_priority_queue) = cycle_priority_queues.next()
         for command in available_commands:
             if getattr(args_command_list, command):
-                args = args_command_list.__dict__[command]
+                # Get this plugin's options if there's any
+                options_dict = {}
+                for option in available_commands[command].get_interface().get_options():
+                    # Was this option set ?
+                    if getattr(args_command_list,option.dest):
+                        options_dict[option.dest] = getattr(args_command_list, option.dest)
 
+                # Add the task to the right queue
                 if command in sslyze_plugins.get_aggressive_commands():
                     # Aggressive commands should not be run in parallel against
                     # a given server so we use the priority queues to prevent this
-                    current_priority_queue.put( (server_connectivity_info, command, args) )
+                    current_priority_queue.put((server_connectivity_info, command, options_dict))
                 else:
                     # Normal commands get put in the standard/shared queue
-                    task_queue.put( (server_connectivity_info, command, args) )
+                    task_queue.put((server_connectivity_info, command, options_dict))
 
 
     for tentative_server_info, exception in connectivity_tester.get_invalid_servers():

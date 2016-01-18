@@ -39,12 +39,12 @@ ROOT_CERTS = []
 
 class PluginChromeSha1Deprecation(PluginBase.PluginBase):
 
-    interface = PluginBase.PluginInterface(title="PluginChromeSha1Deprecation", description=(''))
+    interface = PluginBase.PluginInterface(title="PluginChromeSha1Deprecation", description='')
     interface.add_command(
-        command = "chrome_sha1",
-        help = "Determines if the server will be affected by Google Chrome's SHA-1 deprecation plans. See "
-    "http://googleonlinesecurity.blogspot.com/2014/09/gradually-sunsetting-sha-1.html for more information")
-
+        command="chrome_sha1",
+        help="Determines if the server will be affected by Google Chrome's SHA-1 deprecation plans. See "
+             "http://googleonlinesecurity.blogspot.com/2014/09/gradually-sunsetting-sha-1.html for more information."
+    )
 
     CMD_TITLE = "Google Chrome SHA-1 Deprecation Status"
 

@@ -359,7 +359,7 @@ class XMPPConnection(SSLConnection):
         if 'host-unknown' in xmpp_resp:
             raise StartTLSError(self.ERR_XMPP_HOST_UNKNOWN)
 
-        if 'proceed'  not in xmpp_resp:
+        if 'proceed' not in xmpp_resp:
             raise StartTLSError(self.ERR_XMPP_NO_STARTTLS)
 
 

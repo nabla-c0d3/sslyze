@@ -29,7 +29,7 @@ from xml.etree.ElementTree import Element
 import sys
 
 from plugins import PluginBase
-from utils.ThreadPool import ThreadPool
+from utils.thread_pool import ThreadPool
 from nassl._nassl import OpenSSLError
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
 from nassl.SslClient import ClientCertificateRequested

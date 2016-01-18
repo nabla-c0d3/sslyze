@@ -26,7 +26,7 @@ import socket
 from base64 import b64encode
 from urllib import quote
 from urlparse import urlparse
-from ThreadPool import ThreadPool
+from thread_pool import ThreadPool
 from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSL_FILETYPE_PEM, SSL_FILETYPE_ASN1, SSLV2
 from ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, \
     XMPPConnection, XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \

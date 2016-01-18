@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
-# Name:         ThreadPool.py
+# Name:         thread_pool.py
 # Purpose:      Generic, simple thread pool used in some of the plugins.
 #
 # Author:       alban

@@ -89,10 +89,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
         cipher_list = ssl_client.get_cipher_list()
 
-        # Create a thread pool
-        thread_pool = ThreadPool()
-
         # Scan for every available cipher suite
+        thread_pool = ThreadPool()
         for cipher in cipher_list:
             thread_pool.add_job((self._test_ciphersuite, (server_connectivity_info, ssl_version, cipher)))
 
@@ -137,7 +135,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
     def _generate_text_output(self, result_dict_list, ssl_version, should_hide_rejected_ciphers):
 
         ACCEPTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {message:<60}'.format
-        REJECTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}    {message:<60}'.format
+        REJECTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}{message:<60}'.format
         CIPHER_LIST_TITLE_FORMAT = u'      {section_title:<32} '.format
 
         final_output_txt = [self.PLUGIN_TITLE_FORMAT(ssl_version.upper() + ' Cipher Suites')]
@@ -145,8 +143,8 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
         # Not using a dict here as we want to sort the sections in the output
         dict_title_list = [('preferredCipherSuite', 'Preferred:'),
-                       ('acceptedCipherSuites', 'Accepted:'),
-                       ('errors', 'Undefined - An unexpected error happened:')]
+                           ('acceptedCipherSuites', 'Accepted:'),
+                           ('errors', 'Undefined - An unexpected error happened:')]
 
         if not should_hide_rejected_ciphers:
             dict_title_list.append(('rejectedCipherSuites', 'Rejected:'))

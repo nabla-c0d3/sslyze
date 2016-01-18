@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
-# Name:         SSLyzeSSLConnection.py
+# Name:         ssl_connection.py
 # Purpose:      The SSL connection class that all SSLyze Plugins should be
 #               using. It takes care of creating the right connections based
 #               on the command line arguments supplied by the user.
@@ -27,7 +27,7 @@ from base64 import b64encode
 from urllib import quote
 
 import socket, struct, time, random
-from HTTPResponseParser import parse_http_response
+from http_response_parser import parse_http_response
 from nassl import _nassl, SSL_VERIFY_NONE
 from nassl.DebugSslClient import DebugSslClient
 from nassl.SslClient import ClientCertificateRequested

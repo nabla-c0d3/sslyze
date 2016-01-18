@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
-# Name:         CommandLineParser.py
+# Name:         command_line_parser.py
 # Purpose:      Command line parsing utilities for SSLyze.
 #
 # Author:       aaron, alban
@@ -23,7 +23,7 @@
 
 from optparse import OptionParser, OptionGroup
 from nassl import _nassl, SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
-from utils.ServersConnectivityTester import ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
+from utils.server_connectivity import ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
     ServerConnectivityInfo, TlsWrappedProtocolEnum, ServerConnectivityError
 
 
@@ -35,7 +35,7 @@ class CommandLineParsingError(Exception):
         return self.PARSING_ERROR_FORMAT.format(self)
 
 
-class CommandLineParser():
+class CommandLineParser(object):
 
     # Defines what --regular means
     REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'reneg', 'resum', 'certinfo_basic', 'http_get',

@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 # -------------------------------------------------------------------------------
-# Name:         ServersConnectivityTester.py
+# Name:         server_connectivity.py
 # Purpose:      Initial checks to figure out which servers supplied by the
 #               user are actually reachable.
 #
@@ -28,7 +28,7 @@ from urllib import quote
 from urlparse import urlparse
 from ThreadPool import ThreadPool
 from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSL_FILETYPE_PEM, SSL_FILETYPE_ASN1, SSLV2
-from SSLyzeSSLConnection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, \
+from ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, \
     XMPPConnection, XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \
     PostgresConnection, HTTPSConnection
 from nassl.SslClient import SslClient

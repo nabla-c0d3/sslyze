@@ -31,11 +31,11 @@ import signal
 import sys
 
 from plugins import PluginsFinder
-from utils.SSLyzeSSLConnection import SSLConnection
+from utils.ssl_connection import SSLConnection
 
 try:
-    from utils.CommandLineParser import CommandLineParser, CommandLineParsingError
-    from utils.ServersConnectivityTester import ServersConnectivityTester, ServerConnectivityError
+    from utils.command_line_parser import CommandLineParser, CommandLineParsingError
+    from utils.server_connectivity import ServersConnectivityTester, ServerConnectivityError
 except ImportError as e:
     print str(e) + '\nERROR: Could not import nassl Python module. Did you clone SSLyze\'s repo ? \n' +\
     'Please download the right pre-compiled package as described in the README.\n'

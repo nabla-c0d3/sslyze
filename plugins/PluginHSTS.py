@@ -31,12 +31,12 @@
 #-------------------------------------------------------------------------------
 
 from xml.etree.ElementTree import Element
-from utils.HTTPResponseParser import parse_http_response
+from utils.http_response_parser import parse_http_response
 from plugins import PluginBase
 from urlparse import urlparse
 import Cookie
 
-from utils.ServersConnectivityTester import TlsWrappedProtocolEnum
+from utils.server_connectivity import TlsWrappedProtocolEnum
 
 
 class PluginHSTS(PluginBase.PluginBase):

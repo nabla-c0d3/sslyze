@@ -25,7 +25,7 @@ import new
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
-from utils.SSLyzeSSLConnection import SSLHandshakeRejected
+from utils.ssl_connection import SSLHandshakeRejected
 from nassl._nassl import OpenSSLError, WantX509LookupError, WantReadError
 from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
 

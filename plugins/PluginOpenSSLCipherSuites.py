@@ -25,7 +25,7 @@ from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
 from utils.ThreadPool import ThreadPool
-from utils.SSLyzeSSLConnection import SSLHandshakeRejected
+from utils.ssl_connection import SSLHandshakeRejected
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
 from nassl.SslClient import SslClient
 

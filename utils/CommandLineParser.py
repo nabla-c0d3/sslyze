@@ -38,7 +38,7 @@ class CommandLineParsingError(Exception):
 class CommandLineParser():
 
     # Defines what --regular means
-    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'reneg', 'resum', 'certinfo=basic', 'http_get',
+    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'reneg', 'resum', 'certinfo_basic', 'http_get',
                    'hide_rejected_ciphers', 'compression', 'heartbleed']
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 target3.com:443{ip} etc...'
 
@@ -124,12 +124,7 @@ class CommandLineParser():
             if getattr(args_command_list, 'regular'):
                 setattr(args_command_list, 'regular', False)
                 for cmd in self.REGULAR_CMD:
-                    if 'certinfo' in cmd:
-                        # Allow user to override certinfo when using --regular
-                        if getattr(args_command_list, 'certinfo') is None:
-                            setattr(args_command_list, 'certinfo', 'basic')  # Special case
-                    else: 
-                        setattr(args_command_list, cmd, True)
+                    setattr(args_command_list, cmd, True)
 
 
         # Sanity checks on the command line options

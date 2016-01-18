@@ -243,9 +243,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
 # SSL FUNCTIONS
     def _test_ciphersuite(self, server_connectivity_info, ssl_version, ssl_cipher):
-        """
-        Initiates a SSL handshake with the server, using the SSL version and
-        cipher suite specified.
+        """Initiates a SSL handshake with the server, using the SSL version and cipher suite specified.
         """
         sslConn = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
         sslConn.set_cipher_list(ssl_cipher)
@@ -277,9 +275,7 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
 
 
     def _pref_ciphersuite(self, server_connectivity_info, ssl_version):
-        """
-        Initiates a SSL handshake with the server, using the SSL version and cipher
-        suite specified.
+        """Initiates a SSL handshake with the server, using the SSL version and cipher suite specified.
         """
 
         sslConn = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)

@@ -92,7 +92,7 @@ class SSLConnection(DebugSslClient):
     DEFAULT_SSL_CIPHER_LIST = 'HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA'
 
 
-    # Socket settings global to all SSLyze connections
+    # Socket settings global to all SSLyze connections; can be overridden
     NETWORK_MAX_RETRIES = 3
     NETWORK_TIMEOUT = 5
 
@@ -165,7 +165,10 @@ class SSLConnection(DebugSslClient):
             self._sock = socket.create_connection((self._ip, self._port), self.NETWORK_TIMEOUT)
 
 
-    def connect(self, network_max_retries=NETWORK_MAX_RETRIES):
+    def connect(self, network_max_retries=None):
+        if network_max_retries is None:
+            network_max_retries=self.NETWORK_MAX_RETRIES
+
         retry_attempts = 0
         delay = 0
         while True:
@@ -234,10 +237,9 @@ class SSLConnection(DebugSslClient):
         return ''
 
 
-
 class HTTPSConnection(SSLConnection):
-    """SSL connection class that sends an HTTP GET request after the SSL
-    handshake."""
+    """SSL connection class that sends an HTTP GET request after the SSL handshake.
+    """
 
     HTTP_GET_REQ = 'GET / HTTP/1.0\r\nHost: {0}\r\nConnection: close\r\n\r\n'
 
@@ -264,9 +266,7 @@ class HTTPSConnection(SSLConnection):
                     # Add redirection URL to the result
                     redirect = ' - ' + http_response.getheader('Location', None)
 
-                result = self.GET_RESULT_FORMAT.format(http_response.status,
-                                                       http_response.reason,
-                                                       redirect)
+                result = self.GET_RESULT_FORMAT.format(http_response.status, http_response.reason, redirect)
         except socket.timeout:
             result = self.ERR_HTTP_TIMEOUT
 
@@ -274,8 +274,9 @@ class HTTPSConnection(SSLConnection):
 
 
 class SMTPConnection(SSLConnection):
-    """SSL connection class that performs an SMTP StartTLS negotiation
-    before the SSL handshake and sends a NOOP after the handshake."""
+    """SSL connection class that performs an SMTP StartTLS negotiation before the SSL handshake and sends a NOOP after
+    the handshake.
+    """
 
     ERR_SMTP_REJECTED = 'SMTP EHLO was rejected'
     ERR_NO_SMTP_STARTTLS = 'SMTP STARTTLS not supported'
@@ -309,8 +310,8 @@ class SMTPConnection(SSLConnection):
 
 
 class XMPPConnection(SSLConnection):
-    """SSL connection class that performs an XMPP StartTLS negotiation
-    before the SSL handshake."""
+    """SSL connection class that performs an XMPP StartTLS negotiation before the SSL handshake.
+    """
 
     ERR_XMPP_REJECTED = 'Error opening XMPP stream, try --xmpp_to'
     ERR_XMPP_HOST_UNKNOWN = 'Error opening XMPP stream: server returned host-unknown error, try --xmpp_to'
@@ -336,9 +337,7 @@ class XMPPConnection(SSLConnection):
 
 
     def do_pre_handshake(self):
-        """
-        Connect to a host on a given (SSL) port, send a STARTTLS command,
-        and perform the SSL handshake.
+        """Connect to a host on a given (SSL) port, send a STARTTLS command, and perform the SSL handshake.
         """
         super(XMPPConnection, self).do_pre_handshake()
 
@@ -371,8 +370,8 @@ class XMPPServerConnection(XMPPConnection):
 
 
 class LDAPConnection(SSLConnection):
-    """SSL connection class that performs an LDAP StartTLS negotiation
-    before the SSL handshake."""
+    """SSL connection class that performs an LDAP StartTLS negotiation before the SSL handshake.
+    """
 
     ERR_NO_STARTTLS = 'LDAP AUTH TLS was rejected'
 
@@ -383,9 +382,7 @@ class LDAPConnection(SSLConnection):
 
 
     def do_pre_handshake(self):
-        """
-        Connect to a host on a given (SSL) port, send a STARTTLS command,
-        and perform the SSL handshake.
+        """Connect to a host on a given (SSL) port, send a STARTTLS command, and perform the SSL handshake.
         """
         super(LDAPConnection, self).do_pre_handshake()
 
@@ -397,8 +394,8 @@ class LDAPConnection(SSLConnection):
 
 
 class RDPConnection(SSLConnection):
-    """SSL connection class that performs an RDP StartTLS negotiation
-    before the SSL handshake."""
+    """SSL connection class that performs an RDP StartTLS negotiation before the SSL handshake.
+    """
 
     ERR_NO_STARTTLS = 'RDP AUTH TLS was rejected'
 
@@ -425,8 +422,8 @@ class RDPConnection(SSLConnection):
 
 
 class GenericStartTLSConnection(SSLConnection):
-    """SSL connection class that performs a StartTLS negotiation
-    before the SSL handshake. Used for POP3, IMAP and FTP."""
+    """SSL connection class that performs a StartTLS negotiation before the SSL handshake.
+    """
 
     # To be defined in subclasses
     ERR_NO_STARTTLS = ''
@@ -435,9 +432,7 @@ class GenericStartTLSConnection(SSLConnection):
     SHOULD_WAIT_FOR_SERVER_BANNER = True
 
     def do_pre_handshake(self):
-        """
-        Connect to a host on a given (SSL) port, send a STARTTLS command,
-        and perform the SSL handshake.
+        """Connect to a host on a given (SSL) port, send a STARTTLS command, and perform the SSL handshake.
         """
         super(GenericStartTLSConnection, self).do_pre_handshake()
 
@@ -453,8 +448,8 @@ class GenericStartTLSConnection(SSLConnection):
 
 
 class IMAPConnection(GenericStartTLSConnection):
-    """SSL connection class that performs an IMAP StartTLS negotiation
-    before the SSL handshake."""
+    """SSL connection class that performs an IMAP StartTLS negotiation before the SSL handshake.
+    """
 
     ERR_NO_STARTTLS = 'IMAP START TLS was rejected'
 
@@ -464,8 +459,8 @@ class IMAPConnection(GenericStartTLSConnection):
 
 
 class POP3Connection(GenericStartTLSConnection):
-    """SSL connection class that performs a POP3 StartTLS negotiation
-    before the SSL handshake."""
+    """SSL connection class that performs a POP3 StartTLS negotiation before the SSL handshake.
+    """
 
     ERR_NO_STARTTLS = 'POP START TLS was rejected'
 
@@ -475,8 +470,8 @@ class POP3Connection(GenericStartTLSConnection):
 
 
 class FTPConnection(GenericStartTLSConnection):
-    """SSL connection class that performs an FTP StartTLS negotiation
-    before the SSL handshake."""
+    """SSL connection class that performs an FTP StartTLS negotiation before the SSL handshake.
+    """
 
     ERR_NO_STARTTLS = 'FTP AUTH TLS was rejected'
 
@@ -486,7 +481,8 @@ class FTPConnection(GenericStartTLSConnection):
 
 
 class PostgresConnection(GenericStartTLSConnection):
-    """PostgreSQL SSL Connection."""
+    """PostgreSQL SSL Connection.
+    """
 
     ERR_NO_STARTTLS = 'Postgres AUTH TLS was rejected'
 

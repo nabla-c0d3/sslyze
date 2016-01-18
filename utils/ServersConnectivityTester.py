@@ -352,7 +352,6 @@ class ServerConnectivityInfo(object):
                 self.hostname, self.ip_address, self.port, ssl_version, ssl_verify_locations=ssl_verify_locations
         )
 
-
         # Add XMPP configuration
         if self.starttls_protocol in [StartTlsProtocolEnum.XMPP,
                                       StartTlsProtocolEnum.XMPP_SERVER] and self.xmpp_to_hostname:

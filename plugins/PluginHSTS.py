@@ -36,7 +36,7 @@ from plugins import PluginBase
 from urlparse import urlparse
 import Cookie
 
-from utils.server_connectivity import TlsWrappedProtocolEnum
+from utils.ssl_settings import TlsWrappedProtocolEnum
 
 
 class PluginHSTS(PluginBase.PluginBase):

@@ -30,16 +30,19 @@ from xml.dom import minidom
 import signal
 import sys
 
-from plugins import PluginsFinder
-from utils.ssl_connection import SSLConnection
-
 try:
-    from utils.command_line_parser import CommandLineParser, CommandLineParsingError
-    from utils.server_connectivity import ServersConnectivityTester, ServerConnectivityError
+    import nassl
 except ImportError as e:
     print str(e) + '\nERROR: Could not import nassl Python module. Did you clone SSLyze\'s repo ? \n' +\
     'Please download the right pre-compiled package as described in the README.\n'
     sys.exit()
+
+from plugins import PluginsFinder
+from utils.ssl_connection import SSLConnection
+from utils.command_line_parser import CommandLineParser, CommandLineParsingError
+from utils.server_connectivity import ServersConnectivityTester, ServerConnectivityError
+
+
 
 
 PROJECT_VERSION = '0.13.0'

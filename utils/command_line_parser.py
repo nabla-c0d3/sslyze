@@ -23,8 +23,8 @@
 
 from optparse import OptionParser, OptionGroup
 from nassl import _nassl, SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
-from utils.server_connectivity import ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
-    ServerConnectivityInfo, TlsWrappedProtocolEnum, ServerConnectivityError
+from utils.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
+from utils.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
 
 
 class CommandLineParsingError(Exception):

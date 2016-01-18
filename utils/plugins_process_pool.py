@@ -10,8 +10,15 @@ class PluginsProcessPool(object):
     DEFAULT_MAX_PROCESSES_NB = 12
     DEFAULT_PROCESSES_PER_HOSTNAME_NB = 3
 
-    def __init__(self, available_plugins, network_retries, network_timeout, max_processes_nb=DEFAULT_MAX_PROCESSES_NB,
+    # Controls every socket connection done by every plugin
+    DEFAULT_NETWORK_RETRIES = 3
+    DEFAULT_NETWORK_TIMEOUT = 5  # in seconds
+
+    def __init__(self, available_plugins, network_retries=DEFAULT_NETWORK_RETRIES,
+                 network_timeout=DEFAULT_NETWORK_TIMEOUT,
+                 max_processes_nb=DEFAULT_MAX_PROCESSES_NB,
                  max_processes_per_hostname_nb=DEFAULT_PROCESSES_PER_HOSTNAME_NB):
+
         self._available_plugins = available_plugins
         self._network_retries = network_retries
         self._network_timeout = network_timeout
@@ -28,7 +35,7 @@ class PluginsProcessPool(object):
         self._queued_tasks_nb = 0
 
 
-    def queue_plugin_task(self, server_connectivity_info, plugin_command, plugin_options_dict):
+    def queue_plugin_task(self, server_connectivity_info, plugin_command, plugin_options_dict={}):
         # Ensure we have the right processes and queues in place for this hostname
         self._check_and_create_process(server_connectivity_info.hostname)
 

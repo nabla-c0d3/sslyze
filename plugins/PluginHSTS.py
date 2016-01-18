@@ -36,7 +36,7 @@ from plugins import PluginBase
 from urlparse import urlparse
 import Cookie
 
-from utils.ServersConnectivityTester import StartTlsProtocolEnum
+from utils.ServersConnectivityTester import TlsWrappedProtocolEnum
 
 
 class PluginHSTS(PluginBase.PluginBase):
@@ -50,7 +50,7 @@ class PluginHSTS(PluginBase.PluginBase):
 
 
     def process_task(self, server_info, command, options=None):
-        if server_info.starttls_protocol != StartTlsProtocolEnum.NO_STARTTLS:
+        if server_info.starttls_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
             raise ValueError('Cannot test for HSTS on a StartTLS connection.')
 
         hsts_header = self._get_hsts_header(server_info)

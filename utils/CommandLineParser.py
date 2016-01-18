@@ -24,7 +24,7 @@
 from optparse import OptionParser, OptionGroup
 from nassl import _nassl, SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
 from utils.ServersConnectivityTester import ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
-    ServerConnectivityInfo, StartTlsProtocolEnum, ServerConnectivityError
+    ServerConnectivityInfo, TlsWrappedProtocolEnum, ServerConnectivityError
 
 
 class CommandLineParsingError(Exception):
@@ -49,28 +49,28 @@ class CommandLineParser():
                       'for each target servers.'.format(' , '.join(START_TLS_PROTOCOLS))
 
     # Mapping of StartTls protocols and ports; useful for starttls=auto
-    STARTTLS_PROTOCOL_DICT = {'smtp': StartTlsProtocolEnum.SMTP,
-                              587: StartTlsProtocolEnum.SMTP,
-                              25: StartTlsProtocolEnum.SMTP,
-                              'xmpp': StartTlsProtocolEnum.XMPP,
-                              5222 : StartTlsProtocolEnum.XMPP,
-                              'xmpp_server': StartTlsProtocolEnum.XMPP_SERVER,
-                              5269: StartTlsProtocolEnum.XMPP_SERVER,
-                              'pop3': StartTlsProtocolEnum.POP3,
-                              109: StartTlsProtocolEnum.POP3,
-                              110: StartTlsProtocolEnum.POP3,
-                              'imap': StartTlsProtocolEnum.IMAP,
-                              143: StartTlsProtocolEnum.IMAP,
-                              220: StartTlsProtocolEnum.IMAP,
-                              'ftp': StartTlsProtocolEnum.FTP,
-                              21: StartTlsProtocolEnum.FTP,
-                              'ldap': StartTlsProtocolEnum.LDAP,
-                              3268: StartTlsProtocolEnum.LDAP,
-                              389: StartTlsProtocolEnum.LDAP,
-                              'rdp': StartTlsProtocolEnum.RDP,
-                              3389: StartTlsProtocolEnum.RDP,
-                              'postgres': StartTlsProtocolEnum.POSTGRES,
-                              5432: StartTlsProtocolEnum.POSTGRES}
+    STARTTLS_PROTOCOL_DICT = {'smtp': TlsWrappedProtocolEnum.STARTTLS_SMTP,
+                              587: TlsWrappedProtocolEnum.STARTTLS_SMTP,
+                              25: TlsWrappedProtocolEnum.STARTTLS_SMTP,
+                              'xmpp': TlsWrappedProtocolEnum.STARTTLS_XMPP,
+                              5222 : TlsWrappedProtocolEnum.STARTTLS_XMPP,
+                              'xmpp_server': TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
+                              5269: TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
+                              'pop3': TlsWrappedProtocolEnum.STARTTLS_POP3,
+                              109: TlsWrappedProtocolEnum.STARTTLS_POP3,
+                              110: TlsWrappedProtocolEnum.STARTTLS_POP3,
+                              'imap': TlsWrappedProtocolEnum.STARTTLS_IMAP,
+                              143: TlsWrappedProtocolEnum.STARTTLS_IMAP,
+                              220: TlsWrappedProtocolEnum.STARTTLS_IMAP,
+                              'ftp': TlsWrappedProtocolEnum.STARTTLS_FTP,
+                              21: TlsWrappedProtocolEnum.STARTTLS_FTP,
+                              'ldap': TlsWrappedProtocolEnum.STARTTLS_LDAP,
+                              3268: TlsWrappedProtocolEnum.STARTTLS_LDAP,
+                              389: TlsWrappedProtocolEnum.STARTTLS_LDAP,
+                              'rdp': TlsWrappedProtocolEnum.STARTTLS_RDP,
+                              3389: TlsWrappedProtocolEnum.STARTTLS_RDP,
+                              'postgres': TlsWrappedProtocolEnum.STARTTLS_POSTGRES,
+                              5432: TlsWrappedProtocolEnum.STARTTLS_POSTGRES}
 
     # Default values
     DEFAULT_RETRY_ATTEMPTS = 4
@@ -170,7 +170,7 @@ class CommandLineParser():
 
 
         # STARTTLS
-        starttls_protocol = StartTlsProtocolEnum.NO_STARTTLS
+        tls_wrapped_protocol = TlsWrappedProtocolEnum.PLAIN_TLS
         if args_command_list.starttls:
             if args_command_list.starttls not in self.START_TLS_PROTOCOLS:
                 raise CommandLineParsingError(self.START_TLS_USAGE)
@@ -178,7 +178,7 @@ class CommandLineParser():
                 # StartTLS was specified
                 if args_command_list.starttls in self.STARTTLS_PROTOCOL_DICT.keys():
                     # Protocol was given in the command line
-                    starttls_protocol = self.STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
+                    tls_wrapped_protocol = self.STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
 
 
         # Number of connection retries
@@ -195,7 +195,7 @@ class CommandLineParser():
             try:
                 good_server_list.append(ServerConnectivityInfo.from_command_line(
                     server_string=server_string,
-                    starttls_protocol=starttls_protocol,
+                    tls_wrapped_protocol=tls_wrapped_protocol,
                     tls_server_name_indication=args_command_list.sni,
                     xmpp_to_hostname=args_command_list.xmpp_to,
                     client_auth_credentials=client_auth_creds,
@@ -209,13 +209,20 @@ class CommandLineParser():
                 raise CommandLineParsingError(e[0])
 
 
+        # Command line hacks
         # Handle --starttls=auto now that we parsed the server strings
         if args_command_list.starttls == 'auto':
             for server_info in good_server_list:
                 # We use the port number to deduce the protocol
                 if server_info.port in self.STARTTLS_PROTOCOL_DICT.keys():
-                    server_info.starttls_protocol = self.STARTTLS_PROTOCOL_DICT[server_info.port]
+                    server_info.tls_wrapped_protocol = self.STARTTLS_PROTOCOL_DICT[server_info.port]
 
+        # Handle --http_get now that we parsed the server strings
+        # Doing it here is hacky as the option is defined within PluginOpenSSLCipherSuites
+        if args_command_list.http_get:
+            for server_info in good_server_list:
+                if server_info.port == 443:
+                    server_info.tls_wrapped_protocol = TlsWrappedProtocolEnum.HTTPS
 
         return good_server_list, bad_server_list, args_command_list
 

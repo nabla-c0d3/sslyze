@@ -30,7 +30,7 @@ from ThreadPool import ThreadPool
 from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSL_FILETYPE_PEM, SSL_FILETYPE_ASN1, SSLV2
 from SSLyzeSSLConnection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, \
     XMPPConnection, XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \
-    PostgresConnection
+    PostgresConnection, HTTPSConnection
 from nassl.SslClient import SslClient
 
 
@@ -106,18 +106,21 @@ class CommandLineServerStringParser(object):
         return ipv6_addr, port
 
 
-# TODO: Rename this and add HTTP
-class StartTlsProtocolEnum(object):
-    NO_STARTTLS = 1  # Standard TLS connection
-    SMTP = 2
-    XMPP = 3
-    XMPP_SERVER = 4
-    FTP = 5
-    POP3 = 6
-    LDAP = 7
-    IMAP = 8
-    RDP = 9
-    POSTGRES = 10
+class TlsWrappedProtocolEnum(object):
+    """The list of TLS-wrapped protocols supported by SSLyze; used to figure out how to establish an SSL connection to
+    the server and what kind of "hello" message to send after the handshake was completed.
+    """
+    PLAIN_TLS = 1  # Standard TLS connection
+    HTTPS = 2
+    STARTTLS_SMTP = 3
+    STARTTLS_XMPP = 4
+    STARTTLS_XMPP_SERVER = 5
+    STARTTLS_FTP = 6
+    STARTTLS_POP3 = 7
+    STARTTLS_LDAP = 8
+    STARTTLS_IMAP = 9
+    STARTTLS_RDP = 10
+    STARTTLS_POSTGRES = 11
 
 
 class ClientAuthenticationCredentials(object):
@@ -185,30 +188,31 @@ class HttpConnectTunnelingSettings(object):
 class ServerConnectivityInfo(object):
     """All settings (hostname, port, SSL version, etc.) needed to successfully connect to a specific SSL server."""
 
-    STARTTLS_DEFAULT_PORTS = {
-        StartTlsProtocolEnum.NO_STARTTLS: 443,
-        StartTlsProtocolEnum.SMTP: 25,
-        StartTlsProtocolEnum.XMPP: 5222,
-        StartTlsProtocolEnum.XMPP_SERVER: 5269,
-        StartTlsProtocolEnum.FTP: 21,
-        StartTlsProtocolEnum.POP3: 110,
-        StartTlsProtocolEnum.LDAP: 389,
-        StartTlsProtocolEnum.IMAP: 143,
-        StartTlsProtocolEnum.RDP: 3389,
-        StartTlsProtocolEnum.POSTGRES: 5432
+    TLS_DEFAULT_PORTS = {
+        TlsWrappedProtocolEnum.PLAIN_TLS: 443,
+        TlsWrappedProtocolEnum.STARTTLS_SMTP: 25,
+        TlsWrappedProtocolEnum.STARTTLS_XMPP: 5222,
+        TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER: 5269,
+        TlsWrappedProtocolEnum.STARTTLS_FTP: 21,
+        TlsWrappedProtocolEnum.STARTTLS_POP3: 110,
+        TlsWrappedProtocolEnum.STARTTLS_LDAP: 389,
+        TlsWrappedProtocolEnum.STARTTLS_IMAP: 143,
+        TlsWrappedProtocolEnum.STARTTLS_RDP: 3389,
+        TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 5432
     }
 
-    STARTTLS_CONNECTION_CLASSES = {
-        StartTlsProtocolEnum.NO_STARTTLS: SSLConnection,
-        StartTlsProtocolEnum.SMTP: SMTPConnection,
-        StartTlsProtocolEnum.XMPP: XMPPConnection,
-        StartTlsProtocolEnum.XMPP_SERVER: XMPPServerConnection,
-        StartTlsProtocolEnum.POP3: POP3Connection,
-        StartTlsProtocolEnum.IMAP: IMAPConnection,
-        StartTlsProtocolEnum.FTP: FTPConnection,
-        StartTlsProtocolEnum.LDAP: LDAPConnection,
-        StartTlsProtocolEnum.RDP: RDPConnection,
-        StartTlsProtocolEnum.POSTGRES: PostgresConnection,
+    TLS_CONNECTION_CLASSES = {
+        TlsWrappedProtocolEnum.PLAIN_TLS: SSLConnection,
+        TlsWrappedProtocolEnum.HTTPS: HTTPSConnection,
+        TlsWrappedProtocolEnum.STARTTLS_SMTP: SMTPConnection,
+        TlsWrappedProtocolEnum.STARTTLS_XMPP: XMPPConnection,
+        TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER: XMPPServerConnection,
+        TlsWrappedProtocolEnum.STARTTLS_POP3: POP3Connection,
+        TlsWrappedProtocolEnum.STARTTLS_IMAP: IMAPConnection,
+        TlsWrappedProtocolEnum.STARTTLS_FTP: FTPConnection,
+        TlsWrappedProtocolEnum.STARTTLS_LDAP: LDAPConnection,
+        TlsWrappedProtocolEnum.STARTTLS_RDP: RDPConnection,
+        TlsWrappedProtocolEnum.STARTTLS_POSTGRES: PostgresConnection,
     }
 
     CONNECTIVITY_ERROR_NAME_NOT_RESOLVED = 'Could not resolve {hostname}'
@@ -217,16 +221,16 @@ class ServerConnectivityInfo(object):
     CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
 
 
-    def __init__(self, hostname, port=None, ip_address=None, starttls_protocol=StartTlsProtocolEnum.NO_STARTTLS,
+    def __init__(self, hostname, port=None, ip_address=None, tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS,
                  tls_server_name_indication=None, xmpp_to_hostname=None, client_auth_credentials=None,
                  http_tunneling_settings=None):
 
         self.hostname = hostname
-        self.starttls_protocol = starttls_protocol
+        self.tls_wrapped_protocol = tls_wrapped_protocol
 
         self.port = port
         if not self.port:
-            self.port = self.STARTTLS_DEFAULT_PORTS[starttls_protocol]
+            self.port = self.TLS_DEFAULT_PORTS[tls_wrapped_protocol]
 
         self.ip_address = ip_address
         if not self.ip_address:
@@ -241,8 +245,8 @@ class ServerConnectivityInfo(object):
             self.tls_server_name_indication = self.hostname
 
         self.xmpp_to_hostname = xmpp_to_hostname
-        if self.xmpp_to_hostname and self.starttls_protocol not in [StartTlsProtocolEnum.XMPP,
-                                                                    StartTlsProtocolEnum.XMPP_SERVER]:
+        if self.xmpp_to_hostname and self.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.STARTTLS_XMPP,
+                                                                       TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER]:
             raise ValueError('Can only specify xmpp_to for the XMPP StartTLS protocol.')
 
         self.client_auth_credentials = client_auth_credentials
@@ -254,7 +258,7 @@ class ServerConnectivityInfo(object):
 
 
     @classmethod
-    def from_command_line(cls, server_string, starttls_protocol=StartTlsProtocolEnum.NO_STARTTLS,
+    def from_command_line(cls, server_string, tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS,
                           tls_server_name_indication=None, xmpp_to_hostname=None,
                           client_auth_credentials=None, http_tunneling_settings=None):
         """Constructor that parses a single server string from a command line used to launch SSLyze and returns the
@@ -265,7 +269,7 @@ class ServerConnectivityInfo(object):
         return cls(hostname=hostname,
                    port=port,
                    ip_address=ip_address,
-                   starttls_protocol=starttls_protocol,
+                   tls_wrapped_protocol=tls_wrapped_protocol,
                    tls_server_name_indication=tls_server_name_indication,
                    xmpp_to_hostname=xmpp_to_hostname,
                    client_auth_credentials=client_auth_credentials,
@@ -348,13 +352,13 @@ class ServerConnectivityInfo(object):
 
         # Create the right SSLConnection object
         ssl_version = override_ssl_version if override_ssl_version is not None else self.ssl_version_supported
-        ssl_connection = self.STARTTLS_CONNECTION_CLASSES[self.starttls_protocol](
+        ssl_connection = self.TLS_CONNECTION_CLASSES[self.tls_wrapped_protocol](
                 self.hostname, self.ip_address, self.port, ssl_version, ssl_verify_locations=ssl_verify_locations
         )
 
         # Add XMPP configuration
-        if self.starttls_protocol in [StartTlsProtocolEnum.XMPP,
-                                      StartTlsProtocolEnum.XMPP_SERVER] and self.xmpp_to_hostname:
+        if self.tls_wrapped_protocol in [TlsWrappedProtocolEnum.STARTTLS_XMPP,
+                                         TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER] and self.xmpp_to_hostname:
             ssl_connection.set_xmpp_to(self.xmpp_to_hostname)
 
         # Add HTTP tunneling configuration
@@ -372,40 +376,29 @@ class ServerConnectivityInfo(object):
 
 
 class ServersConnectivityTester(object):
-    """Utility class to connect to a list of servers and return a list of online and offline servers.
+    """Utility class to run servers connectivity testing on a list of ServerConnectivityInfo using a thread pool.
     """
 
     DEFAULT_MAX_THREADS = 50
-
-    ERR_TIMEOUT = 'Could not connect (timeout)'
-    ERR_NAME_NOT_RESOLVED = 'Could not resolve hostname'
-    ERR_REJECTED = 'Connection rejected'
 
     def __init__(self, tentative_server_info_list):
         # Use a thread pool to connect to each server
         self._thread_pool = ThreadPool()
         self._server_info_list = tentative_server_info_list
 
-
     def start_connectivity_testing(self, max_threads=DEFAULT_MAX_THREADS):
-        """Parses the each server string and tests connectivity with the server.
-        """
         for tentative_server_info in self._server_info_list:
             self._thread_pool.add_job((tentative_server_info.test_connectivity_to_server, []))
         nb_threads = min(len(self._server_info_list), max_threads)
         self._thread_pool.start(nb_threads)
 
-
     def get_reachable_servers(self):
-        # Return valid targets
         for (job, _) in self._thread_pool.get_result():
             test_connectivity_to_server_method, _ = job
             server_info = test_connectivity_to_server_method.__self__
             yield server_info
 
-
     def get_invalid_servers(self):
-        # Return invalid targets
         for (job, exception) in self._thread_pool.get_error():
             test_connectivity_to_server_method, _ = job
             server_info = test_connectivity_to_server_method.__self__

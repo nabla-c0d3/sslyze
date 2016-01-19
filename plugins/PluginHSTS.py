@@ -31,6 +31,8 @@
 #-------------------------------------------------------------------------------
 
 from xml.etree.ElementTree import Element
+
+from plugins.PluginBase import PluginResult
 from utils.http_response_parser import parse_http_response
 from plugins import PluginBase
 from urlparse import urlparse
@@ -49,28 +51,101 @@ class PluginHSTS(PluginBase.PluginBase):
     )
 
 
-    def process_task(self, server_info, command, options=None):
-        if server_info.starttls_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
+    def process_task(self, server_info, command, options_dict=None):
+
+        if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
             raise ValueError('Cannot test for HSTS on a StartTLS connection.')
 
         hsts_header = self._get_hsts_header(server_info)
-        hsts_supported = False
-        if hsts_header:
-            hsts_supported = True
+        return HstsResult(server_info, command, options_dict, hsts_header)
 
-        # Text output
-        cmd_title = 'HTTP Strict Transport Security'
-        txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
-        if hsts_supported:
-            txt_result.append(self.FIELD_FORMAT("OK - HSTS header received:", hsts_header))
+
+    MAX_REDIRECT = 5
+
+    def _get_hsts_header(self, server_info):
+
+        hsts_header = None
+        nb_redirect = 0
+        http_get_format = 'GET {0} HTTP/1.0\r\nHost: {1}\r\n{2}Connection: close\r\n\r\n'.format
+        http_path = '/'
+        http_append = ''
+
+        ssl_connection = server_info.get_preconfigured_ssl_connection()
+        # Perform the SSL handshake
+        ssl_connection.connect()
+
+        while nb_redirect < self.MAX_REDIRECT:
+
+            ssl_connection.write(http_get_format(http_path, server_info.hostname, http_append))
+            http_resp = parse_http_response(ssl_connection)
+            
+            if http_resp.version == 9 :
+                # HTTP 0.9 => Probably not an HTTP response
+                raise ValueError('Server did not return an HTTP response')
+            else:
+                hsts_header = http_resp.getheader('strict-transport-security', False)
+
+            # If there was no HSTS header, check if the server returned a redirection
+            if hsts_header is None and 300 <= http_resp.status < 400:
+                redirect_header = http_resp.getheader('Location', None)
+                cookie_header = http_resp.getheader('Set-Cookie', None)
+                
+                if redirect_header is None:
+                    break
+                o = urlparse(redirect_header)
+                
+                # Handle absolute redirection URL but only allow redirections to the same domain and port
+                if o.hostname and o.hostname != server_info.hostname:
+                    break
+                else:
+                    http_path = o.path
+                    if o.scheme == 'http':
+                        # We would have to use urllib for http: URLs
+                        raise ValueError("Error: server sent a redirection to HTTP.")
+
+                # Handle cookies
+                if cookie_header:
+                    cookie = Cookie.SimpleCookie(cookie_header)
+                    if cookie:
+                        http_append = 'Cookie:' + cookie.output(attrs=[], header='', sep=';') + '\r\n'
+
+                nb_redirect+=1
+            else:
+                # If the server did not return a redirection just give up
+                break
+
+        ssl_connection.close()
+        return hsts_header
+
+
+class HstsResult(PluginResult):
+
+    COMMAND_TITLE = 'HTTP Strict Transport Security'
+
+    def __init__(self, server_info, plugin_command, plugin_options, hsts_header):
+        super(HstsResult, self).__init__(server_info, plugin_command, plugin_options)
+
+        # Will be None if no HSTS header was returned
+        self.hsts_header = hsts_header
+
+
+    def as_text(self):
+        txt_result = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+        if self.hsts_header:
+            txt_result.append(self.FIELD_FORMAT("OK - HSTS header received:", self.hsts_header))
         else:
             txt_result.append(self.FIELD_FORMAT("NOT SUPPORTED - Server did not send an HSTS header.", ""))
+        return txt_result
 
-        # XML output
-        xml_hsts_attr = {'isSupported': str(hsts_supported)}
-        if hsts_supported:
+
+    def as_xml(self):
+        xml_result = Element(self.plugin_command, title=self.COMMAND_TITLE)
+
+        is_hsts_supported = True if self.hsts_header else False
+        xml_hsts_attr = {'isSupported': str(is_hsts_supported)}
+        if is_hsts_supported:
             # Do some light parsing of the HSTS header
-            hsts_header_split = hsts_header.split('max-age=')[1].split(';')
+            hsts_header_split = self.hsts_header.split('max-age=')[1].split(';')
             hsts_max_age = hsts_header_split[0].strip()
             hsts_subdomains = False
             if len(hsts_header_split) > 1 and 'includeSubdomains' in hsts_header_split[1]:
@@ -80,67 +155,4 @@ class PluginHSTS(PluginBase.PluginBase):
             xml_hsts_attr['includeSubdomains'] = str(hsts_subdomains)
 
         xml_hsts = Element('httpStrictTransportSecurity', attrib=xml_hsts_attr)
-        xml_result = Element('hsts', title=cmd_title)
         xml_result.append(xml_hsts)
-
-        return PluginBase.PluginResult(txt_result, xml_result)
-
-
-    def _get_hsts_header(self, server_info):
-
-        hstsHeader = None
-        MAX_REDIRECT = 5
-        nb_redirect = 0
-        httpGetFormat = 'GET {0} HTTP/1.0\r\nHost: {1}\r\n{2}Connection: close\r\n\r\n'.format
-        httpPath = '/'
-        httpAppend = ''
-
-        sslConn = server_info.get_preconfigured_ssl_connection()
-        # Perform the SSL handshake
-        sslConn.connect()
-
-        while nb_redirect < MAX_REDIRECT:
-
-            sslConn.write(httpGetFormat(httpPath, server_info.hostname, httpAppend))
-            httpResp = parse_http_response(sslConn)
-            
-            if httpResp.version == 9 :
-                # HTTP 0.9 => Probably not an HTTP response
-                raise ValueError('Server did not return an HTTP response')
-            else:
-                hstsHeader = httpResp.getheader('strict-transport-security', False)
-
-            # If there was no HSTS header, check if the server returned a redirection
-            if hstsHeader is None and 300 <= httpResp.status < 400:
-                redirectHeader = httpResp.getheader('Location', None)
-                cookieHeader = httpResp.getheader('Set-Cookie', None)
-                
-                if redirectHeader is None:
-                    break
-                o = urlparse(redirectHeader)
-                print 'redirection'
-                
-                # Handle absolute redirection URL but only allow redirections to the same domain and port
-                if o.hostname and o.hostname != server_info.hostname:
-                    break
-                else:
-                    httpPath = o.path
-                    if o.scheme == 'http':
-                        # We would have to use urllib for http: URLs
-                        raise ValueError("Error: server sent a redirection to HTTP.")
-
-                # Handle cookies
-                if cookieHeader:
-                    cookie = Cookie.SimpleCookie(cookieHeader)
-                    if cookie:
-                        httpAppend = 'Cookie:' + cookie.output(attrs=[], header='', sep=';') + '\r\n'
-
-                nb_redirect+=1
-            else:
-                # If the server did not return a redirection just give up
-                break
-
-        sslConn.close()
-        return hstsHeader
-
-

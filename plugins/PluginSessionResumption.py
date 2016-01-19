@@ -23,6 +23,7 @@
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
+from plugins.PluginBase import PluginResult
 from utils.thread_pool import ThreadPool
 from nassl import SSL_OP_NO_TICKET
 
@@ -44,204 +45,113 @@ class PluginSessionResumption(PluginBase.PluginBase):
     )
 
 
-    def process_task(self, server_info, command, args):
+    MAX_THREADS_NB = 20
+
+    def process_task(self, server_info, command, options_dict=None):
 
         if command == 'resum':
             result = self._command_resum(server_info)
         elif command == 'resum_rate':
-            result = self._command_resum_rate(server_info)
+            successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(server_info, 100)
+            result = ResumptionRateResult(server_info, command, options_dict, 100, successful_resumptions_nb,
+                                          errored_resumptions_list)
         else:
             raise ValueError("PluginSessionResumption: Unknown command.")
 
         return result
 
 
-    def _command_resum_rate(self, server_info):
-        """
-        Performs 100 session resumptions with the server in order to estimate
-        the session resumption rate.
-        """
-        # Create a thread pool and process the jobs
-        NB_THREADS = 20
-        MAX_RESUM = 100
-        thread_pool = ThreadPool()
-        for _ in xrange(MAX_RESUM):
-            thread_pool.add_job((self._resume_with_session_id, (server_info, )))
-        thread_pool.start(NB_THREADS)
-
-        # Format session ID results
-        (txt_resum, xml_resum) = self._format_resum_id_results(thread_pool, MAX_RESUM)
-
-        # Text output
-        cmd_title = 'Resumption Rate with Session IDs'
-        txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)+' '+ txt_resum[0]]
-        txt_result.extend(txt_resum[1:])
-
-        # XML output
-        xml_result = Element('resum_rate', title = cmd_title)
-        xml_result.append(xml_resum)
-
-        thread_pool.join()
-        return PluginBase.PluginResult(txt_result, xml_result)
-
-
     def _command_resum(self, server_info):
+        """Tests the server for session resumption support using session IDs and TLS session tickets (RFC 5077).
         """
-        Tests the server for session resumption support using session IDs and
-        TLS session tickets (RFC 5077).
-        """
-        NB_THREADS = 5
-        MAX_RESUM = 5
-        thread_pool = ThreadPool()
+        # Test Session ID support
+        successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(server_info, 5)
 
-        for _ in xrange(MAX_RESUM): # Test 5 resumptions with session IDs
-            thread_pool.add_job((self._resume_with_session_id, (server_info,), 'session_id'))
-        thread_pool.start(NB_THREADS)
-
-        # Test TLS tickets support while threads are running
+        # Test TLS tickets support
+        ticket_exception = None
+        ticket_reason = None
+        ticket_supported = False
         try:
             (ticket_supported, ticket_reason) = self._resume_with_session_ticket(server_info)
-            ticket_error = None
         except Exception as e:
-            ticket_error = str(e.__class__.__name__) + ' - ' + str(e)
+            ticket_exception = e
 
-        # Format session ID results
-        (txt_resum, xml_resum) = self._format_resum_id_results(thread_pool, MAX_RESUM)
-
-        if ticket_error:
-            ticket_txt = 'ERROR: ' + ticket_error
-        else:
-            ticket_txt = 'OK - Supported' if ticket_supported else 'NOT SUPPORTED - ' + ticket_reason+'.'
-
-        cmd_title = 'Session Resumption'
-        txt_result = [self.PLUGIN_TITLE_FORMAT(cmd_title)]
-        RESUM_FORMAT = '      {0:<35}{1}'.format
-
-        txt_result.append(RESUM_FORMAT('With Session IDs:', txt_resum[0]))
-        txt_result.extend(txt_resum[1:])
-        txt_result.append(RESUM_FORMAT('With TLS Session Tickets:', ticket_txt))
-
-        # XML output
-        xml_resum_ticket_attr = {}
-        if ticket_error:
-            xml_resum_ticket_attr['error'] = ticket_error
-        else:
-            xml_resum_ticket_attr['isSupported'] = str(ticket_supported)
-            if not ticket_supported:
-                xml_resum_ticket_attr['reason'] = ticket_reason
-
-        xml_resum_ticket = Element('sessionResumptionWithTLSTickets', attrib = xml_resum_ticket_attr)
-        xml_result = Element('resum', title=cmd_title)
-        xml_result.append(xml_resum)
-        xml_result.append(xml_resum_ticket)
-
-        thread_pool.join()
-        return PluginBase.PluginResult(txt_result, xml_result)
+        return ResumptionResult(server_info, 'resum', {}, 5,  successful_resumptions_nb, errored_resumptions_list,
+                                ticket_supported, ticket_reason, ticket_exception)
 
 
-    @staticmethod
-    def _format_resum_id_results(thread_pool, MAX_RESUM):
+    def _test_session_resumption_rate(self, server_info, resumption_attempts_nb):
+        """Attempts several session ID resumption with the server."""
+        thread_pool = ThreadPool()
+
+        for _ in xrange(resumption_attempts_nb):
+            thread_pool.add_job((self._resume_with_session_id, (server_info, )))
+        thread_pool.start(nb_threads=min(resumption_attempts_nb, self.MAX_THREADS_NB))
+
         # Count successful/failed resumptions
-        nb_resum = 0
+        successful_resumptions_nb = 0
         for completed_job in thread_pool.get_result():
-            (job, (is_supported, reason_str)) = completed_job
-            if is_supported:
-                nb_resum += 1
+            (job, was_resumption_successful) = completed_job
+            if was_resumption_successful:
+                successful_resumptions_nb += 1
 
         # Count errors and store error messages
-        error_list = []
+        errored_resumptions_list = []
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
-            error_msg = str(exception.__class__.__name__) + ' - ' + str(exception)
-            error_list.append(error_msg)
-        nb_error = len(error_list)
+            error_msg = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
+            errored_resumptions_list.append(error_msg)
 
-        nb_failed = MAX_RESUM - nb_error - nb_resum
-
-        # Text output
-        SESSID_FORMAT = '{4} ({0} successful, {1} failed, {2} errors, {3} total attempts).{5}'.format
-        sessid_try = ''
-        if nb_resum == MAX_RESUM:
-            sessid_stat = 'OK - Supported'
-        elif nb_resum > 0:
-            sessid_stat = 'PARTIALLY SUPPORTED'
-            sessid_try = ' Try --resum_rate.'
-        elif nb_failed == MAX_RESUM:
-            sessid_stat = 'NOT SUPPORTED'
-        else:
-            sessid_stat = 'ERROR'
-
-        sessid_txt = SESSID_FORMAT(str(nb_resum), str(nb_failed), str(nb_error),
-                                   str(MAX_RESUM), sessid_stat, sessid_try)
-
-        ERRORS_FORMAT = '        ERROR #{0}: {1}'.format
-        txt_result = [sessid_txt]
-        # Add error messages
-        if error_list:
-            i=0
-            for error_msg in error_list:
-                i+=1
-                txt_result.append(ERRORS_FORMAT(str(i), error_msg))
-
-        # XML output
-        sessid_xml = str(nb_resum == MAX_RESUM)
-        xml_resum_id_attr = {'totalAttempts':str(MAX_RESUM),
-                             'errors' : str(nb_error), 'isSupported' : sessid_xml,
-                             'successfulAttempts':str(nb_resum),'failedAttempts':str(nb_failed)}
-        xml_resum_id = Element('sessionResumptionWithSessionIDs', attrib = xml_resum_id_attr)
-        # Add errors
-        if error_list:
-            for error_msg in error_list:
-                xml_resum_error = Element('error')
-                xml_resum_error.text = error_msg
-                xml_resum_id.append(xml_resum_error)
-
-        return txt_result, xml_resum_id
+        thread_pool.join()
+        return successful_resumptions_nb, errored_resumptions_list
 
 
     def _resume_with_session_id(self, server_info):
+        """Performs one session resumption using Session IDs.
         """
-        Performs one session resumption using Session IDs.
-        """
-
         session1 = self._resume_ssl_session(server_info)
-        try: # Recover the session ID
+        try:
+            # Recover the session ID
             session1_id = self._extract_session_id(session1)
         except IndexError:
-            return False, 'Session ID not assigned'
+            # Session ID not assigned
+            return False
 
         if session1_id == '':
-            return False, 'Session ID empty'
+            # Session ID empty
+            return False
 
         # Try to resume that SSL session
         session2 = self._resume_ssl_session(server_info, session1)
         try: # Recover the session ID
             session2_id = self._extract_session_id(session2)
         except IndexError:
-            return False, 'Session ID not assigned'
+            # Session ID not assigned
+            return False
 
         # Finally, compare the two Session IDs
         if session1_id != session2_id:
-            return False, 'Session ID assigned but not accepted'
+            # Session ID assigned but not accepted
+            return False
 
-        return True, ''
+        return True
 
 
     def _resume_with_session_ticket(self, server_info):
+        """Performs one session resumption using TLS Session Tickets.
         """
-        Performs one session resumption using TLS Session Tickets.
-        """
-
         # Connect to the server and keep the SSL session
-        session1 = self._resume_ssl_session(server_info, tlsTicket=True)
-        try: # Recover the TLS ticket
+        session1 = self._resume_ssl_session(server_info, should_enable_tls_ticket=True)
+        try:
+            # Recover the TLS ticket
             session1_tls_ticket = self._extract_tls_session_ticket(session1)
         except IndexError:
             return False, 'TLS ticket not assigned'
 
         # Try to resume that session using the TLS ticket
-        session2 = self._resume_ssl_session(server_info, session1, tlsTicket=True)
-        try: # Recover the TLS ticket
+        session2 = self._resume_ssl_session(server_info, session1, should_enable_tls_ticket=True)
+        try:
+            # Recover the TLS ticket
             session2_tls_ticket = self._extract_tls_session_ticket(session2)
         except IndexError:
             return False, 'TLS ticket not assigned'
@@ -255,9 +165,7 @@ class PluginSessionResumption(PluginBase.PluginBase):
 
     @staticmethod
     def _extract_session_id(ssl_session):
-        """
-        Extracts the SSL session ID from a SSL session object or raises IndexError
-        if the session ID was not set.
+        """Extracts the SSL session ID from a SSL session object or raises IndexError if the session ID was not set.
         """
         session_string = ( (ssl_session.as_text()).split("Session-ID:") )[1]
         session_id = ( session_string.split("Session-ID-ctx:") )[0].strip()
@@ -266,35 +174,166 @@ class PluginSessionResumption(PluginBase.PluginBase):
 
     @staticmethod
     def _extract_tls_session_ticket(ssl_session):
-        """
-        Extracts the TLS session ticket from a SSL session object or raises
-        IndexError if the ticket was not set.
+        """Extracts the TLS session ticket from a SSL session object or raises IndexError if the ticket was not set.
         """
         session_string = ((ssl_session.as_text()).split("TLS session ticket:"))[1]
         session_tls_ticket = (session_string.split("Compression:"))[0]
         return session_tls_ticket
 
 
-    def _resume_ssl_session(self, server_info, sslSession=None, tlsTicket=False):
-        """
-        Connect to the server and returns the session object that was assigned
-        for that connection.
+    def _resume_ssl_session(self, server_info, ssl_session=None, should_enable_tls_ticket=False):
+        """Connects to the server and returns the session object that was assigned for that connection.
         If ssl_session is given, tries to resume that session.
         """
-        sslConn = server_info.get_preconfigured_ssl_connection()
-        if not tlsTicket:
+        ssl_connection = server_info.get_preconfigured_ssl_connection()
+        if not should_enable_tls_ticket:
         # Need to disable TLS tickets to test session IDs, according to rfc5077:
         # If a ticket is presented by the client, the server MUST NOT attempt
         # to use the Session ID in the ClientHello for stateful session resumption
-            sslConn.set_options(SSL_OP_NO_TICKET) # Turning off TLS tickets.
+            ssl_connection.set_options(SSL_OP_NO_TICKET) # Turning off TLS tickets.
 
-        if sslSession:
-            sslConn.set_session(sslSession)
+        if ssl_session:
+            ssl_connection.set_session(ssl_session)
 
         try: # Perform the SSL handshake
-            sslConn.connect()
-            newSession = sslConn.get_session() # Get session data
+            ssl_connection.connect()
+            new_session = ssl_connection.get_session() # Get session data
         finally:
-            sslConn.close()
+            ssl_connection.close()
 
-        return newSession
+        return new_session
+
+
+class ResumptionRateResult(PluginResult):
+    """Result for the --resum_rate command."""
+
+    def __init__(self, server_info, plugin_command, plugin_options, attempted_resumptions_nb, successful_resumptions_nb,
+                 errored_resumptions_list):
+        super(ResumptionRateResult, self).__init__(server_info, plugin_command, plugin_options)
+
+        self.attempted_resumptions_nb = attempted_resumptions_nb
+        self.successful_resumptions_nb = successful_resumptions_nb
+
+        # A list of error messages from uncaught/unexpected exceptions while testing; should always be empty
+        self.errored_resumptions_list = errored_resumptions_list
+
+        self.failed_resumptions_nb = self.attempted_resumptions_nb - self.successful_resumptions_nb - \
+                                     len(self.errored_resumptions_list)
+
+    COMMAND_TITLE = 'Resumption Rate'
+    RESUMPTION_RESULT_FORMAT = '{4} ({0} successful, {1} failed, {2} errors, {3} total attempts).'.format
+    RESUMPTION_LINE_FORMAT = '      {resumption_type:<35}{result}'.format
+    RESUMPTION_ERROR_FORMAT = '        ERROR #{error_nb}: {error_msg}'.format
+
+    def as_text(self):
+        result_txt = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+
+        # Create the line which summarizes the session resumption rate
+        if self.successful_resumptions_nb == self.attempted_resumptions_nb:
+            resumption_supported_txt = 'OK - Supported'
+        elif self.successful_resumptions_nb > 0:
+            resumption_supported_txt = 'PARTIALLY SUPPORTED'
+        elif self.failed_resumptions_nb == self.attempted_resumptions_nb:
+            resumption_supported_txt = 'NOT SUPPORTED'
+        else:
+            resumption_supported_txt = 'ERROR'
+
+        resum_rate_txt = self.RESUMPTION_RESULT_FORMAT(str(self.successful_resumptions_nb),
+                                                      str(self.failed_resumptions_nb),
+                                                      str(len(self.errored_resumptions_list)),
+                                                      str(self.attempted_resumptions_nb),
+                                                      resumption_supported_txt)
+        result_txt.append(self.RESUMPTION_LINE_FORMAT(resumption_type='With Session IDs:', result=resum_rate_txt))
+
+        # Add error messages if there was any
+        i = 0
+        for error_msg in self.errored_resumptions_list:
+            result_txt.append(self.RESUMPTION_ERROR_FORMAT(error_nb=i, error_msg=error_msg))
+            i += 1
+
+        return result_txt
+
+
+    def as_xml(self):
+        xml_result = Element(self.plugin_command, title=self.COMMAND_TITLE)
+
+        resumption_rate_xml = Element(
+                'sessionResumptionWithSessionIDs',
+                attrib = {'totalAttempts':str(self.attempted_resumptions_nb),
+                          'errors' : str(len(self.errored_resumptions_list)),
+                          'isSupported' : str(self.attempted_resumptions_nb == self.successful_resumptions_nb),
+                          'successfulAttempts':str(self.successful_resumptions_nb),
+                          'failedAttempts':str(self.failed_resumptions_nb)}
+        )
+        # Add error messages if there was any
+        for error_msg in self.errored_resumptions_list:
+            resumption_error_xml = Element('error')
+            resumption_error_xml.text = error_msg
+            resumption_rate_xml.append(resumption_error_xml)
+
+        xml_result.append(resumption_rate_xml)
+        return xml_result
+
+
+
+class ResumptionResult(ResumptionRateResult):
+    """Result for the --resum command."""
+
+    def __init__(self, server_info, plugin_command, plugin_options, attempted_resumptions_nb, successful_resumptions_nb,
+                 errored_resumptions_list, is_ticket_resumption_supported, ticket_resumption_failed_reason=None,
+                 ticket_resumption_exception=None):
+
+        super(ResumptionResult, self).__init__(server_info, plugin_command, plugin_options,
+                                                   attempted_resumptions_nb, successful_resumptions_nb,
+                                                   errored_resumptions_list)
+
+        self.is_ticket_resumption_supported = is_ticket_resumption_supported
+
+        # A message explaining why TLS ticket resumption failed
+        self.ticket_resumption_failed_reason = ticket_resumption_failed_reason
+
+        # An exception was raised while trying to perform ticket resumption (should never happen)
+        self.ticket_resumption_error = None
+        if ticket_resumption_exception:
+            self.ticket_resumption_error = '{} - {}'.format(str(ticket_resumption_exception.__class__.__name__),
+                                                            str(ticket_resumption_exception))
+
+    COMMAND_TITLE = 'Session Resumption'
+
+    def as_text(self):
+        # Same output as --resum_rate but add a line about TLS ticket resumption at the end
+        result_txt = super(ResumptionResult, self).as_text()
+
+        if self.ticket_resumption_error:
+            ticket_txt = 'ERROR: {}'.format(self.ticket_resumption_error)
+        else:
+            ticket_txt = 'OK - Supported' \
+                if self.is_ticket_resumption_supported \
+                else 'NOT SUPPORTED - {}.'.format(self.ticket_resumption_failed_reason)
+
+
+        result_txt.append(self.RESUMPTION_LINE_FORMAT(resumption_type='With TLS Tickets:', result=ticket_txt))
+        return result_txt
+
+
+    def as_xml(self):
+        xml_result = Element(self.plugin_command, title=self.COMMAND_TITLE)
+
+        # We keep the session resumption XML node
+        resum_rate_xml = super(ResumptionResult, self).as_xml()
+        session_resum_xml = resum_rate_xml[0]
+        xml_result.append(session_resum_xml)
+
+        # Add the ticket resumption node
+        xml_resum_ticket_attr = {}
+        if self.ticket_resumption_error:
+            xml_resum_ticket_attr['error'] = self.ticket_resumption_error
+        else:
+            xml_resum_ticket_attr['isSupported'] = str(self.is_ticket_resumption_supported)
+            if not self.is_ticket_resumption_supported:
+                xml_resum_ticket_attr['reason'] = self.ticket_resumption_failed_reason
+
+        xml_resum_ticket = Element('sessionResumptionWithTLSTickets', attrib=xml_resum_ticket_attr)
+        xml_result.append(xml_resum_ticket)
+
+        return xml_result

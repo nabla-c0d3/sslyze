@@ -65,7 +65,7 @@ def _format_xml_target_result(server_info, result_list):
     result_list.sort(key=lambda result: result[0])  # Sort results
 
     for (command, plugin_result) in result_list:
-        target_xml.append(plugin_result.get_xml_result())
+        target_xml.append(plugin_result.as_xml())
 
     return target_xml
 
@@ -76,7 +76,7 @@ def _format_txt_target_result(server_info, result_list):
     for (command, plugin_result) in result_list:
         # Print the result of each separate command
         target_result_str += '\n'
-        for line in plugin_result.get_txt_result():
+        for line in plugin_result.as_text():
             target_result_str += line + '\n'
 
     scan_txt = SCAN_FORMAT.format(server_info.hostname, str(server_info.port), server_info.ip_address)

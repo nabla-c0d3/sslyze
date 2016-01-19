@@ -24,6 +24,7 @@
 
 import abc
 from optparse import make_option
+from xml.etree.ElementTree import Element
 
 
 class PluginInterface(object):
@@ -87,36 +88,53 @@ class PluginInterface(object):
 
 
 class PluginResult(object):
-    """Plugin.process_task() should return an instance of this class.
+    """Plugins should return the result of process_task() as a subclass of this.
     """
-    def __init__(self, text_result, xml_result):
-        """
-        @type text_result: [str]
-        @param text_result: Printable version of the plugin's results.
-        Each string within the list gets printed as a separate line.
+    __metaclass__ = abc.ABCMeta
 
-        @type xml_result: xml.etree.ElementTree.Element
-        @param xml_result: XML version of the plugin's results.
-        """
-        self._text_result = text_result
-        self._xml_result = xml_result
+    # Common formatting
+    PLUGIN_TITLE_FORMAT = '  * {0}:'.format
+    FIELD_FORMAT = '      {0:<35}{1}'.format
 
-    def get_xml_result(self):
-        return self._xml_result
+    def __init__(self, server_info, plugin_command, plugin_options):
 
-    def get_txt_result(self):
-        return self._text_result
+        self.server_info = server_info
+        self.plugin_command = plugin_command
+        self.plugin_options = plugin_options
 
+    @abc.abstractmethod
+    def as_xml(self):
+        return
+
+    @abc.abstractmethod
+    def as_text(self):
+        return
+
+
+class PluginRaisedExceptionResult(PluginResult):
+    """Returned when a plugin threw an exception while doing process_task()."""
+
+    def __init__(self, server_info, plugin_command, plugin_options, exception):
+        super(PluginRaisedExceptionResult, self).__init__(server_info, plugin_command, plugin_options)
+        self.exception = exception
+
+    TITLE_TXT_FORMAT = 'Unhandled exception when processing --{command}:'.format
+    CONTENT_TXT_FORMAT = '{exc_module}.{exc_class} - {exc_string}'.format
+
+    def as_text(self):
+        return [self.TITLE_TXT_FORMAT(command=self.plugin_command),
+                self.CONTENT_TXT_FORMAT(exc_module=str(self.exception.__class__.__module__),
+                                        exc_class=str(self.exception.__class__.__name__),
+                                        exc_string=str(self.exception))]
+
+    def as_xml(self):
+        return Element(self.plugin_command, exception=self.get_txt_result()[1])
 
 
 class PluginBase(object):
     """Base plugin abstract class. All plugins have to inherit from it.
     """
     __metaclass__ = abc.ABCMeta
-
-    # Formatting stuff
-    PLUGIN_TITLE_FORMAT = '  * {0}:'.format
-    FIELD_FORMAT = '      {0:<35}{1}'.format
 
 
     @classmethod

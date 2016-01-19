@@ -27,6 +27,7 @@ from xml.etree.ElementTree import Element
 from plugins import PluginBase
 
 from nassl.SslClient import ClientCertificateRequested
+from plugins.PluginBase import PluginResult
 
 
 class PluginCompression(PluginBase.PluginBase):
@@ -37,40 +38,48 @@ class PluginCompression(PluginBase.PluginBase):
         help="Tests the server(s) for Zlib compression support.")
 
 
-    def process_task(self, server_info, command, args):
-
-        sslConn = server_info.get_preconfigured_ssl_connection()
+    def process_task(self, server_info, command, options_dict=None):
+        ssl_connection = server_info.get_preconfigured_ssl_connection()
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives
-        if 'zlib compression' not in sslConn.get_available_compression_methods():
-            raise RuntimeError('OpenSSL was not built with support for zlib / compression. Did you build nassl yourself ?')
+        if 'zlib compression' not in ssl_connection.get_available_compression_methods():
+            raise RuntimeError('OpenSSL was not built with support for zlib / compression. '
+                               'Did you build nassl yourself ?')
 
         try: # Perform the SSL handshake
-            sslConn.connect()
-            compName = sslConn.get_current_compression_method()
-        except ClientCertificateRequested: # The server asked for a client cert
-            compName = sslConn.get_current_compression_method()
+            ssl_connection.connect()
+            compression_name = ssl_connection.get_current_compression_method()
+        except ClientCertificateRequested:
+            # The server asked for a client cert
+            compression_name = ssl_connection.get_current_compression_method()
         finally:
-            sslConn.close()
+            ssl_connection.close()
 
-        # Text output
-        if compName:
-            compTxt = 'VULNERABLE - Server supports Deflate compression'
+        return CompressionResult(server_info, command, options_dict, compression_name)
+
+
+class CompressionResult(PluginResult):
+
+    COMMAND_TITLE = 'Deflate Compression'
+
+    def __init__(self, server_info, plugin_command, plugin_options, compression_name):
+        super(CompressionResult, self).__init__(server_info, plugin_command, plugin_options)
+
+        # Will be empty if no compression is supported by the server
+        self.compression_name = compression_name
+
+    def as_text(self):
+        txt_result = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+        if self.compression_name:
+            txt_result.append(self.FIELD_FORMAT('VULNERABLE - Server supports Deflate compression', ''))
         else:
-            compTxt = 'OK - Compression disabled'
+            txt_result.append(self.FIELD_FORMAT('OK - Compression disabled', ''))
+        return txt_result
 
-        cmdTitle = 'Deflate Compression'
-        txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-        txtOutput.append(self.FIELD_FORMAT(compTxt, ""))
-
-        # XML output
-        xmlOutput = Element(command, title=cmdTitle)
-        if compName:
-            xmlNode = Element('compressionMethod', type="DEFLATE", isSupported="True")
-            xmlOutput.append(xmlNode)
+    def as_xml(self):
+        xml_result = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        if self.compression_name:
+            xml_result.append(Element('compressionMethod', type="DEFLATE", isSupported="True"))
         else:
-            xmlNode = Element('compressionMethod', type="DEFLATE", isSupported="False")
-            xmlOutput.append(xmlNode)
-
-        return PluginBase.PluginResult(txtOutput, xmlOutput)
-
+            xml_result.append(Element('compressionMethod', type="DEFLATE", isSupported="False"))
+        return xml_result

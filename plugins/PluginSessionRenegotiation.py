@@ -27,6 +27,8 @@ from xml.etree.ElementTree import Element
 from plugins import PluginBase
 from nassl._nassl import OpenSSLError
 
+from plugins.PluginBase import PluginResult
+
 
 class PluginSessionRenegotiation(PluginBase.PluginBase):
 
@@ -37,92 +39,112 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
     )
 
 
-    def process_task(self, server_info, command, args):
-
-        # Text output
-        cmdTitle = 'Session Renegotiation'
-        txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-
+    def process_task(self, server_info, command, options_dict=None):
         # Check for client-initiated renegotiation
-        clientReneg = self._test_client_renegotiation(server_info)
-        xmlStrClientReneg = str(clientReneg)
-        clientTxt = 'VULNERABLE - Server honors client-initiated renegotiations' if clientReneg else 'OK - Rejected'
-        txtOutput.append(self.FIELD_FORMAT('Client-initiated Renegotiations:', clientTxt))
+        accepts_client_renegotiation = self._test_client_renegotiation(server_info)
 
         # Check for secure renegotiation
-        secureReneg = self._test_secure_renegotiation(server_info)
-        xmlStrSecureReneg = str(secureReneg)
-        secureTxt = 'OK - Supported' if secureReneg else 'VULNERABLE - Secure renegotiation not supported'
-        txtOutput.append(self.FIELD_FORMAT('Secure Renegotiation:', secureTxt))
+        supports_secure_renegotiation = self._test_secure_renegotiation(server_info)
 
-        # XML output
-        xmlReneg = Element('sessionRenegotiation',
-                           attrib={'canBeClientInitiated' : xmlStrClientReneg, 'isSecure' : xmlStrSecureReneg})
-
-        xmlOutput = Element(command, title=cmdTitle)
-        xmlOutput.append(xmlReneg)
-
-        return PluginBase.PluginResult(txtOutput, xmlOutput)
+        return SessionRenegotiationResult(server_info, command, options_dict, accepts_client_renegotiation,
+                                          supports_secure_renegotiation)
 
 
     def _test_secure_renegotiation(self, server_info):
+        """Checks whether the server supports secure renegotiation.
         """
-        Checks whether the server supports secure renegotiation.
-        """	
-        sslConn = server_info.get_preconfigured_ssl_connection()
+        ssl_connection = server_info.get_preconfigured_ssl_connection()
 
         try: # Perform the SSL handshake
-            sslConn.connect()
-            secureReneg = sslConn.get_secure_renegotiation_support()
+            ssl_connection.connect()
+            supports_secure_renegotiation = ssl_connection.get_secure_renegotiation_support()
 
         finally:
-            sslConn.close()
+            ssl_connection.close()
 
-        return secureReneg
+        return supports_secure_renegotiation
 
 
     def _test_client_renegotiation(self, server_info):
+        """Checks whether the server honors session renegotiation requests.
         """
-        Checks whether the server honors session renegotiation requests.
-        """
-        sslConn = server_info.get_preconfigured_ssl_connection()
+        ssl_connection = server_info.get_preconfigured_ssl_connection()
 
-        try: # Perform the SSL handshake
-            sslConn.connect()
+        try:
+            # Perform the SSL handshake
+            ssl_connection.connect()
 
-            try: # Let's try to renegotiate
-                sslConn.do_renegotiate()
-                clientReneg = True
+            try:
+                # Let's try to renegotiate
+                ssl_connection.do_renegotiate()
+                accepts_client_renegotiation = True
 
             # Errors caused by a server rejecting the renegotiation
             except socket.error as e:
                 if 'connection was forcibly closed' in str(e.args):
-                    clientReneg = False
+                    accepts_client_renegotiation = False
                 elif 'reset by peer' in str(e.args):
-                    clientReneg = False
+                    accepts_client_renegotiation = False
                 else:
                     raise
             #except socket.timeout as e:
             #    result_reneg = 'Rejected (timeout)'
             except OpenSSLError as e:
                 if 'handshake failure' in str(e.args):
-                    clientReneg = False
+                    accepts_client_renegotiation = False
                 elif 'no renegotiation' in str(e.args):
-                    clientReneg = False
+                    accepts_client_renegotiation = False
                 elif 'tlsv1 unrecognized name' in str(e.args):
                     # Yahoo's very own way of rejecting a renegotiation
-                    clientReneg = False
+                    accepts_client_renegotiation = False
                 else:
                     raise
 
             # Should be last as socket errors are also IOError
             except IOError as e:
                 if 'Nassl SSL handshake failed' in str(e.args):
-                    clientReneg = False
+                    accepts_client_renegotiation = False
                 else:
                     raise
 
         finally:
-            sslConn.close()
+            ssl_connection.close()
 
-        return clientReneg
+        return accepts_client_renegotiation
+
+
+class SessionRenegotiationResult(PluginResult):
+
+    COMMAND_TITLE = 'Session Renegotiation'
+
+    def __init__(self, server_info, plugin_command, plugin_options, accepts_client_renegotiation,
+                 supports_secure_renegotiation):
+        super(SessionRenegotiationResult, self).__init__(server_info, plugin_command, plugin_options)
+        self.accepts_client_renegotiation = accepts_client_renegotiation
+        self.supports_secure_renegotiation = supports_secure_renegotiation
+
+
+    def as_text(self):
+        result_txt = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+
+        # Client-initiated reneg
+        client_reneg_txt = 'VULNERABLE - Server honors client-initiated renegotiations' \
+            if self.accepts_client_renegotiation \
+            else 'OK - Rejected'
+        result_txt.append(self.FIELD_FORMAT('Client-initiated Renegotiation:', client_reneg_txt))
+
+        # Secure reneg
+        secure_txt = 'OK - Supported' \
+            if self.supports_secure_renegotiation \
+            else 'VULNERABLE - Secure renegotiation not supported'
+        result_txt.append(self.FIELD_FORMAT('Secure Renegotiation:', secure_txt))
+
+        return result_txt
+
+
+    def as_xml(self):
+        result_xml = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        result_xml.append(Element('sessionRenegotiation',
+                                  attrib={'canBeClientInitiated': str(self.accepts_client_renegotiation),
+                                          'isSecure': str(self.supports_secure_renegotiation)}))
+        return result_xml

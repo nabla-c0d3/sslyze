@@ -25,6 +25,7 @@ import new
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
+from plugins.PluginBase import PluginResult
 from utils.ssl_connection import SSLHandshakeRejected
 from nassl._nassl import OpenSSLError, WantX509LookupError, WantReadError
 from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
@@ -35,51 +36,60 @@ class PluginHeartbleed(PluginBase.PluginBase):
     interface = PluginBase.PluginInterface("PluginHeartbleed",  "")
     interface.add_command(
         command="heartbleed",
-        help=("Tests the server(s) for the OpenSSL Heartbleed vulnerability (experimental).")
+        help="Tests the server(s) for the OpenSSL Heartbleed vulnerability (experimental)."
     )
 
 
-    def process_task(self, server_info, command, args):
-        sslConn = server_info.get_preconfigured_ssl_connection()
-        sslConn.sslVersion = server_info.ssl_version_supported  # Needed by the heartbleed payload
+    def process_task(self, server_info, command, options_dict=None):
+        ssl_connection = server_info.get_preconfigured_ssl_connection()
+        ssl_connection.sslVersion = server_info.ssl_version_supported  # Needed by the heartbleed payload
 
         # Awful hack #1: replace nassl.sslClient.do_handshake() with a heartbleed
         # checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work
-        sslConn.do_handshake = new.instancemethod(do_handshake_with_heartbleed, sslConn, None)
+        ssl_connection.do_handshake = new.instancemethod(do_handshake_with_heartbleed, ssl_connection, None)
 
         heartbleed = None
         try: # Perform the SSL handshake
-            sslConn.connect()
+            ssl_connection.connect()
         except HeartbleedSent:
             # Awful hack #2: directly read the underlying network socket
-            heartbleed = sslConn._sock.recv(16381)
+            heartbleed = ssl_connection._sock.recv(16381)
         finally:
-            sslConn.close()
+            ssl_connection.close()
 
         # Text output
+        is_vulnerable_to_heartbleed = False
         if heartbleed is None:
-            raise Exception("Error: connection failed.")
+            raise ValueError("Error: connection failed.")
         elif '\x01\x01\x01\x01\x01\x01\x01\x01\x01' in heartbleed:
             # Server replied with our hearbeat payload
-            heartbleedTxt = 'VULNERABLE - Server is vulnerable to Heartbleed'
-            heartbleedXml = 'True'
-        else:
-            heartbleedTxt = 'OK - Not vulnerable to Heartbleed'
-            heartbleedXml = 'False'
+            is_vulnerable_to_heartbleed = True
 
-        cmdTitle = 'OpenSSL Heartbleed'
-        txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-        txtOutput.append(self.FIELD_FORMAT(heartbleedTxt, ""))
+        return HeartbleedResult(server_info, command, options_dict, is_vulnerable_to_heartbleed)
 
-        # XML output
-        xmlOutput = Element(command, title=cmdTitle)
-        if heartbleed:
-            xmlNode = Element('openSslHeartbleed', isVulnerable=heartbleedXml)
-            xmlOutput.append(xmlNode)
 
-        return PluginBase.PluginResult(txtOutput, xmlOutput)
+class HeartbleedResult(PluginResult):
 
+    COMMAND_TITLE = 'OpenSSL Heartbleed'
+
+    def __init__(self, server_info, plugin_command, plugin_options, is_vulnerable_to_heartbleed):
+        super(HeartbleedResult, self).__init__(server_info, plugin_command, plugin_options)
+        self.is_vulnerable_to_heartbleed = is_vulnerable_to_heartbleed
+
+    def as_text(self):
+        heartbleed_txt = 'VULNERABLE - Server is vulnerable to Heartbleed' \
+            if self.is_vulnerable_to_heartbleed \
+            else 'OK - Not vulnerable to Heartbleed'
+
+        txt_output = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+        txt_output.append(self.FIELD_FORMAT(heartbleed_txt, ""))
+        return txt_output
+
+    def as_xml(self):
+        xml_output = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        xml_output.append(Element('openSslHeartbleed', isVulnerable=str(self.is_vulnerable_to_heartbleed)))
+        return xml_output
 
 
 

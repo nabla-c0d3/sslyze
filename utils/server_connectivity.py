@@ -228,31 +228,27 @@ class ServerConnectivityInfo(object):
         # Then try to complete an SSL handshake to figure out the SSL version and cipher supported by the server
         ssl_version_supported = None
         ssl_cipher_supported = None
-        for ssl_version in [TLSV1, SSLV23, SSLV3, TLSV1_2]:
-            # Try with the default cipher list
-            ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-            try:
-                # Only do one attempt when testing connectivity
-                ssl_connection.connect(network_max_retries=0)
-                ssl_version_supported = ssl_version
-                ssl_cipher_supported = ssl_connection.get_current_cipher_name()
-                break
-            except:
-                # Default cipher list failed; try one more time with all cipher suites enabled
-                ssl_connection_all_ciphers = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-                ssl_connection_all_ciphers.set_cipher_list('ALL:COMPLEMENTOFALL')
+
+        for ssl_version in [TLSV1_2, TLSV1, SSLV3, SSLV23]:
+            # First try the default cipher list, and then all ciphers
+            for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
+                ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
+                ssl_connection.set_cipher_list(cipher_list)
                 try:
-                    ssl_connection_all_ciphers.connect(network_max_retries=0)
+                    # Only do one attempt when testing connectivity
+                    ssl_connection.connect(network_max_retries=0)
                     ssl_version_supported = ssl_version
-                    ssl_cipher_supported = ssl_connection_all_ciphers.get_current_cipher_name()
+                    ssl_cipher_supported = ssl_connection.get_current_cipher_name()
                     break
                 except:
                     # Could not complete a handshake with this server
                     pass
                 finally:
-                    ssl_connection_all_ciphers.close()
-            finally:
-                ssl_connection.close()
+                    ssl_connection.close()
+
+            if ssl_cipher_supported:
+                # A handshake was successful
+                break
 
         if ssl_version_supported is None or ssl_cipher_supported is None:
             raise ServerConnectivityError(self.CONNECTIVITY_ERROR_HANDSHAKE_ERROR)
@@ -289,6 +285,10 @@ class ServerConnectivityInfo(object):
         # Add Server Name Indication
         if ssl_version != SSLV2:
             ssl_connection.set_tlsext_host_name(self.tls_server_name_indication)
+
+        # Add well-known supported cipher suite
+        if self.ssl_cipher_supported:
+            ssl_connection.set_cipher_list(self.ssl_cipher_supported)
 
         return ssl_connection
 

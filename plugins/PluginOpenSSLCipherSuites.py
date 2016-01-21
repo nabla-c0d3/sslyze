@@ -26,7 +26,7 @@ from xml.etree.ElementTree import Element
 from plugins import PluginBase
 from plugins.PluginBase import PluginResult
 from utils.thread_pool import ThreadPool
-from utils.ssl_connection import SSLHandshakeRejected
+from utils.ssl_connection import SSLHandshakeRejected, SSLConnection
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
 from nassl.SslClient import SslClient
 
@@ -163,29 +163,33 @@ class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
         """Initiates a SSL handshake with the server, using the SSL version and cipher suite specified.
         """
         preferred_cipher = None
-        ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-        try:
-            # Perform the SSL handshake
-            ssl_connection.connect()
-            cipher_name = ssl_connection.get_current_cipher_name()
-            rfc_cipher_name = OPENSSL_TO_RFC_NAMES_MAPPING[ssl_version].get(cipher_name, cipher_name)
-            keysize = ssl_connection.get_current_cipher_bits()
+        # First try the default cipher list, and then all ciphers
+        for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
+            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
+            ssl_connection.set_cipher_list(cipher_list)
+            try:
+                # Perform the SSL handshake
+                ssl_connection.connect()
+                cipher_name = ssl_connection.get_current_cipher_name()
+                rfc_cipher_name = OPENSSL_TO_RFC_NAMES_MAPPING[ssl_version].get(cipher_name, cipher_name)
+                keysize = ssl_connection.get_current_cipher_bits()
 
-            if 'ECDH' in cipher_name:
-                dh_infos = ssl_connection.get_ecdh_param()
-            elif 'DH' in cipher_name:
-                dh_infos = ssl_connection.get_dh_param()
-            else :
-                dh_infos = None
+                if 'ECDH' in cipher_name:
+                    dh_infos = ssl_connection.get_ecdh_param()
+                elif 'DH' in cipher_name:
+                    dh_infos = ssl_connection.get_dh_param()
+                else :
+                    dh_infos = None
 
-            status_msg = ssl_connection.post_handshake_check()
-            preferred_cipher = AcceptedCipherSuite(rfc_cipher_name, keysize, dh_infos, status_msg)
+                status_msg = ssl_connection.post_handshake_check()
+                preferred_cipher = AcceptedCipherSuite(rfc_cipher_name, keysize, dh_infos, status_msg)
+                break
 
-        except:
-            pass
+            except:
+                pass
 
-        finally:
-            ssl_connection.close()
+            finally:
+                ssl_connection.close()
 
         return preferred_cipher
 

@@ -162,16 +162,9 @@ class PluginCertInfo(PluginBase.PluginBase):
 
         thread_pool.join()
 
-        # Compute some fields for the result object
-        ocsp_response_dict = ocsp_response.as_dict() if ocsp_response else None
-        is_ocsp_response_trusted = ocsp_response.verify(MOZILLA_STORE_PATH) if ocsp_response else False
-        hostname_validation_result = certificate_chain[0].matches_hostname(server_info.tls_server_name_indication)
-        pickable_certificate_chain = [Certificate(x509_cert) for x509_cert in certificate_chain]
-
         # All done
-        return result_class(server_info, command, options_dict, pickable_certificate_chain, path_validation_result_list,
-                            path_validation_error_list, hostname_validation_result, ocsp_response_dict,
-                            is_ocsp_response_trusted)
+        return result_class(server_info, command, options_dict, certificate_chain, path_validation_result_list,
+                            path_validation_error_list, ocsp_response)
 
 
     def _get_certificate_chain(self, server_info, trust_store):
@@ -210,21 +203,21 @@ class CertInfoFullResult(PluginResult):
 
 
     def __init__(self, server_info, plugin_command, plugin_options, certificate_chain, path_validation_result_list,
-                            path_validation_error_list, hostname_validation_result, ocsp_response,
-                            is_ocsp_response_trusted):
+                            path_validation_error_list, ocsp_response):
         super(CertInfoFullResult, self).__init__(server_info, plugin_command, plugin_options)
 
-        # Will be None if no OCSP response was returned, otherwise a dictionary
-        self.ocsp_response = ocsp_response
-        self.is_ocsp_response_trusted = is_ocsp_response_trusted
+        # We only keep the dictionary as a nassl.OcspResponse is not pickable
+        self.ocsp_response = ocsp_response.as_dict() if ocsp_response else None
+        self.is_ocsp_response_trusted = ocsp_response.verify(MOZILLA_STORE_PATH) if ocsp_response else False
 
         # List of Certificates; index 0 contains the leaf certificate
-        self.certificate_chain = certificate_chain
+        # We create pickable Certificates from nassl.X509Certificates which are not pickable
+        self.certificate_chain = [Certificate(x509_cert) for x509_cert in certificate_chain]
 
         # Is this an Extended Validation certificate according to Mozilla ?
         self.is_leaf_certificate_ev = False
         try:
-            policy = certificate_chain[0].as_dict['extensions']['X509v3 Certificate Policies']['Policy']
+            policy = self.certificate_chain[0].as_dict['extensions']['X509v3 Certificate Policies']['Policy']
             if policy[0] in self.MOZILLA_EV_OIDS:
                 self.is_leaf_certificate_ev = True
         except:
@@ -235,7 +228,7 @@ class CertInfoFullResult(PluginResult):
         self.path_validation_error_list = path_validation_error_list
 
         # Validation result of the certificate hostname
-        self.hostname_validation_result = hostname_validation_result
+        self.hostname_validation_result = certificate_chain[0].matches_hostname(server_info.tls_server_name_indication)
 
 
     def _get_certificate_text(self):

@@ -251,6 +251,18 @@ class CertInfoFullResult(PluginResult):
                 cert_name = 'No Common Name'
         return cert_name
 
+
+    @staticmethod
+    def _is_root_certificate(certificate):
+        is_root_certificate = False
+        with open(MOZILLA_STORE_PATH, 'r') as store_file:
+            store_content = store_file.read()
+            # Stripping new lines as the lines will have a different length in the trust store VS in the certificate
+            if certificate.as_pem.replace('\n', '') in store_content.replace('\n', ''):
+                is_root_certificate = True
+        return is_root_certificate
+
+
     HOSTNAME_VALIDATION_TEXT = {
         X509_NAME_MATCHES_SAN: 'OK - Subject Alternative Name matches {hostname}'.format,
         X509_NAME_MATCHES_CN: 'OK - Common Name matches {hostname}'.format,
@@ -302,12 +314,20 @@ class CertInfoFullResult(PluginResult):
                                                                    store_version=path_result.trust_store.version),
                                                  error_txt))
 
-        # Print the Common Names within the certificate chain
+        # Print the Common Names within the certificate chain and find if there are SHA1-signed certificates
         cns_in_certificate_chain = []
+        has_sha1_signed_certificate = False
         for cert in self.certificate_chain:
             cert_identity = self._extract_subject_cn_or_oun(cert)
             cns_in_certificate_chain.append(cert_identity)
 
+            if not self._is_root_certificate(cert) and "sha1" in cert.as_dict['signatureAlgorithm']:
+                has_sha1_signed_certificate = True
+
+        sha1_text = 'OK - No SHA1-signed certificate in the chain' \
+            if not has_sha1_signed_certificate \
+            else 'INSECURE - SHA1-signed certificate in the chain'
+        text_output.append(self.FIELD_FORMAT('Weak Signature:', sha1_text))
         text_output.append(self.FIELD_FORMAT('Certificate Chain Received:', str(cns_in_certificate_chain)))
 
 

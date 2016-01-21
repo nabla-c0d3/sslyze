@@ -29,6 +29,7 @@ from xml.etree.ElementTree import Element
 import sys
 
 from plugins import PluginBase
+from plugins.PluginBase import PluginResult
 from utils.thread_pool import ThreadPool
 from nassl._nassl import OpenSSLError
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
@@ -37,7 +38,8 @@ from nassl.SslClient import ClientCertificateRequested
 
 # Getting the path to the trust stores is trickier than it sounds due to subtle differences on OS X, Linux and Windows
 def get_script_dir(follow_symlinks=True):
-    if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
+    if getattr(sys, 'frozen', False):
+        # py2exe, PyInstaller, cx_Freeze
         path = abspath(sys.executable)
     else:
         path = inspect.getabsfile(get_script_dir)
@@ -51,15 +53,54 @@ TRUST_STORES_PATH = join(get_script_dir(), 'data', 'trust_stores')
 # We use the Mozilla store for additional things: OCSP and EV validation
 MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')
 
-AVAILABLE_TRUST_STORES = {
-    MOZILLA_STORE_PATH: ('Mozilla NSS', '09/2015'),
-    join(TRUST_STORES_PATH, 'microsoft.pem'): ('Microsoft', '09/2015'),
-    join(TRUST_STORES_PATH, 'apple.pem'): ('Apple', 'OS X 10.10.5'),
-    join(TRUST_STORES_PATH, 'java.pem'): ('Java 6', 'Update 65'),
-    join(TRUST_STORES_PATH, 'google.pem'): ('Google', '09/2015')
-}
+class TrustStore(object):
+    def __init__(self, path, name, version):
+        self.path = path
+        self.name = name
+        self.version = version
 
-EV_OIDS = ['1.2.276.0.44.1.1.1.4', '1.2.392.200091.100.721.1', '1.2.40.0.17.1.22', '1.2.616.1.113527.2.5.1.1', '1.3.159.1.17.1', '1.3.6.1.4.1.13177.10.1.3.10', '1.3.6.1.4.1.14370.1.6', '1.3.6.1.4.1.14777.6.1.1', '1.3.6.1.4.1.14777.6.1.2', '1.3.6.1.4.1.17326.10.14.2.1.2', '1.3.6.1.4.1.17326.10.14.2.2.2', '1.3.6.1.4.1.17326.10.8.12.1.2', '1.3.6.1.4.1.17326.10.8.12.2.2', '1.3.6.1.4.1.22234.2.5.2.3.1', '1.3.6.1.4.1.23223.1.1.1', '1.3.6.1.4.1.29836.1.10', '1.3.6.1.4.1.34697.2.1', '1.3.6.1.4.1.34697.2.2', '1.3.6.1.4.1.34697.2.3', '1.3.6.1.4.1.34697.2.4', '1.3.6.1.4.1.36305.2', '1.3.6.1.4.1.40869.1.1.22.3', '1.3.6.1.4.1.4146.1.1', '1.3.6.1.4.1.4788.2.202.1', '1.3.6.1.4.1.6334.1.100.1', '1.3.6.1.4.1.6449.1.2.1.5.1', '1.3.6.1.4.1.782.1.2.1.8.1', '1.3.6.1.4.1.7879.13.24.1', '1.3.6.1.4.1.8024.0.2.100.1.2', '2.16.156.112554.3', '2.16.528.1.1003.1.2.7', '2.16.578.1.26.1.3.3', '2.16.756.1.83.21.0', '2.16.756.1.89.1.2.1.1', '2.16.792.3.0.3.1.1.5', '2.16.792.3.0.4.1.1.4', '2.16.840.1.113733.1.7.23.6', '2.16.840.1.113733.1.7.48.1', '2.16.840.1.114028.10.1.2', '2.16.840.1.114171.500.9', '2.16.840.1.114404.1.1.2.4.1', '2.16.840.1.114412.2.1', '2.16.840.1.114413.1.7.23.3', '2.16.840.1.114414.1.7.23.3', '2.16.840.1.114414.1.7.24.3']
+DEFAULT_TRUST_STORE_LIST = [
+    TrustStore(MOZILLA_STORE_PATH, 'Mozilla NSS', '09/2015'),
+    TrustStore(join(TRUST_STORES_PATH, 'microsoft.pem'), 'Microsoft', '09/2015'),
+    TrustStore(join(TRUST_STORES_PATH, 'apple.pem'), 'Apple', 'OS X 10.10.5'),
+    TrustStore(join(TRUST_STORES_PATH, 'java.pem'), 'Java 6', 'Update 65'),
+    TrustStore(join(TRUST_STORES_PATH, 'google.pem'), 'Google', '09/2015'),
+]
+
+
+class PathValidationResult(object):
+    """The result of trying to validate a server's certificate chain using a specific trust store.
+    """
+    def __init__(self, trust_store, verify_string):
+        # The trust store used for validation
+        self.trust_store = trust_store
+
+        # The string returned by OpenSSL's validation function
+        self.verify_string = verify_string
+        self.is_certificate_trusted = True if verify_string == 'ok' else False
+
+
+class PathValidationError(object):
+    """An exception was raised while trying to validate a server's certificate using a specific trust store; should
+    never happen.
+    """
+    def __init__(self, trust_store, exception):
+        self.trust_store = trust_store
+        self.exception = exception
+
+
+class Certificate(object):
+    """Pick-able object for storing information contained within an nassl.X509Certificate. This is needed because we
+     cannot directly send an X509Certificate to a different process (which would happen during a scan) as it is not
+     pickable.
+     """
+
+    def __init__(self, x509_certificate):
+        self.as_pem = x509_certificate.as_pem().strip()
+        self.as_text = x509_certificate.as_text()
+        self.as_dict = x509_certificate.as_dict()
+        self.sha1_fingerprint = x509_certificate.get_SHA1_fingerprint()
+
 
 class PluginCertInfo(PluginBase.PluginBase):
 
@@ -81,319 +122,342 @@ class PluginCertInfo(PluginBase.PluginBase):
     )
 
 
-    TRUST_FORMAT = '{store_name} CA Store ({store_version}):'.format
-
-
     def process_task(self, server_info, command, options_dict=None):
 
         if command == 'certinfo_basic':
-            txt_output_generator = self._get_basic_text
+            result_class = CertInfoBasicResult
         elif command == 'certinfo_full':
-            txt_output_generator = self._get_full_text
+            result_class = CertInfoFullResult
         else:
             raise ValueError("PluginCertInfo: Unknown command.")
 
-        thread_pool = ThreadPool()
-
+        final_trust_store_list = list(DEFAULT_TRUST_STORE_LIST)
         if options_dict and 'ca_file' in options_dict.keys():
-            AVAILABLE_TRUST_STORES[options_dict['ca_file']] = ('Custom --ca_file', 'N/A')
+            final_trust_store_list[options_dict['ca_file']] = ('Custom --ca_file', 'N/A')
 
-        for (store_path, _) in AVAILABLE_TRUST_STORES.iteritems():
+        thread_pool = ThreadPool()
+        for trust_store in final_trust_store_list:
             # Try to connect with each trust store
-            thread_pool.add_job((self._get_cert, (server_info, store_path)))
+            thread_pool.add_job((self._get_certificate_chain, (server_info, trust_store)))
 
-        # Start processing the jobs
-        thread_pool.start(len(AVAILABLE_TRUST_STORES))
+        # Start processing the jobs; one thread per trust
+        thread_pool.start(len(final_trust_store_list))
 
         # Store the results as they come
-        x509_cert_chain = []
-        (verify_dict, verify_dict_error, x509_cert, ocsp_response) = ({}, {}, None, None)
+        certificate_chain = []
+        path_validation_result_list = []
+        path_validation_error_list = []
+        ocsp_response = None
 
         for (job, result) in thread_pool.get_result():
-            (_, (_, store_path)) = job
-            (x509_cert_chain, verify_str, ocsp_response) = result
+            (_, (_, trust_store)) = job
+            certificate_chain, validation_result, ocsp_response = result
             # Store the returned verify string for each trust store
-            x509_cert = x509_cert_chain[0]  # First cert is always the leaf cert
-            store_info = AVAILABLE_TRUST_STORES[store_path]
-            verify_dict[store_info] = verify_str
-
-        if x509_cert is None:
-            # This means none of the connections were successful. Get out
-            for (job, exception) in thread_pool.get_error():
-                raise exception
+            path_validation_result_list.append(PathValidationResult(trust_store, validation_result))
 
         # Store thread pool errors
         for (job, exception) in thread_pool.get_error():
-            (_, (_, store_path)) = job
-            error_msg = str(exception.__class__.__name__) + ' - ' + str(exception)
-
-            store_info = AVAILABLE_TRUST_STORES[store_path]
-            verify_dict_error[store_info] = error_msg
+            (_, (_, trust_store)) = job
+            path_validation_error_list.append(PathValidationError(trust_store, exception))
 
         thread_pool.join()
 
+        # Compute some fields for the result object
+        ocsp_response_dict = ocsp_response.as_dict() if ocsp_response else None
+        is_ocsp_response_trusted = ocsp_response.verify(MOZILLA_STORE_PATH) if ocsp_response else False
+        hostname_validation_result = certificate_chain[0].matches_hostname(server_info.tls_server_name_indication)
+        pickable_certificate_chain = [Certificate(x509_cert) for x509_cert in certificate_chain]
 
-        # Results formatting
-        # Text output - certificate info
-        text_output = [self.PLUGIN_TITLE_FORMAT('Certificate - Content')]
-        text_output.extend(txt_output_generator(x509_cert))
+        # All done
+        return result_class(server_info, command, options_dict, pickable_certificate_chain, path_validation_result_list,
+                            path_validation_error_list, hostname_validation_result, ocsp_response_dict,
+                            is_ocsp_response_trusted)
 
-        # Text output - trust validation
+
+    def _get_certificate_chain(self, server_info, trust_store):
+        """Connects to the target server and uses the supplied trust store to validate the server's certificate.
+        Returns the server's certificate and OCSP response.
+        """
+        ssl_connection = server_info.get_preconfigured_ssl_connection(ssl_verify_locations=trust_store.path)
+
+        # Enable OCSP stapling
+        ssl_connection.set_tlsext_status_ocsp()
+
+        try:  # Perform the SSL handshake
+            ssl_connection.connect()
+
+            ocsp_response = ssl_connection.get_tlsext_status_ocsp_resp()
+            x509_cert_chain = ssl_connection.get_peer_cert_chain()
+            (_, verify_str) = ssl_connection.get_certificate_chain_verify_result()
+
+        except ClientCertificateRequested:  # The server asked for a client cert
+            # We can get the server cert anyway
+            ocsp_response = ssl_connection.get_tlsext_status_ocsp_resp()
+            x509_cert_chain = ssl_connection.get_peer_cert_chain()
+            (_, verify_str) = ssl_connection.get_certificate_chain_verify_result()
+
+        finally:
+            ssl_connection.close()
+
+        return x509_cert_chain, verify_str, ocsp_response
+
+
+class CertInfoFullResult(PluginResult):
+
+    COMMAND_TITLE = 'Certificate Basic Information'
+
+    MOZILLA_EV_OIDS = ['1.2.276.0.44.1.1.1.4', '1.2.392.200091.100.721.1', '1.2.40.0.17.1.22', '1.2.616.1.113527.2.5.1.1', '1.3.159.1.17.1', '1.3.6.1.4.1.13177.10.1.3.10', '1.3.6.1.4.1.14370.1.6', '1.3.6.1.4.1.14777.6.1.1', '1.3.6.1.4.1.14777.6.1.2', '1.3.6.1.4.1.17326.10.14.2.1.2', '1.3.6.1.4.1.17326.10.14.2.2.2', '1.3.6.1.4.1.17326.10.8.12.1.2', '1.3.6.1.4.1.17326.10.8.12.2.2', '1.3.6.1.4.1.22234.2.5.2.3.1', '1.3.6.1.4.1.23223.1.1.1', '1.3.6.1.4.1.29836.1.10', '1.3.6.1.4.1.34697.2.1', '1.3.6.1.4.1.34697.2.2', '1.3.6.1.4.1.34697.2.3', '1.3.6.1.4.1.34697.2.4', '1.3.6.1.4.1.36305.2', '1.3.6.1.4.1.40869.1.1.22.3', '1.3.6.1.4.1.4146.1.1', '1.3.6.1.4.1.4788.2.202.1', '1.3.6.1.4.1.6334.1.100.1', '1.3.6.1.4.1.6449.1.2.1.5.1', '1.3.6.1.4.1.782.1.2.1.8.1', '1.3.6.1.4.1.7879.13.24.1', '1.3.6.1.4.1.8024.0.2.100.1.2', '2.16.156.112554.3', '2.16.528.1.1003.1.2.7', '2.16.578.1.26.1.3.3', '2.16.756.1.83.21.0', '2.16.756.1.89.1.2.1.1', '2.16.792.3.0.3.1.1.5', '2.16.792.3.0.4.1.1.4', '2.16.840.1.113733.1.7.23.6', '2.16.840.1.113733.1.7.48.1', '2.16.840.1.114028.10.1.2', '2.16.840.1.114171.500.9', '2.16.840.1.114404.1.1.2.4.1', '2.16.840.1.114412.2.1', '2.16.840.1.114413.1.7.23.3', '2.16.840.1.114414.1.7.23.3', '2.16.840.1.114414.1.7.24.3']
+
+
+    def __init__(self, server_info, plugin_command, plugin_options, certificate_chain, path_validation_result_list,
+                            path_validation_error_list, hostname_validation_result, ocsp_response,
+                            is_ocsp_response_trusted):
+        super(CertInfoFullResult, self).__init__(server_info, plugin_command, plugin_options)
+
+        # Will be None if no OCSP response was returned, otherwise a dictionary
+        self.ocsp_response = ocsp_response
+        self.is_ocsp_response_trusted = is_ocsp_response_trusted
+
+        # List of Certificates; index 0 contains the leaf certificate
+        self.certificate_chain = certificate_chain
+
+        # Is this an Extended Validation certificate according to Mozilla ?
+        self.is_leaf_certificate_ev = False
+        try:
+            policy = certificate_chain[0].as_dict['extensions']['X509v3 Certificate Policies']['Policy']
+            if policy[0] in self.MOZILLA_EV_OIDS:
+                self.is_leaf_certificate_ev = True
+        except:
+            pass
+
+        # Attempts at validating the certificate chain's path using various trust stores
+        self.path_validation_result_list = path_validation_result_list
+        self.path_validation_error_list = path_validation_error_list
+
+        # Validation result of the certificate hostname
+        self.hostname_validation_result = hostname_validation_result
+
+
+    def _get_certificate_text(self):
+        """For --certinfo_full, we just print the whole certificate.
+        """
+        return [self.certificate_chain[0].as_text]
+
+
+    @staticmethod
+    def _extract_subject_cn_or_oun(certificate):
+        try:
+            # Extract the CN if there's one
+            cert_name = certificate.as_dict['subject']['commonName']
+        except KeyError:
+            # If no common name, display the organizational unit instead
+            try:
+                cert_name = certificate.as_dict['subject']['organizationalUnitName']
+            except KeyError:
+                # Give up
+                cert_name = 'No Common Name'
+        return cert_name
+
+    HOSTNAME_VALIDATION_TEXT = {
+        X509_NAME_MATCHES_SAN: 'OK - Subject Alternative Name matches {hostname}'.format,
+        X509_NAME_MATCHES_CN: 'OK - Common Name matches {hostname}'.format,
+        X509_NAME_MISMATCH: 'FAILED - Certificate does NOT match {hostname}'.format
+    }
+
+    TRUST_FORMAT = '{store_name} CA Store ({store_version}):'.format
+
+
+    def as_text(self):
+        text_output = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+        text_output.extend(self._get_certificate_text())
+
+        # Trust section
         text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - Trust')])
 
         # Hostname validation
-        if server_info.tls_server_name_indication != server_info.hostname:
-            text_output.append(self.FIELD_FORMAT("SNI enabled with virtual domain:",
-                                                 server_info.tls_server_name_indication))
+        server_name_indication = self.server_info.tls_server_name_indication
+        if self.server_info.tls_server_name_indication != self.server_info.hostname:
+            text_output.append(self.FIELD_FORMAT("SNI enabled with virtual domain:", server_name_indication))
 
-        host_val_dict = {
-            X509_NAME_MATCHES_SAN: 'OK - Subject Alternative Name matches',
-            X509_NAME_MATCHES_CN: 'OK - Common Name matches',
-            X509_NAME_MISMATCH: 'FAILED - Certificate does NOT match {}'.format(server_info.tls_server_name_indication)
-        }
-        text_output.append(
-                self.FIELD_FORMAT("Hostname Validation:",
-                                  host_val_dict[x509_cert.matches_hostname(server_info.tls_server_name_indication)])
+        text_output.append(self.FIELD_FORMAT(
+                "Hostname Validation:",
+                self.HOSTNAME_VALIDATION_TEXT[self.hostname_validation_result](hostname=server_name_indication))
         )
 
-        # Path validation that was successful
-        for ((store_name, store_version), verify_str) in verify_dict.iteritems():
-            verify_txt = 'OK - Certificate is trusted' if (verify_str in 'ok') \
-                else 'FAILED - Certificate is NOT Trusted: ' + verify_str
+        # Path validation that was successfully tested
+        for path_result in self.path_validation_result_list:
+            if path_result.is_certificate_trusted:
+                # EV certs - Only Mozilla supported for now
+                ev_txt = ''
+                if self.is_leaf_certificate_ev and 'Mozilla' in path_result.trust_store.name:
+                    ev_txt = ', Extended Validation'
+                path_txt = 'OK - Certificate is trusted{}'.format(ev_txt)
 
-            # EV certs - Only Mozilla supported for now
-            if (verify_str in 'ok') and ('Mozilla' in store_info):
-                if self._is_ev_certificate(x509_cert):
-                    verify_txt += ', Extended Validation'
+            else:
+                path_txt = 'FAILED - Certificate is NOT Trusted: {}'.format(path_result.verify_string)
 
-            text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name=store_name,
-                                                                   store_version=store_version),
-                                                 verify_txt))
-
+            text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name=path_result.trust_store.name,
+                                                                   store_version=path_result.trust_store.version),
+                                                 path_txt))
 
         # Path validation that ran into errors
-        for ((store_name, store_version), error_msg) in verify_dict_error.iteritems():
-            verify_txt = 'ERROR: ' + error_msg
-            text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name=store_name,
-                                                                   store_version=store_version),
-                                                 verify_txt))
+        for path_error in self.path_validation_error_list:
+            error_txt = 'ERROR: {cls} - {text}'.format(cls=str(path_error.exception.__class__.__name__),
+                                                       text=str(path_error.exception))
+
+            text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name=path_result.trust_store.name,
+                                                                   store_version=path_result.trust_store.version),
+                                                 error_txt))
 
         # Print the Common Names within the certificate chain
-        cns_in_cert_chain = []
-        for cert in x509_cert_chain:
+        cns_in_certificate_chain = []
+        for cert in self.certificate_chain:
             cert_identity = self._extract_subject_cn_or_oun(cert)
-            cns_in_cert_chain.append(cert_identity)
+            cns_in_certificate_chain.append(cert_identity)
 
-        text_output.append(self.FIELD_FORMAT('Certificate Chain Received:', str(cns_in_cert_chain)))
+        text_output.append(self.FIELD_FORMAT('Certificate Chain Received:', str(cns_in_certificate_chain)))
 
 
-        # Text output - OCSP stapling
+        # OCSP stapling
         text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - OCSP Stapling')])
-        text_output.extend(self._get_ocsp_text(ocsp_response))
+
+        if self.ocsp_response is None:
+            text_output.append(self.FIELD_FORMAT('NOT SUPPORTED - Server did not send back an OCSP response.', ''))
+
+        else:
+            try:
+                ocsp_trust_txt = 'OK - Response is trusted' \
+                    if self.is_ocsp_response_trusted \
+                    else 'FAILED - Response is NOT trusted'
+            except OpenSSLError as e:
+                if 'certificate verify error' in str(e):
+                    ocsp_trust_txt = 'FAILED - Response is NOT trusted'
+                else:
+                    raise
+
+            ocsp_resp_txt = [
+                self.FIELD_FORMAT('OCSP Response Status:', self.ocsp_response['responseStatus']),
+                self.FIELD_FORMAT('Validation w/ Mozilla\'s CA Store:', ocsp_trust_txt),
+                self.FIELD_FORMAT('Responder Id:', self.ocsp_response['responderID'])]
+
+            if 'successful' in self.ocsp_response['responseStatus']:
+                ocsp_resp_txt.extend([
+                    self.FIELD_FORMAT('Cert Status:', self.ocsp_response['responses'][0]['certStatus']),
+                    self.FIELD_FORMAT('Cert Serial Number:', self.ocsp_response['responses'][0]['certID']['serialNumber']),
+                    self.FIELD_FORMAT('This Update:', self.ocsp_response['responses'][0]['thisUpdate']),
+                    self.FIELD_FORMAT('Next Update:', self.ocsp_response['responses'][0]['nextUpdate'])
+                ])
+            text_output.extend(ocsp_resp_txt)
+
+        # All done
+        return text_output
 
 
-        # XML output
-        xml_output = Element(command, title='Certificate Information')
+    def as_xml(self):
+        xml_output = Element(self.plugin_command, title=self.COMMAND_TITLE)
 
-        # XML output - certificate chain:  always return the full certificate for each cert in the chain
+        # Certificate chain
         cert_chain_xml = Element('certificateChain')
+        for index, certificate in enumerate(self.certificate_chain, start=0):
 
-        # First add the leaf certificate
-        supplied_sni = server_info.tls_server_name_indication \
-            if server_info.tls_server_name_indication != server_info.hostname \
-            else None
+            cert_xml = Element('certificate', attrib={
+                'sha1Fingerprint': certificate.sha1_fingerprint,
+                'position': 'leaf' if index == 0 else 'intermediate',
+                'suppliedServerNameIndication': self.server_info.tls_server_name_indication
+            })
 
-        cert_chain_xml.append(self._format_cert_to_xml(x509_cert_chain[0], 'leaf', supplied_sni))
+            # Add the PEM cert
+            cert_as_pem_xml = Element('asPEM')
+            cert_as_pem_xml.text = certificate.as_pem
+            cert_xml.append(cert_as_pem_xml)
 
-        # Then add every other cert in the chain
-        for cert in x509_cert_chain[1:]:
-            cert_chain_xml.append(self._format_cert_to_xml(cert, 'intermediate', supplied_sni))
+            # Add the parsed certificate
+            for key, value in certificate.as_dict.items():
+                # Sanitize OpenSSL's output
+                if 'subjectPublicKeyInfo' in key:
+                    # Remove the bit suffix so the element is just a number for the key size
+                    if 'publicKeySize' in value.keys():
+                        value['publicKeySize'] = value['publicKeySize'].split(' bit')[0]
 
+                cert_xml.append(_keyvalue_pair_to_xml(key, value))
+
+            cert_chain_xml.append(cert_xml)
         xml_output.append(cert_chain_xml)
 
 
-        # XML output - trust
+        # Trust
         trust_validation_xml = Element('certificateValidation')
 
         # Hostname validation
-        is_hostname_valid = 'False' \
-            if (x509_cert.matches_hostname(server_info.tls_server_name_indication) == X509_NAME_MISMATCH) else 'True'
-
-        host_validation_xml = Element('hostnameValidation', serverHostname=server_info.tls_server_name_indication,
+        is_hostname_valid = 'False' if self.hostname_validation_result == X509_NAME_MISMATCH else 'True'
+        host_validation_xml = Element('hostnameValidation', serverHostname=self.server_info.tls_server_name_indication,
                                       certificateMatchesServerHostname=is_hostname_valid)
         trust_validation_xml.append(host_validation_xml)
 
-        # Path validation - OK
-        for ((store_name, store_version), verify_str) in verify_dict.iteritems():
+        # Path validation that was successful
+        for path_result in self.path_validation_result_list:
             path_attrib_xml = {
-                'usingTrustStore': store_name,
-                'trustStoreVersion': store_version,
-                'validationResult': verify_str
+                'usingTrustStore': path_result.trust_store.name,
+                'trustStoreVersion': path_result.trust_store.version,
+                'validationResult': path_result.verify_string
             }
 
             # EV certs - Only Mozilla supported for now
-            if (verify_str in 'ok') and ('Mozilla' in store_info):
-                    path_attrib_xml['isExtendedValidationCertificate'] = str(self._is_ev_certificate(x509_cert))
+            if self.is_leaf_certificate_ev and 'Mozilla' in path_result.trust_store.name:
+                path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
 
             trust_validation_xml.append(Element('pathValidation', attrib=path_attrib_xml))
 
-        # Path validation - Errors
-        for ((store_name, store_version), error_msg) in verify_dict_error.iteritems():
+        # Path validation that ran into errors
+        for path_error in self.path_validation_error_list:
+            error_txt = 'ERROR: {cls} - {text}'.format(cls=str(path_error.exception.__class__.__name__),
+                                                       text=str(path_error.exception))
             path_attrib_xml = {
-                'usingTrustStore': store_name,
-                'trustStoreVersion': store_version,
-                'error': error_msg
+                'usingTrustStore': path_result.trust_store.name,
+                'trustStoreVersion': path_result.trust_store.version,
+                'error': error_txt
             }
 
             trust_validation_xml.append(Element('pathValidation', attrib=path_attrib_xml))
-
 
         xml_output.append(trust_validation_xml)
 
 
-        # XML output - OCSP Stapling
-        if ocsp_response is None:
-            ocsp_attr_xml = {'isSupported': 'False'}
-        else:
-            ocsp_attr_xml = {'isSupported': 'True'}
-        ocsp_xml = Element('ocspStapling', attrib=ocsp_attr_xml)
+        # OCSP Stapling
+        ocsp_xml = Element('ocspStapling', attrib={'isSupported': 'False' if self.ocsp_response is None else 'True'})
 
-        if ocsp_response:
-            try:
-                ocsp_resp_trusted = str(ocsp_response.verify(MOZILLA_STORE_PATH))
-
-            except OpenSSLError as e:
-                if 'certificate verify error' in str(e):
-                    ocsp_resp_trusted = 'False'
-                else:
-                    raise
-
-            ocsp_resp_attr_xml = {'isTrustedByMozillaCAStore': ocsp_resp_trusted}
-            ocsp_resp_xmp = Element('ocspResponse', attrib=ocsp_resp_attr_xml)
-            for (key, value) in ocsp_response.as_dict().items():
+        if self.ocsp_response:
+            ocsp_resp_xmp = Element('ocspResponse', attrib={'isTrustedByMozillaCAStore': self.is_ocsp_response_trusted})
+            for (key, value) in self.ocsp_response.as_dict.items():
                 ocsp_resp_xmp.append(_keyvalue_pair_to_xml(key, value))
 
             ocsp_xml.append(ocsp_resp_xmp)
-            
         xml_output.append(ocsp_xml)
 
-        return PluginBase.PluginResult(text_output, xml_output)
+        # All done
+        return xml_output
 
 
-    # FORMATTING FUNCTIONS
-    @staticmethod
-    def _format_cert_to_xml(x509_cert, x509_cert_position_in_chain_txt, sni_txt):
-        cert_attrib_xml = {
-            'sha1Fingerprint': x509_cert.get_SHA1_fingerprint()
-        }
+class CertInfoBasicResult(CertInfoFullResult):
+    """Same output as --certinfo_full except for the certificate text output.
+    """
 
-        if x509_cert_position_in_chain_txt:
-            cert_attrib_xml['position'] = x509_cert_position_in_chain_txt
+    def _get_certificate_text(self):
+        """For --certinfo_basic, we only print a few specific fields of the certificate.
+        """
+        cert_dict = self.certificate_chain[0].as_dict
 
-        if sni_txt:
-            cert_attrib_xml['suppliedServerNameIndication'] = sni_txt
-        cert_xml = Element('certificate', attrib=cert_attrib_xml)
+        # Extract the CN if there's one
+        common_name = self._extract_subject_cn_or_oun(self.certificate_chain[0])
 
-        cert_as_pem_xml = Element('asPEM')
-        cert_as_pem_xml.text = x509_cert.as_pem().strip()
-        cert_xml.append(cert_as_pem_xml)
-
-
-        for (key, value) in x509_cert.as_dict().items():
-
-            # Sanitize OpenSSL's output
-            if 'subjectPublicKeyInfo' in key:
-                # Remove the bit suffix so the element is just a number for the key size
-                if 'publicKeySize' in value.keys():
-                    value['publicKeySize'] = value['publicKeySize'].split(' bit')[0]
-
-            # Add the XML element
-            cert_xml.append(_keyvalue_pair_to_xml(key, value))
-        return cert_xml
-
-
-    def _get_ocsp_text(self, ocsp_resp):
-
-        if ocsp_resp is None:
-            return [self.FIELD_FORMAT('NOT SUPPORTED - Server did not send back an OCSP response.', '')]
-
-        ocsp_resp_dict = ocsp_resp.as_dict()
         try:
-            ocsp_trust_txt = 'OK - Response is trusted' if ocsp_resp.verify(MOZILLA_STORE_PATH) \
-                else 'FAILED - Response is NOT trusted'
-        except OpenSSLError as e:
-            if 'certificate verify error' in str(e):
-                ocsp_trust_txt = 'FAILED - Response is NOT trusted'
-            else:
-                raise
-
-        ocsp_resp_txt = [
-            self.FIELD_FORMAT('OCSP Response Status:', ocsp_resp_dict['responseStatus']),
-            self.FIELD_FORMAT('Validation w/ Mozilla\'s CA Store:', ocsp_trust_txt),
-            self.FIELD_FORMAT('Responder Id:', ocsp_resp_dict['responderID'])]
-
-        if 'successful' not in ocsp_resp_dict['responseStatus']:
-            return ocsp_resp_txt
-
-        ocsp_resp_txt.extend(
-            [
-                self.FIELD_FORMAT('Cert Status:', ocsp_resp_dict['responses'][0]['certStatus']),
-                self.FIELD_FORMAT('Cert Serial Number:', ocsp_resp_dict['responses'][0]['certID']['serialNumber']),
-                self.FIELD_FORMAT('This Update:', ocsp_resp_dict['responses'][0]['thisUpdate']),
-                self.FIELD_FORMAT('Next Update:', ocsp_resp_dict['responses'][0]['nextUpdate'])
-            ]
-        )
-
-        return ocsp_resp_txt
-
-
-    @staticmethod
-    def _is_ev_certificate(cert):
-        cert_dict = cert.as_dict()
-        try:
-            policy = cert_dict['extensions']['X509v3 Certificate Policies']['Policy']
-            if policy[0] in EV_OIDS:
-                return True
-        except:
-            return False
-        return False
-
-
-    @staticmethod
-    def _get_full_text(cert):
-        return [cert.as_text()]
-
-
-    @staticmethod
-    def _extract_subject_cn_or_oun(cert):
-        try:  # Extract the CN if there's one
-            cert_name = cert.as_dict()['subject']['commonName']
-        except KeyError:
-            # If no common name, display the organizational unit instead
-            try:
-                cert_name = cert.as_dict()['subject']['organizationalUnitName']
-            except KeyError:
-                # Give up
-                cert_name = 'No Common Name'
-
-        return cert_name
-
-
-    def _get_basic_text(self, cert):
-        cert_dict = cert.as_dict()
-
-        try:  # Extract the CN if there's one
-            common_name = cert_dict['subject']['commonName']
-        except KeyError:
-            common_name = 'None'
-
-        try:  # Extract the CN from the issuer if there's one
+            # Extract the CN from the issuer if there's one
             issuer_name = cert_dict['issuer']['commonName']
         except KeyError:
             issuer_name = str(cert_dict['issuer'])
 
         text_output = [
-            self.FIELD_FORMAT("SHA1 Fingerprint:", cert.get_SHA1_fingerprint()),
+            self.FIELD_FORMAT("SHA1 Fingerprint:", self.certificate_chain[0].sha1_fingerprint),
             self.FIELD_FORMAT("Common Name:", common_name),
             self.FIELD_FORMAT("Issuer:", issuer_name),
             self.FIELD_FORMAT("Serial Number:", cert_dict['serialNumber']),
@@ -403,50 +467,21 @@ class PluginCertInfo(PluginBase.PluginBase):
             self.FIELD_FORMAT("Public Key Algorithm:", cert_dict['subjectPublicKeyInfo']['publicKeyAlgorithm']),
             self.FIELD_FORMAT("Key Size:", cert_dict['subjectPublicKeyInfo']['publicKeySize'])]
 
-        try:  # Print the Public key exponent if there's one; EC public keys don't have one for example
+        try:
+            # Print the Public key exponent if there's one; EC public keys don't have one for example
             text_output.append(self.FIELD_FORMAT("Exponent:", "{0} (0x{0:x})".format(
                 int(cert_dict['subjectPublicKeyInfo']['publicKey']['exponent']))))
         except KeyError:
             pass
 
-
-        try:  # Print the SAN extension if there's one
+        try:
+            # Print the SAN extension if there's one
             text_output.append(self.FIELD_FORMAT('X509v3 Subject Alternative Name:',
                                                  cert_dict['extensions']['X509v3 Subject Alternative Name']))
         except KeyError:
             pass
 
         return text_output
-
-
-    def _get_cert(self, server_info, store_path):
-        """
-        Connects to the target server and uses the supplied trust store to
-        validate the server's certificate. Returns the server's certificate and
-        OCSP response.
-        """
-        ssl_conn = server_info.get_preconfigured_ssl_connection(ssl_verify_locations=store_path)
-
-        # Enable OCSP stapling
-        ssl_conn.set_tlsext_status_ocsp()
-
-        try:  # Perform the SSL handshake
-            ssl_conn.connect()
-
-            ocsp_resp = ssl_conn.get_tlsext_status_ocsp_resp()
-            x509_cert_chain = ssl_conn.get_peer_cert_chain()
-            (_, verify_str) = ssl_conn.get_certificate_chain_verify_result()
-
-        except ClientCertificateRequested:  # The server asked for a client cert
-            # We can get the server cert anyway
-            ocsp_resp = ssl_conn.get_tlsext_status_ocsp_resp()
-            x509_cert_chain = ssl_conn.get_peer_cert_chain()
-            (_, verify_str) = ssl_conn.get_certificate_chain_verify_result()
-
-        finally:
-            ssl_conn.close()
-
-        return x509_cert_chain, verify_str, ocsp_resp
 
 
 # XML generation

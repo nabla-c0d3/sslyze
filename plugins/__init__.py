@@ -106,7 +106,7 @@ class PluginsFinder:
         AVAILABLE_PLUGIN_NAMES = ['plugins.PluginCompression', 'plugins.PluginCertInfo', 'plugins.PluginHeartbleed',
                                   'plugins.PluginHSTS', 'plugins.PluginOpenSSLCipherSuites',
                                   'plugins.PluginSessionRenegotiation', 'plugins.PluginSessionResumption',
-                                  'plugins.PluginChromeSha1Deprecation']
+                                  'plugins.PluginChromeSha1Deprecation', 'plugins.PluginOpenSSLProtocolSupport']
 
         # This it to ensure py2exe can find the plugins
         import plugins.PluginCompression
@@ -116,6 +116,7 @@ class PluginsFinder:
         import plugins.PluginOpenSSLCipherSuites
         import plugins.PluginSessionRenegotiation
         import plugins.PluginSessionResumption
+        import plugins.PluginOpenSSLProtocolSupport
 
         for plugin_name in AVAILABLE_PLUGIN_NAMES:
             imported_module = importlib.import_module(plugin_name)

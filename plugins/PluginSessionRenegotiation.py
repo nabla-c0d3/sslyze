@@ -80,6 +80,9 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
                 accepts_client_renegotiation = True
 
             # Errors caused by a server rejecting the renegotiation
+            except socket.timeout as e:
+                # This is how Netty rejects a renegotiation - https://github.com/nabla-c0d3/sslyze/issues/114
+                    accepts_client_renegotiation = False
             except socket.error as e:
                 if 'connection was forcibly closed' in str(e.args):
                     accepts_client_renegotiation = False
@@ -87,8 +90,6 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
                     accepts_client_renegotiation = False
                 else:
                     raise
-            #except socket.timeout as e:
-            #    result_reneg = 'Rejected (timeout)'
             except OpenSSLError as e:
                 if 'handshake failure' in str(e.args):
                     accepts_client_renegotiation = False

@@ -55,7 +55,8 @@ class PluginSessionRenegotiation(PluginBase.PluginBase):
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
-        try: # Perform the SSL handshake
+        try:
+            # Perform the SSL handshake
             ssl_connection.connect()
             supports_secure_renegotiation = ssl_connection.get_secure_renegotiation_support()
 

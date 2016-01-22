@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #-------------------------------------------------------------------------------
-# Name:         PluginOpenSSLProtocolSupport.py
+# Name:         PluginFallbackScsv.py
 # Purpose:      Tests the server for supported SSL / TLS versions.
 #
-# Author:       bcyrill
+# Author:       bcyrill, alban
 #
 # Copyright:    2014 SSLyze developers
 #
@@ -28,7 +28,7 @@ from utils.SSLyzeSSLConnection import create_sslyze_connection, SSLHandshakeReje
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2, SSL_MODE_SEND_FALLBACK_SCSV
 
 
-class PluginOpenSSLProtocolSupport(PluginBase.PluginBase):
+class PluginFallbackScsv(PluginBase.PluginBase):
 
     interface = PluginBase.PluginInterface(title="PluginOpenSSLProtocolSupport", description="")
     interface.add_command(

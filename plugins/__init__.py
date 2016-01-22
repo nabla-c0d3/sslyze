@@ -116,7 +116,7 @@ class PluginsFinder:
         import plugins.PluginOpenSSLCipherSuites
         import plugins.PluginSessionRenegotiation
         import plugins.PluginSessionResumption
-        import plugins.PluginOpenSSLProtocolSupport
+        import plugins.PluginFallbackScsv
 
         for plugin_name in AVAILABLE_PLUGIN_NAMES:
             imported_module = importlib.import_module(plugin_name)

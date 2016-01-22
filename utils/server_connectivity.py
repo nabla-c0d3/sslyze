@@ -23,7 +23,7 @@
 # -------------------------------------------------------------------------------
 import socket
 
-from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSLV2
+from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSLV2, TLSV1_1
 from ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, XMPPConnection, \
     XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \
     PostgresConnection, HTTPSConnection
@@ -229,7 +229,7 @@ class ServerConnectivityInfo(object):
         ssl_version_supported = None
         ssl_cipher_supported = None
 
-        for ssl_version in [TLSV1_2, TLSV1, SSLV3, SSLV23]:
+        for ssl_version in [TLSV1_2, TLSV1_1, TLSV1, SSLV3, SSLV23]:
             # First try the default cipher list, and then all ciphers
             for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
                 ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
@@ -287,7 +287,7 @@ class ServerConnectivityInfo(object):
             ssl_connection.set_tlsext_host_name(self.tls_server_name_indication)
 
         # Add well-known supported cipher suite
-        if self.ssl_cipher_supported:
+        if self.ssl_cipher_supported and override_ssl_version is None:
             ssl_connection.set_cipher_list(self.ssl_cipher_supported)
 
         return ssl_connection

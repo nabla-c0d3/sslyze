@@ -24,61 +24,62 @@
 from xml.etree.ElementTree import Element
 
 from plugins import PluginBase
-from utils.SSLyzeSSLConnection import create_sslyze_connection, SSLHandshakeRejected
-from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2, SSL_MODE_SEND_FALLBACK_SCSV
+from nassl import SSLV3, SSL_MODE_SEND_FALLBACK_SCSV, _nassl
+from plugins.PluginBase import PluginResult
 
 
 class PluginFallbackScsv(PluginBase.PluginBase):
 
-    interface = PluginBase.PluginInterface(title="PluginOpenSSLProtocolSupport", description="")
+    interface = PluginBase.PluginInterface(title="PluginFallbackScsv", description="")
     interface.add_command(
-        command="protocols",
-        help="Checks the support for the available SSL and TLS protocols.")
-    interface.add_option(
-            option="fallback",
-            help="Check the support for the TLS_FALLBACK_SCSV cipher suite.")
+        command="fallback",
+        help="Checks support for the TLS_FALLBACK_SCSV cipher suite to prevent downgrade attacks."
+    )
 
 
-    def process_task(self, target, command, args):
-        
-        OUT_FORMAT = '      {0:<35}{1}'.format
-        
-        sslVersionDict = [('SSLv2', SSLV2), 
-                        ('SSLv3', SSLV3),
-                        ('TLSv1.0', TLSV1),
-                        ('TLSv1.1', TLSV1_1),
-                        ('TLSv1.2', TLSV1_2)]
-        
-        cmdTitle = 'Protocol Version'
-        if self._shared_settings['fallback']:
-            cmdTitle+=' (using TLS_FALLBACK_SCSV)'
-        txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-        xmlOutput = Element(command, title=cmdTitle)
-        
-        for (sslVersionName, sslVersion) in sslVersionDict:
-            xmlNode = None
-            
-            sslConn = create_sslyze_connection(target, self._shared_settings, sslVersion)
-            sslConn.set_cipher_list('ALL:COMPLEMENTOFALL')
-            if self._shared_settings['fallback']:
-                sslConn.set_mode(SSL_MODE_SEND_FALLBACK_SCSV)
-            
-            try: # Perform the SSL handshake
-                sslConn.connect()
-                isSupported = 'Supported'
-                xmlNode = Element(sslVersionName)
-            
-            except SSLHandshakeRejected as e:
-                isSupported = 'Not Supported - ' + str(e)
-            
-            except:
+    def process_task(self, server_info, plugin_command, plugin_options=None):
+        if server_info.ssl_version_supported <= SSLV3:
+            raise ValueError('Server only supports SSLv3; no downgrade attacks are possible')
+
+        # Try to connect using a lower TLS version with the fallback cipher suite enabled
+        ssl_version_downgrade = server_info.ssl_version_supported - 1
+        ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version_downgrade)
+        ssl_connection.set_mode(SSL_MODE_SEND_FALLBACK_SCSV)
+
+        supports_fallback_scsv = False
+        try:
+            # Perform the SSL handshake
+            ssl_connection.connect()
+
+        except _nassl.OpenSSLError as e:
+            if 'tlsv1 alert inappropriate fallback' in str(e.args):
+                supports_fallback_scsv = True
+            else:
                 raise
-            
-            finally:
-                sslConn.close()
-                txtOutput.append(OUT_FORMAT(sslVersionName, isSupported))
-                if xmlNode is not None:
-                    xmlOutput.append(xmlNode)
-        
-        return PluginBase.PluginResult(txtOutput, xmlOutput)
 
+        finally:
+            ssl_connection.close()
+
+        return FallbackScsvResult(server_info, plugin_command, plugin_options, supports_fallback_scsv)
+
+
+class FallbackScsvResult(PluginResult):
+
+    COMMAND_TITLE = 'Downgrade Attacks'
+
+    def __init__(self, server_info, plugin_command, plugin_options, supports_fallback_scsv):
+        super(FallbackScsvResult, self).__init__(server_info, plugin_command, plugin_options)
+        self.supports_fallback_scsv = supports_fallback_scsv
+
+    def as_text(self):
+        result_txt = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+        downgrade_txt = 'OK - Supported' \
+            if self.supports_fallback_scsv \
+            else 'VULNERABLE - Signaling cipher suite not supported'
+        result_txt.append(self.FIELD_FORMAT('TLS_FALLBACK_SCSV:', downgrade_txt))
+        return result_txt
+
+    def as_xml(self):
+        result_xml = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        result_xml.append(Element('tlsFallbackScsv', attrib={'isSupported': str(self.supports_fallback_scsv)}))
+        return result_xml

@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
-# Name:         sslyze.py
+# Name:         sslyze-cli.py
 # Purpose:      Main module of SSLyze.
 #
 # Author:       aaron, alban
@@ -27,16 +27,7 @@ from multiprocessing import freeze_support
 from time import time
 from xml.dom import minidom
 from xml.etree.ElementTree import Element, tostring
-
 from utils.plugins_process_pool import PluginsProcessPool
-
-try:
-    import nassl
-except ImportError as e:
-    print str(e) + '\nERROR: Could not import nassl Python module. Did you clone SSLyze\'s repo ? \n' +\
-    'Please download the right pre-compiled package as described in the README.\n'
-    sys.exit()
-
 from plugins import PluginsFinder
 from utils.command_line_parser import CommandLineParser, CommandLineParsingError
 from utils.server_connectivity import ServersConnectivityTester, ServerConnectivityError

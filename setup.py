@@ -16,7 +16,7 @@ SSLYZE_SETUP = {
     'long_description' : open('README.md').read() + '\n' + open('AUTHORS.txt').read(),
     'author_email' : PROJECT_EMAIL,
     'url' : PROJECT_URL,
-    'scripts' : ['sslyze.py'],
+    'scripts' : ['sslyze-cli.py'],
     'packages' : ['plugins', 'utils', 'nassl'],
     'package_data' : {'plugins' : ['data/trust_stores/*.pem'],
                      'nassl' : [NASSL_BINARY]},

@@ -20,9 +20,12 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
+import os
+import sys
+# Add ./lib to the path for importing nassl
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 import re
 import signal
-import sys
 from multiprocessing import freeze_support
 from time import time
 from xml.dom import minidom

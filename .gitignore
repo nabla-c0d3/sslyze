@@ -49,3 +49,9 @@ nosetests.xml
 nassl/*
 
 .DS_Store
+
+# Certificates
+*.crt
+*.key
+*.pem
+*.req

@@ -25,13 +25,13 @@ from xml.etree.ElementTree import Element
 
 from nassl import SSLV3, SSL_MODE_SEND_FALLBACK_SCSV, _nassl
 
-from sslyze.plugins import PluginBase
-from sslyze.plugins.PluginBase import PluginResult
+from sslyze.plugins import plugin_base
+from sslyze.plugins.plugin_base import PluginResult
 
 
-class PluginFallbackScsv(PluginBase.PluginBase):
+class FallbackScsvPlugin(plugin_base.PluginBase):
 
-    interface = PluginBase.PluginInterface(title="PluginFallbackScsv", description="")
+    interface = plugin_base.PluginInterface(title="FallbackScsvPlugin", description="")
     interface.add_command(
         command="fallback",
         help="Checks support for the TLS_FALLBACK_SCSV cipher suite to prevent downgrade attacks."

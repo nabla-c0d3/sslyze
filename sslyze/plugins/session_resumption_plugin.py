@@ -24,15 +24,15 @@ from xml.etree.ElementTree import Element
 
 from nassl import SSL_OP_NO_TICKET
 
-from sslyze.plugins import PluginBase
-from sslyze.plugins.PluginBase import PluginResult
+from sslyze.plugins import plugin_base
+from sslyze.plugins.plugin_base import PluginResult
 from sslyze.utils.thread_pool import ThreadPool
 
 
-class PluginSessionResumption(PluginBase.PluginBase):
+class SessionResumptionPlugin(plugin_base.PluginBase):
 
-    interface = PluginBase.PluginInterface(
-        title="PluginSessionResumption",
+    interface = plugin_base.PluginInterface(
+        title="SessionResumptionPlugin",
         description="Analyzes the target server's SSL session resumption capabilities."
     )
     interface.add_command(

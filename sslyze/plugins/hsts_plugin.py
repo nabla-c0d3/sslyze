@@ -34,15 +34,15 @@ import Cookie
 from urlparse import urlparse
 from xml.etree.ElementTree import Element
 
-from sslyze.plugins import PluginBase
-from sslyze.plugins.PluginBase import PluginResult
+from sslyze.plugins import plugin_base
+from sslyze.plugins.plugin_base import PluginResult
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.http_response_parser import parse_http_response
 
 
-class PluginHSTS(PluginBase.PluginBase):
+class HstsPlugin(plugin_base.PluginBase):
 
-    interface = PluginBase.PluginInterface(title="PluginHSTS", description='')
+    interface = plugin_base.PluginInterface(title="HstsPlugin", description='')
     interface.add_command(
         command="hsts",
         help="Checks support for HTTP Strict Transport Security (HSTS) by collecting any Strict-Transport-Security "

@@ -32,8 +32,8 @@ from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_C
 from nassl.SslClient import ClientCertificateRequested
 from nassl._nassl import OpenSSLError
 
-from sslyze.plugins import PluginBase
-from sslyze.plugins.PluginBase import PluginResult
+from sslyze.plugins import plugin_base
+from sslyze.plugins.plugin_base import PluginResult
 from sslyze.utils.thread_pool import ThreadPool
 
 
@@ -103,9 +103,9 @@ class Certificate(object):
         self.sha1_fingerprint = x509_certificate.get_SHA1_fingerprint()
 
 
-class PluginCertInfo(PluginBase.PluginBase):
+class CertificateInfoPlugin(plugin_base.PluginBase):
 
-    interface = PluginBase.PluginInterface(title="PluginCertInfo", description='')
+    interface = plugin_base.PluginInterface(title="CertificateInfoPlugin", description='')
     interface.add_command(
         command="certinfo_basic",
         help="Verifies the validity of the server(s) certificate(s) against various trust stores, checks for support "

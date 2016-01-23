@@ -25,13 +25,13 @@ from xml.etree.ElementTree import Element
 
 from nassl.SslClient import ClientCertificateRequested
 
-from sslyze.plugins import PluginBase
-from sslyze.plugins.PluginBase import PluginResult
+from sslyze.plugins import plugin_base
+from sslyze.plugins.plugin_base import PluginResult
 
 
-class PluginCompression(PluginBase.PluginBase):
+class CompressionPlugin(plugin_base.PluginBase):
 
-    interface = PluginBase.PluginInterface(title="PluginCompression", description="")
+    interface = plugin_base.PluginInterface(title="CompressionPlugin", description="")
     interface.add_command(
         command="compression",
         help="Tests the server(s) for Zlib compression support.")

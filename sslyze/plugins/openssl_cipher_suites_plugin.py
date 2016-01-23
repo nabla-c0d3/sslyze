@@ -26,16 +26,16 @@ from xml.etree.ElementTree import Element
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
 from nassl.SslClient import SslClient
 
-from sslyze.plugins import PluginBase
-from sslyze.plugins.PluginBase import PluginResult
+from sslyze.plugins import plugin_base
+from sslyze.plugins.plugin_base import PluginResult
 from sslyze.utils.ssl_connection import SSLHandshakeRejected, SSLConnection
 from sslyze.utils.thread_pool import ThreadPool
 
 
-class PluginOpenSSLCipherSuites(PluginBase.PluginBase):
+class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
 
-    interface = PluginBase.PluginInterface(
-        "PluginOpenSSLCipherSuites",
+    interface = plugin_base.PluginInterface(
+        "OpenSslCipherSuitesPlugin",
         "Scans the server(s) for supported OpenSSL cipher suites."
     )
     interface.add_command(

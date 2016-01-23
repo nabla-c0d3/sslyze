@@ -18,7 +18,7 @@ class WorkerProcess(Process):
         """The process will first complete tasks it gets from self.queue_in.
         Once it gets notified that all the tasks have been completed, it terminates.
         """
-        from sslyze.plugins.PluginBase import PluginRaisedExceptionResult
+        from sslyze.plugins.plugin_base import PluginRaisedExceptionResult
 
         # Start processing task in the priority queue first
         current_queue_in = self.priority_queue_in

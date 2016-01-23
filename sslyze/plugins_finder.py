@@ -2,7 +2,7 @@ import importlib
 import inspect
 import sys
 import sslyze.plugins
-import sslyze.plugins.PluginBase
+import sslyze.plugins.plugin_base
 
 
 class PluginsFinder:
@@ -30,16 +30,11 @@ class PluginsFinder:
             # Check every declaration in that module
             for name in dir(module):
                 obj = getattr(module, name)
-                if name not in module.__name__:
-                    # Plugins have to have the same class name as their module name
-                    # This prevents Plugin B from being detected twice when there is a Plugin A that imports Plugin B
-                    continue
 
                 if inspect.isclass(obj):
-                    # A class declaration was found in that module
-                    # Checking if it's a subclass of PluginBase
+                    # A class declaration was found in that module; checking if it's a subclass of PluginBase
                     # Discarding PluginBase as a subclass of PluginBase
-                    if obj != sslyze.plugins.PluginBase.PluginBase:
+                    if obj != sslyze.plugins.plugin_base.PluginBase:
                         for base in obj.__bases__:
                             # H4ck because issubclass() doesn't seem to work as expected on Linux
                             # It has to do with PluginBase being imported multiple times (within plugins) or something
@@ -76,18 +71,17 @@ class PluginsFinder:
     def get_plugin_modules_static():
 
         plugin_modules = []
-        AVAILABLE_PLUGIN_NAMES = ['sslyze.plugins.PluginCompression',
-                                  'sslyze.plugins.PluginCertInfo',
-                                  'sslyze.plugins.PluginHeartbleed',
-                                  'sslyze.plugins.PluginHSTS',
-                                  'sslyze.plugins.PluginOpenSSLCipherSuites',
-                                  'sslyze.plugins.PluginSessionRenegotiation',
-                                  'sslyze.plugins.PluginSessionResumption',
-                                  'sslyze.plugins.PluginChromeSha1Deprecation',
-                                  'sslyze.plugins.PluginOpenSSLProtocolSupport']  # TODO: Add new plugins
+        AVAILABLE_PLUGIN_NAMES = ['sslyze.plugins.compression_plugin',
+                                  'sslyze.plugins.certificate_info_plugin',
+                                  'sslyze.plugins.heartbleed_plugin',
+                                  'sslyze.plugins.hsts_plugin',
+                                  'sslyze.plugins.openssl_cipher_suites_plugin',
+                                  'sslyze.plugins.session_renegotiation_plugin',
+                                  'sslyze.plugins.session_resumption_plugin',
+                                  'sslyze.plugins.fallback_scsv_plugin']  # TODO: Add new plugins
 
         # This it to ensure py2exe can find the plugins
-        import sslyze.plugins.PluginSessionResumption
+        import sslyze.plugins.session_resumption_plugin
 
         for plugin_name in AVAILABLE_PLUGIN_NAMES:
             imported_module = importlib.import_module(plugin_name)

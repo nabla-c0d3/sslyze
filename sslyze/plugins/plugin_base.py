@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 #-------------------------------------------------------------------------------
-# Name:         PluginBase.py
+# Name:         plugin_base.py
 # Purpose:      Main abstract plugin class. All the plugins are
 #               subclasses of PluginBase.
 #

@@ -24,11 +24,12 @@
 import socket
 
 from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSLV2, TLSV1_1
-from ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, XMPPConnection, \
+
+from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, XMPPConnection, \
     XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \
     PostgresConnection, HTTPSConnection
-from thread_pool import ThreadPool
-from utils.ssl_settings import TlsWrappedProtocolEnum
+from utils.thread_pool import ThreadPool
 
 
 class ServerConnectivityError(ValueError):

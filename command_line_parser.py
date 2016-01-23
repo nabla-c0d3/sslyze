@@ -22,9 +22,11 @@
 #-------------------------------------------------------------------------------
 
 from optparse import OptionParser, OptionGroup
-from nassl import _nassl, SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
-from utils.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
-from utils.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
+
+from nassl import SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
+
+from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
+from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
 
 
 class CommandLineParsingError(Exception):

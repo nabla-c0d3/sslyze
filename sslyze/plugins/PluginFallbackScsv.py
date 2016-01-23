@@ -23,9 +23,10 @@
 
 from xml.etree.ElementTree import Element
 
-from plugins import PluginBase
 from nassl import SSLV3, SSL_MODE_SEND_FALLBACK_SCSV, _nassl
-from plugins.PluginBase import PluginResult
+
+from sslyze.plugins import PluginBase
+from sslyze.plugins.PluginBase import PluginResult
 
 
 class PluginFallbackScsv(PluginBase.PluginBase):

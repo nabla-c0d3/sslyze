@@ -24,16 +24,17 @@
 import new
 from xml.etree.ElementTree import Element
 
-from plugins import PluginBase
-from plugins.PluginBase import PluginResult
-from utils.ssl_connection import SSLHandshakeRejected
-from nassl._nassl import OpenSSLError, WantX509LookupError, WantReadError
 from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
+from nassl._nassl import WantX509LookupError, WantReadError
+
+from sslyze.plugins import PluginBase
+from sslyze.plugins.PluginBase import PluginResult
+from sslyze.utils.ssl_connection import SSLHandshakeRejected
 
 
 class PluginHeartbleed(PluginBase.PluginBase):
 
-    interface = PluginBase.PluginInterface("PluginHeartbleed",  "")
+    interface = PluginBase.PluginInterface("PluginHeartbleed", "")
     interface.add_command(
         command="heartbleed",
         help="Tests the server(s) for the OpenSSL Heartbleed vulnerability (experimental)."

@@ -1,5 +1,5 @@
 from multiprocessing import Process
-from utils.ssl_connection import SSLConnection
+from sslyze.utils.ssl_connection import SSLConnection
 
 
 class WorkerProcess(Process):
@@ -18,7 +18,7 @@ class WorkerProcess(Process):
         """The process will first complete tasks it gets from self.queue_in.
         Once it gets notified that all the tasks have been completed, it terminates.
         """
-        from plugins.PluginBase import PluginRaisedExceptionResult
+        from sslyze.plugins.PluginBase import PluginRaisedExceptionResult
 
         # Start processing task in the priority queue first
         current_queue_in = self.priority_queue_in

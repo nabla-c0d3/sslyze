@@ -30,15 +30,14 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
+import Cookie
+from urlparse import urlparse
 from xml.etree.ElementTree import Element
 
-from plugins.PluginBase import PluginResult
-from utils.http_response_parser import parse_http_response
-from plugins import PluginBase
-from urlparse import urlparse
-import Cookie
-
-from utils.ssl_settings import TlsWrappedProtocolEnum
+from sslyze.plugins import PluginBase
+from sslyze.plugins.PluginBase import PluginResult
+from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from sslyze.utils.http_response_parser import parse_http_response
 
 
 class PluginHSTS(PluginBase.PluginBase):

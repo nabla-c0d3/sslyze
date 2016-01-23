@@ -23,12 +23,13 @@
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
-from plugins import PluginBase
-from plugins.PluginBase import PluginResult
-from utils.thread_pool import ThreadPool
-from utils.ssl_connection import SSLHandshakeRejected, SSLConnection
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
 from nassl.SslClient import SslClient
+
+from sslyze.plugins import PluginBase
+from sslyze.plugins.PluginBase import PluginResult
+from sslyze.utils.ssl_connection import SSLHandshakeRejected, SSLConnection
+from sslyze.utils.thread_pool import ThreadPool
 
 
 class PluginOpenSSLCipherSuites(PluginBase.PluginBase):

@@ -1,7 +1,7 @@
 import random
 from multiprocessing import JoinableQueue
 
-from utils.worker_process import WorkerProcess
+from sslyze.utils.worker_process import WorkerProcess
 
 
 class PluginsProcessPool(object):

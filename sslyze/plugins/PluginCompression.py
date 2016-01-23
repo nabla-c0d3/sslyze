@@ -23,11 +23,10 @@
 
 from xml.etree.ElementTree import Element
 
-
-from plugins import PluginBase
-
 from nassl.SslClient import ClientCertificateRequested
-from plugins.PluginBase import PluginResult
+
+from sslyze.plugins import PluginBase
+from sslyze.plugins.PluginBase import PluginResult
 
 
 class PluginCompression(PluginBase.PluginBase):

@@ -20,8 +20,12 @@
 #   You should have received a copy of the GNU General Public License
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
+
 import os
 import sys
+
+from sslyze import PROJECT_VERSION, PROJECT_URL
+
 # Add ./lib to the path for importing nassl
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 import re
@@ -30,17 +34,10 @@ from multiprocessing import freeze_support
 from time import time
 from xml.dom import minidom
 from xml.etree.ElementTree import Element, tostring
-from utils.plugins_process_pool import PluginsProcessPool
-from plugins import PluginsFinder
-from utils.command_line_parser import CommandLineParser, CommandLineParsingError
-from utils.server_connectivity import ServersConnectivityTester, ServerConnectivityError
-
-
-PROJECT_VERSION = '0.13.0'
-PROJECT_URL = "https://github.com/nabla-c0d3/sslyze"
-PROJECT_EMAIL = 'nabla.c0d3@gmail.com'
-PROJECT_DESC = 'Fast and full-featured SSL scanner'
-
+from sslyze.plugins_process_pool import PluginsProcessPool
+from sslyze.plugins_finder import PluginsFinder
+from command_line_parser import CommandLineParser, CommandLineParsingError
+from sslyze.server_connectivity import ServersConnectivityTester, ServerConnectivityError
 
 # Global so we can terminate processes when catching SIGINT
 plugins_process_pool = None
@@ -232,8 +229,8 @@ def main():
             result_xml.append(xml_element)
 
         xml_final_doc = Element('document', title = "SSLyze Scan Results",
-                                SSLyzeVersion = PROJECT_VERSION,
-                                SSLyzeWeb = PROJECT_URL)
+                                SSLyzeVersion =PROJECT_VERSION,
+                                SSLyzeWeb =PROJECT_URL)
 
         # Add the list of invalid targets
         invalid_targets_xml = Element('invalidTargets')

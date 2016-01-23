@@ -24,15 +24,15 @@
 import socket
 from xml.etree.ElementTree import Element
 
-from plugins import PluginBase
 from nassl._nassl import OpenSSLError
 
-from plugins.PluginBase import PluginResult
+from sslyze.plugins import PluginBase
+from sslyze.plugins.PluginBase import PluginResult
 
 
 class PluginSessionRenegotiation(PluginBase.PluginBase):
 
-    interface = PluginBase.PluginInterface("PluginSessionRenegotiation",  "")
+    interface = PluginBase.PluginInterface("PluginSessionRenegotiation", "")
     interface.add_command(
         command="reneg",
         help='Tests the server(s) for client-initiated renegotiation and secure renegotiation support.'

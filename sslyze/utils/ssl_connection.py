@@ -23,15 +23,18 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
+import random
+import socket
+import struct
+import time
 from base64 import b64encode
 from urllib import quote
 
-import socket, struct, time, random
-from http_response_parser import parse_http_response
 from nassl import _nassl, SSL_VERIFY_NONE
 from nassl.DebugSslClient import DebugSslClient
 from nassl.SslClient import ClientCertificateRequested
 
+from sslyze.utils.http_response_parser import parse_http_response
 
 
 class SSLHandshakeRejected(IOError):

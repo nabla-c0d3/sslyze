@@ -23,17 +23,18 @@
 #   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-from os.path import join, dirname, realpath, abspath
 import inspect
-from xml.etree.ElementTree import Element
 import sys
+from os.path import join, dirname, realpath, abspath
+from xml.etree.ElementTree import Element
 
-from plugins import PluginBase
-from plugins.PluginBase import PluginResult
-from utils.thread_pool import ThreadPool
-from nassl._nassl import OpenSSLError
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
 from nassl.SslClient import ClientCertificateRequested
+from nassl._nassl import OpenSSLError
+
+from sslyze.plugins import PluginBase
+from sslyze.plugins.PluginBase import PluginResult
+from sslyze.utils.thread_pool import ThreadPool
 
 
 # Getting the path to the trust stores is trickier than it sounds due to subtle differences on OS X, Linux and Windows

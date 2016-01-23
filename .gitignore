@@ -51,7 +51,5 @@ nassl/*
 .DS_Store
 
 # Certificates
-*.crt
+ca/*
 *.key
-*.pem
-*.req

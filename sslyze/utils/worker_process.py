@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""The main process class responsible for instantiating and running the plugins.
+"""
+
+
 from multiprocessing import Process
 from sslyze.utils.ssl_connection import SSLConnection
 

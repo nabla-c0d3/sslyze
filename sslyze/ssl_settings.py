@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+"""Settings to be used for configuring an SSL connection via the ServerConnectivityInfo class.
+"""
+
 import os
 from base64 import b64encode
 from urllib import quote

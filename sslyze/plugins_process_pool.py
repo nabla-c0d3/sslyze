@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+"""Utility class to spawn a pool of processes and dispatch scanning commands so they can be run concurrently.
+"""
+
 import random
 from multiprocessing import JoinableQueue
 

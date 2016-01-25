@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+"""Utility class to discover the list of available plugins.
+"""
+
 import importlib
 import inspect
 import sys
@@ -8,11 +12,9 @@ import sslyze.plugins.plugin_base
 class PluginsFinder:
 
     def __init__(self):
-        """
-        Opens the plugins folder and looks at every .py module in that directory.
-        Finds available plugins by looking at any class defined in those modules
-        that implements the PluginBase abstract class.
-        Returns a list of plugin classes.
+        """Opens the plugins folder and looks at every .py module in that directory.
+        Finds available plugins by looking at any class defined in those modules that implements the PluginBase abstract
+        class, and teturns a list of plugin classes.
         """
         self._plugin_classes = set([])
         self._commands = {}

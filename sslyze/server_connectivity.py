@@ -1,26 +1,7 @@
-#!/usr/bin/env python2.7
-# -------------------------------------------------------------------------------
-# Name:         server_connectivity.py
-# Purpose:      Initial checks to figure out which servers supplied by the
-#               user are actually reachable.
-#
-# Author:       alban
-#
-# Copyright:    2013 SSLyze developers
-#
-#   SSLyze is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation, either version 2 of the License, or
-#   (at your option) any later version.
-#
-#   SSLyze is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
-# -------------------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+"""Utility classes to ensure that the servers to be scanned are actually reachable.
+"""
+
 import socket
 
 from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSLV2, TLSV1_1
@@ -105,7 +86,8 @@ class CommandLineServerStringParser(object):
 
 
 class ServerConnectivityInfo(object):
-    """All settings (hostname, port, SSL version, etc.) needed to successfully connect to a specific SSL server."""
+    """All settings (hostname, port, SSL version, etc.) needed to successfully connect to a specific SSL server.
+    """
 
     TLS_DEFAULT_PORTS = {
         TlsWrappedProtocolEnum.PLAIN_TLS: 443,
@@ -197,7 +179,8 @@ class ServerConnectivityInfo(object):
 
     def test_connectivity_to_server(self):
         """Attempts to perform a full SSL handshake with the server in order to identify one SSL version and cipher
-        suite supported by the server."""
+        suite supported by the server.
+        """
 
         ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=SSLV23)
 
@@ -260,7 +243,8 @@ class ServerConnectivityInfo(object):
 
     def get_preconfigured_ssl_connection(self, override_ssl_version=None, ssl_verify_locations=None):
         """Returns an SSLConnection with the right configuration for successfully establishing an SSL connection to the
-        server. """
+        server.
+        """
         if self.highest_ssl_version_supported is None and override_ssl_version is None:
             raise ValueError('Cannot return an SSLConnection without testing connectivity; '
                              'call test_connectivity_to_server() first')

@@ -1,8 +1,10 @@
-#!/usr/bin/env python2.7
-# Utility to parse HTTP responses
-# http://pythonwise.blogspot.com/2010/02/parse-http-response.html
+# -*- coding: utf-8 -*-
+"""Utility to parse HTTP responses - http://pythonwise.blogspot.com/2010/02/parse-http-response.html.
+"""
+
 from StringIO import StringIO
 from httplib import HTTPResponse
+
 
 class FakeSocket(StringIO):
     def makefile(self, *args, **kw):

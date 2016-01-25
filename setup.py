@@ -8,7 +8,7 @@ SSLYZE_SETUP = {
     'version': __version__,
     'description': PROJECT_DESC,
     'long_description': open('README.md').read(),
-    'author': __author__
+    'author': __author__,
     'author_email': __email__,
     'license': __license__,
     'url': PROJECT_URL,

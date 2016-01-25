@@ -24,7 +24,7 @@
 import os
 import sys
 
-from sslyze import PROJECT_VERSION, PROJECT_URL
+from sslyze import __version__, PROJECT_URL
 
 # Add ./lib to the path for importing nassl
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
@@ -95,7 +95,7 @@ def main():
     available_commands = sslyze_plugins.get_commands()
 
     # Create the command line parser and the list of available options
-    sslyze_parser = CommandLineParser(available_plugins, PROJECT_VERSION)
+    sslyze_parser = CommandLineParser(available_plugins, __version__)
 
     online_servers_list = []
     invalid_servers_list = []
@@ -228,9 +228,8 @@ def main():
         for xml_element in xml_output_list:
             result_xml.append(xml_element)
 
-        xml_final_doc = Element('document', title = "SSLyze Scan Results",
-                                SSLyzeVersion =PROJECT_VERSION,
-                                SSLyzeWeb =PROJECT_URL)
+        xml_final_doc = Element('document', title="SSLyze Scan Results", SSLyzeVersion=__version__,
+                                SSLyzeWeb=PROJECT_URL)
 
         # Add the list of invalid targets
         invalid_targets_xml = Element('invalidTargets')

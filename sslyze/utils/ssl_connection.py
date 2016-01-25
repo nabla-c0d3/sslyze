@@ -31,8 +31,8 @@ from base64 import b64encode
 from urllib import quote
 
 from nassl import _nassl, SSL_VERIFY_NONE
-from nassl.DebugSslClient import DebugSslClient
-from nassl.SslClient import ClientCertificateRequested
+from nassl.debug_ssl_client import DebugSslClient
+from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.utils.http_response_parser import parse_http_response
 

@@ -4,7 +4,7 @@ from urllib import quote
 from urlparse import urlparse
 
 from nassl import SSL_FILETYPE_PEM, SSL_FILETYPE_ASN1
-from nassl.SslClient import SslClient
+from nassl.ssl_client import SslClient
 
 
 class TlsWrappedProtocolEnum(object):

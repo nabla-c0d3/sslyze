@@ -23,7 +23,7 @@
 
 from xml.etree.ElementTree import Element
 
-from nassl.SslClient import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult

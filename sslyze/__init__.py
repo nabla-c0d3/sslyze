@@ -1,4 +1,7 @@
-PROJECT_VERSION = '0.13.0'
+#!/usr/bin/env python2.7
+__author__ = 'Alban Diquet'
+__license__ = 'GPLv2'
+__version__ = '0.13.0'
+__email__ = "nabla.c0d3@gmail.com"
 PROJECT_URL = "https://github.com/nabla-c0d3/sslyze"
-PROJECT_EMAIL = 'nabla.c0d3@gmail.com'
 PROJECT_DESC = 'Fast and full-featured SSL scanner'

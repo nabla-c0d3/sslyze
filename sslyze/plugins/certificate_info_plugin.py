@@ -29,7 +29,7 @@ from os.path import join, dirname, realpath, abspath
 from xml.etree.ElementTree import Element
 
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
-from nassl.SslClient import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested
 from nassl._nassl import OpenSSLError
 
 from sslyze.plugins import plugin_base

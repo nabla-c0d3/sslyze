@@ -24,7 +24,7 @@ from operator import attrgetter
 from xml.etree.ElementTree import Element
 
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
-from nassl.SslClient import SslClient
+from nassl.ssl_client import SslClient
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult

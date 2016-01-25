@@ -1,19 +1,21 @@
 #!/usr/bin/env python2.7
-from sslyze import PROJECT_VERSION, PROJECT_URL, PROJECT_EMAIL, PROJECT_DESC
+from sslyze import PROJECT_URL, PROJECT_DESC, __author__, __email__, __version__, __license__
 from distutils.core import setup
 
 
 SSLYZE_SETUP = {
     'name': 'SSLyze',
-    'version': PROJECT_VERSION,
+    'version': __version__,
     'description': PROJECT_DESC,
-    'long_description': open('README.md').read() + '\n' + open('AUTHORS.txt').read(),
-    'author_email': PROJECT_EMAIL,
+    'long_description': open('README.md').read(),
+    'author': __author__
+    'author_email': __email__,
+    'license': __license__,
     'url': PROJECT_URL,
     'scripts': ['sslyze-cli.py'],
     'packages': ['sslyze', 'sslyze.plugins', 'sslyze.utils'],
     'package_data': {'sslyze.plugins': ['data/trust_stores/*.pem']},
-    'license': open('LICENSE.txt').read()
+    'install_requires': ['nassl']
 }
 
 setup(**SSLYZE_SETUP)

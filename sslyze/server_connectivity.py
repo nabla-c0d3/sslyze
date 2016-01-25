@@ -172,7 +172,7 @@ class ServerConnectivityInfo(object):
         self.http_tunneling_settings = http_tunneling_settings
 
         # Set after actually testing the connectivity
-        self.ssl_version_supported = None
+        self.highest_ssl_version_supported = None
         self.ssl_cipher_supported = None
 
 
@@ -254,19 +254,19 @@ class ServerConnectivityInfo(object):
         if ssl_version_supported is None or ssl_cipher_supported is None:
             raise ServerConnectivityError(self.CONNECTIVITY_ERROR_HANDSHAKE_ERROR)
 
-        self.ssl_version_supported = ssl_version_supported
+        self.highest_ssl_version_supported = ssl_version_supported
         self.ssl_cipher_supported = ssl_cipher_supported
 
 
     def get_preconfigured_ssl_connection(self, override_ssl_version=None, ssl_verify_locations=None):
         """Returns an SSLConnection with the right configuration for successfully establishing an SSL connection to the
         server. """
-        if self.ssl_version_supported is None and override_ssl_version is None:
+        if self.highest_ssl_version_supported is None and override_ssl_version is None:
             raise ValueError('Cannot return an SSLConnection without testing connectivity; '
                              'call test_connectivity_to_server() first')
 
         # Create the right SSLConnection object
-        ssl_version = override_ssl_version if override_ssl_version is not None else self.ssl_version_supported
+        ssl_version = override_ssl_version if override_ssl_version is not None else self.highest_ssl_version_supported
         ssl_connection = self.TLS_CONNECTION_CLASSES[self.tls_wrapped_protocol](
                 self.hostname, self.ip_address, self.port, ssl_version, ssl_verify_locations=ssl_verify_locations
         )

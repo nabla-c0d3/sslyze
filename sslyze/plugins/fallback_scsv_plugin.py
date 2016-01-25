@@ -43,7 +43,7 @@ class FallbackScsvPlugin(plugin_base.PluginBase):
             raise ValueError('Server only supports SSLv3; no downgrade attacks are possible')
 
         # Try to connect using a lower TLS version with the fallback cipher suite enabled
-        ssl_version_downgrade = server_info.ssl_version_supported - 1
+        ssl_version_downgrade = server_info.highest_ssl_version_supported - 1
         ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version_downgrade)
         ssl_connection.set_mode(SSL_MODE_SEND_FALLBACK_SCSV)
 

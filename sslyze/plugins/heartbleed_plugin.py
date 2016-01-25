@@ -43,7 +43,7 @@ class HeartbleedPlugin(plugin_base.PluginBase):
 
     def process_task(self, server_info, command, options_dict=None):
         ssl_connection = server_info.get_preconfigured_ssl_connection()
-        ssl_connection.sslVersion = server_info.ssl_version_supported  # Needed by the heartbleed payload
+        ssl_connection.ssl_version = server_info.highest_ssl_version_supported  # Needed by the heartbleed payload
 
         # Awful hack #1: replace nassl.sslClient.do_handshake() with a heartbleed
         # checking SSL handshake so that all the SSLyze options
@@ -94,7 +94,7 @@ class HeartbleedResult(PluginResult):
 
 
 
-def heartbleed_payload(sslVersion):
+def heartbleed_payload(ssl_version):
     # This heartbleed payload does not exploit the server
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
 
@@ -119,7 +119,7 @@ def heartbleed_payload(sslVersion):
         '\x00\x03\x01\x00\x00'
     )
 
-    return payload.format(SSL_VERSION_MAPPING[sslVersion])
+    return payload.format(SSL_VERSION_MAPPING[ssl_version])
 
 
 class HeartbleedSent(SSLHandshakeRejected):
@@ -151,7 +151,7 @@ def do_handshake_with_heartbleed(self):
             lenToRead = self._network_bio.pending()
 
         # Send the heartbleed payload after the client hello
-        self._sock.send(heartbleed_payload(self.sslVersion))
+        self._sock.send(heartbleed_payload(self.ssl_version))
 
         # Recover the peer's encrypted response
         # In this heartbleed handshake we only receive the server hello
@@ -168,6 +168,6 @@ def do_handshake_with_heartbleed(self):
     except WantX509LookupError:
         # Server asked for a client certificate and we didn't provide one
         # Heartbleed should work anyway
-        self._sock.send(heartbleed_payload(self.sslVersion)) # The heartbleed payload
+        self._sock.send(heartbleed_payload(self.ssl_version)) # The heartbleed payload
         raise HeartbleedSent("") # Signal that we sent the heartbleed payload
 

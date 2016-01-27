@@ -15,7 +15,18 @@ SSLYZE_SETUP = {
     'scripts': ['sslyze-cli.py'],
     'packages': ['sslyze', 'sslyze.plugins', 'sslyze.utils'],
     'package_data': {'sslyze.plugins': ['data/trust_stores/*.pem']},
-    'install_requires': ['nassl']
+    'install_requires': ['nassl'],
+    'classifiers': [
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
+        'Natural Language :: French',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: System :: Networking',
+        'Topic :: Security'
+    ],
 }
 
 setup(**SSLYZE_SETUP)

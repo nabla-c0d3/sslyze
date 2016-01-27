@@ -1,129 +1,91 @@
-#!/usr/bin/env python
-#-------------------------------------------------------------------------------
-# Name:         PluginOpenSSL_CCS_injection.py
-# Purpose:      Tests the target server for CVE-2014-0224.
-#
-# Author:       David Guillen Fandos
-#
-# Copyright:    2015 David Guillen Fandos
-#
-#   SSLyze is free software: you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation, either version 2 of the License, or
-#   (at your option) any later version.
-#
-#   SSLyze is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with SSLyze.  If not, see <http://www.gnu.org/licenses/>.
-#-------------------------------------------------------------------------------
+# -*- coding: utf-8 -*-
+"""Plugin to test the target server for CVE-2014-0224.
+"""
 
-import socket, new
 from xml.etree.ElementTree import Element
 
-from plugins import PluginBase
-from utils.SSLyzeSSLConnection import create_sslyze_connection, SSLHandshakeRejected
-from nassl._nassl import OpenSSLError, WantX509LookupError, WantReadError
-from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV23, SSLV3
+from sslyze.plugins import plugin_base
+from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
 import socket, struct, time, random
 
-class PluginOpenSSL_CCS_injection(PluginBase.PluginBase):
+from sslyze.plugins.plugin_base import PluginResult
 
-    interface = PluginBase.PluginInterface("PluginOpenSSL_CCS_injection",  "")
+
+class OpenSslCcsInjectionPlugin(plugin_base.PluginBase):
+
+    interface = plugin_base.PluginInterface("OpenSslCcsInjectionPlugin",  "")
     interface.add_command(
         command="openssl_ccs",
-        help=(
-            "Tests the server(s) for the OpenSSL CCS injection vulnerability (experimental)."))
+        help="Tests the server(s) for the OpenSSL CCS injection vulnerability (experimental)."
+    )
 
     def srecv(self):
         r = self._sock.recv(4096)
         self._inbuffer += r
-
         return r != ''
 
-    def process_task(self, target, command, args):
-        (self._host, self._ip, self._port, self._sslVersion) = target
-        self._timeout = self._shared_settings['timeout']
+    def process_task(self, server_info, plugin_command, options_dict=None):
 
-        # Although it's kinda redundant, try all proto versions
-        vuln = False
-        for self._sslVersion in [TLSV1, TLSV1_1, TLSV1_2, SSLV3]:
-            self._inbuffer = ""
-            self._sock = socket.create_connection((self._ip, self._port), self._timeout)
+        ssl_connection = server_info.get_preconfigured_ssl_connection()
+        self._ssl_version = server_info.highest_ssl_version_supported
+        is_vulnerable = False
+        self._inbuffer = ""
+        ssl_connection.do_pre_handshake()
 
-            # Send hello and wait for server hello & cert
-            serverhello, servercert = False, False
-            self._sock.send(self.makeHello())
-            while not serverhello: #  or not servercert
+        # H4ck to directly send the CCS payload
+        self._sock = ssl_connection._sock
+
+        # Send hello and wait for server hello & cert
+        serverhello, servercert = False, False
+        self._sock.send(self.make_hello())
+        while not serverhello: #  or not servercert
+            try:
+                if not self.srecv(): break
+            except:
+                break
+            rs = self.parse_records()
+            for record in rs:
+                if record['type'] == 22:
+                    for p in record['proto']:
+                        if p['type'] == 2:
+                            serverhello= True
+                        if p['type'] == 11:
+                            servercert= True
+
+        # Send the CCS
+        if serverhello: # and servercert:
+            is_vulnerable, stop = True, False
+            self._sock.send(self.make_ccs())
+            while not stop:
                 try:
                     if not self.srecv(): break
-                except:
+                except socket.timeout:
                     break
-                rs = self.parseRecords()
+                except:
+                    is_vulnerable = False
+                    stop = True
+
+                rs = self.parse_records()
                 for record in rs:
-                    if record['type'] == 22:
+                    if record['type'] == 21:
                         for p in record['proto']:
-                            if p['type'] == 2:
-                                serverhello= True
-                            if p['type'] == 11:
-                                servercert= True
+                            if p['level'] == 2 or (p['level'] == 1 and p['desc'] == 0):
+                                is_vulnerable = False
+                                stop = True
 
-            # Send the CCS
-            if serverhello: # and servercert:
-                vuln, stop = True, False
-                self._sock.send(self.makeCCS())
-                while not stop:
-                    try:
-                        if not self.srecv(): break
-                    except socket.timeout:
-                        break
-                    except:
-                        vuln = False
-                        stop = True
+            # If we receive no alert message check whether it is really is_vulnerable
+            if is_vulnerable:
+                self._sock.send('\x15' + self.ssl_tokens[self._ssl_version] + '\x00\x02\x01\x00')
 
-                    rs = self.parseRecords()
-                    for record in rs:
-                        if record['type'] == 21:
-                            for p in record['proto']:
-                                if p['level'] == 2 or (p['level'] == 1 and p['desc'] == 0):
-                                    vuln = False
-                                    stop = True
+                try:
+                    if not self.srecv():
+                        is_vulnerable = False
+                except:
+                    is_vulnerable = False
 
-                # If we receive no alert message check whether it is really vuln
-                if vuln:
-                    self._sock.send('\x15' + PluginOpenSSL_CCS_injection.ssl_tokens[self._sslVersion] + '\x00\x02\x01\x00')
+        self._sock.close()
+        return OpenSslCcsInjectionResult(server_info, plugin_command, options_dict, is_vulnerable)
 
-                    try:
-                        if not self.srecv():
-                            vuln = False
-                    except:
-                        vuln = False
-
-            self._sock.close()
-   
-            if vuln:
-                break
-
-        if vuln:
-            opensslccsTxt = 'VULNERABLE - Server is vulnerable to OpenSSL\'s CCS injection'
-            opensslccsXml = 'True'
-        else:
-            opensslccsTxt = 'OK - Not vulnerable to OpenSSL\'s CCS injection'
-            opensslccsXml = 'False'
-
-        cmdTitle = 'Open SSL CVE-2014-0224'
-        txtOutput = [self.PLUGIN_TITLE_FORMAT(cmdTitle)]
-        txtOutput.append(self.FIELD_FORMAT(opensslccsTxt, ""))
-
-        xmlOutput = Element(command, title=cmdTitle)
-        if vuln:
-            xmlNode = Element('openssl_ccs', isVulnerable=opensslccsXml)
-            xmlOutput.append(xmlNode)
-
-        return PluginBase.PluginResult(txtOutput, xmlOutput)
 
     ssl_tokens = {
         SSLV3   : "\x03\x00",
@@ -191,28 +153,28 @@ class PluginOpenSSL_CCS_injection(PluginBase.PluginBase):
     ]
 
     # Create a TLS record out of a protocol packet
-    def makeRecord(self, t, body):
+    def make_record(self, t, body):
         l = struct.pack("!H",len(body))
-        return chr(t) + PluginOpenSSL_CCS_injection.ssl_tokens[self._sslVersion] + l + body
+        return chr(t) + self.ssl_tokens[self._ssl_version] + l + body
 
-    def makeHello(self):
-        suites = "".join(PluginOpenSSL_CCS_injection.ssl3_cipher)
+    def make_hello(self):
+        suites = "".join(self.ssl3_cipher)
         rand = "".join([ chr(int(256 * random.random())) for x in range(32) ])
         l  = struct.pack("!L", 39+len(suites))[1:] # 3 bytes
         sl = struct.pack("!H", len(suites))
 
         # Client hello, lenght and version
         # Random data + session ID + cipher suites + compression suites
-        data  = "\x01" + l + PluginOpenSSL_CCS_injection.ssl_tokens[self._sslVersion] + rand + "\x00"
+        data  = "\x01" + l + self.ssl_tokens[self._ssl_version] + rand + "\x00"
         data += sl + suites + "\x01\x00"
 
-        return self.makeRecord(22, data)
+        return self.make_record(22, data)
 
-    def makeCCS(self):
+    def make_ccs(self):
         ccsbody = "\x01" # Empty CCS
-        return self.makeRecord(20, ccsbody)
+        return self.make_record(20, ccsbody)
 
-    def parseHandshakePkt(self, buf):
+    def parse_handshake_pkt(self, buf):
         r = []
         while len(buf) >= 4:
             mt = ord(buf[0])
@@ -225,10 +187,10 @@ class PluginOpenSSL_CCS_injection(PluginBase.PluginBase):
             buf = buf[4+mlen:]
         return r
 
-    def parseAlertPkt(self, buf):
+    def parse_alert_pkt(self, buf):
         return [ {"level": ord(buf[0]), "desc": ord(buf[1]) } ]
 
-    def parseRecords(self):
+    def parse_records(self):
         r = []
         # 5 byte header
         while len(self._inbuffer) >= 5:
@@ -240,9 +202,9 @@ class PluginOpenSSL_CCS_injection(PluginBase.PluginBase):
                 break
 
             if mtype == 22: # Handshake
-                protp = self.parseHandshakePkt(self._inbuffer[5:5+mlen])
+                protp = self.parse_handshake_pkt(self._inbuffer[5:5 + mlen])
             elif mtype == 21: # Alert
-                protp = self.parseAlertPkt(self._inbuffer[5:5+mlen])
+                protp = self.parse_alert_pkt(self._inbuffer[5:5 + mlen])
             else:
                 protp = []
 
@@ -253,3 +215,27 @@ class PluginOpenSSL_CCS_injection(PluginBase.PluginBase):
         return r
 
 
+class OpenSslCcsInjectionResult(PluginResult):
+
+    def __init__(self, server_info, plugin_command, plugin_options, is_vulnerable_to_ccs_injection):
+        super(OpenSslCcsInjectionResult, self).__init__(server_info, plugin_command, plugin_options)
+        self.is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection
+
+
+    COMMAND_TITLE = 'OpenSSL CCS Injection'
+
+    def as_xml(self):
+        result_xml = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        result_xml.append(Element('openSslCcsInjection',
+                                  attrib={'isVulnerable': str(self.is_vulnerable_to_ccs_injection)}))
+        return result_xml
+
+
+    def as_text(self):
+        result_txt = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+
+        ccs_text = 'VULNERABLE - Server is vulnerable to OpenSSL CCS injection' \
+            if self.is_vulnerable_to_ccs_injection \
+            else 'OK - Not vulnerable to OpenSSL CCS injection'
+        result_txt.append(self.FIELD_FORMAT('', ccs_text))
+        return result_txt

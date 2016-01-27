@@ -67,7 +67,7 @@ class HeartbleedResult(PluginResult):
             else 'OK - Not vulnerable to Heartbleed'
 
         txt_output = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
-        txt_output.append(self.FIELD_FORMAT(heartbleed_txt, ""))
+        txt_output.append(self.FIELD_FORMAT("", heartbleed_txt))
         return txt_output
 
     def as_xml(self):

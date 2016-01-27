@@ -73,14 +73,15 @@ class PluginsFinder:
     def get_plugin_modules_static():
 
         plugin_modules = []
-        AVAILABLE_PLUGIN_NAMES = ['sslyze.plugins.compression_plugin',
-                                  'sslyze.plugins.certificate_info_plugin',
+        AVAILABLE_PLUGIN_NAMES = ['sslyze.plugins.certificate_info_plugin',
+                                  'sslyze.plugins.compression_plugin',
+                                  'sslyze.plugins.fallback_scsv_plugin',
                                   'sslyze.plugins.heartbleed_plugin',
                                   'sslyze.plugins.hsts_plugin',
+                                  'sslyze.plugins.openssl_ccs_injection_plugin',
                                   'sslyze.plugins.openssl_cipher_suites_plugin',
                                   'sslyze.plugins.session_renegotiation_plugin',
-                                  'sslyze.plugins.session_resumption_plugin',
-                                  'sslyze.plugins.fallback_scsv_plugin']  # TODO: Add new plugins
+                                  'sslyze.plugins.session_resumption_plugin']
 
         # This it to ensure py2exe can find the plugins
         import sslyze.plugins.session_resumption_plugin

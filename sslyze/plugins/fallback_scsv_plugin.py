@@ -18,7 +18,7 @@ class FallbackScsvPlugin(plugin_base.PluginBase):
 
 
     def process_task(self, server_info, plugin_command, plugin_options=None):
-        if server_info.ssl_version_supported <= SSLV3:
+        if server_info.highest_ssl_version_supported <= SSLV3:
             raise ValueError('Server only supports SSLv3; no downgrade attacks are possible')
 
         # Try to connect using a lower TLS version with the fallback cipher suite enabled

@@ -49,9 +49,9 @@ class CompressionResult(PluginResult):
     def as_text(self):
         txt_result = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
         if self.compression_name:
-            txt_result.append(self.FIELD_FORMAT('VULNERABLE - Server supports Deflate compression', ''))
+            txt_result.append(self.FIELD_FORMAT('', 'VULNERABLE - Server supports Deflate compression'))
         else:
-            txt_result.append(self.FIELD_FORMAT('OK - Compression disabled', ''))
+            txt_result.append(self.FIELD_FORMAT('', 'OK - Compression disabled'))
         return txt_result
 
     def as_xml(self):

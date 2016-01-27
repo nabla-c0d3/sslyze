@@ -18,73 +18,6 @@ class ServerConnectivityError(ValueError):
         self.error_msg = error_msg
 
 
-class CommandLineServerStringParser(object):
-    """Utility class to parse a 'host:port{ip}' string taken from the command line into a valid (host,ip, port) tuple.
-    Supports IPV6 addresses.
-    """
-
-    SERVER_STRING_ERROR_BAD_PORT = 'Not a valid host:port'
-    SERVER_STRING_ERROR_NO_IPV6 = 'IPv6 is not supported on this platform'
-
-    @classmethod
-    def parse_server_string(cls, server_str):
-        # Extract ip from target
-        if '{' in server_str and '}' in server_str:
-            raw_target = server_str.split('{')
-            raw_ip = raw_target[1]
-
-            ip = raw_ip.replace('}', '')
-
-            # Clean the target
-            server_str = raw_target[0]
-        else:
-            ip = None
-
-        # Look for ipv6 hint in target
-        if '[' in server_str:
-            (host, port) = cls._parse_ipv6_server_string(server_str)
-        else:
-            # Look for ipv6 hint in the ip
-            if ip is not None and '[' in ip:
-                (ip, port) = cls._parse_ipv6_server_string(ip)
-
-            # Fallback to ipv4
-            (host, port) = cls._parse_ipv4_server_string(server_str)
-
-        return host, ip, port
-
-    @classmethod
-    def _parse_ipv4_server_string(cls, server_str):
-
-        if ':' in server_str:
-            host = (server_str.split(':'))[0]  # hostname or ipv4 address
-            try:
-                port = int((server_str.split(':'))[1])
-            except:  # Port is not an int
-                raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
-        else:
-            host = server_str
-            port = None
-
-        return host, port
-
-    @classmethod
-    def _parse_ipv6_server_string(cls, server_str):
-
-        if not socket.has_ipv6:
-            raise ServerConnectivityError(cls.SERVER_STRING_ERROR_NO_IPV6)
-
-        port = None
-        target_split = (server_str.split(']'))
-        ipv6_addr = target_split[0].split('[')[1]
-        if ':' in target_split[1]:  # port was specified
-            try:
-                port = int(target_split[1].rsplit(':')[1])
-            except:  # Port is not an int
-                raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
-        return ipv6_addr, port
-
-
 class ServerConnectivityInfo(object):
     """All settings (hostname, port, SSL version, etc.) needed to successfully connect to a specific SSL server.
     """
@@ -306,3 +239,71 @@ class ServersConnectivityTester(object):
             test_connectivity_to_server_method, _ = job
             server_info = test_connectivity_to_server_method.__self__
             yield (server_info, exception)
+
+
+
+class CommandLineServerStringParser(object):
+    """Utility class to parse a 'host:port{ip}' string taken from the command line into a valid (host,ip, port) tuple.
+    Supports IPV6 addresses.
+    """
+
+    SERVER_STRING_ERROR_BAD_PORT = 'Not a valid host:port'
+    SERVER_STRING_ERROR_NO_IPV6 = 'IPv6 is not supported on this platform'
+
+    @classmethod
+    def parse_server_string(cls, server_str):
+        # Extract ip from target
+        if '{' in server_str and '}' in server_str:
+            raw_target = server_str.split('{')
+            raw_ip = raw_target[1]
+
+            ip = raw_ip.replace('}', '')
+
+            # Clean the target
+            server_str = raw_target[0]
+        else:
+            ip = None
+
+        # Look for ipv6 hint in target
+        if '[' in server_str:
+            (host, port) = cls._parse_ipv6_server_string(server_str)
+        else:
+            # Look for ipv6 hint in the ip
+            if ip is not None and '[' in ip:
+                (ip, port) = cls._parse_ipv6_server_string(ip)
+
+            # Fallback to ipv4
+            (host, port) = cls._parse_ipv4_server_string(server_str)
+
+        return host, ip, port
+
+    @classmethod
+    def _parse_ipv4_server_string(cls, server_str):
+
+        if ':' in server_str:
+            host = (server_str.split(':'))[0]  # hostname or ipv4 address
+            try:
+                port = int((server_str.split(':'))[1])
+            except:  # Port is not an int
+                raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
+        else:
+            host = server_str
+            port = None
+
+        return host, port
+
+    @classmethod
+    def _parse_ipv6_server_string(cls, server_str):
+
+        if not socket.has_ipv6:
+            raise ServerConnectivityError(cls.SERVER_STRING_ERROR_NO_IPV6)
+
+        port = None
+        target_split = (server_str.split(']'))
+        ipv6_addr = target_split[0].split('[')[1]
+        if ':' in target_split[1]:  # port was specified
+            try:
+                port = int(target_split[1].rsplit(':')[1])
+            except:  # Port is not an int
+                raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
+        return ipv6_addr, port

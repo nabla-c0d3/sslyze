@@ -18,7 +18,7 @@ from sslyze.plugins_process_pool import PluginsProcessPool
 from sslyze.plugins_finder import PluginsFinder
 from command_line_parser import CommandLineParser, CommandLineParsingError
 from sslyze.server_connectivity import ServersConnectivityTester, ServerConnectivityError
-from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
+from sslyze.server_connectivity import ClientAuthenticationServerConfigurationEnum
 
 # Global so we can terminate processes when catching SIGINT
 plugins_process_pool = None
@@ -124,9 +124,9 @@ def main():
             client_auth_msg = ''
             client_auth_requirement = server_connectivity_info.client_auth_requirement
             if client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED:
-                client_auth_msg = '  WARNING: Client authentication REQUIRED, specific plugins will fail.'
+                client_auth_msg = '  WARNING: Server REQUIRED client authentication, specific plugins will fail.'
             elif client_auth_requirement == ClientAuthenticationServerConfigurationEnum.OPTIONAL:
-                client_auth_msg = '  WARNING: Client authentication optional'
+                client_auth_msg = '  WARNING: Server requested optional client authentication'
 
             print SERVER_OK_FORMAT.format(host=server_connectivity_info.hostname, port=server_connectivity_info.port,
                                           ip_address=server_connectivity_info.ip_address,

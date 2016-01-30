@@ -77,28 +77,28 @@ class ServerConnectivityInfo(object):
         Args:
             hostname (str): The server's hostname.
             port (int): The server's TLS port number. If not supplied, the default port number for the specified
-                tls_wrapped_protocol will be used.
-            ip_address (str): The server's IP address. If not supplied, a DNS lookup for the specified hostname will be
-                performed.
-            tls_wrapped_protocol (TlsWrappedProtocolEnum): The protocol wrapped in TLS that the server expects.
-                It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what kind of
-                "hello" message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not
-                supplied, "plain" TLS will be used.
-            tls_server_name_indication (str): The hostname to set within the Server Name Indication TLS extension. If
-                not supplied, the specified hostname will be used.
-            xmpp_to_hostname (str): The hostname to set within the 'to' attribute of the XMPP stream. If not supplied,
-                the specified hostname will be used. Should only be set if the supplied tls_wrapped_protocol is an XMPP
-                protocol.
-            client_auth_credentials (ClientAuthenticationCredentials): The client certificate and private key needed to
-                perform mutual authentication with the server. If not supplied, sslyze will attempt to connect to the
-                server without performing mutual authentication.
-            http_tunneling_settings (HttpConnectTunnelingSettings): The HTTP proxy configuration to use in order to
-                tunnel the scans through a proxy. If not supplied, sslyze will run the scans by directly connecting to
-                the server.
+                `tls_wrapped_protocol` will be used.
+            ip_address (Optional[str]): The server's IP address. If not supplied, a DNS lookup for the specified
+                `hostname` will be performed.
+            tls_wrapped_protocol (Optional[TlsWrappedProtocolEnum]): The protocol wrapped in TLS that the server
+                expects. It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what
+                kind of "hello" message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If
+                not supplied, standard TLS will be used.
+            tls_server_name_indication (Optional[str]): The hostname to set within the Server Name Indication TLS
+                extension. If not supplied, the specified `hostname` will be used.
+            xmpp_to_hostname (Optional[str]): The hostname to set within the `to` attribute of the XMPP stream. If not
+                supplied, the specified `hostname` will be used. Should only be set if the supplied
+                `tls_wrapped_protocol` is an XMPP protocol.
+            client_auth_credentials (Optional[ClientAuthenticationCredentials]): The client certificate and private key
+                needed to perform mutual authentication with the server. If not supplied, sslyze will attempt to connect
+                to the server without performing mutual authentication.
+            http_tunneling_settings (Optional[HttpConnectTunnelingSettings]): The HTTP proxy configuration to use in
+                order to tunnel the scans through a proxy. If not supplied, sslyze will run the scans by directly
+                connecting to the server.
 
         Returns:
             ServerConnectivityInfo: An object representing all the information needed to connect to a specific server.
-            This information must be validated by calling the test_connectivity_to_server() method.
+            This information must be validated by calling the `test_connectivity_to_server()` method.
 
         Raises:
             ServerConnectivityError: If a DNS lookup was attempted and failed.

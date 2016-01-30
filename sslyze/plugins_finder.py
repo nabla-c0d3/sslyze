@@ -12,9 +12,9 @@ import sslyze.plugins.plugin_base
 class PluginsFinder:
 
     def __init__(self):
-        """Opens the plugins folder and looks at every .py module in that directory.
-        Finds available plugins by looking at any class defined in those modules that implements the PluginBase abstract
-        class, and teturns a list of plugin classes.
+        """Finds available plugins by discovering any class that implements the PluginBase abstract class.
+
+        Returns PluginsFinder: An object encapsulating the list of available sslyze plugin classess.
         """
         self._plugin_classes = set([])
         self._commands = {}

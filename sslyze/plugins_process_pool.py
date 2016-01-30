@@ -9,7 +9,8 @@ from sslyze.utils.worker_process import WorkerProcess
 
 
 class PluginsProcessPool(object):
-    """Creates a pool of processes and dispatches scanning commands to be run."""
+    """Creates a pool of processes and dispatches scanning commands to be run concurrently.
+    """
 
     DEFAULT_MAX_PROCESSES_NB = 12
     DEFAULT_PROCESSES_PER_HOSTNAME_NB = 3
@@ -22,6 +23,19 @@ class PluginsProcessPool(object):
                  network_timeout=DEFAULT_NETWORK_TIMEOUT,
                  max_processes_nb=DEFAULT_MAX_PROCESSES_NB,
                  max_processes_per_hostname_nb=DEFAULT_PROCESSES_PER_HOSTNAME_NB):
+        """
+        Args:
+            available_plugins (PluginsFinder): An object encapsulating the list of available plugins.
+            network_retries (Optional[int)]: How many times plugins should retry a connection that timed out.
+            network_timeout (Optional[int]): The time until an ongoing connection times out within all plugins.
+            max_processes_nb (Optional[int]): The maximum number of processes to spawn for running scans concurrently.
+            max_processes_per_hostname_nb (Optional[int]): The maximum of processes that can be used for running scans
+                concurrently on a single server.
+
+        Returns:
+            PluginsProcessPool: An object for queueing scan commands to be run concurrently.
+
+        """
 
         self._available_plugins = available_plugins
         self._network_retries = network_retries
@@ -40,6 +54,15 @@ class PluginsProcessPool(object):
 
 
     def queue_plugin_task(self, server_connectivity_info, plugin_command, plugin_options_dict={}):
+        """Queue a scan command targeting a specific server.
+
+        Args:
+            server_connectivity_info (ServerConnectivityInfo): The information for connecting to the server.
+            plugin_command (str): The plugin scan command to be run on the server. Available commands for each plugin
+                are described in the sslyze CLI --help text.
+            plugin_options_dict (dict): Scan options to be passed to the plugin. Available options for each plugin are
+                described in the sslyze CLI --help text.
+        """
         # Ensure we have the right processes and queues in place for this hostname
         self._check_and_create_process(server_connectivity_info.hostname)
 
@@ -91,8 +114,14 @@ class PluginsProcessPool(object):
 
 
     def get_results(self):
-        """New tasks cannot be queued once this is called. Returns a list of tuples of
-        (server_info, plugin_command, plugin_result)."""
+        """Returns the result of previously queues scan command; new tasks can no longer be queued once this is called.
+
+        Yields:
+            (ServerConnectivityInfo, str, PluginResult): The server information, plugin command and result of the scan
+                command run on this server. The PluginResult object is command/plugin-specific and has attributes
+                with the result of the scan command that was run; see specific PluginResult subclasses for the list of
+                attributes.
+        """
         # Put a 'None' sentinel in the queue to let the each process know when every task has been completed
         for _ in xrange(self._get_current_processes_nb()):
             self._task_queue.put(None)

@@ -22,7 +22,7 @@ data_files.append(('data\\trust_stores', plugin_data_files))
 sslyze_setup_py2exe = SSLYZE_SETUP.copy()
 sslyze_setup_py2exe.update(
         {
-            'console': ['sslyze-cli.py'],
+            'console': ['sslyze.py'],
             'data_files': data_files,
             'zipfile': None,
             'options': {'py2exe': {

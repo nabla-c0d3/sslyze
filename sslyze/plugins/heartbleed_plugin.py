@@ -54,6 +54,11 @@ class HeartbleedPlugin(plugin_base.PluginBase):
 
 
 class HeartbleedResult(PluginResult):
+    """The result of running --heartbleed on a specific server.
+
+    Attributes:
+        is_vulnerable_to_heartbleed (bool): True if the server is vulnerable to the Heartbleed attack.
+    """
 
     COMMAND_TITLE = 'OpenSSL Heartbleed'
 

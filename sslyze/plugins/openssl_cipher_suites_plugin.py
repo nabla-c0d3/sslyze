@@ -187,7 +187,6 @@ class AcceptedCipherSuite(object):
         self.post_handshake_response = post_handshake_response.decode("utf-8")
 
 
-
 class RejectedCipherSuite(object):
     def __init__(self, name, handshake_error_message):
         self.name = name
@@ -203,6 +202,14 @@ class ErroredCipherSuite(object):
 
 
 class OpenSSLCipherSuitesResult(PluginResult):
+    """The result of running --sslv2, --sslv3, --tlsv1, --tlsv1_1 or --tlsv1_2 on a specific server.
+
+    Attributes:
+        accepted_cipher_list (List[AcceptedCipherSuite]): The list of cipher suites supported by the server.
+        rejected_cipher_list (List[RejectedCipherSuite]): The list of cipher suites rejected by the server.
+        errored_cipher_list (List[ErroredCipherSuite]): The list of cipher suites that triggered an unexpected error
+            during the TLS handshake.
+    """
 
     def __init__(self, server_info, plugin_command, plugin_options, preferred_cipher, accepted_cipher_list,
                  rejected_cipher_list, errored_cipher_list):
@@ -223,9 +230,9 @@ class OpenSSLCipherSuitesResult(PluginResult):
 
     def as_xml(self):
         ssl_version = self.plugin_command
-        isProtocolSupported = True if len(self.accepted_cipher_list) > 0 else False
+        is_protocol_supported = True if len(self.accepted_cipher_list) > 0 else False
         result_xml = Element(ssl_version, title='{0} Cipher Suites'.format(ssl_version.upper()),
-                            isProtocolSupported=str(isProtocolSupported))
+                            isProtocolSupported=str(is_protocol_supported))
 
         # Output the preferred cipher
         if self.preferred_cipher:

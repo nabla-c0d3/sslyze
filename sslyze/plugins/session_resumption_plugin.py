@@ -188,7 +188,17 @@ class SessionResumptionPlugin(plugin_base.PluginBase):
 
 
 class ResumptionRateResult(PluginResult):
-    """Result for the --resum_rate command."""
+    """The result of running --resum_rate on a specific server.
+
+    Attributes:
+        attempted_resumptions_nb (int): The total number of session ID resumptions that were attempted.
+        successful_resumptions_nb (int): The number of session ID resumptions that were successful.
+        failed_resumptions_nb (int): The number of session ID resumptions that failed.
+        errored_resumptions_list (Optional[List[(str)]): A list of unexpected errors triggered while trying to perform
+        session ID resumption with the server (should always be empty).
+    """
+
+    COMMAND_TITLE = 'Resumption Rate'
 
     def __init__(self, server_info, plugin_command, plugin_options, attempted_resumptions_nb, successful_resumptions_nb,
                  errored_resumptions_list):
@@ -196,14 +206,11 @@ class ResumptionRateResult(PluginResult):
 
         self.attempted_resumptions_nb = attempted_resumptions_nb
         self.successful_resumptions_nb = successful_resumptions_nb
-
-        # A list of error messages from uncaught/unexpected exceptions while testing; should always be empty
         self.errored_resumptions_list = errored_resumptions_list
+        self.failed_resumptions_nb = attempted_resumptions_nb - successful_resumptions_nb - \
+                                     len(errored_resumptions_list)
 
-        self.failed_resumptions_nb = self.attempted_resumptions_nb - self.successful_resumptions_nb - \
-                                     len(self.errored_resumptions_list)
 
-    COMMAND_TITLE = 'Resumption Rate'
     RESUMPTION_RESULT_FORMAT = '{4} ({0} successful, {1} failed, {2} errors, {3} total attempts).'.format
     RESUMPTION_LINE_FORMAT = '      {resumption_type:<35}{result}'.format
     RESUMPTION_ERROR_FORMAT = '        ERROR #{error_nb}: {error_msg}'.format
@@ -260,19 +267,24 @@ class ResumptionRateResult(PluginResult):
 
 
 class ResumptionResult(ResumptionRateResult):
-    """Result for the --resum command."""
+    """The result of running --resum on a specific server; also has all the attributes of ResumptionRateResult.
+
+    Attributes:
+        is_ticket_resumption_supported (bool): True if the server honors client-initiated renegotiation attempts.
+        ticket_resumption_failed_reason (str): A message explaining why TLS ticket resumption failed.
+        ticket_resumption_exception (Optional[str]): An unexpected error that was raised while trying to perform ticket
+            resumption (should never happen).
+    """
 
     def __init__(self, server_info, plugin_command, plugin_options, attempted_resumptions_nb, successful_resumptions_nb,
                  errored_resumptions_list, is_ticket_resumption_supported, ticket_resumption_failed_reason=None,
                  ticket_resumption_exception=None):
 
         super(ResumptionResult, self).__init__(server_info, plugin_command, plugin_options,
-                                                   attempted_resumptions_nb, successful_resumptions_nb,
-                                                   errored_resumptions_list)
+                                               attempted_resumptions_nb, successful_resumptions_nb,
+                                               errored_resumptions_list)
 
         self.is_ticket_resumption_supported = is_ticket_resumption_supported
-
-        # A message explaining why TLS ticket resumption failed
         self.ticket_resumption_failed_reason = ticket_resumption_failed_reason
 
         # An exception was raised while trying to perform ticket resumption (should never happen)

@@ -37,13 +37,17 @@ class CompressionPlugin(plugin_base.PluginBase):
 
 
 class CompressionResult(PluginResult):
+    """The result of running --compression on a specific server.
+
+    Attributes:
+        compression_name (str): The name of the compression algorithm supported by the server; empty if compression is
+            not supported by the server.
+    """
 
     COMMAND_TITLE = 'Deflate Compression'
 
     def __init__(self, server_info, plugin_command, plugin_options, compression_name):
         super(CompressionResult, self).__init__(server_info, plugin_command, plugin_options)
-
-        # Will be empty if no compression is supported by the server
         self.compression_name = compression_name
 
     def as_text(self):

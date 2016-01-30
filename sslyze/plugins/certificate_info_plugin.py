@@ -176,10 +176,37 @@ class CertificateInfoPlugin(plugin_base.PluginBase):
 
 
 class CertInfoFullResult(PluginResult):
+    """The result of running --certinfo_full on a specific server.
+
+    Attributes:
+        certificate_chain (List[Certificate]): The server's certificate chain; index 0 is the leaf certificate.
+        is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
+        path_validation_result_list (List[PathValidationResult]): A list of attempts at validating the server's
+            certificate chain path using various trust stores.
+        path_validation_error_list (List[PathValidationError]):  A list of attempts at validating the server's
+            certificate chain path that triggered an unexpected error.
+        hostname_validation_result (int): Validation result of the certificate hostname.
+        ocsp_response (Optional[dict]): The OCSP response returned by the server.
+        is_ocsp_response_trusted (Optional[bool]): True if the OCSP response is trusted using the Mozilla trust store.
+    """
 
     COMMAND_TITLE = 'Certificate Basic Information'
 
-    MOZILLA_EV_OIDS = ['1.2.276.0.44.1.1.1.4', '1.2.392.200091.100.721.1', '1.2.40.0.17.1.22', '1.2.616.1.113527.2.5.1.1', '1.3.159.1.17.1', '1.3.6.1.4.1.13177.10.1.3.10', '1.3.6.1.4.1.14370.1.6', '1.3.6.1.4.1.14777.6.1.1', '1.3.6.1.4.1.14777.6.1.2', '1.3.6.1.4.1.17326.10.14.2.1.2', '1.3.6.1.4.1.17326.10.14.2.2.2', '1.3.6.1.4.1.17326.10.8.12.1.2', '1.3.6.1.4.1.17326.10.8.12.2.2', '1.3.6.1.4.1.22234.2.5.2.3.1', '1.3.6.1.4.1.23223.1.1.1', '1.3.6.1.4.1.29836.1.10', '1.3.6.1.4.1.34697.2.1', '1.3.6.1.4.1.34697.2.2', '1.3.6.1.4.1.34697.2.3', '1.3.6.1.4.1.34697.2.4', '1.3.6.1.4.1.36305.2', '1.3.6.1.4.1.40869.1.1.22.3', '1.3.6.1.4.1.4146.1.1', '1.3.6.1.4.1.4788.2.202.1', '1.3.6.1.4.1.6334.1.100.1', '1.3.6.1.4.1.6449.1.2.1.5.1', '1.3.6.1.4.1.782.1.2.1.8.1', '1.3.6.1.4.1.7879.13.24.1', '1.3.6.1.4.1.8024.0.2.100.1.2', '2.16.156.112554.3', '2.16.528.1.1003.1.2.7', '2.16.578.1.26.1.3.3', '2.16.756.1.83.21.0', '2.16.756.1.89.1.2.1.1', '2.16.792.3.0.3.1.1.5', '2.16.792.3.0.4.1.1.4', '2.16.840.1.113733.1.7.23.6', '2.16.840.1.113733.1.7.48.1', '2.16.840.1.114028.10.1.2', '2.16.840.1.114171.500.9', '2.16.840.1.114404.1.1.2.4.1', '2.16.840.1.114412.2.1', '2.16.840.1.114413.1.7.23.3', '2.16.840.1.114414.1.7.23.3', '2.16.840.1.114414.1.7.24.3']
+    MOZILLA_EV_OIDS = ['1.2.276.0.44.1.1.1.4', '1.2.392.200091.100.721.1', '1.2.40.0.17.1.22',
+                       '1.2.616.1.113527.2.5.1.1', '1.3.159.1.17.1', '1.3.6.1.4.1.13177.10.1.3.10',
+                       '1.3.6.1.4.1.14370.1.6', '1.3.6.1.4.1.14777.6.1.1', '1.3.6.1.4.1.14777.6.1.2',
+                       '1.3.6.1.4.1.17326.10.14.2.1.2', '1.3.6.1.4.1.17326.10.14.2.2.2',
+                       '1.3.6.1.4.1.17326.10.8.12.1.2', '1.3.6.1.4.1.17326.10.8.12.2.2', '1.3.6.1.4.1.22234.2.5.2.3.1',
+                       '1.3.6.1.4.1.23223.1.1.1', '1.3.6.1.4.1.29836.1.10', '1.3.6.1.4.1.34697.2.1',
+                       '1.3.6.1.4.1.34697.2.2', '1.3.6.1.4.1.34697.2.3', '1.3.6.1.4.1.34697.2.4',
+                       '1.3.6.1.4.1.36305.2', '1.3.6.1.4.1.40869.1.1.22.3', '1.3.6.1.4.1.4146.1.1',
+                       '1.3.6.1.4.1.4788.2.202.1', '1.3.6.1.4.1.6334.1.100.1', '1.3.6.1.4.1.6449.1.2.1.5.1',
+                       '1.3.6.1.4.1.782.1.2.1.8.1', '1.3.6.1.4.1.7879.13.24.1', '1.3.6.1.4.1.8024.0.2.100.1.2',
+                       '2.16.156.112554.3', '2.16.528.1.1003.1.2.7', '2.16.578.1.26.1.3.3', '2.16.756.1.83.21.0',
+                       '2.16.756.1.89.1.2.1.1', '2.16.792.3.0.3.1.1.5', '2.16.792.3.0.4.1.1.4',
+                       '2.16.840.1.113733.1.7.23.6', '2.16.840.1.113733.1.7.48.1', '2.16.840.1.114028.10.1.2',
+                       '2.16.840.1.114171.500.9', '2.16.840.1.114404.1.1.2.4.1', '2.16.840.1.114412.2.1',
+                       '2.16.840.1.114413.1.7.23.3', '2.16.840.1.114414.1.7.23.3', '2.16.840.1.114414.1.7.24.3']
 
 
     def __init__(self, server_info, plugin_command, plugin_options, certificate_chain, path_validation_result_list,
@@ -190,11 +217,9 @@ class CertInfoFullResult(PluginResult):
         self.ocsp_response = ocsp_response.as_dict() if ocsp_response else None
         self.is_ocsp_response_trusted = ocsp_response.verify(MOZILLA_STORE_PATH) if ocsp_response else False
 
-        # List of Certificates; index 0 contains the leaf certificate
         # We create pickable Certificates from nassl.X509Certificates which are not pickable
         self.certificate_chain = [Certificate(x509_cert) for x509_cert in certificate_chain]
 
-        # Is this an Extended Validation certificate according to Mozilla ?
         self.is_leaf_certificate_ev = False
         try:
             policy = self.certificate_chain[0].as_dict['extensions']['X509v3 Certificate Policies']['Policy']
@@ -203,11 +228,8 @@ class CertInfoFullResult(PluginResult):
         except:
             pass
 
-        # Attempts at validating the certificate chain's path using various trust stores
         self.path_validation_result_list = path_validation_result_list
         self.path_validation_error_list = path_validation_error_list
-
-        # Validation result of the certificate hostname
         self.hostname_validation_result = certificate_chain[0].matches_hostname(server_info.tls_server_name_indication)
 
 
@@ -315,7 +337,7 @@ class CertInfoFullResult(PluginResult):
         text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - OCSP Stapling')])
 
         if self.ocsp_response is None:
-            text_output.append(self.FIELD_FORMAT('NOT SUPPORTED - Server did not send back an OCSP response.', ''))
+            text_output.append(self.FIELD_FORMAT('', 'NOT SUPPORTED - Server did not send back an OCSP response.'))
 
         else:
             try:

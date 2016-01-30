@@ -97,6 +97,12 @@ class SessionRenegotiationPlugin(plugin_base.PluginBase):
 
 
 class SessionRenegotiationResult(PluginResult):
+    """The result of running --reneg on a specific server.
+
+    Attributes:
+        accepts_client_renegotiation (bool): True if the server honors client-initiated renegotiation attempts.
+        supports_secure_renegotiation (bool): True if the server supports secure renegotiation.
+    """
 
     COMMAND_TITLE = 'Session Renegotiation'
 

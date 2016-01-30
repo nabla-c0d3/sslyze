@@ -90,13 +90,16 @@ class HstsPlugin(plugin_base.PluginBase):
 
 
 class HstsResult(PluginResult):
+    """The result of running --hsts on a specific server.
+
+    Attributes:
+        hsts_header (str): The content of the HSTS header returned by the server; None if no HSTS header was returned.
+    """
 
     COMMAND_TITLE = 'HTTP Strict Transport Security'
 
     def __init__(self, server_info, plugin_command, plugin_options, hsts_header):
         super(HstsResult, self).__init__(server_info, plugin_command, plugin_options)
-
-        # Will be None if no HSTS header was returned
         self.hsts_header = hsts_header
 
 

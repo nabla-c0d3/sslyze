@@ -7,7 +7,7 @@ import socket
 from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSLV2, TLSV1_1
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationServerConfigurationEnum
+from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, XMPPConnection, \
     XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \
     PostgresConnection, HTTPSConnection
@@ -19,8 +19,19 @@ class ServerConnectivityError(ValueError):
         self.error_msg = error_msg
 
 
+class ClientAuthenticationServerConfigurationEnum(object):
+    """Whether the server asked for client authentication.
+    """
+    DISABLED = 1
+    OPTIONAL = 2
+    REQUIRED = 3
+
+
 class ServerConnectivityInfo(object):
     """All settings (hostname, port, SSL version, etc.) needed to successfully connect to a specific SSL server.
+
+    After initializing a ServerConnectivityInfo, the test_connectivity_to_server() method must be called next to
+    ensure that the server is actually reachable.
     """
 
     TLS_DEFAULT_PORTS = {
@@ -59,7 +70,40 @@ class ServerConnectivityInfo(object):
     def __init__(self, hostname, port=None, ip_address=None, tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS,
                  tls_server_name_indication=None, xmpp_to_hostname=None, client_auth_credentials=None,
                  http_tunneling_settings=None):
+        """Constructor to specify how to connect to a server to be scanned.
 
+        Most arguments are optional but can be supplied in order to be more specific about the server's configuration.
+
+        Args:
+            hostname (str): The server's hostname.
+            port (int): The server's TLS port number. If not supplied, the default port number for the specified
+                tls_wrapped_protocol will be used.
+            ip_address (str): The server's IP address. If not supplied, a DNS lookup for the specified hostname will be
+                performed.
+            tls_wrapped_protocol (TlsWrappedProtocolEnum): The protocol wrapped in TLS that the server expects.
+                It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what kind of
+                "hello" message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not
+                supplied, "plain" TLS will be used.
+            tls_server_name_indication (str): The hostname to set within the Server Name Indication TLS extension. If
+                not supplied, the specified hostname will be used.
+            xmpp_to_hostname (str): The hostname to set within the 'to' attribute of the XMPP stream. If not supplied,
+                the specified hostname will be used. Should only be set if the supplied tls_wrapped_protocol is an XMPP
+                protocol.
+            client_auth_credentials (ClientAuthenticationCredentials): The client certificate and private key needed to
+                perform mutual authentication with the server. If not supplied, sslyze will attempt to connect to the
+                server without performing mutual authentication.
+            http_tunneling_settings (HttpConnectTunnelingSettings): The HTTP proxy configuration to use in order to
+                tunnel the scans through a proxy. If not supplied, sslyze will run the scans by directly connecting to
+                the server.
+
+        Returns:
+            ServerConnectivityInfo: An object representing all the information needed to connect to a specific server.
+            This information must be validated by calling the test_connectivity_to_server() method.
+
+        Raises:
+            ServerConnectivityError: If a DNS lookup was attempted and failed.
+            ValueError: If `xmpp_to_hostname` was specified for a non-XMPP protocol.
+        """
         self.hostname = hostname
         self.tls_wrapped_protocol = tls_wrapped_protocol
 
@@ -199,8 +243,8 @@ class ServerConnectivityInfo(object):
 
     def get_preconfigured_ssl_connection(self, override_ssl_version=None, ssl_verify_locations=None,
                                          should_ignore_client_auth=None):
-        """Returns an SSLConnection with the right configuration for successfully establishing an SSL connection to the
-        server.
+        """Returns an SSLConnection instance with the right configuration for successfully establishing an SSL
+        connection to the server. Used by all plugins to connect to the server and run scans.
         """
         if self.highest_ssl_version_supported is None and override_ssl_version is None:
             raise ValueError('Cannot return an SSLConnection without testing connectivity; '
@@ -340,3 +384,4 @@ class CommandLineServerStringParser(object):
             except:  # Port is not an int
                 raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
         return ipv6_addr, port
+

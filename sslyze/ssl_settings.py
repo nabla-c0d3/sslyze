@@ -28,14 +28,6 @@ class TlsWrappedProtocolEnum(object):
     STARTTLS_POSTGRES = 11
 
 
-class ClientAuthenticationServerConfigurationEnum(object):
-    """Whether the server asked for client authentication.
-    """
-    DISABLED = 1
-    OPTIONAL = 2
-    REQUIRED = 3
-
-
 class ClientAuthenticationCredentials(object):
     """Everything needed to perform client authentication with an SSL server.
     """
@@ -92,6 +84,8 @@ class HttpConnectTunnelingSettings(object):
 
 
     def get_basic_auth_header(self):
+        """Generate the right HTTP header for Basic Authentication.
+        """
         header = ''
         if self.basic_auth_user is not None:
             header = b64encode('{0}:{1}'.format(quote(self.basic_auth_user), quote(self.basic_auth_password)))

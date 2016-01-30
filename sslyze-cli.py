@@ -18,6 +18,7 @@ from sslyze.plugins_process_pool import PluginsProcessPool
 from sslyze.plugins_finder import PluginsFinder
 from command_line_parser import CommandLineParser, CommandLineParsingError
 from sslyze.server_connectivity import ServersConnectivityTester, ServerConnectivityError
+from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
 
 # Global so we can terminate processes when catching SIGINT
 plugins_process_pool = None
@@ -113,15 +114,23 @@ def main():
     connectivity_tester = ServersConnectivityTester(good_server_list)
     connectivity_tester.start_connectivity_testing()
 
-    SERVER_OK_FORMAT = '   {host}:{port:<25} => {ip_address}'
+    SERVER_OK_FORMAT = '   {host}:{port:<25} => {ip_address} {client_auth_msg}'
     SERVER_INVALID_FORMAT = '   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.'
 
     # Store and print servers we were able to connect to
     for server_connectivity_info in connectivity_tester.get_reachable_servers():
         online_servers_list.append(server_connectivity_info)
         if should_print_text_results:
+            client_auth_msg = ''
+            client_auth_requirement = server_connectivity_info.client_auth_requirement
+            if client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED:
+                client_auth_msg = '  WARNING: Client authentication REQUIRED, specific plugins will fail.'
+            elif client_auth_requirement == ClientAuthenticationServerConfigurationEnum.OPTIONAL:
+                client_auth_msg = '  WARNING: Client authentication optional'
+
             print SERVER_OK_FORMAT.format(host=server_connectivity_info.hostname, port=server_connectivity_info.port,
-                                          ip_address=server_connectivity_info.ip_address)
+                                          ip_address=server_connectivity_info.ip_address,
+                                          client_auth_msg=client_auth_msg)
 
         # Send tasks to worker processes
         for plugin_command in available_commands:

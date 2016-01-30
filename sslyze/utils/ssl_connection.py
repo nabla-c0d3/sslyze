@@ -85,7 +85,7 @@ class SSLConnection(DebugSslClient):
 
 
     def __init__(self, host, ip, port, ssl_version, ssl_verify_locations=None, client_certchain_file=None,
-                 client_key_file=None, client_key_type=None, client_key_password=''):
+                 client_key_file=None, client_key_type=None, client_key_password='', should_ignore_client_auth=False):
         if client_certchain_file:
             # A client certificate and private key were provided
             super(SSLConnection, self).__init__(ssl_version=ssl_version,
@@ -94,13 +94,14 @@ class SSLConnection(DebugSslClient):
                                                 client_certchain_file=client_certchain_file,
                                                 client_key_file=client_key_file,
                                                 client_key_type=client_key_type,
-                                                client_key_password=client_key_password)
+                                                client_key_password=client_key_password,
+                                                ignore_client_authentication_requests=False)
         else:
-            # No client cert and key; ignore certificate authenticatio requests
+            # No client cert and key
             super(SSLConnection, self).__init__(ssl_version=ssl_version,
                                                 ssl_verify=SSL_VERIFY_NONE,
                                                 ssl_verify_locations=ssl_verify_locations,
-                                                ignore_client_authentication_requests=True)
+                                                ignore_client_authentication_requests=should_ignore_client_auth)
 
         self._sock = None
         self._host = host

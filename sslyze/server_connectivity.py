@@ -5,8 +5,9 @@
 import socket
 
 from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSLV2, TLSV1_1
+from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationServerConfigurationEnum
 from utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, XMPPConnection, \
     XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \
     PostgresConnection, HTTPSConnection
@@ -89,6 +90,7 @@ class ServerConnectivityInfo(object):
         # Set after actually testing the connectivity
         self.highest_ssl_version_supported = None
         self.ssl_cipher_supported = None
+        self.client_auth_requirement = None
 
 
     @classmethod
@@ -114,7 +116,7 @@ class ServerConnectivityInfo(object):
         """Attempts to perform a full SSL handshake with the server in order to identify one SSL version and cipher
         suite supported by the server.
         """
-
+        client_auth_requirement = ClientAuthenticationServerConfigurationEnum.DISABLED
         ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=SSLV23)
 
         # First only try a socket connection
@@ -149,7 +151,8 @@ class ServerConnectivityInfo(object):
         for ssl_version in [TLSV1_2, TLSV1_1, TLSV1, SSLV3, SSLV23]:
             # First try the default cipher list, and then all ciphers
             for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
-                ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
+                ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
+                                                                       should_ignore_client_auth=False)
                 ssl_connection.set_cipher_list(cipher_list)
                 try:
                     # Only do one attempt when testing connectivity
@@ -157,6 +160,25 @@ class ServerConnectivityInfo(object):
                     ssl_version_supported = ssl_version
                     ssl_cipher_supported = ssl_connection.get_current_cipher_name()
                     break
+                except ClientCertificateRequested:
+                    # Connection successful but the servers wants a client certificate which wasn't supplied to sslyze
+                    # Store the SSL version and cipher list that is supported
+                    ssl_version_supported = ssl_version
+                    ssl_cipher_supported = ssl_connection.get_current_cipher_name()
+
+                    # Try a new connection to see if client authentication is optional
+                    ssl_connection_auth = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
+                                                                            should_ignore_client_auth=True)
+                    ssl_connection_auth.set_cipher_list(cipher_list)
+                    try:
+                        ssl_connection_auth.connect(network_max_retries=0)
+                        ssl_cipher_supported = ssl_connection_auth.get_current_cipher_name()
+                        client_auth_requirement = ClientAuthenticationServerConfigurationEnum.OPTIONAL
+                    except:
+                        client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
+                    finally:
+                        ssl_connection.close()
+
                 except:
                     # Could not complete a handshake with this server
                     pass
@@ -172,9 +194,11 @@ class ServerConnectivityInfo(object):
 
         self.highest_ssl_version_supported = ssl_version_supported
         self.ssl_cipher_supported = ssl_cipher_supported
+        self.client_auth_requirement = client_auth_requirement
 
 
-    def get_preconfigured_ssl_connection(self, override_ssl_version=None, ssl_verify_locations=None):
+    def get_preconfigured_ssl_connection(self, override_ssl_version=None, ssl_verify_locations=None,
+                                         should_ignore_client_auth=None):
         """Returns an SSLConnection with the right configuration for successfully establishing an SSL connection to the
         server.
         """
@@ -182,10 +206,19 @@ class ServerConnectivityInfo(object):
             raise ValueError('Cannot return an SSLConnection without testing connectivity; '
                              'call test_connectivity_to_server() first')
 
+        if should_ignore_client_auth is None:
+            # Ignore client auth requests if the server allows optional TLS client authentication
+            # If the server requires client authentication, do not ignore the request so that the right exceptions get
+            # thrown within the plugins, providing a better output
+            should_ignore_client_auth = False \
+                if self.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED \
+                else True
+
         # Create the right SSLConnection object
         ssl_version = override_ssl_version if override_ssl_version is not None else self.highest_ssl_version_supported
         ssl_connection = self.TLS_CONNECTION_CLASSES[self.tls_wrapped_protocol](
-                self.hostname, self.ip_address, self.port, ssl_version, ssl_verify_locations=ssl_verify_locations
+            self.hostname, self.ip_address, self.port, ssl_version, ssl_verify_locations=ssl_verify_locations,
+            should_ignore_client_auth=should_ignore_client_auth
         )
 
         # Add XMPP configuration

@@ -28,6 +28,14 @@ class TlsWrappedProtocolEnum(object):
     STARTTLS_POSTGRES = 11
 
 
+class ClientAuthenticationServerConfigurationEnum(object):
+    """Whether the server asked for client authentication.
+    """
+    DISABLED = 1
+    OPTIONAL = 2
+    REQUIRED = 3
+
+
 class ClientAuthenticationCredentials(object):
     """Everything needed to perform client authentication with an SSL server.
     """

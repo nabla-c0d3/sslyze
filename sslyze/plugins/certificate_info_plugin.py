@@ -442,8 +442,9 @@ class CertInfoFullResult(PluginResult):
         ocsp_xml = Element('ocspStapling', attrib={'isSupported': 'False' if self.ocsp_response is None else 'True'})
 
         if self.ocsp_response:
-            ocsp_resp_xmp = Element('ocspResponse', attrib={'isTrustedByMozillaCAStore': self.is_ocsp_response_trusted})
-            for (key, value) in self.ocsp_response.as_dict.items():
+            ocsp_resp_xmp = Element('ocspResponse',
+                                    attrib={'isTrustedByMozillaCAStore': str(self.is_ocsp_response_trusted)})
+            for (key, value) in self.ocsp_response.items():
                 ocsp_resp_xmp.append(_keyvalue_pair_to_xml(key, value))
 
             ocsp_xml.append(ocsp_resp_xmp)

@@ -371,8 +371,12 @@ class CertInfoFullResult(PluginResult):
         xml_output = Element(self.plugin_command, title=self.COMMAND_TITLE)
 
         # Certificate chain
-        cert_chain_xml = Element('certificateChain')
+        cert_xml_list = []
+        has_sha1_signed_certificate = False
         for index, certificate in enumerate(self.certificate_chain, start=0):
+
+            if not self._is_root_certificate(certificate) and "sha1" in certificate.as_dict['signatureAlgorithm']:
+                has_sha1_signed_certificate = True
 
             cert_xml = Element('certificate', attrib={
                 'sha1Fingerprint': certificate.sha1_fingerprint,
@@ -395,6 +399,11 @@ class CertInfoFullResult(PluginResult):
 
                 cert_xml.append(_keyvalue_pair_to_xml(key, value))
 
+            cert_xml_list.append(cert_xml)
+
+        cert_chain_xml = Element('certificateChain',
+                                 attrib={'hasSha1SignedCertificate': str(has_sha1_signed_certificate)})
+        for cert_xml in cert_xml_list:
             cert_chain_xml.append(cert_xml)
         xml_output.append(cert_chain_xml)
 

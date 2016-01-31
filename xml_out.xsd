@@ -37,8 +37,8 @@
     <xs:element name="target">
         <xs:complexType>
             <xs:all>
-                <xs:element minOccurs="0" ref="certinfo"/>
-                <xs:element minOccurs="0" ref="chrome_sha1"/>
+                <xs:element minOccurs="0" ref="certinfo_full"/>
+                <xs:element minOccurs="0" ref="certinfo_basic"/>
                 <xs:element minOccurs="0" ref="compression"/>
                 <xs:element minOccurs="0" ref="heartbleed"/>
                 <xs:element minOccurs="0" ref="hsts"/>
@@ -50,20 +50,60 @@
                 <xs:element minOccurs="0" ref="tlsv1"/>
                 <xs:element minOccurs="0" ref="tlsv1_1"/>
                 <xs:element minOccurs="0" ref="tlsv1_2"/>
+                <xs:element minOccurs="0" ref="fallback"/>
+                <xs:element minOccurs="0" ref="openssl_ccs"/>
             </xs:all>
             <xs:attribute name="host" use="required"/>
             <xs:attribute name="ip" use="required"/>
             <xs:attribute name="port" use="required"/>
         </xs:complexType>
     </xs:element>
-    <xs:element name="certinfo">
+    <xs:element name="fallback">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="tlsFallbackScsv"/>
+            </xs:sequence>
+            <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="tlsFallbackScsv">
+        <xs:complexType>
+            <xs:attribute name="isVulnerable" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="openssl_ccs">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="openSslCcsInjection"/>
+            </xs:sequence>
+            <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="openSslCcsInjection">
+        <xs:complexType>
+            <xs:attribute name="isVulnerable" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="certinfo_full">
         <xs:complexType>
             <xs:sequence>
                 <xs:element ref="certificateChain"/>
                 <xs:element ref="certificateValidation"/>
                 <xs:element ref="ocspStapling"/>
             </xs:sequence>
-            <xs:attribute name="argument" use="required"/>
+            <xs:attribute name="title" use="required"/>
+            <xs:attribute name="exception"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="certinfo_basic">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="certificateChain"/>
+                <xs:element ref="certificateValidation"/>
+                <xs:element ref="ocspStapling"/>
+            </xs:sequence>
             <xs:attribute name="title" use="required"/>
             <xs:attribute name="exception"/>
         </xs:complexType>
@@ -73,6 +113,7 @@
             <xs:sequence>
                 <xs:element maxOccurs="unbounded" ref="certificate"/>
             </xs:sequence>
+            <xs:attribute name="hasSha1SignedCertificate" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="certificateValidation">
@@ -129,52 +170,6 @@
     </xs:element>
     <xs:element name="responseStatus" type="xs:string"/>
     <xs:element name="producedAt" type="xs:string"/>
-    <xs:element name="chrome_sha1">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="chromeSha1Deprecation"/>
-            </xs:sequence>
-            <xs:attribute name="title" use="required"/>
-            <xs:attribute name="exception"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="chromeSha1Deprecation">
-        <xs:complexType>
-            <xs:sequence minOccurs="0">
-                <xs:element ref="sha1SignedCertificates"/>
-                <xs:element ref="chrome39"/>
-                <xs:element ref="chrome40"/>
-                <xs:element ref="chrome41"/>
-            </xs:sequence>
-            <xs:attribute name="isServerAffected" use="required"/>
-            <xs:attribute name="leafCertificateNotAfter"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="sha1SignedCertificates">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element maxOccurs="unbounded" ref="certificate"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="chrome39">
-        <xs:complexType>
-            <xs:attribute name="behavior" use="required"/>
-            <xs:attribute name="isAffected" use="required"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="chrome40">
-        <xs:complexType>
-            <xs:attribute name="behavior" use="required"/>
-            <xs:attribute name="isAffected" use="required"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="chrome41">
-        <xs:complexType>
-            <xs:attribute name="behavior" use="required"/>
-            <xs:attribute name="isAffected" use="required"/>
-        </xs:complexType>
-    </xs:element>
     <xs:element name="compression">
         <xs:complexType>
             <xs:sequence>

@@ -26,7 +26,7 @@ sslyze_plugins = PluginsFinder()
 # Create a process pool to run scanning commands concurrently
 plugins_process_pool = PluginsProcessPool(sslyze_plugins)
 
-# Queue some scan commands
+# Queue some scan commands; the commands are same as what is described in the SSLyze CLI --help text.
 print '\nQueuing some commands...'
 plugins_process_pool.queue_plugin_task(server_info, 'sslv3')
 plugins_process_pool.queue_plugin_task(server_info, 'reneg')

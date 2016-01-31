@@ -7,89 +7,108 @@ Fast and full-featured SSL scanner.
 Description
 -----------
 
-SSLyze is a Python tool that can analyze the SSL configuration of a server by
-connecting to it. It is designed to be fast and comprehensive, and should help
-organizations and testers identify misconfigurations affecting their SSL
+SSLyze is a Python tool that can analyze the SSL configuration of a server by connecting to it. It is designed to be 
+fast and comprehensive, and should help organizations and testers identify mis-configurations affecting their SSL
 servers.
 
 Key features include:
-* Multi-processed and multi-threaded scanning (it's fast)
-* SSL 2.0/3.0 and TLS 1.0/1.1/1.2 compatibility
-* Performance testing: session resumption and TLS tickets support
-* Security testing: weak cipher suites, insecure renegotiation, CRIME, Heartbleed and more
-* Server certificate validation and revocation checking through OCSP stapling
-* Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP and FTP
-* Support for client certificates when scanning servers that perform mutual authentication
-* XML output to further process the scan results
+* Multi-processed and multi-threaded scanning: it's very fast.
+* Support for all SSL protocols, from SSL 2.0 to TLS 1.2.
+* Performance testing: session resumption and TLS tickets support.
+* Security testing: weak cipher suites, insecure renegotiation, CRIME, Heartbleed and more.
+* Server certificate validation and revocation checking through OCSP stapling.
+* Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP, PostGres and FTP.
+* Support for client certificates when scanning servers that perform mutual authentication.
+* **NEW:** SSLyze can also be used as a library, in order to run scans and process the results directly from Python.
 * And much more !
 
 
-Installation
-------------
+Getting Started
+---------------
 
-### Mac OS X
+SSLyze can be installed directly via pip:
+    
+    pip install sslyze
+    TBD
+    
+It is also easy to directly clone the repository and the fetch the requirements:
 
-SSLyze can be installed using Homebrew:
+    git clone https://github.com/nabla-c0d3/sslyze.git
+    cd sslyze
+    pip install -r requirements.txt --target ./lib
+    
+Then, the command line tool can be used to scan servers:
 
-    brew install sslyze
-
-
-### Other Platforms
-
-SSLyze requires Python 2.7; the supported platforms are Windows 7 32/64 bits,
-Linux 32/64 bits and OS X 64 bits.
-
-SSLyze is statically linked with OpenSSL. For this reason, the easiest
-way to run SSLyze is to download one the pre-compiled packages available in
-the GitHub releases section for this project, at
-https://github.com/nabla-c0d3/sslyze/releases.
-
-
-Usage
------
-
-### Command line options
-
-The following command will provide the list of available command line options:
-	$ python sslyze.py -h
+    python sslyze.py --regular www.yahoo.com:443 www.google.com
+    
+SSLyze has been tested on the following platforms: Windows 7 (32 and 64 bits), Debian 7 (32 and 64 bits), 
+OS X El Capitan.
 
 
-### Sample command line:
+Usage as a library
+------------------
 
-	$ python sslyze.py --regular www.isecpartners.com:443 www.google.com
+Starting with version 0.13, SSLyze can be used as a Python module in order to run scans and process the results directly 
+in Python:
 
-See the test folder for additional examples.
+    # Retrieve the certificate CN from smtp.gmail.com:587; first ensure the server is reachable
+    hostname = 'smtp.gmail.com'
+    try:
+        server_info = ServerConnectivityInfo(hostname=hostname, port=587,
+                                             tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
+        server_info.test_connectivity_to_server()
+    except ServerConnectivityError as e:
+        raise RuntimeError('Error when connecting to {}: {}'.format(hostname, e.error_msg))
+    
+    # Get the list of available plugins
+    sslyze_plugins = PluginsFinder()
+    
+    # Create a process pool to run scanning commands concurrently
+    plugins_process_pool = PluginsProcessPool(sslyze_plugins)
+    
+    # Queue a scan command to get the server's certificate
+    plugins_process_pool.queue_plugin_task(server_info, 'certinfo_basic')
+    
+    # Process the result and print the certificate CN
+    for server_info, plugin_command, plugin_result in plugins_process_pool.get_results():
+        if plugin_result.plugin_command == 'certinfo_basic':
+            print 'Server Certificate CN: {}'.format(plugin_result.certificate_chain[0].as_dict['subject']['commonName'])
+
+The scan commands are same as the ones described in the SSLyze CLI `--help` text. 
+
+They will all be run concurrently using Python's multiprocessing module. Each command will return a `PluginResult` 
+object with attributes with the result of the scan command run on the server (such as list of supported cipher suites 
+for the `--tlsv1` command). These attributes are specific to each plugin and command but are all documented (within each 
+plugin's module).
+
+See _api\_sample.py_ for more examples of SSLyze's Python API.
 
 
-Build / nassl
--------------
+Windows executable
+------------------
 
-SSLyze is all Python code but since version 0.7, it uses a custom OpenSSL
-wrapper written in C called nassl. The pre-compiled packages for SSLyze
-contain a compiled version of this wrapper in sslyze/nassl. If you want to
-clone the SSLyze repo, you will have to get a compiled version of nassl from
-one of the SSLyze packages and copy it to sslyze-master/nassl, in order to get
-SSLyze to run.
+A pre-compiled Windows executable is available in the _Releases_ tab. The package can also be generated by running the 
+following command:
 
-The source code for nassl is hosted at https://github.com/nabla-c0d3/nassl.
+    python.exe setup_py2exe.py py2exe
+    
 
+How does it work ?
+------------------
 
-Py2exe Build
-------------
-
-SSLyze can be packaged as a Windows executable by running the following command:
-
-    $ python.exe setup_py2exe.py py2exe
+SSLyze is all Python code but it uses an 
+[OpenSSL wrapper written in C called nassl](https://github.com/nabla-c0d3/nassl), which was specifically developed for
+allowing SSLyze to access the low-level OpenSSL APIs needed to perform deep SSL testing.
 
 
 Where do the trust stores come from?
 ------------------------------------
 
-The Mozilla, Microsoft, Apple and Java trust stores are downloaded using the 
-following tool: https://github.com/nabla-c0d3/catt/blob/master/sslyze.md.
+The Mozilla, Microsoft, Apple and Java trust stores are downloaded using the following tool: 
+https://github.com/nabla-c0d3/catt/blob/master/sslyze.md .
 
 
 License
---------
+-------
 
 GPLv2 - See LICENSE.txt.

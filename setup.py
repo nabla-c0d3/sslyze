@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 from sslyze import PROJECT_URL, PROJECT_DESC, __author__, __email__, __version__, __license__
-from distutils.core import setup
+from setuptools import setup
 
 
 SSLYZE_SETUP = {
@@ -15,7 +15,7 @@ SSLYZE_SETUP = {
     'scripts': ['sslyze_cli.py'],
     'packages': ['sslyze', 'sslyze.plugins', 'sslyze.utils'],
     'package_data': {'sslyze.plugins': ['data/trust_stores/*.pem']},
-    'install_requires': ['nassl'],
+    'install_requires': ['nassl==0.13.1'],
     'classifiers': [
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

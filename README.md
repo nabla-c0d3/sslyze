@@ -51,9 +51,10 @@ Starting with version 0.13.0, SSLyze can be used as a Python module in order to 
 directly in Python:
 
 ```python
-# Retrieve the certificate CN from smtp.gmail.com:587; first ensure the server is reachable
+# Script to retrieve the certificate CN from smtp.gmail.com:587
 hostname = 'smtp.gmail.com'
 try:
+    # First we must ensure that the server is reachable
     server_info = ServerConnectivityInfo(hostname=hostname, port=587,
                                          tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
     server_info.test_connectivity_to_server()

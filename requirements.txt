@@ -1,1 +1,1 @@
-nassl
+nassl==0.13.1

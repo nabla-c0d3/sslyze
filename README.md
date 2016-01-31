@@ -29,8 +29,7 @@ Getting Started
 SSLyze can be installed directly via pip:
     
     pip install sslyze
-    TBD
-    
+
 It is also easy to directly clone the repository and the fetch the requirements:
 
     git clone https://github.com/nabla-c0d3/sslyze.git
@@ -41,38 +40,40 @@ Then, the command line tool can be used to scan servers:
 
     python sslyze.py --regular www.yahoo.com:443 www.google.com
     
-SSLyze has been tested on the following platforms: Windows 7 (32 and 64 bits), Debian 7 (32 and 64 bits), 
-OS X El Capitan.
+SSLyze has been tested on the following platforms: Windows 7 (32 and 64 bits), Debian 7 (32 and 64 bits), OS X El 
+Capitan.
 
 
 Usage as a library
 ------------------
 
-Starting with version 0.13, SSLyze can be used as a Python module in order to run scans and process the results directly 
-in Python:
+Starting with version 0.13.0, SSLyze can be used as a Python module in order to run scans and process the results 
+directly in Python:
 
-    # Retrieve the certificate CN from smtp.gmail.com:587; first ensure the server is reachable
-    hostname = 'smtp.gmail.com'
-    try:
-        server_info = ServerConnectivityInfo(hostname=hostname, port=587,
-                                             tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
-        server_info.test_connectivity_to_server()
-    except ServerConnectivityError as e:
-        raise RuntimeError('Error when connecting to {}: {}'.format(hostname, e.error_msg))
-    
-    # Get the list of available plugins
-    sslyze_plugins = PluginsFinder()
-    
-    # Create a process pool to run scanning commands concurrently
-    plugins_process_pool = PluginsProcessPool(sslyze_plugins)
-    
-    # Queue a scan command to get the server's certificate
-    plugins_process_pool.queue_plugin_task(server_info, 'certinfo_basic')
-    
-    # Process the result and print the certificate CN
-    for server_info, plugin_command, plugin_result in plugins_process_pool.get_results():
-        if plugin_result.plugin_command == 'certinfo_basic':
-            print 'Server Certificate CN: {}'.format(plugin_result.certificate_chain[0].as_dict['subject']['commonName'])
+```python
+# Retrieve the certificate CN from smtp.gmail.com:587; first ensure the server is reachable
+hostname = 'smtp.gmail.com'
+try:
+    server_info = ServerConnectivityInfo(hostname=hostname, port=587,
+                                         tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
+    server_info.test_connectivity_to_server()
+except ServerConnectivityError as e:
+    raise RuntimeError('Error when connecting to {}: {}'.format(hostname, e.error_msg))
+
+# Get the list of available plugins
+sslyze_plugins = PluginsFinder()
+
+# Create a process pool to run scanning commands concurrently
+plugins_process_pool = PluginsProcessPool(sslyze_plugins)
+
+# Queue a scan command to get the server's certificate
+plugins_process_pool.queue_plugin_task(server_info, 'certinfo_basic')
+
+# Process the result and print the certificate CN
+for server_info, plugin_command, plugin_result in plugins_process_pool.get_results():
+    if plugin_result.plugin_command == 'certinfo_basic':
+        print 'Server Certificate CN: {}'.format(plugin_result.certificate_chain[0].as_dict['subject']['commonName'])
+```
 
 The scan commands are same as the ones described in the SSLyze CLI `--help` text. 
 

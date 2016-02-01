@@ -7,7 +7,6 @@ SSLYZE_SETUP = {
     'name': 'SSLyze',
     'version': __version__,
     'description': PROJECT_DESC,
-    'long_description': open('README.md').read(),
     'author': __author__,
     'author_email': __email__,
     'license': __license__,
@@ -29,4 +28,5 @@ SSLYZE_SETUP = {
     ],
 }
 
-setup(**SSLYZE_SETUP)
+if __name__ == "__main__":
+    setup(**SSLYZE_SETUP)

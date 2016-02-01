@@ -198,7 +198,8 @@ class ErroredCipherSuite(object):
     def __init__(self, name, exception):
         self.name = name
         self.is_anonymous = True if 'anon' in name else False
-        self.exception = exception
+        # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
+        self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
 
 class OpenSSLCipherSuitesResult(PluginResult):
@@ -253,7 +254,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
             for cipher in self.errored_cipher_list:
                 cipher_xml = Element('cipherSuite',
                                      attrib={'name': cipher.name,
-                                             'connectionStatus': str(cipher.exception)})
+                                             'connectionStatus': cipher.error_message})
                 error_xml.append(cipher_xml)
             result_xml.append(error_xml)
 
@@ -312,7 +313,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
             result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Undefined - An unexpected error happened:'))
             for cipher in self.errored_cipher_list:
                 cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT(cipher_name=cipher.name,
-                                                                   error_message=str(cipher.exception))
+                                                                   error_message=cipher.error_message)
                 result_txt.append(cipher_line_txt)
 
         # Output all rejected ciphers if needed

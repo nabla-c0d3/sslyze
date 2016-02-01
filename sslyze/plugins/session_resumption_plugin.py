@@ -249,11 +249,11 @@ class ResumptionRateResult(PluginResult):
 
         resumption_rate_xml = Element(
                 'sessionResumptionWithSessionIDs',
-                attrib = {'totalAttempts':str(self.attempted_resumptions_nb),
-                          'errors' : str(len(self.errored_resumptions_list)),
-                          'isSupported' : str(self.attempted_resumptions_nb == self.successful_resumptions_nb),
-                          'successfulAttempts':str(self.successful_resumptions_nb),
-                          'failedAttempts':str(self.failed_resumptions_nb)}
+                attrib={'totalAttempts': str(self.attempted_resumptions_nb),
+                        'errors': str(len(self.errored_resumptions_list)),
+                        'isSupported': str(self.attempted_resumptions_nb == self.successful_resumptions_nb),
+                        'successfulAttempts': str(self.successful_resumptions_nb),
+                        'failedAttempts': str(self.failed_resumptions_nb)}
         )
         # Add error messages if there was any
         for error_msg in self.errored_resumptions_list:

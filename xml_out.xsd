@@ -29,8 +29,6 @@
                 <xs:element maxOccurs="unbounded" ref="target"/>
             </xs:sequence>
             <xs:attribute name="defaultTimeout" use="required"/>
-            <xs:attribute name="httpsTunnel" use="required"/>
-            <xs:attribute name="startTLS" use="required"/>
             <xs:attribute name="totalScanTime" use="required"/>
         </xs:complexType>
     </xs:element>
@@ -55,7 +53,9 @@
             </xs:all>
             <xs:attribute name="host" use="required"/>
             <xs:attribute name="ip" use="required"/>
-            <xs:attribute name="port" use="required"/>
+            <xs:attribute name="tlsWrappedProtocol" use="required"/>
+            <xs:attribute name="httpsTunnelHostname" use="optional"/>
+            <xs:attribute name="httpsTunnelPort" use="optional"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="fallback">

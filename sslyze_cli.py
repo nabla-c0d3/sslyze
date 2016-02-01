@@ -377,8 +377,33 @@ def _format_title(title):
     return ' {title}\n {underline}\n'.format(title=title.upper(), underline='-' * len(title))
 
 
+TLS_PROTOCOL_XML_TEXT = {
+    TlsWrappedProtocolEnum.PLAIN_TLS: 'plainTls',
+    TlsWrappedProtocolEnum.HTTPS: 'https',
+    TlsWrappedProtocolEnum.STARTTLS_SMTP: 'startTlsSmtp',
+    TlsWrappedProtocolEnum.STARTTLS_XMPP: 'startTlsXmpp',
+    TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER: 'startTlsXmppServer',
+    TlsWrappedProtocolEnum.STARTTLS_POP3: 'startTlsPop3',
+    TlsWrappedProtocolEnum.STARTTLS_IMAP: 'startTlsImap',
+    TlsWrappedProtocolEnum.STARTTLS_FTP: 'startTlsFtp',
+    TlsWrappedProtocolEnum.STARTTLS_LDAP: 'startTlsLdap',
+    TlsWrappedProtocolEnum.STARTTLS_RDP: 'startTlsRdp',
+    TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 'startTlsPostGres',
+}
+
+
 def _format_xml_target_result(server_info, result_list):
-    target_xml = Element('target', host=server_info.hostname, ip=server_info.ip_address, port=str(server_info.port))
+    target_attrib = {'host': server_info.hostname,
+                     'ip': server_info.ip_address,
+                     'port': str(server_info.port),
+                     'tlsWrappedProtocol': TLS_PROTOCOL_XML_TEXT[server_info.tls_wrapped_protocol]
+                     }
+    if server_info.http_tunneling_settings:
+        # Add proxy settings
+        target_attrib['httpsTunnelHostname'] = server_info.http_tunneling_settings.hostname
+        target_attrib['httpsTunnelPort'] = server_info.http_tunneling_settings.port
+
+    target_xml = Element('target', attrib=target_attrib)
     result_list.sort(key=lambda result: result[0])  # Sort results
 
     for (command, plugin_result) in result_list:
@@ -547,12 +572,9 @@ def main():
 
     # Output XML doc to a file if needed
     if args_command_list.xml_file:
-        # TODO: Add proxy and starttls info to each server
-        result_xml_attr = {#'httpsTunnel':str(shared_settings['https_tunnel_host']),
-                           'totalScanTime': str(exec_time),
+        result_xml_attr = {'totalScanTime': str(exec_time),
                            'networkTimeout': str(args_command_list.timeout),
                            'networkMaxRetries': str(args_command_list.nb_retries),
-                           #'startTLS' : str(shared_settings['starttls'])
                            }
 
         result_xml = Element('results', attrib = result_xml_attr)

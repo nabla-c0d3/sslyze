@@ -72,23 +72,27 @@ class PluginsFinder:
     @staticmethod
     def get_plugin_modules_static():
 
-        plugin_modules = []
-        AVAILABLE_PLUGIN_NAMES = ['sslyze.plugins.certificate_info_plugin',
-                                  'sslyze.plugins.compression_plugin',
-                                  'sslyze.plugins.fallback_scsv_plugin',
-                                  'sslyze.plugins.heartbleed_plugin',
-                                  'sslyze.plugins.hsts_plugin',
-                                  'sslyze.plugins.openssl_ccs_injection_plugin',
-                                  'sslyze.plugins.openssl_cipher_suites_plugin',
-                                  'sslyze.plugins.session_renegotiation_plugin',
-                                  'sslyze.plugins.session_resumption_plugin']
-
-        # This it to ensure py2exe can find the plugins
+        import sslyze.plugins.certificate_info_plugin
+        import sslyze.plugins.compression_plugin
+        import sslyze.plugins.fallback_scsv_plugin
+        import sslyze.plugins.heartbleed_plugin
+        import sslyze.plugins.hsts_plugin
+        import sslyze.plugins.openssl_ccs_injection_plugin
+        import sslyze.plugins.openssl_cipher_suites_plugin
+        import sslyze.plugins.session_renegotiation_plugin
         import sslyze.plugins.session_resumption_plugin
 
-        for plugin_name in AVAILABLE_PLUGIN_NAMES:
-            imported_module = importlib.import_module(plugin_name)
-            plugin_modules.append(imported_module)
+        plugin_modules = [
+            sslyze.plugins.certificate_info_plugin,
+            sslyze.plugins.compression_plugin,
+            sslyze.plugins.fallback_scsv_plugin,
+            sslyze.plugins.heartbleed_plugin,
+            sslyze.plugins.hsts_plugin,
+            sslyze.plugins.openssl_ccs_injection_plugin,
+            sslyze.plugins.openssl_cipher_suites_plugin,
+            sslyze.plugins.session_renegotiation_plugin,
+            sslyze.plugins.session_resumption_plugin
+        ]
 
         return plugin_modules
 

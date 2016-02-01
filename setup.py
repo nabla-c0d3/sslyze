@@ -1,6 +1,5 @@
 #!/usr/bin/env python2.7
 from sslyze import PROJECT_URL, PROJECT_DESC, __author__, __email__, __version__, __license__
-from setuptools import setup
 
 
 SSLYZE_SETUP = {
@@ -29,4 +28,7 @@ SSLYZE_SETUP = {
 }
 
 if __name__ == "__main__":
+    # Importing setuptools here because setup_py2exe also imports SSLYZE_SETUP but needs to use distutils
+    from setuptools import setup
+
     setup(**SSLYZE_SETUP)

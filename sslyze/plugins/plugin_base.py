@@ -108,7 +108,7 @@ class PluginRaisedExceptionResult(PluginResult):
                                         exc_string=str(self.exception))]
 
     def as_xml(self):
-        return Element(self.plugin_command, exception=self.get_txt_result()[1])
+        return Element(self.plugin_command, exception=self.as_text()[1])
 
 
 class PluginBase(object):
@@ -116,6 +116,8 @@ class PluginBase(object):
     """
     __metaclass__ = abc.ABCMeta
 
+    # To be defined in subclasses
+    interface = None
 
     @classmethod
     def get_interface(plugin_class):
@@ -125,5 +127,11 @@ class PluginBase(object):
 
     @abc.abstractmethod
     def process_task(self, server_connectivity_info, command, options_dict=None):
-        """Completes the task specified by command on the server."""
+        """Completes the task specified by command on the server.
+
+        Args:
+            server_connectivity_info (ServerConnectivityInfo):
+            command (str):
+            options_dict (dict):
+        """
         return

@@ -304,13 +304,11 @@ class XMPPConnection(SSLConnection):
         "http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
         "rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>" )
     XMPP_STARTTLS = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
-
-
-    def __init__(self, (host, ip, port, ssl_version), ssl_verify_locations, timeout, max_attempts,
-                 client_certchain_file=None, client_key_file=None, client_key_type=None, client_key_password=''):
-        super(XMPPConnection, self).__init__((host, ip, port, ssl_version), ssl_verify_locations, timeout, max_attempts,
+    def __init__(self, host, ip, port, ssl_version, ssl_verify_locations=None, client_certchain_file=None,
+                 client_key_file=None, client_key_type=None, client_key_password='', should_ignore_client_auth=False):
+        super(XMPPConnection, self).__init__(host, ip, port, ssl_version, ssl_verify_locations,
                                              client_certchain_file, client_key_file, client_key_type,
-                                             client_key_password)
+                                             client_key_password, should_ignore_client_auth)
         self._xmpp_to = host
 
 

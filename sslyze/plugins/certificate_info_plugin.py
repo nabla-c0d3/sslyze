@@ -129,7 +129,7 @@ class CertificateInfoPlugin(plugin_base.PluginBase):
 
         final_trust_store_list = list(DEFAULT_TRUST_STORE_LIST)
         if options_dict and 'ca_file' in options_dict.keys():
-            final_trust_store_list[options_dict['ca_file']] = ('Custom --ca_file', 'N/A')
+            final_trust_store_list.append(TrustStore(options_dict['ca_file'], 'Custom --ca_file', 'N/A'))
 
         thread_pool = ThreadPool()
         for trust_store in final_trust_store_list:

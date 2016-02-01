@@ -82,7 +82,8 @@ class PathValidationError(object):
     """
     def __init__(self, trust_store, exception):
         self.trust_store = trust_store
-        self.exception = exception
+        # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
+        self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
 
 class Certificate(object):
@@ -308,9 +309,7 @@ class CertInfoFullResult(PluginResult):
 
         # Path validation that ran into errors
         for path_error in self.path_validation_error_list:
-            error_txt = 'ERROR: {cls} - {text}'.format(cls=str(path_error.exception.__class__.__name__),
-                                                       text=str(path_error.exception))
-
+            error_txt = 'ERROR: {}'.format(path_error.error_message)
             text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name=path_result.trust_store.name,
                                                                    store_version=path_result.trust_store.version),
                                                  error_txt))
@@ -433,8 +432,7 @@ class CertInfoFullResult(PluginResult):
 
         # Path validation that ran into errors
         for path_error in self.path_validation_error_list:
-            error_txt = 'ERROR: {cls} - {text}'.format(cls=str(path_error.exception.__class__.__name__),
-                                                       text=str(path_error.exception))
+            error_txt = 'ERROR: {}'.format(path_error.error_message)
             path_attrib_xml = {
                 'usingTrustStore': path_result.trust_store.name,
                 'trustStoreVersion': path_result.trust_store.version,

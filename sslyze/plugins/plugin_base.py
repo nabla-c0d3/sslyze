@@ -96,16 +96,13 @@ class PluginRaisedExceptionResult(PluginResult):
 
     def __init__(self, server_info, plugin_command, plugin_options, exception):
         super(PluginRaisedExceptionResult, self).__init__(server_info, plugin_command, plugin_options)
-        self.exception = exception
+        # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
+        self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
     TITLE_TXT_FORMAT = 'Unhandled exception when processing --{command}:'.format
-    CONTENT_TXT_FORMAT = '{exc_module}.{exc_class} - {exc_string}'.format
 
     def as_text(self):
-        return [self.TITLE_TXT_FORMAT(command=self.plugin_command),
-                self.CONTENT_TXT_FORMAT(exc_module=str(self.exception.__class__.__module__),
-                                        exc_class=str(self.exception.__class__.__name__),
-                                        exc_string=str(self.exception))]
+        return [self.TITLE_TXT_FORMAT(command=self.plugin_command), self.error_message]
 
     def as_xml(self):
         return Element(self.plugin_command, exception=self.as_text()[1])

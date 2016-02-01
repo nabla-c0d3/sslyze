@@ -1,0 +1,3 @@
+# python sslyze_cli.py --regular --xml_out client_auth_test.xml --targets_in test/client_auth_test.txt
+auth.startssl.com
+xnet-eu.intellij.net

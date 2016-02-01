@@ -212,7 +212,7 @@ class ServerConnectivityInfo(object):
 
                     # Try a new connection to see if client authentication is optional
                     ssl_connection_auth = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
-                                                                            should_ignore_client_auth=True)
+                                                                                should_ignore_client_auth=True)
                     ssl_connection_auth.set_cipher_list(cipher_list)
                     try:
                         ssl_connection_auth.connect(network_max_retries=0)

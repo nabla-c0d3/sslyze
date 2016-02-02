@@ -56,11 +56,11 @@ class TrustStore(object):
         self.version = version
 
 DEFAULT_TRUST_STORE_LIST = [
-    TrustStore(MOZILLA_STORE_PATH, 'Mozilla NSS', '09/2015'),
-    TrustStore(join(TRUST_STORES_PATH, 'microsoft.pem'), 'Microsoft', '09/2015'),
-    TrustStore(join(TRUST_STORES_PATH, 'apple.pem'), 'Apple', 'OS X 10.10.5'),
+    TrustStore(MOZILLA_STORE_PATH, 'Mozilla NSS', '02/2016'),
+    TrustStore(join(TRUST_STORES_PATH, 'microsoft.pem'), 'Microsoft', '02/2016'),
+    TrustStore(join(TRUST_STORES_PATH, 'apple.pem'), 'Apple', 'OS X 10.11.3'),
     TrustStore(join(TRUST_STORES_PATH, 'java.pem'), 'Java 6', 'Update 65'),
-    TrustStore(join(TRUST_STORES_PATH, 'google.pem'), 'Google', '09/2015'),
+    TrustStore(join(TRUST_STORES_PATH, 'google.pem'), 'Google', '02/2016'),
 ]
 
 

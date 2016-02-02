@@ -51,7 +51,7 @@ Starting with version 0.13.0, SSLyze can be used as a Python module in order to 
 directly in Python:
 
 ```python
-# Script to retrieve the certificate CN from smtp.gmail.com:587
+# Script to get the list of SSLv3 cipher suites supported by smtp.gmail.com
 hostname = 'smtp.gmail.com'
 try:
     # First we must ensure that the server is reachable
@@ -68,13 +68,15 @@ sslyze_plugins = PluginsFinder()
 plugins_process_pool = PluginsProcessPool(sslyze_plugins)
 
 # Queue a scan command to get the server's certificate
-plugins_process_pool.queue_plugin_task(server_info, 'certinfo_basic')
+plugins_process_pool.queue_plugin_task(server_info, 'sslv3')
 
 # Process the result and print the certificate CN
 for server_info, plugin_command, plugin_result in plugins_process_pool.get_results():
-    if plugin_result.plugin_command == 'certinfo_basic':
-        print 'Server Certificate CN:'
-        print plugin_result.certificate_chain[0].as_dict['subject']['commonName']
+    if plugin_result.plugin_command == 'sslv3':
+        # Do something with the result
+        print 'SSLV3 cipher suites'
+        for cipher in plugin_result.accepted_cipher_list:
+            print '    {}'.format(cipher.name)
 ```
 
 The scan commands are same as the ones described in the `sslyze_cly.py --help` text. 

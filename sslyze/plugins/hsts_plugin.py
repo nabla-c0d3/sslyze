@@ -130,3 +130,4 @@ class HstsResult(PluginResult):
 
         xml_hsts = Element('httpStrictTransportSecurity', attrib=xml_hsts_attr)
         xml_result.append(xml_hsts)
+        return xml_result

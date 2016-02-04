@@ -246,8 +246,9 @@ class HTTPSConnection(SSLConnection):
             else:
                 redirect = ''
                 if 300 <= http_response.status < 400:
-                    # Add redirection URL to the result
-                    redirect = ' - ' + http_response.getheader('Location', None)
+                    if http_response.getheader('Location', None):
+                        # Add redirection URL to the result
+                        redirect = ' - ' + http_response.getheader('Location', None)
 
                 result = self.GET_RESULT_FORMAT.format(http_response.status, http_response.reason, redirect)
         except socket.timeout:

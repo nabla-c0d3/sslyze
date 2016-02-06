@@ -198,7 +198,7 @@ class SSLConnection(DebugSslClient):
             # Attempt to retry connection if a network error occurred
             except:
                 retry_attempts += 1
-                if retry_attempts == network_max_retries:
+                if retry_attempts >= network_max_retries:
                     # Exhausted the number of retry attempts, give up
                     raise
                 elif retry_attempts == 1:

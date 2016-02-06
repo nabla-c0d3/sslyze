@@ -208,7 +208,7 @@ class ServerConnectivityInfo(object):
                     # Connection successful but the servers wants a client certificate which wasn't supplied to sslyze
                     # Store the SSL version and cipher list that is supported
                     ssl_version_supported = ssl_version
-                    ssl_cipher_supported = ssl_connection.get_current_cipher_name()
+                    ssl_cipher_supported = cipher_list
 
                     # Try a new connection to see if client authentication is optional
                     ssl_connection_auth = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,

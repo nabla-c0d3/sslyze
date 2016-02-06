@@ -153,11 +153,17 @@ class CertificateInfoPlugin(plugin_base.PluginBase):
             path_validation_result_list.append(PathValidationResult(trust_store, validation_result))
 
         # Store thread pool errors
+        last_exception = None
         for (job, exception) in thread_pool.get_error():
             (_, (_, trust_store)) = job
             path_validation_error_list.append(PathValidationError(trust_store, exception))
+            last_exception = exception
 
         thread_pool.join()
+
+        if len(path_validation_error_list) == len(final_trust_store_list):
+            # All connections failed unexpectedly; raise an exception instead of returning a result
+            raise RuntimeError('Could not connect to the server; last error: {}'.format(last_exception))
 
         # All done
         return result_class(server_info, command, options_dict, certificate_chain, path_validation_result_list,

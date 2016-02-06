@@ -148,10 +148,7 @@ class SSLConnection(DebugSslClient):
             self._sock = socket.create_connection((self._ip, self._port), self.NETWORK_TIMEOUT)
 
 
-    def connect(self, network_max_retries=None):
-        if network_max_retries is None:
-            network_max_retries=self.NETWORK_MAX_RETRIES
-
+    def connect(self, network_max_retries=NETWORK_MAX_RETRIES):
         retry_attempts = 0
         delay = 0
         while True:

@@ -160,7 +160,7 @@ class CommandLineParser(object):
                                                                     key_type,
                                                                     args_command_list.keypass)
             except ValueError as e:
-                    raise CommandLineParsingError('Invalid client authentication settings: {}.'.format(e[0]))
+                raise CommandLineParsingError('Invalid client authentication settings: {}.'.format(e[0]))
 
 
         # HTTP CONNECT proxy

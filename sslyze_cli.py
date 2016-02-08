@@ -130,13 +130,19 @@ class CommandLineParser(object):
 
 
         # Sanity checks on the command line options
-        # Prevent --quiet without --xml_out
-        if not args_command_list.xml_file and args_command_list.quiet:
-                raise CommandLineParsingError('Cannot use --quiet without --xml_out.')
-
         # Prevent --quiet and --xml_out -
         if args_command_list.xml_file and args_command_list.xml_file == '-' and args_command_list.quiet:
                 raise CommandLineParsingError('Cannot use --quiet with --xml_out -.')
+
+        # Prevent --quiet and --json_out -
+        if args_command_list.json_file and args_command_list.json_file == '-' and args_command_list.quiet:
+                raise CommandLineParsingError('Cannot use --quiet with --json_out -.')
+
+        # Prevent --xml_out - and --json_out -
+        if args_command_list.json_file and args_command_list.json_file == '-'\
+                and args_command_list.xml_file and args_command_list.xml_file == '-'.quiet:
+                raise CommandLineParsingError('Cannot use --xml_out - with --json_out -.')
+
 
         # Sanity checks on the client cert options
         client_auth_creds = None
@@ -266,8 +272,16 @@ class CommandLineParser(object):
             help='Writes the scan results as an XML document to the file XML_FILE. If XML_FILE is set to "-", the XML '
                  'output will instead be printed to stdout.',
             dest='xml_file',
-            default=None)
-
+            default=None
+        )
+        # JSON output
+        self._parser.add_option(
+            '--json_out',
+            help='Writes the scan results as a JSON document to the file JSON_FILE. If JSON_FILE is set to "-", the '
+                 'JSON output will instead be printed to stdout.',
+            dest='json_file',
+            default=None
+        )
         # Read targets from input file
         self._parser.add_option(
             '--targets_in',
@@ -405,12 +419,28 @@ def _format_xml_target_result(server_info, result_list):
         target_attrib['httpsTunnelPort'] = server_info.http_tunneling_settings.port
 
     target_xml = Element('target', attrib=target_attrib)
-    result_list.sort(key=lambda result: result[0])  # Sort results
+    result_list.sort(key=lambda result: result)  # Sort results
 
     for plugin_result in result_list:
         target_xml.append(plugin_result.as_xml())
 
     return target_xml
+
+
+def _format_json_result(server_info, result_list):
+    dict_final = {'server_info': server_info.__dict__}
+    dict_command_result = {}
+    for plugin_result in result_list:
+        dict_result = plugin_result.__dict__
+        # Remove the server_info node
+        dict_result.pop("server_info", None)
+        # Remove the plugin_command node
+        plugin_command = dict_result.pop("plugin_command", None)
+        dict_command_result[plugin_command] = dict_result
+
+    dict_final['commands_results'] = dict_command_result
+    return dict_final
+
 
 
 def _format_txt_target_result(server_info, result_list):
@@ -460,7 +490,8 @@ def main():
         print e.get_error_msg()
         return
 
-    should_print_text_results = not args_command_list.quiet and args_command_list.xml_file != '-'
+    should_print_text_results = not args_command_list.quiet and args_command_list.xml_file != '-'  \
+        and args_command_list.json_file != '-'
     if should_print_text_results:
         print '\n\n\n' + _format_title('Available plugins')
         for plugin in available_plugins:
@@ -553,36 +584,57 @@ def main():
     for plugin_result in plugins_process_pool.get_results():
         server_info = plugin_result.server_info
         result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
-                                                  port=server_info.port)].append(plugin_result)
+                                      port=server_info.port)].append(plugin_result)
 
-        if len(result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
-                                                         port=server_info.port)]) == task_num:
+        result_list = result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname, port=server_info.port)]
+
+        if len(result_list) == task_num:
             # Done with this server; print the results and update the xml doc
             if args_command_list.xml_file:
-                xml_output_list.append(
-                    _format_xml_target_result(server_info,
-                                              result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
-                                                                            port=server_info.port)])
-                )
+                xml_output_list.append(_format_xml_target_result(server_info, result_list))
 
             if should_print_text_results:
-                print _format_txt_target_result(server_info,
-                                                result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
-                                                                              port=server_info.port)]
-                                                )
-
+                print _format_txt_target_result(server_info, result_list)
 
 
     # --TERMINATE--
     exec_time = time()-start_time
 
+    # Output JSON to a file if needed
+    if args_command_list.json_file:
+        json_output = {'total_scan_time': str(exec_time),
+                       'network_timeout': str(args_command_list.timeout),
+                       'network_max_retries': str(args_command_list.nb_retries),
+                       'invalid_targets': {}}
+
+        # Add the list of invalid targets
+        for server_string, exception in invalid_servers_list:
+            if isinstance(exception, ServerConnectivityError):
+                json_output['invalidTargets'][server_string] = exception.error_msg
+            else:
+                # Unexpected bug in SSLyze
+                raise exception
+
+        # Add the output of the plugins for each server
+        for host_str, plugin_result_list in result_dict.iteritems():
+            server_info = plugin_result_list[0].server_info
+            json_output[host_str] =  _format_json_result(server_info, plugin_result_list)
+
+        final_json_output = json.dumps(json_output, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        if args_command_list.json_file == '-':
+            # Print XML output to the console if needed
+            print final_json_output
+        else:
+            # Otherwise save the XML output to the console
+            with open(args_command_list.json_file, 'w') as json_file:
+                json_file.write(final_json_output)
+
+
     # Output XML doc to a file if needed
     if args_command_list.xml_file:
         result_xml_attr = {'totalScanTime': str(exec_time),
                            'networkTimeout': str(args_command_list.timeout),
-                           'networkMaxRetries': str(args_command_list.nb_retries),
-                           }
-
+                           'networkMaxRetries': str(args_command_list.nb_retries)}
         result_xml = Element('results', attrib = result_xml_attr)
 
         # Sort results in alphabetical order to make the XML files (somewhat) diff-able

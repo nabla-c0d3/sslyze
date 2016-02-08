@@ -6,6 +6,7 @@ from xml.etree.ElementTree import Element
 from nassl import SSLV3, SSL_MODE_SEND_FALLBACK_SCSV, _nassl
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult
+from sslyze.utils.ssl_connection import SSLHandshakeRejected
 
 
 class FallbackScsvPlugin(plugin_base.PluginBase):
@@ -32,10 +33,17 @@ class FallbackScsvPlugin(plugin_base.PluginBase):
             ssl_connection.connect()
 
         except _nassl.OpenSSLError as e:
+            # This is the right, specific alert the server should return
             if 'tlsv1 alert inappropriate fallback' in str(e.args):
                 supports_fallback_scsv = True
             else:
                 raise
+
+        except SSLHandshakeRejected:
+            # If the handshake is rejected, we assume downgrade attacks are prevented (this is how F5 balancers do it)
+            # although it could also be because the server does not support this version of TLS
+            # https://github.com/nabla-c0d3/sslyze/issues/119
+            supports_fallback_scsv = True
 
         finally:
             ssl_connection.close()

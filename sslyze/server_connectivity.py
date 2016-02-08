@@ -262,6 +262,7 @@ class ServerConnectivityInfo(object):
         ssl_version = override_ssl_version if override_ssl_version is not None else self.highest_ssl_version_supported
         ssl_connection = self.TLS_CONNECTION_CLASSES[self.tls_wrapped_protocol](
             self.hostname, self.ip_address, self.port, ssl_version, ssl_verify_locations=ssl_verify_locations,
+            client_auth_creds=self.client_auth_credentials,
             should_ignore_client_auth=should_ignore_client_auth
         )
 

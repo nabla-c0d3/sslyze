@@ -237,6 +237,7 @@ class CertInfoFullResult(PluginResult):
         self.path_validation_result_list = path_validation_result_list
         self.path_validation_error_list = path_validation_error_list
         self.hostname_validation_result = certificate_chain[0].matches_hostname(server_info.tls_server_name_indication)
+        self.is_certificate_chain_order_valid = self._is_certificate_chain_order_valid(self.certificate_chain)
 
 
     def _get_certificate_text(self):
@@ -271,26 +272,21 @@ class CertInfoFullResult(PluginResult):
         return is_root_certificate
 
 
-
-    def _verify_chain_order(self):
-        last = 0
-        ordermsg = ""
-        for cert in self.certificate_chain:
-            if last != 0:
-                current = cert.as_dict['subject']['commonName']
-                if current != last:
-                    if ordermsg =="":
-                        ordermsg += "FAILED: certificate chain out of order! \n"
-                    ordermsg += "\t\t\tIssuer \""+last+"\" must precede \""+current+"\"\n"
+    @staticmethod
+    def _is_certificate_chain_order_valid(certificate_chain):
+        for index, cert in enumerate(certificate_chain):
+            current_subject = cert.as_dict['subject']['commonName']
+            if index > 0:
+                # Compare the current subject with the previous issuer in the chain
+                if current_subject != previous_issuer:
+                    return False
             try:
-                last = cert.as_dict['issuer']['commonName']
+                previous_issuer = cert.as_dict['issuer']['commonName']
             except KeyError:
-                # Missing issuer. This is okay if this is the last cert.
-                last = "missing-issuer!"
-            
-        if ordermsg == "":
-            ordermsg = "OK - Order is correct"
-        return ordermsg
+                # Missing issuer; this is okay if this is the last cert
+                previous_issuer = "missing-issuer!"
+        return True
+
 
     HOSTNAME_VALIDATION_TEXT = {
         X509_NAME_MATCHES_SAN: 'OK - Subject Alternative Name matches {hostname}'.format,
@@ -357,9 +353,9 @@ class CertInfoFullResult(PluginResult):
         text_output.append(self.FIELD_FORMAT('Weak Signature:', sha1_text))
         text_output.append(self.FIELD_FORMAT('Certificate Chain Received:', str(cns_in_certificate_chain)))
 
-        ordermsg = self._verify_chain_order()
-            
-        text_output.append(self.FIELD_FORMAT('Certificate Chain Order:', str(ordermsg)))
+        chain_order_txt = 'OK - Order is valid' if self.is_certificate_chain_order_valid \
+            else 'FAILED - Certificate chain out of order!'
+        text_output.append(self.FIELD_FORMAT('Certificate Chain Order:', chain_order_txt))
 
         # OCSP stapling
         text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - OCSP Stapling')])
@@ -431,7 +427,8 @@ class CertInfoFullResult(PluginResult):
             cert_xml_list.append(cert_xml)
 
         cert_chain_xml = Element('certificateChain',
-                                 attrib={'hasSha1SignedCertificate': str(has_sha1_signed_certificate)})
+                                 attrib={'hasSha1SignedCertificate': str(has_sha1_signed_certificate),
+                                         'isChainOrderValid': str(self.is_certificate_chain_order_valid)})
         for cert_xml in cert_xml_list:
             cert_chain_xml.append(cert_xml)
         xml_output.append(cert_chain_xml)
@@ -460,14 +457,6 @@ class CertInfoFullResult(PluginResult):
 
             trust_validation_xml.append(Element('pathValidation', attrib=path_attrib_xml))
 
-        if self._verify_chain_order().startswith("OK"):
-            chain_order_validation_xml = Element('chainOrderValidation', validationResult="ok")
-            
-        if self._verify_chain_order().startswith("FAILED"):
-            chain_order_validation_xml = Element('chainOrderValidation', validationResult="failure")
-            
-        trust_validation_xml.append(chain_order_validation_xml)
-            
 
         # Path validation that ran into errors
         for path_error in self.path_validation_error_list:

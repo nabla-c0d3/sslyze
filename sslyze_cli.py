@@ -249,21 +249,25 @@ class CommandLineParser(object):
             help='Client certificate chain filename. The certificates must be in PEM format and must be sorted '
                  'starting with the subject\'s client certificate, followed by intermediate CA certificates if '
                  'applicable.',
-            dest='cert')
+            dest='cert'
+        )
         clientcert_group.add_option(
             '--key',
             help= 'Client private key filename.',
-            dest='key')
+            dest='key'
+        )
         clientcert_group.add_option(
             '--keyform',
             help= 'Client private key format. DER or PEM (default).',
             dest='keyform',
-            default='PEM')
+            default='PEM'
+        )
         clientcert_group.add_option(
             '--pass',
             help= 'Client private key passphrase.',
             dest='keypass',
-            default='')
+            default=''
+        )
         self._parser.add_option_group(clientcert_group)
 
         # XML output
@@ -285,84 +289,69 @@ class CommandLineParser(object):
         # Read targets from input file
         self._parser.add_option(
             '--targets_in',
-            help='Reads the list of targets to scan from the file TARGETS_IN. It should contain one host:port per line.',
+            help='Reads the list of targets to scan from the file TARGETS_IN. It should contain one host:port per '
+                 'line.',
             dest='targets_in',
-            default=None)
-
+            default=None
+        )
         # Timeout
         self._parser.add_option(
             '--timeout',
-            help= (
-                'Sets the timeout value in seconds used for every socket '
-                'connection made to the target server(s). Default is ' +
-                str(self.DEFAULT_TIMEOUT) + 's.'),
+            help='Sets the timeout value in seconds used for every socket connection made to the target server(s). '
+                 'Default is {}s.'.format(str(self.DEFAULT_TIMEOUT)),
             type='int',
             dest='timeout',
-            default=self.DEFAULT_TIMEOUT)
-
-
+            default=self.DEFAULT_TIMEOUT
+        )
         # Control connection retry attempts
         self._parser.add_option(
             '--nb_retries',
-            help= (
-                'Sets the number retry attempts for all network connections '
-                'initiated throughout the scan. Increase this value if you are '
-                'getting a lot of timeout/connection errors when scanning a '
-                'specific server. Decrease this value to increase the speed '
-                'of the scans; results may however return connection errors. '
-                'Default is '
-                + str(self.DEFAULT_RETRY_ATTEMPTS) + ' connection attempts.'),
+            help='Sets the number retry attempts for all network connections initiated throughout the scan. Increase '
+                 'this value if you are getting a lot of timeout/connection errors when scanning a specific server. '
+                 'Decrease this value to increase the speed of the scans; results may however return connection errors.'
+                 ' Default is {} connection attempts.'.format(str(self.DEFAULT_RETRY_ATTEMPTS)),
             type='int',
             dest='nb_retries',
-            default=self.DEFAULT_RETRY_ATTEMPTS)
-
-
+            default=self.DEFAULT_RETRY_ATTEMPTS
+        )
         # HTTP CONNECT Proxy
         self._parser.add_option(
             '--https_tunnel',
-            help= (
-                'Tunnels all traffic to the target server(s) through an HTTP '
-                'CONNECT proxy. HTTP_TUNNEL should be the proxy\'s URL: '
-                '\'http://USER:PW@HOST:PORT/\'. For proxies requiring '
-                'authentication, only Basic Authentication is supported.'),
+            help='Tunnels all traffic to the target server(s) through an HTTP CONNECT proxy. HTTP_TUNNEL should be the '
+                 'proxy\'s URL: \'http://USER:PW@HOST:PORT/\'. For proxies requiring authentication, only Basic '
+                 'Authentication is supported.',
             dest='https_tunnel',
-            default=None)
-
+            default=None
+        )
         # STARTTLS
         self._parser.add_option(
             '--starttls',
-            help= (
-                'Performs StartTLS handshakes when connecting to the target '
-                'server(s). ' + self.START_TLS_USAGE),
+            help='Performs StartTLS handshakes when connecting to the target server(s). ' + self.START_TLS_USAGE,
             dest='starttls',
-            default=None)
-
+            default=None
+        )
         self._parser.add_option(
             '--xmpp_to',
-            help= (
-                'Optional setting for STARTTLS XMPP. '
-                ' XMPP_TO should be the hostname to be put in the \'to\' attribute '
-                'of the XMPP stream. Default is the server\'s hostname.'),
+            help='Optional setting for STARTTLS XMPP. XMPP_TO should be the hostname to be put in the \'to\' attribute '
+                 'of the XMPP stream. Default is the server\'s hostname.',
             dest='xmpp_to',
-            default=None)
-
+            default=None
+        )
         # Server Name Indication
         self._parser.add_option(
             '--sni',
-            help= (
-                'Use Server Name Indication to specify the hostname to connect to.'
-                ' Will only affect TLS 1.0+ connections.'),
+            help='Use Server Name Indication to specify the hostname to connect to.  Will only affect TLS 1.0+ '
+                 'connections.',
             dest='sni',
-            default=None)
-
+            default=None
+        )
         # No text output
         self._parser.add_option(
             '--quiet',
             action="store_true",
             dest='quiet',
-            help=(
-                'Hide script standard outputs.'
-                ' Will only affect script output if --xml_out is set.'))
+            help='Do not output anything to stdout; useful when using --xml_out or --json_out.'
+        )
 
 
     def _add_plugin_options(self, available_plugins):

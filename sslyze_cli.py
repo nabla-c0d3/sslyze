@@ -407,7 +407,7 @@ def _format_xml_target_result(server_info, result_list):
     target_xml = Element('target', attrib=target_attrib)
     result_list.sort(key=lambda result: result[0])  # Sort results
 
-    for (command, plugin_result) in result_list:
+    for plugin_result in result_list:
         target_xml.append(plugin_result.as_xml())
 
     return target_xml
@@ -416,7 +416,7 @@ def _format_xml_target_result(server_info, result_list):
 def _format_txt_target_result(server_info, result_list):
     target_result_str = ''
 
-    for (command, plugin_result) in result_list:
+    for plugin_result in result_list:
         # Print the result of each separate command
         target_result_str += '\n'
         for line in plugin_result.as_text():
@@ -545,28 +545,32 @@ def main():
     # Each host has a list of results
     result_dict = {}
     # We cannot use the server_info object directly as its address will change due to multiprocessing
-    RESULT_DICT_KEY_FORMAT = '{hostname}:{port}'
+    RESULT_KEY_FORMAT = '{hostname}:{port}'.format
     for server_info in online_servers_list:
-        result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname, port=server_info.port)] = []
+        result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname, port=server_info.port)] = []
 
     # Process the results as they come
     for plugin_result in plugins_process_pool.get_results():
-        result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
-                                                  port=server_info.port)].append((plugin_result.plugin_command,
-                                                                                  plugin_result))
+        server_info = plugin_result.server_info
+        result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
+                                                  port=server_info.port)].append(plugin_result)
 
-        if len(result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
+        if len(result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
                                                          port=server_info.port)]) == task_num:
             # Done with this server; print the results and update the xml doc
             if args_command_list.xml_file:
-                xml_output_list.append(_format_xml_target_result(
-                        server_info, result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
-                                                                               port=server_info.port)]))
+                xml_output_list.append(
+                    _format_xml_target_result(server_info,
+                                              result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
+                                                                            port=server_info.port)])
+                )
 
             if should_print_text_results:
-                print _format_txt_target_result(
-                        server_info, result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
-                                                                               port=server_info.port)])
+                print _format_txt_target_result(server_info,
+                                                result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
+                                                                              port=server_info.port)]
+                                                )
+
 
 
     # --TERMINATE--

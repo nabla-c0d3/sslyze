@@ -271,6 +271,27 @@ class CertInfoFullResult(PluginResult):
         return is_root_certificate
 
 
+
+    def _verify_chain_order(self):
+        last = 0
+        ordermsg = ""
+        for cert in self.certificate_chain:
+            if last != 0:
+                current = cert.as_dict['subject']['commonName']
+                if current != last:
+                    if ordermsg =="":
+                        ordermsg += "FAILED: certificate chain out of order! \n"
+                    ordermsg += "\t\t\tIssuer \""+last+"\" must precede \""+current+"\"\n"
+            try:
+                last = cert.as_dict['issuer']['commonName']
+            except KeyError:
+                # Missing issuer. This is okay if this is the last cert.
+                last = "missing-issuer!"
+            
+        if ordermsg == "":
+            ordermsg = "OK - Order is correct"
+        return ordermsg
+
     HOSTNAME_VALIDATION_TEXT = {
         X509_NAME_MATCHES_SAN: 'OK - Subject Alternative Name matches {hostname}'.format,
         X509_NAME_MATCHES_CN: 'OK - Common Name matches {hostname}'.format,
@@ -336,6 +357,9 @@ class CertInfoFullResult(PluginResult):
         text_output.append(self.FIELD_FORMAT('Weak Signature:', sha1_text))
         text_output.append(self.FIELD_FORMAT('Certificate Chain Received:', str(cns_in_certificate_chain)))
 
+        ordermsg = self._verify_chain_order()
+            
+        text_output.append(self.FIELD_FORMAT('Certificate Chain Order:', str(ordermsg)))
 
         # OCSP stapling
         text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - OCSP Stapling')])
@@ -435,6 +459,15 @@ class CertInfoFullResult(PluginResult):
                 path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
 
             trust_validation_xml.append(Element('pathValidation', attrib=path_attrib_xml))
+
+        if self._verify_chain_order().startswith("OK"):
+            chain_order_validation_xml = Element('chainOrderValidation', validationResult="ok")
+            
+        if self._verify_chain_order().startswith("FAILED"):
+            chain_order_validation_xml = Element('chainOrderValidation', validationResult="failure")
+            
+        trust_validation_xml.append(chain_order_validation_xml)
+            
 
         # Path validation that ran into errors
         for path_error in self.path_validation_error_list:

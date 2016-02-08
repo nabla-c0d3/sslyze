@@ -1,7 +1,6 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
-
-
+import json
 import os
 import sys
 
@@ -551,9 +550,10 @@ def main():
         result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname, port=server_info.port)] = []
 
     # Process the results as they come
-    for server_info, plugin_command, plugin_result in plugins_process_pool.get_results():
+    for plugin_result in plugins_process_pool.get_results():
         result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
-                                                  port=server_info.port)].append((plugin_command, plugin_result))
+                                                  port=server_info.port)].append((plugin_result.plugin_command,
+                                                                                  plugin_result))
 
         if len(result_dict[RESULT_DICT_KEY_FORMAT.format(hostname=server_info.hostname,
                                                          port=server_info.port)]) == task_num:

@@ -71,7 +71,7 @@ plugins_process_pool = PluginsProcessPool(sslyze_plugins)
 plugins_process_pool.queue_plugin_task(server_info, 'sslv3')
 
 # Process the result and print the certificate CN
-for server_info, plugin_command, plugin_result in plugins_process_pool.get_results():
+for plugin_result in plugins_process_pool.get_results():
     if plugin_result.plugin_command == 'sslv3':
         # Do something with the result
         print 'SSLV3 cipher suites'

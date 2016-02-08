@@ -48,13 +48,13 @@ class WorkerProcess(Process):
 
             try:
                 # Process the task
-                result = plugin_instance.process_task(server_info,command,options_dict)
+                result = plugin_instance.process_task(server_info, command, options_dict)
             except Exception as e:
                 #raise
                 result = PluginRaisedExceptionResult(server_info, command, options_dict, e)
 
             # Send the result to queue_out
-            self.queue_out.put((server_info, command, result))
+            self.queue_out.put(result)
             current_queue_in.task_done()
 
         return

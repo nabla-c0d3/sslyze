@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # Process the results
     reneg_result = None
     print '\nProcessing results...'
-    for server_info, plugin_command, plugin_result in plugins_process_pool.get_results():
+    for plugin_result in plugins_process_pool.get_results():
         # Each plugin result has attributes with the information you're looking for, specific to each plugin
         # All these attributes are documented within each plugin's module
         if plugin_result.plugin_command == 'sslv3':

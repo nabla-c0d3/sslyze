@@ -275,16 +275,17 @@ class CertInfoFullResult(PluginResult):
     @staticmethod
     def _is_certificate_chain_order_valid(certificate_chain):
         for index, cert in enumerate(certificate_chain):
-            current_subject = cert.as_dict['subject']['commonName']
+            current_subject = cert.as_dict['subject']
+
             if index > 0:
                 # Compare the current subject with the previous issuer in the chain
                 if current_subject != previous_issuer:
                     return False
             try:
-                previous_issuer = cert.as_dict['issuer']['commonName']
+                previous_issuer = cert.as_dict['issuer']
             except KeyError:
                 # Missing issuer; this is okay if this is the last cert
-                previous_issuer = "missing-issuer!"
+                previous_issuer = "missing issuer {}".format(index)
         return True
 
 

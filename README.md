@@ -20,6 +20,7 @@ Key features include:
 * Server certificate validation and revocation checking through OCSP stapling.
 * Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP, PostGres and FTP.
 * Support for client certificates when scanning servers that perform mutual authentication.
+* Scan results can be written to an XML or JSON file for further processing.
 * And much more !
 
 

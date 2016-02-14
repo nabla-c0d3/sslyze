@@ -565,17 +565,17 @@ def main():
     # Each host has a list of results
     result_dict = {}
     # We cannot use the server_info object directly as its address will change due to multiprocessing
-    RESULT_KEY_FORMAT = '{hostname}:{port}'.format
+    RESULT_KEY_FORMAT = '{ip_address}:{port}'.format
     for server_info in online_servers_list:
-        result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname, port=server_info.port)] = []
+        result_dict[RESULT_KEY_FORMAT(ip_address=server_info.ip_address, port=server_info.port)] = []
 
     # Process the results as they come
     for plugin_result in plugins_process_pool.get_results():
         server_info = plugin_result.server_info
-        result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
+        result_dict[RESULT_KEY_FORMAT(ip_address=server_info.ip_address,
                                       port=server_info.port)].append(plugin_result)
 
-        result_list = result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname, port=server_info.port)]
+        result_list = result_dict[RESULT_KEY_FORMAT(ip_address=server_info.ip_address, port=server_info.port)]
 
         if len(result_list) == task_num:
             # Done with this server; print the results and update the xml doc

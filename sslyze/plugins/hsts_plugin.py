@@ -54,7 +54,7 @@ class HstsPlugin(plugin_base.PluginBase):
                 # HTTP 0.9 => Probably not an HTTP response
                 raise ValueError('Server did not return an HTTP response')
             else:
-                hsts_header = http_resp.getheader('strict-transport-security', False)
+                hsts_header = http_resp.getheader('strict-transport-security', None)
 
             # If there was no HSTS header, check if the server returned a redirection
             if hsts_header is None and 300 <= http_resp.status < 400:

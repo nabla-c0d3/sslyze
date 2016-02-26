@@ -1,7 +1,7 @@
 SSLyze
 ======
 
-Fast and full-featured SSL scanner.
+Fast and full-featured SSL scanner for Python 2.7.
 
 
 Description

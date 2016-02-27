@@ -60,7 +60,6 @@ DEFAULT_TRUST_STORE_LIST = [
     TrustStore(join(TRUST_STORES_PATH, 'microsoft.pem'), 'Microsoft', '02/2016'),
     TrustStore(join(TRUST_STORES_PATH, 'apple.pem'), 'Apple', 'OS X 10.11.3'),
     TrustStore(join(TRUST_STORES_PATH, 'java.pem'), 'Java 6', 'Update 65'),
-    TrustStore(join(TRUST_STORES_PATH, 'google.pem'), 'Google', '02/2016'),
 ]
 
 

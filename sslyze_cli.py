@@ -594,12 +594,13 @@ def main():
         json_output = {'total_scan_time': str(exec_time),
                        'network_timeout': str(args_command_list.timeout),
                        'network_max_retries': str(args_command_list.nb_retries),
-                       'invalid_targets': {}}
+                       'invalid_targets': [],
+                       'accepted_targets': []}
 
         # Add the list of invalid targets
         for server_string, exception in invalid_servers_list:
             if isinstance(exception, ServerConnectivityError):
-                json_output['invalidTargets'][server_string] = exception.error_msg
+                json_output['invalid_targets'].append({server_string: exception.error_msg})
             else:
                 # Unexpected bug in SSLyze
                 raise exception
@@ -607,7 +608,7 @@ def main():
         # Add the output of the plugins for each server
         for host_str, plugin_result_list in result_dict.iteritems():
             server_info = plugin_result_list[0].server_info
-            json_output[host_str] =  _format_json_result(server_info, plugin_result_list)
+            json_output['accepted_targets'].append(_format_json_result(server_info, plugin_result_list))
 
         final_json_output = json.dumps(json_output, default=lambda o: o.__dict__, sort_keys=True, indent=4)
         if args_command_list.json_file == '-':

@@ -117,10 +117,10 @@ class PluginsProcessPool(object):
         """Returns the result of previously queues scan command; new tasks can no longer be queued once this is called.
 
         Yields:
-            (ServerConnectivityInfo, str, PluginResult): The server information, plugin command and result of the scan
-                command run on this server. The PluginResult object is command/plugin-specific and has attributes
-                with the result of the scan command that was run; see specific PluginResult subclasses for the list of
-                attributes.
+            PluginResult: The result of a scan command run on a server. The server and command information are available
+                within the server_info and plugin_command attributes. The PluginResult object also has
+                command/plugin-specific attributes with the result of the scan command that was run; see
+                specific PluginResult subclasses for the list of attributes.
         """
         # Put a 'None' sentinel in the queue to let the each process know when every task has been completed
         for _ in xrange(self._get_current_processes_nb()):

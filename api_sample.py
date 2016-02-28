@@ -4,12 +4,15 @@
 # Add ./lib to the path for importing nassl
 import os
 import sys
+
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 
 from sslyze.plugins_finder import PluginsFinder
 from sslyze.plugins_process_pool import PluginsProcessPool
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
+import sslyze.plugins.plugin_base
+
 
 
 if __name__ == '__main__':
@@ -41,6 +44,11 @@ if __name__ == '__main__':
     reneg_result = None
     print '\nProcessing results...'
     for plugin_result in plugins_process_pool.get_results():
+        # Sometimes a plugin command can unexpectedly fail (as a bug); it is returned as a PluginRaisedExceptionResult
+        if isinstance(plugin_result, sslyze.plugins.plugin_base.PluginRaisedExceptionResult):
+            plugins_process_pool.emergency_shutdown()
+            raise RuntimeError('Scan command failed: {}'.format(plugin_result.as_text()))
+
         # Each plugin result has attributes with the information you're looking for, specific to each plugin
         # All these attributes are documented within each plugin's module
         if plugin_result.plugin_command == 'sslv3':

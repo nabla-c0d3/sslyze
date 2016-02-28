@@ -99,7 +99,7 @@ class PluginRaisedExceptionResult(PluginResult):
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
-    TITLE_TXT_FORMAT = 'Unhandled exception when processing --{command}:'.format
+    TITLE_TXT_FORMAT = 'Unhandled exception while running --{command}:'.format
 
     def as_text(self):
         return [self.TITLE_TXT_FORMAT(command=self.plugin_command), self.error_message]

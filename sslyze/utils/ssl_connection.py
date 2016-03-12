@@ -227,11 +227,13 @@ class HTTPSConnection(SSLConnection):
 
     ERR_HTTP_TIMEOUT = 'Timeout on HTTP GET'
     ERR_NOT_HTTP = 'Server response was not HTTP'
+    ERR_GENERIC = 'Error sending HTTP GET'
 
 
     def post_handshake_check(self):
 
         try:
+            # TODO: This is code only used by OpenSSLCipherSuitesPlugin anf should be moved there
             # Send an HTTP GET to the server and store the HTTP Status Code
             self.write(self.HTTP_GET_REQ.format(self._host))
 
@@ -250,6 +252,8 @@ class HTTPSConnection(SSLConnection):
                 result = self.GET_RESULT_FORMAT.format(http_response.status, http_response.reason, redirect)
         except socket.timeout:
             result = self.ERR_HTTP_TIMEOUT
+        except IOError:
+            result = self.ERR_GENERIC
 
         return result
 

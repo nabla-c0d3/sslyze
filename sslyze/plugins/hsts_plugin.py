@@ -41,14 +41,17 @@ class HstsPlugin(plugin_base.PluginBase):
         http_path = '/'
         http_append = ''
 
-        ssl_connection = server_info.get_preconfigured_ssl_connection()
-        # Perform the SSL handshake
-        ssl_connection.connect()
-
         while nb_redirect < self.MAX_REDIRECT:
+            # Always use a new connection as some servers always close the connection after sending back an HTTP
+            # response
+            ssl_connection = server_info.get_preconfigured_ssl_connection()
+
+            # Perform the SSL handshake
+            ssl_connection.connect()
 
             ssl_connection.write(http_get_format(http_path, server_info.hostname, http_append))
             http_resp = parse_http_response(ssl_connection)
+            ssl_connection.close()
             
             if http_resp.version == 9 :
                 # HTTP 0.9 => Probably not an HTTP response
@@ -85,7 +88,6 @@ class HstsPlugin(plugin_base.PluginBase):
                 # If the server did not return a redirection just give up
                 break
 
-        ssl_connection.close()
         return hsts_header
 
 

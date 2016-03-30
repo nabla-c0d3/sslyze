@@ -75,7 +75,7 @@ class HstsPlugin(plugin_base.PluginBase):
                     http_path = o.path
                     if o.scheme == 'http':
                         # We would have to use urllib for http: URLs
-                        raise ValueError("Error: server sent a redirection to HTTP.")
+                        break
 
                 # Handle cookies
                 if cookie_header:

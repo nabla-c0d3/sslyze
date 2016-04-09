@@ -433,7 +433,7 @@ def _format_json_result(server_info, result_list):
 
 
 def _format_txt_target_result(server_info, result_list):
-    target_result_str = ''
+    target_result_str = u''
 
     for plugin_result in result_list:
         # Print the result of each separate command

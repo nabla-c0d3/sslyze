@@ -228,10 +228,12 @@ class CertInfoFullResult(PluginResult):
         self.is_leaf_certificate_ev = False
         try:
             policy = self.certificate_chain[0].as_dict['extensions']['X509v3 Certificate Policies']['Policy']
-            if policy[0] in self.MOZILLA_EV_OIDS:
-                self.is_leaf_certificate_ev = True
         except:
+            # Certificate which don't have this extension
             pass
+        else:
+            if policy[0] in MOZILLA_EV_OIDS:
+                self.is_leaf_certificate_ev = True
 
         self.path_validation_result_list = path_validation_result_list
         self.path_validation_error_list = path_validation_error_list

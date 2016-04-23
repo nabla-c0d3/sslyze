@@ -29,9 +29,9 @@ plugins_process_pool = None
 
 
 # Command line parsing utils
-class CommandLineParsingError(Exception):
+class CommandLineParsingError(ValueError):
 
-    PARSING_ERROR_FORMAT = '  Command line error: {0}\n  Use -h for help.'
+    PARSING_ERROR_FORMAT = u'  Command line error: {0}\n  Use -h for help.'
 
     def get_error_msg(self):
         return self.PARSING_ERROR_FORMAT.format(self)
@@ -200,6 +200,8 @@ class CommandLineParser(object):
         good_server_list = []
         bad_server_list = []
         for server_string in args_target_list:
+            # Support unicode domains
+            server_string = unicode(server_string, 'utf-8')
             try:
                 good_server_list.append(ServerConnectivityInfo.from_command_line(
                     server_string=server_string,
@@ -374,11 +376,11 @@ class CommandLineParser(object):
 
 
 # Todo: Move formatting stuff to another file
-SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}:{1}'
+SCAN_FORMAT = u'Scan Results For {0}:{1} - {2}:{1}'
 
 
 def _format_title(title):
-    return ' {title}\n {underline}\n'.format(title=title.upper(), underline='-' * len(title))
+    return u' {title}\n {underline}\n'.format(title=title.upper(), underline='-' * len(title))
 
 
 TLS_PROTOCOL_XML_TEXT = {
@@ -505,8 +507,8 @@ def main():
     connectivity_tester = ServersConnectivityTester(good_server_list)
     connectivity_tester.start_connectivity_testing()
 
-    SERVER_OK_FORMAT = '   {host}:{port:<25} => {ip_address} {client_auth_msg}'
-    SERVER_INVALID_FORMAT = '   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.'
+    SERVER_OK_FORMAT = u'   {host}:{port:<25} => {ip_address} {client_auth_msg}'
+    SERVER_INVALID_FORMAT = u'   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.'
 
     # Store and print servers we were able to connect to
     for server_connectivity_info in connectivity_tester.get_reachable_servers():
@@ -537,7 +539,7 @@ def main():
 
 
     for tentative_server_info, exception in connectivity_tester.get_invalid_servers():
-        invalid_servers_list.append(('{}:{}'.format(tentative_server_info.hostname, tentative_server_info.port),
+        invalid_servers_list.append((u'{}:{}'.format(tentative_server_info.hostname, tentative_server_info.port),
                                      exception))
 
 
@@ -565,7 +567,7 @@ def main():
     # Each host has a list of results
     result_dict = {}
     # We cannot use the server_info object directly as its address will change due to multiprocessing
-    RESULT_KEY_FORMAT = '{hostname}:{ip_address}:{port}'.format
+    RESULT_KEY_FORMAT = u'{hostname}:{ip_address}:{port}'.format
     for server_info in online_servers_list:
         result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname, ip_address=server_info.ip_address,
                                       port=server_info.port)] = []

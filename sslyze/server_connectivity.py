@@ -61,7 +61,7 @@ class ServerConnectivityInfo(object):
         TlsWrappedProtocolEnum.STARTTLS_POSTGRES: PostgresConnection,
     }
 
-    CONNECTIVITY_ERROR_NAME_NOT_RESOLVED = 'Could not resolve {hostname}'
+    CONNECTIVITY_ERROR_NAME_NOT_RESOLVED = u'Could not resolve {hostname}'
     CONNECTIVITY_ERROR_TIMEOUT = 'Could not connect (timeout)'
     CONNECTIVITY_ERROR_REJECTED = 'Connection rejected'
     CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
@@ -75,7 +75,7 @@ class ServerConnectivityInfo(object):
         Most arguments are optional but can be supplied in order to be more specific about the server's configuration.
 
         Args:
-            hostname (str): The server's hostname.
+            hostname (unicode): The server's hostname.
             port (int): The server's TLS port number. If not supplied, the default port number for the specified
                 `tls_wrapped_protocol` will be used.
             ip_address (Optional[str]): The server's IP address. If not supplied, a DNS lookup for the specified
@@ -104,7 +104,8 @@ class ServerConnectivityInfo(object):
             ServerConnectivityError: If a DNS lookup was attempted and failed.
             ValueError: If `xmpp_to_hostname` was specified for a non-XMPP protocol.
         """
-        self.hostname = hostname
+        # Store the hostname in ACE format in the case the domain name is unicode
+        self.hostname = hostname.encode('idna')
         self.tls_wrapped_protocol = tls_wrapped_protocol
 
         self.port = port
@@ -114,8 +115,8 @@ class ServerConnectivityInfo(object):
         self.ip_address = ip_address
         if not self.ip_address:
             try:
-                addr_infos = socket.getaddrinfo(unicode(self.hostname), self.port, socket.AF_UNSPEC, socket.IPPROTO_IP)
-                (family, socktype, proto, canonname, sockaddr) = addr_infos[0]
+                addr_infos = socket.getaddrinfo(self.hostname, self.port, socket.AF_UNSPEC, socket.IPPROTO_IP)
+                family, socktype, proto, canonname, sockaddr = addr_infos[0]
             except (socket.gaierror, IndexError):
                 raise ServerConnectivityError(self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED.format(hostname=self.hostname))
             else:
@@ -123,10 +124,8 @@ class ServerConnectivityInfo(object):
                 self.ip_address = sockaddr[0]
                 self.port = sockaddr[1]
 
-        self.tls_server_name_indication = tls_server_name_indication
-        if not self.tls_server_name_indication:
-            # Use the hostname as the default SNI
-            self.tls_server_name_indication = self.hostname
+        # Use the hostname as the default SNI
+        self.tls_server_name_indication = tls_server_name_indication if tls_server_name_indication else self.hostname
 
         self.xmpp_to_hostname = xmpp_to_hostname
         if self.xmpp_to_hostname and self.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.STARTTLS_XMPP,
@@ -188,7 +187,7 @@ class ServerConnectivityInfo(object):
 
         # Other errors
         except Exception as e:
-            raise ServerConnectivityError('{0}: {1}'.format(str(type(e).__name__), e[0]))
+            raise ServerConnectivityError(u'{0}: {1}'.format(str(type(e).__name__), e[0]))
 
         finally:
             ssl_connection.close()

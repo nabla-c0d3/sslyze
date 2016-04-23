@@ -114,8 +114,10 @@ class ServerConnectivityInfo(object):
         self.ip_address = ip_address
         if not self.ip_address:
             try:
-                self.ip_address = socket.gethostbyname(self.hostname)
-            except socket.gaierror:
+                addr_infos = socket.getaddrinfo(unicode(self.hostname), self.port, socket.AF_UNSPEC, socket.IPPROTO_IP)
+                (family, socktype, proto, canonname, sockaddr) = addr_infos[0]
+                (self.ip_address, self.port) = sockaddr
+            except (socket.gaierror, IndexError):
                 raise ServerConnectivityError(self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED.format(hostname=self.hostname))
 
         self.tls_server_name_indication = tls_server_name_indication

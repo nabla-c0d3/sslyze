@@ -259,7 +259,7 @@ class CertInfoFullResult(PluginResult):
             except KeyError:
                 # Give up
                 cert_name = 'No Common Name'
-        return cert_name
+        return unicode(cert_name, 'utf-8')
 
 
     @staticmethod
@@ -353,7 +353,7 @@ class CertInfoFullResult(PluginResult):
             if not has_sha1_signed_certificate \
             else 'INSECURE - SHA1-signed certificate in the chain'
         text_output.append(self.FIELD_FORMAT('Weak Signature:', sha1_text))
-        text_output.append(self.FIELD_FORMAT('Certificate Chain Received:', str(cns_in_certificate_chain)))
+        text_output.append(self.FIELD_FORMAT('Certificate Chain Received:', ' --> '.join(cns_in_certificate_chain)))
 
         chain_order_txt = 'OK - Order is valid' if self.is_certificate_chain_order_valid \
             else 'FAILED - Certificate chain out of order!'
@@ -504,9 +504,9 @@ class CertInfoBasicResult(CertInfoFullResult):
 
         try:
             # Extract the CN from the issuer if there's one
-            issuer_name = cert_dict['issuer']['commonName']
+            issuer_name = unicode(cert_dict['issuer']['commonName'], 'utf-8')
         except KeyError:
-            issuer_name = str(cert_dict['issuer'])
+            issuer_name = unicode(cert_dict['issuer'], 'utf-8')
 
         text_output = [
             self.FIELD_FORMAT("SHA1 Fingerprint:", self.certificate_chain[0].sha1_fingerprint),

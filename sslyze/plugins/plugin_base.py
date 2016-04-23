@@ -74,7 +74,7 @@ class PluginResult(object):
 
     # Common formatting
     PLUGIN_TITLE_FORMAT = '  * {0}:'.format
-    FIELD_FORMAT = '      {0:<35}{1}'.format
+    FIELD_FORMAT = u'      {0:<35}{1}'.format
 
     def __init__(self, server_info, plugin_command, plugin_options):
 

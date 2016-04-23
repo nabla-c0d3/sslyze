@@ -116,11 +116,12 @@ class ServerConnectivityInfo(object):
             try:
                 addr_infos = socket.getaddrinfo(unicode(self.hostname), self.port, socket.AF_UNSPEC, socket.IPPROTO_IP)
                 (family, socktype, proto, canonname, sockaddr) = addr_infos[0]
+            except (socket.gaierror, IndexError):
+                raise ServerConnectivityError(self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED.format(hostname=self.hostname))
+            else:
                 # Works for both IPv4 and IPv6
                 self.ip_address = sockaddr[0]
                 self.port = sockaddr[1]
-            except (socket.gaierror, IndexError):
-                raise ServerConnectivityError(self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED.format(hostname=self.hostname))
 
         self.tls_server_name_indication = tls_server_name_indication
         if not self.tls_server_name_indication:

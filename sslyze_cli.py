@@ -139,8 +139,8 @@ class CommandLineParser(object):
                 raise CommandLineParsingError('Cannot use --quiet with --json_out -.')
 
         # Prevent --xml_out - and --json_out -
-        if args_command_list.json_file and args_command_list.json_file == '-'\
-                and args_command_list.xml_file and args_command_list.xml_file == '-'.quiet:
+        if args_command_list.json_file and args_command_list.json_file == '-' \
+                and args_command_list.xml_file and args_command_list.xml_file == '-':
                 raise CommandLineParsingError('Cannot use --xml_out - with --json_out -.')
 
 

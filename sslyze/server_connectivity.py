@@ -155,16 +155,19 @@ class ServerConnectivityInfo(object):
                    http_tunneling_settings=http_tunneling_settings)
 
 
-    def test_connectivity_to_server(self):
+    def test_connectivity_to_server(self, network_timeout=None):
         """Attempts to perform a full SSL handshake with the server in order to identify one SSL version and cipher
         suite supported by the server.
+
+        Args:
+            network_timeout (int): Network timeout value in seconds passed to the underlying socket.
         """
         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.DISABLED
         ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=SSLV23)
 
         # First only try a socket connection
         try:
-            ssl_connection.do_pre_handshake()
+            ssl_connection.do_pre_handshake(network_timeout=network_timeout)
 
         # Socket errors
         except socket.timeout:  # Host is down
@@ -199,7 +202,7 @@ class ServerConnectivityInfo(object):
                 ssl_connection.set_cipher_list(cipher_list)
                 try:
                     # Only do one attempt when testing connectivity
-                    ssl_connection.connect(network_max_retries=0)
+                    ssl_connection.connect(network_timeout=network_timeout, network_max_retries=0)
                     ssl_version_supported = ssl_version
                     ssl_cipher_supported = ssl_connection.get_current_cipher_name()
                     break
@@ -299,9 +302,9 @@ class ServersConnectivityTester(object):
         self._thread_pool = ThreadPool()
         self._server_info_list = tentative_server_info_list
 
-    def start_connectivity_testing(self, max_threads=DEFAULT_MAX_THREADS):
+    def start_connectivity_testing(self, max_threads=DEFAULT_MAX_THREADS, network_timeout=None):
         for tentative_server_info in self._server_info_list:
-            self._thread_pool.add_job((tentative_server_info.test_connectivity_to_server, []))
+            self._thread_pool.add_job((tentative_server_info.test_connectivity_to_server, [network_timeout]))
         nb_threads = min(len(self._server_info_list), max_threads)
         self._thread_pool.start(nb_threads)
 

@@ -23,6 +23,8 @@ from optparse import OptionParser, OptionGroup
 from nassl import SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError, ServersConnectivityTester
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
+from sslyze.utils.ssl_connection import SSLConnection
+
 
 # Global so we can terminate processes when catching SIGINT
 plugins_process_pool = None
@@ -73,11 +75,6 @@ class CommandLineParser(object):
                               3389: TlsWrappedProtocolEnum.STARTTLS_RDP,
                               'postgres': TlsWrappedProtocolEnum.STARTTLS_POSTGRES,
                               5432: TlsWrappedProtocolEnum.STARTTLS_POSTGRES}
-
-    # Default values
-    DEFAULT_RETRY_ATTEMPTS = 4
-    DEFAULT_TIMEOUT = 5
-
 
     def __init__(self, available_plugins, sslyze_version):
         """Generates SSLyze's command line parser.
@@ -300,10 +297,10 @@ class CommandLineParser(object):
         self._parser.add_option(
             '--timeout',
             help='Sets the timeout value in seconds used for every socket connection made to the target server(s). '
-                 'Default is {}s.'.format(str(self.DEFAULT_TIMEOUT)),
+                 'Default is {}s.'.format(str(SSLConnection.NETWORK_TIMEOUT)),
             type='int',
             dest='timeout',
-            default=self.DEFAULT_TIMEOUT
+            default=SSLConnection.NETWORK_TIMEOUT
         )
         # Control connection retry attempts
         self._parser.add_option(
@@ -311,10 +308,10 @@ class CommandLineParser(object):
             help='Sets the number retry attempts for all network connections initiated throughout the scan. Increase '
                  'this value if you are getting a lot of timeout/connection errors when scanning a specific server. '
                  'Decrease this value to increase the speed of the scans; results may however return connection errors.'
-                 ' Default is {} connection attempts.'.format(str(self.DEFAULT_RETRY_ATTEMPTS)),
+                 ' Default is {} connection attempts.'.format(str(SSLConnection.NETWORK_MAX_RETRIES)),
             type='int',
             dest='nb_retries',
-            default=self.DEFAULT_RETRY_ATTEMPTS
+            default=SSLConnection.NETWORK_MAX_RETRIES
         )
         # HTTP CONNECT Proxy
         self._parser.add_option(
@@ -505,7 +502,7 @@ def main():
         print _format_title('Checking host(s) availability')
 
     connectivity_tester = ServersConnectivityTester(good_server_list)
-    connectivity_tester.start_connectivity_testing()
+    connectivity_tester.start_connectivity_testing(network_timeout=args_command_list.timeout)
 
     SERVER_OK_FORMAT = u'   {host}:{port:<25} => {ip_address} {client_auth_msg}'
     SERVER_INVALID_FORMAT = u'   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.'

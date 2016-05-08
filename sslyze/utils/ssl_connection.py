@@ -117,13 +117,13 @@ class SSLConnection(DebugSslClient):
             self._tunnel_basic_auth_token = b64encode('{0}:{1}'.format(quote(tunnel_user), quote(tunnel_password)))
 
 
-    def do_pre_handshake(self):
-        """Open a socket to the server; setup HTTP tunneling if a proxy was configured."""
-
+    def do_pre_handshake(self, network_timeout):
+        """Open a socket to the server; setup HTTP tunneling if a proxy was configured.
+        """
         if self._tunnel_host:
             # Proxy configured; setup HTTP tunneling
             try:
-                self._sock = socket.create_connection((self._tunnel_host, self._tunnel_port), self.NETWORK_TIMEOUT)
+                self._sock = socket.create_connection((self._tunnel_host, self._tunnel_port), network_timeout)
             except socket.timeout as e:
                 raise ProxyError(self.ERR_PROXY_OFFLINE.format(e[0]))
             except socket.error as e:
@@ -142,10 +142,12 @@ class SSLConnection(DebugSslClient):
                 raise ProxyError(self.ERR_CONNECT_REJECTED)
         else:
             # No proxy; connect directly to the server
-            self._sock = socket.create_connection((self._ip, self._port), self.NETWORK_TIMEOUT)
+            self._sock = socket.create_connection((self._ip, self._port), network_timeout)
 
 
-    def connect(self, network_max_retries=NETWORK_MAX_RETRIES):
+    def connect(self, network_timeout=None, network_max_retries=None):
+        final_timeout = self.NETWORK_TIMEOUT if network_timeout is None else network_timeout
+        final_max_retries = self.NETWORK_MAX_RETRIES if network_max_retries is None else network_max_retries
         retry_attempts = 0
         delay = 0
         while True:
@@ -154,7 +156,7 @@ class SSLConnection(DebugSslClient):
                 time.sleep(delay)
 
                 # StartTLS negotiation or proxy setup if needed
-                self.do_pre_handshake()
+                self.do_pre_handshake(final_timeout)
 
                 try: # SSL handshake
                     self.do_handshake()
@@ -192,7 +194,7 @@ class SSLConnection(DebugSslClient):
             # Attempt to retry connection if a network error occurred
             except:
                 retry_attempts += 1
-                if retry_attempts >= network_max_retries:
+                if retry_attempts >= final_max_retries:
                     # Exhausted the number of retry attempts, give up
                     raise
                 elif retry_attempts == 1:
@@ -264,8 +266,8 @@ class SMTPConnection(SSLConnection):
     ERR_NO_SMTP_STARTTLS = 'SMTP STARTTLS not supported'
 
 
-    def do_pre_handshake(self):
-        super(SMTPConnection, self).do_pre_handshake()
+    def do_pre_handshake(self, network_timeout):
+        super(SMTPConnection, self).do_pre_handshake(network_timeout)
 
         # Get the SMTP banner
         self._sock.recv(2048)
@@ -317,10 +319,10 @@ class XMPPConnection(SSLConnection):
         self._xmpp_to = xmpp_to
 
 
-    def do_pre_handshake(self):
+    def do_pre_handshake(self, network_timeout):
         """Connect to a host on a given (SSL) port, send a STARTTLS command, and perform the SSL handshake.
         """
-        super(XMPPConnection, self).do_pre_handshake()
+        super(XMPPConnection, self).do_pre_handshake(network_timeout)
 
         # Open an XMPP stream
         self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
@@ -362,10 +364,10 @@ class LDAPConnection(SSLConnection):
     START_TLS_OK_APACHEDS = '\x30\x26\x02\x01\x01\x78\x21\x0a\x01\x00\x04\x00\x04\x00\x8a\x16\x31\x2e\x33\x2e\x36\x2e\x31\x2e\x34\x2e\x31\x2e\x31\x34\x36\x36\x2e\x32\x30\x30\x33\x37\x8b\x00'
 
 
-    def do_pre_handshake(self):
+    def do_pre_handshake(self, network_timeout):
         """Connect to a host on a given (SSL) port, send a STARTTLS command, and perform the SSL handshake.
         """
-        super(LDAPConnection, self).do_pre_handshake()
+        super(LDAPConnection, self).do_pre_handshake(network_timeout)
 
         # Send Start TLS
         self._sock.send(self.START_TLS_CMD)
@@ -383,12 +385,12 @@ class RDPConnection(SSLConnection):
     START_TLS_CMD = bytearray(b'\x03\x00\x00\x13\x0E\xE0\x00\x00\x00\x00\x00\x01\x00\x08\x00\x03\x00\x00\x00')
     START_TLS_OK = 'Start TLS request accepted.'
 
-    def do_pre_handshake(self):
+    def do_pre_handshake(self, network_timeout):
         """
         Connect to a host on a given (SSL) port, send a STARTTLS command,
         and perform the SSL handshake.
         """
-        super(RDPConnection, self).do_pre_handshake()
+        super(RDPConnection, self).do_pre_handshake(network_timeout)
 
         self._sock.send(self.START_TLS_CMD)
         data = self._sock.recv(4)
@@ -412,10 +414,10 @@ class GenericStartTLSConnection(SSLConnection):
     START_TLS_OK = ''
     SHOULD_WAIT_FOR_SERVER_BANNER = True
 
-    def do_pre_handshake(self):
+    def do_pre_handshake(self, network_timeout):
         """Connect to a host on a given (SSL) port, send a STARTTLS command, and perform the SSL handshake.
         """
-        super(GenericStartTLSConnection, self).do_pre_handshake()
+        super(GenericStartTLSConnection, self).do_pre_handshake(network_timeout)
 
         # Grab the banner
         if self.SHOULD_WAIT_FOR_SERVER_BANNER:

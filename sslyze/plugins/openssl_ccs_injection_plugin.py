@@ -9,6 +9,7 @@ from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
 import socket, struct, time, random
 
 from sslyze.plugins.plugin_base import PluginResult
+from sslyze.utils.ssl_connection import SSLConnection
 
 
 class OpenSslCcsInjectionPlugin(plugin_base.PluginBase):
@@ -30,7 +31,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.PluginBase):
         self._ssl_version = server_info.highest_ssl_version_supported
         is_vulnerable = False
         self._inbuffer = ""
-        ssl_connection.do_pre_handshake()
+        ssl_connection.do_pre_handshake(network_timeout=SSLConnection.NETWORK_TIMEOUT)
 
         # H4ck to directly send the CCS payload
         self._sock = ssl_connection._sock

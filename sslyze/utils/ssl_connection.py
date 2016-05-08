@@ -41,40 +41,37 @@ class SSLConnection(DebugSslClient):
     """Base SSL connection class.
     """
 
-    # The following errors mean that the server explicitly rejected the
-    # handshake. The goal to differentiate rejected handshakes from random
-    # network errors such as the server going offline, etc.
-    HANDSHAKE_REJECTED_SOCKET_ERRORS = {'was forcibly closed' : 'Received FIN',
-                                        'reset by peer' : 'Received RST'}
+    # The following errors mean that the server explicitly rejected the handshake. The goal to differentiate rejected
+    # handshakes from random network errors such as the server going offline, etc.
+    HANDSHAKE_REJECTED_SOCKET_ERRORS = {'was forcibly closed': 'Received FIN',
+                                        'reset by peer': 'Received RST'}
 
-    HANDSHAKE_REJECTED_SSL_ERRORS = {'sslv3 alert handshake failure' : 'Alert handshake failure',
-                                     'no ciphers available' : 'No ciphers available',
-                                     'excessive message size' : 'Excessive message size',
-                                     'bad mac decode' : 'Bad mac decode',
-                                     'wrong version number' : 'Wrong version number',
-                                     'no cipher match' : 'No cipher match',
-                                     'bad decompression' : 'Bad decompression',
-                                     'peer error no cipher' : 'Peer error no cipher',
-                                     'no cipher list' : 'No ciphers list',
-                                     'insufficient security' : 'Insufficient security',
-                                     'block type is not 01' : 'block type is not 01',  # Actually an RSA error
+    HANDSHAKE_REJECTED_SSL_ERRORS = {'sslv3 alert handshake failure': 'Alert handshake failure',
+                                     'no ciphers available': 'No ciphers available',
+                                     'excessive message size': 'Excessive message size',
+                                     'bad mac decode': 'Bad mac decode',
+                                     'wrong version number': 'Wrong version number',
+                                     'no cipher match': 'No cipher match',
+                                     'bad decompression': 'Bad decompression',
+                                     'peer error no cipher': 'Peer error no cipher',
+                                     'no cipher list': 'No ciphers list',
+                                     'insufficient security': 'Insufficient security',
+                                     'block type is not 01': 'block type is not 01',  # Actually an RSA error
                                      'tlsv1 alert protocol version': 'Alert: protocol version '}
-
 
     # Constants for tunneling the traffic through a proxy
     HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
     HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = 'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {2}\r\n\r\n'
 
+    # Errors caused by the proxy
     ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
-
 
     # Restrict cipher list to make the client hello smaller so we don't run into
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
     DEFAULT_SSL_CIPHER_LIST = 'HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA'
 
-
-    # Socket settings global to all SSLyze connections; can be overridden
+    # Default socket settings global to all SSLyze connections; can be overridden
     NETWORK_MAX_RETRIES = 3
     NETWORK_TIMEOUT = 5
 

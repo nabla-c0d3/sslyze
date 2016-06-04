@@ -13,7 +13,7 @@ SSLYZE_SETUP = {
     'scripts': ['sslyze_cli.py'],
     'packages': ['sslyze', 'sslyze.plugins', 'sslyze.utils'],
     'package_data': {'sslyze.plugins': ['data/trust_stores/*.pem']},
-    'install_requires': ['nassl>=0.13.0,<1.14.0'],
+    'install_requires': ['nassl>=0.13.0,<0.14.0'],
     'classifiers': [
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

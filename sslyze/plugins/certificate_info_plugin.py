@@ -54,9 +54,22 @@ class TrustStore(object):
         self.path = path
         self.name = name
         self.version = version
+        self._certificate_list = None
+
+    def __contains__(self, certificate):
+        is_certificate_in_store = False
+        with open(self.path, 'r') as store_file:
+            store_content = store_file.read()
+            # Stripping new lines as the lines will have a different length in the trust store VS in the certificate
+            if certificate.as_pem.replace('\n', '') in store_content.replace('\n', ''):
+                is_certificate_in_store = True
+        return is_certificate_in_store
+
+
+MOZILLA_TRUST_STORE = TrustStore(MOZILLA_STORE_PATH, 'Mozilla NSS', '02/2016')
 
 DEFAULT_TRUST_STORE_LIST = [
-    TrustStore(MOZILLA_STORE_PATH, 'Mozilla NSS', '02/2016'),
+    MOZILLA_TRUST_STORE,
     TrustStore(join(TRUST_STORES_PATH, 'microsoft.pem'), 'Microsoft', '02/2016'),
     TrustStore(join(TRUST_STORES_PATH, 'apple.pem'), 'Apple', 'OS X 10.11.3'),
     TrustStore(join(TRUST_STORES_PATH, 'java.pem'), 'Java 6', 'Update 65'),
@@ -264,17 +277,6 @@ class CertInfoFullResult(PluginResult):
 
 
     @staticmethod
-    def _is_root_certificate(certificate):
-        is_root_certificate = False
-        with open(MOZILLA_STORE_PATH, 'r') as store_file:
-            store_content = store_file.read()
-            # Stripping new lines as the lines will have a different length in the trust store VS in the certificate
-            if certificate.as_pem.replace('\n', '') in store_content.replace('\n', ''):
-                is_root_certificate = True
-        return is_root_certificate
-
-
-    @staticmethod
     def _is_certificate_chain_order_valid(certificate_chain):
         for index, cert in enumerate(certificate_chain):
             current_subject = cert.as_dict['subject']
@@ -347,7 +349,7 @@ class CertInfoFullResult(PluginResult):
             cert_identity = self._extract_subject_cn_or_oun(cert)
             cns_in_certificate_chain.append(cert_identity)
 
-            if not self._is_root_certificate(cert) and "sha1" in cert.as_dict['signatureAlgorithm']:
+            if "sha1" in cert.as_dict['signatureAlgorithm'] and cert not in MOZILLA_TRUST_STORE:
                 has_sha1_signed_certificate = True
 
         sha1_text = 'OK - No SHA1-signed certificate in the chain' \
@@ -403,7 +405,7 @@ class CertInfoFullResult(PluginResult):
         has_sha1_signed_certificate = False
         for index, certificate in enumerate(self.certificate_chain, start=0):
 
-            if not self._is_root_certificate(certificate) and "sha1" in certificate.as_dict['signatureAlgorithm']:
+            if "sha1" in certificate.as_dict['signatureAlgorithm'] and certificate not in MOZILLA_TRUST_STORE:
                 has_sha1_signed_certificate = True
 
             cert_xml = Element('certificate', attrib={

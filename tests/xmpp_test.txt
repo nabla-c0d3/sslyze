@@ -1,2 +1,0 @@
-# python sslyze_cli.py --xml_out=xmpp.xml --tlsv1 --sslv2 --sslv3 --tlsv1_1 --tlsv1_2 --hide_rejected_ciphers --certinfo_basic --reneg --resum --starttls=xmpp --xmpp_to=gmail.com talk.google.com
-# python sslyze_cli.py --xml_out=jabber.xml --tlsv1 --sslv2 --sslv3 --tlsv1_1 --tlsv1_2 --hide_rejected_ciphers --certinfo_basic --reneg --resum --starttls=xmpp_server jabber.org

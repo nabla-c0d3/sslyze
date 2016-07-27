@@ -105,5 +105,5 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_unicode_leaf(self):
-        # TBD
+        # TBD - need to find a host with a certificate that has unicode in the common name
         pass

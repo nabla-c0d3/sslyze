@@ -116,3 +116,14 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+    def test_dh_info(self):
+        server_info = ServerConnectivityInfo(hostname='dh480.badssl.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = OpenSslCipherSuitesPlugin()
+        plugin_result = plugin.process_task(server_info, 'tlsv1')
+
+        self.assertTrue(plugin_result.preferred_cipher)
+        self.assertEquals(plugin_result.preferred_cipher.dh_info['GroupSize'], '480')
+        

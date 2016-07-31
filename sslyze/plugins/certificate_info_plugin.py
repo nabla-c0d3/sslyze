@@ -415,7 +415,7 @@ class CertInfoFullResult(PluginResult):
         for cert in self.certificate_chain:
             cert_identity = self._extract_subject_cn_or_oun(cert)
             cns_in_certificate_chain.append(cert_identity)
-        text_output.append(self.FIELD_FORMAT('Received Certificate Chain:', ' --> '.join(cns_in_certificate_chain)))
+        text_output.append(self.FIELD_FORMAT('Received Chain:', ' --> '.join(cns_in_certificate_chain)))
 
         # Print the Common Names within the verified certificate chain if validation was successful
         if self.verified_certificate_chain:
@@ -426,23 +426,23 @@ class CertInfoFullResult(PluginResult):
             verified_chain_txt = ' --> '.join(cns_in_certificate_chain)
         else:
             verified_chain_txt = 'ERROR - Could not build verified chain'
-        text_output.append(self.FIELD_FORMAT('Verified Certificate Chain :', verified_chain_txt))
+        text_output.append(self.FIELD_FORMAT('Verified Chain w/ Mozilla Store:', verified_chain_txt))
 
         if self.verified_certificate_chain:
             chain_with_anchor_txt = 'OK - Anchor certificate not sent' if not self.has_anchor_in_certificate_chain \
                 else 'WARNING - Received certificate chain contains the anchor certificate'
         else:
             chain_with_anchor_txt = 'ERROR - Could not build verified chain'
-        text_output.append(self.FIELD_FORMAT('Certificate Chain w/ Anchor:', chain_with_anchor_txt))
+        text_output.append(self.FIELD_FORMAT('Received Chain Contains Anchor:', chain_with_anchor_txt))
 
         chain_order_txt = 'OK - Order is valid' if self.is_certificate_chain_order_valid \
             else 'FAILED - Certificate chain out of order!'
-        text_output.append(self.FIELD_FORMAT('Certificate Chain Order:', chain_order_txt))
+        text_output.append(self.FIELD_FORMAT('Received Chain Order:', chain_order_txt))
 
-        sha1_text = 'OK - No SHA1-signed certificate in the chain' \
+        sha1_text = 'OK - No SHA1-signed certificate in the verified certificate chain' \
             if not self.has_sha1_in_certificate_chain \
-            else 'INSECURE - SHA1-signed certificate in the chain'
-        text_output.append(self.FIELD_FORMAT('SHA-1 Signature in Chain:', sha1_text))
+            else 'INSECURE - SHA1-signed certificate in the verified certificate chain'
+        text_output.append(self.FIELD_FORMAT('Verified Chain contains SHA1:', sha1_text))
 
         # OCSP stapling
         text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - OCSP Stapling')])
@@ -463,7 +463,7 @@ class CertInfoFullResult(PluginResult):
 
             ocsp_resp_txt = [
                 self.FIELD_FORMAT('OCSP Response Status:', self.ocsp_response['responseStatus']),
-                self.FIELD_FORMAT('Validation w/ Mozilla\'s CA Store:', ocsp_trust_txt),
+                self.FIELD_FORMAT('Validation w/ Mozilla Store:', ocsp_trust_txt),
                 self.FIELD_FORMAT('Responder Id:', self.ocsp_response['responderID'])]
 
             if 'successful' in self.ocsp_response['responseStatus']:

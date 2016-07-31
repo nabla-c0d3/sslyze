@@ -509,7 +509,10 @@ class CertInfoBasicResult(CertInfoFullResult):
             # Extract the CN from the issuer if there's one
             issuer_name = unicode(cert_dict['issuer']['commonName'], 'utf-8')
         except KeyError:
-            issuer_name = unicode(cert_dict['issuer'], 'utf-8')
+            # Otherwise show the whole Issuer field
+            issuer_name = unicode(
+                ' - '.join(['{}: {}'.format(key, value) for key, value in cert_dict['issuer'].iteritems()]), 'utf-8'
+            )
 
         text_output = [
             self.FIELD_FORMAT("SHA1 Fingerprint:", self.certificate_chain[0].sha1_fingerprint),

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
@@ -24,19 +25,26 @@ class ProtocolsTestCase(unittest.TestCase):
 
 
     def test_ipv6(self):
-        # TODO: to be added later
-        return
-        try:
-            server_info = ServerConnectivityInfo(hostname='www.ietf.org', ip_address='2001:1890:126c::1:1e')
-            server_info.test_connectivity_to_server()
-        except ServerConnectivityError as e:
-            print e
-            raise
+        server_info = ServerConnectivityInfo(hostname='www.google.com', ip_address='2607:f8b0:4005:804::2004')
+        server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, 'certinfo_basic')
 
-        self.assertEquals(len(plugin_result.certificate_chain), 2)
+        self.assertEquals(len(plugin_result.certificate_chain), 3)
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+
+    def test_international_names(self):
+        server_info = ServerConnectivityInfo(hostname=u'www.sociétégénérale.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+
+        self.assertEquals(len(plugin_result.certificate_chain), 3)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -55,7 +63,6 @@ class ProtocolsTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
-
 
 
     def test_starttls(self):

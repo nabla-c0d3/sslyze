@@ -115,8 +115,13 @@ class ServerConnectivityInfo(object):
         self.ip_address = ip_address
         if not self.ip_address:
             try:
-                self.ip_address = socket.gethostbyname(self.hostname)
-            except socket.gaierror:
+                addr_infos = socket.getaddrinfo(self.hostname, self.port, socket.AF_UNSPEC, socket.IPPROTO_IP)
+                family, socktype, proto, canonname, sockaddr = addr_infos[0]
+
+                # Works for both IPv4 and IPv6
+                self.ip_address = sockaddr[0]
+
+            except (socket.gaierror, IndexError):
                 raise ServerConnectivityError(self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED.format(hostname=self.hostname))
 
         # Use the hostname as the default SNI

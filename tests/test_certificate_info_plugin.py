@@ -93,9 +93,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, 'certinfo_basic')
 
-        # TODO: Expose has_sha1 as an attribute
-        self.assertIn('INSECURE - SHA1-signed certificate in the chain', '\n'.join(plugin_result.as_text()))
+        self.assertTrue(plugin_result.has_sha1_in_certificate_chain)
 
+        self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
 
@@ -106,8 +106,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, 'certinfo_basic')
 
-        self.assertIn('OK - No SHA1-signed certificate in the chain', '\n'.join(plugin_result.as_text()))
+        self.assertFalse(plugin_result.has_sha1_in_certificate_chain)
 
+        self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
 

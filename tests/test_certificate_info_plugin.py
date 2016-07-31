@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import unittest
 
@@ -93,6 +94,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_xml())
 
+
     def test_sha256_chain(self):
         server_info = ServerConnectivityInfo(hostname='sha256.badssl.com')
         server_info.test_connectivity_to_server()
@@ -104,6 +106,15 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_xml())
 
-    def test_unicode_leaf(self):
-        # TBD - need to find a host with a certificate that has unicode in the common name
-        pass
+
+    def test_unicode_certificate(self):
+        server_info = ServerConnectivityInfo(hostname=u'www.főgáz.hu')
+        server_info.test_connectivity_to_server()
+
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+
+        self.assertTrue(plugin_result.certificate_chain)
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())

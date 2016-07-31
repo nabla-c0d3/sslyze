@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import socket
 import unittest
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
@@ -24,7 +25,23 @@ class ProtocolsTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
 
+    @staticmethod
+    def _is_ipv6_available():
+        has_ipv6 = False
+        s = socket.socket(socket.AF_INET6)
+        try:
+            s.connect(('2607:f8b0:4005:804::2004', 443))
+            has_ipv6 = True
+        except:
+            pass
+        return has_ipv6
+
+
     def test_ipv6(self):
+        if not self._is_ipv6_available():
+            print 'WARNING: IPv6 not available - skipping test'
+            return
+
         server_info = ServerConnectivityInfo(hostname='www.google.com', ip_address='2607:f8b0:4005:804::2004')
         server_info.test_connectivity_to_server()
 

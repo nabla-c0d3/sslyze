@@ -127,6 +127,12 @@ class Certificate(object):
         self.as_dict = x509_certificate.as_dict()
         self.sha1_fingerprint = x509_certificate.get_SHA1_fingerprint()
 
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__) and self.as_pem == other.as_pem)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class CertificateInfoPlugin(plugin_base.PluginBase):
 
@@ -235,7 +241,7 @@ class CertInfoFullResult(PluginResult):
             certificate.
         verified_certificate_chain (List[Certificate]): The verified certificate chain; index 0 is the leaf
             certificate and the last element is the anchor/CA certificate from the Mozilla trust store. Will be empty if
-            validation failed.
+            validation failed or the verified chain could not be built.
         is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
         path_validation_result_list (List[PathValidationResult]): A list of attempts at validating the server's
             certificate chain path using various trust stores.
@@ -273,38 +279,48 @@ class CertInfoFullResult(PluginResult):
             if policy[0] in MOZILLA_EV_OIDS:
                 self.is_leaf_certificate_ev = True
 
-        was_validation_successful = False
+        self.is_certificate_chain_order_valid = self._is_certificate_chain_order_valid(self.certificate_chain)
+        self.verified_certificate_chain = []
         for path_result in path_validation_result_list:
             if path_result.is_certificate_trusted and 'Mozilla' in path_result.trust_store.name:
-                was_validation_successful = True
+                # Validation with the Mozilla store was successful; try to build the verified chain
+                if self.is_certificate_chain_order_valid:
+                    # Do not even try if the received chain was in the wrong order
+                    self.verified_certificate_chain = self._build_verified_certificate_chain(self.certificate_chain)
                 break
 
-        self.verified_certificate_chain = []
-        if was_validation_successful:
-            # Try to figure out the verified chain by finding the root CA in the Mozilla trust store
-            # TODO: OpenSSL 1.1.0 has SSL_get0_verified_chain() to do this directly
-            for cert in self.certificate_chain:
-                ca_cert = MOZILLA_TRUST_STORE.get_certificate_with_subject(cert.as_dict['issuer'])
-                self.verified_certificate_chain.append(cert)
-                if ca_cert:
-                    self.verified_certificate_chain.append(ca_cert)
-                    break
-
-        self.has_anchor_in_certificate_chain = len(self.verified_certificate_chain) != len(self.certificate_chain)
+        self.has_anchor_in_certificate_chain = False
+        if self.verified_certificate_chain and self.verified_certificate_chain[-1] in self.certificate_chain:
+            self.has_anchor_in_certificate_chain = True
 
         self.path_validation_result_list = path_validation_result_list
         self.path_validation_error_list = path_validation_error_list
         self.hostname_validation_result = certificate_chain[0].matches_hostname(server_info.tls_server_name_indication)
-        self.is_certificate_chain_order_valid = self._is_certificate_chain_order_valid(self.certificate_chain)
-        self.has_sha1_in_certificate_chain = self._has_sha1_in_certificate_chain()
 
-
-    def _has_sha1_in_certificate_chain(self):
+        # Check if a SHA1-signed certificate is in the chain
         # Root certificates can still be signed with SHA1 so we only check leaf and intermediate certificates
+        self.has_sha1_in_certificate_chain = False
         for cert in self.verified_certificate_chain[:-1]:
             if "sha1" in cert.as_dict['signatureAlgorithm']:
-                return True
-        return False
+                self.has_sha1_in_certificate_chain = True
+
+
+    @staticmethod
+    def _build_verified_certificate_chain(received_certificate_chain):
+        """Try to figure out the verified chain by finding the anchor/root CA the received chain chains up to in the
+        Mozilla trust store. This will not clean the certificate chain if additional/invalid certificates were sent and
+        assumes certificates were sent in the right order.
+        """
+        # TODO: OpenSSL 1.1.0 has SSL_get0_verified_chain() to do this directly
+        verified_certificate_chain = []
+        # Assume that the certificates were sent in the correct order or give up
+        for cert in received_certificate_chain:
+            ca_cert = MOZILLA_TRUST_STORE.get_certificate_with_subject(cert.as_dict['issuer'])
+            verified_certificate_chain.append(cert)
+            if ca_cert:
+                verified_certificate_chain.append(ca_cert)
+                break
+        return verified_certificate_chain
 
 
     def _get_certificate_text(self):
@@ -394,11 +410,6 @@ class CertInfoFullResult(PluginResult):
                                                                    store_version=path_result.trust_store.version),
                                                  error_txt))
 
-        sha1_text = 'OK - No SHA1-signed certificate in the chain' \
-            if not self.has_sha1_in_certificate_chain \
-            else 'INSECURE - SHA1-signed certificate in the chain'
-        text_output.append(self.FIELD_FORMAT('Weak Signature:', sha1_text))
-
         # Print the Common Names within the certificate chain
         cns_in_certificate_chain = []
         for cert in self.certificate_chain:
@@ -412,16 +423,26 @@ class CertInfoFullResult(PluginResult):
             for cert in self.verified_certificate_chain:
                 cert_identity = self._extract_subject_cn_or_oun(cert)
                 cns_in_certificate_chain.append(cert_identity)
-            text_output.append(self.FIELD_FORMAT('Verified Certificate Chain :',
-                                                 ' --> '.join(cns_in_certificate_chain)))
+            verified_chain_txt = ' --> '.join(cns_in_certificate_chain)
+        else:
+            verified_chain_txt = 'ERROR - Could not build verified chain'
+        text_output.append(self.FIELD_FORMAT('Verified Certificate Chain :', verified_chain_txt))
 
-        chain_with_anchor_txt = 'OK - Anchor certificate not sent' if self.has_anchor_in_certificate_chain \
-            else 'WARNING - Received certificate chain contains the anchor certificate!'
+        if self.verified_certificate_chain:
+            chain_with_anchor_txt = 'OK - Anchor certificate not sent' if not self.has_anchor_in_certificate_chain \
+                else 'WARNING - Received certificate chain contains the anchor certificate'
+        else:
+            chain_with_anchor_txt = 'ERROR - Could not build verified chain'
         text_output.append(self.FIELD_FORMAT('Certificate Chain w/ Anchor:', chain_with_anchor_txt))
 
         chain_order_txt = 'OK - Order is valid' if self.is_certificate_chain_order_valid \
             else 'FAILED - Certificate chain out of order!'
         text_output.append(self.FIELD_FORMAT('Certificate Chain Order:', chain_order_txt))
+
+        sha1_text = 'OK - No SHA1-signed certificate in the chain' \
+            if not self.has_sha1_in_certificate_chain \
+            else 'INSECURE - SHA1-signed certificate in the chain'
+        text_output.append(self.FIELD_FORMAT('SHA-1 Signature in Chain:', sha1_text))
 
         # OCSP stapling
         text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - OCSP Stapling')])

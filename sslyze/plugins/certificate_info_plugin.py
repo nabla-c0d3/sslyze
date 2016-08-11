@@ -126,6 +126,7 @@ class Certificate(object):
         self.as_text = x509_certificate.as_text()
         self.as_dict = x509_certificate.as_dict()
         self.sha1_fingerprint = x509_certificate.get_SHA1_fingerprint()
+        self.hpkp_pin = x509_certificate.get_hpkp_pin()
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and self.as_pem == other.as_pem)

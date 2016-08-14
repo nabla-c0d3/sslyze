@@ -159,14 +159,17 @@ class ServerConnectivityInfo(object):
         """
         # Will raise a ValueError if the server string is not properly formatted
         hostname, ip_address, port = CommandLineServerStringParser.parse_server_string(server_string)
-        return cls(hostname=hostname,
-                   port=port,
-                   ip_address=ip_address,
-                   tls_wrapped_protocol=tls_wrapped_protocol,
-                   tls_server_name_indication=tls_server_name_indication,
-                   xmpp_to_hostname=xmpp_to_hostname,
-                   client_auth_credentials=client_auth_credentials,
-                   http_tunneling_settings=http_tunneling_settings)
+        server_info = cls(hostname=hostname,
+                         port=port,
+                         ip_address=ip_address,
+                         tls_wrapped_protocol=tls_wrapped_protocol,
+                         tls_server_name_indication=tls_server_name_indication,
+                         xmpp_to_hostname=xmpp_to_hostname,
+                         client_auth_credentials=client_auth_credentials,
+                         http_tunneling_settings=http_tunneling_settings)
+        # Keep the original server string to display it in the CLI output if there was a connection error
+        server_info.server_string = server_string
+        return server_info
 
 
     def test_connectivity_to_server(self, network_timeout=None):

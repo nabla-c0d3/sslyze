@@ -536,8 +536,7 @@ def main():
 
 
     for tentative_server_info, exception in connectivity_tester.get_invalid_servers():
-        invalid_servers_list.append((u'{}:{}'.format(tentative_server_info.hostname, tentative_server_info.port),
-                                     exception))
+        invalid_servers_list.append((tentative_server_info.server_string, exception))
 
 
     # Print servers we were NOT able to connect to

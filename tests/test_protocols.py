@@ -5,7 +5,7 @@ import unittest
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError, \
     ClientAuthenticationServerConfigurationEnum
-from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from sslyze.ssl_settings import TlsWrappedProtocolEnum, HttpConnectTunnelingSettings
 
 
 class ProtocolsTestCase(unittest.TestCase):
@@ -109,3 +109,12 @@ class ProtocolsTestCase(unittest.TestCase):
 
             self.assertTrue(plugin_result.as_text())
             self.assertTrue(plugin_result.as_xml())
+
+
+    def test_https_tunneling(self):
+        # Ensure that an IP address cannot be specified when using an HTTP proxy for scans
+        tunnel_settings = HttpConnectTunnelingSettings('fakedomain', 443)
+        with self.assertRaisesRegexp(ValueError, 'Cannot specify both ip_address and http_tunneling_settings'):
+            ServerConnectivityInfo(hostname='www.google.com', ip_address='1.2.3.4',
+                                   http_tunneling_settings=tunnel_settings)
+

@@ -79,7 +79,8 @@ class ServerConnectivityInfo(object):
             port (int): The server's TLS port number. If not supplied, the default port number for the specified
                 `tls_wrapped_protocol` will be used.
             ip_address (Optional[str]): The server's IP address. If not supplied, a DNS lookup for the specified
-                `hostname` will be performed.
+                `hostname` will be performed. If `http_tunneling_settings` is specified, `ip_address` cannot be supplied
+                as the HTTP proxy will be responsible for looking up and connecting to the server to be scanned.
             tls_wrapped_protocol (Optional[TlsWrappedProtocolEnum]): The protocol wrapped in TLS that the server
                 expects. It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what
                 kind of "hello" message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If
@@ -103,6 +104,7 @@ class ServerConnectivityInfo(object):
         Raises:
             ServerConnectivityError: If a DNS lookup was attempted and failed.
             ValueError: If `xmpp_to_hostname` was specified for a non-XMPP protocol.
+            ValueError: If both `ip_address` and `http_tunneling_settings` were supplied.
         """
         # Store the hostname in ACE format in the case the domain name is unicode
         self.hostname = hostname.encode('idna')
@@ -112,8 +114,11 @@ class ServerConnectivityInfo(object):
         if not self.port:
             self.port = self.TLS_DEFAULT_PORTS[tls_wrapped_protocol]
 
-        self.ip_address = ip_address
-        if not self.ip_address:
+        if ip_address and http_tunneling_settings:
+            raise ValueError('Cannot specify both ip_address and http_tunneling_settings.')
+
+        elif not ip_address and not http_tunneling_settings:
+            # Do a DNS lookup
             try:
                 addr_infos = socket.getaddrinfo(self.hostname, self.port, socket.AF_UNSPEC, socket.IPPROTO_IP)
                 family, socktype, proto, canonname, sockaddr = addr_infos[0]
@@ -123,6 +128,10 @@ class ServerConnectivityInfo(object):
 
             except (socket.gaierror, IndexError):
                 raise ServerConnectivityError(self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED.format(hostname=self.hostname))
+
+        else:
+            # An IP address was specified or the scan will go through a proxy
+            self.ip_address = ip_address
 
         # Use the hostname as the default SNI
         self.tls_server_name_indication = tls_server_name_indication if tls_server_name_indication else self.hostname
@@ -149,7 +158,7 @@ class ServerConnectivityInfo(object):
         corresponding ServerConnectivityInfo.
         """
         # Will raise a ValueError if the server string is not properly formatted
-        (hostname, ip_address, port) = CommandLineServerStringParser.parse_server_string(server_string)
+        hostname, ip_address, port = CommandLineServerStringParser.parse_server_string(server_string)
         return cls(hostname=hostname,
                    port=port,
                    ip_address=ip_address,

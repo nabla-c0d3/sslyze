@@ -127,20 +127,18 @@ class HstsResult(PluginResult):
         else:
             txt_result.append(self.FIELD_FORMAT("NOT SUPPORTED - Server did not send an HSTS header", ""))
 
-            
-        txt_result.extend(['', self.PLUGIN_TITLE_FORMAT('Computed HPKP Pins for Current Chain')])
-        index = 0
+        computed_hpkp_pins_text = ['', self.PLUGIN_TITLE_FORMAT('Computed HPKP Pins for Current Chain')]
         server_pin_list = []
         if self.verified_certificate_chain:
-            for cert in self.verified_certificate_chain:
+            for index, cert in enumerate(self.verified_certificate_chain, start=0):
                 cert_subject = CertInfoFullResult._extract_subject_cn_or_oun(cert)
-                txt_result.append(self.PIN_TXT_FORMAT(('{} - {}'.format(index, cert_subject)), cert.hpkp_pin))
+                computed_hpkp_pins_text.append(self.PIN_TXT_FORMAT(('{} - {}'.format(index, cert_subject)),
+                                                                   cert.hpkp_pin))
                 server_pin_list.append(cert.hpkp_pin)
-                index += 1
         else:
-            txt_result.append(self.FIELD_FORMAT("ERROR - Could not build verified chain", ""))
+            computed_hpkp_pins_text.append(self.FIELD_FORMAT("ERROR - Could not build verified chain", ""))
 
-        txt_result.extend(['', self.PLUGIN_TITLE_FORMAT('HTTP Public Key Pinning')])
+        txt_result.extend(['', self.PLUGIN_TITLE_FORMAT('HTTP Public Key Pinning (HPKP)')])
         if self.hpkp_header:
             # Parse the header
             configured_pin_list = []
@@ -176,6 +174,9 @@ class HstsResult(PluginResult):
 
         else:
             txt_result.append(self.FIELD_FORMAT("NOT SUPPORTED - Server did not send an HPKP header", ""))
+
+        # Dispay computed HPKP pins last
+        txt_result.extend(computed_hpkp_pins_text)
 
         return txt_result
 

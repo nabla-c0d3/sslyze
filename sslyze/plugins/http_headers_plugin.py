@@ -66,7 +66,7 @@ class HttpHeadersPlugin(plugin_base.PluginBase):
                 hsts_header = http_resp.getheader('strict-transport-security', None)
                 hpkp_header = http_resp.getheader('public-key-pins', None)
                 if hpkp_header is None:
-                    hpkp_header = http_resp.getheader('public-key-pins-only', None)
+                    hpkp_header = http_resp.getheader('public-key-pins-report-only', None)
 
             # If there was no HSTS header, check if the server returned a redirection
             if hsts_header is None and 300 <= http_resp.status < 400:

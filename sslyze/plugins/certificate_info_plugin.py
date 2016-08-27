@@ -124,7 +124,15 @@ class Certificate(object):
     def __init__(self, x509_certificate):
         self.as_pem = x509_certificate.as_pem().strip()
         self.as_text = x509_certificate.as_text()
+
         self.as_dict = x509_certificate.as_dict()
+        # Sanitize OpenSSL's output
+        for key, value in self.as_dict.items():
+            if 'subjectPublicKeyInfo' in key:
+                # Remove the bit suffix so the element is just a number for the key size
+                if 'publicKeySize' in value.keys():
+                    value['publicKeySize'] = value['publicKeySize'].split(' bit')[0]
+
         self.sha1_fingerprint = x509_certificate.get_SHA1_fingerprint()
         self.hpkp_pin = x509_certificate.get_hpkp_pin()
 
@@ -499,19 +507,17 @@ class CertInfoFullResult(PluginResult):
 
             # Add the parsed certificate
             for key, value in certificate.as_dict.items():
-                # Sanitize OpenSSL's output
-                if 'subjectPublicKeyInfo' in key:
-                    # Remove the bit suffix so the element is just a number for the key size
-                    if 'publicKeySize' in value.keys():
-                        value['publicKeySize'] = value['publicKeySize'].split(' bit')[0]
-
                 cert_xml.append(_keyvalue_pair_to_xml(key, value))
-
             cert_xml_list.append(cert_xml)
 
-        cert_chain_xml = Element('certificateChain',
-                                 attrib={'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain),
-                                         'isChainOrderValid': str(self.is_certificate_chain_order_valid)})
+
+        cert_chain_attrs ={'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain),
+                           'isChainOrderValid': str(self.is_certificate_chain_order_valid)}
+        if self.verified_certificate_chain:
+            cert_chain_attrs['containsAnchorCertificate'] = str(False) if not self.has_anchor_in_certificate_chain \
+                else str(True)
+        cert_chain_xml = Element('receivedCertificateChain', attrib=cert_chain_attrs)
+
         for cert_xml in cert_xml_list:
             cert_chain_xml.append(cert_xml)
         xml_output.append(cert_chain_xml)
@@ -534,11 +540,36 @@ class CertInfoFullResult(PluginResult):
                 'validationResult': path_result.verify_string
             }
 
-            # EV certs - Only Mozilla supported for now
-            if self.is_leaf_certificate_ev and 'Mozilla' in path_result.trust_store.name:
-                path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
+            # Things we only do with the Mozilla store
+            verified_cert_chain_xml = None
+            if 'Mozilla' in path_result.trust_store.name:
+                # EV certs
+                if self.is_leaf_certificate_ev:
+                    path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
 
-            trust_validation_xml.append(Element('pathValidation', attrib=path_attrib_xml))
+                # Verified chain
+                if self.verified_certificate_chain:
+                    verified_cert_chain_xml = Element('verifiedCertificateChain')
+                    for certificate in self.certificate_chain:
+                        cert_xml = Element('certificate', attrib={'sha1Fingerprint': certificate.sha1_fingerprint})
+
+                        # Add the PEM cert
+                        cert_as_pem_xml = Element('asPEM')
+                        cert_as_pem_xml.text = certificate.as_pem
+                        cert_xml.append(cert_as_pem_xml)
+
+                        # Add the parsed certificate
+                        for key, value in certificate.as_dict.items():
+                            cert_xml.append(_keyvalue_pair_to_xml(key, value))
+                        cert_xml_list.append(cert_xml)
+
+                        verified_cert_chain_xml.append(cert_xml)
+
+            path_valid_xml = Element('pathValidation', attrib=path_attrib_xml)
+            if verified_cert_chain_xml:
+                path_valid_xml.append(verified_cert_chain_xml)
+
+            trust_validation_xml.append(path_valid_xml)
 
 
         # Path validation that ran into errors

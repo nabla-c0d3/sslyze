@@ -127,8 +127,7 @@ class HstsResult(PluginResult):
         else:
             txt_result.append(self.FIELD_FORMAT("NOT SUPPORTED - Server did not send an HSTS header", ""))
 
-        # TODO: Add verified_chain to certinfo XML
-
+            
         txt_result.extend(['', self.PLUGIN_TITLE_FORMAT('Computed HPKP Pins for Current Chain')])
         index = 0
         server_pin_list = []

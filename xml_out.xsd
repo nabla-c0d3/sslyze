@@ -91,7 +91,7 @@
     <xs:element name="certinfo_full">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="certificateChain"/>
+                <xs:element ref="receivedCertificateChain"/>
                 <xs:element ref="certificateValidation"/>
                 <xs:element ref="ocspStapling"/>
             </xs:sequence>
@@ -102,7 +102,7 @@
     <xs:element name="certinfo_basic">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="certificateChain"/>
+                <xs:element ref="receivedCertificateChain"/>
                 <xs:element ref="certificateValidation"/>
                 <xs:element ref="ocspStapling"/>
             </xs:sequence>
@@ -110,13 +110,22 @@
             <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
-    <xs:element name="certificateChain">
+    <xs:element name="receivedCertificateChain">
         <xs:complexType>
             <xs:sequence>
                 <xs:element maxOccurs="unbounded" ref="certificate"/>
             </xs:sequence>
             <xs:attribute name="hasSha1SignedCertificate" use="required"/>
             <xs:attribute name="isChainOrderValid" use="required"/>
+            <xs:attribute name="containsAnchorCertificate"/>
+        </xs:complexType>
+    </xs:element>
+        <xs:element name="verifiedCertificateChain">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="certificate"/>
+            </xs:sequence>
+            <xs:attribute name="hasSha1SignedCertificate" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="certificateValidation">
@@ -140,6 +149,7 @@
             <xs:attribute name="usingTrustStore" use="required"/>
             <xs:attribute name="validationResult"/>
             <xs:attribute name="error"/>
+            <xs:element minOccurs="0" ref="verifiedCertificateChain"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="ocspStapling">

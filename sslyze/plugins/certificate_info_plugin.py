@@ -566,7 +566,7 @@ class CertInfoFullResult(PluginResult):
                         verified_cert_chain_xml.append(cert_xml)
 
             path_valid_xml = Element('pathValidation', attrib=path_attrib_xml)
-            if verified_cert_chain_xml:
+            if verified_cert_chain_xml is not None:
                 path_valid_xml.append(verified_cert_chain_xml)
 
             trust_validation_xml.append(path_valid_xml)

@@ -17,7 +17,7 @@ class HstsPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
-    def test_hsts_disabled(self):
+    def test_hsts_and_hpkp_disabled(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
@@ -25,6 +25,20 @@ class HstsPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, 'hsts')
 
         self.assertFalse(plugin_result.hsts_header)
+        self.assertFalse(plugin_result.hpkp_header)
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+    def test_hpkp_enabled(self):
+        server_info = ServerConnectivityInfo(hostname='madavi.de')
+        server_info.test_connectivity_to_server()
+
+        plugin = HstsPlugin()
+        plugin_result = plugin.process_task(server_info, 'hsts')
+
+        self.assertTrue(plugin_result.hpkp_header)
+        self.assertTrue(plugin_result.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())

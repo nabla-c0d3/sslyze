@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Plugin to test the server for the presence of the HTTP Strict Transport Security header.
+"""Plugin to test the server for the presence of the HTTP Strict Transport Security and HTTP Public Key Pinning
+headers.
 """
 
 import Cookie
@@ -15,18 +16,19 @@ from sslyze.utils.http_response_parser import parse_http_response
 
 class HttpHeadersPlugin(plugin_base.PluginBase):
 
-    interface = plugin_base.PluginInterface(title="HstsPlugin", description='')
+    interface = plugin_base.PluginInterface(title="HttpHeadersPlugin", description='')
     interface.add_command(
-        command="hsts",
-        help="Checks support for HTTP Strict Transport Security (HSTS) by collecting any Strict-Transport-Security "
-             "field present in the HTTP response sent back by the server(s)."
+        command="http_headers",
+        help="Checks for the HTTP Strict Transport Security (HSTS) and HTTP Public Key Pinning (HPKP) HTTP headers "
+             "within the response sent back by the server(s). Also computes the HPKP pins for the server(s)' current "
+             "certificate chain."
     )
 
 
     def process_task(self, server_info, command, options_dict=None):
 
         if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
-            raise ValueError('Cannot test for HSTS on a StartTLS connection.')
+            raise ValueError('Cannot test for HTTP headers on a StartTLS connection.')
 
         hsts_header, hpkp_header, certificate_chain = self._get_hsts_header(server_info)
         return HstsResult(server_info, command, options_dict, hsts_header, hpkp_header, certificate_chain)

@@ -3,14 +3,14 @@ from sslyze.plugins.http_headers_plugin import HttpHeadersPlugin
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class HstsPluginTestCase(unittest.TestCase):
+class HttpHeadersPluginTestCase(unittest.TestCase):
 
     def test_hsts_enabled(self):
         server_info = ServerConnectivityInfo(hostname='hsts.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = HttpHeadersPlugin()
-        plugin_result = plugin.process_task(server_info, 'hsts')
+        plugin_result = plugin.process_task(server_info, 'http_headers')
 
         self.assertTrue(plugin_result.hsts_header)
 
@@ -22,7 +22,7 @@ class HstsPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = HttpHeadersPlugin()
-        plugin_result = plugin.process_task(server_info, 'hsts')
+        plugin_result = plugin.process_task(server_info, 'http_headers')
 
         self.assertFalse(plugin_result.hsts_header)
         self.assertFalse(plugin_result.hpkp_header)
@@ -35,7 +35,7 @@ class HstsPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = HttpHeadersPlugin()
-        plugin_result = plugin.process_task(server_info, 'hsts')
+        plugin_result = plugin.process_task(server_info, 'http_headers')
 
         self.assertTrue(plugin_result.hpkp_header)
         self.assertTrue(plugin_result.verified_certificate_chain)

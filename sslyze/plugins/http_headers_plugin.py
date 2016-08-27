@@ -13,7 +13,7 @@ from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.http_response_parser import parse_http_response
 
 
-class HstsPlugin(plugin_base.PluginBase):
+class HttpHeadersPlugin(plugin_base.PluginBase):
 
     interface = plugin_base.PluginInterface(title="HstsPlugin", description='')
     interface.add_command(

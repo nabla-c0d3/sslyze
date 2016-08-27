@@ -76,7 +76,7 @@ class PluginsFinder:
         import sslyze.plugins.compression_plugin
         import sslyze.plugins.fallback_scsv_plugin
         import sslyze.plugins.heartbleed_plugin
-        import sslyze.plugins.hsts_plugin
+        import sslyze.plugins.http_headers_plugin
         import sslyze.plugins.openssl_ccs_injection_plugin
         import sslyze.plugins.openssl_cipher_suites_plugin
         import sslyze.plugins.session_renegotiation_plugin
@@ -87,7 +87,7 @@ class PluginsFinder:
             sslyze.plugins.compression_plugin,
             sslyze.plugins.fallback_scsv_plugin,
             sslyze.plugins.heartbleed_plugin,
-            sslyze.plugins.hsts_plugin,
+            sslyze.plugins.http_headers_plugin,
             sslyze.plugins.openssl_ccs_injection_plugin,
             sslyze.plugins.openssl_cipher_suites_plugin,
             sslyze.plugins.session_renegotiation_plugin,

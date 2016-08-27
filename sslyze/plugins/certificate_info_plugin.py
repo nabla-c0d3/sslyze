@@ -497,7 +497,8 @@ class CertInfoFullResult(PluginResult):
             cert_xml = Element('certificate', attrib={
                 'sha1Fingerprint': certificate.sha1_fingerprint,
                 'position': 'leaf' if index == 0 else 'intermediate',
-                'suppliedServerNameIndication': self.server_info.tls_server_name_indication
+                'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
+                'hpkpSha256Pin': certificate.hpkp_pin
             })
 
             # Add the PEM cert
@@ -511,8 +512,7 @@ class CertInfoFullResult(PluginResult):
             cert_xml_list.append(cert_xml)
 
 
-        cert_chain_attrs ={'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain),
-                           'isChainOrderValid': str(self.is_certificate_chain_order_valid)}
+        cert_chain_attrs ={'isChainOrderValid': str(self.is_certificate_chain_order_valid)}
         if self.verified_certificate_chain:
             cert_chain_attrs['containsAnchorCertificate'] = str(False) if not self.has_anchor_in_certificate_chain \
                 else str(True)
@@ -549,9 +549,14 @@ class CertInfoFullResult(PluginResult):
 
                 # Verified chain
                 if self.verified_certificate_chain:
-                    verified_cert_chain_xml = Element('verifiedCertificateChain')
+                    verified_cert_chain_xml = Element('verifiedCertificateChain',
+                                                      {'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain),})
                     for certificate in self.certificate_chain:
-                        cert_xml = Element('certificate', attrib={'sha1Fingerprint': certificate.sha1_fingerprint})
+                        cert_xml = Element('certificate', attrib={
+                            'sha1Fingerprint': certificate.sha1_fingerprint,
+                            'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
+                            'hpkpSha256Pin': certificate.hpkp_pin
+                        })
 
                         # Add the PEM cert
                         cert_as_pem_xml = Element('asPEM')

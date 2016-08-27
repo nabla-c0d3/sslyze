@@ -40,7 +40,7 @@
                 <xs:element minOccurs="0" ref="certinfo_basic"/>
                 <xs:element minOccurs="0" ref="compression"/>
                 <xs:element minOccurs="0" ref="heartbleed"/>
-                <xs:element minOccurs="0" ref="hsts"/>
+                <xs:element minOccurs="0" ref="http_headers"/>
                 <xs:element minOccurs="0" ref="reneg"/>
                 <xs:element minOccurs="0" ref="resum"/>
                 <xs:element minOccurs="0" ref="resum_rate"/>
@@ -115,7 +115,6 @@
             <xs:sequence>
                 <xs:element maxOccurs="unbounded" ref="certificate"/>
             </xs:sequence>
-            <xs:attribute name="hasSha1SignedCertificate" use="required"/>
             <xs:attribute name="isChainOrderValid" use="required"/>
             <xs:attribute name="containsAnchorCertificate"/>
         </xs:complexType>
@@ -144,12 +143,14 @@
     </xs:element>
     <xs:element name="pathValidation">
         <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" ref="verifiedCertificateChain"/>
+            </xs:sequence>
             <xs:attribute name="isExtendedValidationCertificate"/>
             <xs:attribute name="trustStoreVersion" use="required"/>
             <xs:attribute name="usingTrustStore" use="required"/>
             <xs:attribute name="validationResult"/>
             <xs:attribute name="error"/>
-            <xs:element minOccurs="0" ref="verifiedCertificateChain"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="ocspStapling">
@@ -213,10 +214,11 @@
             <xs:attribute name="isVulnerable" use="required"/>
         </xs:complexType>
     </xs:element>
-    <xs:element name="hsts">
+    <xs:element name="http_headers">
         <xs:complexType>
             <xs:all>
                 <xs:element minOccurs="0" ref="httpStrictTransportSecurity"/>
+                <xs:element minOccurs="0" ref="httpPublicKeyPinning"/>
             </xs:all>
             <xs:attribute name="title"/>
             <xs:attribute name="exception"/>
@@ -224,12 +226,29 @@
     </xs:element>
     <xs:element name="httpStrictTransportSecurity">
         <xs:complexType>
-            <xs:attribute name="includeSubdomains"/>
+            <xs:attribute name="includeSubDomains"/>
             <xs:attribute name="isSupported" use="required"/>
             <xs:attribute name="maxAge"/>
+            <xs:attribute name="preload"/>
             <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
+        <xs:element name="httpPublicKeyPinning">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="pinSha256"/>
+            </xs:sequence>
+            <xs:attribute name="includeSubDomains"/>
+            <xs:attribute name="isSupported" use="required"/>
+            <xs:attribute name="maxAge"/>
+            <xs:attribute name="reportOnly"/>
+            <xs:attribute name="reportUri"/>
+            <xs:attribute name="isValidPinConfigured"/>
+            <xs:attribute name="isBackupPinConfigured"/>
+            <xs:attribute name="exception"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="pinSha256" type="xs:string"/>
     <xs:element name="reneg">
         <xs:complexType>
             <xs:sequence>
@@ -356,6 +375,7 @@
             </xs:sequence>
             <xs:attribute name="position"/>
             <xs:attribute name="sha1Fingerprint" use="required"/>
+            <xs:attribute name="hpkpSha256Pin" use="required"/>
             <xs:attribute name="suppliedServerNameIndication" use="required"/>
         </xs:complexType>
     </xs:element>

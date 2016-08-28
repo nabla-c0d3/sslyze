@@ -30,75 +30,44 @@ class HttpHeadersPlugin(plugin_base.PluginBase):
         if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
             raise ValueError('Cannot test for HTTP headers on a StartTLS connection.')
 
-        hsts_header, hpkp_header, hpkp_report_only, certificate_chain = self._get_hsts_header(server_info)
+        hsts_header, hpkp_header, hpkp_report_only, certificate_chain = self._get_security_headers(server_info)
         return HttpHeadersResult(server_info, command, options_dict, hsts_header, hpkp_header, hpkp_report_only,
                                  certificate_chain)
 
+    # Sample GET request with the Chrome for Windows 7 User Agent
+    HTTP_GET_FORMAT = 'GET / HTTP/1.1\r\n' \
+                      'Host: {host}\r\n' \
+                      'User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36\r\n' \
+                      'Connection: close\r\n\r\n'
 
-
-    MAX_REDIRECT = 5
-
-    def _get_hsts_header(self, server_info):
-        certificate_chain = None
-        hsts_header = None
-        hpkp_header = None
+    @classmethod
+    def _get_security_headers(cls, server_info):
         hpkp_report_only = False
-        nb_redirect = 0
-        http_get_format = 'GET {0} HTTP/1.0\r\nHost: {1}\r\n{2}Connection: close\r\n\r\n'.format
-        http_path = '/'
-        http_append = ''
 
-        while nb_redirect < self.MAX_REDIRECT:
-            # Always use a new connection as some servers always close the connection after sending back an HTTP
-            # response
-            ssl_connection = server_info.get_preconfigured_ssl_connection()
+        # Perform the SSL handshake
+        ssl_connection = server_info.get_preconfigured_ssl_connection()
+        ssl_connection.connect()
+        certificate_chain = ssl_connection.get_peer_cert_chain()
 
-            # Perform the SSL handshake
-            ssl_connection.connect()
-            certificate_chain = ssl_connection.get_peer_cert_chain()
+        # Send an HTTP GET request to the server
+        ssl_connection.write(cls.HTTP_GET_FORMAT.format(host=server_info.hostname))
+        http_resp = parse_http_response(ssl_connection)
+        ssl_connection.close()
 
-            ssl_connection.write(http_get_format(http_path, server_info.hostname, http_append))
-            http_resp = parse_http_response(ssl_connection)
-            ssl_connection.close()
-            
-            if http_resp.version == 9 :
-                # HTTP 0.9 => Probably not an HTTP response
-                raise ValueError('Server did not return an HTTP response')
-            else:
-                hsts_header = http_resp.getheader('strict-transport-security', None)
-                hpkp_header = http_resp.getheader('public-key-pins', None)
-                if hpkp_header is None:
-                    hpkp_report_only = True
-                    hpkp_header = http_resp.getheader('public-key-pins-report-only', None)
+        if http_resp.version == 9 :
+            # HTTP 0.9 => Probably not an HTTP response
+            raise ValueError('Server did not return an HTTP response')
+        else:
+            hsts_header = http_resp.getheader('strict-transport-security', None)
+            hpkp_header = http_resp.getheader('public-key-pins', None)
+            if hpkp_header is None:
+                hpkp_report_only = True
+                hpkp_header = http_resp.getheader('public-key-pins-report-only', None)
 
-            # If there was no HSTS header, check if the server returned a redirection
-            if hsts_header is None and 300 <= http_resp.status < 400:
-                redirect_header = http_resp.getheader('Location', None)
-                cookie_header = http_resp.getheader('Set-Cookie', None)
-                
-                if redirect_header is None:
-                    break
-                o = urlparse(redirect_header)
-                
-                # Handle absolute redirection URL but only allow redirections to the same domain and port
-                if o.hostname and o.hostname != server_info.hostname:
-                    break
-                else:
-                    http_path = o.path
-                    if o.scheme == 'http':
-                        # We would have to use urllib for http: URLs
-                        break
-
-                # Handle cookies
-                if cookie_header:
-                    cookie = Cookie.SimpleCookie(cookie_header)
-                    if cookie:
-                        http_append = 'Cookie:' + cookie.output(attrs=[], header='', sep=';') + '\r\n'
-
-                nb_redirect+=1
-            else:
-                # If the server did not return a redirection just give up
-                break
+        # We do not follow redirections because the security headers must be set on the first page according to
+        # https://hstspreload.appspot.com/:
+        # "If you are serving an additional redirect from your HTTPS site, that redirect must still have the HSTS
+        # header (rather than the page it redirects to)."
 
         return hsts_header, hpkp_header, hpkp_report_only, certificate_chain
 

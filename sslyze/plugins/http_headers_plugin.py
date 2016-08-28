@@ -167,7 +167,7 @@ class HttpHeadersResult(PluginResult):
             self.is_backup_pin_configured = set(self.hpkp_header.pin_sha256_list) != set(server_pin_list)
 
 
-    PIN_TXT_FORMAT = '      {0:<80}{1}'.format
+    PIN_TXT_FORMAT = '      {0:<50}{1}'.format
 
     def as_text(self):
         txt_result = [self.PLUGIN_TITLE_FORMAT('HTTP Strict Transport Security (HSTS)')]
@@ -183,6 +183,9 @@ class HttpHeadersResult(PluginResult):
         if self.verified_certificate_chain:
             for index, cert in enumerate(self.verified_certificate_chain, start=0):
                 cert_subject = CertInfoFullResult._extract_subject_cn_or_oun(cert)
+                if len(cert_subject) > 40:
+                    # Make the CN shorter when displaying it
+                    cert_subject = '{}...'.format(cert_subject[:40])
                 computed_hpkp_pins_text.append(self.PIN_TXT_FORMAT(('{} - {}'.format(index, cert_subject)),
                                                                    cert.hpkp_pin))
         else:

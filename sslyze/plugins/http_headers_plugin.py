@@ -127,11 +127,11 @@ class HttpHeadersResult(PluginResult):
         is_valid_pin_configured (bool): True if at least one of the configured pins was found in the server's
             verified certificate chain. None if the verified chain could not be built or no HPKP header was returned.
         is_backup_pin_configured (bool): True if if at least one of the configured pins was NOT found in the server's
-            verified certificate chain. None if the verified chain could not be builtor no HPKP header was returned.
+            verified certificate chain. None if the verified chain could not be built or no HPKP header was returned.
         verified_certificate_chain (List[Certificate]): The verified certificate chain; index 0 is the leaf
             certificate and the last element is the anchor/CA certificate from the Mozilla trust store. Will be empty if
             validation failed or the verified chain could not be built. The HPKP pin for each certificate is available
-            in the certificate's hpkp_pin attribute.
+            in the certificate's hpkp_pin attribute. None if the verified chain could not be built.
 
     """
 
@@ -144,8 +144,12 @@ class HttpHeadersResult(PluginResult):
         self.hpkp_header = ParsedHpkpHeader(hpkp_header, hpkp_report_only) if hpkp_header else None
 
         # Hack: use function in CertificateInfoPlugin to get the verified certificate chain so we can check the pins
-        self.verified_certificate_chain = CertInfoFullResult._build_verified_certificate_chain(
-            [Certificate(x509_cert) for x509_cert in certificate_chain])
+        self.verified_certificate_chain = None
+        parsed_certificate_chain = [Certificate(x509_cert) for x509_cert in certificate_chain]
+        if CertInfoFullResult._is_certificate_chain_order_valid(parsed_certificate_chain):
+            self.verified_certificate_chain = CertInfoFullResult._build_verified_certificate_chain(
+                parsed_certificate_chain
+            )
 
         # Is the pinning configuration valid?
         self.is_valid_pin_configured = None
@@ -182,7 +186,7 @@ class HttpHeadersResult(PluginResult):
                 computed_hpkp_pins_text.append(self.PIN_TXT_FORMAT(('{} - {}'.format(index, cert_subject)),
                                                                    cert.hpkp_pin))
         else:
-            computed_hpkp_pins_text.append(self.FIELD_FORMAT("ERROR - Could not build verified chain", ""))
+            computed_hpkp_pins_text.append(self.FIELD_FORMAT(CertInfoFullResult.NO_VERIFIED_CHAIN_ERROR_TXT, ""))
 
         txt_result.extend(['', self.PLUGIN_TITLE_FORMAT('HTTP Public Key Pinning (HPKP)')])
         if self.hpkp_header:

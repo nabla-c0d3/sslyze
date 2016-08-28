@@ -13,12 +13,15 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, 'http_headers')
 
         self.assertTrue(plugin_result.hsts_header)
+        self.assertFalse(plugin_result.hpkp_header)
+        self.assertIsNone(plugin_result.is_valid_pin_configured)
+        self.assertIsNone(plugin_result.is_backup_pin_configured)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
     def test_hsts_and_hpkp_disabled(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
+        server_info = ServerConnectivityInfo(hostname='expired.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = HttpHeadersPlugin()
@@ -26,6 +29,8 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
 
         self.assertFalse(plugin_result.hsts_header)
         self.assertFalse(plugin_result.hpkp_header)
+        self.assertIsNone(plugin_result.is_valid_pin_configured)
+        self.assertIsNone(plugin_result.is_backup_pin_configured)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -38,6 +43,8 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, 'http_headers')
 
         self.assertTrue(plugin_result.hpkp_header)
+        self.assertTrue(plugin_result.is_valid_pin_configured)
+        self.assertTrue(plugin_result.is_backup_pin_configured)
         self.assertTrue(plugin_result.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())

@@ -67,7 +67,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertEquals(len(plugin_result.path_validation_error_list), 0)
         self.assertEquals(plugin_result.hostname_validation_result, X509_NAME_MATCHES_SAN)
         self.assertTrue(plugin_result.is_certificate_chain_order_valid)
-        self.assertFalse(plugin_result.has_anchor_in_certificate_chain)
+        self.assertIsNone(plugin_result.has_anchor_in_certificate_chain)
+        self.assertIsNone(plugin_result.has_sha1_in_certificate_chain)
         self.assertFalse(plugin_result.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())

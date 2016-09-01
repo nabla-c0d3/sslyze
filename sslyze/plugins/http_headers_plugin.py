@@ -38,6 +38,7 @@ class HttpHeadersPlugin(plugin_base.PluginBase):
     HTTP_GET_FORMAT = 'GET / HTTP/1.1\r\n' \
                       'Host: {host}\r\n' \
                       'User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36\r\n' \
+                      'Accept: */*' \
                       'Connection: close\r\n\r\n'
 
     @classmethod
@@ -78,12 +79,12 @@ class ParsedHstsHeader(object):
         self.max_age = None
         self.include_subdomains = False
         self.preload = False
-
         for hsts_directive in raw_hsts_header.split(';'):
             hsts_directive = hsts_directive.strip()
             if 'max-age' in hsts_directive:
                 self.max_age = hsts_directive.split('max-age=')[1].strip()
-            elif 'includeSubDomains' in hsts_directive:
+            elif 'includesubdomains' in hsts_directive.lower():
+                # Some websites have a different case for IncludeSubDomains
                 self.include_subdomains = True
             elif 'preload' in hsts_directive:
                 self.preload = True
@@ -106,7 +107,8 @@ class ParsedHpkpHeader(object):
                 pin_sha256_list.append(hpkp_directive.split('pin-sha256=')[1].strip(' "'))
             elif 'max-age' in hpkp_directive:
                 self.max_age = hpkp_directive.split('max-age=')[1].strip()
-            elif 'includeSubDomains' in hpkp_directive:
+            elif 'includesubdomains' in hpkp_directive.lower():
+                # Some websites have a different case for IncludeSubDomains
                 self.include_subdomains = True
             elif 'report-uri' in hpkp_directive:
                 self.report_uri = hpkp_directive.split('report-uri=')[1].strip(' "')

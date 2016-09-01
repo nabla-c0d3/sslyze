@@ -36,7 +36,7 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_hpkp_enabled(self):
-        server_info = ServerConnectivityInfo(hostname='madavi.de')
+        server_info = ServerConnectivityInfo(hostname='github.com')
         server_info.test_connectivity_to_server()
 
         plugin = HttpHeadersPlugin()

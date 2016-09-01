@@ -43,9 +43,9 @@ Then, the command line tool can be used to scan servers:
 
     python sslyze_cli.py --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
 
-On Linux, the `python-devel` package needs to be installed first so that the nassl C extension can be compiled:
+On Linux, the `python-dev` package needs to be installed first so that the nassl C extension can be compiled:
 
-    sudo apt-get install python-devel
+    sudo apt-get install python-dev
 
 SSLyze has been tested on the following platforms: Windows 7 (32 and 64 bits), Debian 7 (32 and 64 bits), OS X El 
 Capitan.

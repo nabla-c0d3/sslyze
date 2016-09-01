@@ -16,7 +16,6 @@ servers.
 
 Key features include:
 * Multi-processed and multi-threaded scanning: it's very fast.
-* Support for all SSL protocols, from SSL 2.0 to TLS 1.2.
 * **NEW:** SSLyze can also be used as a library, in order to run scans and process the results directly from Python.
 * Performance testing: session resumption and TLS tickets support.
 * Security testing: weak cipher suites, insecure renegotiation, CRIME, Heartbleed and more.

@@ -404,7 +404,7 @@ def _format_xml_target_result(server_info, result_list):
     if server_info.http_tunneling_settings:
         # Add proxy settings
         target_attrib['httpsTunnelHostname'] = server_info.http_tunneling_settings.hostname
-        target_attrib['httpsTunnelPort'] = server_info.http_tunneling_settings.port
+        target_attrib['httpsTunnelPort'] = str(server_info.http_tunneling_settings.port)
 
     target_xml = Element('target', attrib=target_attrib)
     result_list.sort(key=lambda result: result)  # Sort results
@@ -536,8 +536,7 @@ def main():
 
 
     for tentative_server_info, exception in connectivity_tester.get_invalid_servers():
-        invalid_servers_list.append((u'{}:{}'.format(tentative_server_info.hostname, tentative_server_info.port),
-                                     exception))
+        invalid_servers_list.append((tentative_server_info.server_string, exception))
 
 
     # Print servers we were NOT able to connect to

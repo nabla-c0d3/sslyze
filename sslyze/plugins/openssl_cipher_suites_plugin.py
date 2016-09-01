@@ -236,37 +236,39 @@ class OpenSSLCipherSuitesResult(PluginResult):
                             isProtocolSupported=str(is_protocol_supported))
 
         # Output the preferred cipher
+        preferred_xml = Element('preferredCipherSuite')
         if self.preferred_cipher:
-            preferred_xml = Element('preferredCipherSuite')
             preferred_xml.append(self._format_accepted_cipher_xml(self.preferred_cipher))
-            result_xml.append(preferred_xml)
+        result_xml.append(preferred_xml)
 
         # Output all the accepted ciphers if any
+        accepted_xml = Element('acceptedCipherSuites')
         if len(self.accepted_cipher_list) > 0:
-            accepted_xml = Element('acceptedCipherSuites')
             for cipher in self.accepted_cipher_list:
                 accepted_xml.append(self._format_accepted_cipher_xml(cipher))
-            result_xml.append(accepted_xml)
-
-        # Output all the errored ciphers if any
-        if len(self.errored_cipher_list) > 0:
-            error_xml = Element('errors')
-            for cipher in self.errored_cipher_list:
-                cipher_xml = Element('cipherSuite',
-                                     attrib={'name': cipher.name,
-                                             'connectionStatus': cipher.error_message})
-                error_xml.append(cipher_xml)
-            result_xml.append(error_xml)
+        result_xml.append(accepted_xml)
 
         # Output all the rejected ciphers if any
+        rejected_xml = Element('rejectedCipherSuites')
         if len(self.rejected_cipher_list) > 0:
-            rejected_xml = Element('rejectedCipherSuites')
             for cipher in self.rejected_cipher_list:
                 cipher_xml = Element('cipherSuite',
                                      attrib={'name': cipher.name,
+                                             'anonymous': str(cipher.is_anonymous),
                                              'connectionStatus': cipher.handshake_error_message})
                 rejected_xml.append(cipher_xml)
-            result_xml.append(rejected_xml)
+        result_xml.append(rejected_xml)
+
+        # Output all the errored ciphers if any
+        error_xml = Element('errors')
+        if len(self.errored_cipher_list) > 0:
+            for cipher in self.errored_cipher_list:
+                cipher_xml = Element('cipherSuite',
+                                     attrib={'name': cipher.name,
+                                             'anonymous': str(cipher.is_anonymous),
+                                             'connectionStatus': cipher.error_message})
+                error_xml.append(cipher_xml)
+        result_xml.append(error_xml)
 
         return result_xml
 

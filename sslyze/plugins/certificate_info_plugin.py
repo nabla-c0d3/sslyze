@@ -11,6 +11,7 @@ from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_C
 from nassl.ssl_client import ClientCertificateRequested
 from nassl._nassl import OpenSSLError
 
+from nassl.x509_certificate import X509Certificate
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult
 from sslyze.utils.thread_pool import ThreadPool
@@ -54,16 +55,31 @@ class TrustStore(object):
         self.path = path
         self.name = name
         self.version = version
-        self._certificate_list = None
+        self._certificate_dict = None
 
-    def __contains__(self, certificate):
-        is_certificate_in_store = False
+    def _extract_certificate_dict(self):
+        cert_dict = {}
         with open(self.path, 'r') as store_file:
             store_content = store_file.read()
-            # Stripping new lines as the lines will have a different length in the trust store VS in the certificate
-            if certificate.as_pem.replace('\n', '') in store_content.replace('\n', ''):
-                is_certificate_in_store = True
-        return is_certificate_in_store
+            # Each certificate is separated by two new lines and there are comments to remove at the beginning
+            pem_cert_list = store_content.split('\n\n')[1::]
+            for pem_cert in pem_cert_list:
+                cert = Certificate(X509Certificate.from_pem(pem_cert))
+
+                # Store a dictionary of subject->certificate for easy lookup
+                cert_dict[self._hash_subject(cert.as_dict['subject'])] = cert
+            return cert_dict
+
+    @staticmethod
+    def _hash_subject(certificate_subjet_dict):
+        hashed_subject = ''.join(['{}{}'.format(key, value) for key, value in certificate_subjet_dict.iteritems()])
+        return hashed_subject
+
+    def get_certificate_with_subject(self, certificate_subject):
+        if self._certificate_dict is None:
+            self._certificate_dict = self._extract_certificate_dict()
+
+        return self._certificate_dict.get(self._hash_subject(certificate_subject), None)
 
 
 MOZILLA_TRUST_STORE = TrustStore(MOZILLA_STORE_PATH, 'Mozilla NSS', '02/2016')
@@ -108,8 +124,23 @@ class Certificate(object):
     def __init__(self, x509_certificate):
         self.as_pem = x509_certificate.as_pem().strip()
         self.as_text = x509_certificate.as_text()
+
         self.as_dict = x509_certificate.as_dict()
+        # Sanitize OpenSSL's output
+        for key, value in self.as_dict.items():
+            if 'subjectPublicKeyInfo' in key:
+                # Remove the bit suffix so the element is just a number for the key size
+                if 'publicKeySize' in value.keys():
+                    value['publicKeySize'] = value['publicKeySize'].split(' bit')[0]
+
         self.sha1_fingerprint = x509_certificate.get_SHA1_fingerprint()
+        self.hpkp_pin = x509_certificate.get_hpkp_pin()
+
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__) and self.as_pem == other.as_pem)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class CertificateInfoPlugin(plugin_base.PluginBase):
@@ -215,7 +246,11 @@ class CertInfoFullResult(PluginResult):
     """The result of running --certinfo_full on a specific server.
 
     Attributes:
-        certificate_chain (List[Certificate]): The server's certificate chain; index 0 is the leaf certificate.
+        certificate_chain (List[Certificate]): The certificate chain sent by the server; index 0 is the leaf
+            certificate.
+        verified_certificate_chain (List[Certificate]): The verified certificate chain; index 0 is the leaf
+            certificate and the last element is the anchor/CA certificate from the Mozilla trust store. Will be empty if
+            validation failed or the verified chain could not be built.
         is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
         path_validation_result_list (List[PathValidationResult]): A list of attempts at validating the server's
             certificate chain path using various trust stores.
@@ -224,6 +259,10 @@ class CertInfoFullResult(PluginResult):
         hostname_validation_result (int): Validation result of the certificate hostname.
         ocsp_response (Optional[dict]): The OCSP response returned by the server.
         is_ocsp_response_trusted (Optional[bool]): True if the OCSP response is trusted using the Mozilla trust store.
+        has_sha1_in_certificate_chain (bool): True if any of the leaf or intermediate certificates are signed using the
+            SHA-1 algorithm. None if the verified chain could not be built or no HPKP header was returned.
+        has_anchor_in_certificate_chain (bool): True if the server included the anchor/root certificate in the chain it
+            send back to clients. None if the verified chain could not be built or no HPKP header was returned.
     """
 
     COMMAND_TITLE = 'Certificate Basic Information'
@@ -249,10 +288,57 @@ class CertInfoFullResult(PluginResult):
             if policy[0] in MOZILLA_EV_OIDS:
                 self.is_leaf_certificate_ev = True
 
+        self.is_certificate_chain_order_valid = self._is_certificate_chain_order_valid(self.certificate_chain)
+        self.verified_certificate_chain = []
+        for path_result in path_validation_result_list:
+            if path_result.is_certificate_trusted and 'Mozilla' in path_result.trust_store.name:
+                # Validation with the Mozilla store was successful; try to build the verified chain
+                if self.is_certificate_chain_order_valid:
+                    # Do not even try if the received chain was in the wrong order
+                    self.verified_certificate_chain = self._build_verified_certificate_chain(self.certificate_chain)
+                break
+
+        self.has_anchor_in_certificate_chain = None
+        if self.verified_certificate_chain:
+            self.has_anchor_in_certificate_chain = self.verified_certificate_chain[-1] in self.certificate_chain
+
         self.path_validation_result_list = path_validation_result_list
         self.path_validation_error_list = path_validation_error_list
         self.hostname_validation_result = certificate_chain[0].matches_hostname(server_info.tls_server_name_indication)
-        self.is_certificate_chain_order_valid = self._is_certificate_chain_order_valid(self.certificate_chain)
+
+        # Check if a SHA1-signed certificate is in the chain
+        # Root certificates can still be signed with SHA1 so we only check leaf and intermediate certificates
+        self.has_sha1_in_certificate_chain = None
+        if self.verified_certificate_chain:
+            self.has_sha1_in_certificate_chain = False
+            for cert in self.verified_certificate_chain[:-1]:
+                if "sha1" in cert.as_dict['signatureAlgorithm']:
+                    self.has_sha1_in_certificate_chain = True
+                    break
+
+
+    @staticmethod
+    def _build_verified_certificate_chain(received_certificate_chain):
+        """Try to figure out the verified chain by finding the anchor/root CA the received chain chains up to in the
+        Mozilla trust store. This will not clean the certificate chain if additional/invalid certificates were sent and
+        assumes certificates were sent in the right order.
+        """
+        # TODO: OpenSSL 1.1.0 has SSL_get0_verified_chain() to do this directly
+        verified_certificate_chain = []
+        ca_cert = None
+        # Assume that the certificates were sent in the correct order or give up
+        for cert in received_certificate_chain:
+            ca_cert = MOZILLA_TRUST_STORE.get_certificate_with_subject(cert.as_dict['issuer'])
+            verified_certificate_chain.append(cert)
+            if ca_cert:
+                verified_certificate_chain.append(ca_cert)
+                break
+
+        if ca_cert is None:
+            # Could not build the verified chain
+            return None
+
+        return verified_certificate_chain
 
 
     def _get_certificate_text(self):
@@ -301,6 +387,7 @@ class CertInfoFullResult(PluginResult):
 
     TRUST_FORMAT = '{store_name} CA Store ({store_version}):'.format
 
+    NO_VERIFIED_CHAIN_ERROR_TXT = 'ERROR - Could not build verified chain (certificate untrusted?)'
 
     def as_text(self):
         text_output = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
@@ -342,25 +429,43 @@ class CertInfoFullResult(PluginResult):
                                                                    store_version=path_result.trust_store.version),
                                                  error_txt))
 
-        # Print the Common Names within the certificate chain and find if there are SHA1-signed certificates
+        # Print the Common Names within the certificate chain
         cns_in_certificate_chain = []
-        has_sha1_signed_certificate = False
         for cert in self.certificate_chain:
             cert_identity = self._extract_subject_cn_or_oun(cert)
             cns_in_certificate_chain.append(cert_identity)
+        text_output.append(self.FIELD_FORMAT('Received Chain:', ' --> '.join(cns_in_certificate_chain)))
 
-            if "sha1" in cert.as_dict['signatureAlgorithm'] and cert not in MOZILLA_TRUST_STORE:
-                has_sha1_signed_certificate = True
+        # Print the Common Names within the verified certificate chain if validation was successful
+        if self.verified_certificate_chain:
+            cns_in_certificate_chain = []
+            for cert in self.verified_certificate_chain:
+                cert_identity = self._extract_subject_cn_or_oun(cert)
+                cns_in_certificate_chain.append(cert_identity)
+            verified_chain_txt = ' --> '.join(cns_in_certificate_chain)
+        else:
+            verified_chain_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
+        text_output.append(self.FIELD_FORMAT('Verified Chain w/ Mozilla Store:', verified_chain_txt))
 
-        sha1_text = 'OK - No SHA1-signed certificate in the chain' \
-            if not has_sha1_signed_certificate \
-            else 'INSECURE - SHA1-signed certificate in the chain'
-        text_output.append(self.FIELD_FORMAT('Weak Signature:', sha1_text))
-        text_output.append(self.FIELD_FORMAT('Certificate Chain Received:', ' --> '.join(cns_in_certificate_chain)))
+        if self.verified_certificate_chain:
+            chain_with_anchor_txt = 'OK - Anchor certificate not sent' if not self.has_anchor_in_certificate_chain \
+                else 'WARNING - Received certificate chain contains the anchor certificate'
+        else:
+            chain_with_anchor_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
+        text_output.append(self.FIELD_FORMAT('Received Chain Contains Anchor:', chain_with_anchor_txt))
 
         chain_order_txt = 'OK - Order is valid' if self.is_certificate_chain_order_valid \
             else 'FAILED - Certificate chain out of order!'
-        text_output.append(self.FIELD_FORMAT('Certificate Chain Order:', chain_order_txt))
+        text_output.append(self.FIELD_FORMAT('Received Chain Order:', chain_order_txt))
+
+        if self.verified_certificate_chain:
+            sha1_text = 'OK - No SHA1-signed certificate in the verified certificate chain' \
+                if not self.has_sha1_in_certificate_chain \
+                else 'INSECURE - SHA1-signed certificate in the verified certificate chain'
+        else:
+            sha1_text = self.NO_VERIFIED_CHAIN_ERROR_TXT
+
+        text_output.append(self.FIELD_FORMAT('Verified Chain contains SHA1:', sha1_text))
 
         # OCSP stapling
         text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - OCSP Stapling')])
@@ -381,7 +486,7 @@ class CertInfoFullResult(PluginResult):
 
             ocsp_resp_txt = [
                 self.FIELD_FORMAT('OCSP Response Status:', self.ocsp_response['responseStatus']),
-                self.FIELD_FORMAT('Validation w/ Mozilla\'s CA Store:', ocsp_trust_txt),
+                self.FIELD_FORMAT('Validation w/ Mozilla Store:', ocsp_trust_txt),
                 self.FIELD_FORMAT('Responder Id:', self.ocsp_response['responderID'])]
 
             if 'successful' in self.ocsp_response['responseStatus']:
@@ -402,16 +507,12 @@ class CertInfoFullResult(PluginResult):
 
         # Certificate chain
         cert_xml_list = []
-        has_sha1_signed_certificate = False
         for index, certificate in enumerate(self.certificate_chain, start=0):
-
-            if "sha1" in certificate.as_dict['signatureAlgorithm'] and certificate not in MOZILLA_TRUST_STORE:
-                has_sha1_signed_certificate = True
-
             cert_xml = Element('certificate', attrib={
                 'sha1Fingerprint': certificate.sha1_fingerprint,
                 'position': 'leaf' if index == 0 else 'intermediate',
-                'suppliedServerNameIndication': self.server_info.tls_server_name_indication
+                'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
+                'hpkpSha256Pin': certificate.hpkp_pin
             })
 
             # Add the PEM cert
@@ -421,19 +522,16 @@ class CertInfoFullResult(PluginResult):
 
             # Add the parsed certificate
             for key, value in certificate.as_dict.items():
-                # Sanitize OpenSSL's output
-                if 'subjectPublicKeyInfo' in key:
-                    # Remove the bit suffix so the element is just a number for the key size
-                    if 'publicKeySize' in value.keys():
-                        value['publicKeySize'] = value['publicKeySize'].split(' bit')[0]
-
                 cert_xml.append(_keyvalue_pair_to_xml(key, value))
-
             cert_xml_list.append(cert_xml)
 
-        cert_chain_xml = Element('certificateChain',
-                                 attrib={'hasSha1SignedCertificate': str(has_sha1_signed_certificate),
-                                         'isChainOrderValid': str(self.is_certificate_chain_order_valid)})
+
+        cert_chain_attrs ={'isChainOrderValid': str(self.is_certificate_chain_order_valid)}
+        if self.verified_certificate_chain:
+            cert_chain_attrs['containsAnchorCertificate'] = str(False) if not self.has_anchor_in_certificate_chain \
+                else str(True)
+        cert_chain_xml = Element('receivedCertificateChain', attrib=cert_chain_attrs)
+
         for cert_xml in cert_xml_list:
             cert_chain_xml.append(cert_xml)
         xml_output.append(cert_chain_xml)
@@ -456,11 +554,43 @@ class CertInfoFullResult(PluginResult):
                 'validationResult': path_result.verify_string
             }
 
-            # EV certs - Only Mozilla supported for now
-            if self.is_leaf_certificate_ev and 'Mozilla' in path_result.trust_store.name:
-                path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
+            # Things we only do with the Mozilla store
+            verified_cert_chain_xml = None
+            if 'Mozilla' in path_result.trust_store.name:
+                # EV certs
+                if self.is_leaf_certificate_ev:
+                    path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
 
-            trust_validation_xml.append(Element('pathValidation', attrib=path_attrib_xml))
+                # Verified chain
+                if self.verified_certificate_chain:
+                    verified_cert_chain_xml = Element(
+                        'verifiedCertificateChain',
+                        {'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain)}
+                    )
+                    for certificate in self.certificate_chain:
+                        cert_xml = Element('certificate', attrib={
+                            'sha1Fingerprint': certificate.sha1_fingerprint,
+                            'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
+                            'hpkpSha256Pin': certificate.hpkp_pin
+                        })
+
+                        # Add the PEM cert
+                        cert_as_pem_xml = Element('asPEM')
+                        cert_as_pem_xml.text = certificate.as_pem
+                        cert_xml.append(cert_as_pem_xml)
+
+                        # Add the parsed certificate
+                        for key, value in certificate.as_dict.items():
+                            cert_xml.append(_keyvalue_pair_to_xml(key, value))
+                        cert_xml_list.append(cert_xml)
+
+                        verified_cert_chain_xml.append(cert_xml)
+
+            path_valid_xml = Element('pathValidation', attrib=path_attrib_xml)
+            if verified_cert_chain_xml is not None:
+                path_valid_xml.append(verified_cert_chain_xml)
+
+            trust_validation_xml.append(path_valid_xml)
 
 
         # Path validation that ran into errors

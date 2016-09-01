@@ -86,10 +86,10 @@ MOZILLA_TRUST_STORE = TrustStore(MOZILLA_STORE_PATH, 'Mozilla NSS', '02/2016')
 
 DEFAULT_TRUST_STORE_LIST = [
     MOZILLA_TRUST_STORE,
-    TrustStore(join(TRUST_STORES_PATH, 'microsoft.pem'), 'Microsoft', '02/2016'),
-    TrustStore(join(TRUST_STORES_PATH, 'apple.pem'), 'Apple', 'OS X 10.11.3'),
+    TrustStore(join(TRUST_STORES_PATH, 'microsoft.pem'), 'Microsoft', '09/2016'),
+    TrustStore(join(TRUST_STORES_PATH, 'apple.pem'), 'Apple', 'OS X 10.11.6'),
     TrustStore(join(TRUST_STORES_PATH, 'java.pem'), 'Java 7', 'Update 79'),
-    TrustStore(join(TRUST_STORES_PATH, 'aosp.pem'), 'AOSP', 'N Preview 2'),
+    TrustStore(join(TRUST_STORES_PATH, 'aosp.pem'), 'AOSP', '7.0.0 r1'),
 ]
 
 

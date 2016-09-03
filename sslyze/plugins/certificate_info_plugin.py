@@ -82,7 +82,7 @@ class TrustStore(object):
         return self._certificate_dict.get(self._hash_subject(certificate_subject), None)
 
 
-MOZILLA_TRUST_STORE = TrustStore(MOZILLA_STORE_PATH, 'Mozilla NSS', '02/2016')
+MOZILLA_TRUST_STORE = TrustStore(MOZILLA_STORE_PATH, 'Mozilla NSS', '09/2016')
 
 DEFAULT_TRUST_STORE_LIST = [
     MOZILLA_TRUST_STORE,

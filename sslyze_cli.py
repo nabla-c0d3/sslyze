@@ -415,6 +415,18 @@ def _format_xml_target_result(server_info, result_list):
     return target_xml
 
 
+def _object_to_json_dict(plugin_object):
+    """Convert an object to a dictionnary suitable for the JSON output.
+    """
+    final_fict = {}
+    for key, value in plugin_object.__dict__.iteritems():
+        if not key.startswith('_'):
+            # Remove private attributes
+            final_fict[key] = value
+    return final_fict
+
+
+
 def _format_json_result(server_info, result_list):
     dict_final = {'server_info': server_info.__dict__}
     dict_command_result = {}
@@ -427,6 +439,7 @@ def _format_json_result(server_info, result_list):
         dict_command_result[plugin_command] = dict_result
 
     dict_final['commands_results'] = dict_command_result
+
     return dict_final
 
 
@@ -610,7 +623,7 @@ def main():
             server_info = plugin_result_list[0].server_info
             json_output['accepted_targets'].append(_format_json_result(server_info, plugin_result_list))
 
-        final_json_output = json.dumps(json_output, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        final_json_output = json.dumps(json_output, default=_object_to_json_dict, sort_keys=True, indent=4)
         if args_command_list.json_file == '-':
             # Print XML output to the console if needed
             print final_json_output

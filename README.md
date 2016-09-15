@@ -85,7 +85,7 @@ for plugin_result in plugins_process_pool.get_results():
             print '    {}'.format(cipher.name)
 ```
 
-The scan commands are same as the ones described in the `sslyze_cly.py --help` text.
+The scan commands are same as the ones described in the `sslyze_cli.py --help` text.
 
 They will all be run concurrently using Python's multiprocessing module. Each command will return a `PluginResult`
 object with attributes that contain the result of the scan command run on the server (such as list of supported cipher

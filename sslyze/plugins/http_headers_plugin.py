@@ -81,6 +81,10 @@ class ParsedHstsHeader(object):
         self.preload = False
         for hsts_directive in raw_hsts_header.split(';'):
             hsts_directive = hsts_directive.strip()
+            if not hsts_directive:
+                # Empty space at the end of the header
+                continue
+
             if 'max-age' in hsts_directive:
                 self.max_age = hsts_directive.split('max-age=')[1].strip()
             elif 'includesubdomains' in hsts_directive.lower():
@@ -89,7 +93,7 @@ class ParsedHstsHeader(object):
             elif 'preload' in hsts_directive:
                 self.preload = True
             else:
-                raise ValueError('Unexpected value in HSTS header: {}'.format(hsts_directive))
+                raise ValueError('Unexpected value in HSTS header: {}'.format(repr(hsts_directive)))
 
 
 class ParsedHpkpHeader(object):
@@ -103,6 +107,10 @@ class ParsedHpkpHeader(object):
         pin_sha256_list = []
         for hpkp_directive in raw_hpkp_header.split(';'):
             hpkp_directive = hpkp_directive.strip()
+            if not hpkp_directive:
+                # Empty space at the end of the header
+                continue
+
             if 'pin-sha256' in hpkp_directive:
                 pin_sha256_list.append(hpkp_directive.split('pin-sha256=')[1].strip(' "'))
             elif 'max-age' in hpkp_directive:
@@ -113,7 +121,7 @@ class ParsedHpkpHeader(object):
             elif 'report-uri' in hpkp_directive:
                 self.report_uri = hpkp_directive.split('report-uri=')[1].strip(' "')
             else:
-                raise ValueError('Unexpected value in HPKP header: {}'.format(hpkp_directive))
+                raise ValueError('Unexpected value in HPKP header: {}'.format(repr(hpkp_directive)))
 
         self.pin_sha256_list = pin_sha256_list
 

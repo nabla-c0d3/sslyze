@@ -12,6 +12,7 @@ from urllib import quote
 from nassl import _nassl, SSL_VERIFY_NONE
 from nassl.debug_ssl_client import DebugSslClient
 from nassl.ssl_client import ClientCertificateRequested
+from sslyze.utils.http_request_generator import HttpRequestGenerator
 
 from sslyze.utils.http_response_parser import parse_http_response
 
@@ -220,8 +221,6 @@ class HTTPSConnection(SSLConnection):
     """SSL connection class that sends an HTTP GET request after the SSL handshake.
     """
 
-    HTTP_GET_REQ = 'GET / HTTP/1.0\r\nHost: {0}\r\nConnection: close\r\n\r\n'
-
     GET_RESULT_FORMAT = 'HTTP {0} {1}{2}'
 
     ERR_HTTP_TIMEOUT = 'Timeout on HTTP GET'
@@ -234,7 +233,7 @@ class HTTPSConnection(SSLConnection):
         try:
             # TODO: This is code only used by OpenSSLCipherSuitesPlugin anf should be moved there
             # Send an HTTP GET to the server and store the HTTP Status Code
-            self.write(self.HTTP_GET_REQ.format(self._host))
+            self.write(HttpRequestGenerator.get_request(self._host))
 
             # Parse the response and print the Location header
             http_response = parse_http_response(self)

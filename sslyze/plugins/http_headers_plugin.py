@@ -11,6 +11,7 @@ from sslyze.plugins import plugin_base
 from sslyze.plugins.certificate_info_plugin import CertInfoFullResult, Certificate
 from sslyze.plugins.plugin_base import PluginResult
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.http_response_parser import parse_http_response
 
 
@@ -34,13 +35,6 @@ class HttpHeadersPlugin(plugin_base.PluginBase):
         return HttpHeadersResult(server_info, command, options_dict, hsts_header, hpkp_header, hpkp_report_only,
                                  certificate_chain)
 
-    # Sample GET request with the Chrome for Windows 7 User Agent
-    HTTP_GET_FORMAT = 'GET / HTTP/1.1\r\n' \
-                      'Host: {host}\r\n' \
-                      'User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36\r\n' \
-                      'Accept: */*' \
-                      'Connection: close\r\n\r\n'
-
     @classmethod
     def _get_security_headers(cls, server_info):
         hpkp_report_only = False
@@ -51,7 +45,7 @@ class HttpHeadersPlugin(plugin_base.PluginBase):
         certificate_chain = ssl_connection.get_peer_cert_chain()
 
         # Send an HTTP GET request to the server
-        ssl_connection.write(cls.HTTP_GET_FORMAT.format(host=server_info.hostname))
+        ssl_connection.write(HttpRequestGenerator.get_request(host=server_info.hostname))
         http_resp = parse_http_response(ssl_connection)
         ssl_connection.close()
 

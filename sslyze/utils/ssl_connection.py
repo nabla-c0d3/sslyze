@@ -14,7 +14,7 @@ from nassl.debug_ssl_client import DebugSslClient
 from nassl.ssl_client import ClientCertificateRequested
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 
-from sslyze.utils.http_response_parser import parse_http_response
+from sslyze.utils.http_response_parser import HttpResponseParser
 
 
 class SSLHandshakeRejected(IOError):
@@ -236,7 +236,7 @@ class HTTPSConnection(SSLConnection):
             self.write(HttpRequestGenerator.get_request(self._host))
 
             # Parse the response and print the Location header
-            http_response = parse_http_response(self)
+            http_response = HttpResponseParser.parse(self)
             if http_response.version == 9 :
                 # HTTP 0.9 => Probably not an HTTP response
                 result = self.ERR_NOT_HTTP

@@ -12,7 +12,7 @@ from sslyze.plugins.certificate_info_plugin import CertInfoFullResult, Certifica
 from sslyze.plugins.plugin_base import PluginResult
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
-from sslyze.utils.http_response_parser import parse_http_response
+from sslyze.utils.http_response_parser import HttpResponseParser
 
 
 class HttpHeadersPlugin(plugin_base.PluginBase):
@@ -46,7 +46,7 @@ class HttpHeadersPlugin(plugin_base.PluginBase):
 
         # Send an HTTP GET request to the server
         ssl_connection.write(HttpRequestGenerator.get_request(host=server_info.hostname))
-        http_resp = parse_http_response(ssl_connection)
+        http_resp = HttpResponseParser.parse(ssl_connection)
         ssl_connection.close()
 
         if http_resp.version == 9 :

@@ -11,24 +11,27 @@ class FakeSocket(StringIO):
         return self
 
 
-def parse_http_response(sock):
+class HttpResponseParser(object):
 
-    try:
-        # H4ck to standardize the API between sockets and SSLConnection objects
-        response = sock.read(4096)
-    except AttributeError:
-        response = sock.recv(4096)
+    @staticmethod
+    def parse(sock):
 
-    if 'HTTP/' not in response:
-        # Try to get the rest of the response
         try:
-            response += sock.read(4096)
+            # H4ck to standardize the API between sockets and SSLConnection objects
+            response = sock.read(4096)
         except AttributeError:
-            response += sock.recv(4096)
+            response = sock.recv(4096)
 
-    fake_sock = FakeSocket(response)
-    response = HTTPResponse(fake_sock)
-    response.begin()
+        if 'HTTP/' not in response:
+            # Try to get the rest of the response
+            try:
+                response += sock.read(4096)
+            except AttributeError:
+                response += sock.recv(4096)
 
-    return response
+        fake_sock = FakeSocket(response)
+        response = HTTPResponse(fake_sock)
+        response.begin()
+
+        return response
 

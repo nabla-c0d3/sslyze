@@ -8,7 +8,7 @@ from sslyze import __version__, PROJECT_URL
 
 # Add ./lib to the path for importing nassl for non-frozen builds
 if not hasattr(sys,"frozen"):
-    sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
+    sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
 
 import re
 import signal
@@ -687,4 +687,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

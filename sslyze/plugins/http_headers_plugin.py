@@ -3,8 +3,6 @@
 headers.
 """
 
-import Cookie
-from urlparse import urlparse
 from xml.etree.ElementTree import Element
 
 from sslyze.plugins import plugin_base

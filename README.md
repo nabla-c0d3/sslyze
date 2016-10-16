@@ -32,23 +32,20 @@ Getting Started
 SSLyze can be installed directly via pip:
 
     pip install sslyze
+    sslyze --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
 
 It is also easy to directly clone the repository and the fetch the requirements:
 
     git clone https://github.com/nabla-c0d3/sslyze.git
     cd sslyze
     pip install -r requirements.txt --target ./lib
-
-Then, the command line tool can be used to scan servers:
-
-    python sslyze_cli.py --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
+    python -m sslyze --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
 
 On Linux, the `python-dev` package needs to be installed first so that the nassl C extension can be compiled:
 
     sudo apt-get install python-dev
 
-SSLyze has been tested on the following platforms: Windows 7 (32 and 64 bits), Debian 7 (32 and 64 bits), OS X El
-Capitan.
+SSLyze has been tested on the following platforms: Windows 7 (32 and 64 bits), Debian 7 (32 and 64 bits), macOS Sierra
 
 Usage as a library
 ------------------

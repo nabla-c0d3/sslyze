@@ -22,8 +22,8 @@ class HttpResponseParser(object):
         except AttributeError:
             response = sock.recv(4096)
 
-        if 'HTTP/' not in response:
-            # Try to get the rest of the response
+        while 'HTTP/' not in response or '\r\n\r\n' not in response:
+            # Parse until the end of the headers
             try:
                 response += sock.read(4096)
             except AttributeError:

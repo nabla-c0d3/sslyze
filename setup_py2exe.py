@@ -26,7 +26,7 @@ sslyze_setup_py2exe.update(
             'packages': ['sslyze', 'sslyze.plugins', 'sslyze.utils', 'nassl',],
             # Force the packaging of the C extension
             'package_data': {'nassl': ['_nassl.pyd']},
-            'console': ['sslyze_cli.py'],
+            'console': ['sslyze\\__main__.py'],
             'data_files': data_files,
             'zipfile': None,
             'options': {'py2exe': {

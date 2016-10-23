@@ -109,12 +109,3 @@ class ProtocolsTestCase(unittest.TestCase):
 
             self.assertTrue(plugin_result.as_text())
             self.assertTrue(plugin_result.as_xml())
-
-
-    def test_https_tunneling(self):
-        # Ensure that an IP address cannot be specified when using an HTTP proxy for scans
-        tunnel_settings = HttpConnectTunnelingSettings('fakedomain', 443)
-        with self.assertRaisesRegexp(ValueError, 'Cannot specify both ip_address and http_tunneling_settings'):
-            ServerConnectivityInfo(hostname='www.google.com', ip_address='1.2.3.4',
-                                   http_tunneling_settings=tunnel_settings)
-

@@ -136,7 +136,7 @@ class SSLConnection(DebugSslClient):
             else:
                 self._sock.send(self.HTTP_CONNECT_REQ_PROXY_AUTH_BASIC.format(self._host, self._port,
                                                                               self._tunnel_basic_auth_token))
-            http_response = parse_http_response(self._sock)
+            http_response = HttpResponseParser.parse(self._sock)
 
             # Check if the proxy was able to connect to the host
             if http_response.status != 200:

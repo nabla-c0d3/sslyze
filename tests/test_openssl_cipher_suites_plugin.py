@@ -17,6 +17,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, 'sslv2')
 
         self.assertIsNone(plugin_result.preferred_cipher)
+        self.assertFalse(plugin_result.cipher_order_pref in ['server', 'client'])
         self.assertFalse(plugin_result.accepted_cipher_list)
         self.assertTrue(plugin_result.rejected_cipher_list)
         self.assertFalse(plugin_result.errored_cipher_list)
@@ -36,6 +37,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, 'sslv3')
 
         self.assertIsNone(plugin_result.preferred_cipher)
+        self.assertFalse(plugin_result.cipher_order_pref in ['server', 'client'])
         self.assertFalse(plugin_result.accepted_cipher_list)
         self.assertTrue(plugin_result.rejected_cipher_list)
         self.assertFalse(plugin_result.errored_cipher_list)
@@ -51,6 +53,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, 'tlsv1')
 
         self.assertTrue(plugin_result.preferred_cipher)
+        self.assertTrue(plugin_result.cipher_order_pref in ['server', 'client'])
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
         self.assertEquals({'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
                            'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA',
@@ -77,7 +80,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, 'tlsv1_1')
 
         self.assertTrue(plugin_result.preferred_cipher)
-
+        self.assertTrue(plugin_result.cipher_order_pref in ['server', 'client'])
         self.assertTrue(plugin_result.accepted_cipher_list)
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
         self.assertEquals({'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
@@ -100,6 +103,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, 'tlsv1_2')
 
         self.assertTrue(plugin_result.preferred_cipher)
+        self.assertTrue(plugin_result.cipher_order_pref in ['server', 'client'])
         self.assertTrue(plugin_result.accepted_cipher_list)
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
         self.assertEquals({'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',

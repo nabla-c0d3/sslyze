@@ -165,9 +165,9 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
         else:
             cipher_a, cipher_b = accepted_cipher_list[0], accepted_cipher_list[1]
             cipher_a_b = self._test_ciphersuite(server_connectivity_info, ssl_version,
-												cipher_a.openssl_name + "," + cipher_b.openssl_name)
+                                                cipher_a.openssl_name + "," + cipher_b.openssl_name)
             cipher_b_a = self._test_ciphersuite(server_connectivity_info, ssl_version,
-												cipher_b.openssl_name + "," + cipher_a.openssl_name)
+                                                cipher_b.openssl_name + "," + cipher_a.openssl_name)
             if cipher_a_b.name == cipher_b_a.name:
                 return "server"
             else:

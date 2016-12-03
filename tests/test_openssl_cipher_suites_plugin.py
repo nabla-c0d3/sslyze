@@ -118,7 +118,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_dh_info(self):
-        server_info = ServerConnectivityInfo(hostname='dh512.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='dh480.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()

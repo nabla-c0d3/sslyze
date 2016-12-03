@@ -118,7 +118,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_dh_info(self):
-        server_info = ServerConnectivityInfo(hostname='dh480.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='dh512.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -126,4 +126,27 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.preferred_cipher)
         self.assertEquals(plugin_result.preferred_cipher.dh_info['GroupSize'], '480')
-        
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+
+    def test_null_cipher_suites(self):
+        server_info = ServerConnectivityInfo(hostname='null.badssl.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = OpenSslCipherSuitesPlugin()
+        plugin_result = plugin.process_task(server_info, 'tlsv1_2')
+
+        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
+        self.assertEquals({'TLS_ECDH_anon_WITH_AES_256_CBC_SHA', 'TLS_DH_anon_WITH_AES_256_CBC_SHA256',
+                           'TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA', 'TLS_DH_anon_WITH_AES_256_GCM_SHA384',
+                           'TLS_DH_anon_WITH_AES_256_CBC_SHA', 'TLS_ECDH_anon_WITH_AES_128_CBC_SHA',
+                           'TLS_DH_anon_WITH_AES_128_CBC_SHA256', 'TLS_DH_anon_WITH_AES_128_CBC_SHA',
+                           'TLS_DH_anon_WITH_AES_128_GCM_SHA256', 'TLS_DH_anon_WITH_SEED_CBC_SHA',
+                           'TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA', 'TLS_ECDHE_RSA_WITH_NULL_SHA',
+                           'TLS_ECDH_anon_WITH_NULL_SHA', 'TLS_RSA_WITH_NULL_SHA256', 'TLS_RSA_WITH_NULL_SHA'},
+                          set(accepted_cipher_name_list))
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())

@@ -150,3 +150,33 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+
+    def test_rc4_cipher_suites(self):
+        server_info = ServerConnectivityInfo(hostname='rc4.badssl.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = OpenSslCipherSuitesPlugin()
+        plugin_result = plugin.process_task(server_info, 'tlsv1_2')
+
+        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
+        self.assertEquals({'TLS_ECDHE_RSA_WITH_RC4_128_SHA', 'TLS_RSA_WITH_RC4_128_SHA'},
+                          set(accepted_cipher_name_list))
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+
+    def test_rc4_md5_cipher_suites(self):
+        server_info = ServerConnectivityInfo(hostname='rc4-md5.badssl.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = OpenSslCipherSuitesPlugin()
+        plugin_result = plugin.process_task(server_info, 'tlsv1_2')
+
+        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
+        self.assertEquals({'TLS_RSA_WITH_RC4_128_MD5'},
+                          set(accepted_cipher_name_list))
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())

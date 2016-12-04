@@ -86,7 +86,10 @@ class ProtocolsTestCase(unittest.TestCase):
         for hostname, protocol in [('imap.comcast.net', TlsWrappedProtocolEnum.STARTTLS_IMAP),
                                    ('pop.comcast.net', TlsWrappedProtocolEnum.STARTTLS_POP3),
                                    ('ldap.virginia.edu', TlsWrappedProtocolEnum.STARTTLS_LDAP),
-                                   ('jabber.org', TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER)]:
+                                   ('jabber.org', TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER),
+
+                                   # Some Heroku Postgres instance I created
+                                   ('ec2-54-235-80-86.compute-1.amazonaws.com', TlsWrappedProtocolEnum.STARTTLS_POSTGRES)]:
 
             server_info = ServerConnectivityInfo(hostname=hostname, tls_wrapped_protocol=protocol)
             server_info.test_connectivity_to_server()

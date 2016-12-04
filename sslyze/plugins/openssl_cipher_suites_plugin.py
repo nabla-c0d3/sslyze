@@ -99,12 +99,12 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
             raise exception
 
         thread_pool.join()
-        cipher_order_pref = self._check_cipher_order_preference(server_connectivity_info, ssl_version,
-                                                                accepted_cipher_list)
+        client_cipher_order = self._check_client_cipher_suite_preference(server_connectivity_info, ssl_version,
+                                                                         accepted_cipher_list)
 
         plugin_result = OpenSSLCipherSuitesResult(server_connectivity_info, plugin_command, options_dict,
                                                   preferred_cipher, accepted_cipher_list, rejected_cipher_list,
-                                                  errored_cipher_list, cipher_order_pref)
+                                                  errored_cipher_list, client_cipher_order)
         return plugin_result
 
 
@@ -155,13 +155,13 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
             if isinstance(preferred_cipher, AcceptedCipherSuite):
                 return preferred_cipher
 
-    def _check_cipher_order_preference(self, server_connectivity_info, ssl_version, accepted_cipher_list):
+    def _check_client_cipher_suite_preference(self, server_connectivity_info, ssl_version, accepted_cipher_list):
         """Checks whether the server has its own cipher suite preference order by initiating
            two SSL handshakes with the server, using the SSL version and two accepted cipher suites
         """
         # We should have at least 2 accepted ciphers to make sure that server has its own order
         if (len(accepted_cipher_list) < 2):
-            return "unidentified"
+            return False
         else:
             cipher_a, cipher_b = accepted_cipher_list[0], accepted_cipher_list[1]
             cipher_a_b = self._test_ciphersuite(server_connectivity_info, ssl_version,
@@ -169,9 +169,9 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
             cipher_b_a = self._test_ciphersuite(server_connectivity_info, ssl_version,
                                                 cipher_b.openssl_name + "," + cipher_a.openssl_name)
             if cipher_a_b.name == cipher_b_a.name:
-                return "server"
+                return False
             else:
-                return "client"
+                return True
     
 class AcceptedCipherSuite(object):
     def __init__(self, name, openssl_cipher_name, key_size, dh_info=None, post_handshake_response=None):
@@ -207,13 +207,15 @@ class OpenSSLCipherSuitesResult(PluginResult):
         rejected_cipher_list (List[RejectedCipherSuite]): The list of cipher suites rejected by the server.
         errored_cipher_list (List[ErroredCipherSuite]): The list of cipher suites that triggered an unexpected error
             during the TLS handshake.
+        follows_client_cipher_suite_preference : Boolean value that shows whether the server obeys the client side 
+        cipher suite order and select the first one from the list offered by the client.
     """
 
     def __init__(self, server_info, plugin_command, plugin_options, preferred_cipher, accepted_cipher_list,
-                 rejected_cipher_list, errored_cipher_list, cipher_order_pref):
+                 rejected_cipher_list, errored_cipher_list, follows_client_cipher_suite_preference):
         super(OpenSSLCipherSuitesResult, self).__init__(server_info, plugin_command, plugin_options)
 
-        self.cipher_order_pref = cipher_order_pref
+        self.follows_client_cipher_suite_preference = follows_client_cipher_suite_preference
         
         self.preferred_cipher = preferred_cipher
 
@@ -238,7 +240,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
         preferred_xml = Element('preferredCipherSuite')
         if self.preferred_cipher:
             preferred_xml.append(self._format_accepted_cipher_xml(self.preferred_cipher))
-            SubElement(preferred_xml, "cipherOrderPreference").text = self.cipher_order_pref
+            SubElement(preferred_xml, "followsClientCipherSuitePreference").text = str(self.follows_client_cipher_suite_preference)
             
         result_xml.append(preferred_xml)
 
@@ -301,8 +303,9 @@ class OpenSSLCipherSuitesResult(PluginResult):
 
         # Output the preferred cipher
         if self.preferred_cipher:
+            follows_client_pref_txt = "Client order" if self.follows_client_cipher_suite_preference else "Server order"
             result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Cipher suite preference:'))
-            result_txt.append(self.CIPHER_PREFERENCE_FORMAT(which_side=self.cipher_order_pref.title() + " order"))
+            result_txt.append(self.CIPHER_PREFERENCE_FORMAT(which_side=follows_client_pref_txt))
             result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Preferred:'))
             result_txt.append(self._format_accepted_cipher_txt(self.preferred_cipher))
 

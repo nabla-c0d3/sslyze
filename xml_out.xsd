@@ -551,7 +551,7 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element minOccurs="0" ref="cipherSuite"/>
-	        <xs:element minOccurs="0" name="cipherOrderPreference" type="xs:string"/>
+	        <xs:element minOccurs="0" name="followsClientCipherSuitePreference"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

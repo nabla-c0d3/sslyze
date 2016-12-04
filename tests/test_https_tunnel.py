@@ -9,6 +9,14 @@ from tiny_proxy import ThreadingHTTPServer
 import multiprocessing
 
 
+def proxy_worker(port):
+    """Worker method for running an HTTP CONNECT proxy on port 8000.
+    """
+    server_address = ('', port)
+    httpd = ThreadingHTTPServer(server_address, ProxyHandler)
+    httpd.serve_forever()
+
+
 class HttpsTunnelTestCase(unittest.TestCase):
 
 
@@ -19,20 +27,10 @@ class HttpsTunnelTestCase(unittest.TestCase):
             ServerConnectivityInfo(hostname='www.google.com', ip_address='1.2.3.4',
                                    http_tunneling_settings=tunnel_settings)
 
-
-    @staticmethod
-    def _proxy_worker(port):
-        """Worker method for running an HTTP CONNECT proxy on port 8000.
-        """
-        server_address = ('', port)
-        httpd = ThreadingHTTPServer(server_address, ProxyHandler)
-        httpd.serve_forever()
-
-
     def test_https_tunneling(self):
         # Start a local proxy
         proxy_port = 8000
-        p = multiprocessing.Process(target=self._proxy_worker, args=(proxy_port, ))
+        p = multiprocessing.Process(target=proxy_worker, args=(proxy_port, ))
         p.start()
 
         try:

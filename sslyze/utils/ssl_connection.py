@@ -469,5 +469,5 @@ class PostgresConnection(GenericStartTLSConnection):
     ERR_NO_STARTTLS = 'Postgres AUTH TLS was rejected'
 
     START_TLS_CMD = bytearray(b'\x00\x00\x00\x08\x04\xD2\x16\x2F')
-    START_TLS_OK = 'Start TLS request accepted.'
+    START_TLS_OK = 'S'
     SHOULD_WAIT_FOR_SERVER_BANNER = False

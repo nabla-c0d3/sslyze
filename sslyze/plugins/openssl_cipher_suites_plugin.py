@@ -3,7 +3,7 @@
 """
 
 from operator import attrgetter
-from xml.etree.ElementTree import Element
+from xml.etree.ElementTree import Element, SubElement
 
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
 from nassl.ssl_client import SslClient
@@ -99,16 +99,19 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
             raise exception
 
         thread_pool.join()
+        client_cipher_order = self._check_client_cipher_suite_preference(server_connectivity_info, ssl_version,
+                                                                         accepted_cipher_list)
 
         plugin_result = OpenSSLCipherSuitesResult(server_connectivity_info, plugin_command, options_dict,
                                                   preferred_cipher, accepted_cipher_list, rejected_cipher_list,
-                                                  errored_cipher_list)
+                                                  errored_cipher_list, client_cipher_order)
         return plugin_result
 
 
     def _test_ciphersuite(self, server_connectivity_info, ssl_version, ssl_cipher):
         """Initiates a SSL handshake with the server, using the SSL version and cipher suite specified.
         """
+        cipher_result = None
         rfc_cipher_name = OPENSSL_TO_RFC_NAMES_MAPPING[ssl_version].get(ssl_cipher, ssl_cipher)
         ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
         ssl_connection.set_cipher_list(ssl_cipher)
@@ -116,26 +119,26 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
         try:
             # Perform the SSL handshake
             ssl_connection.connect()
+            cipher_name = ssl_connection.get_current_cipher_name()
+            rfc_cipher_name = OPENSSL_TO_RFC_NAMES_MAPPING[ssl_version].get(cipher_name, cipher_name)
+            keysize = ssl_connection.get_current_cipher_bits()
+
+            if 'ECDH' in cipher_name:
+                dh_infos = ssl_connection.get_ecdh_param()
+            elif 'DH' in cipher_name:
+                dh_infos = ssl_connection.get_dh_param()
+            else:
+                dh_infos = None
+
+            status_msg = ssl_connection.post_handshake_check()
+            cipher_result = AcceptedCipherSuite(rfc_cipher_name, cipher_name, keysize, dh_infos, status_msg)
 
         except SSLHandshakeRejected as e:
             cipher_result = RejectedCipherSuite(rfc_cipher_name, str(e))
 
         except Exception as e:
             cipher_result = ErroredCipherSuite(rfc_cipher_name, e)
-
-        else:
-            keysize = ssl_connection.get_current_cipher_bits()
-                
-            if 'ECDH' in ssl_cipher :
-                dh_infos = ssl_connection.get_ecdh_param()
-            elif 'DH' in ssl_cipher :
-                dh_infos = ssl_connection.get_dh_param()
-            else :
-                dh_infos = None
-
-            status_msg = ssl_connection.post_handshake_check()
-            cipher_result = AcceptedCipherSuite(rfc_cipher_name, keysize, dh_infos, status_msg)
-
+            
         finally:
             ssl_connection.close()
 
@@ -148,38 +151,32 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
         preferred_cipher = None
         # First try the default cipher list, and then all ciphers
         for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
-            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-            ssl_connection.set_cipher_list(cipher_list)
-            try:
-                # Perform the SSL handshake
-                ssl_connection.connect()
-                cipher_name = ssl_connection.get_current_cipher_name()
-                rfc_cipher_name = OPENSSL_TO_RFC_NAMES_MAPPING[ssl_version].get(cipher_name, cipher_name)
-                keysize = ssl_connection.get_current_cipher_bits()
+            preferred_cipher = self._test_ciphersuite(server_connectivity_info, ssl_version, cipher_list)
+            if isinstance(preferred_cipher, AcceptedCipherSuite):
+                return preferred_cipher
 
-                if 'ECDH' in cipher_name:
-                    dh_infos = ssl_connection.get_ecdh_param()
-                elif 'DH' in cipher_name:
-                    dh_infos = ssl_connection.get_dh_param()
-                else :
-                    dh_infos = None
-
-                status_msg = ssl_connection.post_handshake_check()
-                preferred_cipher = AcceptedCipherSuite(rfc_cipher_name, keysize, dh_infos, status_msg)
-                break
-
-            except:
-                pass
-
-            finally:
-                ssl_connection.close()
-
-        return preferred_cipher
-
-
+    def _check_client_cipher_suite_preference(self, server_connectivity_info, ssl_version, accepted_cipher_list):
+        """Checks whether the server has its own cipher suite preference order by initiating
+           two SSL handshakes with the server, using the SSL version and two accepted cipher suites
+        """
+        # We should have at least 2 accepted ciphers to make sure that server has its own order
+        if (len(accepted_cipher_list) < 2):
+            return False
+        else:
+            cipher_a, cipher_b = accepted_cipher_list[0], accepted_cipher_list[1]
+            cipher_a_b = self._test_ciphersuite(server_connectivity_info, ssl_version,
+                                                cipher_a.openssl_name + "," + cipher_b.openssl_name)
+            cipher_b_a = self._test_ciphersuite(server_connectivity_info, ssl_version,
+                                                cipher_b.openssl_name + "," + cipher_a.openssl_name)
+            if cipher_a_b.name == cipher_b_a.name:
+                return False
+            else:
+                return True
+    
 class AcceptedCipherSuite(object):
-    def __init__(self, name, key_size, dh_info=None, post_handshake_response=None):
+    def __init__(self, name, openssl_cipher_name, key_size, dh_info=None, post_handshake_response=None):
         self.name = name
+        self.openssl_name = openssl_cipher_name
         self.is_anonymous = True if 'anon' in name else False
         self.key_size = key_size
         self.dh_info = dh_info
@@ -210,12 +207,16 @@ class OpenSSLCipherSuitesResult(PluginResult):
         rejected_cipher_list (List[RejectedCipherSuite]): The list of cipher suites rejected by the server.
         errored_cipher_list (List[ErroredCipherSuite]): The list of cipher suites that triggered an unexpected error
             during the TLS handshake.
+        follows_client_cipher_suite_preference : Boolean value that shows whether the server obeys the client side 
+        cipher suite order and select the first one from the list offered by the client.
     """
 
     def __init__(self, server_info, plugin_command, plugin_options, preferred_cipher, accepted_cipher_list,
-                 rejected_cipher_list, errored_cipher_list):
+                 rejected_cipher_list, errored_cipher_list, follows_client_cipher_suite_preference):
         super(OpenSSLCipherSuitesResult, self).__init__(server_info, plugin_command, plugin_options)
 
+        self.follows_client_cipher_suite_preference = follows_client_cipher_suite_preference
+        
         self.preferred_cipher = preferred_cipher
 
         # Sort all the lists
@@ -239,6 +240,8 @@ class OpenSSLCipherSuitesResult(PluginResult):
         preferred_xml = Element('preferredCipherSuite')
         if self.preferred_cipher:
             preferred_xml.append(self._format_accepted_cipher_xml(self.preferred_cipher))
+            SubElement(preferred_xml, "followsClientCipherSuitePreference").text = str(self.follows_client_cipher_suite_preference)
+            
         result_xml.append(preferred_xml)
 
         # Output all the accepted ciphers if any
@@ -290,6 +293,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
     ACCEPTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {status:<60}'.format
     REJECTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}{error_message:<60}'.format
     CIPHER_LIST_TITLE_FORMAT = '      {section_title:<32} '.format
+    CIPHER_PREFERENCE_FORMAT = u'        {which_side}'.format
     VERSION_TITLE_FORMAT = '{ssl_version} Cipher Suites'.format
 
     def as_text(self):
@@ -299,6 +303,9 @@ class OpenSSLCipherSuitesResult(PluginResult):
 
         # Output the preferred cipher
         if self.preferred_cipher:
+            follows_client_pref_txt = "Client order" if self.follows_client_cipher_suite_preference else "Server order"
+            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Cipher suite preference:'))
+            result_txt.append(self.CIPHER_PREFERENCE_FORMAT(which_side=follows_client_pref_txt))
             result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Preferred:'))
             result_txt.append(self._format_accepted_cipher_txt(self.preferred_cipher))
 

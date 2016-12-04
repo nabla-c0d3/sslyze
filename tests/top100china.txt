@@ -1,4 +1,4 @@
-# python sslyze_cli.py --regular --xml_out top100china.xml --targets_in test/top100china.txt
+# python -m sslyze --regular --xml_out top100china.xml --targets_in tests/top100china.txt
 baidu.com
 qq.com
 taobao.com

@@ -1,4 +1,4 @@
-# python sslyze_cli.py --regular --xml_out top100.xml --targets_in test/top100.txt
+# python -m sslyze --regular --xml_out top100.xml --targets_in tests/top100.txt
 google.com
 facebook.com
 youtube.com

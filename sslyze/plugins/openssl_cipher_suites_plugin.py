@@ -69,7 +69,7 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
         # Scan for every available cipher suite
         thread_pool = ThreadPool()
         for cipher in cipher_list:
-            thread_pool.add_job((self._test_ciphersuite, (server_connectivity_info, ssl_version, cipher)))
+            thread_pool.add_job((self._test_cipher_suite, (server_connectivity_info, ssl_version, cipher)))
 
         # Start processing the jobs; One thread per cipher
         thread_pool.start(nb_threads=min(len(cipher_list), self.MAX_THREADS))
@@ -107,7 +107,7 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
         return plugin_result
 
 
-    def _test_ciphersuite(self, server_connectivity_info, ssl_version, openssl_cipher_name):
+    def _test_cipher_suite(self, server_connectivity_info, ssl_version, openssl_cipher_name):
         """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
         """
         ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)

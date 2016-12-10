@@ -3,6 +3,9 @@
 import os
 import sys
 
+from sslyze.cli.json_output import JsonOutput
+from sslyze.cli.text_output import TextOutput
+from sslyze.cli.xml_output import XmlOutput
 
 if not hasattr(sys,"frozen"):
     sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
@@ -20,96 +23,10 @@ from sslyze.plugins_process_pool import PluginsProcessPool
 from sslyze.plugins_finder import PluginsFinder
 from sslyze.server_connectivity import ClientAuthenticationServerConfigurationEnum
 from sslyze.server_connectivity import ServerConnectivityError, ServersConnectivityTester
-from sslyze.ssl_settings import TlsWrappedProtocolEnum
+
 
 # Global so we can terminate processes when catching SIGINT
 plugins_process_pool = None
-
-
-# Todo: Move formatting stuff to another file
-SCAN_FORMAT = u'Scan Results For {0}:{1} - {2}:{1}'
-
-
-def _format_title(title):
-    return u' {title}\n {underline}\n'.format(title=title.upper(), underline='-' * len(title))
-
-
-TLS_PROTOCOL_XML_TEXT = {
-    TlsWrappedProtocolEnum.PLAIN_TLS: 'plainTls',
-    TlsWrappedProtocolEnum.HTTPS: 'https',
-    TlsWrappedProtocolEnum.STARTTLS_SMTP: 'startTlsSmtp',
-    TlsWrappedProtocolEnum.STARTTLS_XMPP: 'startTlsXmpp',
-    TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER: 'startTlsXmppServer',
-    TlsWrappedProtocolEnum.STARTTLS_POP3: 'startTlsPop3',
-    TlsWrappedProtocolEnum.STARTTLS_IMAP: 'startTlsImap',
-    TlsWrappedProtocolEnum.STARTTLS_FTP: 'startTlsFtp',
-    TlsWrappedProtocolEnum.STARTTLS_LDAP: 'startTlsLdap',
-    TlsWrappedProtocolEnum.STARTTLS_RDP: 'startTlsRdp',
-    TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 'startTlsPostGres',
-}
-
-
-def _format_xml_target_result(server_info, result_list):
-    target_attrib = {'host': server_info.hostname,
-                     'ip': server_info.ip_address,
-                     'port': str(server_info.port),
-                     'tlsWrappedProtocol': TLS_PROTOCOL_XML_TEXT[server_info.tls_wrapped_protocol]
-                     }
-    if server_info.http_tunneling_settings:
-        # Add proxy settings
-        target_attrib['httpsTunnelHostname'] = server_info.http_tunneling_settings.hostname
-        target_attrib['httpsTunnelPort'] = str(server_info.http_tunneling_settings.port)
-
-    target_xml = Element('target', attrib=target_attrib)
-    result_list.sort(key=lambda result: result)  # Sort results
-
-    for plugin_result in result_list:
-        target_xml.append(plugin_result.as_xml())
-
-    return target_xml
-
-
-def _object_to_json_dict(plugin_object):
-    """Convert an object to a dictionnary suitable for the JSON output.
-    """
-    final_fict = {}
-    for key, value in plugin_object.__dict__.iteritems():
-        if not key.startswith('_'):
-            # Remove private attributes
-            final_fict[key] = value
-    return final_fict
-
-
-
-def _format_json_result(server_info, result_list):
-    dict_final = {'server_info': server_info.__dict__}
-    dict_command_result = {}
-    for plugin_result in result_list:
-        dict_result = plugin_result.__dict__
-        # Remove the server_info node
-        dict_result.pop("server_info", None)
-        # Remove the plugin_command node
-        plugin_command = dict_result.pop("plugin_command", None)
-        dict_command_result[plugin_command] = dict_result
-
-    dict_final['commands_results'] = dict_command_result
-
-    return dict_final
-
-
-
-def _format_txt_target_result(server_info, result_list):
-    target_result_str = u''
-
-    for plugin_result in result_list:
-        # Print the result of each separate command
-        target_result_str += '\n'
-        for line in plugin_result.as_text():
-            target_result_str += line + '\n'
-
-    scan_txt = SCAN_FORMAT.format(server_info.hostname, str(server_info.port), server_info.ip_address)
-    return _format_title(scan_txt) + target_result_str + '\n\n'
-
 
 def sigint_handler(signum, frame):
     print 'Scan interrupted... shutting down.'
@@ -148,7 +65,7 @@ def main():
     should_print_text_results = not args_command_list.quiet and args_command_list.xml_file != '-'  \
         and args_command_list.json_file != '-'
     if should_print_text_results:
-        print '\n\n\n' + _format_title('Available plugins')
+        print '\n\n\n' + TextOutput.format_title('Available plugins')
         for plugin in available_plugins:
             print '  ' + plugin.__name__
         print '\n\n'
@@ -166,7 +83,7 @@ def main():
     #--TESTING SECTION--
     # Figure out which hosts are up and fill the task queue with work to do
     if should_print_text_results:
-        print _format_title('Checking host(s) availability')
+        print TextOutput.format_title('Checking host(s) availability')
 
     connectivity_tester = ServersConnectivityTester(good_server_list)
     connectivity_tester.start_connectivity_testing(network_timeout=args_command_list.timeout)
@@ -247,10 +164,10 @@ def main():
         if len(result_list) == task_num:
             # Done with this server; print the results and update the xml doc
             if args_command_list.xml_file:
-                xml_output_list.append(_format_xml_target_result(server_info, result_list))
+                xml_output_list.append(XmlOutput.process_plugin_results(server_info, result_list))
 
             if should_print_text_results:
-                print _format_txt_target_result(server_info, result_list)
+                print TextOutput.process_plugin_results(server_info, result_list)
 
 
     # --TERMINATE--
@@ -275,9 +192,9 @@ def main():
         # Add the output of the plugins for each server
         for host_str, plugin_result_list in result_dict.iteritems():
             server_info = plugin_result_list[0].server_info
-            json_output['accepted_targets'].append(_format_json_result(server_info, plugin_result_list))
+            json_output['accepted_targets'].append(JsonOutput.process_plugin_results(server_info, plugin_result_list))
 
-        final_json_output = json.dumps(json_output, default=_object_to_json_dict, sort_keys=True, indent=4)
+        final_json_output = json.dumps(json_output, default=JsonOutput.object_to_json_dict, sort_keys=True, indent=4)
         if args_command_list.json_file == '-':
             # Print XML output to the console if needed
             print final_json_output
@@ -336,7 +253,7 @@ def main():
 
 
     if should_print_text_results:
-        print _format_title('Scan Completed in {0:.2f} s'.format(exec_time))
+        print TextOutput.format_title('Scan Completed in {0:.2f} s'.format(exec_time))
 
 
 if __name__ == "__main__":

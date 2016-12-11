@@ -1,3 +1,4 @@
+
 from sslyze.plugins.plugin_base import PluginResult
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 
@@ -22,7 +23,7 @@ class CompletedServerScan(object):
     """
     
     def __init__(self, server_info, plugin_result_list):
-        # type: (ServerConnectivityInfo, list[PluginResult]) -> None
+        # type: (ServerConnectivityInfo, List[PluginResult]) -> None
         self.server_info = server_info
         self.plugin_result_list = plugin_result_list
 

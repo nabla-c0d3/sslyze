@@ -1,3 +1,4 @@
+from sslyze.cli import CompletedServerScan
 from sslyze.cli import FailedServerScan
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.server_connectivity import ClientAuthenticationServerConfigurationEnum
@@ -57,6 +58,7 @@ class ConsoleOutputGenerator(OutputGenerator):
 
 
     def server_scan_completed(self, server_scan):
+        # type: (CompletedServerScan) -> None
         target_result_str = u''
         for plugin_result in server_scan.plugin_result_list:
             # Print the result of each separate command
@@ -70,4 +72,5 @@ class ConsoleOutputGenerator(OutputGenerator):
 
 
     def scans_completed(self, total_scan_time):
+        # type: (float) -> None
         self._file_to.write(self._format_title('Scan Completed in {0:.2f} s'.format(total_scan_time)))

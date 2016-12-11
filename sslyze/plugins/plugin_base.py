@@ -84,10 +84,12 @@ class PluginResult(object):
 
     @abc.abstractmethod
     def as_xml(self):
+        # type: () -> Element
         return
 
     @abc.abstractmethod
     def as_text(self):
+        # type: () -> List[unicode]
         return
 
 

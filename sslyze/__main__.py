@@ -3,26 +3,20 @@
 import os
 import sys
 
-from sslyze.cli.json_output import JsonOutput
-from sslyze.cli.text_output import TextOutput
-from sslyze.cli.xml_output import XmlOutput
 
 if not hasattr(sys,"frozen"):
     sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
 
-from sslyze import __version__, PROJECT_URL
+from sslyze.cli.output_hub import OutputHub
+from sslyze.cli import FailedServerScan, CompletedServerScan
+from sslyze import __version__
 from sslyze.cli.command_line_parser import CommandLineParsingError, CommandLineParser
-import re
-import json
 import signal
 from multiprocessing import freeze_support
 from time import time
-from xml.dom import minidom
-from xml.etree.ElementTree import Element, tostring
 from sslyze.plugins_process_pool import PluginsProcessPool
 from sslyze.plugins_finder import PluginsFinder
-from sslyze.server_connectivity import ClientAuthenticationServerConfigurationEnum
-from sslyze.server_connectivity import ServerConnectivityError, ServersConnectivityTester
+from sslyze.server_connectivity import ServersConnectivityTester
 
 
 # Global so we can terminate processes when catching SIGINT
@@ -43,35 +37,25 @@ def main():
     signal.signal(signal.SIGINT, sigint_handler)
 
     start_time = time()
-    #--PLUGINS INITIALIZATION--
+
+    # Retrieve available plugins
     sslyze_plugins = PluginsFinder()
     available_plugins = sslyze_plugins.get_plugins()
     available_commands = sslyze_plugins.get_commands()
 
     # Create the command line parser and the list of available options
     sslyze_parser = CommandLineParser(available_plugins, __version__)
-
-    online_servers_list = []
-    invalid_servers_list = []
-
-    # Parse the command line
     try:
         good_server_list, bad_server_list, args_command_list = sslyze_parser.parse_command_line()
-        invalid_servers_list.extend(bad_server_list)
     except CommandLineParsingError as e:
         print e.get_error_msg()
         return
 
-    should_print_text_results = not args_command_list.quiet and args_command_list.xml_file != '-'  \
-        and args_command_list.json_file != '-'
-    if should_print_text_results:
-        print '\n\n\n' + TextOutput.format_title('Available plugins')
-        for plugin in available_plugins:
-            print '  ' + plugin.__name__
-        print '\n\n'
+    output_hub = OutputHub()
+    output_hub.command_line_parsed(available_plugins, args_command_list)
 
 
-    #--PROCESSES INITIALIZATION--
+    # Initialize the pool of processes that will run each plugin
     if args_command_list.https_tunnel:
         # Maximum one process to not kill the proxy
         plugins_process_pool = PluginsProcessPool(sslyze_plugins, args_command_list.nb_retries,
@@ -80,31 +64,20 @@ def main():
         plugins_process_pool = PluginsProcessPool(sslyze_plugins, args_command_list.nb_retries,
                                                   args_command_list.timeout)
 
-    #--TESTING SECTION--
-    # Figure out which hosts are up and fill the task queue with work to do
-    if should_print_text_results:
-        print TextOutput.format_title('Checking host(s) availability')
 
+    # Figure out which hosts are up and fill the task queue with work to do
     connectivity_tester = ServersConnectivityTester(good_server_list)
     connectivity_tester.start_connectivity_testing(network_timeout=args_command_list.timeout)
 
-    SERVER_OK_FORMAT = u'   {host}:{port:<25} => {ip_address} {client_auth_msg}'
-    SERVER_INVALID_FORMAT = u'   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.'
+    # Store and print server whose command line string was bad
+    for failed_scan in bad_server_list:
+        output_hub.server_connectivity_test_failed(failed_scan)
 
     # Store and print servers we were able to connect to
+    online_servers_list = []
     for server_connectivity_info in connectivity_tester.get_reachable_servers():
         online_servers_list.append(server_connectivity_info)
-        if should_print_text_results:
-            client_auth_msg = ''
-            client_auth_requirement = server_connectivity_info.client_auth_requirement
-            if client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED:
-                client_auth_msg = '  WARNING: Server REQUIRED client authentication, specific plugins will fail.'
-            elif client_auth_requirement == ClientAuthenticationServerConfigurationEnum.OPTIONAL:
-                client_auth_msg = '  WARNING: Server requested optional client authentication'
-
-            print SERVER_OK_FORMAT.format(host=server_connectivity_info.hostname, port=server_connectivity_info.port,
-                                          ip_address=server_connectivity_info.ip_address,
-                                          client_auth_msg=client_auth_msg)
+        output_hub.server_connectivity_test_succeeded(server_connectivity_info)
 
         # Send tasks to worker processes
         for plugin_command in available_commands:
@@ -119,30 +92,19 @@ def main():
                 plugins_process_pool.queue_plugin_task(server_connectivity_info, plugin_command, plugin_options_dict)
 
 
+    # Store and print servers we were NOT able to connect to
     for tentative_server_info, exception in connectivity_tester.get_invalid_servers():
-        invalid_servers_list.append((tentative_server_info.server_string, exception))
+        failed_scan = FailedServerScan(tentative_server_info.server_string, exception)
+        output_hub.server_connectivity_test_failed(failed_scan)
 
-
-    # Print servers we were NOT able to connect to
-    if should_print_text_results:
-        for server_string, exception in invalid_servers_list:
-            if isinstance(exception, ServerConnectivityError):
-                print SERVER_INVALID_FORMAT.format(server_string=server_string, error_msg=exception.error_msg)
-            else:
-                # Unexpected bug in SSLyze
-                raise exception
-        print '\n\n'
 
     # Keep track of how many tasks have to be performed for each target
     task_num = 0
+    output_hub.scans_started()
     for command in available_commands:
         if getattr(args_command_list, command):
             task_num += 1
 
-
-    # --REPORTING SECTION--
-    # XML output
-    xml_output_list = []
 
     # Each host has a list of results
     result_dict = {}
@@ -158,102 +120,18 @@ def main():
         result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname, ip_address=server_info.ip_address,
                                       port=server_info.port)].append(plugin_result)
 
-        result_list = result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname, ip_address=server_info.ip_address,
-                                                    port=server_info.port)]
+        plugin_result_list = result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
+                                                           ip_address=server_info.ip_address,
+                                                           port=server_info.port)]
 
-        if len(result_list) == task_num:
-            # Done with this server; print the results and update the xml doc
-            if args_command_list.xml_file:
-                xml_output_list.append(XmlOutput.process_plugin_results(server_info, result_list))
-
-            if should_print_text_results:
-                print TextOutput.process_plugin_results(server_info, result_list)
+        if len(plugin_result_list) == task_num:
+            # Done with this server; send the result to the output hub
+            output_hub.server_scan_completed(CompletedServerScan(server_info, plugin_result_list))
 
 
-    # --TERMINATE--
+    # All done
     exec_time = time()-start_time
-
-    # Output JSON to a file if needed
-    if args_command_list.json_file:
-        json_output = {'total_scan_time': str(exec_time),
-                       'network_timeout': str(args_command_list.timeout),
-                       'network_max_retries': str(args_command_list.nb_retries),
-                       'invalid_targets': [],
-                       'accepted_targets': []}
-
-        # Add the list of invalid targets
-        for server_string, exception in invalid_servers_list:
-            if isinstance(exception, ServerConnectivityError):
-                json_output['invalid_targets'].append({server_string: exception.error_msg})
-            else:
-                # Unexpected bug in SSLyze
-                raise exception
-
-        # Add the output of the plugins for each server
-        for host_str, plugin_result_list in result_dict.iteritems():
-            server_info = plugin_result_list[0].server_info
-            json_output['accepted_targets'].append(JsonOutput.process_plugin_results(server_info, plugin_result_list))
-
-        final_json_output = json.dumps(json_output, default=JsonOutput.object_to_json_dict, sort_keys=True, indent=4)
-        if args_command_list.json_file == '-':
-            # Print XML output to the console if needed
-            print final_json_output
-        else:
-            # Otherwise save the XML output to the console
-            with open(args_command_list.json_file, 'w') as json_file:
-                json_file.write(final_json_output)
-
-
-    # Output XML doc to a file if needed
-    if args_command_list.xml_file:
-        result_xml_attr = {'totalScanTime': str(exec_time),
-                           'networkTimeout': str(args_command_list.timeout),
-                           'networkMaxRetries': str(args_command_list.nb_retries)}
-        result_xml = Element('results', attrib = result_xml_attr)
-
-        # Sort results in alphabetical order to make the XML files (somewhat) diff-able
-        xml_output_list.sort(key=lambda xml_elem: xml_elem.attrib['host'])
-        for xml_element in xml_output_list:
-            result_xml.append(xml_element)
-
-        xml_final_doc = Element('document', title="SSLyze Scan Results", SSLyzeVersion=__version__,
-                                SSLyzeWeb=PROJECT_URL)
-
-        # Add the list of invalid targets
-        invalid_targets_xml = Element('invalidTargets')
-        for server_string, exception in invalid_servers_list:
-            if isinstance(exception, ServerConnectivityError):
-                error_xml = Element('invalidTarget', error=exception.error_msg)
-                error_xml.text = server_string
-                invalid_targets_xml.append(error_xml)
-            else:
-                # Unexpected bug in SSLyze
-                raise exception
-        xml_final_doc.append(invalid_targets_xml)
-
-        # Add the output of the plugins
-        xml_final_doc.append(result_xml)
-
-        # Remove characters that are illegal for XML
-        # https://lsimons.wordpress.com/2011/03/17/stripping-illegal-characters-out-of-xml-in-python/
-        xml_final_string = tostring(xml_final_doc, encoding='UTF-8')
-        illegal_xml_chars_RE = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]')
-        xml_sanitized_final_string = illegal_xml_chars_RE.sub('', xml_final_string)
-
-        # Hack: Prettify the XML file so it's (somewhat) diff-able
-        xml_final_pretty = minidom.parseString(xml_sanitized_final_string).toprettyxml(indent="  ", encoding="utf-8" )
-
-        if args_command_list.xml_file == '-':
-            # Print XML output to the console if needed
-            print xml_final_pretty
-        else:
-            # Otherwise save the XML output to the console
-            with open(args_command_list.xml_file, 'w') as xml_file:
-                xml_file.write(xml_final_pretty)
-
-
-    if should_print_text_results:
-        print TextOutput.format_title('Scan Completed in {0:.2f} s'.format(exec_time))
+    output_hub.scans_completed(exec_time)
 
 
 if __name__ == "__main__":

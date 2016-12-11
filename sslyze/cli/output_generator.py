@@ -23,29 +23,35 @@ class OutputGenerator(object):
 
     @abstractmethod
     def command_line_parsed(self, available_plugins, args_command_list):
-        pass
+        """The CLI was just started and successfully parsed the command line.
+        """
 
     @abstractmethod
     def server_connectivity_test_failed(self, failed_scan):
         # type: (FailedServerScan) -> None
-        pass
+        """The CLI found a server that it could not connect to; no scans will be performed against this server.
+        """
 
     @abstractmethod
     def server_connectivity_test_succeeded(self, server_connectivity_info):
         # type: (ServerConnectivityInfo) -> None
-        pass
+        """The CLI found a server that it was able to connect to; scans will be run against this server.
+        """
 
     @abstractmethod
     def scans_started(self):
         # type: (None) -> None
-        pass
+        """The CLI has finished testing connectivity with the supplied servers and will now start the scans.
+        """
 
     @abstractmethod
     def server_scan_completed(self, server_scan_result):
         # type: (CompletedServerScan) -> None
-        pass
+        """The CLI has finished scanning one single server.
+        """
 
     @abstractmethod
     def scans_completed(self, total_scan_time):
         # type: (float) -> None
-        pass
+        """The CLI has finished scanning all the supplied servers and will now exit.
+        """

@@ -40,14 +40,16 @@ class JsonOutputGenerator(OutputGenerator):
 
         dict_command_result = {}
         for plugin_result in server_scan_result.plugin_result_list:
-            dict_result = plugin_result.__dict__
+            dict_result = plugin_result.__dict__.copy()
             # Remove the server_info node
             dict_result.pop("server_info", None)
             # Remove the plugin_command node
             plugin_command = dict_result.pop("plugin_command", None)
+            if plugin_command in dict_command_result.keys():
+                raise ValueError('Received duplicate result for command {}'.format(plugin_command))
             dict_command_result[plugin_command] = dict_result
-        server_scan_dict['commands_results'] = dict_command_result
 
+        server_scan_dict['commands_results'] = dict_command_result
         self._json_dict['accepted_targets'].append(server_scan_dict)
 
 

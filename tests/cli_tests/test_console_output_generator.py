@@ -5,29 +5,10 @@ from StringIO import StringIO
 from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze.cli.console_output import ConsoleOutputGenerator
 from sslyze.server_connectivity import ServerConnectivityError, ClientAuthenticationServerConfigurationEnum
-
-
-class MockServerConnectivityInfo(object):
-    def __init__(self, client_auth_requirement=None):
-        self.hostname = u'unicödeéè.com'
-        self.port = 443
-        self.ip_address = '2001:0:9d38:6abd:1c85:1b5b:3fb2:4231'
-        self.client_auth_requirement = client_auth_requirement
-
-
-class MockPluginResult(object):
-    def __init__(self, text_output):
-        self.text_output = text_output
-
-    def as_xml(self):
-        pass
-
-    def as_text(self):
-        return [self.text_output]
+from tests.cli_tests import MockServerConnectivityInfo, MockPluginResult
 
 
 class ConsoleOutputGeneratorTestCase(unittest.TestCase):
-
 
     def test_command_line_parsed(self):
         output_file = StringIO()

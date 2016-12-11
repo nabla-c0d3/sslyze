@@ -41,7 +41,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
                                             {'ca_file': os.path.join(os.path.dirname(__file__), 'utils',
                                                                      'wildcard-self-signed.pem')})
 
-        self.assertEquals(len(plugin_result.path_validation_result_list), 6)
+        self.assertEquals(len(plugin_result.path_validation_result_list), 5)
         for path_validation_result in plugin_result.path_validation_result_list:
             if path_validation_result.trust_store.name == 'Custom --ca_file':
                 self.assertFalse(path_validation_result.is_certificate_trusted)

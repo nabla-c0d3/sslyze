@@ -1,15 +1,15 @@
 # coding=utf-8
-import json
 import unittest
 from StringIO import StringIO
+from xml.etree.ElementTree import Element
 
 from sslyze.cli import FailedServerScan, CompletedServerScan
-from sslyze.cli.json_output import JsonOutputGenerator
+from sslyze.cli.xml_output import XmlOutputGenerator
 from sslyze.server_connectivity import ServerConnectivityError
 from tests.cli_tests import MockServerConnectivityInfo, MockPluginResult, MockCommandLineValues
 
 
-class JsonOutputGeneratorTestCase(unittest.TestCase):
+class XmlOutputGeneratorTestCase(unittest.TestCase):
 
     def test(self):
         """The final output only gets written at the end, when calling scans_completed(). Hence we need to call all the
@@ -17,7 +17,7 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
         """
 
         output_file = StringIO()
-        generator = JsonOutputGenerator(output_file)
+        generator = XmlOutputGenerator(output_file)
 
         generator.command_line_parsed(None, MockCommandLineValues())
 
@@ -30,34 +30,37 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
 
         generator.scans_started()
 
-        plugin_result_1 = MockPluginResult('plugin1', u'Plugin ûnicôdé output', None)
-        plugin_result_2 = MockPluginResult('plugin2', 'other plugin Output', None)
+        plugin_xml_out_1 = Element(u'plugin1', attrib={'test1': 'value1'})
+        plugin_xml_out_1.text = u'Plugin ûnicôdé output'
+        plugin_result_1 = MockPluginResult('plugin1', None, plugin_xml_out_1)
+        plugin_xml_out_2 = Element(u'plugin2', attrib={'test2': 'value2'})
+        plugin_xml_out_2.text = u'other plugin Output'
+        plugin_result_2 = MockPluginResult('plugin2', None, plugin_xml_out_2)
         server_scan = CompletedServerScan(server_info, [plugin_result_1, plugin_result_2])
         generator.server_scan_completed(server_scan)
 
         scan_time = 1.3
         generator.scans_completed(scan_time)
 
-        received_output = output_file.getvalue()
+        received_output = unicode(output_file.getvalue(), 'utf-8')
         output_file.close()
 
         # Ensure the output properly listed the connectivity error with unicode escaped as \u sequences
-        self.assertIn(json.dumps(u'unibadeéè.com', ensure_ascii=True), received_output)
-        self.assertIn(json.dumps(u'Some érrôr', ensure_ascii=True), received_output)
+        self.assertIn(u'unibadeéè.com', received_output)
+        self.assertIn(u'Some érrôr', received_output)
 
         # Ensure the output properly listed the online domain
-        self.assertIn(json.dumps(server_info.hostname, ensure_ascii=True), received_output)
+        self.assertIn(server_info.hostname, received_output)
         self.assertIn(str(server_info.port), received_output)
         self.assertIn(server_info.ip_address, received_output)
 
-        # Ensure the output displayed the plugin's attributes as JSON
+        # Ensure the output displayed the plugin's XML output
         self.assertIn(plugin_result_1.plugin_command, received_output)
         self.assertIn(plugin_result_2.plugin_command, received_output)
-        self.assertIn('"text_output":', received_output)
-        self.assertIn(json.dumps(plugin_result_1.text_output, ensure_ascii=True), received_output)
-        self.assertIn(plugin_result_2.text_output, received_output)
+        self.assertIn(plugin_result_1.as_xml().text, received_output)
+        self.assertIn(plugin_result_2.as_xml().text, received_output)
 
         # Ensure the console output displayed the total scan time
-        self.assertIn(str(scan_time), received_output)
-        self.assertIn('"network_timeout": "{}"'.format(MockCommandLineValues().timeout), received_output)
-        self.assertIn('"network_max_retries": "{}"'.format(MockCommandLineValues().nb_retries), received_output)
+        self.assertIn('totalScanTime="{}"'.format(scan_time), received_output)
+        self.assertIn('networkTimeout="{}"'.format(MockCommandLineValues().timeout), received_output)
+        self.assertIn('networkMaxRetries="{}"'.format(MockCommandLineValues().nb_retries), received_output)

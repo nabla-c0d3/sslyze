@@ -109,8 +109,8 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         generator = ConsoleOutputGenerator(output_file)
 
         server_info = MockServerConnectivityInfo()
-        plugin_result_1 = MockPluginResult(u'Plugin ûnicôdé output')
-        plugin_result_2 = MockPluginResult('other plugin Output')
+        plugin_result_1 = MockPluginResult('plugin1', u'Plugin ûnicôdé output', None)
+        plugin_result_2 = MockPluginResult('plugin2', 'other plugin Output', None)
         server_scan = CompletedServerScan(server_info, [plugin_result_1, plugin_result_2])
         generator.server_scan_completed(server_scan)
 

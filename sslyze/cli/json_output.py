@@ -1,5 +1,6 @@
 import json
 
+from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
 from sslyze.cli import FailedServerScan
 from sslyze.cli.output_generator import OutputGenerator
@@ -9,7 +10,8 @@ class JsonOutputGenerator(OutputGenerator):
 
     def __init__(self, file_to):
         super(JsonOutputGenerator, self).__init__(file_to)
-        self._json_dict = {}
+        self._json_dict = {'sslyze_version': __version__,
+                           'sslyze_url': PROJECT_URL}
 
 
     def command_line_parsed(self, available_plugins, args_command_list):
@@ -17,7 +19,6 @@ class JsonOutputGenerator(OutputGenerator):
                                 'network_max_retries': str(args_command_list.nb_retries),
                                 'invalid_targets': [],
                                 'accepted_targets': []})
-        # TODO: add sslze version / url
 
 
     def server_connectivity_test_failed(self, failed_scan):

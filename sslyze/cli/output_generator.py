@@ -7,6 +7,10 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 class OutputGenerator(object):
+    """The abstract class output generator classes should inherit from.
+
+    Each method must be implemented and will be called in the order below, as the SSLyze CLI runs scans.
+    """
     __metaclass__ = ABCMeta
 
     def __init__(self, file_to):
@@ -16,7 +20,6 @@ class OutputGenerator(object):
     def close(self):
         # type: (None) -> None
         self._file_to.close()
-
 
     @abstractmethod
     def command_line_parsed(self, available_plugins, args_command_list):

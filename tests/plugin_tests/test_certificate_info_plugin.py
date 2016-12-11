@@ -4,7 +4,7 @@ import unittest
 
 from nassl import X509_NAME_MATCHES_SAN
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
-from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 class CertificateInfoPluginTestCase(unittest.TestCase):

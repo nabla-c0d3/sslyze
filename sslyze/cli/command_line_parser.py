@@ -2,6 +2,7 @@ from optparse import OptionParser, OptionGroup
 
 from nassl import SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
 
+from sslyze.cli import FailedServerScan
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
 from sslyze.utils.ssl_connection import SSLConnection
@@ -186,7 +187,7 @@ class CommandLineParser(object):
                 )
             except ServerConnectivityError as e:
                 # Will happen for example if the DNS lookup failed or the server string is malformed
-                bad_server_list.append((server_string, e))
+                bad_server_list.append(FailedServerScan(server_string, e))
             except ValueError as e:
                 # Will happen for example if xmpp_to is specified for a non-XMPP connection
                 raise CommandLineParsingError(e[0])

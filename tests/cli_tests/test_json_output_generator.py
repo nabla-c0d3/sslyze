@@ -15,7 +15,6 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
         """The final output only gets written at the end, when calling scans_completed(). Hence we need to call all the
         methods in the right order and validate the final output at the end.
         """
-
         output_file = StringIO()
         generator = JsonOutputGenerator(output_file)
 

@@ -53,7 +53,7 @@
                 <xs:element minOccurs="0" ref="openssl_ccs"/>
             </xs:all>
             <xs:attribute name="host" use="required"/>
-            <xs:attribute name="ip" use="required"/>
+            <xs:attribute name="ip" use="optional"/>
             <xs:attribute name="port" use="required"/>
             <xs:attribute name="tlsWrappedProtocol" use="required"/>
             <xs:attribute name="httpsTunnelHostname" use="optional"/>

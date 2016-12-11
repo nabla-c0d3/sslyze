@@ -9,10 +9,10 @@ class ConsoleOutputGenerator(OutputGenerator):
 
     TITLE_FORMAT =  u' {title}\n {underline}\n'
 
-    SERVER_OK_FORMAT = u'   {host}:{port:<25} => {ip_address} {client_auth_msg}'
+    SERVER_OK_FORMAT = u'   {host}:{port:<25} => {network_route} {client_auth_msg}'
     SERVER_INVALID_FORMAT = u'   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.'
 
-    SCAN_FORMAT = u'Scan Results For {0}:{1} - {2}:{1}'
+    SCAN_FORMAT = u'Scan Results For {0}:{1} - {2}'
 
 
     @classmethod
@@ -47,11 +47,16 @@ class ConsoleOutputGenerator(OutputGenerator):
         elif client_auth_requirement == ClientAuthenticationServerConfigurationEnum.OPTIONAL:
             client_auth_msg = '  WARNING: Server requested optional client authentication'
 
-        self._file_to.write(self.SERVER_OK_FORMAT.format(host=server_connectivity_info.hostname,
-                                                  port=server_connectivity_info.port,
-                                                  ip_address=server_connectivity_info.ip_address,
-                                                  client_auth_msg=client_auth_msg))
+        network_route = server_connectivity_info.ip_address
+        if server_connectivity_info.http_tunneling_settings:
+            # We do not know the server's IP address if going through a proxy
+            network_route = u'Proxy at {}:{}'.format(server_connectivity_info.http_tunneling_settings.hostname,
+                                                     server_connectivity_info.http_tunneling_settings.port)
 
+        self._file_to.write(self.SERVER_OK_FORMAT.format(host=server_connectivity_info.hostname,
+                                                         port=server_connectivity_info.port,
+                                                         network_route=network_route,
+                                                         client_auth_msg=client_auth_msg))
 
     def scans_started(self):
         self._file_to.write('\n\n\n\n')
@@ -66,8 +71,15 @@ class ConsoleOutputGenerator(OutputGenerator):
             for line in plugin_result.as_text():
                 target_result_str += line + '\n'
 
+
+        network_route = server_scan.server_info.ip_address
+        if server_scan.server_info.http_tunneling_settings:
+            # We do not know the server's IP address if going through a proxy
+            network_route = u'Proxy at {}:{}'.format(server_scan.server_info.http_tunneling_settings.hostname,
+                                                     server_scan.server_info.http_tunneling_settings.port)
+
         scan_txt = self.SCAN_FORMAT.format(server_scan.server_info.hostname, str(server_scan.server_info.port),
-                                          server_scan.server_info.ip_address)
+                                           network_route)
         self._file_to.write(self._format_title(scan_txt) + target_result_str + '\n\n')
 
 

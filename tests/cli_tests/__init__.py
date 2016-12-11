@@ -11,7 +11,11 @@ class MockServerConnectivityInfo(object):
         self.ip_address = '2001:0:9d38:6abd:1c85:1b5b:3fb2:4231'
         self.client_auth_requirement = client_auth_requirement
         self.tls_wrapped_protocol = TlsWrappedProtocolEnum.HTTPS
+
         self.http_tunneling_settings = http_tunneling_settings
+        if http_tunneling_settings:
+            # When scanning through a proxy, we do not know the final server's IP address
+            self.ip_address = None
 
 
 class MockPluginResult(object):

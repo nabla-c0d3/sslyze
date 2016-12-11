@@ -6,6 +6,7 @@ from xml.etree.ElementTree import Element
 from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze.cli.xml_output import XmlOutputGenerator
 from sslyze.server_connectivity import ServerConnectivityError
+from sslyze.ssl_settings import HttpConnectTunnelingSettings
 from tests.cli_tests import MockServerConnectivityInfo, MockPluginResult, MockCommandLineValues
 
 
@@ -15,7 +16,6 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         """The final output only gets written at the end, when calling scans_completed(). Hence we need to call all the
         methods in the right order and validate the final output at the end.
         """
-
         output_file = StringIO()
         generator = XmlOutputGenerator(output_file)
 
@@ -64,3 +64,24 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         self.assertIn('totalScanTime="{}"'.format(scan_time), received_output)
         self.assertIn('networkTimeout="{}"'.format(MockCommandLineValues().timeout), received_output)
         self.assertIn('networkMaxRetries="{}"'.format(MockCommandLineValues().nb_retries), received_output)
+
+
+    def test_with_http_tunneling(self):
+        output_file = StringIO()
+        generator = XmlOutputGenerator(output_file)
+
+        # When scanning through a proxy, we do not know the final server's IP address
+        # This makes sure the XML output properly handles that
+        tunneling_settings = HttpConnectTunnelingSettings(u'prôxyé.com', 3128)
+        server_info = MockServerConnectivityInfo(http_tunneling_settings=tunneling_settings)
+
+        server_scan = CompletedServerScan(server_info, [])
+        generator.server_scan_completed(server_scan)
+        generator.scans_completed(1.3)
+
+        received_output = unicode(output_file.getvalue(), 'utf-8')
+        output_file.close()
+
+        # Ensure the output displayed the tunneling settings
+        self.assertIn(u'httpsTunnelHostname="{}"'.format(tunneling_settings.hostname), received_output)
+        self.assertIn('httpsTunnelPort="{}"'.format(tunneling_settings.port), received_output)

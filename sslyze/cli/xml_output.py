@@ -62,7 +62,6 @@ class XmlOutputGenerator(OutputGenerator):
         # Add server info
         server_info = server_scan_result.server_info
         target_attrib = {'host': server_info.hostname,
-                         'ip': server_info.ip_address,
                          'port': str(server_info.port),
                          'tlsWrappedProtocol': self.TLS_PROTOCOL_XML_TEXT[server_info.tls_wrapped_protocol]}
 
@@ -70,6 +69,9 @@ class XmlOutputGenerator(OutputGenerator):
         if server_info.http_tunneling_settings:
             target_attrib['httpsTunnelHostname'] = server_info.http_tunneling_settings.hostname
             target_attrib['httpsTunnelPort'] = str(server_info.http_tunneling_settings.port)
+        else:
+            # We only know the IP if we're not scanning through a proxy
+            target_attrib['ip'] = server_info.ip_address
 
         server_scan_node = Element('target', attrib=target_attrib)
         server_scan_result.plugin_result_list.sort(key=lambda result: result)  # Sort results

@@ -23,7 +23,7 @@ sslyze_setup_py2exe = SSLYZE_SETUP.copy()
 sslyze_setup_py2exe.update(
         {
             # Add nassl to the list of packages
-            'packages': ['sslyze', 'sslyze.plugins', 'sslyze.utils', 'nassl',],
+            'packages': ['sslyze', 'sslyze.plugins', 'sslyze.utils', 'sslyze.cli', 'nassl',],
             # Force the packaging of the C extension
             'package_data': {'nassl': ['_nassl.pyd']},
             'console': ['sslyze\\__main__.py'],

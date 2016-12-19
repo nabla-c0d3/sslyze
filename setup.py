@@ -11,7 +11,7 @@ SSLYZE_SETUP = {
     'license': __license__,
     'url': PROJECT_URL,
     'entry_points': {'console_scripts': ['sslyze = sslyze.__main__:main']},
-    'packages': ['sslyze', 'sslyze.plugins', 'sslyze.utils'],
+    'packages': ['sslyze', 'sslyze.plugins', 'sslyze.utils', 'sslyze.cli'],
     'package_data': {'sslyze.plugins': ['data/trust_stores/*.pem']},
     'install_requires': ['nassl>=0.14.0,<0.15.0'],
     'classifiers': [

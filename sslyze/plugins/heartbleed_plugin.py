@@ -122,9 +122,10 @@ def do_handshake_with_heartbleed(self):
     # I copied nassl's code here so I could leave anything heartbleed-related
     # outside of the nassl code base
     try:
-        if self._ssl.do_handshake() == 1:
-            self._handshakeDone = True
-            return True # Handshake was successful
+        self._ssl.do_handshake()
+        self._handshakeDone = True
+        # Handshake was successful
+        return
 
     except WantReadError:
         # OpenSSL is expecting more data from the peer

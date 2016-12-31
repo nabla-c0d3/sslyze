@@ -2,7 +2,7 @@ SSLyze
 ======
 
 [![Build Status](https://travis-ci.org/nabla-c0d3/sslyze.svg?branch=master)](https://travis-ci.org/nabla-c0d3/sslyze)
-[![PyPI version](https://badge.fury.io/py/sslyze.svg)](https://badge.fury.io/py/sslyze)
+[![PyPI version](https://badge.fury.io/py/SSLyze.svg)](https://badge.fury.io/py/SSLyze)
 
 Fast and full-featured SSL scanner for Python 2.7.
 

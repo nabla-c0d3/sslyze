@@ -32,10 +32,12 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
 
         plugin_xml_out_1 = Element(u'plugin1', attrib={'test1': 'value1'})
         plugin_xml_out_1.text = u'Plugin ûnicôdé output'
-        plugin_result_1 = MockPluginResult('plugin1', None, plugin_xml_out_1)
+        plugin_result_1 = MockPluginResult('plugin1', u'', plugin_xml_out_1)
         plugin_xml_out_2 = Element(u'plugin2', attrib={'test2': 'value2'})
         plugin_xml_out_2.text = u'other plugin Output'
-        plugin_result_2 = MockPluginResult('plugin2', None, plugin_xml_out_2)
+        plugin_result_2 = MockPluginResult('plugin2', u'', plugin_xml_out_2)
+
+        # noinspection PyTypeChecker
         server_scan = CompletedServerScan(server_info, [plugin_result_1, plugin_result_2])
         generator.server_scan_completed(server_scan)
 
@@ -75,6 +77,7 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         tunneling_settings = HttpConnectTunnelingSettings(u'prôxyé.com', 3128)
         server_info = MockServerConnectivityInfo(http_tunneling_settings=tunneling_settings)
 
+        # noinspection PyTypeChecker
         server_scan = CompletedServerScan(server_info, [])
         generator.server_scan_completed(server_scan)
         generator.scans_completed(1.3)

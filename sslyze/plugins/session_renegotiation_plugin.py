@@ -31,7 +31,8 @@ class SessionRenegotiationPlugin(plugin_base.PluginBase):
                                           supports_secure_renegotiation)
 
 
-    def _test_secure_renegotiation(self, server_info):
+    @staticmethod
+    def _test_secure_renegotiation(server_info):
         """Checks whether the server supports secure renegotiation.
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection()
@@ -47,7 +48,8 @@ class SessionRenegotiationPlugin(plugin_base.PluginBase):
         return supports_secure_renegotiation
 
 
-    def _test_client_renegotiation(self, server_info):
+    @staticmethod
+    def _test_client_renegotiation(server_info):
         """Checks whether the server honors session renegotiation requests.
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection()
@@ -62,7 +64,7 @@ class SessionRenegotiationPlugin(plugin_base.PluginBase):
                 accepts_client_renegotiation = True
 
             # Errors caused by a server rejecting the renegotiation
-            except socket.timeout as e:
+            except socket.timeout:
                 # This is how Netty rejects a renegotiation - https://github.com/nabla-c0d3/sslyze/issues/114
                     accepts_client_renegotiation = False
             except socket.error as e:

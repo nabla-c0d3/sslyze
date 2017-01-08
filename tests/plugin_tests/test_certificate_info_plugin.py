@@ -11,7 +11,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_valid_chain(self):
-        server_info = ServerConnectivityInfo(hostname='www.hotmail.com')
+        server_info = ServerConnectivityInfo(hostname=u'www.hotmail.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -50,7 +50,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_invalid_chain(self):
-        server_info = ServerConnectivityInfo(hostname='self-signed.badssl.com')
+        server_info = ServerConnectivityInfo(hostname=u'self-signed.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -77,7 +77,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
     def test_1000_sans_chain(self):
         # Ensure SSLyze can process a leaf cert with 1000 SANs
-        server_info = ServerConnectivityInfo(hostname='1000-sans.badssl.com')
+        server_info = ServerConnectivityInfo(hostname=u'1000-sans.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -88,7 +88,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_sha1_chain(self):
-        server_info = ServerConnectivityInfo(hostname='sha1-2017.badssl.com')
+        server_info = ServerConnectivityInfo(hostname=u'sha1-2017.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -101,7 +101,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_sha256_chain(self):
-        server_info = ServerConnectivityInfo(hostname='sha256.badssl.com')
+        server_info = ServerConnectivityInfo(hostname=u'sha256.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -127,7 +127,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_chain_with_anchor(self):
-        server_info = ServerConnectivityInfo(hostname='www.verizon.com')
+        server_info = ServerConnectivityInfo(hostname=u'www.verizon.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()

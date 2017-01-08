@@ -71,15 +71,12 @@ class HeartbleedResult(PluginResult):
             if self.is_vulnerable_to_heartbleed \
             else 'OK - Not vulnerable to Heartbleed'
 
-        txt_output = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
-        txt_output.append(self.FIELD_FORMAT("", heartbleed_txt))
-        return txt_output
+        return [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE), self.FIELD_FORMAT("", heartbleed_txt)]
 
     def as_xml(self):
         xml_output = Element(self.plugin_command, title=self.COMMAND_TITLE)
         xml_output.append(Element('openSslHeartbleed', isVulnerable=str(self.is_vulnerable_to_heartbleed)))
         return xml_output
-
 
 
 def heartbleed_payload(ssl_version):

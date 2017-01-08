@@ -3,16 +3,15 @@ import socket
 import unittest
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
-from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError, \
-    ClientAuthenticationServerConfigurationEnum
-from sslyze.ssl_settings import TlsWrappedProtocolEnum, HttpConnectTunnelingSettings
+from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthenticationServerConfigurationEnum
+from sslyze.ssl_settings import TlsWrappedProtocolEnum
 
 
 class ProtocolsTestCase(unittest.TestCase):
 
 
     def test_smtp_custom_port(self):
-        server_info = ServerConnectivityInfo(hostname='smtp.gmail.com', port=587,
+        server_info = ServerConnectivityInfo(hostname=u'smtp.gmail.com', port=587,
                                              tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
         server_info.test_connectivity_to_server()
 
@@ -42,7 +41,7 @@ class ProtocolsTestCase(unittest.TestCase):
             print 'WARNING: IPv6 not available - skipping test'
             return
 
-        server_info = ServerConnectivityInfo(hostname='www.google.com', ip_address='2607:f8b0:4005:804::2004')
+        server_info = ServerConnectivityInfo(hostname=u'www.google.com', ip_address='2607:f8b0:4005:804::2004')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -59,7 +58,7 @@ class ProtocolsTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+        plugin_result = plugin.process_task(server_info, u'certinfo_basic')
 
         self.assertEquals(len(plugin_result.certificate_chain), 3)
 
@@ -68,7 +67,7 @@ class ProtocolsTestCase(unittest.TestCase):
 
 
     def test_xmpp_to(self):
-        server_info = ServerConnectivityInfo(hostname='talk.google.com',
+        server_info = ServerConnectivityInfo(hostname=u'talk.google.com',
                                              tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_XMPP,
                                              xmpp_to_hostname='gmail.com')
         server_info.test_connectivity_to_server()
@@ -83,10 +82,10 @@ class ProtocolsTestCase(unittest.TestCase):
 
 
     def test_starttls(self):
-        for hostname, protocol in [('imap.comcast.net', TlsWrappedProtocolEnum.STARTTLS_IMAP),
-                                   ('pop.comcast.net', TlsWrappedProtocolEnum.STARTTLS_POP3),
-                                   ('ldap.virginia.edu', TlsWrappedProtocolEnum.STARTTLS_LDAP),
-                                   ('jabber.org', TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER),
+        for hostname, protocol in [(u'imap.comcast.net', TlsWrappedProtocolEnum.STARTTLS_IMAP),
+                                   (u'pop.comcast.net', TlsWrappedProtocolEnum.STARTTLS_POP3),
+                                   (u'ldap.virginia.edu', TlsWrappedProtocolEnum.STARTTLS_LDAP),
+                                   (u'jabber.org', TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER),
 
                                    # Some Heroku Postgres instance I created
                                    ('ec2-54-235-80-86.compute-1.amazonaws.com', TlsWrappedProtocolEnum.STARTTLS_POSTGRES)]:
@@ -102,7 +101,7 @@ class ProtocolsTestCase(unittest.TestCase):
 
 
     def test_optional_client_authentication(self):
-        for hostname in ['auth.startssl.com', 'xnet-eu.intellij.net']:
+        for hostname in [u'auth.startssl.com', u'xnet-eu.intellij.net']:
             server_info = ServerConnectivityInfo(hostname=hostname)
             server_info.test_connectivity_to_server()
             self.assertEquals(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)

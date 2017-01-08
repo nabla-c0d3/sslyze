@@ -164,7 +164,8 @@ class SessionResumptionPlugin(plugin_base.PluginBase):
         return session_tls_ticket
 
 
-    def _resume_ssl_session(self, server_info, ssl_session=None, should_enable_tls_ticket=False):
+    @staticmethod
+    def _resume_ssl_session(server_info, ssl_session=None, should_enable_tls_ticket=False):
         """Connects to the server and returns the session object that was assigned for that connection.
         If ssl_session is given, tries to resume that session.
         """

@@ -1,6 +1,5 @@
 # coding=utf-8
 from xml.etree.ElementTree import Element
-
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 
 

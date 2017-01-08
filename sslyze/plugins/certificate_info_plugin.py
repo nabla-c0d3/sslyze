@@ -137,7 +137,7 @@ class Certificate(object):
         self.hpkp_pin = x509_certificate.get_hpkp_pin()
 
     def __eq__(self, other):
-        return (isinstance(other, self.__class__) and self.as_pem == other.as_pem)
+        return isinstance(other, self.__class__) and self.as_pem == other.as_pem
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -214,7 +214,8 @@ class CertificateInfoPlugin(plugin_base.PluginBase):
                             path_validation_error_list, ocsp_response)
 
 
-    def _get_certificate_chain(self, server_info, trust_store):
+    @staticmethod
+    def _get_certificate_chain(server_info, trust_store):
         """Connects to the target server and uses the supplied trust store to validate the server's certificate.
         Returns the server's certificate and OCSP response.
         """
@@ -364,6 +365,7 @@ class CertInfoFullResult(PluginResult):
 
     @staticmethod
     def _is_certificate_chain_order_valid(certificate_chain):
+        previous_issuer = None
         for index, cert in enumerate(certificate_chain):
             current_subject = cert.as_dict['subject']
 

@@ -6,7 +6,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class FallbackScsvPluginTestCase(unittest.TestCase):
 
     def test_fallback_good(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
+        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = FallbackScsvPlugin()

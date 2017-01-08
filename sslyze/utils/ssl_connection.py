@@ -106,6 +106,8 @@ class SSLConnection(DebugSslClient):
         self._ip = ip
         self._port = port
         self._tunnel_host = None
+        self._tunnel_port = None
+        self._tunnel_basic_auth_token = None
         self.set_cipher_list(self.DEFAULT_SSL_CIPHER_LIST)
 
 
@@ -327,10 +329,10 @@ class XMPPConnection(SSLConnection):
         self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
 
         # Get the server's features and check for an error
-        serverResp = self._sock.recv(4096)
-        if '<stream:error>' in serverResp:
+        server_resp = self._sock.recv(4096)
+        if '<stream:error>' in server_resp:
             raise StartTLSError(self.ERR_XMPP_REJECTED)
-        elif '</stream:features>' not in serverResp:
+        elif '</stream:features>' not in server_resp:
             # Get all the server features before initiating startTLS
             self._sock.recv(4096)
 

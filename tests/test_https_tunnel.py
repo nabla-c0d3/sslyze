@@ -24,7 +24,7 @@ class HttpsTunnelTestCase(unittest.TestCase):
         # Ensure that an IP address cannot be specified when using an HTTP proxy for scans
         tunnel_settings = HttpConnectTunnelingSettings('fakedomain', 443)
         with self.assertRaisesRegexp(ValueError, 'Cannot specify both ip_address and http_tunneling_settings'):
-            ServerConnectivityInfo(hostname='www.google.com', ip_address='1.2.3.4',
+            ServerConnectivityInfo(hostname=u'www.google.com', ip_address='1.2.3.4',
                                    http_tunneling_settings=tunnel_settings)
 
     def test_https_tunneling(self):
@@ -36,7 +36,7 @@ class HttpsTunnelTestCase(unittest.TestCase):
         try:
             # Run a scan through the proxy
             tunnel_settings = HttpConnectTunnelingSettings('localhost', proxy_port)
-            server_info = ServerConnectivityInfo(hostname='www.google.com', http_tunneling_settings=tunnel_settings)
+            server_info = ServerConnectivityInfo(hostname=u'www.google.com', http_tunneling_settings=tunnel_settings)
 
             # Try to connect to the proxy - retry if the proxy subprocess wasn't ready
             proxy_connection_attempts = 0

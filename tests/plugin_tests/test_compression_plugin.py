@@ -6,7 +6,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class CompressionPluginTestCase(unittest.TestCase):
 
     def test_compression_disabled(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
+        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = CompressionPlugin()

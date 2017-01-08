@@ -85,12 +85,12 @@ class PluginResult(object):
     @abc.abstractmethod
     def as_xml(self):
         # type: () -> Element
-        return
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def as_text(self):
         # type: () -> List[unicode]
-        return
+        raise NotImplementedError()
 
 
 class PluginRaisedExceptionResult(PluginResult):
@@ -119,10 +119,10 @@ class PluginBase(object):
     interface = None
 
     @classmethod
-    def get_interface(plugin_class):
+    def get_interface(cls):
         """Returns the AvailableCommands object for the current plugin.
         """
-        return plugin_class.interface
+        return cls.interface
 
     @abc.abstractmethod
     def process_task(self, server_connectivity_info, command, options_dict=None):

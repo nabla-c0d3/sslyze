@@ -53,7 +53,7 @@ class PluginsProcessPool(object):
         self._queued_tasks_nb = 0
 
 
-    def queue_plugin_task(self, server_connectivity_info, plugin_command, plugin_options_dict={}):
+    def queue_plugin_task(self, server_connectivity_info, plugin_command, plugin_options_dict=None):
         """Queue a scan command targeting a specific server.
 
         Args:

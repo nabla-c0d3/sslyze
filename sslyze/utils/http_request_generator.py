@@ -15,6 +15,6 @@ class HttpRequestGenerator(object):
     @classmethod
     def get_request(cls, host, user_agent=None):
         final_user_agent = user_agent
-        if final_user_agent == None:
+        if final_user_agent is None:
             final_user_agent = cls.DEFAULT_USER_AGENT
         return cls.HTTP_GET_FORMAT.format(host=host,user_agent=final_user_agent)

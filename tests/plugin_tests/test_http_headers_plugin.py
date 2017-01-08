@@ -6,7 +6,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class HttpHeadersPluginTestCase(unittest.TestCase):
 
     def test_hsts_enabled(self):
-        server_info = ServerConnectivityInfo(hostname='hsts.badssl.com')
+        server_info = ServerConnectivityInfo(hostname=u'hsts.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = HttpHeadersPlugin()
@@ -21,7 +21,7 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_hsts_and_hpkp_disabled(self):
-        server_info = ServerConnectivityInfo(hostname='expired.badssl.com')
+        server_info = ServerConnectivityInfo(hostname=u'expired.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = HttpHeadersPlugin()
@@ -36,7 +36,7 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_hpkp_enabled(self):
-        server_info = ServerConnectivityInfo(hostname='github.com')
+        server_info = ServerConnectivityInfo(hostname=u'github.com')
         server_info.test_connectivity_to_server()
 
         plugin = HttpHeadersPlugin()

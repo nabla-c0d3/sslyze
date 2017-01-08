@@ -1,5 +1,4 @@
 import unittest
-from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -7,7 +6,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class SessionResumptionPluginPluginTestCase(unittest.TestCase):
 
     def test_resumption(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
+        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = SessionResumptionPlugin()

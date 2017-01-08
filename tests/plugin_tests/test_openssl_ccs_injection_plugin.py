@@ -6,7 +6,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
 
     def test_ccs_injection_good(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
+        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCcsInjectionPlugin()

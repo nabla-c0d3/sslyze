@@ -90,8 +90,8 @@ class XmlOutputGenerator(OutputGenerator):
         # Remove characters that are illegal for XML
         # https://lsimons.wordpress.com/2011/03/17/stripping-illegal-characters-out-of-xml-in-python/
         xml_final_string = tostring(self._xml_root_node, encoding='UTF-8')
-        illegal_xml_chars_RE = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]')
-        xml_sanitized_final_string = illegal_xml_chars_RE.sub('', xml_final_string)
+        illegal_xml_chars_re = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]')
+        xml_sanitized_final_string = illegal_xml_chars_re.sub('', xml_final_string)
 
         # Hack: Prettify the XML file so it's (somewhat) diff-able
         xml_final_pretty = minidom.parseString(xml_sanitized_final_string).toprettyxml(indent="  ", encoding="utf-8" )

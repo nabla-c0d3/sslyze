@@ -2,7 +2,6 @@
 """Utility class to discover the list of available plugins.
 """
 
-import importlib
 import inspect
 import sys
 import sslyze.plugins

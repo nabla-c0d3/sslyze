@@ -6,7 +6,7 @@ from xml.etree.ElementTree import Element
 
 from sslyze.plugins import plugin_base
 from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
-import socket, struct, time, random
+import socket, struct, random
 
 from sslyze.plugins.plugin_base import PluginResult
 from sslyze.utils.ssl_connection import SSLConnection
@@ -175,7 +175,8 @@ class OpenSslCcsInjectionPlugin(plugin_base.PluginBase):
         ccsbody = "\x01" # Empty CCS
         return self.make_record(20, ccsbody)
 
-    def parse_handshake_pkt(self, buf):
+    @staticmethod
+    def parse_handshake_pkt(buf):
         r = []
         while len(buf) >= 4:
             mt = ord(buf[0])
@@ -188,7 +189,8 @@ class OpenSslCcsInjectionPlugin(plugin_base.PluginBase):
             buf = buf[4+mlen:]
         return r
 
-    def parse_alert_pkt(self, buf):
+    @staticmethod
+    def parse_alert_pkt(buf):
         return [ {"level": ord(buf[0]), "desc": ord(buf[1]) } ]
 
     def parse_records(self):

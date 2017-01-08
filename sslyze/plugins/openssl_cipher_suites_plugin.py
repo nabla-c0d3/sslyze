@@ -3,14 +3,14 @@
 """
 from abc import ABCMeta
 from operator import attrgetter
-from xml.etree.ElementTree import Element, SubElement
+from xml.etree.ElementTree import Element
 
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
 from nassl.ssl_client import SslClient
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult
-from sslyze.utils.ssl_connection import SSLHandshakeRejected, SSLConnection
+from sslyze.utils.ssl_connection import SSLHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
 
 
@@ -107,7 +107,8 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
         return plugin_result
 
 
-    def _test_cipher_suite(self, server_connectivity_info, ssl_version, openssl_cipher_name):
+    @staticmethod
+    def _test_cipher_suite(server_connectivity_info, ssl_version, openssl_cipher_name):
         """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
         """
         ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
@@ -135,7 +136,7 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
     def _get_preferred_cipher_suite(self, server_connectivity_info, ssl_version, accepted_cipher_list):
         """Try to detect the server's preferred cipher suite among all cipher suites supported by SSLyze.
         """
-        if (len(accepted_cipher_list) < 2):
+        if len(accepted_cipher_list) < 2:
             return None
 
         first_cipher_string = ', '.join([cipher.openssl_name for cipher in accepted_cipher_list])
@@ -154,7 +155,8 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
             return None
 
 
-    def _get_selected_cipher_suite(self, server_connectivity_info, ssl_version, openssl_cipher_string):
+    @staticmethod
+    def _get_selected_cipher_suite(server_connectivity_info, ssl_version, openssl_cipher_string):
         """Given an OpenSSL cipher string (which may specify multiple cipher suites), return the cipher suite that was
             selected by the server during the SSL handshake.
         """
@@ -301,7 +303,8 @@ class OpenSSLCipherSuitesResult(PluginResult):
         return result_xml
 
 
-    def _format_accepted_cipher_xml(self, cipher):
+    @staticmethod
+    def _format_accepted_cipher_xml(cipher):
         """Returns an XML node of an AcceptedCipherSuite's information.
         """
         cipher_xml = Element('cipherSuite',

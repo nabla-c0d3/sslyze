@@ -18,7 +18,7 @@ import sslyze.plugins.plugin_base
 if __name__ == '__main__':
         
     # Setup the servers to scan and ensure they are reachable
-    hostname = 'smtp.gmail.com'
+    hostname = u'smtp.gmail.com'
     try:
         server_info = ServerConnectivityInfo(hostname=hostname, port=587,
                                              tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)

@@ -6,13 +6,12 @@ import threading
 from Queue import Queue
 
 
-class _ThreadPoolSentinel:
+class _ThreadPoolSentinel(object):
     pass
 
 
-class ThreadPool:
-    """
-    Generic Thread Pool used in some of the plugins.
+class ThreadPool(object):
+    """Generic Thread Pool used in some of the plugins.
     Any unhandled exception happening in the work function goes to the error
     queue that can be read using get_error().
     Anything else goes to the result queue that can be read using get_result().
@@ -29,7 +28,7 @@ class ThreadPool:
 
     def get_error(self):
         active_threads = self._active_threads
-        while (active_threads) or (not self._error_q.empty()):
+        while active_threads or (not self._error_q.empty()):
             error = self._error_q.get()
             if isinstance(error, _ThreadPoolSentinel): # One thread was done
                 active_threads -= 1
@@ -43,7 +42,7 @@ class ThreadPool:
 
     def get_result(self):
         active_threads = self._active_threads
-        while (active_threads) or (not self._result_q.empty()):
+        while active_threads or (not self._result_q.empty()):
             result = self._result_q.get()
             if isinstance(result, _ThreadPoolSentinel): # One thread was done
                 active_threads -= 1
@@ -72,7 +71,7 @@ class ThreadPool:
             self._active_threads += 1
 
         # Put sentinels to let the threads know when there's no more jobs
-        [self._job_q.put(_ThreadPoolSentinel()) for worker in self._thread_list]
+        [self._job_q.put(_ThreadPoolSentinel()) for _ in self._thread_list]
 
 
     def join(self): # Clean exit

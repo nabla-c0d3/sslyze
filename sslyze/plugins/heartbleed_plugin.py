@@ -2,9 +2,7 @@
 """Plugin to test the server for CVE-2014-0160.
 """
 
-
-
-import new
+import types
 from xml.etree.ElementTree import Element
 
 from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
@@ -31,7 +29,7 @@ class HeartbleedPlugin(plugin_base.PluginBase):
         # Awful hack #1: replace nassl.sslClient.do_handshake() with a heartbleed
         # checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work
-        ssl_connection.do_handshake = new.instancemethod(do_handshake_with_heartbleed, ssl_connection, None)
+        ssl_connection.do_handshake = types.MethodType(do_handshake_with_heartbleed, ssl_connection)
 
         heartbleed = None
         try: # Perform the SSL handshake

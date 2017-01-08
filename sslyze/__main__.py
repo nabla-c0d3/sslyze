@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import os
 import sys
 
@@ -7,7 +8,6 @@ import sys
 if not hasattr(sys,"frozen"):
     sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
 
-from __future__ import print_function
 from sslyze.cli.output_hub import OutputHub
 from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze import __version__

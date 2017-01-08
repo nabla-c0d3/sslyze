@@ -64,7 +64,7 @@ class JsonOutputGenerator(OutputGenerator):
         """Convert an object to a dictionnary suitable for the JSON output.
         """
         final_fict = {}
-        for key, value in plugin_object.__dict__.iteritems():
+        for key, value in plugin_object.__dict__.items():
             if not key.startswith('_'):
                 # Remove private attributes
                 final_fict[key] = value

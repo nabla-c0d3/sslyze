@@ -7,6 +7,7 @@ import sys
 if not hasattr(sys,"frozen"):
     sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
 
+from __future__ import print_function
 from sslyze.cli.output_hub import OutputHub
 from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze import __version__
@@ -23,7 +24,7 @@ from sslyze.server_connectivity import ServersConnectivityTester
 plugins_process_pool = None
 
 def sigint_handler(signum, frame):
-    print 'Scan interrupted... shutting down.'
+    print('Scan interrupted... shutting down.')
     if plugins_process_pool:
         plugins_process_pool.emergency_shutdown()
     sys.exit()
@@ -48,7 +49,7 @@ def main():
     try:
         good_server_list, bad_server_list, args_command_list = sslyze_parser.parse_command_line()
     except CommandLineParsingError as e:
-        print e.get_error_msg()
+        print(e.get_error_msg())
         return
 
     output_hub = OutputHub()

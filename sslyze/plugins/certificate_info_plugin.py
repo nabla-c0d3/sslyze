@@ -72,7 +72,7 @@ class TrustStore(object):
 
     @staticmethod
     def _hash_subject(certificate_subjet_dict):
-        hashed_subject = ''.join(['{}{}'.format(key, value) for key, value in certificate_subjet_dict.iteritems()])
+        hashed_subject = ''.join(['{}{}'.format(key, value) for key, value in certificate_subjet_dict.items()])
         return hashed_subject
 
     def get_certificate_with_subject(self, certificate_subject):
@@ -643,7 +643,7 @@ class CertInfoBasicResult(CertInfoFullResult):
         except KeyError:
             # Otherwise show the whole Issuer field
             issuer_name = unicode(
-                ' - '.join(['{}: {}'.format(key, value) for key, value in cert_dict['issuer'].iteritems()]), 'utf-8'
+                ' - '.join(['{}: {}'.format(key, value) for key, value in cert_dict['issuer'].items()]), 'utf-8'
             )
 
         text_output = [

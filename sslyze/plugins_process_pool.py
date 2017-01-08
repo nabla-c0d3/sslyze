@@ -110,7 +110,7 @@ class PluginsProcessPool(object):
 
 
     def _get_current_processes_nb(self):
-        return sum([len(process_list) for hostname, process_list in self._processes_dict.iteritems()])
+        return sum([len(process_list) for hostname, process_list in self._processes_dict.items()])
 
 
     def get_results(self):
@@ -123,11 +123,11 @@ class PluginsProcessPool(object):
                 specific PluginResult subclasses for the list of attributes.
         """
         # Put a 'None' sentinel in the queue to let the each process know when every task has been completed
-        for _ in xrange(self._get_current_processes_nb()):
+        for _ in range(self._get_current_processes_nb()):
             self._task_queue.put(None)
 
-        for hostname, hostname_queue in self._hostname_queues_dict.iteritems():
-            for i in xrange(len(self._processes_dict[hostname])):
+        for hostname, hostname_queue in self._hostname_queues_dict.items():
+            for i in range(len(self._processes_dict[hostname])):
                 hostname_queue.put(None)
 
         received_task_results = 0

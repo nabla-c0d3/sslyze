@@ -67,7 +67,7 @@ class SessionResumptionPlugin(plugin_base.PluginBase):
         """Attempts several session ID resumption with the server."""
         thread_pool = ThreadPool()
 
-        for _ in xrange(resumption_attempts_nb):
+        for _ in range(resumption_attempts_nb):
             thread_pool.add_job((self._resume_with_session_id, (server_info, )))
         thread_pool.start(nb_threads=min(resumption_attempts_nb, self.MAX_THREADS_NB))
 

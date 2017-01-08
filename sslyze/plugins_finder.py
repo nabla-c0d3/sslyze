@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
+
 """Utility class to discover the list of available plugins.
 """
 
+from __future__ import print_function
 import inspect
 import sys
 import sslyze.plugins
 import sslyze.plugins.plugin_base
 
 
-class PluginsFinder:
+class PluginsFinder(object):
 
     def __init__(self):
         """Finds available plugins by discovering any class that implements the PluginBase abstract class.
@@ -105,7 +107,7 @@ class PluginsFinder:
                 module = loader.find_module(module_name).load_module(module_name)
                 plugin_modules.append(module)
             except Exception as e:
-                print '  {module} - Import Error: {error}'.format(module=module_name, error=str(e))
+                print('  {module} - Import Error: {error}'.format(module=module_name, error=str(e)))
                 continue
 
         return plugin_modules

@@ -3,7 +3,15 @@
 """
 
 import threading
-from Queue import Queue
+
+try:
+    # Python 3
+    # noinspection PyCompatibility
+    from queue import Queue
+except ImportError:
+    # Python 2
+    # noinspection PyCompatibility
+    from Queue import Queue
 
 
 class _ThreadPoolSentinel(object):

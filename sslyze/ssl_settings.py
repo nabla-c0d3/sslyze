@@ -5,7 +5,15 @@
 import os
 from base64 import b64encode
 from urllib import quote
-from urlparse import urlparse
+
+try:
+    # Python 3
+    # noinspection PyCompatibility
+    from urllib.parse import urlparse
+except ImportError:
+    # Python 2
+    # noinspection PyCompatibility
+    from urlparse import urlparse
 
 from nassl import SSL_FILETYPE_PEM, SSL_FILETYPE_ASN1
 from nassl.ssl_client import SslClient

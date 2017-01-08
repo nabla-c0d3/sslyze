@@ -2,11 +2,18 @@
 """Utility to parse HTTP responses - http://pythonwise.blogspot.com/2010/02/parse-http-response.html.
 """
 
-from StringIO import StringIO
-from httplib import HTTPResponse
+from io import BytesIO
+try:
+    # Python 3
+    # noinspection PyCompatibility
+    from http.client import HTTPResponse
+except ImportError:
+    # Python 2
+    # noinspection PyCompatibility
+    from httplib import HTTPResponse
 
 
-class FakeSocket(StringIO):
+class FakeSocket(BytesIO):
     def makefile(self, *args, **kw):
         return self
 

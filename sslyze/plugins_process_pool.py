@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
-"""Utility class to spawn a pool of processes and dispatch scanning commands so they can be run concurrently.
-"""
 
 import random
 from multiprocessing import JoinableQueue
 
+from sslyze.plugins.plugin_base import PluginResult
+from sslyze.plugins_finder import PluginsFinder
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.worker_process import WorkerProcess
+from typing import Dict
+from typing import Iterable
+from typing import Optional
 
 
 class PluginsProcessPool(object):
-    """Creates a pool of processes and dispatches scanning commands to be run concurrently.
+    """Manage a pool of processes to dispatch scanning commands so they can be run concurrently.
     """
 
     DEFAULT_MAX_PROCESSES_NB = 12
@@ -19,14 +23,19 @@ class PluginsProcessPool(object):
     DEFAULT_NETWORK_RETRIES = 3
     DEFAULT_NETWORK_TIMEOUT = 5  # in seconds
 
-    def __init__(self, available_plugins, network_retries=DEFAULT_NETWORK_RETRIES,
+    def __init__(self,
+                 available_plugins,
+                 network_retries=DEFAULT_NETWORK_RETRIES,
                  network_timeout=DEFAULT_NETWORK_TIMEOUT,
                  max_processes_nb=DEFAULT_MAX_PROCESSES_NB,
-                 max_processes_per_hostname_nb=DEFAULT_PROCESSES_PER_HOSTNAME_NB):
-        """
+                 max_processes_per_hostname_nb=DEFAULT_PROCESSES_PER_HOSTNAME_NB
+                 ):
+        # type: (PluginsFinder, Optional[int], Optional[int], Optional[int], Optional[int]) -> None
+        """Create a pool of processes for running scanning commands concurrently.
+
         Args:
             available_plugins (PluginsFinder): An object encapsulating the list of available plugins.
-            network_retries (Optional[int)]: How many times plugins should retry a connection that timed out.
+            network_retries (Optional[int]): How many times plugins should retry a connection that timed out.
             network_timeout (Optional[int]): The time until an ongoing connection times out within all plugins.
             max_processes_nb (Optional[int]): The maximum number of processes to spawn for running scans concurrently.
             max_processes_per_hostname_nb (Optional[int]): The maximum of processes that can be used for running scans
@@ -34,7 +43,6 @@ class PluginsProcessPool(object):
 
         Returns:
             PluginsProcessPool: An object for queueing scan commands to be run concurrently.
-
         """
 
         self._available_plugins = available_plugins
@@ -54,13 +62,14 @@ class PluginsProcessPool(object):
 
 
     def queue_plugin_task(self, server_connectivity_info, plugin_command, plugin_options_dict=None):
+        # type: (ServerConnectivityInfo, str, Dict) -> None
         """Queue a scan command targeting a specific server.
 
         Args:
             server_connectivity_info (ServerConnectivityInfo): The information for connecting to the server.
             plugin_command (str): The plugin scan command to be run on the server. Available commands for each plugin
                 are described in the sslyze CLI --help text.
-            plugin_options_dict (dict): Scan options to be passed to the plugin. Available options for each plugin are
+            plugin_options_dict (Optional[dict]): Scan options to be passed to the plugin. Available options for each plugin are
                 described in the sslyze CLI --help text.
         """
         # Ensure we have the right processes and queues in place for this hostname
@@ -114,7 +123,8 @@ class PluginsProcessPool(object):
 
 
     def get_results(self):
-        """Returns the result of previously queues scan command; new tasks can no longer be queued once this is called.
+        # type: () -> Iterable[PluginResult]
+        """Return the result of previously queued scan commands; new tasks can no longer be queued once this is called.
 
         Yields:
             PluginResult: The result of a scan command run on a server. The server and command information are available

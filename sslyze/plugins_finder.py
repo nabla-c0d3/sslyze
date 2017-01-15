@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Utility class to discover the list of available plugins.
-"""
-
 from __future__ import print_function
 import inspect
 import sys
@@ -11,11 +8,30 @@ import sslyze.plugins.plugin_base
 
 
 class PluginsFinder(object):
+    """Utility class to discover the list of available SSLyze scanning plugins and commands.
+    """
+
+    _DISCOVERED_PLUGINS = None
+
+    @classmethod
+    def get(cls):
+        # type: () -> PluginsFinder
+        """Discover available SSLyze plugins and return a PluginsFinder to be passed to a PluginsProcessPool.
+
+        Returns:
+            PluginsFinder:  An object encapsulating the list of available SSLyze plugins.
+        """
+        if cls._DISCOVERED_PLUGINS is None:
+            cls._DISCOVERED_PLUGINS = PluginsFinder()
+        return cls._DISCOVERED_PLUGINS
+
 
     def __init__(self):
-        """Finds available plugins by discovering any class that implements the PluginBase abstract class.
+        # type: () -> None
+        """Find available plugins by discovering any class that implements the PluginBase abstract class.
 
-        Returns PluginsFinder: An object encapsulating the list of available sslyze plugin classess.
+        Returns:
+            PluginsFinder:  An object encapsulating the list of available SSLyze plugins.
         """
         self._plugin_classes = set([])
         self._commands = {}

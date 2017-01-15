@@ -4,7 +4,7 @@ SSLyze
 [![Build Status](https://travis-ci.org/nabla-c0d3/sslyze.svg?branch=master)](https://travis-ci.org/nabla-c0d3/sslyze)
 [![PyPI version](https://badge.fury.io/py/SSLyze.svg)](https://badge.fury.io/py/SSLyze)
 
-Fast and full-featured SSL scanner for Python 2.7.
+Fast and powerful SSL/TLS server scanning library for Python 2.7.
 
 
 Description
@@ -65,7 +65,7 @@ except ServerConnectivityError as e:
     raise RuntimeError('Error when connecting to {}: {}'.format(hostname, e.error_msg))
 
 # Get the list of available plugins
-sslyze_plugins = PluginsFinder()
+sslyze_plugins = PluginsFinder.get()
 
 # Create a process pool to run scanning commands concurrently
 plugins_process_pool = PluginsProcessPool(sslyze_plugins)

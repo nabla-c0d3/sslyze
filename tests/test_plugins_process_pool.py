@@ -11,7 +11,7 @@ class PluginsProcessPoolTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         # Get the list of available plugins
-        sslyze_plugins = PluginsFinder()
+        sslyze_plugins = PluginsFinder.get()
 
         # Create a process pool to run scanning commands concurrently
         plugins_process_pool = PluginsProcessPool(sslyze_plugins)

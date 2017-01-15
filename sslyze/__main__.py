@@ -40,7 +40,7 @@ def main():
     start_time = time()
 
     # Retrieve available plugins
-    sslyze_plugins = PluginsFinder()
+    sslyze_plugins = PluginsFinder.get()
     available_plugins = sslyze_plugins.get_plugins()
     available_commands = sslyze_plugins.get_commands()
 

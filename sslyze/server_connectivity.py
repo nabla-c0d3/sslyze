@@ -3,11 +3,11 @@
 """
 
 import socket
-
+from typing import Optional
 from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSLV2, TLSV1_1
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
 from utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, XMPPConnection, \
     XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \
     PostgresConnection, HTTPSConnection
@@ -67,16 +67,23 @@ class ServerConnectivityInfo(object):
     CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
 
 
-    def __init__(self, hostname, port=None, ip_address=None, tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS,
-                 tls_server_name_indication=None, xmpp_to_hostname=None, client_auth_credentials=None,
-                 http_tunneling_settings=None):
+    def __init__(self,
+                 hostname,                                              # type: unicode
+                 port=None,                                             # type: Optional[int]
+                 ip_address=None,                                       # type: Optional[str]
+                 tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS, # type: Optional[TlsWrappedProtocolEnum]
+                 tls_server_name_indication=None,                       # type: Optional[unicode]
+                 xmpp_to_hostname=None,                                 # type: Optional[unicode]
+                 client_auth_credentials=None,                          # type: Optional[ClientAuthenticationCredentials]
+                 http_tunneling_settings=None                           # type: Optional[HttpConnectTunnelingSettings]
+                 ):
         """Constructor to specify how to connect to a server to be scanned.
 
         Most arguments are optional but can be supplied in order to be more specific about the server's configuration.
 
         Args:
             hostname (unicode): The server's hostname.
-            port (int): The server's TLS port number. If not supplied, the default port number for the specified
+            port (Optional[int]): The server's TLS port number. If not supplied, the default port number for the specified
                 `tls_wrapped_protocol` will be used.
             ip_address (Optional[str]): The server's IP address. If not supplied, a DNS lookup for the specified
                 `hostname` will be performed. If `http_tunneling_settings` is specified, `ip_address` cannot be supplied
@@ -85,9 +92,9 @@ class ServerConnectivityInfo(object):
                 expects. It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what
                 kind of "hello" message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If
                 not supplied, standard TLS will be used.
-            tls_server_name_indication (Optional[str]): The hostname to set within the Server Name Indication TLS
+            tls_server_name_indication (Optional[unicode]): The hostname to set within the Server Name Indication TLS
                 extension. If not supplied, the specified `hostname` will be used.
-            xmpp_to_hostname (Optional[str]): The hostname to set within the `to` attribute of the XMPP stream. If not
+            xmpp_to_hostname (Optional[unicode]): The hostname to set within the `to` attribute of the XMPP stream. If not
                 supplied, the specified `hostname` will be used. Should only be set if the supplied
                 `tls_wrapped_protocol` is an XMPP protocol.
             client_auth_credentials (Optional[ClientAuthenticationCredentials]): The client certificate and private key
@@ -150,34 +157,19 @@ class ServerConnectivityInfo(object):
         self.client_auth_requirement = None
 
 
-    @classmethod
-    def from_command_line(cls, server_string, tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS,
-                          tls_server_name_indication=None, xmpp_to_hostname=None,
-                          client_auth_credentials=None, http_tunneling_settings=None):
-        """Constructor that parses a single server string from a command line used to launch SSLyze and returns the
-        corresponding ServerConnectivityInfo.
-        """
-        # Will raise a ValueError if the server string is not properly formatted
-        hostname, ip_address, port = CommandLineServerStringParser.parse_server_string(server_string)
-        server_info = cls(hostname=hostname,
-                         port=port,
-                         ip_address=ip_address,
-                         tls_wrapped_protocol=tls_wrapped_protocol,
-                         tls_server_name_indication=tls_server_name_indication,
-                         xmpp_to_hostname=xmpp_to_hostname,
-                         client_auth_credentials=client_auth_credentials,
-                         http_tunneling_settings=http_tunneling_settings)
-        # Keep the original server string to display it in the CLI output if there was a connection error
-        server_info.server_string = server_string
-        return server_info
-
-
     def test_connectivity_to_server(self, network_timeout=None):
-        """Attempts to perform a full SSL handshake with the server in order to identify one SSL version and cipher
-        suite supported by the server.
+        # type: (Optional[int]) -> None
+        """Attempts to perform a full SSL handshake with the server.
+
+        This method will ensure that the server can be reached, and will also identify one SSL/TLS version and one
+        cipher suite supported by the server. If the connectivity test is successful, the ServerConnectivityInfo object
+        is then ready to be passed to plugins in order to run scan commands on the server.
 
         Args:
-            network_timeout (int): Network timeout value in seconds passed to the underlying socket.
+            network_timeout (Optional[int]): Network timeout value in seconds passed to the underlying socket.
+
+        Raises:
+            ServerConnectivityError: If the server was not reachable or an SSL/TLS handshake could not be completed.
         """
         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.DISABLED
         ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=SSLV23)
@@ -262,8 +254,10 @@ class ServerConnectivityInfo(object):
 
     def get_preconfigured_ssl_connection(self, override_ssl_version=None, ssl_verify_locations=None,
                                          should_ignore_client_auth=None):
-        """Returns an SSLConnection instance with the right configuration for successfully establishing an SSL
-        connection to the server. Used by all plugins to connect to the server and run scans.
+        # type: (Optional[int], Optional[bool], Optional[bool]) -> SSLConnection
+        """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
+
+        Used by all plugins to connect to the server and run scans.
         """
         if self.highest_ssl_version_supported is None and override_ssl_version is None:
             raise ValueError('Cannot return an SSLConnection without testing connectivity; '
@@ -336,72 +330,3 @@ class ServersConnectivityTester(object):
             test_connectivity_to_server_method, _ = job
             server_info = test_connectivity_to_server_method.__self__
             yield (server_info, exception)
-
-
-
-class CommandLineServerStringParser(object):
-    """Utility class to parse a 'host:port{ip}' string taken from the command line into a valid (host,ip, port) tuple.
-    Supports IPV6 addresses.
-    """
-
-    SERVER_STRING_ERROR_BAD_PORT = 'Not a valid host:port'
-    SERVER_STRING_ERROR_NO_IPV6 = 'IPv6 is not supported on this platform'
-
-    @classmethod
-    def parse_server_string(cls, server_str):
-        # Extract ip from target
-        if '{' in server_str and '}' in server_str:
-            raw_target = server_str.split('{')
-            raw_ip = raw_target[1]
-
-            ip = raw_ip.replace('}', '')
-
-            # Clean the target
-            server_str = raw_target[0]
-        else:
-            ip = None
-
-        # Look for ipv6 hint in target
-        if '[' in server_str:
-            (host, port) = cls._parse_ipv6_server_string(server_str)
-        else:
-            # Look for ipv6 hint in the ip
-            if ip is not None and '[' in ip:
-                (ip, port) = cls._parse_ipv6_server_string(ip)
-
-            # Fallback to ipv4
-            (host, port) = cls._parse_ipv4_server_string(server_str)
-
-        return host, ip, port
-
-    @classmethod
-    def _parse_ipv4_server_string(cls, server_str):
-
-        if ':' in server_str:
-            host = (server_str.split(':'))[0]  # hostname or ipv4 address
-            try:
-                port = int((server_str.split(':'))[1])
-            except:  # Port is not an int
-                raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
-        else:
-            host = server_str
-            port = None
-
-        return host, port
-
-    @classmethod
-    def _parse_ipv6_server_string(cls, server_str):
-
-        if not socket.has_ipv6:
-            raise ServerConnectivityError(cls.SERVER_STRING_ERROR_NO_IPV6)
-
-        port = None
-        target_split = (server_str.split(']'))
-        ipv6_addr = target_split[0].split('[')[1]
-        if ':' in target_split[1]:  # port was specified
-            try:
-                port = int(target_split[1].rsplit(':')[1])
-            except:  # Port is not an int
-                raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
-        return ipv6_addr, port
-

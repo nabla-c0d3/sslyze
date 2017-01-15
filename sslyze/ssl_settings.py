@@ -5,6 +5,7 @@
 import os
 from base64 import b64encode
 from urllib import quote
+from typing import Optional
 
 try:
     # Python 3
@@ -20,8 +21,10 @@ from nassl.ssl_client import SslClient
 
 
 class TlsWrappedProtocolEnum(object):
-    """The list of TLS-wrapped protocols supported by SSLyze; used to figure out how to establish an SSL connection to
-    the server and what kind of "hello" message to send after the handshake was completed.
+    """The list of TLS-wrapped protocols supported by SSLyze.
+
+    SSLyze uses this to figure out how to establish an SSL/TLS connection to the server and what kind of "hello" message
+    to send after the handshake was completed.
     """
     PLAIN_TLS = 1  # Standard TLS connection
     HTTPS = 2
@@ -37,12 +40,20 @@ class TlsWrappedProtocolEnum(object):
 
 
 class ClientAuthenticationCredentials(object):
-    """Everything needed to perform client authentication with an SSL server.
+    """Parameters needed to perform SSL/TLS client/mutual authentication with a server.
     """
 
     def __init__(self, client_certificate_chain_path, client_key_path, client_key_type=SSL_FILETYPE_PEM,
                  client_key_password=''):
+        # type: (str, str, int, Optional[str]) -> None
+        """Create a container for SSL/TLS client authentication settings.
 
+        Args:
+            client_certificate_chain_path (str): Path to the client's certificate chain.
+            client_key_path (str): Path to the client's private key.
+            client_key_type (int): SSL_FILETYPE_PEM or SSL_FILETYPE_DER.
+            client_key_password (Optional[str]): Password needed to decrypt the private key.
+        """
         self.client_certificate_chain_path = client_certificate_chain_path
         if not os.path.isfile(self.client_certificate_chain_path):
             raise ValueError('Could not open the client certificate file')
@@ -63,10 +74,11 @@ class ClientAuthenticationCredentials(object):
 
 
 class HttpConnectTunnelingSettings(object):
-    """Information needed to tunnel SSL/TLS traffic through an HTTP Connect Proxy.
+    """Parameters needed to tunnel SSL/TLS traffic through an HTTP Connect Proxy.
     """
 
     def __init__(self, hostname, port, basic_auth_user=None, basic_auth_password=None):
+        # type: (unicode, int, Optional[str], Optional[str]) -> None
         self.hostname = hostname
         self.port = port
         self.basic_auth_user = basic_auth_user
@@ -75,6 +87,7 @@ class HttpConnectTunnelingSettings(object):
 
     @classmethod
     def from_url(cls, proxy_url):
+        # type: (str) -> HttpConnectTunnelingSettings
         parsed_url = urlparse(proxy_url)
 
         if not parsed_url.netloc or not parsed_url.hostname:

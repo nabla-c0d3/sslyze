@@ -8,7 +8,7 @@ from xml.etree.ElementTree import Element
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
 from nassl.ssl_client import SslClient
 
-from sslyze.plugins.abstract_plugin import Plugin, ScanCommand
+from sslyze.plugins.plugin_base import Plugin, ScanCommand
 from sslyze.plugins.plugin_base import PluginResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLHandshakeRejected

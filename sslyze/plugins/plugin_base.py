@@ -3,73 +3,92 @@
 """
 
 import abc
-from optparse import make_option
+import inspect
+import optparse
 from xml.etree.ElementTree import Element
 
-from sslyze.plugins.abstract_plugin import ScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
-from typing import Dict
 from typing import List
-from typing import Optional
 
 
-class PluginInterface(object):
-    """Class to describe what a plugin does: its title, description, and which scan commands it implements.
-    """
+class ScanCommand(object):
 
-    def __init__(self, title, description):
-        # type: (str, str) -> None
-        """Title and description are sent to optparse.OptionGroup().
+    __metaclass__ = abc.ABCMeta
+
+    @classmethod
+    def get_description(cls):
+        """The description is expected to be the command class' docstring.
         """
-        self.title = title
-        self.description = description
-        self._options = []
-        self._commands = []
-        self._commands_as_text = []
+        return cls.__doc__.strip()
 
-    def add_option(self, option, help, dest=None):
-        # type: (str, str, Optional[str]) -> None
-        """Options are settings specific to one single plugin; they will passed to process_task() in the options_dict.
+    @classmethod
+    def get_cli_argument(cls):
+        # type: () -> str
+        """Should return the command line option to be used to run the scan command via the CLI.
         """
-        # If dest is something, store it, otherwise just use store_true
-        action="store_true"
-        if dest is not None:
-            action="store"
+        raise NotImplementedError()
 
-        self._options.append(make_option('--{}'.format(option), action=action, help=help, dest=dest))
+    @classmethod
+    def is_aggressive(cls):
+        # type: () -> bool
+        """Should return True if command will open many simultaneous connections to the server.
 
-
-    def add_command(self, command, help, is_aggressive=False):
-        # type: (str, str, Optional[bool]) -> None
-        """Commands are actions/scans the plugin implements, with PluginXXX.process_task().
-
-        Setting aggressive to True is a warning that the command will open many simultaneous connections to the server
-        and should therefore not be run concurrently with other `aggressive` commands against a given server.
+        When using the PluginsProcessPool to run scan commands, only one aggressive command will be run concurrently per
+        server, to avoid DOS-ing the server.
         """
+        raise NotImplementedError()
 
-        self._commands.append(make_option('--{}'.format(command), action='store_true', help=help))
-        self._commands_as_text.append((command, is_aggressive))
+    @classmethod
+    def get_plugin_class(cls):
+        raise NotImplementedError()
 
-    @staticmethod
-    def _make_option(command, help, dest):
-        # If dest is something, store it, otherwise just use store_true
-        action="store_true"
-        if dest is not None:
-            action="store"
-
-        return make_option('--' + command, action=action, help=help, dest=dest)
-
-
-    def get_commands(self):
-        return self._commands
+    @classmethod
+    def get_optional_arguments(cls):
+        # type: () -> List[str]
+        """Some commands support optional arguments which are automatically passed to the command's constructor.
+        """
+        return inspect.getargspec(cls.__init__).args[1::]
 
 
-    def get_commands_as_text(self):
-        return self._commands_as_text
+class Plugin(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @classmethod
+    def get_title(cls):
+        return cls.__name__
+
+    @classmethod
+    def get_description(cls):
+        return cls.__doc__.strip()
+
+    @classmethod
+    def get_available_commands(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def get_cli_option_group(cls):
+        # TODO(ad): Refactor this to do more, after switching away from optparse
+        options = []
+        for scan_command_class in cls.get_available_commands():
+            options.append(optparse.make_option('--' + scan_command_class.get_cli_argument(), action='store_true',
+                                                help=scan_command_class.get_description()))
+        return options
 
 
-    def get_options(self):
-        return self._options
+    @abc.abstractmethod
+    def process_task(self, server_connectivity_info, command):
+        # type: (ServerConnectivityInfo, ScanCommand) -> PluginResult
+        """Run the supplied scan command on the server.
+
+        Args:
+            server_connectivity_info (ServerConnectivityInfo): The server to run the scan command on.
+            command (ScanCommand): The scan command.
+
+        Returns:
+            PluginResult: The result of the scan command run on the supplied server.
+        """
+        raise NotImplementedError()
 
 
 class PluginResult(object):
@@ -123,38 +142,3 @@ class PluginRaisedExceptionResult(PluginResult):
     def as_xml(self):
         # type: () -> Element
         return Element(self.scan_command.get_cli_argument(), exception=self.as_text()[1])
-
-
-class PluginBase(object):
-    """Base plugin abstract class. All plugins have to inherit from it.
-    """
-    __metaclass__ = abc.ABCMeta
-
-    # Any subclass (ie. an actual plugin) must store its PluginInterface in the subclass' interface attribute.
-    interface = None
-
-    def __init__(self):
-        if self.interface is None:
-            raise TypeError('Plugin did not set a PluginInterface in its interface attribute')
-
-    @classmethod
-    def get_interface(cls):
-        # type: () -> PluginInterface
-        """Return the PluginInterface object for the current plugin.
-        """
-        return cls.interface
-
-    @abc.abstractmethod
-    def process_task(self, server_connectivity_info, command, options_dict=None):
-        # type: (ServerConnectivityInfo, str, Optional[Dict]) -> PluginResult
-        """Run the supplied scan command on the server.
-
-        Args:
-            server_connectivity_info (ServerConnectivityInfo): The server to run the scan command on.
-            command (str): The scan command.
-            options_dict (dict): Some plugins accept additional settings that can be supplied here.
-
-        Returns:
-            PluginResult: The result of the scan command run on the supplied server.
-        """
-        raise NotImplementedError()

@@ -3,7 +3,7 @@
 import random
 from multiprocessing import JoinableQueue
 
-from sslyze.plugins.abstract_plugin import ScanCommand
+from sslyze.plugins.plugin_base import ScanCommand
 from sslyze.plugins.plugin_base import PluginResult
 from sslyze.plugins_finder import PluginsFinder
 from sslyze.server_connectivity import ServerConnectivityInfo

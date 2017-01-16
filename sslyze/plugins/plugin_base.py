@@ -41,7 +41,7 @@ class ScanCommand(object):
         When using the PluginsProcessPool to run scan commands, only one aggressive command will be run concurrently per
         server, to avoid DOS-ing the server.
         """
-        raise NotImplementedError()
+        return False
 
     @classmethod
     def get_plugin_class(cls):

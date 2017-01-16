@@ -17,10 +17,6 @@ class CompressionScanCommand(ScanCommand):
         return u'compression'
 
     @classmethod
-    def is_aggressive(cls):
-        return False
-
-    @classmethod
     def get_plugin_class(cls):
         return CompressionPlugin
 

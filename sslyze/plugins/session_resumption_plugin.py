@@ -24,7 +24,7 @@ class SessionResumptionPlugin(plugin_base.PluginBase):
     interface.add_command(
         command="resum_rate",
         help="Performs 100 session resumptions with the server(s), in order to estimate the session resumption rate.",
-        aggressive=True
+        is_aggressive=True
     )
 
 
@@ -217,7 +217,7 @@ class ResumptionRateResult(PluginResult):
     RESUMPTION_ERROR_FORMAT = '        ERROR #{error_nb}: {error_msg}'.format
 
     def as_text(self):
-        result_txt = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+        result_txt = [self._format_title(self.COMMAND_TITLE)]
 
         # Create the line which summarizes the session resumption rate
         if self.successful_resumptions_nb == self.attempted_resumptions_nb:

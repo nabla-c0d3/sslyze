@@ -106,7 +106,7 @@ class SessionRenegotiationResult(PluginResult):
         supports_secure_renegotiation (bool): True if the server supports secure renegotiation.
     """
 
-    COMMAND_TITLE = 'Session Renegotiation'
+    COMMAND_TITLE = u'Session Renegotiation'
 
     def __init__(self, server_info, plugin_command, plugin_options, accepts_client_renegotiation,
                  supports_secure_renegotiation):
@@ -116,19 +116,19 @@ class SessionRenegotiationResult(PluginResult):
 
 
     def as_text(self):
-        result_txt = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+        result_txt = [self._format_title(self.COMMAND_TITLE)]
 
         # Client-initiated reneg
-        client_reneg_txt = 'VULNERABLE - Server honors client-initiated renegotiations' \
+        client_reneg_txt = u'VULNERABLE - Server honors client-initiated renegotiations' \
             if self.accepts_client_renegotiation \
-            else 'OK - Rejected'
-        result_txt.append(self.FIELD_FORMAT('Client-initiated Renegotiation:', client_reneg_txt))
+            else u'OK - Rejected'
+        result_txt.append(self._format_field(u'Client-initiated Renegotiation:', client_reneg_txt))
 
         # Secure reneg
-        secure_txt = 'OK - Supported' \
+        secure_txt = u'OK - Supported' \
             if self.supports_secure_renegotiation \
-            else 'VULNERABLE - Secure renegotiation not supported'
-        result_txt.append(self.FIELD_FORMAT('Secure Renegotiation:', secure_txt))
+            else u'VULNERABLE - Secure renegotiation not supported'
+        result_txt.append(self._format_field(u'Secure Renegotiation:', secure_txt))
 
         return result_txt
 

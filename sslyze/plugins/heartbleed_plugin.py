@@ -58,18 +58,18 @@ class HeartbleedResult(PluginResult):
         is_vulnerable_to_heartbleed (bool): True if the server is vulnerable to the Heartbleed attack.
     """
 
-    COMMAND_TITLE = 'OpenSSL Heartbleed'
+    COMMAND_TITLE = u'OpenSSL Heartbleed'
 
     def __init__(self, server_info, plugin_command, plugin_options, is_vulnerable_to_heartbleed):
         super(HeartbleedResult, self).__init__(server_info, plugin_command, plugin_options)
         self.is_vulnerable_to_heartbleed = is_vulnerable_to_heartbleed
 
     def as_text(self):
-        heartbleed_txt = 'VULNERABLE - Server is vulnerable to Heartbleed' \
+        heartbleed_txt = u'VULNERABLE - Server is vulnerable to Heartbleed' \
             if self.is_vulnerable_to_heartbleed \
-            else 'OK - Not vulnerable to Heartbleed'
+            else u'OK - Not vulnerable to Heartbleed'
 
-        return [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE), self.FIELD_FORMAT("", heartbleed_txt)]
+        return [self._format_title(self.COMMAND_TITLE), self._format_field(u"", heartbleed_txt)]
 
     def as_xml(self):
         xml_output = Element(self.plugin_command, title=self.COMMAND_TITLE)

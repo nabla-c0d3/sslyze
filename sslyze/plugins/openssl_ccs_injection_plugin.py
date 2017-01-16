@@ -225,7 +225,7 @@ class OpenSslCcsInjectionResult(PluginResult):
         is_vulnerable_to_ccs_injection (bool): True if the server is vulnerable to OpenSSL's CCS injection issue.
     """
 
-    COMMAND_TITLE = 'OpenSSL CCS Injection'
+    COMMAND_TITLE = u'OpenSSL CCS Injection'
 
     def __init__(self, server_info, plugin_command, plugin_options, is_vulnerable_to_ccs_injection):
         super(OpenSslCcsInjectionResult, self).__init__(server_info, plugin_command, plugin_options)
@@ -240,10 +240,10 @@ class OpenSslCcsInjectionResult(PluginResult):
 
 
     def as_text(self):
-        result_txt = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+        result_txt = [self._format_title(self.COMMAND_TITLE)]
 
-        ccs_text = 'VULNERABLE - Server is vulnerable to OpenSSL CCS injection' \
+        ccs_text = u'VULNERABLE - Server is vulnerable to OpenSSL CCS injection' \
             if self.is_vulnerable_to_ccs_injection \
-            else 'OK - Not vulnerable to OpenSSL CCS injection'
-        result_txt.append(self.FIELD_FORMAT('', ccs_text))
+            else u'OK - Not vulnerable to OpenSSL CCS injection'
+        result_txt.append(self._format_field(u'', ccs_text))
         return result_txt

@@ -23,27 +23,27 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
     interface.add_command(
         command="sslv2",
         help="Lists the SSL 2.0 OpenSSL cipher suites supported by the server(s).",
-        aggressive=False
+        is_aggressive=False
     )
     interface.add_command(
         command="sslv3",
         help="Lists the SSL 3.0 OpenSSL cipher suites supported by the server(s).",
-        aggressive=True
+        is_aggressive=True
     )
     interface.add_command(
         command="tlsv1",
         help="Lists the TLS 1.0 OpenSSL cipher suites supported by the server(s).",
-        aggressive=True
+        is_aggressive=True
     )
     interface.add_command(
         command="tlsv1_1",
         help="Lists the TLS 1.1 OpenSSL cipher suites supported by the server(s).",
-        aggressive=True
+        is_aggressive=True
     )
     interface.add_command(
         command="tlsv1_2",
         help="Lists the TLS 1.2 OpenSSL cipher suites supported by the server(s).",
-        aggressive=True
+        is_aggressive=True
     )
     interface.add_option(
         option='http_get',
@@ -326,7 +326,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
     def as_text(self):
         ssl_version = self.plugin_command
         hide_rejected_ciphers = self.plugin_options and self.plugin_options.get('hide_rejected_ciphers', False)
-        result_txt = [self.PLUGIN_TITLE_FORMAT(self.VERSION_TITLE_FORMAT(ssl_version=ssl_version.upper()))]
+        result_txt = [self._format_title(self.VERSION_TITLE_FORMAT(ssl_version=ssl_version.upper()))]
 
         # Output all the accepted ciphers if any
         if len(self.accepted_cipher_list) > 0:

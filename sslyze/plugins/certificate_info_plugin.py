@@ -269,7 +269,7 @@ class CertInfoFullResult(PluginResult):
             send back to clients. None if the verified chain could not be built or no HPKP header was returned.
     """
 
-    COMMAND_TITLE = 'Certificate Basic Information'
+    COMMAND_TITLE = u'Certificate Basic Information'
 
     def __init__(self, server_info, plugin_command, plugin_options, certificate_chain, path_validation_result_list,
                             path_validation_error_list, ocsp_response):
@@ -385,29 +385,29 @@ class CertInfoFullResult(PluginResult):
 
 
     HOSTNAME_VALIDATION_TEXT = {
-        X509_NAME_MATCHES_SAN: 'OK - Subject Alternative Name matches {hostname}'.format,
-        X509_NAME_MATCHES_CN: 'OK - Common Name matches {hostname}'.format,
-        X509_NAME_MISMATCH: 'FAILED - Certificate does NOT match {hostname}'.format
+        X509_NAME_MATCHES_SAN: u'OK - Subject Alternative Name matches {hostname}'.format,
+        X509_NAME_MATCHES_CN: u'OK - Common Name matches {hostname}'.format,
+        X509_NAME_MISMATCH: u'FAILED - Certificate does NOT match {hostname}'.format
     }
 
-    TRUST_FORMAT = '{store_name} CA Store ({store_version}):'.format
+    TRUST_FORMAT = u'{store_name} CA Store ({store_version}):'.format
 
-    NO_VERIFIED_CHAIN_ERROR_TXT = 'ERROR - Could not build verified chain (certificate untrusted?)'
+    NO_VERIFIED_CHAIN_ERROR_TXT = u'ERROR - Could not build verified chain (certificate untrusted?)'
 
     def as_text(self):
-        text_output = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+        text_output = [self._format_title(self.COMMAND_TITLE)]
         text_output.extend(self._get_certificate_text())
 
         # Trust section
-        text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - Trust')])
+        text_output.extend(['', self._format_title(u'Certificate - Trust')])
 
         # Hostname validation
         server_name_indication = self.server_info.tls_server_name_indication
         if self.server_info.tls_server_name_indication != self.server_info.hostname:
-            text_output.append(self.FIELD_FORMAT("SNI enabled with virtual domain:", server_name_indication))
+            text_output.append(self._format_field(u"SNI enabled with virtual domain:", server_name_indication))
 
-        text_output.append(self.FIELD_FORMAT(
-                "Hostname Validation:",
+        text_output.append(self._format_field(
+                u"Hostname Validation:",
                 self.HOSTNAME_VALIDATION_TEXT[self.hostname_validation_result](hostname=server_name_indication))
         )
 
@@ -417,29 +417,29 @@ class CertInfoFullResult(PluginResult):
                 # EV certs - Only Mozilla supported for now
                 ev_txt = ''
                 if self.is_leaf_certificate_ev and 'Mozilla' in path_result.trust_store.name:
-                    ev_txt = ', Extended Validation'
-                path_txt = 'OK - Certificate is trusted{}'.format(ev_txt)
+                    ev_txt = u', Extended Validation'
+                path_txt = u'OK - Certificate is trusted{}'.format(ev_txt)
 
             else:
-                path_txt = 'FAILED - Certificate is NOT Trusted: {}'.format(path_result.verify_string)
+                path_txt = u'FAILED - Certificate is NOT Trusted: {}'.format(path_result.verify_string)
 
-            text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name=path_result.trust_store.name,
-                                                                   store_version=path_result.trust_store.version),
-                                                 path_txt))
+            text_output.append(self._format_field(self.TRUST_FORMAT(store_name=path_result.trust_store.name,
+                                                                    store_version=path_result.trust_store.version),
+                                                  path_txt))
 
         # Path validation that ran into errors
         for path_error in self.path_validation_error_list:
-            error_txt = 'ERROR: {}'.format(path_error.error_message)
-            text_output.append(self.FIELD_FORMAT(self.TRUST_FORMAT(store_name=path_result.trust_store.name,
-                                                                   store_version=path_result.trust_store.version),
-                                                 error_txt))
+            error_txt = u'ERROR: {}'.format(path_error.error_message)
+            text_output.append(self._format_field(self.TRUST_FORMAT(store_name=path_result.trust_store.name,
+                                                                    store_version=path_result.trust_store.version),
+                                                  error_txt))
 
         # Print the Common Names within the certificate chain
         cns_in_certificate_chain = []
         for cert in self.certificate_chain:
             cert_identity = self._extract_subject_cn_or_oun(cert)
             cns_in_certificate_chain.append(cert_identity)
-        text_output.append(self.FIELD_FORMAT('Received Chain:', ' --> '.join(cns_in_certificate_chain)))
+        text_output.append(self._format_field(u'Received Chain:', ' --> '.join(cns_in_certificate_chain)))
 
         # Print the Common Names within the verified certificate chain if validation was successful
         if self.verified_certificate_chain:
@@ -450,56 +450,56 @@ class CertInfoFullResult(PluginResult):
             verified_chain_txt = ' --> '.join(cns_in_certificate_chain)
         else:
             verified_chain_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
-        text_output.append(self.FIELD_FORMAT('Verified Chain w/ Mozilla Store:', verified_chain_txt))
+        text_output.append(self._format_field(u'Verified Chain w/ Mozilla Store:', verified_chain_txt))
 
         if self.verified_certificate_chain:
-            chain_with_anchor_txt = 'OK - Anchor certificate not sent' if not self.has_anchor_in_certificate_chain \
-                else 'WARNING - Received certificate chain contains the anchor certificate'
+            chain_with_anchor_txt = u'OK - Anchor certificate not sent' if not self.has_anchor_in_certificate_chain \
+                else u'WARNING - Received certificate chain contains the anchor certificate'
         else:
             chain_with_anchor_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
-        text_output.append(self.FIELD_FORMAT('Received Chain Contains Anchor:', chain_with_anchor_txt))
+        text_output.append(self._format_field(u'Received Chain Contains Anchor:', chain_with_anchor_txt))
 
-        chain_order_txt = 'OK - Order is valid' if self.is_certificate_chain_order_valid \
-            else 'FAILED - Certificate chain out of order!'
-        text_output.append(self.FIELD_FORMAT('Received Chain Order:', chain_order_txt))
+        chain_order_txt = u'OK - Order is valid' if self.is_certificate_chain_order_valid \
+            else u'FAILED - Certificate chain out of order!'
+        text_output.append(self._format_field(u'Received Chain Order:', chain_order_txt))
 
         if self.verified_certificate_chain:
-            sha1_text = 'OK - No SHA1-signed certificate in the verified certificate chain' \
+            sha1_text = u'OK - No SHA1-signed certificate in the verified certificate chain' \
                 if not self.has_sha1_in_certificate_chain \
-                else 'INSECURE - SHA1-signed certificate in the verified certificate chain'
+                else u'INSECURE - SHA1-signed certificate in the verified certificate chain'
         else:
             sha1_text = self.NO_VERIFIED_CHAIN_ERROR_TXT
 
-        text_output.append(self.FIELD_FORMAT('Verified Chain contains SHA1:', sha1_text))
+        text_output.append(self._format_field(u'Verified Chain contains SHA1:', sha1_text))
 
         # OCSP stapling
-        text_output.extend(['', self.PLUGIN_TITLE_FORMAT('Certificate - OCSP Stapling')])
+        text_output.extend(['', self._format_title(u'Certificate - OCSP Stapling')])
 
         if self.ocsp_response is None:
-            text_output.append(self.FIELD_FORMAT('', 'NOT SUPPORTED - Server did not send back an OCSP response.'))
+            text_output.append(self._format_field(u'', u'NOT SUPPORTED - Server did not send back an OCSP response.'))
 
         else:
             try:
-                ocsp_trust_txt = 'OK - Response is trusted' \
+                ocsp_trust_txt = u'OK - Response is trusted' \
                     if self.is_ocsp_response_trusted \
-                    else 'FAILED - Response is NOT trusted'
+                    else u'FAILED - Response is NOT trusted'
             except OpenSSLError as e:
                 if 'certificate verify error' in str(e):
-                    ocsp_trust_txt = 'FAILED - Response is NOT trusted'
+                    ocsp_trust_txt = u'FAILED - Response is NOT trusted'
                 else:
                     raise
 
             ocsp_resp_txt = [
-                self.FIELD_FORMAT('OCSP Response Status:', self.ocsp_response['responseStatus']),
-                self.FIELD_FORMAT('Validation w/ Mozilla Store:', ocsp_trust_txt),
-                self.FIELD_FORMAT('Responder Id:', self.ocsp_response['responderID'])]
+                self._format_field(u'OCSP Response Status:', self.ocsp_response['responseStatus']),
+                self._format_field(u'Validation w/ Mozilla Store:', ocsp_trust_txt),
+                self._format_field(u'Responder Id:', self.ocsp_response['responderID'])]
 
             if 'successful' in self.ocsp_response['responseStatus']:
                 ocsp_resp_txt.extend([
-                    self.FIELD_FORMAT('Cert Status:', self.ocsp_response['responses'][0]['certStatus']),
-                    self.FIELD_FORMAT('Cert Serial Number:', self.ocsp_response['responses'][0]['certID']['serialNumber']),
-                    self.FIELD_FORMAT('This Update:', self.ocsp_response['responses'][0]['thisUpdate']),
-                    self.FIELD_FORMAT('Next Update:', self.ocsp_response['responses'][0]['nextUpdate'])
+                    self._format_field(u'Cert Status:', self.ocsp_response['responses'][0]['certStatus']),
+                    self._format_field(u'Cert Serial Number:', self.ocsp_response['responses'][0]['certID']['serialNumber']),
+                    self._format_field(u'This Update:', self.ocsp_response['responses'][0]['thisUpdate']),
+                    self._format_field(u'Next Update:', self.ocsp_response['responses'][0]['nextUpdate'])
                 ])
             text_output.extend(ocsp_resp_txt)
 
@@ -650,27 +650,27 @@ class CertInfoBasicResult(CertInfoFullResult):
             )
 
         text_output = [
-            self.FIELD_FORMAT("SHA1 Fingerprint:", self.certificate_chain[0].sha1_fingerprint),
-            self.FIELD_FORMAT("Common Name:", common_name),
-            self.FIELD_FORMAT("Issuer:", issuer_name),
-            self.FIELD_FORMAT("Serial Number:", cert_dict['serialNumber']),
-            self.FIELD_FORMAT("Not Before:", cert_dict['validity']['notBefore']),
-            self.FIELD_FORMAT("Not After:", cert_dict['validity']['notAfter']),
-            self.FIELD_FORMAT("Signature Algorithm:", cert_dict['signatureAlgorithm']),
-            self.FIELD_FORMAT("Public Key Algorithm:", cert_dict['subjectPublicKeyInfo']['publicKeyAlgorithm']),
-            self.FIELD_FORMAT("Key Size:", cert_dict['subjectPublicKeyInfo']['publicKeySize'])]
+            self._format_field(u"SHA1 Fingerprint:", self.certificate_chain[0].sha1_fingerprint),
+            self._format_field(u"Common Name:", common_name),
+            self._format_field(u"Issuer:", issuer_name),
+            self._format_field(u"Serial Number:", cert_dict['serialNumber']),
+            self._format_field(u"Not Before:", cert_dict['validity']['notBefore']),
+            self._format_field(u"Not After:", cert_dict['validity']['notAfter']),
+            self._format_field(u"Signature Algorithm:", cert_dict['signatureAlgorithm']),
+            self._format_field(u"Public Key Algorithm:", cert_dict['subjectPublicKeyInfo']['publicKeyAlgorithm']),
+            self._format_field(u"Key Size:", cert_dict['subjectPublicKeyInfo']['publicKeySize'])]
 
         try:
             # Print the Public key exponent if there's one; EC public keys don't have one for example
-            text_output.append(self.FIELD_FORMAT("Exponent:", "{0} (0x{0:x})".format(
+            text_output.append(self._format_field(u"Exponent:", "{0} (0x{0:x})".format(
                 int(cert_dict['subjectPublicKeyInfo']['publicKey']['exponent']))))
         except KeyError:
             pass
 
         try:
             # Print the SAN extension if there's one
-            text_output.append(self.FIELD_FORMAT('X509v3 Subject Alternative Name:',
-                                                 cert_dict['extensions']['X509v3 Subject Alternative Name']))
+            text_output.append(self._format_field(u'X509v3 Subject Alternative Name:',
+                                                  cert_dict['extensions']['X509v3 Subject Alternative Name']))
         except KeyError:
             pass
 

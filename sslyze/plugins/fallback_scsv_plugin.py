@@ -59,18 +59,18 @@ class FallbackScsvResult(PluginResult):
         attacks.
     """
 
-    COMMAND_TITLE = 'Downgrade Attacks'
+    COMMAND_TITLE = u'Downgrade Attacks'
 
     def __init__(self, server_info, plugin_command, plugin_options, supports_fallback_scsv):
         super(FallbackScsvResult, self).__init__(server_info, plugin_command, plugin_options)
         self.supports_fallback_scsv = supports_fallback_scsv
 
     def as_text(self):
-        result_txt = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
-        downgrade_txt = 'OK - Supported' \
+        result_txt = [self._format_title(self.COMMAND_TITLE)]
+        downgrade_txt = u'OK - Supported' \
             if self.supports_fallback_scsv \
-            else 'VULNERABLE - Signaling cipher suite not supported'
-        result_txt.append(self.FIELD_FORMAT('TLS_FALLBACK_SCSV:', downgrade_txt))
+            else u'VULNERABLE - Signaling cipher suite not supported'
+        result_txt.append(self._format_field(u'TLS_FALLBACK_SCSV:', downgrade_txt))
         return result_txt
 
     def as_xml(self):

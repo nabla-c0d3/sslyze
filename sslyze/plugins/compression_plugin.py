@@ -44,18 +44,18 @@ class CompressionResult(PluginResult):
             not supported by the server.
     """
 
-    COMMAND_TITLE = 'Deflate Compression'
+    COMMAND_TITLE = u'Deflate Compression'
 
     def __init__(self, server_info, plugin_command, plugin_options, compression_name):
         super(CompressionResult, self).__init__(server_info, plugin_command, plugin_options)
         self.compression_name = compression_name
 
     def as_text(self):
-        txt_result = [self.PLUGIN_TITLE_FORMAT(self.COMMAND_TITLE)]
+        txt_result = [self._format_title(self.COMMAND_TITLE)]
         if self.compression_name:
-            txt_result.append(self.FIELD_FORMAT('', 'VULNERABLE - Server supports Deflate compression'))
+            txt_result.append(self._format_field(u'', u'VULNERABLE - Server supports Deflate compression'))
         else:
-            txt_result.append(self.FIELD_FORMAT('', 'OK - Compression disabled'))
+            txt_result.append(self._format_field(u'', u'OK - Compression disabled'))
         return txt_result
 
     def as_xml(self):

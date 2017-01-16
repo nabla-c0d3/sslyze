@@ -67,16 +67,17 @@ class ServerConnectivityInfo(object):
     CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
 
 
-    def __init__(self,
-                 hostname,                                              # type: unicode
-                 port=None,                                             # type: Optional[int]
-                 ip_address=None,                                       # type: Optional[str]
-                 tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS, # type: Optional[TlsWrappedProtocolEnum]
-                 tls_server_name_indication=None,                       # type: Optional[unicode]
-                 xmpp_to_hostname=None,                                 # type: Optional[unicode]
-                 client_auth_credentials=None,                          # type: Optional[ClientAuthenticationCredentials]
-                 http_tunneling_settings=None                           # type: Optional[HttpConnectTunnelingSettings]
-                 ):
+    def __init__(
+            self,
+            hostname,                                              # type: unicode
+            port=None,                                             # type: Optional[int]
+            ip_address=None,                                       # type: Optional[str]
+            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS, # type: Optional[TlsWrappedProtocolEnum]
+            tls_server_name_indication=None,                       # type: Optional[unicode]
+            xmpp_to_hostname=None,                                 # type: Optional[unicode]
+            client_auth_credentials=None,                          # type: Optional[ClientAuthenticationCredentials]
+            http_tunneling_settings=None                           # type: Optional[HttpConnectTunnelingSettings]
+            ):
         """Constructor to specify how to connect to a server to be scanned.
 
         Most arguments are optional but can be supplied in order to be more specific about the server's configuration.

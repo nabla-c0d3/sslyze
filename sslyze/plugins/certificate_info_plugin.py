@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Plugin to retrieve and validate the server's certificate.
-"""
+
 
 import inspect
+import optparse
 import sys
 from os.path import join, dirname, realpath, abspath
 from xml.etree.ElementTree import Element
@@ -13,11 +13,17 @@ from nassl._nassl import OpenSSLError
 
 from nassl.x509_certificate import X509Certificate
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginResult
+from sslyze.plugins.plugin_base import PluginResult, ScanCommand
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
 
 
 # Getting the path to the trust stores is trickier than it sounds due to subtle differences on OS X, Linux and Windows
+from typing import Dict
+from typing import List
+from typing import Optional
+
+
 def get_script_dir(follow_symlinks=True):
     if getattr(sys, 'frozen', False):
         # py2exe, PyInstaller, cx_Freeze
@@ -146,38 +152,68 @@ class Certificate(object):
         return hash(self.as_pem)
 
 
-class CertificateInfoPlugin(plugin_base.PluginBase):
+class CertificateInfoScanCommand(ScanCommand):
+    """Verify the validity of the server(s) certificate(s) against various trust stores and checks for OCSP stapling
+    support.
+    """
 
-    interface = plugin_base.PluginInterface(title="CertificateInfoPlugin", description='')
-    interface.add_command(
-        command="certinfo_basic",
-        help="Verifies the validity of the server(s) certificate(s) against various trust stores, checks for support "
-             "for OCSP stapling, and prints relevant fields of the certificate."
-    )
-    interface.add_command(
-        command="certinfo_full",
-        help="Same as --certinfo_basic but also prints the full server certificate."
-    )
-    interface.add_option(
-        option="ca_file",
-        help="Local Certificate Authority file (in PEM format), to verify the "
-             "validity of the server(s) certificate(s) against.",
-        dest="ca_file"
-    )
+    def __init__(self, ca_file=None, print_full_certificate=False):
+        # type: (Optional[str], Optional[bool]) -> None
+        self.custom_ca_file = ca_file
+        self.should_print_full_certificate = print_full_certificate
+
+    @classmethod
+    def get_cli_argument(cls):
+        return u'certinfo'
+
+    @classmethod
+    def is_aggressive(cls):
+        return False
+
+    @classmethod
+    def get_plugin_class(cls):
+        return CertificateInfoPlugin
 
 
-    def process_task(self, server_info, command, options_dict=None):
+class CertificateInfoPlugin(plugin_base.Plugin):
+    """Retrieve and validate the server's certificate chain.
+    """
 
-        if command == 'certinfo_basic':
-            result_class = CertInfoBasicResult
-        elif command == 'certinfo_full':
-            result_class = CertInfoFullResult
-        else:
-            raise ValueError("PluginCertInfo: Unknown command.")
 
+    @classmethod
+    def get_available_commands(cls):
+        return [CertificateInfoScanCommand]
+
+    @classmethod
+    def get_cli_option_group(cls):
+        options = super(CertificateInfoPlugin, cls).get_cli_option_group()
+
+        # Add the special optional argument for this plugin's commands
+        # They must match the names in the commands' contructor
+        options.append(
+            optparse.make_option(
+                u'--ca_file',
+                help=u'Local Certificate Authority file (in PEM format), to verify the validity of the server(s)'
+                     u' certificate(s) against.',
+                action=u'store_true'
+            )
+        )
+        # TODO(ad): Move this to the command line parser ?
+        options.append(
+            optparse.make_option(
+                u'--print_full_certificate',
+                help=u'Option - Print the full content of server certificate instead of selected fields.',
+                action=u'store_true'
+            )
+        )
+        return options
+
+
+    def process_task(self, server_info, scan_command):
+        # type: (ServerConnectivityInfo, CertificateInfoScanCommand) -> CertificateInfoResult
         final_trust_store_list = list(DEFAULT_TRUST_STORE_LIST)
-        if options_dict and 'ca_file' in options_dict.keys():
-            final_trust_store_list.append(TrustStore(options_dict['ca_file'], 'Custom --ca_file', 'N/A'))
+        if scan_command.custom_ca_file:
+            final_trust_store_list.append(TrustStore(scan_command.custom_ca_file, u'Custom --ca_file', u'N/A'))
 
         thread_pool = ThreadPool()
         for trust_store in final_trust_store_list:
@@ -210,10 +246,10 @@ class CertificateInfoPlugin(plugin_base.PluginBase):
 
         if len(path_validation_error_list) == len(final_trust_store_list):
             # All connections failed unexpectedly; raise an exception instead of returning a result
-            raise RuntimeError('Could not connect to the server; last error: {}'.format(last_exception))
+            raise RuntimeError(u'Could not connect to the server; last error: {}'.format(last_exception))
 
         # All done
-        return result_class(server_info, command, options_dict, certificate_chain, path_validation_result_list,
+        return CertificateInfoResult(server_info, scan_command, certificate_chain, path_validation_result_list,
                             path_validation_error_list, ocsp_response)
 
 
@@ -246,8 +282,8 @@ class CertificateInfoPlugin(plugin_base.PluginBase):
         return x509_cert_chain, verify_str, ocsp_response
 
 
-class CertInfoFullResult(PluginResult):
-    """The result of running --certinfo_full on a specific server.
+class CertificateInfoResult(PluginResult):
+    """The result of running a CertificateInfoScanCommand on a specific server.
 
     Attributes:
         certificate_chain (List[Certificate]): The certificate chain sent by the server; index 0 is the leaf
@@ -271,9 +307,16 @@ class CertInfoFullResult(PluginResult):
 
     COMMAND_TITLE = u'Certificate Basic Information'
 
-    def __init__(self, server_info, plugin_command, plugin_options, certificate_chain, path_validation_result_list,
-                            path_validation_error_list, ocsp_response):
-        super(CertInfoFullResult, self).__init__(server_info, plugin_command, plugin_options)
+    def __init__(
+            self,
+            server_info,                    # type: ServerConnectivityInfo
+            scan_command,                   # type: CertificateInfoScanCommand
+            certificate_chain,              # type: List[X509Certificate]
+            path_validation_result_list,    # type: List[PathValidationResult]
+            path_validation_error_list,     # type: List[PathValidationError]
+            ocsp_response                   # type: Optional[Dict]
+            ):
+        super(CertificateInfoResult, self).__init__(server_info, scan_command)
 
         # We only keep the dictionary as a nassl.OcspResponse is not pickable
         self.ocsp_response = ocsp_response.as_dict() if ocsp_response else None
@@ -345,12 +388,6 @@ class CertInfoFullResult(PluginResult):
         return verified_certificate_chain
 
 
-    def _get_certificate_text(self):
-        """For --certinfo_full, we just print the whole certificate.
-        """
-        return [self.certificate_chain[0].as_text]
-
-
     @staticmethod
     def _extract_subject_cn_or_oun(certificate):
         try:
@@ -396,7 +433,10 @@ class CertInfoFullResult(PluginResult):
 
     def as_text(self):
         text_output = [self._format_title(self.COMMAND_TITLE)]
-        text_output.extend(self._get_certificate_text())
+        if self.scan_command.should_print_full_certificate:
+            text_output.extend(self._get_full_certificate_text())
+        else:
+            text_output.extend(self._get_basic_certificate_text())
 
         # Trust section
         text_output.extend(['', self._format_title(u'Certificate - Trust')])
@@ -508,7 +548,7 @@ class CertInfoFullResult(PluginResult):
 
 
     def as_xml(self):
-        xml_output = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        xml_output = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
 
         # Certificate chain
         cert_xml_list = []
@@ -628,13 +668,11 @@ class CertInfoFullResult(PluginResult):
         return xml_output
 
 
-class CertInfoBasicResult(CertInfoFullResult):
-    """Same output as --certinfo_full except for the certificate text output.
-    """
+    def _get_full_certificate_text(self):
+        return [self.certificate_chain[0].as_text]
 
-    def _get_certificate_text(self):
-        """For --certinfo_basic, we only print a few specific fields of the certificate.
-        """
+
+    def _get_basic_certificate_text(self):
         cert_dict = self.certificate_chain[0].as_dict
 
         # Extract the CN if there's one

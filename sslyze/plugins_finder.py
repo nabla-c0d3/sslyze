@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import sslyze.plugins
 import sslyze.plugins.plugin_base
+from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin
 
 
@@ -34,8 +35,9 @@ class PluginsFinder(object):
         Returns:
             PluginsFinder:  An object encapsulating the list of available SSLyze plugins.
         """
-        self._plugin_classes = [OpenSslCipherSuitesPlugin]
+        self._plugin_classes = [OpenSslCipherSuitesPlugin, CertificateInfoPlugin]
         self._commands = OpenSslCipherSuitesPlugin.get_available_commands()
+        self._commands.extend(CertificateInfoPlugin.get_available_commands())
         self._aggressive_comands = []
 
 

@@ -40,6 +40,7 @@ def main():
     start_time = time()
 
     # Retrieve available plugins
+    # TODO: Change this
     sslyze_plugins = PluginsFinder.get()
     available_plugins = sslyze_plugins.get_plugins()
     available_commands = sslyze_plugins.get_commands()
@@ -81,16 +82,17 @@ def main():
         output_hub.server_connectivity_test_succeeded(server_connectivity_info)
 
         # Send tasks to worker processes
-        for plugin_command in available_commands:
-            if getattr(args_command_list, plugin_command):
-                # Get this plugin's options if there's any
-                plugin_options_dict = {}
-                for option in available_commands[plugin_command].get_interface().get_options():
+        for scan_command_class in available_commands:
+            if getattr(args_command_list, scan_command_class.get_cli_argument()):
+                # Get this command's optional argument if there's any
+                optional_args = {}
+                for optional_arg_name in scan_command_class.get_optional_arguments():
                     # Was this option set ?
-                    if getattr(args_command_list,option.dest):
-                        plugin_options_dict[option.dest] = getattr(args_command_list, option.dest)
+                    if getattr(args_command_list, optional_arg_name):
+                        optional_args[optional_arg_name] = getattr(args_command_list, optional_arg_name)
+                scan_command = scan_command_class(**optional_args)
 
-                plugins_process_pool.queue_plugin_task(server_connectivity_info, plugin_command, plugin_options_dict)
+                plugins_process_pool.queue_plugin_task(server_connectivity_info, scan_command)
 
 
     # Store and print servers we were NOT able to connect to
@@ -102,8 +104,8 @@ def main():
     # Keep track of how many tasks have to be performed for each target
     task_num = 0
     output_hub.scans_started()
-    for command in available_commands:
-        if getattr(args_command_list, command):
+    for scan_command_class in available_commands:
+        if getattr(args_command_list, scan_command_class.get_cli_argument()):
             task_num += 1
 
 

@@ -6,6 +6,7 @@ import abc
 from optparse import make_option
 from xml.etree.ElementTree import Element
 
+from sslyze.plugins.abstract_plugin import ScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from typing import Dict
 from typing import List
@@ -76,12 +77,10 @@ class PluginResult(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, server_info, plugin_command, plugin_options):
-        # type: (ServerConnectivityInfo, str, Dict) -> None
-
+    def __init__(self, server_info, scan_command):
+        # type: (ServerConnectivityInfo, ScanCommand) -> None
         self.server_info = server_info
-        self.plugin_command = plugin_command
-        self.plugin_options = plugin_options
+        self.scan_command = scan_command
 
     @abc.abstractmethod
     def as_xml(self):
@@ -109,9 +108,9 @@ class PluginRaisedExceptionResult(PluginResult):
     """The result returned when a plugin threw an exception while doing process_task().
     """
 
-    def __init__(self, server_info, plugin_command, plugin_options, exception):
-        # type: (ServerConnectivityInfo, str, Dict, Exception) -> None
-        super(PluginRaisedExceptionResult, self).__init__(server_info, plugin_command, plugin_options)
+    def __init__(self, server_info, scan_command, exception):
+        # type: (ServerConnectivityInfo, ScanCommand, Exception) -> None
+        super(PluginRaisedExceptionResult, self).__init__(server_info, scan_command)
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
@@ -119,11 +118,11 @@ class PluginRaisedExceptionResult(PluginResult):
 
     def as_text(self):
         # type: () -> List[unicode]
-        return [self.TITLE_TXT_FORMAT.format(command=self.plugin_command), self.error_message]
+        return [self.TITLE_TXT_FORMAT.format(command=self.scan_command.get_cli_argument()), self.error_message]
 
     def as_xml(self):
         # type: () -> Element
-        return Element(self.plugin_command, exception=self.as_text()[1])
+        return Element(self.scan_command.get_cli_argument(), exception=self.as_text()[1])
 
 
 class PluginBase(object):

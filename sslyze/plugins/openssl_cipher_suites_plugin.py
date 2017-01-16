@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Plugin to test the server server for supported OpenSSL cipher suites.
-"""
+
+import optparse
 from abc import ABCMeta
 from operator import attrgetter
 from xml.etree.ElementTree import Element
@@ -8,58 +8,124 @@ from xml.etree.ElementTree import Element
 from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
 from nassl.ssl_client import SslClient
 
-from sslyze.plugins import plugin_base
+from sslyze.plugins.abstract_plugin import Plugin, ScanCommand
 from sslyze.plugins.plugin_base import PluginResult
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
+from typing import List
 
 
-class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
+class CipherSuiteScanCommand(ScanCommand):
 
-    interface = plugin_base.PluginInterface(
-        "OpenSslCipherSuitesPlugin",
-        "Scans the server(s) for supported OpenSSL cipher suites."
-    )
-    interface.add_command(
-        command="sslv2",
-        help="Lists the SSL 2.0 OpenSSL cipher suites supported by the server(s).",
-        is_aggressive=False
-    )
-    interface.add_command(
-        command="sslv3",
-        help="Lists the SSL 3.0 OpenSSL cipher suites supported by the server(s).",
-        is_aggressive=True
-    )
-    interface.add_command(
-        command="tlsv1",
-        help="Lists the TLS 1.0 OpenSSL cipher suites supported by the server(s).",
-        is_aggressive=True
-    )
-    interface.add_command(
-        command="tlsv1_1",
-        help="Lists the TLS 1.1 OpenSSL cipher suites supported by the server(s).",
-        is_aggressive=True
-    )
-    interface.add_command(
-        command="tlsv1_2",
-        help="Lists the TLS 1.2 OpenSSL cipher suites supported by the server(s).",
-        is_aggressive=True
-    )
-    interface.add_option(
-        option='http_get',
-        help="Option - For each cipher suite, sends an HTTP GET request after "
-        "completing the SSL handshake and returns the HTTP status code."
-    )
-    interface.add_option(
-        option='hide_rejected_ciphers',
-        help="Option - Hides the (usually long) list of cipher suites that were rejected by the server(s)."
-    )
+    __metaclass__ = ABCMeta
+
+    def __init__(self, http_get=False, hide_rejected_ciphers=False):
+        # TODO(ad): Document
+        self.http_get = http_get
+        self.hide_rejected_ciphers = hide_rejected_ciphers
+
+    @classmethod
+    def is_aggressive(cls):
+        return True
+
+    @classmethod
+    def get_plugin_class(cls):
+        return OpenSslCipherSuitesPlugin
+
+
+class Sslv20ScanCommand(CipherSuiteScanCommand):
+    """List the SSL 2.0 OpenSSL cipher suites supported by the server(s).
+    """
+    @classmethod
+    def get_cli_argument(cls):
+        return u'sslv2'
+
+    @classmethod
+    def is_aggressive(cls):
+        # There only are few SSL 2 cipher suites to test for
+        return False
+
+
+class Sslv30ScanCommand(CipherSuiteScanCommand):
+    """List the SSL 3.0 OpenSSL cipher suites supported by the server(s).
+    """
+    @classmethod
+    def get_cli_argument(cls):
+        return u'sslv3'
+
+
+class Tlsv10ScanCommand(CipherSuiteScanCommand):
+    """List the TLS 1.0 OpenSSL cipher suites supported by the server(s).
+    """
+    @classmethod
+    def get_cli_argument(cls):
+        return u'tlsv1'
+
+
+class Tlsv11ScanCommand(CipherSuiteScanCommand):
+    """List the TLS 1.1 OpenSSL cipher suites supported by the server(s).
+    """
+    @classmethod
+    def get_cli_argument(cls):
+        return u'tlsv1_1'
+
+
+class Tlsv12ScanCommand(CipherSuiteScanCommand):
+    """List the TLS 1.2 OpenSSL cipher suites supported by the server(s).
+    """
+    @classmethod
+    def get_cli_argument(cls):
+        return u'tlsv1_2'
+
+
+class OpenSslCipherSuitesPlugin(Plugin):
+    """Scan the server(s) for supported OpenSSL cipher suites.
+    """
 
     MAX_THREADS = 15
-    SSL_VERSIONS_MAPPING = {'sslv2': SSLV2, 'sslv3': SSLV3, 'tlsv1': TLSV1, 'tlsv1_1': TLSV1_1, 'tlsv1_2': TLSV1_2}
+    SSL_VERSIONS_MAPPING = {
+        Sslv20ScanCommand: SSLV2,
+        Sslv30ScanCommand: SSLV3,
+        Tlsv10ScanCommand: TLSV1,
+        Tlsv11ScanCommand: TLSV1_1,
+        Tlsv12ScanCommand: TLSV1_2
+    }
 
-    def process_task(self, server_connectivity_info, plugin_command, options_dict=None):
-        ssl_version = self.SSL_VERSIONS_MAPPING[plugin_command]
+    @classmethod
+    def get_available_commands(cls):
+        return [Sslv20ScanCommand, Sslv30ScanCommand, Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand]
+
+
+    @classmethod
+    def get_cli_option_group(cls):
+        options = super(OpenSslCipherSuitesPlugin, cls).get_cli_option_group()
+
+        # Add the special optional argument for this plugin's commands
+        # They must match the names in the commands' contructor
+        options.append(
+            optparse.make_option(
+                # TODO(ad): Move this option to the CLI parser ?
+                u'--http_get',
+                help=u'Option - For each cipher suite, sends an HTTP GET request after completing the SSL handshake '
+                     u'and returns the HTTP status code.',
+                action=u'store_true'
+            )
+        )
+        options.append(
+            optparse.make_option(
+                # TODO(ad): Move this option to the CLI parser ?
+                u'--hide_rejected_ciphers',
+                help=u'Option - Hides the (usually long) list of cipher suites that were rejected by the server(s).',
+                action=u'store_true'
+            )
+        )
+        return options
+
+
+    def process_task(self, server_connectivity_info, scan_command):
+        # type: (ServerConnectivityInfo, CipherSuiteScanCommand) -> OpenSSLCipherSuitesResult
+        ssl_version = self.SSL_VERSIONS_MAPPING[scan_command.__class__]
 
         # Get the list of available cipher suites for the given ssl version
         ssl_client = SslClient(ssl_version=ssl_version)
@@ -101,9 +167,8 @@ class OpenSslCipherSuitesPlugin(plugin_base.PluginBase):
         preferred_cipher = self._get_preferred_cipher_suite(server_connectivity_info, ssl_version, accepted_cipher_list)
 
         # Generate the results
-        plugin_result = OpenSSLCipherSuitesResult(server_connectivity_info, plugin_command, options_dict,
-                                                  preferred_cipher, accepted_cipher_list, rejected_cipher_list,
-                                                  errored_cipher_list)
+        plugin_result = OpenSSLCipherSuitesResult(server_connectivity_info, scan_command, preferred_cipher,
+                                                  accepted_cipher_list, rejected_cipher_list, errored_cipher_list)
         return plugin_result
 
 
@@ -242,9 +307,9 @@ class OpenSSLCipherSuitesResult(PluginResult):
             are supported by the server.
     """
 
-    def __init__(self, server_info, plugin_command, plugin_options, preferred_cipher, accepted_cipher_list,
-                 rejected_cipher_list, errored_cipher_list):
-        super(OpenSSLCipherSuitesResult, self).__init__(server_info, plugin_command, plugin_options)
+    def __init__(self, server_info, scan_command, preferred_cipher, accepted_cipher_list, rejected_cipher_list,
+                 errored_cipher_list):
+        super(OpenSSLCipherSuitesResult, self).__init__(server_info, scan_command)
 
         self.preferred_cipher = preferred_cipher
 
@@ -260,7 +325,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
 
 
     def as_xml(self):
-        ssl_version = self.plugin_command
+        ssl_version = self.scan_command.get_cli_argument()
         is_protocol_supported = True if len(self.accepted_cipher_list) > 0 else False
         result_xml = Element(ssl_version, title='{0} Cipher Suites'.format(ssl_version.upper()),
                              isProtocolSupported=str(is_protocol_supported))
@@ -324,8 +389,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
     VERSION_TITLE_FORMAT = '{ssl_version} Cipher Suites'.format
 
     def as_text(self):
-        ssl_version = self.plugin_command
-        hide_rejected_ciphers = self.plugin_options and self.plugin_options.get('hide_rejected_ciphers', False)
+        ssl_version = self.scan_command.get_cli_argument()
         result_txt = [self._format_title(self.VERSION_TITLE_FORMAT(ssl_version=ssl_version.upper()))]
 
         # Output all the accepted ciphers if any
@@ -343,7 +407,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
             result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Accepted:'))
             for cipher in self.accepted_cipher_list:
                 result_txt.append(self._format_accepted_cipher_txt(cipher))
-        elif hide_rejected_ciphers:
+        elif self.scan_command.hide_rejected_ciphers:
             result_txt.append('      Server rejected all cipher suites.')
 
         # Output all errors if any
@@ -355,7 +419,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
                 result_txt.append(cipher_line_txt)
 
         # Output all rejected ciphers if needed
-        if len(self.rejected_cipher_list) > 0 and not hide_rejected_ciphers:
+        if len(self.rejected_cipher_list) > 0 and not self.scan_command.hide_rejected_ciphers:
             result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Rejected:'))
             for cipher in self.rejected_cipher_list:
                 cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT(cipher_name=cipher.name,

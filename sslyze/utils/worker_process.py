@@ -42,16 +42,14 @@ class WorkerProcess(Process):
                     self.queue_out.put(None)
                     break
 
-            server_info, command, options_dict = task
-            # Instantiate the proper plugin
-            plugin_instance = self.available_commands[command]()
-
+            server_info, scan_command = task
+            plugin_instance = scan_command.get_plugin_class()()
             try:
                 # Process the task
-                result = plugin_instance.process_task(server_info, command, options_dict)
+                result = plugin_instance.process_task(server_info, scan_command)
             except Exception as e:
                 #raise
-                result = PluginRaisedExceptionResult(server_info, command, options_dict, e)
+                result = PluginRaisedExceptionResult(server_info, scan_command, e)
 
             # Send the result to queue_out
             self.queue_out.put(result)

@@ -294,7 +294,7 @@ class CommandLineParser(object):
 
         # Client certificate options
         clientcert_group = OptionGroup(self._parser,
-            'Client certificate support', '')
+            'Client certificate options', '')
         clientcert_group.add_option(
             '--cert',
             help='Client certificate chain filename. The certificates must be in PEM format and must be sorted '
@@ -321,8 +321,11 @@ class CommandLineParser(object):
         )
         self._parser.add_option_group(clientcert_group)
 
+        # Input / output
+        output_group = OptionGroup(self._parser,
+            'Input and output options', '')
         # XML output
-        self._parser.add_option(
+        output_group.add_option(
             '--xml_out',
             help='Writes the scan results as an XML document to the file XML_FILE. If XML_FILE is set to "-", the XML '
                  'output will instead be printed to stdout.',
@@ -330,7 +333,7 @@ class CommandLineParser(object):
             default=None
         )
         # JSON output
-        self._parser.add_option(
+        output_group.add_option(
             '--json_out',
             help='Writes the scan results as a JSON document to the file JSON_FILE. If JSON_FILE is set to "-", the '
                  'JSON output will instead be printed to stdout.',
@@ -338,15 +341,27 @@ class CommandLineParser(object):
             default=None
         )
         # Read targets from input file
-        self._parser.add_option(
+        output_group.add_option(
             '--targets_in',
             help='Reads the list of targets to scan from the file TARGETS_IN. It should contain one host:port per '
                  'line.',
             dest='targets_in',
             default=None
         )
+        # No text output
+        output_group.add_option(
+            '--quiet',
+            action="store_true",
+            dest='quiet',
+            help='Do not output anything to stdout; useful when using --xml_out or --json_out.'
+        )
+        self._parser.add_option_group(output_group)
+
+        # Connectivity option group
+        connect_group = OptionGroup(self._parser,
+            'Connectivity options', '')
         # Timeout
-        self._parser.add_option(
+        connect_group.add_option(
             '--timeout',
             help='Sets the timeout value in seconds used for every socket connection made to the target server(s). '
                  'Default is {}s.'.format(str(SSLConnection.NETWORK_TIMEOUT)),
@@ -355,7 +370,7 @@ class CommandLineParser(object):
             default=SSLConnection.NETWORK_TIMEOUT
         )
         # Control connection retry attempts
-        self._parser.add_option(
+        connect_group.add_option(
             '--nb_retries',
             help='Sets the number retry attempts for all network connections initiated throughout the scan. Increase '
                  'this value if you are getting a lot of timeout/connection errors when scanning a specific server. '
@@ -366,7 +381,7 @@ class CommandLineParser(object):
             default=SSLConnection.NETWORK_MAX_RETRIES
         )
         # HTTP CONNECT Proxy
-        self._parser.add_option(
+        connect_group.add_option(
             '--https_tunnel',
             help='Tunnels all traffic to the target server(s) through an HTTP CONNECT proxy. HTTP_TUNNEL should be the '
                  'proxy\'s URL: \'http://USER:PW@HOST:PORT/\'. For proxies requiring authentication, only Basic '
@@ -375,13 +390,13 @@ class CommandLineParser(object):
             default=None
         )
         # STARTTLS
-        self._parser.add_option(
+        connect_group.add_option(
             '--starttls',
             help='Performs StartTLS handshakes when connecting to the target server(s). ' + self.START_TLS_USAGE,
             dest='starttls',
             default=None
         )
-        self._parser.add_option(
+        connect_group.add_option(
             '--xmpp_to',
             help='Optional setting for STARTTLS XMPP. XMPP_TO should be the hostname to be put in the \'to\' attribute '
                  'of the XMPP stream. Default is the server\'s hostname.',
@@ -389,20 +404,14 @@ class CommandLineParser(object):
             default=None
         )
         # Server Name Indication
-        self._parser.add_option(
+        connect_group.add_option(
             '--sni',
             help='Use Server Name Indication to specify the hostname to connect to.  Will only affect TLS 1.0+ '
                  'connections.',
             dest='sni',
             default=None
         )
-        # No text output
-        self._parser.add_option(
-            '--quiet',
-            action="store_true",
-            dest='quiet',
-            help='Do not output anything to stdout; useful when using --xml_out or --json_out.'
-        )
+        self._parser.add_option_group(connect_group)
 
 
     def _add_plugin_options(self, available_plugins):
@@ -410,15 +419,8 @@ class CommandLineParser(object):
         line parser.
         """
         for plugin_class in available_plugins:
-            plugin_desc = plugin_class.get_interface()
-
             # Add the current plugin's commands to the parser
-            group = OptionGroup(self._parser, plugin_desc.title, plugin_desc.description)
-            for cmd in plugin_desc.get_commands():
-                    group.add_option(cmd)
-
-            # Add the current plugin's options to the parser
-            for option in plugin_desc.get_options():
-                    group.add_option(option)
-
+            group = OptionGroup(self._parser, plugin_class.get_title(), plugin_class.get_description())
+            for option in plugin_class.get_cli_option_group():
+                group.add_option(option)
             self._parser.add_option_group(group)

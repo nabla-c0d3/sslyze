@@ -3,6 +3,7 @@
 import random
 from multiprocessing import JoinableQueue
 
+from sslyze.plugins.abstract_plugin import ScanCommand
 from sslyze.plugins.plugin_base import PluginResult
 from sslyze.plugins_finder import PluginsFinder
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -61,30 +62,27 @@ class PluginsProcessPool(object):
         self._queued_tasks_nb = 0
 
 
-    def queue_plugin_task(self, server_connectivity_info, plugin_command, plugin_options_dict=None):
-        # type: (ServerConnectivityInfo, str, Dict) -> None
+    def queue_plugin_task(self, server_connectivity_info, scan_command):
+        # type: (ServerConnectivityInfo, ScanCommand) -> None
         """Queue a scan command targeting a specific server.
 
         Args:
             server_connectivity_info (ServerConnectivityInfo): The information for connecting to the server.
-            plugin_command (str): The plugin scan command to be run on the server. Available commands for each plugin
-                are described in the sslyze CLI --help text.
-            plugin_options_dict (Optional[dict]): Scan options to be passed to the plugin. Available options for each plugin are
-                described in the sslyze CLI --help text.
+            scan_command (str): The plugin scan command to be run on the server. Available commands for each plugin
+                are described in the sslyze CLI --help text or in the API documentation.
         """
         # Ensure we have the right processes and queues in place for this hostname
         self._check_and_create_process(server_connectivity_info.hostname)
 
         # Add the task to the right queue
         self._queued_tasks_nb += 1
-        if plugin_command in self._available_plugins.get_aggressive_commands():
+        if scan_command.is_aggressive:
             # Aggressive commands should not be run in parallel against
             # a given server so we use the priority queues to prevent this
-            self._hostname_queues_dict[server_connectivity_info.hostname].put((server_connectivity_info, plugin_command,
-                                                                               plugin_options_dict))
+            self._hostname_queues_dict[server_connectivity_info.hostname].put((server_connectivity_info, scan_command))
         else:
             # Normal commands get put in the standard/shared queue
-            self._task_queue.put((server_connectivity_info, plugin_command, plugin_options_dict))
+            self._task_queue.put((server_connectivity_info, scan_command))
 
 
     def _check_and_create_process(self, hostname):

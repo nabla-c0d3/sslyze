@@ -1,24 +1,37 @@
 # -*- coding: utf-8 -*-
-"""Plugin to test the server for the TLS_FALLBACK_SCSV cipher suite, which prevents downgrade attacks.
-"""
+
 
 from xml.etree.ElementTree import Element
 from nassl import SSLV3, SSL_MODE_SEND_FALLBACK_SCSV, _nassl
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginResult
+from sslyze.plugins.plugin_base import PluginResult, ScanCommand
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
 
 
-class FallbackScsvPlugin(plugin_base.PluginBase):
+class FallbackScsvScanCommand(ScanCommand):
+    """Test for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.
+    """
 
-    interface = plugin_base.PluginInterface(title="FallbackScsvPlugin", description="")
-    interface.add_command(
-        command="fallback",
-        help="Checks support for the TLS_FALLBACK_SCSV cipher suite to prevent downgrade attacks."
-    )
+    @classmethod
+    def get_cli_argument(cls):
+        return u'fallback'
+
+    @classmethod
+    def get_plugin_class(cls):
+        return FallbackScsvPlugin
 
 
-    def process_task(self, server_info, plugin_command, plugin_options=None):
+class FallbackScsvPlugin(plugin_base.Plugin):
+    """Test for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.
+    """
+
+    @classmethod
+    def get_available_commands(cls):
+        return [FallbackScsvScanCommand]
+
+    def process_task(self, server_info, scan_command):
+        # type: (ServerConnectivityInfo, FallbackScsvScanCommand) -> FallbackScsvResult
         if server_info.highest_ssl_version_supported <= SSLV3:
             raise ValueError('Server only supports SSLv3; no downgrade attacks are possible')
 
@@ -48,7 +61,7 @@ class FallbackScsvPlugin(plugin_base.PluginBase):
         finally:
             ssl_connection.close()
 
-        return FallbackScsvResult(server_info, plugin_command, plugin_options, supports_fallback_scsv)
+        return FallbackScsvResult(server_info, scan_command, supports_fallback_scsv)
 
 
 class FallbackScsvResult(PluginResult):
@@ -61,8 +74,9 @@ class FallbackScsvResult(PluginResult):
 
     COMMAND_TITLE = u'Downgrade Attacks'
 
-    def __init__(self, server_info, plugin_command, plugin_options, supports_fallback_scsv):
-        super(FallbackScsvResult, self).__init__(server_info, plugin_command, plugin_options)
+    def __init__(self, server_info, scan_command, supports_fallback_scsv):
+        # type: (ServerConnectivityInfo, FallbackScsvScanCommand, bool) -> None
+        super(FallbackScsvResult, self).__init__(server_info, scan_command)
         self.supports_fallback_scsv = supports_fallback_scsv
 
     def as_text(self):
@@ -74,6 +88,6 @@ class FallbackScsvResult(PluginResult):
         return result_txt
 
     def as_xml(self):
-        result_xml = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        result_xml = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
         result_xml.append(Element('tlsFallbackScsv', attrib={'isSupported': str(self.supports_fallback_scsv)}))
         return result_xml

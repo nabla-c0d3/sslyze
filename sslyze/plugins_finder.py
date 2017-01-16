@@ -7,6 +7,7 @@ import sslyze.plugins
 import sslyze.plugins.plugin_base
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.plugins.compression_plugin import CompressionPlugin
+from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin
 
 
@@ -37,7 +38,7 @@ class PluginsFinder(object):
         Returns:
             PluginsFinder:  An object encapsulating the list of available SSLyze plugins.
         """
-        self._plugin_classes = [OpenSslCipherSuitesPlugin, CertificateInfoPlugin, CompressionPlugin]
+        self._plugin_classes = [OpenSslCipherSuitesPlugin, CertificateInfoPlugin, CompressionPlugin, FallbackScsvPlugin]
         self._commands = []
         for plugin_class in self._plugin_classes:
             self._commands.extend(plugin_class.get_available_commands())

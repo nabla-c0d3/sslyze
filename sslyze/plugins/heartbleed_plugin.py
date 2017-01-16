@@ -9,20 +9,34 @@ from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
 from nassl._nassl import WantX509LookupError, WantReadError
 
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginResult
+from sslyze.plugins.plugin_base import PluginResult, ScanCommand
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
 
 
-class HeartbleedPlugin(plugin_base.PluginBase):
+class HeartbleedScanCommand(ScanCommand):
+    """Test the server(s) for the OpenSSL Heartbleed vulnerability.
+    """
 
-    interface = plugin_base.PluginInterface("HeartbleedPlugin", "")
-    interface.add_command(
-        command="heartbleed",
-        help="Tests the server(s) for the OpenSSL Heartbleed vulnerability (experimental)."
-    )
+    @classmethod
+    def get_cli_argument(cls):
+        return u'heartbleed'
+
+    @classmethod
+    def get_plugin_class(cls):
+        return HeartbleedPlugin
 
 
-    def process_task(self, server_info, command, options_dict=None):
+class HeartbleedPlugin(plugin_base.Plugin):
+    """Test the server(s) for the OpenSSL Heartbleed vulnerability.
+    """
+
+    @classmethod
+    def get_available_commands(cls):
+        return [HeartbleedScanCommand]
+
+    def process_task(self, server_info, scan_command):
+        # type: (ServerConnectivityInfo, HeartbleedScanCommand) -> HeartbleedResult
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         ssl_connection.ssl_version = server_info.highest_ssl_version_supported  # Needed by the heartbleed payload
 
@@ -48,7 +62,7 @@ class HeartbleedPlugin(plugin_base.PluginBase):
             # Server replied with our hearbeat payload
             is_vulnerable_to_heartbleed = True
 
-        return HeartbleedResult(server_info, command, options_dict, is_vulnerable_to_heartbleed)
+        return HeartbleedResult(server_info, scan_command, is_vulnerable_to_heartbleed)
 
 
 class HeartbleedResult(PluginResult):
@@ -60,8 +74,9 @@ class HeartbleedResult(PluginResult):
 
     COMMAND_TITLE = u'OpenSSL Heartbleed'
 
-    def __init__(self, server_info, plugin_command, plugin_options, is_vulnerable_to_heartbleed):
-        super(HeartbleedResult, self).__init__(server_info, plugin_command, plugin_options)
+    def __init__(self, server_info, scan_command, is_vulnerable_to_heartbleed):
+        # type: (ServerConnectivityInfo, HeartbleedScanCommand, bool) -> None
+        super(HeartbleedResult, self).__init__(server_info, scan_command)
         self.is_vulnerable_to_heartbleed = is_vulnerable_to_heartbleed
 
     def as_text(self):
@@ -72,7 +87,7 @@ class HeartbleedResult(PluginResult):
         return [self._format_title(self.COMMAND_TITLE), self._format_field(u"", heartbleed_txt)]
 
     def as_xml(self):
-        xml_output = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        xml_output = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
         xml_output.append(Element('openSslHeartbleed', isVulnerable=str(self.is_vulnerable_to_heartbleed)))
         return xml_output
 

@@ -1,22 +1,40 @@
 # -*- coding: utf-8 -*-
-"""Plugin to test the server for Zlib compression support.
-"""
+
 
 from xml.etree.ElementTree import Element
 from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginResult
+from sslyze.plugins.plugin_base import PluginResult, ScanCommand
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class CompressionPlugin(plugin_base.PluginBase):
+class CompressionScanCommand(ScanCommand):
+    """Test the server(s) for Zlib compression support.
+    """
 
-    interface = plugin_base.PluginInterface(title="CompressionPlugin", description="")
-    interface.add_command(
-        command="compression",
-        help="Tests the server(s) for Zlib compression support.")
+    @classmethod
+    def get_cli_argument(cls):
+        return u'compression'
+
+    @classmethod
+    def is_aggressive(cls):
+        return False
+
+    @classmethod
+    def get_plugin_class(cls):
+        return CompressionPlugin
 
 
-    def process_task(self, server_info, command, options_dict=None):
+class CompressionPlugin(plugin_base.Plugin):
+    """Test the server(s) for Zlib compression support.
+    """
+
+    @classmethod
+    def get_available_commands(cls):
+        return [CompressionScanCommand]
+
+    def process_task(self, server_info, scan_command):
+        # type: (ServerConnectivityInfo, CompressionScanCommand) -> CompressionResult
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives
@@ -33,7 +51,7 @@ class CompressionPlugin(plugin_base.PluginBase):
         finally:
             ssl_connection.close()
 
-        return CompressionResult(server_info, command, options_dict, compression_name)
+        return CompressionResult(server_info, scan_command, compression_name)
 
 
 class CompressionResult(PluginResult):
@@ -46,8 +64,9 @@ class CompressionResult(PluginResult):
 
     COMMAND_TITLE = u'Deflate Compression'
 
-    def __init__(self, server_info, plugin_command, plugin_options, compression_name):
-        super(CompressionResult, self).__init__(server_info, plugin_command, plugin_options)
+    def __init__(self, server_info, scan_command, compression_name):
+        # type: (ServerConnectivityInfo, CompressionScanCommand, str) -> None
+        super(CompressionResult, self).__init__(server_info, scan_command)
         self.compression_name = compression_name
 
     def as_text(self):
@@ -59,7 +78,7 @@ class CompressionResult(PluginResult):
         return txt_result
 
     def as_xml(self):
-        xml_result = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        xml_result = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
         if self.compression_name:
             xml_result.append(Element('compressionMethod', type="DEFLATE", isSupported="True"))
         else:

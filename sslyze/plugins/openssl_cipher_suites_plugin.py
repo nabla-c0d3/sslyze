@@ -23,6 +23,7 @@ class CipherSuiteScanCommand(ScanCommand):
 
     def __init__(self, http_get=False, hide_rejected_ciphers=False):
         # type: (Optional[Bool], Optional[Bool]) -> None
+        super(CipherSuiteScanCommand, self).__init__()
         self.http_get = http_get
         self.hide_rejected_ciphers = hide_rejected_ciphers
 

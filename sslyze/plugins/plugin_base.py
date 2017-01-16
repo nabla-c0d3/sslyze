@@ -15,6 +15,11 @@ class ScanCommand(object):
 
     __metaclass__ = abc.ABCMeta
 
+    def __init__(self):
+        """Optional arguments for a command can be passed as keyword arguments here.
+        """
+        pass
+
     @classmethod
     def get_description(cls):
         """The description is expected to be the command class' docstring.

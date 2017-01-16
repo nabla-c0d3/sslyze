@@ -159,6 +159,7 @@ class CertificateInfoScanCommand(ScanCommand):
 
     def __init__(self, ca_file=None, print_full_certificate=False):
         # type: (Optional[str], Optional[bool]) -> None
+        super(CertificateInfoScanCommand, self).__init__()
         self.custom_ca_file = ca_file
         self.should_print_full_certificate = print_full_certificate
 
@@ -176,9 +177,8 @@ class CertificateInfoScanCommand(ScanCommand):
 
 
 class CertificateInfoPlugin(plugin_base.Plugin):
-    """Retrieve and validate the server's certificate chain.
+    """Retrieve and validate the server(s)' certificate chain.
     """
-
 
     @classmethod
     def get_available_commands(cls):

@@ -14,6 +14,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
 from typing import List
+from typing import Optional
 
 
 class CipherSuiteScanCommand(ScanCommand):
@@ -21,7 +22,7 @@ class CipherSuiteScanCommand(ScanCommand):
     __metaclass__ = ABCMeta
 
     def __init__(self, http_get=False, hide_rejected_ciphers=False):
-        # TODO(ad): Document
+        # type: (Optional[Bool], Optional[Bool]) -> None
         self.http_get = http_get
         self.hide_rejected_ciphers = hide_rejected_ciphers
 
@@ -293,7 +294,7 @@ class ErroredCipherSuite(CipherSuite):
 
 
 class OpenSSLCipherSuitesResult(PluginResult):
-    """The result of running --sslv2, --sslv3, --tlsv1, --tlsv1_1 or --tlsv1_2 on a specific server.
+    """The result of running a CipherSuiteScanCommand on a specific server.
 
     Attributes:
         accepted_cipher_list (List[AcceptedCipherSuite]): The list of cipher suites supported supported by both SSLyze
@@ -307,8 +308,15 @@ class OpenSSLCipherSuitesResult(PluginResult):
             are supported by the server.
     """
 
-    def __init__(self, server_info, scan_command, preferred_cipher, accepted_cipher_list, rejected_cipher_list,
-                 errored_cipher_list):
+    def __init__(
+            self,
+            server_info,           # type: ServerConnectivityInfo
+            scan_command,          # type: CipherSuiteScanCommand
+            preferred_cipher,      # type: AcceptedCipherSuite
+            accepted_cipher_list,  # type: List[AcceptedCipherSuite]
+            rejected_cipher_list,  # type: List[RejectedCipherSuite]
+            errored_cipher_list    # type: List[ErroredCipherSuite]
+            ):
         super(OpenSSLCipherSuitesResult, self).__init__(server_info, scan_command)
 
         self.preferred_cipher = preferred_cipher

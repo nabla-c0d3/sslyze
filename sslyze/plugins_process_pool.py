@@ -8,7 +8,6 @@ from sslyze.plugins.plugin_base import PluginResult
 from sslyze.plugins_finder import PluginsFinder
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.worker_process import WorkerProcess
-from typing import Dict
 from typing import Iterable
 from typing import Optional
 

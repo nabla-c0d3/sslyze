@@ -51,7 +51,7 @@ class CompressionPlugin(plugin_base.Plugin):
 
 
 class CompressionResult(PluginResult):
-    """The result of running --compression on a specific server.
+    """The result of running a CompressionScanCommand on a specific server.
 
     Attributes:
         compression_name (str): The name of the compression algorithm supported by the server; empty if compression is

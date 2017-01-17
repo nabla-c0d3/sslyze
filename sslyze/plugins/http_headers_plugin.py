@@ -1,36 +1,51 @@
 # -*- coding: utf-8 -*-
-"""Plugin to test the server for the presence of the HTTP Strict Transport Security and HTTP Public Key Pinning
-headers.
-"""
 
 from xml.etree.ElementTree import Element
 
+from nassl.x509_certificate import X509Certificate
 from sslyze.plugins import plugin_base
-from sslyze.plugins.certificate_info_plugin import CertInfoFullResult, Certificate
-from sslyze.plugins.plugin_base import PluginResult
+from sslyze.plugins.utils.certificate import Certificate
+from sslyze.plugins.utils.trust_store.trust_store import  CouldNotBuildVerifiedChainError
+from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.http_response_parser import HttpResponseParser
+from typing import List
+from typing import Optional
 
 
-class HttpHeadersPlugin(plugin_base.PluginBase):
+class HttpHeadersScanCommand(plugin_base.ScanCommand):
+    """Check for the HTTP Strict Transport Security (HSTS) and HTTP Public Key Pinning (HPKP) HTTP headers within the
+    response sent back by the server(s). Also compute the HPKP pins for the server(s)' current certificate chain.
+    """
 
-    interface = plugin_base.PluginInterface(title="HttpHeadersPlugin", description='')
-    interface.add_command(
-        command="http_headers",
-        help="Checks for the HTTP Strict Transport Security (HSTS) and HTTP Public Key Pinning (HPKP) HTTP headers "
-             "within the response sent back by the server(s). Also computes the HPKP pins for the server(s)' current "
-             "certificate chain."
-    )
+    @classmethod
+    def get_cli_argument(cls):
+        return u'http_headers'
+
+    @classmethod
+    def get_plugin_class(cls):
+        return HttpHeadersPlugin
 
 
-    def process_task(self, server_info, command, options_dict=None):
+class HttpHeadersPlugin(plugin_base.Plugin):
+    """Test the server(s) for the presence of security-related HTTP headers.
+    """
+
+    @classmethod
+    def get_available_commands(cls):
+        return [HttpHeadersScanCommand]
+
+
+    def process_task(self, server_info, scan_command):
+        # type: (ServerConnectivityInfo, HttpHeadersScanCommand) -> HttpHeadersResult
 
         if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
             raise ValueError('Cannot test for HTTP headers on a StartTLS connection.')
 
         hsts_header, hpkp_header, hpkp_report_only, certificate_chain = self._get_security_headers(server_info)
-        return HttpHeadersResult(server_info, command, options_dict, hsts_header, hpkp_header, hpkp_report_only,
+        return HttpHeadersResult(server_info, scan_command, hsts_header, hpkp_header, hpkp_report_only,
                                  certificate_chain)
 
     @classmethod
@@ -49,7 +64,7 @@ class HttpHeadersPlugin(plugin_base.PluginBase):
 
         if http_resp.version == 9 :
             # HTTP 0.9 => Probably not an HTTP response
-            raise ValueError('Server did not return an HTTP response')
+            raise ValueError(u'Server did not return an HTTP response')
         else:
             hsts_header = http_resp.getheader('strict-transport-security', None)
             hpkp_header = http_resp.getheader('public-key-pins', None)
@@ -68,6 +83,7 @@ class HttpHeadersPlugin(plugin_base.PluginBase):
 class ParsedHstsHeader(object):
 
     def __init__(self, raw_hsts_header):
+        # type: (unicode) -> None
         self.max_age = None
         self.include_subdomains = False
         self.preload = False
@@ -85,12 +101,13 @@ class ParsedHstsHeader(object):
             elif 'preload' in hsts_directive:
                 self.preload = True
             else:
-                raise ValueError('Unexpected value in HSTS header: {}'.format(repr(hsts_directive)))
+                raise ValueError(u'Unexpected value in HSTS header: {}'.format(repr(hsts_directive)))
 
 
 class ParsedHpkpHeader(object):
 
     def __init__(self, raw_hpkp_header, report_only=False):
+        # type: (unicode, Optional[bool]) -> None
         self.report_only = report_only
         self.report_uri = None
         self.include_subdomains = False
@@ -113,13 +130,13 @@ class ParsedHpkpHeader(object):
             elif 'report-uri' in hpkp_directive:
                 self.report_uri = hpkp_directive.split('report-uri=')[1].strip(' "')
             else:
-                raise ValueError('Unexpected value in HPKP header: {}'.format(repr(hpkp_directive)))
+                raise ValueError(u'Unexpected value in HPKP header: {}'.format(repr(hpkp_directive)))
 
         self.pin_sha256_list = pin_sha256_list
 
 
-class HttpHeadersResult(PluginResult):
-    """The result of running --http_headers on a specific server.
+class HttpHeadersResult(plugin_base.PluginResult):
+    """The result of running a HttpHeadersScanCommand on a specific server.
 
     Attributes:
         hsts_header (ParsedHstsHeader): The content of the HSTS header returned by the server; None if no HSTS header
@@ -139,19 +156,20 @@ class HttpHeadersResult(PluginResult):
 
     COMMAND_TITLE = u'HTTP Security Headers'
 
-    def __init__(self, server_info, plugin_command, plugin_options, hsts_header, hpkp_header, hpkp_report_only,
-                 certificate_chain):
-        super(HttpHeadersResult, self).__init__(server_info, plugin_command, plugin_options)
-        self.hsts_header = ParsedHstsHeader(hsts_header) if hsts_header else None
-        self.hpkp_header = ParsedHpkpHeader(hpkp_header, hpkp_report_only) if hpkp_header else None
+    def __init__(self, server_info, scan_command, raw_hsts_header, raw_hpkp_header, hpkp_report_only, cert_chain):
+        # type: (ServerConnectivityInfo, HttpHeadersScanCommand, unicode, unicode, bool, List[X509Certificate]) -> None
+        super(HttpHeadersResult, self).__init__(server_info, scan_command)
+        self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
+        self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
 
-        # Hack: use function in CertificateInfoPlugin to get the verified certificate chain so we can check the pins
-        self.verified_certificate_chain = None
-        parsed_certificate_chain = [Certificate(x509_cert) for x509_cert in certificate_chain]
-        if CertInfoFullResult._is_certificate_chain_order_valid(parsed_certificate_chain):
-            self.verified_certificate_chain = CertInfoFullResult._build_verified_certificate_chain(
+        parsed_certificate_chain = [Certificate.from_nassl(x509_cert) for x509_cert in cert_chain]
+        self.verified_certificate_chain = []
+        try:
+            self.verified_certificate_chain = TrustStoresRepository.get_main().build_verified_certificate_chain(
                 parsed_certificate_chain
             )
+        except CouldNotBuildVerifiedChainError:
+            pass
 
         # Is the pinning configuration valid?
         self.is_valid_pin_configured = None
@@ -181,17 +199,20 @@ class HttpHeadersResult(PluginResult):
         else:
             txt_result.append(self._format_field(u"NOT SUPPORTED - Server did not send an HSTS header", u""))
 
-        computed_hpkp_pins_text = ['', self._format_title('Computed HPKP Pins for Current Chain')]
+        computed_hpkp_pins_text = ['', self._format_title(u'Computed HPKP Pins for Current Chain')]
         if self.verified_certificate_chain:
             for index, cert in enumerate(self.verified_certificate_chain, start=0):
-                cert_subject = CertInfoFullResult._extract_subject_cn_or_oun(cert)
-                if len(cert_subject) > 40:
+                final_subject = cert.printable_subject_name
+                if len(cert.printable_subject_name) > 40:
                     # Make the CN shorter when displaying it
-                    cert_subject = '{}...'.format(cert_subject[:40])
-                computed_hpkp_pins_text.append(self.PIN_TXT_FORMAT(('{} - {}'.format(index, cert_subject)),
-                                                                   cert.hpkp_pin))
+                    final_subject = u'{}...'.format(cert.printable_subject_name[:40])
+                computed_hpkp_pins_text.append(
+                    self.PIN_TXT_FORMAT((u'{} - {}'.format(index, final_subject)), cert.hpkp_pin)
+                )
         else:
-            computed_hpkp_pins_text.append(self._format_field(CertInfoFullResult.NO_VERIFIED_CHAIN_ERROR_TXT, u""))
+            computed_hpkp_pins_text.append(
+                self._format_field(u'ERROR - Could not build verified chain (certificate untrusted?)', u'')
+            )
 
         txt_result.extend(['', self._format_title(u'HTTP Public Key Pinning (HPKP)')])
         if self.hpkp_header:
@@ -222,7 +243,7 @@ class HttpHeadersResult(PluginResult):
 
 
     def as_xml(self):
-        xml_result = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        xml_result = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
 
         # HSTS header
         is_hsts_supported = True if self.hsts_header else False

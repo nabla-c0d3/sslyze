@@ -1,108 +1,34 @@
 # -*- coding: utf-8 -*-
 
 
-import inspect
 import optparse
-import sys
-from os.path import join, dirname, realpath, abspath
 from xml.etree.ElementTree import Element
 
-from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
-from nassl.ssl_client import ClientCertificateRequested
 from nassl._nassl import OpenSSLError
 
+from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
+from nassl.ocsp_response import OcspResponse
+from nassl.ssl_client import ClientCertificateRequested
 from nassl.x509_certificate import X509Certificate
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult, ScanCommand
+from sslyze.plugins.utils.certificate import Certificate
+from sslyze.plugins.utils.trust_store.trust_store import TrustStore, \
+    InvalidCertificateChainOrderError, AnchorCertificateNotInTrustStoreError
+from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
-
-
-# Getting the path to the trust stores is trickier than it sounds due to subtle differences on OS X, Linux and Windows
 from typing import Dict
 from typing import List
 from typing import Optional
-
-
-def get_script_dir(follow_symlinks=True):
-    if getattr(sys, 'frozen', False):
-        # py2exe, PyInstaller, cx_Freeze
-        path = abspath(sys.executable)
-    else:
-        path = inspect.getabsfile(get_script_dir)
-    if follow_symlinks:
-        path = realpath(path)
-    return dirname(path)
-
-
-TRUST_STORES_PATH = join(get_script_dir(), 'data', 'trust_stores')
-
-# We use the Mozilla store for additional things: OCSP and EV validation
-MOZILLA_STORE_PATH = join(TRUST_STORES_PATH, 'mozilla.pem')
-MOZILLA_EV_OIDS = ['1.2.276.0.44.1.1.1.4', '1.2.392.200091.100.721.1', '1.2.40.0.17.1.22',
-                   '1.2.616.1.113527.2.5.1.1', '1.3.159.1.17.1', '1.3.6.1.4.1.13177.10.1.3.10',
-                   '1.3.6.1.4.1.14370.1.6', '1.3.6.1.4.1.14777.6.1.1', '1.3.6.1.4.1.14777.6.1.2',
-                   '1.3.6.1.4.1.17326.10.14.2.1.2', '1.3.6.1.4.1.17326.10.14.2.2.2',
-                   '1.3.6.1.4.1.17326.10.8.12.1.2', '1.3.6.1.4.1.17326.10.8.12.2.2', '1.3.6.1.4.1.22234.2.5.2.3.1',
-                   '1.3.6.1.4.1.23223.1.1.1', '1.3.6.1.4.1.29836.1.10', '1.3.6.1.4.1.34697.2.1',
-                   '1.3.6.1.4.1.34697.2.2', '1.3.6.1.4.1.34697.2.3', '1.3.6.1.4.1.34697.2.4',
-                   '1.3.6.1.4.1.36305.2', '1.3.6.1.4.1.40869.1.1.22.3', '1.3.6.1.4.1.4146.1.1',
-                   '1.3.6.1.4.1.4788.2.202.1', '1.3.6.1.4.1.6334.1.100.1', '1.3.6.1.4.1.6449.1.2.1.5.1',
-                   '1.3.6.1.4.1.782.1.2.1.8.1', '1.3.6.1.4.1.7879.13.24.1', '1.3.6.1.4.1.8024.0.2.100.1.2',
-                   '2.16.156.112554.3', '2.16.528.1.1003.1.2.7', '2.16.578.1.26.1.3.3', '2.16.756.1.83.21.0',
-                   '2.16.756.1.89.1.2.1.1', '2.16.792.3.0.3.1.1.5', '2.16.792.3.0.4.1.1.4',
-                   '2.16.840.1.113733.1.7.23.6', '2.16.840.1.113733.1.7.48.1', '2.16.840.1.114028.10.1.2',
-                   '2.16.840.1.114171.500.9', '2.16.840.1.114404.1.1.2.4.1', '2.16.840.1.114412.2.1',
-                   '2.16.840.1.114413.1.7.23.3', '2.16.840.1.114414.1.7.23.3', '2.16.840.1.114414.1.7.24.3']
-
-
-class TrustStore(object):
-    def __init__(self, path, name, version):
-        self.path = path
-        self.name = name
-        self.version = version
-        self._certificate_dict = None
-
-    def _extract_certificate_dict(self):
-        cert_dict = {}
-        with open(self.path, 'r') as store_file:
-            store_content = store_file.read()
-            # Each certificate is separated by two new lines and there are comments to remove at the beginning
-            pem_cert_list = store_content.split('\n\n')[1::]
-            for pem_cert in pem_cert_list:
-                cert = Certificate(X509Certificate.from_pem(pem_cert))
-
-                # Store a dictionary of subject->certificate for easy lookup
-                cert_dict[self._hash_subject(cert.as_dict['subject'])] = cert
-            return cert_dict
-
-    @staticmethod
-    def _hash_subject(certificate_subjet_dict):
-        hashed_subject = ''.join(['{}{}'.format(key, value) for key, value in certificate_subjet_dict.items()])
-        return hashed_subject
-
-    def get_certificate_with_subject(self, certificate_subject):
-        if self._certificate_dict is None:
-            self._certificate_dict = self._extract_certificate_dict()
-
-        return self._certificate_dict.get(self._hash_subject(certificate_subject), None)
-
-
-MOZILLA_TRUST_STORE = TrustStore(MOZILLA_STORE_PATH, 'Mozilla NSS', '09/2016')
-
-DEFAULT_TRUST_STORE_LIST = [
-    MOZILLA_TRUST_STORE,
-    TrustStore(join(TRUST_STORES_PATH, 'microsoft.pem'), 'Microsoft', '09/2016'),
-    TrustStore(join(TRUST_STORES_PATH, 'apple.pem'), 'Apple', 'OS X 10.11.6'),
-    TrustStore(join(TRUST_STORES_PATH, 'java.pem'), 'Java 7', 'Update 79'),
-    TrustStore(join(TRUST_STORES_PATH, 'aosp.pem'), 'AOSP', '7.0.0 r1'),
-]
+from typing import Tuple
 
 
 class PathValidationResult(object):
     """The result of trying to validate a server's certificate chain using a specific trust store.
     """
     def __init__(self, trust_store, verify_string):
+        # type: (TrustStore, unicode) -> None
         # The trust store used for validation
         self.trust_store = trust_store
 
@@ -116,40 +42,10 @@ class PathValidationError(object):
     never happen.
     """
     def __init__(self, trust_store, exception):
+        # type: (TrustStore, Exception) -> None
         self.trust_store = trust_store
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
-
-
-class Certificate(object):
-    """Pick-able object for storing information contained within an nassl.X509Certificate. This is needed because we
-     cannot directly send an X509Certificate to a different process (which would happen during a scan) as it is not
-     pickable.
-     """
-
-    def __init__(self, x509_certificate):
-        self.as_pem = x509_certificate.as_pem().strip()
-        self.as_text = x509_certificate.as_text()
-
-        self.as_dict = x509_certificate.as_dict()
-        # Sanitize OpenSSL's output
-        for key, value in self.as_dict.items():
-            if 'subjectPublicKeyInfo' in key:
-                # Remove the bit suffix so the element is just a number for the key size
-                if 'publicKeySize' in value.keys():
-                    value['publicKeySize'] = value['publicKeySize'].split(' bit')[0]
-
-        self.sha1_fingerprint = x509_certificate.get_SHA1_fingerprint()
-        self.hpkp_pin = x509_certificate.get_hpkp_pin()
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.as_pem == other.as_pem
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.as_pem)
 
 
 class CertificateInfoScanCommand(ScanCommand):
@@ -207,14 +103,14 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, CertificateInfoScanCommand) -> CertificateInfoResult
-        final_trust_store_list = list(DEFAULT_TRUST_STORE_LIST)
+        final_trust_store_list = list(TrustStoresRepository.get_all())
         if scan_command.custom_ca_file:
             final_trust_store_list.append(TrustStore(scan_command.custom_ca_file, u'Custom --ca_file', u'N/A'))
 
         thread_pool = ThreadPool()
         for trust_store in final_trust_store_list:
             # Try to connect with each trust store
-            thread_pool.add_job((self._get_certificate_chain, (server_info, trust_store)))
+            thread_pool.add_job((self._get_and_verify_certificate_chain, (server_info, trust_store)))
 
         # Start processing the jobs; one thread per trust
         thread_pool.start(len(final_trust_store_list))
@@ -250,7 +146,8 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
 
     @staticmethod
-    def _get_certificate_chain(server_info, trust_store):
+    def _get_and_verify_certificate_chain(server_info, trust_store):
+        # type: (ServerConnectivityInfo, TrustStore) -> Tuple[X509Certificate, unicode, OcspResponse]
         """Connects to the target server and uses the supplied trust store to validate the server's certificate.
         Returns the server's certificate and OCSP response.
         """
@@ -314,32 +211,35 @@ class CertificateInfoResult(PluginResult):
             ):
         super(CertificateInfoResult, self).__init__(server_info, scan_command)
 
+        main_trust_store = TrustStoresRepository.get_main()
+
         # We only keep the dictionary as a nassl.OcspResponse is not pickable
         self.ocsp_response = ocsp_response.as_dict() if ocsp_response else None
-        self.is_ocsp_response_trusted = ocsp_response.verify(MOZILLA_STORE_PATH) if ocsp_response else False
+        self.is_ocsp_response_trusted = ocsp_response.verify(main_trust_store.path) if ocsp_response else False
 
         # We create pickable Certificates from nassl.X509Certificates which are not pickable
-        self.certificate_chain = [Certificate(x509_cert) for x509_cert in certificate_chain]
+        self.certificate_chain = [Certificate.from_nassl(x509_cert) for x509_cert in certificate_chain]
+        self.is_leaf_certificate_ev = main_trust_store.is_extended_validation(self.certificate_chain[0])
 
-        self.is_leaf_certificate_ev = False
-        try:
-            policy = self.certificate_chain[0].as_dict['extensions']['X509v3 Certificate Policies']['Policy']
-        except:
-            # Certificate which don't have this extension
-            pass
-        else:
-            if policy[0] in MOZILLA_EV_OIDS:
-                self.is_leaf_certificate_ev = True
-
-        self.is_certificate_chain_order_valid = self._is_certificate_chain_order_valid(self.certificate_chain)
+        # Try to build the verified chain
         self.verified_certificate_chain = []
+        self.is_certificate_chain_order_valid = True
+        try:
+            self.verified_certificate_chain = main_trust_store.build_verified_certificate_chain(self.certificate_chain)
+        except InvalidCertificateChainOrderError:
+            self.is_certificate_chain_order_valid = False
+        except AnchorCertificateNotInTrustStoreError:
+            pass
+
+        # Find the result of the validation with the main trust store (Mozilla)
+        is_chain_trusted_by_main_store = False
         for path_result in path_validation_result_list:
-            if path_result.is_certificate_trusted and 'Mozilla' in path_result.trust_store.name:
-                # Validation with the Mozilla store was successful; try to build the verified chain
-                if self.is_certificate_chain_order_valid:
-                    # Do not even try if the received chain was in the wrong order
-                    self.verified_certificate_chain = self._build_verified_certificate_chain(self.certificate_chain)
-                break
+            if path_result.trust_store == main_trust_store:
+                is_chain_trusted_by_main_store = path_result.is_certificate_trusted
+
+        if not is_chain_trusted_by_main_store:
+            # Somehow we were able to build a verified chain but the validation failed - expired cert?
+            self.verified_certificate_chain = []
 
         self.has_anchor_in_certificate_chain = None
         if self.verified_certificate_chain:
@@ -355,66 +255,9 @@ class CertificateInfoResult(PluginResult):
         if self.verified_certificate_chain:
             self.has_sha1_in_certificate_chain = False
             for cert in self.verified_certificate_chain[:-1]:
-                if "sha1" in cert.as_dict['signatureAlgorithm']:
+                if u"sha1" in cert.as_dict['signatureAlgorithm']:
                     self.has_sha1_in_certificate_chain = True
                     break
-
-
-    @staticmethod
-    def _build_verified_certificate_chain(received_certificate_chain):
-        """Try to figure out the verified chain by finding the anchor/root CA the received chain chains up to in the
-        Mozilla trust store. This will not clean the certificate chain if additional/invalid certificates were sent and
-        assumes certificates were sent in the right order.
-        """
-        # TODO: OpenSSL 1.1.0 has SSL_get0_verified_chain() to do this directly
-        verified_certificate_chain = []
-        ca_cert = None
-        # Assume that the certificates were sent in the correct order or give up
-        for cert in received_certificate_chain:
-            ca_cert = MOZILLA_TRUST_STORE.get_certificate_with_subject(cert.as_dict['issuer'])
-            verified_certificate_chain.append(cert)
-            if ca_cert:
-                verified_certificate_chain.append(ca_cert)
-                break
-
-        if ca_cert is None:
-            # Could not build the verified chain
-            return None
-
-        return verified_certificate_chain
-
-
-    @staticmethod
-    def _extract_subject_cn_or_oun(certificate):
-        try:
-            # Extract the CN if there's one
-            cert_name = certificate.as_dict['subject']['commonName']
-        except KeyError:
-            # If no common name, display the organizational unit instead
-            try:
-                cert_name = certificate.as_dict['subject']['organizationalUnitName']
-            except KeyError:
-                # Give up
-                cert_name = 'No Common Name'
-        return unicode(cert_name, 'utf-8')
-
-
-    @staticmethod
-    def _is_certificate_chain_order_valid(certificate_chain):
-        previous_issuer = None
-        for index, cert in enumerate(certificate_chain):
-            current_subject = cert.as_dict['subject']
-
-            if index > 0:
-                # Compare the current subject with the previous issuer in the chain
-                if current_subject != previous_issuer:
-                    return False
-            try:
-                previous_issuer = cert.as_dict['issuer']
-            except KeyError:
-                # Missing issuer; this is okay if this is the last cert
-                previous_issuer = "missing issuer {}".format(index)
-        return True
 
 
     HOSTNAME_VALIDATION_TEXT = {
@@ -451,8 +294,9 @@ class CertificateInfoResult(PluginResult):
         for path_result in self.path_validation_result_list:
             if path_result.is_certificate_trusted:
                 # EV certs - Only Mozilla supported for now
-                ev_txt = ''
-                if self.is_leaf_certificate_ev and 'Mozilla' in path_result.trust_store.name:
+                ev_txt = u''
+                # TODO: Validate tath this works
+                if self.is_leaf_certificate_ev and TrustStoresRepository.get_main() == path_result.trust_store:
                     ev_txt = u', Extended Validation'
                 path_txt = u'OK - Certificate is trusted{}'.format(ev_txt)
 
@@ -471,18 +315,12 @@ class CertificateInfoResult(PluginResult):
                                                   error_txt))
 
         # Print the Common Names within the certificate chain
-        cns_in_certificate_chain = []
-        for cert in self.certificate_chain:
-            cert_identity = self._extract_subject_cn_or_oun(cert)
-            cns_in_certificate_chain.append(cert_identity)
+        cns_in_certificate_chain = [cert.printable_subject_name for cert in self.certificate_chain]
         text_output.append(self._format_field(u'Received Chain:', ' --> '.join(cns_in_certificate_chain)))
 
         # Print the Common Names within the verified certificate chain if validation was successful
         if self.verified_certificate_chain:
-            cns_in_certificate_chain = []
-            for cert in self.verified_certificate_chain:
-                cert_identity = self._extract_subject_cn_or_oun(cert)
-                cns_in_certificate_chain.append(cert_identity)
+            cns_in_certificate_chain = [cert.printable_subject_name for cert in self.verified_certificate_chain]
             verified_chain_txt = ' --> '.join(cns_in_certificate_chain)
         else:
             verified_chain_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
@@ -671,22 +509,10 @@ class CertificateInfoResult(PluginResult):
     def _get_basic_certificate_text(self):
         cert_dict = self.certificate_chain[0].as_dict
 
-        # Extract the CN if there's one
-        common_name = self._extract_subject_cn_or_oun(self.certificate_chain[0])
-
-        try:
-            # Extract the CN from the issuer if there's one
-            issuer_name = unicode(cert_dict['issuer']['commonName'], 'utf-8')
-        except KeyError:
-            # Otherwise show the whole Issuer field
-            issuer_name = unicode(
-                ' - '.join(['{}: {}'.format(key, value) for key, value in cert_dict['issuer'].items()]), 'utf-8'
-            )
-
         text_output = [
             self._format_field(u"SHA1 Fingerprint:", self.certificate_chain[0].sha1_fingerprint),
-            self._format_field(u"Common Name:", common_name),
-            self._format_field(u"Issuer:", issuer_name),
+            self._format_field(u"Common Name:", self.certificate_chain[0].printable_subject_name),
+            self._format_field(u"Issuer:", self.certificate_chain[0].printable_issuer_name),
             self._format_field(u"Serial Number:", cert_dict['serialNumber']),
             self._format_field(u"Not Before:", cert_dict['validity']['notBefore']),
             self._format_field(u"Not After:", cert_dict['validity']['notAfter']),
@@ -696,7 +522,7 @@ class CertificateInfoResult(PluginResult):
 
         try:
             # Print the Public key exponent if there's one; EC public keys don't have one for example
-            text_output.append(self._format_field(u"Exponent:", "{0} (0x{0:x})".format(
+            text_output.append(self._format_field(u"Exponent:", u"{0} (0x{0:x})".format(
                 int(cert_dict['subjectPublicKeyInfo']['publicKey']['exponent']))))
         except KeyError:
             pass

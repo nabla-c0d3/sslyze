@@ -57,8 +57,8 @@ class HeartbleedPlugin(plugin_base.Plugin):
         # Text output
         is_vulnerable_to_heartbleed = False
         if heartbleed is None:
-            raise ValueError("Error: connection failed.")
-        elif '\x01\x01\x01\x01\x01\x01\x01\x01\x01' in heartbleed:
+            raise ValueError(u'Error: connection failed.')
+        elif b'\x01\x01\x01\x01\x01\x01\x01\x01\x01' in heartbleed:
             # Server replied with our hearbeat payload
             is_vulnerable_to_heartbleed = True
 
@@ -97,24 +97,24 @@ def heartbleed_payload(ssl_version):
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
 
     SSL_VERSION_MAPPING = {
-        SSLV3 :  '\x00', # Surprising that it works with SSL 3 which doesn't define TLS extensions
-        TLSV1 :  '\x01',
-        TLSV1_1: '\x02',
-        TLSV1_2: '\x03'}
+        SSLV3 :  b'\x00', # Surprising that it works with SSL 3 which doesn't define TLS extensions
+        TLSV1 :  b'\x01',
+        TLSV1_1: b'\x02',
+        TLSV1_2: b'\x03'}
 
     payload = (
-        '\x18'           # Record type - Heartbeat
-        '\x03{0}'               # TLS version
-        '\x40\x00'              # Record length
-        '\x01'                  # Heartbeat type - Request
-        '\x3f\xfd')             # Heartbeat length
+        b'\x18'           # Record type - Heartbeat
+        b'\x03{0}'               # TLS version
+        b'\x40\x00'              # Record length
+        b'\x01'                  # Heartbeat type - Request
+        b'\x3f\xfd')             # Heartbeat length
 
     payload += '\x01'*16381     # Heartbeat data
 
     payload += (                # Second Heartbeat request with no padding
-        '\x18'                  # Record type - Heartbeat
-        '\x03{0}'
-        '\x00\x03\x01\x00\x00'
+        b'\x18'                  # Record type - Heartbeat
+        b'\x03{0}'
+        b'\x00\x03\x01\x00\x00'
     )
 
     return payload.format(SSL_VERSION_MAPPING[ssl_version])
@@ -156,7 +156,7 @@ def do_handshake_with_heartbleed(self):
         # In this heartbleed handshake we only receive the server hello
         handshakeDataIn = self._sock.recv(2048)
         if len(handshakeDataIn) == 0:
-            raise IOError('Nassl SSL handshake failed: peer did not send data back.')
+            raise IOError(u'Nassl SSL handshake failed: peer did not send data back.')
         # Pass the data to the SSL engine
         self._network_bio.write(handshakeDataIn)
 
@@ -168,5 +168,5 @@ def do_handshake_with_heartbleed(self):
         # Server asked for a client certificate and we didn't provide one
         # Heartbleed should work anyway
         self._sock.send(heartbleed_payload(self.ssl_version)) # The heartbleed payload
-        raise HeartbleedSent("") # Signal that we sent the heartbleed payload
+        raise HeartbleedSent(u'') # Signal that we sent the heartbleed payload
 

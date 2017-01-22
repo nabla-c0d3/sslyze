@@ -87,18 +87,18 @@ class HttpConnectTunnelingSettings(object):
 
     @classmethod
     def from_url(cls, proxy_url):
-        # type: (str) -> HttpConnectTunnelingSettings
+        # type: (unicode) -> HttpConnectTunnelingSettings
         parsed_url = urlparse(proxy_url)
 
         if not parsed_url.netloc or not parsed_url.hostname:
-            raise ValueError('Invalid Proxy URL.')
+            raise ValueError(u'Invalid Proxy URL.')
 
-        if parsed_url.scheme == 'http':
+        if parsed_url.scheme == u'http':
            default_port = 80
-        elif parsed_url.scheme == 'https':
+        elif parsed_url.scheme == u'https':
            default_port = 443
         else:
-            raise ValueError('Invalid URL scheme')
+            raise ValueError(u'Invalid URL scheme')
 
         port = parsed_url.port if parsed_url.port else default_port
         return cls(parsed_url.hostname, port, parsed_url.username, parsed_url.password)

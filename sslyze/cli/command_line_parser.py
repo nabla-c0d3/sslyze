@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from optparse import OptionParser, OptionGroup
 
 from nassl import SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
@@ -22,8 +23,8 @@ class CommandLineServerStringParser(object):
     Supports IPV6 addresses.
     """
 
-    SERVER_STRING_ERROR_BAD_PORT = 'Not a valid host:port'
-    SERVER_STRING_ERROR_NO_IPV6 = 'IPv6 is not supported on this platform'
+    SERVER_STRING_ERROR_BAD_PORT = u'Not a valid host:port'
+    SERVER_STRING_ERROR_NO_IPV6 = u'IPv6 is not supported on this platform'
 
     @classmethod
     def parse_server_string(cls, server_str):
@@ -88,44 +89,44 @@ class CommandLineServerStringParser(object):
 class CommandLineParser(object):
 
     # Defines what --regular means
-    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'reneg', 'resum', 'certinfo_basic', 'http_get',
-                   'hide_rejected_ciphers', 'compression', 'heartbleed', 'openssl_ccs', 'fallback']
-    SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 target3.com:443{ip} etc...'
+    REGULAR_CMD = [u'sslv2', u'sslv3', u'tlsv1', u'tlsv1_1', u'tlsv1_2', u'reneg', u'resum', u'certinfo_basic',
+                   u'http_get', u'hide_rejected_ciphers', u'compression', u'heartbleed', u'openssl_ccs', u'fallback']
+    SSLYZE_USAGE = u'usage: %prog [options] target1.com target2.com:443 target3.com:443{ip} etc...'
 
     # StartTLS options
-    START_TLS_PROTOCOLS = ['smtp', 'xmpp', 'xmpp_server', 'pop3', 'ftp', 'imap', 'ldap', 'rdp', 'postgres', 'auto']
-    START_TLS_USAGE = 'STARTTLS should be one of: {}. The \'auto\' option will cause SSLyze to deduce the protocol ' \
-                      '(ftp, imap, etc.) from the supplied port number, ' \
-                      'for each target servers.'.format(' , '.join(START_TLS_PROTOCOLS))
+    START_TLS_PROTOCOLS = [u'smtp', u'xmpp', u'xmpp_server', u'pop3', u'ftp', u'imap', u'ldap', u'rdp', u'postgres',
+                           u'auto']
+    START_TLS_USAGE = u'StartTLS should be one of: {}. The \'auto\' option will cause SSLyze to deduce the protocol ' \
+                      u'(ftp, imap, etc.) from the supplied port number, ' \
+                      u'for each target servers.'.format(u' , '.join(START_TLS_PROTOCOLS))
 
     # Mapping of StartTls protocols and ports; useful for starttls=auto
-    STARTTLS_PROTOCOL_DICT = {'smtp': TlsWrappedProtocolEnum.STARTTLS_SMTP,
+    STARTTLS_PROTOCOL_DICT = {u'smtp': TlsWrappedProtocolEnum.STARTTLS_SMTP,
                               587: TlsWrappedProtocolEnum.STARTTLS_SMTP,
                               25: TlsWrappedProtocolEnum.STARTTLS_SMTP,
-                              'xmpp': TlsWrappedProtocolEnum.STARTTLS_XMPP,
-                              5222 : TlsWrappedProtocolEnum.STARTTLS_XMPP,
-                              'xmpp_server': TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
+                              u'xmpp': TlsWrappedProtocolEnum.STARTTLS_XMPP,
+                              5222: TlsWrappedProtocolEnum.STARTTLS_XMPP,
+                              u'xmpp_server': TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
                               5269: TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
-                              'pop3': TlsWrappedProtocolEnum.STARTTLS_POP3,
+                              u'pop3': TlsWrappedProtocolEnum.STARTTLS_POP3,
                               109: TlsWrappedProtocolEnum.STARTTLS_POP3,
                               110: TlsWrappedProtocolEnum.STARTTLS_POP3,
-                              'imap': TlsWrappedProtocolEnum.STARTTLS_IMAP,
+                              u'imap': TlsWrappedProtocolEnum.STARTTLS_IMAP,
                               143: TlsWrappedProtocolEnum.STARTTLS_IMAP,
                               220: TlsWrappedProtocolEnum.STARTTLS_IMAP,
-                              'ftp': TlsWrappedProtocolEnum.STARTTLS_FTP,
+                              u'ftp': TlsWrappedProtocolEnum.STARTTLS_FTP,
                               21: TlsWrappedProtocolEnum.STARTTLS_FTP,
-                              'ldap': TlsWrappedProtocolEnum.STARTTLS_LDAP,
+                              u'ldap': TlsWrappedProtocolEnum.STARTTLS_LDAP,
                               3268: TlsWrappedProtocolEnum.STARTTLS_LDAP,
                               389: TlsWrappedProtocolEnum.STARTTLS_LDAP,
-                              'rdp': TlsWrappedProtocolEnum.STARTTLS_RDP,
+                              u'rdp': TlsWrappedProtocolEnum.STARTTLS_RDP,
                               3389: TlsWrappedProtocolEnum.STARTTLS_RDP,
-                              'postgres': TlsWrappedProtocolEnum.STARTTLS_POSTGRES,
+                              u'postgres': TlsWrappedProtocolEnum.STARTTLS_POSTGRES,
                               5432: TlsWrappedProtocolEnum.STARTTLS_POSTGRES}
 
     def __init__(self, available_plugins, sslyze_version):
-        """Generates SSLyze's command line parser.
+        """Generate SSLyze's command line parser.
         """
-
         self._parser = OptionParser(version=sslyze_version, usage=self.SSLYZE_USAGE)
 
         # Add generic command line options to the parser
@@ -135,8 +136,8 @@ class CommandLineParser(object):
         self._add_plugin_options(available_plugins)
 
         # Add the --regular command line parameter as a shortcut if possible
-        regular_help = 'Regular HTTPS scan; shortcut for --{}'.format(' --'.join(self.REGULAR_CMD))
-        self._parser.add_option('--regular', action="store_true", dest=None, help=regular_help)
+        regular_help = u'Regular HTTPS scan; shortcut for --{}'.format(u' --'.join(self.REGULAR_CMD))
+        self._parser.add_option(u'--regular', action=u'store_true', dest=None, help=regular_help)
 
 
     def parse_command_line(self):
@@ -148,26 +149,26 @@ class CommandLineParser(object):
         # Handle the --targets_in command line and fill args_target_list
         if args_command_list.targets_in:
             if args_target_list:
-                raise CommandLineParsingError("Cannot use --targets_list and specify targets within the command line.")
+                raise CommandLineParsingError(u'Cannot use --targets_list and specify targets within the command line.')
 
             try:  # Read targets from a file
                 with open(args_command_list.targets_in) as f:
                     for target in f.readlines():
                         if target.strip():  # Ignore empty lines
-                            if not target.startswith('#'):  # Ignore comment lines
+                            if not target.startswith(u'#'):  # Ignore comment lines
                                 args_target_list.append(target.strip())
             except IOError:
-                raise CommandLineParsingError("Can't read targets from input file '{}.".format(
-                        args_command_list.targets_in))
+                raise CommandLineParsingError(u'Can\'t read targets from input file \'{}.'.format(
+                    args_command_list.targets_in))
 
         if not args_target_list:
-            raise CommandLineParsingError('No targets to scan.')
+            raise CommandLineParsingError(u'No targets to scan.')
 
 
         # Handle the --regular command line parameter as a shortcut
-        if self._parser.has_option('--regular'):
-            if getattr(args_command_list, 'regular'):
-                setattr(args_command_list, 'regular', False)
+        if self._parser.has_option(u'--regular'):
+            if getattr(args_command_list, u'regular'):
+                setattr(args_command_list, u'regular', False)
                 for cmd in self.REGULAR_CMD:
                     setattr(args_command_list, cmd, True)
 
@@ -175,31 +176,31 @@ class CommandLineParser(object):
         # Sanity checks on the command line options
         # Prevent --quiet and --xml_out -
         if args_command_list.xml_file and args_command_list.xml_file == '-' and args_command_list.quiet:
-                raise CommandLineParsingError('Cannot use --quiet with --xml_out -.')
+                raise CommandLineParsingError(u'Cannot use --quiet with --xml_out -.')
 
         # Prevent --quiet and --json_out -
         if args_command_list.json_file and args_command_list.json_file == '-' and args_command_list.quiet:
-                raise CommandLineParsingError('Cannot use --quiet with --json_out -.')
+                raise CommandLineParsingError(u'Cannot use --quiet with --json_out -.')
 
         # Prevent --xml_out - and --json_out -
         if args_command_list.json_file and args_command_list.json_file == '-' \
                 and args_command_list.xml_file and args_command_list.xml_file == '-':
-                raise CommandLineParsingError('Cannot use --xml_out - with --json_out -.')
+                raise CommandLineParsingError(u'Cannot use --xml_out - with --json_out -.')
 
 
         # Sanity checks on the client cert options
         client_auth_creds = None
         if bool(args_command_list.cert) ^ bool(args_command_list.key):
-            raise CommandLineParsingError('No private key or certificate file were given. See --cert and --key.')
+            raise CommandLineParsingError(u'No private key or certificate file were given. See --cert and --key.')
 
         elif args_command_list.cert:
             # Private key formats
-            if args_command_list.keyform == 'DER':
+            if args_command_list.keyform == u'DER':
                 key_type = SSL_FILETYPE_ASN1
-            elif args_command_list.keyform == 'PEM':
+            elif args_command_list.keyform == u'PEM':
                 key_type = SSL_FILETYPE_PEM
             else:
-                raise CommandLineParsingError('--keyform should be DER or PEM.')
+                raise CommandLineParsingError(u'--keyform should be DER or PEM.')
 
             # Let's try to open the cert and key files
             try:
@@ -208,7 +209,7 @@ class CommandLineParser(object):
                                                                     key_type,
                                                                     args_command_list.keypass)
             except ValueError as e:
-                raise CommandLineParsingError('Invalid client authentication settings: {}.'.format(e[0]))
+                raise CommandLineParsingError(u'Invalid client authentication settings: {}.'.format(e[0]))
 
 
         # HTTP CONNECT proxy
@@ -217,7 +218,7 @@ class CommandLineParser(object):
             try:
                 http_tunneling_settings = HttpConnectTunnelingSettings.from_url(args_command_list.https_tunnel)
             except ValueError as e:
-                raise CommandLineParsingError('Invalid proxy URL for --https_tunnel: {}.'.format(e[0]))
+                raise CommandLineParsingError(u'Invalid proxy URL for --https_tunnel: {}.'.format(e[0]))
 
 
         # STARTTLS
@@ -234,7 +235,7 @@ class CommandLineParser(object):
 
         # Number of connection retries
         if args_command_list.nb_retries < 1:
-            raise CommandLineParsingError('Cannot have a number smaller than 1 for --nb_retries.')
+            raise CommandLineParsingError(u'Cannot have a number smaller than 1 for --nb_retries.')
 
 
         # Create the server connectivity info for each specifed servers
@@ -270,7 +271,7 @@ class CommandLineParser(object):
 
         # Command line hacks
         # Handle --starttls=auto now that we parsed the server strings
-        if args_command_list.starttls == 'auto':
+        if args_command_list.starttls == u'auto':
             for server_info in good_server_list:
                 # We use the port number to deduce the protocol
                 if server_info.port in self.STARTTLS_PROTOCOL_DICT.keys():
@@ -286,129 +287,125 @@ class CommandLineParser(object):
         return good_server_list, bad_server_list, args_command_list
 
 
-
     def _add_default_options(self):
-        """
-        Adds default command line options to the parser.
+        """Add default command line options to the parser.
         """
 
         # Client certificate options
-        clientcert_group = OptionGroup(self._parser,
-            'Client certificate options', '')
+        clientcert_group = OptionGroup(self._parser, u'Client certificate options', u'')
         clientcert_group.add_option(
-            '--cert',
-            help='Client certificate chain filename. The certificates must be in PEM format and must be sorted '
-                 'starting with the subject\'s client certificate, followed by intermediate CA certificates if '
-                 'applicable.',
-            dest='cert'
+            u'--cert',
+            help=u'Client certificate chain filename. The certificates must be in PEM format and must be sorted '
+                 u'starting with the subject\'s client certificate, followed by intermediate CA certificates if '
+                 u'applicable.',
+            dest=u'cert'
         )
         clientcert_group.add_option(
-            '--key',
-            help= 'Client private key filename.',
-            dest='key'
+            u'--key',
+            help=u'Client private key filename.',
+            dest=u'key'
         )
         clientcert_group.add_option(
-            '--keyform',
-            help= 'Client private key format. DER or PEM (default).',
-            dest='keyform',
-            default='PEM'
+            u'--keyform',
+            help=u'Client private key format. DER or PEM (default).',
+            dest=u'keyform',
+            default=u'PEM'
         )
         clientcert_group.add_option(
-            '--pass',
-            help= 'Client private key passphrase.',
-            dest='keypass',
-            default=''
+            u'--pass',
+            help=u'Client private key passphrase.',
+            dest=u'keypass',
+            default=u''
         )
         self._parser.add_option_group(clientcert_group)
 
         # Input / output
-        output_group = OptionGroup(self._parser,
-            'Input and output options', '')
+        output_group = OptionGroup(self._parser, u'Input and output options', u'')
         # XML output
         output_group.add_option(
-            '--xml_out',
-            help='Writes the scan results as an XML document to the file XML_FILE. If XML_FILE is set to "-", the XML '
-                 'output will instead be printed to stdout.',
-            dest='xml_file',
+            u'--xml_out',
+            help=u'Write the scan results as an XML document to the file XML_FILE. If XML_FILE is set to "-", the XML '
+                 u'output will instead be printed to stdout.',
+            dest=u'xml_file',
             default=None
         )
         # JSON output
         output_group.add_option(
-            '--json_out',
-            help='Writes the scan results as a JSON document to the file JSON_FILE. If JSON_FILE is set to "-", the '
-                 'JSON output will instead be printed to stdout.',
-            dest='json_file',
+            u'--json_out',
+            help=u'Write the scan results as a JSON document to the file JSON_FILE. If JSON_FILE is set to "-", the '
+                 u'JSON output will instead be printed to stdout.',
+            dest=u'json_file',
             default=None
         )
         # Read targets from input file
         output_group.add_option(
-            '--targets_in',
-            help='Reads the list of targets to scan from the file TARGETS_IN. It should contain one host:port per '
-                 'line.',
-            dest='targets_in',
+            u'--targets_in',
+            help=u'Read the list of targets to scan from the file TARGETS_IN. It should contain one host:port per '
+                 u'line.',
+            dest=u'targets_in',
             default=None
         )
         # No text output
         output_group.add_option(
-            '--quiet',
-            action="store_true",
-            dest='quiet',
-            help='Do not output anything to stdout; useful when using --xml_out or --json_out.'
+            u'--quiet',
+            action=u'store_true',
+            dest=u'quiet',
+            help=u'Do not output anything to stdout; useful when using --xml_out or --json_out.'
         )
         self._parser.add_option_group(output_group)
 
         # Connectivity option group
-        connect_group = OptionGroup(self._parser,
-            'Connectivity options', '')
+        connect_group = OptionGroup(self._parser, u'Connectivity options', u'')
         # Timeout
         connect_group.add_option(
-            '--timeout',
-            help='Sets the timeout value in seconds used for every socket connection made to the target server(s). '
-                 'Default is {}s.'.format(str(SSLConnection.NETWORK_TIMEOUT)),
-            type='int',
-            dest='timeout',
+            u'--timeout',
+            help=u'Set the timeout value in seconds used for every socket connection made to the target server(s). '
+                 u'Default is {}s.'.format(str(SSLConnection.NETWORK_TIMEOUT)),
+            type=u'int',
+            dest=u'timeout',
             default=SSLConnection.NETWORK_TIMEOUT
         )
         # Control connection retry attempts
         connect_group.add_option(
-            '--nb_retries',
-            help='Sets the number retry attempts for all network connections initiated throughout the scan. Increase '
-                 'this value if you are getting a lot of timeout/connection errors when scanning a specific server. '
-                 'Decrease this value to increase the speed of the scans; results may however return connection errors.'
-                 ' Default is {} connection attempts.'.format(str(SSLConnection.NETWORK_MAX_RETRIES)),
-            type='int',
-            dest='nb_retries',
+            u'--nb_retries',
+            help=u'Set the number retry attempts for all network connections initiated throughout the scan. Increase '
+                 u'this value if you are getting a lot of timeout/connection errors when scanning a specific server. '
+                 u'Decrease this value to increase the speed of the scans; results may however return connection '
+                 u'errors. Default is {} connection attempts.'.format(str(SSLConnection.NETWORK_MAX_RETRIES)),
+            type=u'int',
+            dest=u'nb_retries',
             default=SSLConnection.NETWORK_MAX_RETRIES
         )
         # HTTP CONNECT Proxy
         connect_group.add_option(
-            '--https_tunnel',
-            help='Tunnels all traffic to the target server(s) through an HTTP CONNECT proxy. HTTP_TUNNEL should be the '
-                 'proxy\'s URL: \'http://USER:PW@HOST:PORT/\'. For proxies requiring authentication, only Basic '
-                 'Authentication is supported.',
-            dest='https_tunnel',
+            u'--https_tunnel',
+            help=u'Tunnel all traffic to the target server(s) through an HTTP CONNECT proxy. HTTP_TUNNEL should be the '
+                 u'proxy\'s URL: \'http://USER:PW@HOST:PORT/\'. For proxies requiring authentication, only Basic '
+                 u'Authentication is supported.',
+            dest=u'https_tunnel',
             default=None
         )
         # STARTTLS
         connect_group.add_option(
-            '--starttls',
-            help='Performs StartTLS handshakes when connecting to the target server(s). ' + self.START_TLS_USAGE,
-            dest='starttls',
+            u'--starttls',
+            help=u'Perform a StartTLS handshake when connecting to the target server(s). '
+                 u'{}'.format(self.START_TLS_USAGE),
+            dest=u'starttls',
             default=None
         )
         connect_group.add_option(
-            '--xmpp_to',
-            help='Optional setting for STARTTLS XMPP. XMPP_TO should be the hostname to be put in the \'to\' attribute '
-                 'of the XMPP stream. Default is the server\'s hostname.',
-            dest='xmpp_to',
+            u'--xmpp_to',
+            help=u'Optional setting for STARTTLS XMPP. XMPP_TO should be the hostname to be put in the \'to\' attribute '
+                 u'of the XMPP stream. Default is the server\'s hostname.',
+            dest=u'xmpp_to',
             default=None
         )
         # Server Name Indication
         connect_group.add_option(
-            '--sni',
-            help='Use Server Name Indication to specify the hostname to connect to.  Will only affect TLS 1.0+ '
-                 'connections.',
-            dest='sni',
+            u'--sni',
+            help=u'Use Server Name Indication to specify the hostname to connect to.  Will only affect TLS 1.0+ '
+                 u'connections.',
+            dest=u'sni',
             default=None
         )
         self._parser.add_option_group(connect_group)

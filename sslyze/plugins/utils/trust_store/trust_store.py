@@ -60,7 +60,7 @@ class TrustStore(object):
     @staticmethod
     def _hash_subject(certificate_subjet_dict):
         # type: (Dict) -> unicode
-        hashed_subject = u''.join([u'{}{}'.format(unicode(key, encoding='utf-8'), unicode(value, encoding='utf-8'))
+        hashed_subject = u''.join([u'{}{}'.format(key.decode(encoding='utf-8'), value.decode(encoding='utf-8'))
                                    for key, value in certificate_subjet_dict.items()])
         return hashed_subject
 

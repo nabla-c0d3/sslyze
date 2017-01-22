@@ -1,6 +1,7 @@
 
 from sslyze.plugins.plugin_base import PluginResult
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
+from typing import List
 
 
 class FailedServerScan(object):

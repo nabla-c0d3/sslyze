@@ -245,7 +245,7 @@ class CommandLineParser(object):
         bad_server_list = []
         for server_string in args_target_list:
             # Support unicode domains
-            server_string = unicode(server_string, 'utf-8')
+            server_string = server_string.decode('utf-8')
             try:
                 hostname, ip_address, port = CommandLineServerStringParser.parse_server_string(server_string)
                 server_info = ServerConnectivityInfo(

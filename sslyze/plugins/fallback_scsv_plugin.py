@@ -10,7 +10,7 @@ from sslyze.utils.ssl_connection import SSLHandshakeRejected
 
 
 class FallbackScsvScanCommand(ScanCommand):
-    """Test for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.
+    """Test the server(s) for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.
     """
 
     @classmethod
@@ -23,7 +23,7 @@ class FallbackScsvScanCommand(ScanCommand):
 
 
 class FallbackScsvPlugin(plugin_base.Plugin):
-    """Test for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.
+    """Test the server(s) for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.
     """
 
     @classmethod

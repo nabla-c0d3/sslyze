@@ -417,7 +417,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
             for cipher in self.accepted_cipher_list:
                 result_txt.append(self._format_accepted_cipher_txt(cipher))
         elif self.scan_command.hide_rejected_ciphers:
-            result_txt.append('      Server rejected all cipher suites.')
+            result_txt.append(u'      Server rejected all cipher suites.')
 
         # Output all errors if any
         if len(self.errored_cipher_list) > 0:

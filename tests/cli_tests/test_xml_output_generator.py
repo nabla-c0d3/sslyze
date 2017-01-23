@@ -44,7 +44,7 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         scan_time = 1.3
         generator.scans_completed(scan_time)
 
-        received_output = unicode(output_file.getvalue(), 'utf-8')
+        received_output = output_file.getvalue().decode('utf-8')
         output_file.close()
 
         # Ensure the output properly listed the connectivity error with unicode escaped as \u sequences
@@ -82,9 +82,9 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         generator.server_scan_completed(server_scan)
         generator.scans_completed(1.3)
 
-        received_output = unicode(output_file.getvalue(), 'utf-8')
+        received_output = output_file.getvalue().decode('utf-8')
         output_file.close()
 
         # Ensure the output displayed the tunneling settings
         self.assertIn(u'httpsTunnelHostname="{}"'.format(tunneling_settings.hostname), received_output)
-        self.assertIn('httpsTunnelPort="{}"'.format(tunneling_settings.port), received_output)
+        self.assertIn(u'httpsTunnelPort="{}"'.format(tunneling_settings.port), received_output)

@@ -30,9 +30,9 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
         generator.scans_started()
 
         # noinspection PyTypeChecker
-        plugin_result_1 = MockPluginResult('plugin1', u'Plugin ûnicôdé output', None)
+        plugin_result_1 = MockPluginResult(u'plugin1', u'Plugin ûnicôdé output', None)
         # noinspection PyTypeChecker
-        plugin_result_2 = MockPluginResult('plugin2', u'other plugin Output', None)
+        plugin_result_2 = MockPluginResult(u'plugin2', u'other plugin Output', None)
         # noinspection PyTypeChecker
         server_scan = CompletedServerScan(server_info, [plugin_result_1, plugin_result_2])
         generator.server_scan_completed(server_scan)

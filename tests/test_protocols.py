@@ -2,7 +2,9 @@
 import socket
 import unittest
 
-from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
+import logging
+
+from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthenticationServerConfigurationEnum
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 
@@ -16,7 +18,7 @@ class ProtocolsTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertEquals(len(plugin_result.certificate_chain), 3)
 
@@ -29,7 +31,7 @@ class ProtocolsTestCase(unittest.TestCase):
         has_ipv6 = False
         s = socket.socket(socket.AF_INET6)
         try:
-            s.connect(('2607:f8b0:4005:804::2004', 443))
+            s.connect((u'2607:f8b0:4005:804::2004', 443))
             has_ipv6 = True
         except:
             pass
@@ -38,14 +40,14 @@ class ProtocolsTestCase(unittest.TestCase):
 
     def test_ipv6(self):
         if not self._is_ipv6_available():
-            print 'WARNING: IPv6 not available - skipping test'
+            logging.warning(u'WARNING: IPv6 not available - skipping test')
             return
 
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com', ip_address='2607:f8b0:4005:804::2004')
+        server_info = ServerConnectivityInfo(hostname=u'www.google.com', ip_address=u'2607:f8b0:4005:804::2004')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertEquals(len(plugin_result.certificate_chain), 3)
 
@@ -58,7 +60,7 @@ class ProtocolsTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, u'certinfo_basic')
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertEquals(len(plugin_result.certificate_chain), 3)
 
@@ -69,11 +71,11 @@ class ProtocolsTestCase(unittest.TestCase):
     def test_xmpp_to(self):
         server_info = ServerConnectivityInfo(hostname=u'talk.google.com',
                                              tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_XMPP,
-                                             xmpp_to_hostname='gmail.com')
+                                             xmpp_to_hostname=u'gmail.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertEquals(len(plugin_result.certificate_chain), 3)
 
@@ -88,13 +90,14 @@ class ProtocolsTestCase(unittest.TestCase):
                                    (u'jabber.org', TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER),
 
                                    # Some Heroku Postgres instance I created
-                                   ('ec2-54-235-80-86.compute-1.amazonaws.com', TlsWrappedProtocolEnum.STARTTLS_POSTGRES)]:
+                                   (u'ec2-54-235-80-86.compute-1.amazonaws.com',
+                                    TlsWrappedProtocolEnum.STARTTLS_POSTGRES)]:
 
             server_info = ServerConnectivityInfo(hostname=hostname, tls_wrapped_protocol=protocol)
             server_info.test_connectivity_to_server()
 
             plugin = CertificateInfoPlugin()
-            plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+            plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
             self.assertTrue(plugin_result.as_text())
             self.assertTrue(plugin_result.as_xml())
@@ -107,7 +110,7 @@ class ProtocolsTestCase(unittest.TestCase):
             self.assertEquals(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
 
             plugin = CertificateInfoPlugin()
-            plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+            plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
             self.assertTrue(plugin_result.as_text())
             self.assertTrue(plugin_result.as_xml())

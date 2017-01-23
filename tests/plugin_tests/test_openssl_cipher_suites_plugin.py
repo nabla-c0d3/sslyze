@@ -1,5 +1,6 @@
 import unittest
-from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin
+from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, Sslv30ScanCommand, \
+    Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -14,7 +15,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'sslv2')
+        plugin_result = plugin.process_task(server_info, Sslv20ScanCommand())
 
         self.assertIsNone(plugin_result.preferred_cipher)
         self.assertFalse(plugin_result.accepted_cipher_list)
@@ -33,7 +34,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'sslv3')
+        plugin_result = plugin.process_task(server_info, Sslv30ScanCommand())
 
         self.assertIsNone(plugin_result.preferred_cipher)
         self.assertFalse(plugin_result.accepted_cipher_list)
@@ -48,7 +49,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'tlsv1')
+        plugin_result = plugin.process_task(server_info, Tlsv10ScanCommand())
 
         self.assertTrue(plugin_result.preferred_cipher)
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
@@ -74,7 +75,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'tlsv1_1')
+        plugin_result = plugin.process_task(server_info, Tlsv11ScanCommand())
 
         self.assertTrue(plugin_result.preferred_cipher)
         self.assertTrue(plugin_result.accepted_cipher_list)
@@ -96,7 +97,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'tlsv1_2')
+        # Also do full HTTP connections
+        plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand(http_get=True))
 
         self.assertTrue(plugin_result.preferred_cipher)
         self.assertTrue(plugin_result.accepted_cipher_list)
@@ -121,7 +123,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'tlsv1')
+        plugin_result = plugin.process_task(server_info, Tlsv10ScanCommand())
 
         self.assertTrue(plugin_result.preferred_cipher)
         self.assertEquals(plugin_result.preferred_cipher.dh_info['GroupSize'], '480')
@@ -133,7 +135,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'tlsv1_2')
+        plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
         self.assertEquals({'TLS_ECDH_anon_WITH_AES_256_CBC_SHA', 'TLS_DH_anon_WITH_AES_256_CBC_SHA256',
@@ -154,7 +156,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'tlsv1_2')
+        plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
         self.assertEquals({'TLS_ECDHE_RSA_WITH_RC4_128_SHA', 'TLS_RSA_WITH_RC4_128_SHA'},
@@ -169,7 +171,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'tlsv1_2')
+        plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
         self.assertEquals({'TLS_RSA_WITH_RC4_128_MD5'},
@@ -184,7 +186,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'tlsv1_2')
+        plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
         self.assertTrue(plugin_result.preferred_cipher)
         self.assertTrue(plugin_result.accepted_cipher_list)
@@ -194,7 +196,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, 'tlsv1_2')
+        plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
         self.assertIsNone(plugin_result.preferred_cipher)
         self.assertTrue(plugin_result.accepted_cipher_list)

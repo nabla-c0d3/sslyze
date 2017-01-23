@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
+from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import HttpConnectTunnelingSettings
 from tiny_proxy import ProxyHandler
@@ -22,8 +22,8 @@ class HttpsTunnelTestCase(unittest.TestCase):
 
     def test_https_tunneling_bad_arguments(self):
         # Ensure that an IP address cannot be specified when using an HTTP proxy for scans
-        tunnel_settings = HttpConnectTunnelingSettings('fakedomain', 443)
-        with self.assertRaisesRegexp(ValueError, 'Cannot specify both ip_address and http_tunneling_settings'):
+        tunnel_settings = HttpConnectTunnelingSettings(u'fakedomain', 443)
+        with self.assertRaisesRegexp(ValueError, u'Cannot specify both ip_address and http_tunneling_settings'):
             ServerConnectivityInfo(hostname=u'www.google.com', ip_address='1.2.3.4',
                                    http_tunneling_settings=tunnel_settings)
 
@@ -35,7 +35,7 @@ class HttpsTunnelTestCase(unittest.TestCase):
 
         try:
             # Run a scan through the proxy
-            tunnel_settings = HttpConnectTunnelingSettings('localhost', proxy_port)
+            tunnel_settings = HttpConnectTunnelingSettings(u'localhost', proxy_port)
             server_info = ServerConnectivityInfo(hostname=u'www.google.com', http_tunneling_settings=tunnel_settings)
 
             # Try to connect to the proxy - retry if the proxy subprocess wasn't ready
@@ -51,7 +51,7 @@ class HttpsTunnelTestCase(unittest.TestCase):
 
 
             plugin = CertificateInfoPlugin()
-            plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+            plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
             self.assertTrue(plugin_result.certificate_chain)
 

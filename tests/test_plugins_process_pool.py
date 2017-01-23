@@ -1,4 +1,8 @@
 import unittest
+
+from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
+from sslyze.plugins.compression_plugin import CompressionScanCommand
+from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanCommand
 from sslyze.plugins_finder import PluginsFinder
 from sslyze.plugins_process_pool import PluginsProcessPool
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -17,9 +21,9 @@ class PluginsProcessPoolTestCase(unittest.TestCase):
         plugins_process_pool = PluginsProcessPool(sslyze_plugins)
 
         # Queue some scan commands that are quick
-        plugins_process_pool.queue_plugin_task(server_info, 'certinfo_basic')
-        plugins_process_pool.queue_plugin_task(server_info, 'reneg')
-        plugins_process_pool.queue_plugin_task(server_info, 'compression')
+        plugins_process_pool.queue_plugin_task(server_info, CertificateInfoScanCommand())
+        plugins_process_pool.queue_plugin_task(server_info, SessionRenegotiationScanCommand())
+        plugins_process_pool.queue_plugin_task(server_info, CompressionScanCommand())
 
         # Process the results
         nb_results = 0

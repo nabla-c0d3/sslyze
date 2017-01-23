@@ -51,6 +51,7 @@ class Certificate(object):
 
     @property
     def printable_subject_name(self):
+        # type: () -> unicode
         try:
             # Extract the CN if there's one
             cert_name = self.as_dict['subject']['commonName']
@@ -61,10 +62,12 @@ class Certificate(object):
             except KeyError:
                 # Give up
                 cert_name = u'No Common Name'
-        return cert_name
+        # TODO(ad): nassl should return a unicode dict
+        return cert_name.decode('utf-8')
 
     @property
     def printable_issuer_name(self):
+        # type: () -> unicode
         try:
             # Extract the CN from the issuer if there's one
             issuer_name = self.as_dict['subject']['commonName']
@@ -72,4 +75,4 @@ class Certificate(object):
             # Otherwise show the whole Issuer field
             issuer_name = u' - '.join([u'{}: {}'.format(key, value) for key, value in self.as_dict['issuer'].items()])
 
-        return issuer_name
+        return issuer_name.decode('utf-8')

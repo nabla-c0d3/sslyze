@@ -16,6 +16,7 @@ from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugi
 
 # TODO(ad): rename this
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin
+from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin
 
 
 class PluginsFinder(object):
@@ -46,7 +47,7 @@ class PluginsFinder(object):
         """
         self._plugin_classes = [OpenSslCipherSuitesPlugin, CertificateInfoPlugin, CompressionPlugin, FallbackScsvPlugin,
                                 HeartbleedPlugin, HttpHeadersPlugin, OpenSslCcsInjectionPlugin,
-                                SessionRenegotiationPlugin]
+                                SessionRenegotiationPlugin, SessionResumptionPlugin]
         self._commands = []
         for plugin_class in self._plugin_classes:
             self._commands.extend(plugin_class.get_available_commands())

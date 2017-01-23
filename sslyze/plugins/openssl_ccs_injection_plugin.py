@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Plugin to test the target server for CVE-2014-0224.
-"""
 
 from xml.etree.ElementTree import Element
 
@@ -9,24 +7,38 @@ from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
 import socket, struct, random
 
 from sslyze.plugins.plugin_base import PluginResult
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLConnection
 
 
-class OpenSslCcsInjectionPlugin(plugin_base.PluginBase):
+class OpenSslCcsInjectionScanCommand(plugin_base.ScanCommand):
+    """Test the server(s) for the OpenSSL CCS injection vulnerability (CVE-2014-0224).
+    """
 
-    interface = plugin_base.PluginInterface("OpenSslCcsInjectionPlugin",  "")
-    interface.add_command(
-        command="openssl_ccs",
-        help="Tests the server(s) for the OpenSSL CCS injection vulnerability (experimental)."
-    )
+    @classmethod
+    def get_cli_argument(cls):
+        return u'openssl_ccs'
+
+    @classmethod
+    def get_plugin_class(cls):
+        return OpenSslCcsInjectionPlugin
+
+
+class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
+    """Test the server(s) for CVE-2014-0224.
+    """
+
+    @classmethod
+    def get_available_commands(cls):
+        return [OpenSslCcsInjectionScanCommand]
 
     def srecv(self):
         r = self._sock.recv(4096)
         self._inbuffer += r
         return r != ''
 
-    def process_task(self, server_info, plugin_command, options_dict=None):
-
+    def process_task(self, server_info, scan_command):
+        # type: (ServerConnectivityInfo, OpenSslCcsInjectionScanCommand) -> OpenSslCcsInjectionResult
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         self._ssl_version = server_info.highest_ssl_version_supported
         is_vulnerable = False
@@ -85,7 +97,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.PluginBase):
                     is_vulnerable = False
 
         self._sock.close()
-        return OpenSslCcsInjectionResult(server_info, plugin_command, options_dict, is_vulnerable)
+        return OpenSslCcsInjectionResult(server_info, scan_command, is_vulnerable)
 
 
     ssl_tokens = {
@@ -153,6 +165,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.PluginBase):
         '\xfe\xfe', '\xfe\xff', '\xff\xe0', '\xff\xe1'
     ]
 
+
     # Create a TLS record out of a protocol packet
     def make_record(self, t, body):
         l = struct.pack("!H",len(body))
@@ -191,7 +204,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.PluginBase):
 
     @staticmethod
     def parse_alert_pkt(buf):
-        return [ {"level": ord(buf[0]), "desc": ord(buf[1]) } ]
+        return [{"level": ord(buf[0]), "desc": ord(buf[1])}]
 
     def parse_records(self):
         r = []
@@ -227,17 +240,16 @@ class OpenSslCcsInjectionResult(PluginResult):
 
     COMMAND_TITLE = u'OpenSSL CCS Injection'
 
-    def __init__(self, server_info, plugin_command, plugin_options, is_vulnerable_to_ccs_injection):
-        super(OpenSslCcsInjectionResult, self).__init__(server_info, plugin_command, plugin_options)
+    def __init__(self, server_info, scan_command, is_vulnerable_to_ccs_injection):
+        # type: (ServerConnectivityInfo, OpenSslCcsInjectionScanCommand, bool) -> None
+        super(OpenSslCcsInjectionResult, self).__init__(server_info, scan_command)
         self.is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection
 
-
     def as_xml(self):
-        result_xml = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        result_xml = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
         result_xml.append(Element('openSslCcsInjection',
                                   attrib={'isVulnerable': str(self.is_vulnerable_to_ccs_injection)}))
         return result_xml
-
 
     def as_text(self):
         result_txt = [self._format_title(self.COMMAND_TITLE)]

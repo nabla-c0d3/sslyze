@@ -10,6 +10,7 @@ from sslyze.plugins.compression_plugin import CompressionPlugin
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin
 from sslyze.plugins.heartbleed_plugin import HeartbleedPlugin
 from sslyze.plugins.http_headers_plugin import HttpHeadersPlugin
+from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin
 
 
@@ -41,7 +42,7 @@ class PluginsFinder(object):
             PluginsFinder:  An object encapsulating the list of available SSLyze plugins.
         """
         self._plugin_classes = [OpenSslCipherSuitesPlugin, CertificateInfoPlugin, CompressionPlugin, FallbackScsvPlugin,
-                                HeartbleedPlugin, HttpHeadersPlugin]
+                                HeartbleedPlugin, HttpHeadersPlugin, OpenSslCcsInjectionPlugin]
         self._commands = []
         for plugin_class in self._plugin_classes:
             self._commands.extend(plugin_class.get_available_commands())

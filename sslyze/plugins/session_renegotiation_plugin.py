@@ -9,31 +9,42 @@ from nassl._nassl import OpenSSLError
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class SessionRenegotiationPlugin(plugin_base.PluginBase):
+class SessionRenegotiationScanCommand(plugin_base.ScanCommand):
+    """Test the server(s) for client-initiated renegotiation and secure renegotiation support.
+    """
 
-    interface = plugin_base.PluginInterface("SessionRenegotiationPlugin", "")
-    interface.add_command(
-        command="reneg",
-        help='Tests the server(s) for client-initiated renegotiation and secure renegotiation support.'
-    )
+    @classmethod
+    def get_cli_argument(cls):
+        return u'reneg'
+
+    @classmethod
+    def get_plugin_class(cls):
+        return SessionRenegotiationPlugin
 
 
-    def process_task(self, server_info, command, options_dict=None):
-        # Check for client-initiated renegotiation
+class SessionRenegotiationPlugin(plugin_base.Plugin):
+    """Test the server(s)' implementation of session renegotiation.
+    """
+
+    @classmethod
+    def get_available_commands(cls):
+        return [SessionRenegotiationScanCommand]
+
+
+    def process_task(self, server_info, scan_command):
+        # type: (ServerConnectivityInfo, SessionRenegotiationScanCommand) -> SessionRenegotiationResult
         accepts_client_renegotiation = self._test_client_renegotiation(server_info)
-
-        # Check for secure renegotiation
         supports_secure_renegotiation = self._test_secure_renegotiation(server_info)
-
-        return SessionRenegotiationResult(server_info, command, options_dict, accepts_client_renegotiation,
+        return SessionRenegotiationResult(server_info, scan_command, accepts_client_renegotiation,
                                           supports_secure_renegotiation)
 
 
     @staticmethod
     def _test_secure_renegotiation(server_info):
-        """Checks whether the server supports secure renegotiation.
+        """Check whether the server supports secure renegotiation.
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
@@ -50,7 +61,7 @@ class SessionRenegotiationPlugin(plugin_base.PluginBase):
 
     @staticmethod
     def _test_client_renegotiation(server_info):
-        """Checks whether the server honors session renegotiation requests.
+        """Check whether the server honors session renegotiation requests.
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
@@ -99,7 +110,7 @@ class SessionRenegotiationPlugin(plugin_base.PluginBase):
 
 
 class SessionRenegotiationResult(PluginResult):
-    """The result of running --reneg on a specific server.
+    """The result of running a SessionRenegotiationScanCommand on a specific server.
 
     Attributes:
         accepts_client_renegotiation (bool): True if the server honors client-initiated renegotiation attempts.
@@ -108,9 +119,8 @@ class SessionRenegotiationResult(PluginResult):
 
     COMMAND_TITLE = u'Session Renegotiation'
 
-    def __init__(self, server_info, plugin_command, plugin_options, accepts_client_renegotiation,
-                 supports_secure_renegotiation):
-        super(SessionRenegotiationResult, self).__init__(server_info, plugin_command, plugin_options)
+    def __init__(self, server_info, scan_command, accepts_client_renegotiation, supports_secure_renegotiation):
+        super(SessionRenegotiationResult, self).__init__(server_info, scan_command)
         self.accepts_client_renegotiation = accepts_client_renegotiation
         self.supports_secure_renegotiation = supports_secure_renegotiation
 
@@ -134,7 +144,7 @@ class SessionRenegotiationResult(PluginResult):
 
 
     def as_xml(self):
-        result_xml = Element(self.plugin_command, title=self.COMMAND_TITLE)
+        result_xml = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
         result_xml.append(Element('sessionRenegotiation',
                                   attrib={'canBeClientInitiated': str(self.accepts_client_renegotiation),
                                           'isSecure': str(self.supports_secure_renegotiation)}))

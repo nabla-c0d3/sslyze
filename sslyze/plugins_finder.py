@@ -15,6 +15,9 @@ from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugi
 
 
 # TODO(ad): rename this
+from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin
+
+
 class PluginsFinder(object):
     """Utility class to discover the list of available SSLyze scanning plugins and commands.
     """
@@ -42,7 +45,8 @@ class PluginsFinder(object):
             PluginsFinder:  An object encapsulating the list of available SSLyze plugins.
         """
         self._plugin_classes = [OpenSslCipherSuitesPlugin, CertificateInfoPlugin, CompressionPlugin, FallbackScsvPlugin,
-                                HeartbleedPlugin, HttpHeadersPlugin, OpenSslCcsInjectionPlugin]
+                                HeartbleedPlugin, HttpHeadersPlugin, OpenSslCcsInjectionPlugin,
+                                SessionRenegotiationPlugin]
         self._commands = []
         for plugin_class in self._plugin_classes:
             self._commands.extend(plugin_class.get_available_commands())

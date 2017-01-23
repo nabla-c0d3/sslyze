@@ -232,7 +232,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
 
 
 class OpenSslCcsInjectionResult(PluginResult):
-    """The result of running --openssl_ccs on a specific server.
+    """The result of running an OpenSslCcsInjectionScanCommand on a specific server.
 
     Attributes:
         is_vulnerable_to_ccs_injection (bool): True if the server is vulnerable to OpenSSL's CCS injection issue.

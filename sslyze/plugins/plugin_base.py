@@ -113,18 +113,18 @@ class PluginResult(object):
 
     @abc.abstractmethod
     def as_text(self):
-        # type: () -> List[unicode]
+        # type: () -> List[Text]
         raise NotImplementedError()
 
     # Common formatting methods to have a consistent console output
     @staticmethod
     def _format_title(title):
-        # type: (unicode) -> unicode
+        # type: (Text) -> Text
         return '  * {0}:'.format(title)
 
     @staticmethod
     def _format_field(title, value):
-        # type: (unicode, unicode) -> unicode
+        # type: (Text, Text) -> Text
         return u'      {0:<35}{1}'.format(title, value)
 
 
@@ -136,12 +136,12 @@ class PluginRaisedExceptionResult(PluginResult):
         # type: (ServerConnectivityInfo, ScanCommand, Exception) -> None
         super(PluginRaisedExceptionResult, self).__init__(server_info, scan_command)
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
-        self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
+        self.error_message = u'{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
-    TITLE_TXT_FORMAT = 'Unhandled exception while running --{command}:'
+    TITLE_TXT_FORMAT = u'Unhandled exception while running --{command}:'
 
     def as_text(self):
-        # type: () -> List[unicode]
+        # type: () -> List[Text]
         return [self.TITLE_TXT_FORMAT.format(command=self.scan_command.get_cli_argument()), self.error_message]
 
     def as_xml(self):

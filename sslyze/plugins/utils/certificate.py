@@ -1,5 +1,6 @@
 from nassl.x509_certificate import X509Certificate
 from typing import Dict
+from typing import Text
 
 
 class Certificate(object):
@@ -28,12 +29,12 @@ class Certificate(object):
 
     @classmethod
     def from_pem(cls, pem_cert):
-        # type: (unicode) -> Certificate
+        # type: (Text) -> Certificate
         # Somewhat convoluted
         return cls.from_nassl(X509Certificate.from_pem(pem_cert))
 
     def __init__(self, as_pem, as_text, as_dict, sha1_fingerprint, hpkp_pin):
-        # type: (unicode, unicode, Dict, unicode, unicode) -> None
+        # type: (Text, Text, Dict, Text, Text) -> None
         self.as_pem = as_pem
         self.as_text = as_text
         self.as_dict = as_dict
@@ -51,14 +52,14 @@ class Certificate(object):
 
     @property
     def printable_subject_name(self):
-        # type: () -> unicode
+        # type: () -> Text
         try:
             # Extract the CN if there's one
-            cert_name = self.as_dict['subject']['commonName']
+            cert_name = self.as_dict[u'subject'][u'commonName']
         except KeyError:
             # If no common name, display the organizational unit instead
             try:
-                cert_name = self.as_dict['subject']['organizationalUnitName']
+                cert_name = self.as_dict[u'subject'][u'organizationalUnitName']
             except KeyError:
                 # Give up
                 cert_name = u'No Common Name'
@@ -67,12 +68,12 @@ class Certificate(object):
 
     @property
     def printable_issuer_name(self):
-        # type: () -> unicode
+        # type: () -> Text
         try:
             # Extract the CN from the issuer if there's one
-            issuer_name = self.as_dict['subject']['commonName']
+            issuer_name = self.as_dict[u'subject'][u'commonName']
         except KeyError:
             # Otherwise show the whole Issuer field
-            issuer_name = u' - '.join([u'{}: {}'.format(key, value) for key, value in self.as_dict['issuer'].items()])
+            issuer_name = u' - '.join([u'{}: {}'.format(key, value) for key, value in self.as_dict[u'issuer'].items()])
 
-        return issuer_name.decode('utf-8')
+        return issuer_name.decode(u'utf-8')

@@ -2,6 +2,7 @@
 from sslyze.plugins.plugin_base import PluginResult
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from typing import List
+from typing import Text
 
 
 class FailedServerScan(object):
@@ -9,7 +10,7 @@ class FailedServerScan(object):
     """
     
     def __init__(self, server_string, connection_exception):
-        # type: (unicode, ServerConnectivityError) -> None
+        # type: (Text, ServerConnectivityError) -> None
         self.server_string = server_string
 
         if not isinstance(connection_exception, ServerConnectivityError):

@@ -3,6 +3,7 @@ from sslyze.cli import FailedServerScan
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.server_connectivity import ClientAuthenticationServerConfigurationEnum
 from sslyze.server_connectivity import ServerConnectivityInfo
+from typing import Text
 
 
 class ConsoleOutputGenerator(OutputGenerator):
@@ -17,7 +18,7 @@ class ConsoleOutputGenerator(OutputGenerator):
 
     @classmethod
     def _format_title(cls, title):
-        # type: (unicode) -> unicode
+        # type: (Text) -> Text
         return cls.TITLE_FORMAT.format(title=title.upper(), underline='-' * len(title))
 
 
@@ -40,12 +41,12 @@ class ConsoleOutputGenerator(OutputGenerator):
 
     def server_connectivity_test_succeeded(self, server_connectivity_info):
         # type: (ServerConnectivityInfo) -> None
-        client_auth_msg = ''
+        client_auth_msg = u''
         client_auth_requirement = server_connectivity_info.client_auth_requirement
         if client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED:
-            client_auth_msg = '  WARNING: Server REQUIRED client authentication, specific plugins will fail.'
+            client_auth_msg = u'  WARNING: Server REQUIRED client authentication, specific plugins will fail.'
         elif client_auth_requirement == ClientAuthenticationServerConfigurationEnum.OPTIONAL:
-            client_auth_msg = '  WARNING: Server requested optional client authentication'
+            client_auth_msg = u'  WARNING: Server requested optional client authentication'
 
         network_route = server_connectivity_info.ip_address
         if server_connectivity_info.http_tunneling_settings:
@@ -85,4 +86,4 @@ class ConsoleOutputGenerator(OutputGenerator):
 
     def scans_completed(self, total_scan_time):
         # type: (float) -> None
-        self._file_to.write(self._format_title('Scan Completed in {0:.2f} s'.format(total_scan_time)))
+        self._file_to.write(self._format_title(u'Scan Completed in {0:.2f} s'.format(total_scan_time)))

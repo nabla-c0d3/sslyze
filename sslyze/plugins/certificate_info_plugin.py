@@ -6,7 +6,6 @@ from xml.etree.ElementTree import Element
 
 from nassl._nassl import OpenSSLError
 
-from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
 from nassl.ocsp_response import OcspResponse, OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
 from nassl.x509_certificate import X509Certificate
@@ -18,9 +17,9 @@ from sslyze.plugins.utils.trust_store.trust_store import TrustStore, \
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
-from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Text
 from typing import Tuple
 
 
@@ -28,7 +27,7 @@ class PathValidationResult(object):
     """The result of trying to validate a server's certificate chain using a specific trust store.
     """
     def __init__(self, trust_store, verify_string):
-        # type: (TrustStore, unicode) -> None
+        # type: (TrustStore, Text) -> None
         # The trust store used for validation
         self.trust_store = trust_store
 
@@ -54,7 +53,7 @@ class CertificateInfoScanCommand(ScanCommand):
     """
 
     def __init__(self, ca_file=None, print_full_certificate=False):
-        # type: (Optional[str], bool) -> None
+        # type: (Optional[Text], bool) -> None
         super(CertificateInfoScanCommand, self).__init__()
         self.custom_ca_file = ca_file
         self.should_print_full_certificate = print_full_certificate
@@ -147,7 +146,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
     @staticmethod
     def _get_and_verify_certificate_chain(server_info, trust_store):
-        # type: (ServerConnectivityInfo, TrustStore) -> Tuple[X509Certificate, unicode, OcspResponse]
+        # type: (ServerConnectivityInfo, TrustStore) -> Tuple[List[X509Certificate], Text, Optional[OcspResponse]]
         """Connects to the target server and uses the supplied trust store to validate the server's certificate.
         Returns the server's certificate and OCSP response.
         """

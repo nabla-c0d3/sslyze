@@ -3,6 +3,8 @@ from optparse import OptionParser, OptionGroup
 
 from nassl import SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
 import socket
+
+from typing import Text
 from typing import Tuple
 from sslyze.cli import FailedServerScan
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
@@ -28,7 +30,7 @@ class CommandLineServerStringParser(object):
 
     @classmethod
     def parse_server_string(cls, server_str):
-        # type: (unicode) -> Tuple[unicode, str, int]
+        # type: (Text) -> Tuple[Text, Text, int]
         # Extract ip from target
         if '{' in server_str and '}' in server_str:
             raw_target = server_str.split('{')

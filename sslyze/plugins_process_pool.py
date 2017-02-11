@@ -10,6 +10,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.worker_process import WorkerProcess
 from typing import Iterable
 from typing import Optional
+from typing import Text
 
 
 class PluginsProcessPool(object):
@@ -85,7 +86,7 @@ class PluginsProcessPool(object):
 
 
     def _check_and_create_process(self, hostname):
-        # type: (unicode) -> None
+        # type: (Text) -> None
         if hostname not in self._hostname_queues_dict.keys():
             # We haven't this hostname before
             if self._get_current_processes_nb() < self._max_processes_nb:

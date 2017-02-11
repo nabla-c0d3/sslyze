@@ -8,6 +8,7 @@ from urllib import quote
 
 from enum import Enum
 from typing import Optional
+from typing import Text
 
 try:
     # Python 3
@@ -80,7 +81,7 @@ class HttpConnectTunnelingSettings(object):
     """
 
     def __init__(self, hostname, port, basic_auth_user=None, basic_auth_password=None):
-        # type: (unicode, int, Optional[str], Optional[str]) -> None
+        # type: (Text, int, Optional[Text], Optional[Text]) -> None
         self.hostname = hostname
         self.port = port
         self.basic_auth_user = basic_auth_user
@@ -89,7 +90,7 @@ class HttpConnectTunnelingSettings(object):
 
     @classmethod
     def from_url(cls, proxy_url):
-        # type: (unicode) -> HttpConnectTunnelingSettings
+        # type: (Text) -> HttpConnectTunnelingSettings
         parsed_url = urlparse(proxy_url)
 
         if not parsed_url.netloc or not parsed_url.hostname:
@@ -107,7 +108,7 @@ class HttpConnectTunnelingSettings(object):
 
 
     def get_basic_auth_header(self):
-        # type: () -> unicode
+        # type: () -> Text
         """Generate the right HTTP header for Basic Authentication.
         """
         header = ''

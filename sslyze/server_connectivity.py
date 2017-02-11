@@ -5,13 +5,14 @@
 import socket
 
 from enum import Enum
+from nassl import OpenSslVersionEnum
 from typing import Iterable
 from typing import List
 from typing import Optional
-from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSLV2, TLSV1_1
 from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
+from typing import Text
 from typing import Tuple
 from utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, XMPPConnection, \
     XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \
@@ -21,7 +22,7 @@ from utils.thread_pool import ThreadPool
 
 class ServerConnectivityError(ValueError):
     def __init__(self, error_msg):
-        # type: (unicode) -> None
+        # type: (Text) -> None
         self.error_msg = error_msg
 
 
@@ -75,22 +76,22 @@ class ServerConnectivityInfo(object):
 
     def __init__(
             self,
-            hostname,                                              # type: unicode
+            hostname,                                              # type: Text
             port=None,                                             # type: Optional[int]
             ip_address=None,                                       # type: Optional[str]
-            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS, # type: Optional[TlsWrappedProtocolEnum]
-            tls_server_name_indication=None,                       # type: Optional[unicode]
-            xmpp_to_hostname=None,                                 # type: Optional[unicode]
+            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS, # type: TlsWrappedProtocolEnum
+            tls_server_name_indication=None,                       # type: Optional[Text]
+            xmpp_to_hostname=None,                                 # type: Optional[Text]
             client_auth_credentials=None,                          # type: Optional[ClientAuthenticationCredentials]
             http_tunneling_settings=None                           # type: Optional[HttpConnectTunnelingSettings]
             ):
-        # type: () -> None
+        # type: (...) -> None
         """Constructor to specify how to connect to a server to be scanned.
 
         Most arguments are optional but can be supplied in order to be more specific about the server's configuration.
 
         Args:
-            hostname (unicode): The server's hostname.
+            hostname (Text): The server's hostname.
             port (Optional[int]): The server's TLS port number. If not supplied, the default port number for the specified
                 `tls_wrapped_protocol` will be used.
             ip_address (Optional[str]): The server's IP address. If not supplied, a DNS lookup for the specified
@@ -100,9 +101,9 @@ class ServerConnectivityInfo(object):
                 expects. It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what
                 kind of "hello" message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If
                 not supplied, standard TLS will be used.
-            tls_server_name_indication (Optional[unicode]): The hostname to set within the Server Name Indication TLS
+            tls_server_name_indication (Optional[Text]): The hostname to set within the Server Name Indication TLS
                 extension. If not supplied, the specified `hostname` will be used.
-            xmpp_to_hostname (Optional[unicode]): The hostname to set within the `to` attribute of the XMPP stream. If not
+            xmpp_to_hostname (Optional[Text]): The hostname to set within the `to` attribute of the XMPP stream. If not
                 supplied, the specified `hostname` will be used. Should only be set if the supplied
                 `tls_wrapped_protocol` is an XMPP protocol.
             client_auth_credentials (Optional[ClientAuthenticationCredentials]): The client certificate and private key
@@ -122,7 +123,7 @@ class ServerConnectivityInfo(object):
             ValueError: If both `ip_address` and `http_tunneling_settings` were supplied.
         """
         # Store the hostname in ACE format in the case the domain name is unicode
-        self.hostname = hostname.encode('idna')
+        self.hostname = hostname.encode(u'idna')
         self.tls_wrapped_protocol = tls_wrapped_protocol
 
         self.port = port
@@ -180,7 +181,7 @@ class ServerConnectivityInfo(object):
             ServerConnectivityError: If the server was not reachable or an SSL/TLS handshake could not be completed.
         """
         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.DISABLED
-        ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=SSLV23)
+        ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=OpenSslVersionEnum.SSLV23)
 
         # First only try a socket connection
         try:
@@ -211,7 +212,7 @@ class ServerConnectivityInfo(object):
         ssl_version_supported = None
         ssl_cipher_supported = None
 
-        for ssl_version in [TLSV1_2, TLSV1_1, TLSV1, SSLV3, SSLV23]:
+        for ssl_version in OpenSslVersionEnum. [TLSV1_2, TLSV1_1, TLSV1, SSLV3, SSLV23]:
             # First try the default cipher list, and then all ciphers
             for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
                 ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,

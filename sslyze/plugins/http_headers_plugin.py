@@ -16,7 +16,7 @@ from typing import Optional
 from typing import Text
 
 
-class HttpHeadersScanCommand(plugin_base.ScanCommand):
+class HttpHeadersPluginScanCommand(plugin_base.PluginScanCommand):
     """Check for the HTTP Strict Transport Security (HSTS) and HTTP Public Key Pinning (HPKP) HTTP headers within the
     response sent back by the server(s). Also compute the HPKP pins for the server(s)' current certificate chain.
     """
@@ -32,18 +32,18 @@ class HttpHeadersPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [HttpHeadersScanCommand]
+        return [HttpHeadersPluginScanCommand]
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, HttpHeadersScanCommand) -> HttpHeadersResult
+        # type: (ServerConnectivityInfo, HttpHeadersPluginScanCommand) -> HttpHeadersScanScanResult
 
         if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
-            raise ValueError('Cannot test for HTTP headers on a StartTLS connection.')
+            raise ValueError(u'Cannot test for HTTP headers on a StartTLS connection.')
 
         hsts_header, hpkp_header, hpkp_report_only, certificate_chain = self._get_security_headers(server_info)
-        return HttpHeadersResult(server_info, scan_command, hsts_header, hpkp_header, hpkp_report_only,
-                                 certificate_chain)
+        return HttpHeadersScanScanResult(server_info, scan_command, hsts_header, hpkp_header, hpkp_report_only,
+                                         certificate_chain)
 
     @classmethod
     def _get_security_headers(cls, server_info):
@@ -132,7 +132,7 @@ class ParsedHpkpHeader(object):
         self.pin_sha256_list = pin_sha256_list
 
 
-class HttpHeadersResult(plugin_base.PluginResult):
+class HttpHeadersScanScanResult(plugin_base.PluginScanResult):
     """The result of running a HttpHeadersScanCommand on a specific server.
 
     Attributes:
@@ -154,8 +154,8 @@ class HttpHeadersResult(plugin_base.PluginResult):
     COMMAND_TITLE = u'HTTP Security Headers'
 
     def __init__(self, server_info, scan_command, raw_hsts_header, raw_hpkp_header, hpkp_report_only, cert_chain):
-        # type: (ServerConnectivityInfo, HttpHeadersScanCommand, Text, Text, bool, List[X509Certificate]) -> None
-        super(HttpHeadersResult, self).__init__(server_info, scan_command)
+        # type: (ServerConnectivityInfo, HttpHeadersPluginScanCommand, Text, Text, bool, List[X509Certificate]) -> None
+        super(HttpHeadersScanScanResult, self).__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
 

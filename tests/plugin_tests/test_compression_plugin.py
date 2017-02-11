@@ -1,5 +1,5 @@
 import unittest
-from sslyze.plugins.compression_plugin import CompressionPlugin, CompressionScanCommand
+from sslyze.plugins.compression_plugin import CompressionPlugin, CompressionPluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -10,7 +10,7 @@ class CompressionPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CompressionPlugin()
-        plugin_result = plugin.process_task(server_info, CompressionScanCommand())
+        plugin_result = plugin.process_task(server_info, CompressionPluginScanCommand())
 
         self.assertFalse(plugin_result.compression_name)
 

@@ -6,12 +6,12 @@ from nassl import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 import socket, struct, random
 
-from sslyze.plugins.plugin_base import PluginResult
+from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLConnection
 
 
-class OpenSslCcsInjectionScanCommand(plugin_base.ScanCommand):
+class OpenSslCcsInjectionPluginScanCommand(plugin_base.PluginScanCommand):
     """Test the server(s) for the OpenSSL CCS injection vulnerability (CVE-2014-0224).
     """
 
@@ -26,7 +26,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [OpenSslCcsInjectionScanCommand]
+        return [OpenSslCcsInjectionPluginScanCommand]
 
     def srecv(self):
         r = self._sock.recv(4096)
@@ -34,7 +34,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         return r != ''
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, OpenSslCcsInjectionScanCommand) -> OpenSslCcsInjectionResult
+        # type: (ServerConnectivityInfo, OpenSslCcsInjectionPluginScanCommand) -> OpenSslCcsInjectionScanScanResult
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         self._ssl_version = server_info.highest_ssl_version_supported
         is_vulnerable = False
@@ -93,7 +93,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
                     is_vulnerable = False
 
         self._sock.close()
-        return OpenSslCcsInjectionResult(server_info, scan_command, is_vulnerable)
+        return OpenSslCcsInjectionScanScanResult(server_info, scan_command, is_vulnerable)
 
 
     ssl_tokens = {
@@ -227,7 +227,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         return r
 
 
-class OpenSslCcsInjectionResult(PluginResult):
+class OpenSslCcsInjectionScanScanResult(PluginScanResult):
     """The result of running an OpenSslCcsInjectionScanCommand on a specific server.
 
     Attributes:
@@ -237,8 +237,8 @@ class OpenSslCcsInjectionResult(PluginResult):
     COMMAND_TITLE = u'OpenSSL CCS Injection'
 
     def __init__(self, server_info, scan_command, is_vulnerable_to_ccs_injection):
-        # type: (ServerConnectivityInfo, OpenSslCcsInjectionScanCommand, bool) -> None
-        super(OpenSslCcsInjectionResult, self).__init__(server_info, scan_command)
+        # type: (ServerConnectivityInfo, OpenSslCcsInjectionPluginScanCommand, bool) -> None
+        super(OpenSslCcsInjectionScanScanResult, self).__init__(server_info, scan_command)
         self.is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection
 
     def as_xml(self):

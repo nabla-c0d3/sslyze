@@ -1,5 +1,5 @@
 
-from sslyze.plugins.plugin_base import PluginResult
+from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from typing import List
 from typing import Text
@@ -25,7 +25,7 @@ class CompletedServerScan(object):
     """
     
     def __init__(self, server_info, plugin_result_list):
-        # type: (ServerConnectivityInfo, List[PluginResult]) -> None
+        # type: (ServerConnectivityInfo, List[PluginScanResult]) -> None
         self.server_info = server_info
         self.plugin_result_list = plugin_result_list
 

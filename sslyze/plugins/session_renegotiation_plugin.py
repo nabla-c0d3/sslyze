@@ -8,11 +8,11 @@ from xml.etree.ElementTree import Element
 from nassl._nassl import OpenSSLError
 
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginResult
+from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class SessionRenegotiationScanCommand(plugin_base.ScanCommand):
+class SessionRenegotiationPluginScanCommand(plugin_base.PluginScanCommand):
     """Test the server(s) for client-initiated renegotiation and secure renegotiation support.
     """
 
@@ -27,15 +27,15 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [SessionRenegotiationScanCommand]
+        return [SessionRenegotiationPluginScanCommand]
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, SessionRenegotiationScanCommand) -> SessionRenegotiationResult
+        # type: (ServerConnectivityInfo, SessionRenegotiationPluginScanCommand) -> SessionRenegotiationScanResult
         accepts_client_renegotiation = self._test_client_renegotiation(server_info)
         supports_secure_renegotiation = self._test_secure_renegotiation(server_info)
-        return SessionRenegotiationResult(server_info, scan_command, accepts_client_renegotiation,
-                                          supports_secure_renegotiation)
+        return SessionRenegotiationScanResult(server_info, scan_command, accepts_client_renegotiation,
+                                              supports_secure_renegotiation)
 
 
     @staticmethod
@@ -105,7 +105,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
         return accepts_client_renegotiation
 
 
-class SessionRenegotiationResult(PluginResult):
+class SessionRenegotiationScanResult(PluginScanResult):
     """The result of running a SessionRenegotiationScanCommand on a specific server.
 
     Attributes:
@@ -116,7 +116,7 @@ class SessionRenegotiationResult(PluginResult):
     COMMAND_TITLE = u'Session Renegotiation'
 
     def __init__(self, server_info, scan_command, accepts_client_renegotiation, supports_secure_renegotiation):
-        super(SessionRenegotiationResult, self).__init__(server_info, scan_command)
+        super(SessionRenegotiationScanResult, self).__init__(server_info, scan_command)
         self.accepts_client_renegotiation = accepts_client_renegotiation
         self.supports_secure_renegotiation = supports_secure_renegotiation
 

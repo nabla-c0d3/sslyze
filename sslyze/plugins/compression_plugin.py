@@ -4,11 +4,11 @@
 from xml.etree.ElementTree import Element
 from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginResult, ScanCommand
+from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class CompressionScanCommand(ScanCommand):
+class CompressionPluginScanCommand(PluginScanCommand):
     """Test the server(s) for Zlib compression support.
     """
 
@@ -23,10 +23,10 @@ class CompressionPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [CompressionScanCommand]
+        return [CompressionPluginScanCommand]
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, CompressionScanCommand) -> CompressionResult
+        # type: (ServerConnectivityInfo, CompressionPluginScanCommand) -> CompressionScanScanResult
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives
@@ -43,10 +43,10 @@ class CompressionPlugin(plugin_base.Plugin):
         finally:
             ssl_connection.close()
 
-        return CompressionResult(server_info, scan_command, compression_name)
+        return CompressionScanScanResult(server_info, scan_command, compression_name)
 
 
-class CompressionResult(PluginResult):
+class CompressionScanScanResult(PluginScanResult):
     """The result of running a CompressionScanCommand on a specific server.
 
     Attributes:
@@ -57,8 +57,8 @@ class CompressionResult(PluginResult):
     COMMAND_TITLE = u'Deflate Compression'
 
     def __init__(self, server_info, scan_command, compression_name):
-        # type: (ServerConnectivityInfo, CompressionScanCommand, str) -> None
-        super(CompressionResult, self).__init__(server_info, scan_command)
+        # type: (ServerConnectivityInfo, CompressionPluginScanCommand, str) -> None
+        super(CompressionScanScanResult, self).__init__(server_info, scan_command)
         self.compression_name = compression_name
 
     def as_text(self):

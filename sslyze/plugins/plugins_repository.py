@@ -8,7 +8,7 @@ from sslyze.plugins.http_headers_plugin import HttpHeadersPlugin
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin
 from sslyze.plugins.plugin_base import Plugin
-from sslyze.plugins.plugin_base import ScanCommand
+from sslyze.plugins.plugin_base import PluginScanCommand
 
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin
@@ -40,13 +40,13 @@ class PluginsRepository(object):
         self._scan_commands_to_plugin_classes = scan_commands_to_plugin_classes
 
     def get_plugin_class_for_command(self, scan_command):
-        # type: (ScanCommand) -> Type[Plugin]
+        # type: (PluginScanCommand) -> Type[Plugin]
         """Get the class of the plugin implementing the supplied scan command.
         """
         return self._scan_commands_to_plugin_classes[scan_command.__class__]
 
     def get_available_commands(self):
-        # type: () -> List[ScanCommand]
+        # type: () -> List[PluginScanCommand]
         """Get the list of all available scan comands across all plugins.
         """
         return self._scan_commands_to_plugin_classes.keys()

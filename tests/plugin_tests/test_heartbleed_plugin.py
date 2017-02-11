@@ -1,5 +1,5 @@
 import unittest
-from sslyze.plugins.heartbleed_plugin import HeartbleedPlugin, HeartbleedScanCommand
+from sslyze.plugins.heartbleed_plugin import HeartbleedPlugin, HeartbleedPluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -10,7 +10,7 @@ class HeartbleedPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = HeartbleedPlugin()
-        plugin_result = plugin.process_task(server_info, HeartbleedScanCommand())
+        plugin_result = plugin.process_task(server_info, HeartbleedPluginScanCommand())
 
         self.assertFalse(plugin_result.is_vulnerable_to_heartbleed)
 

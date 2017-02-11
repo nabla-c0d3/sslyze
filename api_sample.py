@@ -9,11 +9,11 @@ import sys
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 
 from sslyze.concurrent_scanner import ConcurrentScanner
-from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
-from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanCommand
+from sslyze.plugins.certificate_info_plugin import CertificateInfoPluginScanCommand
+from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
-from sslyze.plugins.plugin_base import PluginRaisedExceptionResult
+from sslyze.plugins.plugin_base import PluginRaisedExceptionScanResult
 from sslyze.synchronous_scanner import SynchronousScanner
 from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv10ScanCommand, Sslv30ScanCommand
 
@@ -44,15 +44,15 @@ if __name__ == u'__main__':
     # Queue some scan commands
     print(u'\nQueuing some commands...')
     concurrent_scanner.queue_scan_command(server_info, Sslv30ScanCommand())
-    concurrent_scanner.queue_scan_command(server_info, SessionRenegotiationScanCommand())
-    concurrent_scanner.queue_scan_command(server_info, CertificateInfoScanCommand())
+    concurrent_scanner.queue_scan_command(server_info, SessionRenegotiationPluginScanCommand())
+    concurrent_scanner.queue_scan_command(server_info, CertificateInfoPluginScanCommand())
 
     # Process the results
     reneg_result = None
     print(u'\nProcessing results...')
     for plugin_result in concurrent_scanner.get_results():
         # Sometimes a plugin command can unexpectedly fail (as a bug); it is returned as a PluginRaisedExceptionResult
-        if isinstance(plugin_result, PluginRaisedExceptionResult):
+        if isinstance(plugin_result, PluginRaisedExceptionScanResult):
             raise RuntimeError(u'Scan command failed: {}'.format(plugin_result.as_text()))
 
         # Each plugin result has attributes with the information you're looking for, specific to each plugin
@@ -63,12 +63,12 @@ if __name__ == u'__main__':
             for cipher in plugin_result.accepted_cipher_list:
                 print(u'    {}'.format(cipher.name))
 
-        elif isinstance(plugin_result.scan_command, SessionRenegotiationScanCommand):
+        elif isinstance(plugin_result.scan_command, SessionRenegotiationPluginScanCommand):
             reneg_result = plugin_result
             print(u'Client renegotiation: {}'.format(plugin_result.accepts_client_renegotiation))
             print(u'Secure renegotiation: {}'.format(plugin_result.supports_secure_renegotiation))
 
-        elif isinstance(plugin_result.scan_command, CertificateInfoScanCommand):
+        elif isinstance(plugin_result.scan_command, CertificateInfoPluginScanCommand):
             print(u'Server Certificate CN: {}'.format(
                 plugin_result.certificate_chain[0].as_dict[u'subject'][u'commonName']
             ))

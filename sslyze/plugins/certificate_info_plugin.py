@@ -10,7 +10,7 @@ from nassl.ocsp_response import OcspResponse, OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
 from nassl.x509_certificate import X509Certificate, HostnameValidationResultEnum
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginResult, ScanCommand
+from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.plugins.utils.certificate import Certificate
 from sslyze.plugins.utils.trust_store.trust_store import TrustStore, \
     InvalidCertificateChainOrderError, AnchorCertificateNotInTrustStoreError
@@ -23,14 +23,14 @@ from typing import Text
 from typing import Tuple
 
 
-class CertificateInfoScanCommand(ScanCommand):
+class CertificateInfoPluginScanCommand(PluginScanCommand):
     """Verify the validity of the server(s) certificate(s) against various trust stores and checks for OCSP stapling
     support.
     """
 
     def __init__(self, ca_file=None, print_full_certificate=False):
         # type: (Optional[Text], Optional[bool]) -> None
-        super(CertificateInfoScanCommand, self).__init__()
+        super(CertificateInfoPluginScanCommand, self).__init__()
         self.custom_ca_file = ca_file
         self.should_print_full_certificate = print_full_certificate
 
@@ -69,7 +69,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [CertificateInfoScanCommand]
+        return [CertificateInfoPluginScanCommand]
 
     @classmethod
     def get_cli_option_group(cls):
@@ -97,7 +97,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, CertificateInfoScanCommand) -> CertificateInfoResult
+        # type: (ServerConnectivityInfo, CertificateInfoPluginScanCommand) -> CertificateInfoScanScanResult
         final_trust_store_list = list(TrustStoresRepository.get_all())
         if scan_command.custom_ca_file:
             final_trust_store_list.append(TrustStore(scan_command.custom_ca_file, u'Custom --ca_file', u'N/A'))
@@ -136,8 +136,8 @@ class CertificateInfoPlugin(plugin_base.Plugin):
             raise RuntimeError(u'Could not connect to the server; last error: {}'.format(last_exception))
 
         # All done
-        return CertificateInfoResult(server_info, scan_command, certificate_chain, path_validation_result_list,
-                                     path_validation_error_list, ocsp_response)
+        return CertificateInfoScanScanResult(server_info, scan_command, certificate_chain, path_validation_result_list,
+                                             path_validation_error_list, ocsp_response)
 
 
     @staticmethod
@@ -170,7 +170,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         return x509_cert_chain, verify_str, ocsp_response
 
 
-class CertificateInfoResult(PluginResult):
+class CertificateInfoScanScanResult(PluginScanResult):
     """The result of running a CertificateInfoScanCommand on a specific server.
 
     Attributes:
@@ -198,14 +198,14 @@ class CertificateInfoResult(PluginResult):
     def __init__(
             self,
             server_info,                    # type: ServerConnectivityInfo
-            scan_command,                   # type: CertificateInfoScanCommand
+            scan_command,                   # type: CertificateInfoPluginScanCommand
             certificate_chain,              # type: List[X509Certificate]
             path_validation_result_list,    # type: List[PathValidationResult]
             path_validation_error_list,     # type: List[PathValidationError]
             ocsp_response                   # type: OcspResponse
             ):
         # type: (...) -> None
-        super(CertificateInfoResult, self).__init__(server_info, scan_command)
+        super(CertificateInfoScanScanResult, self).__init__(server_info, scan_command)
 
         main_trust_store = TrustStoresRepository.get_main()
 

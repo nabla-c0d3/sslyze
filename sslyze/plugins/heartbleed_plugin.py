@@ -9,12 +9,12 @@ from nassl._nassl import WantX509LookupError, WantReadError
 
 from nassl import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginResult, ScanCommand
+from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
 
 
-class HeartbleedScanCommand(ScanCommand):
+class HeartbleedPluginScanCommand(PluginScanCommand):
     """Test the server(s) for the OpenSSL Heartbleed vulnerability.
     """
 
@@ -29,10 +29,10 @@ class HeartbleedPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [HeartbleedScanCommand]
+        return [HeartbleedPluginScanCommand]
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, HeartbleedScanCommand) -> HeartbleedResult
+        # type: (ServerConnectivityInfo, HeartbleedPluginScanCommand) -> HeartbleedScanScanResult
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         ssl_connection.ssl_version = server_info.highest_ssl_version_supported  # Needed by the heartbleed payload
 
@@ -58,10 +58,10 @@ class HeartbleedPlugin(plugin_base.Plugin):
             # Server replied with our hearbeat payload
             is_vulnerable_to_heartbleed = True
 
-        return HeartbleedResult(server_info, scan_command, is_vulnerable_to_heartbleed)
+        return HeartbleedScanScanResult(server_info, scan_command, is_vulnerable_to_heartbleed)
 
 
-class HeartbleedResult(PluginResult):
+class HeartbleedScanScanResult(PluginScanResult):
     """The result of running a HeartbleedScanCommand on a specific server.
 
     Attributes:
@@ -71,8 +71,8 @@ class HeartbleedResult(PluginResult):
     COMMAND_TITLE = u'OpenSSL Heartbleed'
 
     def __init__(self, server_info, scan_command, is_vulnerable_to_heartbleed):
-        # type: (ServerConnectivityInfo, HeartbleedScanCommand, bool) -> None
-        super(HeartbleedResult, self).__init__(server_info, scan_command)
+        # type: (ServerConnectivityInfo, HeartbleedPluginScanCommand, bool) -> None
+        super(HeartbleedScanScanResult, self).__init__(server_info, scan_command)
         self.is_vulnerable_to_heartbleed = is_vulnerable_to_heartbleed
 
     def as_text(self):

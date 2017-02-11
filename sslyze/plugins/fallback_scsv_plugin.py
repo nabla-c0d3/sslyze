@@ -4,12 +4,12 @@
 from xml.etree.ElementTree import Element
 from nassl import _nassl, OpenSslVersionEnum
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginResult, ScanCommand
+from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
 
 
-class FallbackScsvScanCommand(ScanCommand):
+class FallbackScsvPluginScanCommand(PluginScanCommand):
     """Test the server(s) for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.
     """
 
@@ -24,10 +24,10 @@ class FallbackScsvPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [FallbackScsvScanCommand]
+        return [FallbackScsvPluginScanCommand]
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, FallbackScsvScanCommand) -> FallbackScsvResult
+        # type: (ServerConnectivityInfo, FallbackScsvPluginScanCommand) -> FallbackScsvScanScanResult
         if server_info.highest_ssl_version_supported.value <= OpenSslVersionEnum.SSLV3.value:
             raise ValueError(u'Server only supports SSLv3; no downgrade attacks are possible')
 
@@ -57,10 +57,10 @@ class FallbackScsvPlugin(plugin_base.Plugin):
         finally:
             ssl_connection.close()
 
-        return FallbackScsvResult(server_info, scan_command, supports_fallback_scsv)
+        return FallbackScsvScanScanResult(server_info, scan_command, supports_fallback_scsv)
 
 
-class FallbackScsvResult(PluginResult):
+class FallbackScsvScanScanResult(PluginScanResult):
     """The result of running a FallbackScsvScanCommand on a specific server.
 
     Attributes:
@@ -71,7 +71,7 @@ class FallbackScsvResult(PluginResult):
     COMMAND_TITLE = u'Downgrade Attacks'
 
     def __init__(self, server_info, scan_command, supports_fallback_scsv):
-        # type: (ServerConnectivityInfo, FallbackScsvScanCommand, bool) -> None
+        # type: (ServerConnectivityInfo, FallbackScsvPluginScanCommand, bool) -> None
         super(FallbackScsvResult, self).__init__(server_info, scan_command)
         self.supports_fallback_scsv = supports_fallback_scsv
 

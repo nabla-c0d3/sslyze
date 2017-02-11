@@ -3,8 +3,8 @@
 import random
 from multiprocessing import JoinableQueue
 
-from sslyze.plugins.plugin_base import PluginResult
-from sslyze.plugins.plugin_base import ScanCommand
+from sslyze.plugins.plugin_base import PluginScanResult
+from sslyze.plugins.plugin_base import PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.synchronous_scanner import SynchronousScanner
 from sslyze.utils.worker_process import WorkerProcess
@@ -51,7 +51,7 @@ class ConcurrentScanner(object):
 
 
     def queue_scan_command(self, server_connectivity_info, scan_command):
-        # type: (ServerConnectivityInfo, ScanCommand) -> None
+        # type: (ServerConnectivityInfo, PluginScanCommand) -> None
         """Queue a scan command targeting a specific server.
 
         Args:
@@ -109,7 +109,7 @@ class ConcurrentScanner(object):
 
 
     def get_results(self):
-        # type: () -> Iterable[PluginResult]
+        # type: () -> Iterable[PluginScanResult]
         """Return the result of previously queued scan commands; new commands cannot be queued once this is called.
 
         Yields:

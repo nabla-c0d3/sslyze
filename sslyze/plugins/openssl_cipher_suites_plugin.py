@@ -8,8 +8,8 @@ from xml.etree.ElementTree import Element
 from nassl import OpenSslVersionEnum
 from nassl.ssl_client import SslClient
 
-from sslyze.plugins.plugin_base import Plugin, ScanCommand
-from sslyze.plugins.plugin_base import PluginResult
+from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
+from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLConnection
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
@@ -20,13 +20,13 @@ from typing import Optional
 from typing import Text
 
 
-class CipherSuiteScanCommand(ScanCommand):
+class CipherSuitePluginScanCommand(PluginScanCommand):
 
     __metaclass__ = ABCMeta
 
     def __init__(self, http_get=False, hide_rejected_ciphers=False):
         # type: (bool, bool) -> None
-        super(CipherSuiteScanCommand, self).__init__()
+        super(CipherSuitePluginScanCommand, self).__init__()
         self.http_get = http_get
         self.hide_rejected_ciphers = hide_rejected_ciphers
 
@@ -35,7 +35,7 @@ class CipherSuiteScanCommand(ScanCommand):
         return True
 
 
-class Sslv20ScanCommand(CipherSuiteScanCommand):
+class Sslv20ScanCommand(CipherSuitePluginScanCommand):
     """List the SSL 2.0 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
@@ -48,7 +48,7 @@ class Sslv20ScanCommand(CipherSuiteScanCommand):
         return False
 
 
-class Sslv30ScanCommand(CipherSuiteScanCommand):
+class Sslv30ScanCommand(CipherSuitePluginScanCommand):
     """List the SSL 3.0 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
@@ -56,7 +56,7 @@ class Sslv30ScanCommand(CipherSuiteScanCommand):
         return u'sslv3'
 
 
-class Tlsv10ScanCommand(CipherSuiteScanCommand):
+class Tlsv10ScanCommand(CipherSuitePluginScanCommand):
     """List the TLS 1.0 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
@@ -64,7 +64,7 @@ class Tlsv10ScanCommand(CipherSuiteScanCommand):
         return u'tlsv1'
 
 
-class Tlsv11ScanCommand(CipherSuiteScanCommand):
+class Tlsv11ScanCommand(CipherSuitePluginScanCommand):
     """List the TLS 1.1 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
@@ -72,7 +72,7 @@ class Tlsv11ScanCommand(CipherSuiteScanCommand):
         return u'tlsv1_1'
 
 
-class Tlsv12ScanCommand(CipherSuiteScanCommand):
+class Tlsv12ScanCommand(CipherSuitePluginScanCommand):
     """List the TLS 1.2 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
@@ -125,7 +125,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
 
     def process_task(self, server_connectivity_info, scan_command):
-        # type: (ServerConnectivityInfo, CipherSuiteScanCommand) -> OpenSSLCipherSuitesResult
+        # type: (ServerConnectivityInfo, CipherSuitePluginScanCommand) -> OpenSSLCipherSuitesResult
         ssl_version = self.SSL_VERSIONS_MAPPING[scan_command.__class__]
 
         # Get the list of available cipher suites for the given ssl version
@@ -168,7 +168,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
         preferred_cipher = self._get_preferred_cipher_suite(server_connectivity_info, ssl_version, accepted_cipher_list)
 
         # Generate the results
-        plugin_result = OpenSSLCipherSuitesResult(server_connectivity_info, scan_command, preferred_cipher,
+        plugin_result = CipherSuiteScanScanResult(server_connectivity_info, scan_command, preferred_cipher,
                                                   accepted_cipher_list, rejected_cipher_list, errored_cipher_list)
         return plugin_result
 
@@ -302,7 +302,7 @@ class ErroredCipherSuite(CipherSuite):
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
 
-class CipherSuiteScanResult(PluginResult):
+class CipherSuiteScanScanResult(PluginScanResult):
     """The result of running a CipherSuiteScanCommand on a specific server.
 
     Attributes:
@@ -320,14 +320,14 @@ class CipherSuiteScanResult(PluginResult):
     def __init__(
             self,
             server_info,           # type: ServerConnectivityInfo
-            scan_command,          # type: CipherSuiteScanCommand
+            scan_command,          # type: CipherSuitePluginScanCommand
             preferred_cipher,      # type: AcceptedCipherSuite
             accepted_cipher_list,  # type: List[AcceptedCipherSuite]
             rejected_cipher_list,  # type: List[RejectedCipherSuite]
             errored_cipher_list    # type: List[ErroredCipherSuite]
             ):
         # type: (...) -> None
-        super(CipherSuiteScanResult, self).__init__(server_info, scan_command)
+        super(CipherSuiteScanScanResult, self).__init__(server_info, scan_command)
 
         self.preferred_cipher = preferred_cipher
 

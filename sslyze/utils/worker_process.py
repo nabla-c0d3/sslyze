@@ -25,7 +25,7 @@ class WorkerProcess(Process):
         """The process will first complete tasks it gets from self.queue_in.
         Once it gets notified that all the tasks have been completed, it terminates.
         """
-        from sslyze.plugins.plugin_base import PluginRaisedExceptionResult
+        from sslyze.plugins.plugin_base import PluginRaisedExceptionScanResult
 
         # Start processing task in the priority queue first
         current_queue_in = self.priority_queue_in
@@ -49,7 +49,7 @@ class WorkerProcess(Process):
                 result = self._synchronous_scanner.run_scan_command(server_info, scan_command)
             except Exception as e:
                 #raise
-                result = PluginRaisedExceptionResult(server_info, scan_command, e)
+                result = PluginRaisedExceptionScanResult(server_info, scan_command, e)
 
             # Send the result to queue_out
             self.queue_out.put(result)

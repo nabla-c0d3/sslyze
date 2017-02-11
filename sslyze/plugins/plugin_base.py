@@ -12,7 +12,7 @@ from typing import List
 from typing import Text
 
 
-class ScanCommand(object):
+class PluginScanCommand(object):
 
     __metaclass__ = abc.ABCMeta
 
@@ -80,26 +80,26 @@ class Plugin(object):
 
     @abc.abstractmethod
     def process_task(self, server_connectivity_info, command):
-        # type: (ServerConnectivityInfo, ScanCommand) -> PluginResult
+        # type: (ServerConnectivityInfo, PluginScanCommand) -> PluginScanResult
         """Run the supplied scan command on the server.
 
         Args:
             server_connectivity_info (ServerConnectivityInfo): The server to run the scan command on.
-            command (ScanCommand): The scan command.
+            command (PluginScanCommand): The scan command.
 
         Returns:
-            PluginResult: The result of the scan command run on the supplied server.
+            PluginScanResult: The result of the scan command run on the supplied server.
         """
         raise NotImplementedError()
 
 
-class PluginResult(object):
+class PluginScanResult(object):
     """Plugins should return the result of process_task() as a subclass of this.
     """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, ScanCommand) -> None
+        # type: (ServerConnectivityInfo, PluginScanCommand) -> None
         self.server_info = server_info
         self.scan_command = scan_command
 
@@ -125,13 +125,13 @@ class PluginResult(object):
         return u'      {0:<35}{1}'.format(title, value)
 
 
-class PluginRaisedExceptionResult(PluginResult):
+class PluginRaisedExceptionScanResult(PluginScanResult):
     """The result returned when a plugin threw an exception while doing process_task().
     """
 
     def __init__(self, server_info, scan_command, exception):
-        # type: (ServerConnectivityInfo, ScanCommand, Exception) -> None
-        super(PluginRaisedExceptionResult, self).__init__(server_info, scan_command)
+        # type: (ServerConnectivityInfo, PluginScanCommand, Exception) -> None
+        super(PluginRaisedExceptionScanResult, self).__init__(server_info, scan_command)
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
         self.error_message = u'{} - {}'.format(str(exception.__class__.__name__), str(exception))
 

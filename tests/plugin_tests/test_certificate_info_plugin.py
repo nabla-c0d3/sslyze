@@ -3,7 +3,7 @@ import os
 import unittest
 
 from nassl.x509_certificate import HostnameValidationResultEnum
-from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
+from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoPluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -14,7 +14,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=u'doesntexist'))
+        plugin.process_task(server_info, CertificateInfoPluginScanCommand(ca_file=u'doesntexist'))
 
 
     def test_ca_file(self):
@@ -23,7 +23,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         ca_file_path = os.path.join(os.path.dirname(__file__), u'utils', u'wildcard-self-signed.pem')
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
+        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand(ca_file=ca_file_path))
 
         self.assertEquals(len(plugin_result.path_validation_result_list), 5)
         for path_validation_result in plugin_result.path_validation_result_list:
@@ -38,7 +38,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
 
         self.assertTrue(plugin_result.ocsp_response)
         self.assertTrue(plugin_result.is_ocsp_response_trusted)
@@ -65,7 +65,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(print_full_certificate=True))
+        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand(print_full_certificate=True))
 
         # The only difference with the previous test is the text output
         self.assertTrue(plugin_result.as_text())
@@ -76,7 +76,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
 
         self.assertIsNone(plugin_result.ocsp_response)
         self.assertEquals(len(plugin_result.certificate_chain), 1)
@@ -103,7 +103,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
 
         san_list = plugin_result.certificate_chain[0].as_dict[u'extensions'][u'X509v3 Subject Alternative Name'][u'DNS']
         self.assertEquals(len(san_list), 1000)
@@ -114,7 +114,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
 
         self.assertTrue(plugin_result.has_sha1_in_certificate_chain)
 
@@ -127,7 +127,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
 
         self.assertFalse(plugin_result.has_sha1_in_certificate_chain)
 
@@ -140,7 +140,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
 
         self.assertTrue(plugin_result.certificate_chain)
 
@@ -153,7 +153,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
 
         self.assertTrue(plugin_result.has_anchor_in_certificate_chain)
 

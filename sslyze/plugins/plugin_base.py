@@ -29,7 +29,7 @@ class PluginScanCommand(object):
 
     @classmethod
     def get_cli_argument(cls):
-        # type: () -> str
+        # type: () -> Text
         """Should return the command line option to be used to run the scan command via the CLI.
         """
         raise NotImplementedError()

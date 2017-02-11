@@ -79,7 +79,7 @@ class ServerConnectivityInfo(object):
             hostname,                                              # type: Text
             port=None,                                             # type: Optional[int]
             ip_address=None,                                       # type: Optional[Text]
-            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS, # type: TlsWrappedProtocolEnum
+            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS, # type: Optional[TlsWrappedProtocolEnum]
             tls_server_name_indication=None,                       # type: Optional[Text]
             xmpp_to_hostname=None,                                 # type: Optional[Text]
             client_auth_credentials=None,                          # type: Optional[ClientAuthenticationCredentials]
@@ -97,7 +97,7 @@ class ServerConnectivityInfo(object):
             ip_address (Optional[Text]): The server's IP address. If not supplied, a DNS lookup for the specified
                 `hostname` will be performed. If `http_tunneling_settings` is specified, `ip_address` cannot be supplied
                 as the HTTP proxy will be responsible for looking up and connecting to the server to be scanned.
-            tls_wrapped_protocol (TlsWrappedProtocolEnum): The protocol wrapped in TLS that the server
+            tls_wrapped_protocol (Optional[TlsWrappedProtocolEnum]): The protocol wrapped in TLS that the server
                 expects. It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what
                 kind of "hello" message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If
                 not supplied, standard TLS will be used.
@@ -316,7 +316,7 @@ class ServersConnectivityTester(object):
     """Utility class to run servers connectivity testing on a list of ServerConnectivityInfo using a thread pool.
     """
 
-    DEFAULT_MAX_THREADS = 50
+    _DEFAULT_MAX_THREADS = 50
 
     def __init__(self, tentative_server_info_list):
         # type: (List[ServerConnectivityInfo]) -> None
@@ -324,8 +324,8 @@ class ServersConnectivityTester(object):
         self._thread_pool = ThreadPool()
         self._server_info_list = tentative_server_info_list
 
-    def start_connectivity_testing(self, max_threads=DEFAULT_MAX_THREADS, network_timeout=None):
-        # type: (int, Optional[int]) -> None
+    def start_connectivity_testing(self, max_threads=_DEFAULT_MAX_THREADS, network_timeout=None):
+        # type: (Optional[int], Optional[int]) -> None
         for tentative_server_info in self._server_info_list:
             self._thread_pool.add_job((tentative_server_info.test_connectivity_to_server, [network_timeout]))
         nb_threads = min(len(self._server_info_list), max_threads)

@@ -30,9 +30,9 @@ class CompressionPlugin(plugin_base.Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives
-        if 'zlib compression' not in ssl_connection.get_available_compression_methods():
-            raise RuntimeError('OpenSSL was not built with support for zlib / compression. '
-                               'Did you build nassl yourself ?')
+        if u'zlib compression' not in ssl_connection.get_available_compression_methods():
+            raise RuntimeError(u'OpenSSL was not built with support for zlib / compression. '
+                               u'Did you build nassl yourself ?')
 
         try: # Perform the SSL handshake
             ssl_connection.connect()

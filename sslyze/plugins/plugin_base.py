@@ -9,6 +9,7 @@ from xml.etree.ElementTree import Element
 
 from sslyze.server_connectivity import ServerConnectivityInfo
 from typing import List
+from typing import Text
 
 
 class ScanCommand(object):

@@ -25,10 +25,6 @@ class SessionResumptionSupportScanCommand(plugin_base.ScanCommand):
     def get_cli_argument(cls):
         return u'resum'
 
-    @classmethod
-    def get_plugin_class(cls):
-        return SessionResumptionPlugin
-
 
 class SessionResumptionRateScanCommand(plugin_base.ScanCommand):
     """Perform 100 session ID resumptions with the server(s), in order to estimate the rate for successful resumptions.
@@ -37,10 +33,6 @@ class SessionResumptionRateScanCommand(plugin_base.ScanCommand):
     @classmethod
     def get_cli_argument(cls):
         return u'resum_rate'
-
-    @classmethod
-    def get_plugin_class(cls):
-        return SessionResumptionPlugin
 
     @classmethod
     def is_aggressive(cls):

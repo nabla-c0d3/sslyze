@@ -107,6 +107,7 @@ class HttpConnectTunnelingSettings(object):
 
 
     def get_basic_auth_header(self):
+        # type: () -> unicode
         """Generate the right HTTP header for Basic Authentication.
         """
         header = ''

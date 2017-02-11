@@ -85,6 +85,7 @@ class PluginsProcessPool(object):
 
 
     def _check_and_create_process(self, hostname):
+        # type: (unicode) -> None
         if hostname not in self._hostname_queues_dict.keys():
             # We haven't this hostname before
             if self._get_current_processes_nb() < self._max_processes_nb:
@@ -116,6 +117,7 @@ class PluginsProcessPool(object):
 
 
     def _get_current_processes_nb(self):
+        # type: () -> int
         return sum([len(process_list) for hostname, process_list in self._processes_dict.items()])
 
 

@@ -209,6 +209,7 @@ class CertificateInfoResult(PluginResult):
             path_validation_error_list,     # type: List[PathValidationError]
             ocsp_response                   # type: Optional[Dict]
             ):
+        # type: (...) -> None
         super(CertificateInfoResult, self).__init__(server_info, scan_command)
 
         main_trust_store = TrustStoresRepository.get_main()

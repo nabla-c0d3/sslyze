@@ -16,7 +16,7 @@ from typing import Optional
 from typing import Text
 
 
-class HttpHeadersPluginScanCommand(plugin_base.PluginScanCommand):
+class HttpHeadersScanCommand(plugin_base.PluginScanCommand):
     """Check for the HTTP Strict Transport Security (HSTS) and HTTP Public Key Pinning (HPKP) HTTP headers within the
     response sent back by the server(s). Also compute the HPKP pins for the server(s)' current certificate chain.
     """
@@ -32,18 +32,18 @@ class HttpHeadersPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [HttpHeadersPluginScanCommand]
+        return [HttpHeadersScanCommand]
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, HttpHeadersPluginScanCommand) -> HttpHeadersScanScanResult
+        # type: (ServerConnectivityInfo, HttpHeadersScanCommand) -> HttpHeadersScanResult
 
         if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
             raise ValueError(u'Cannot test for HTTP headers on a StartTLS connection.')
 
         hsts_header, hpkp_header, hpkp_report_only, certificate_chain = self._get_security_headers(server_info)
-        return HttpHeadersScanScanResult(server_info, scan_command, hsts_header, hpkp_header, hpkp_report_only,
-                                         certificate_chain)
+        return HttpHeadersScanResult(server_info, scan_command, hsts_header, hpkp_header, hpkp_report_only,
+                                     certificate_chain)
 
     @classmethod
     def _get_security_headers(cls, server_info):
@@ -78,7 +78,13 @@ class HttpHeadersPlugin(plugin_base.Plugin):
 
 
 class ParsedHstsHeader(object):
+    """The HTTP Strict Transport Security header returned by the server.
 
+    Attributes:
+        preload (bool): True if the preload directive is set.
+        include_subdomains (bool): True if the includesubdomains directive is set.
+        max_age (int): The content of the max-age field.
+    """
     def __init__(self, raw_hsts_header):
         # type: (Text) -> None
         self.max_age = None
@@ -91,7 +97,7 @@ class ParsedHstsHeader(object):
                 continue
 
             if 'max-age' in hsts_directive:
-                self.max_age = hsts_directive.split('max-age=')[1].strip()
+                self.max_age = int(hsts_directive.split('max-age=')[1].strip())
             elif 'includesubdomains' in hsts_directive.lower():
                 # Some websites have a different case for IncludeSubDomains
                 self.include_subdomains = True
@@ -102,6 +108,16 @@ class ParsedHstsHeader(object):
 
 
 class ParsedHpkpHeader(object):
+    """The HTTP Public Key Pinning header returned by the server.
+
+    Attributes:
+        report_only (bool): True if the HPKP header used is "Public-Key-Pins-Report-Only" (instead of
+            "Public-Key-Pins").
+        report_uri (Text): The content of the report-uri field.
+        include_subdomains (bool): True if the includesubdomains directive is set.
+        max_age (int): The content of the max-age field.
+        pin_sha256_list (List[Text]): The list of pin-sha256 values set in the header.
+    """
 
     def __init__(self, raw_hpkp_header, report_only=False):
         # type: (Text, bool) -> None
@@ -120,7 +136,7 @@ class ParsedHpkpHeader(object):
             if 'pin-sha256' in hpkp_directive:
                 pin_sha256_list.append(hpkp_directive.split('pin-sha256=')[1].strip(' "'))
             elif 'max-age' in hpkp_directive:
-                self.max_age = hpkp_directive.split('max-age=')[1].strip()
+                self.max_age = int(hpkp_directive.split('max-age=')[1].strip())
             elif 'includesubdomains' in hpkp_directive.lower():
                 # Some websites have a different case for IncludeSubDomains
                 self.include_subdomains = True
@@ -132,7 +148,7 @@ class ParsedHpkpHeader(object):
         self.pin_sha256_list = pin_sha256_list
 
 
-class HttpHeadersScanScanResult(plugin_base.PluginScanResult):
+class HttpHeadersScanResult(plugin_base.PluginScanResult):
     """The result of running a HttpHeadersScanCommand on a specific server.
 
     Attributes:
@@ -154,8 +170,8 @@ class HttpHeadersScanScanResult(plugin_base.PluginScanResult):
     COMMAND_TITLE = u'HTTP Security Headers'
 
     def __init__(self, server_info, scan_command, raw_hsts_header, raw_hpkp_header, hpkp_report_only, cert_chain):
-        # type: (ServerConnectivityInfo, HttpHeadersPluginScanCommand, Text, Text, bool, List[X509Certificate]) -> None
-        super(HttpHeadersScanScanResult, self).__init__(server_info, scan_command)
+        # type: (ServerConnectivityInfo, HttpHeadersScanCommand, Text, Text, bool, List[X509Certificate]) -> None
+        super(HttpHeadersScanResult, self).__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
 

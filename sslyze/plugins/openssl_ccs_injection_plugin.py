@@ -11,7 +11,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLConnection
 
 
-class OpenSslCcsInjectionPluginScanCommand(plugin_base.PluginScanCommand):
+class OpenSslCcsInjectionScanCommand(plugin_base.PluginScanCommand):
     """Test the server(s) for the OpenSSL CCS injection vulnerability (CVE-2014-0224).
     """
 
@@ -26,7 +26,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [OpenSslCcsInjectionPluginScanCommand]
+        return [OpenSslCcsInjectionScanCommand]
 
     def srecv(self):
         r = self._sock.recv(4096)
@@ -34,7 +34,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         return r != ''
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, OpenSslCcsInjectionPluginScanCommand) -> OpenSslCcsInjectionScanScanResult
+        # type: (ServerConnectivityInfo, OpenSslCcsInjectionScanCommand) -> OpenSslCcsInjectionScanResult
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         self._ssl_version = server_info.highest_ssl_version_supported
         is_vulnerable = False
@@ -227,7 +227,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         return r
 
 
-class OpenSslCcsInjectionScanScanResult(PluginScanResult):
+class OpenSslCcsInjectionScanResult(PluginScanResult):
     """The result of running an OpenSslCcsInjectionScanCommand on a specific server.
 
     Attributes:
@@ -237,8 +237,8 @@ class OpenSslCcsInjectionScanScanResult(PluginScanResult):
     COMMAND_TITLE = u'OpenSSL CCS Injection'
 
     def __init__(self, server_info, scan_command, is_vulnerable_to_ccs_injection):
-        # type: (ServerConnectivityInfo, OpenSslCcsInjectionPluginScanCommand, bool) -> None
-        super(OpenSslCcsInjectionScanScanResult, self).__init__(server_info, scan_command)
+        # type: (ServerConnectivityInfo, OpenSslCcsInjectionScanCommand, bool) -> None
+        super(OpenSslCcsInjectionScanResult, self).__init__(server_info, scan_command)
         self.is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection
 
     def as_xml(self):

@@ -222,7 +222,7 @@ class SessionResumptionPlugin(plugin_base.Plugin):
         return new_session
 
 
-class ResumptionRateResult(PluginResult):
+class SessionResumptionRateResult(PluginResult):
     """The result of running SessionResumptionRateScanCommand on a specific server.
 
     Attributes:
@@ -243,7 +243,7 @@ class ResumptionRateResult(PluginResult):
             successful_resumptions_nb,  # type: int
             errored_resumptions_list    # type: List[Text]
     ):
-        super(ResumptionRateResult, self).__init__(server_info, scan_command)
+        super(SessionResumptionRateResult, self).__init__(server_info, scan_command)
         self.attempted_resumptions_nb = attempted_resumptions_nb
         self.successful_resumptions_nb = successful_resumptions_nb
         self.errored_resumptions_list = errored_resumptions_list
@@ -307,7 +307,7 @@ class ResumptionRateResult(PluginResult):
 
 
 
-class ResumptionResult(ResumptionRateResult):
+class SessionResumptionSupportResult(SessionResumptionRateResult):
     """The result of running --resum on a specific server; also has all the attributes of ResumptionRateResult.
 
     Attributes:
@@ -328,8 +328,8 @@ class ResumptionResult(ResumptionRateResult):
             ticket_resumption_failed_reason=None,   # type: Optional[Text]
             ticket_resumption_exception=None        # type: Optional[Exception]
     ):
-        super(ResumptionResult, self).__init__(server_info, scan_command, attempted_resumptions_nb,
-                                               successful_resumptions_nb, errored_resumptions_list)
+        super(SessionResumptionSupportResult, self).__init__(server_info, scan_command, attempted_resumptions_nb,
+                                                             successful_resumptions_nb, errored_resumptions_list)
 
         self.is_ticket_resumption_supported = is_ticket_resumption_supported
         self.ticket_resumption_failed_reason = ticket_resumption_failed_reason
@@ -344,7 +344,7 @@ class ResumptionResult(ResumptionRateResult):
 
     def as_text(self):
         # Same output as --resum_rate but add a line about TLS ticket resumption at the end
-        result_txt = super(ResumptionResult, self).as_text()
+        result_txt = super(SessionResumptionSupportResult, self).as_text()
 
         if self.ticket_resumption_error:
             ticket_txt = u'ERROR: {}'.format(self.ticket_resumption_error)
@@ -362,7 +362,7 @@ class ResumptionResult(ResumptionRateResult):
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
 
         # We keep the session resumption XML node
-        resum_rate_xml = super(ResumptionResult, self).as_xml()
+        resum_rate_xml = super(SessionResumptionSupportResult, self).as_xml()
         session_resum_xml = resum_rate_xml[0]
         xml_result.append(session_resum_xml)
 

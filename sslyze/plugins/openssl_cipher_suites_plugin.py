@@ -302,7 +302,7 @@ class ErroredCipherSuite(CipherSuite):
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
 
-class OpenSSLCipherSuitesResult(PluginResult):
+class CipherSuiteScanResult(PluginResult):
     """The result of running a CipherSuiteScanCommand on a specific server.
 
     Attributes:
@@ -327,7 +327,7 @@ class OpenSSLCipherSuitesResult(PluginResult):
             errored_cipher_list    # type: List[ErroredCipherSuite]
             ):
         # type: (...) -> None
-        super(OpenSSLCipherSuitesResult, self).__init__(server_info, scan_command)
+        super(CipherSuiteScanResult, self).__init__(server_info, scan_command)
 
         self.preferred_cipher = preferred_cipher
 

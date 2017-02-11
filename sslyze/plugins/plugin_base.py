@@ -123,24 +123,3 @@ class PluginScanResult(object):
     def _format_field(title, value):
         # type: (Text, Text) -> Text
         return u'      {0:<35}{1}'.format(title, value)
-
-
-class PluginRaisedExceptionScanResult(PluginScanResult):
-    """The result returned when a plugin threw an exception while doing process_task().
-    """
-
-    def __init__(self, server_info, scan_command, exception):
-        # type: (ServerConnectivityInfo, PluginScanCommand, Exception) -> None
-        super(PluginRaisedExceptionScanResult, self).__init__(server_info, scan_command)
-        # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
-        self.error_message = u'{} - {}'.format(str(exception.__class__.__name__), str(exception))
-
-    TITLE_TXT_FORMAT = u'Unhandled exception while running --{command}:'
-
-    def as_text(self):
-        # type: () -> List[Text]
-        return [self.TITLE_TXT_FORMAT.format(command=self.scan_command.get_cli_argument()), self.error_message]
-
-    def as_xml(self):
-        # type: () -> Element
-        return Element(self.scan_command.get_cli_argument(), exception=self.as_text()[1])

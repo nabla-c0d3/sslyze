@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import random
+from _elementtree import Element
 from multiprocessing import JoinableQueue
 
 from sslyze.plugins.plugin_base import PluginScanResult
@@ -9,8 +10,30 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.synchronous_scanner import SynchronousScanner
 from sslyze.utils.worker_process import WorkerProcess
 from typing import Iterable
+from typing import List
 from typing import Optional
 from typing import Text
+
+
+class PluginRaisedExceptionScanResult(PluginScanResult):
+    """The result returned when a scan command threw an exception while being run by a ConcurrentScanner.
+    """
+
+    def __init__(self, server_info, scan_command, exception):
+        # type: (ServerConnectivityInfo, PluginScanCommand, Exception) -> None
+        super(PluginRaisedExceptionScanResult, self).__init__(server_info, scan_command)
+        # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
+        self.error_message = u'{} - {}'.format(str(exception.__class__.__name__), str(exception))
+
+    TITLE_TXT_FORMAT = u'Unhandled exception while running --{command}:'
+
+    def as_text(self):
+        # type: () -> List[Text]
+        return [self.TITLE_TXT_FORMAT.format(command=self.scan_command.get_cli_argument()), self.error_message]
+
+    def as_xml(self):
+        # type: () -> Element
+        return Element(self.scan_command.get_cli_argument(), exception=self.as_text()[1])
 
 
 class ConcurrentScanner(object):

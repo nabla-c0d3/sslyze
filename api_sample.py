@@ -8,12 +8,11 @@ import sys
 
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 
-from sslyze.concurrent_scanner import ConcurrentScanner
+from sslyze.concurrent_scanner import ConcurrentScanner, PluginRaisedExceptionScanResult
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPluginScanCommand
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
-from sslyze.plugins.plugin_base import PluginRaisedExceptionScanResult
 from sslyze.synchronous_scanner import SynchronousScanner
 from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv10ScanCommand, Sslv30ScanCommand
 

@@ -4,6 +4,7 @@
 
 from multiprocessing import Process
 from multiprocessing import JoinableQueue
+
 from sslyze.synchronous_scanner import SynchronousScanner
 
 
@@ -25,7 +26,7 @@ class WorkerProcess(Process):
         """The process will first complete tasks it gets from self.queue_in.
         Once it gets notified that all the tasks have been completed, it terminates.
         """
-        from sslyze.plugins.plugin_base import PluginRaisedExceptionScanResult
+        from sslyze.concurrent_scanner import PluginRaisedExceptionScanResult
 
         # Start processing task in the priority queue first
         current_queue_in = self.priority_queue_in
@@ -54,5 +55,3 @@ class WorkerProcess(Process):
             # Send the result to queue_out
             self.queue_out.put(result)
             current_queue_in.task_done()
-
-        return

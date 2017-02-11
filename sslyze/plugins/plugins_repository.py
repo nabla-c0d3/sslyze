@@ -48,7 +48,7 @@ class PluginsRepository(object):
         return self._scan_command_classes_to_plugin_classes[scan_command.__class__]
 
     def get_available_commands(self):
-        # type: () -> List[PluginScanCommand]
+        # type: () -> List[Type[PluginScanCommand]]
         """Get the list of all available scan comands across all plugins.
         """
         return self._scan_command_classes_to_plugin_classes.keys()

@@ -9,7 +9,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
 
 
-class FallbackScsvPluginScanCommand(PluginScanCommand):
+class FallbackScsvScanCommand(PluginScanCommand):
     """Test the server(s) for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.
     """
 
@@ -24,10 +24,10 @@ class FallbackScsvPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [FallbackScsvPluginScanCommand]
+        return [FallbackScsvScanCommand]
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, FallbackScsvPluginScanCommand) -> FallbackScsvScanScanResult
+        # type: (ServerConnectivityInfo, FallbackScsvScanCommand) -> FallbackScsvScanResult
         if server_info.highest_ssl_version_supported.value <= OpenSslVersionEnum.SSLV3.value:
             raise ValueError(u'Server only supports SSLv3; no downgrade attacks are possible')
 
@@ -57,10 +57,10 @@ class FallbackScsvPlugin(plugin_base.Plugin):
         finally:
             ssl_connection.close()
 
-        return FallbackScsvScanScanResult(server_info, scan_command, supports_fallback_scsv)
+        return FallbackScsvScanResult(server_info, scan_command, supports_fallback_scsv)
 
 
-class FallbackScsvScanScanResult(PluginScanResult):
+class FallbackScsvScanResult(PluginScanResult):
     """The result of running a FallbackScsvScanCommand on a specific server.
 
     Attributes:
@@ -71,8 +71,8 @@ class FallbackScsvScanScanResult(PluginScanResult):
     COMMAND_TITLE = u'Downgrade Attacks'
 
     def __init__(self, server_info, scan_command, supports_fallback_scsv):
-        # type: (ServerConnectivityInfo, FallbackScsvPluginScanCommand, bool) -> None
-        super(FallbackScsvScanScanResult, self).__init__(server_info, scan_command)
+        # type: (ServerConnectivityInfo, FallbackScsvScanCommand, bool) -> None
+        super(FallbackScsvScanResult, self).__init__(server_info, scan_command)
         self.supports_fallback_scsv = supports_fallback_scsv
 
     def as_text(self):

@@ -113,7 +113,9 @@ class ConcurrentScanner(object):
         """Return the result of previously queued scan commands; new commands cannot be queued once this is called.
 
         Yields:
-            PluginResult: The result of the scan command.
+            PluginResult: The result of the scan command, which will be an instance of the scan command's corresponding
+            PluginResult subclass. If there was an unexpected error while running the scan command, this will be a
+            PluginRaisedExceptionResult instance.
         """
         # Put a 'None' sentinel in the queue to let the each process know when every task has been completed
         for _ in range(self._get_current_processes_nb()):

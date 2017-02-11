@@ -5,17 +5,17 @@
 import os
 import sys
 
-from sslyze.concurrent_scanner import ConcurrentScanner
-from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
-from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanCommand
 
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 
+from sslyze.concurrent_scanner import ConcurrentScanner
+from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
+from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
-import sslyze.plugins.plugin_base
+from sslyze.plugins.plugin_base import PluginRaisedExceptionResult
 from sslyze.synchronous_scanner import SynchronousScanner
-from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv10ScanCommand, Sslv30ScanCommand, OpenSSLCipherSuitesResult
+from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv10ScanCommand, Sslv30ScanCommand
 
 if __name__ == u'__main__':
     # Setup the server to scan and ensure it is online/reachable
@@ -52,7 +52,7 @@ if __name__ == u'__main__':
     print(u'\nProcessing results...')
     for plugin_result in concurrent_scanner.get_results():
         # Sometimes a plugin command can unexpectedly fail (as a bug); it is returned as a PluginRaisedExceptionResult
-        if isinstance(plugin_result, sslyze.plugins.plugin_base.PluginRaisedExceptionResult):
+        if isinstance(plugin_result, PluginRaisedExceptionResult):
             raise RuntimeError(u'Scan command failed: {}'.format(plugin_result.as_text()))
 
         # Each plugin result has attributes with the information you're looking for, specific to each plugin

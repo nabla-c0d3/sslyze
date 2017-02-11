@@ -5,6 +5,7 @@ import inspect
 import sys
 from os.path import abspath, realpath, dirname
 from sslyze.plugins.utils.trust_store.trust_store import TrustStore
+from typing import List
 
 
 def _get_script_dir(follow_symlinks=True):

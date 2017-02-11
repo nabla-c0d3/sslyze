@@ -3,6 +3,8 @@
 """
 
 import socket
+
+from enum import Enum
 from typing import Optional
 from nassl import SSLV23, SSLV3, TLSV1, TLSV1_2, SSLV2, TLSV1_1
 from nassl.ssl_client import ClientCertificateRequested
@@ -19,7 +21,7 @@ class ServerConnectivityError(ValueError):
         self.error_msg = error_msg
 
 
-class ClientAuthenticationServerConfigurationEnum(object):
+class ClientAuthenticationServerConfigurationEnum(Enum):
     """Whether the server asked for client authentication.
     """
     DISABLED = 1
@@ -62,9 +64,9 @@ class ServerConnectivityInfo(object):
     }
 
     CONNECTIVITY_ERROR_NAME_NOT_RESOLVED = u'Could not resolve {hostname}'
-    CONNECTIVITY_ERROR_TIMEOUT = 'Could not connect (timeout)'
-    CONNECTIVITY_ERROR_REJECTED = 'Connection rejected'
-    CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
+    CONNECTIVITY_ERROR_TIMEOUT = u'Could not connect (timeout)'
+    CONNECTIVITY_ERROR_REJECTED = u'Connection rejected'
+    CONNECTIVITY_ERROR_HANDSHAKE_ERROR = u'Could not complete an SSL handshake'
 
 
     def __init__(

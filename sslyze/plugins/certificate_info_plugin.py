@@ -215,7 +215,6 @@ class CertificateInfoResult(PluginResult):
 
         # We only keep the dictionary as a nassl.OcspResponse is not pickable
         self.ocsp_response = ocsp_response.as_dict() if ocsp_response else None
-        print ocsp_response.verify(main_trust_store.path)
         self.is_ocsp_response_trusted = ocsp_response.verify(main_trust_store.path) if ocsp_response else False
 
         # We create pickable Certificates from nassl.X509Certificates which are not pickable

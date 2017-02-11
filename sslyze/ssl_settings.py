@@ -5,6 +5,8 @@
 import os
 from base64 import b64encode
 from urllib import quote
+
+from enum import Enum
 from typing import Optional
 
 try:
@@ -20,7 +22,7 @@ from nassl import SSL_FILETYPE_PEM, SSL_FILETYPE_ASN1
 from nassl.ssl_client import SslClient
 
 
-class TlsWrappedProtocolEnum(object):
+class TlsWrappedProtocolEnum(Enum):
     """The list of TLS-wrapped protocols supported by SSLyze.
 
     SSLyze uses this to figure out how to establish an SSL/TLS connection to the server and what kind of "hello" message
@@ -56,17 +58,17 @@ class ClientAuthenticationCredentials(object):
         """
         self.client_certificate_chain_path = client_certificate_chain_path
         if not os.path.isfile(self.client_certificate_chain_path):
-            raise ValueError('Could not open the client certificate file')
+            raise ValueError(u'Could not open the client certificate file')
 
         self.client_key_path = client_key_path
         if not os.path.isfile(self.client_key_path):
-            raise ValueError('Could not open the client private key file')
+            raise ValueError(u'Could not open the client private key file')
 
         self.client_key_password = client_key_password
 
         self.client_key_type = client_key_type
         if self.client_key_type not in [SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM]:
-            raise ValueError('Invalid certificate format specified')
+            raise ValueError(u'Invalid certificate format specified')
 
         # Try to load the cert and key in OpenSSL; will raise an exception if something is wrong
         SslClient(client_certchain_file=self.client_certificate_chain_path, client_key_file=self.client_key_path,
@@ -109,5 +111,5 @@ class HttpConnectTunnelingSettings(object):
         """
         header = ''
         if self.basic_auth_user is not None:
-            header = b64encode('{0}:{1}'.format(quote(self.basic_auth_user), quote(self.basic_auth_password)))
+            header = b64encode(u'{0}:{1}'.format(quote(self.basic_auth_user), quote(self.basic_auth_password)))
         return header

@@ -5,6 +5,7 @@
 from xml.etree.ElementTree import Element
 
 import nassl
+from enum import Enum
 from nassl import SSL_OP_NO_TICKET
 
 from sslyze.plugins import plugin_base
@@ -46,7 +47,7 @@ class SessionResumptionRateScanCommand(plugin_base.ScanCommand):
         return True
 
 
-class TslSessionTicketSupportEnum(object):
+class TslSessionTicketSupportEnum(Enum):
     SUCCEEDED = 1
     FAILED_TICKET_NOT_ASSIGNED = 2
     FAILED_TICKED_IGNORED = 3
@@ -157,7 +158,7 @@ class SessionResumptionPlugin(plugin_base.Plugin):
         return True
 
     def _resume_with_session_ticket(self, server_info):
-        # type: (ServerConnectivityInfo) -> int
+        # type: (ServerConnectivityInfo) -> TslSessionTicketSupportEnum
         """Perform one session resumption using TLS Session Tickets.
         """
         # Connect to the server and keep the SSL session

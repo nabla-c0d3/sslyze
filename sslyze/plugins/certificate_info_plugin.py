@@ -7,7 +7,7 @@ from xml.etree.ElementTree import Element
 from nassl._nassl import OpenSSLError
 
 from nassl import X509_NAME_MISMATCH, X509_NAME_MATCHES_SAN, X509_NAME_MATCHES_CN
-from nassl.ocsp_response import OcspResponse
+from nassl.ocsp_response import OcspResponse, OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
 from nassl.x509_certificate import X509Certificate
 from sslyze.plugins import plugin_base
@@ -54,7 +54,7 @@ class CertificateInfoScanCommand(ScanCommand):
     """
 
     def __init__(self, ca_file=None, print_full_certificate=False):
-        # type: (Optional[str], Optional[bool]) -> None
+        # type: (Optional[str], bool) -> None
         super(CertificateInfoScanCommand, self).__init__()
         self.custom_ca_file = ca_file
         self.should_print_full_certificate = print_full_certificate
@@ -207,16 +207,23 @@ class CertificateInfoResult(PluginResult):
             certificate_chain,              # type: List[X509Certificate]
             path_validation_result_list,    # type: List[PathValidationResult]
             path_validation_error_list,     # type: List[PathValidationError]
-            ocsp_response                   # type: Optional[Dict]
+            ocsp_response                   # type: OcspResponse
             ):
         # type: (...) -> None
         super(CertificateInfoResult, self).__init__(server_info, scan_command)
 
         main_trust_store = TrustStoresRepository.get_main()
 
-        # We only keep the dictionary as a nassl.OcspResponse is not pickable
-        self.ocsp_response = ocsp_response.as_dict() if ocsp_response else None
-        self.is_ocsp_response_trusted = ocsp_response.verify(main_trust_store.path) if ocsp_response else False
+        self.ocsp_response = None
+        self.is_ocsp_response_trusted = None
+        if ocsp_response:
+            # We only keep the dictionary as a nassl.OcspResponse is not pickable
+            self.ocsp_response = ocsp_response.as_dict()
+            try:
+                ocsp_response.verify(main_trust_store.path)
+                self.is_ocsp_response_trusted = True
+            except OcspResponseNotTrustedError:
+                self.is_ocsp_response_trusted = False
 
         # We create pickable Certificates from nassl.X509Certificates which are not pickable
         self.certificate_chain = [Certificate.from_nassl(x509_cert) for x509_cert in certificate_chain]

@@ -3,12 +3,21 @@ from typing import Dict
 from typing import Text
 
 
-class Certificate(object):
-    """Pick-able object for storing information contained within an nassl.X509Certificate.
+# Pick-able object for storing information contained within an nassl.X509Certificate.
+# This is needed because we cannot directly send an X509Certificate to a different process (which would happen during
+# a scan with the ConcurrentScanner) as it is not pickable.
 
-    This is needed because we cannot directly send an X509Certificate to a different process (which would happen during
-    a scan) as it is not pickable.
-     """
+class Certificate(object):
+    """An X509 certificate.
+
+    Attributes:
+        as_pem (Text): The certificate in PEM format.
+        as_text (Text): The certificate in human-readable format.
+        as_dict (Dict): The certificate as a dictionary.
+        sha1_fingerprint (Text): The SHA1 fingerprint of the certificate.
+        hpkp_pin (Text): The HPKP pin (ie. base64-encoded SHA256 of the SPKI, as described in RFC 7469) of the
+            certificate.
+    """
 
     @classmethod
     def from_nassl(cls, nassl_x509_certificate):

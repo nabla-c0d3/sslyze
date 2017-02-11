@@ -9,6 +9,15 @@ from typing import Text
 
 
 class TrustStore(object):
+    """A set of root certificates to be used for certificate validation.
+
+    By default, SSLyze packages the following trust stores: Mozilla, Microsoft, Apple, Android and Java.
+
+    Attributes:
+        path (Text): The path to the PEM-formatted file containing the root certificates.
+        name (Text): The human-readable name of the trust store (such as "Mozilla").
+        version (Text): The human-readable version or date of the trust store (such as "09/2016").
+    """
 
     def __init__(self, path, name, version, ev_oids=None):
         # type: (Text, Text, Text, Optional[List[Text]]) -> None

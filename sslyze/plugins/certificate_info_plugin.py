@@ -23,14 +23,21 @@ from typing import Text
 from typing import Tuple
 
 
-class CertificateInfoPluginScanCommand(PluginScanCommand):
-    """Verify the validity of the server(s) certificate(s) against various trust stores and checks for OCSP stapling
-    support.
+class CertificateInfoScanCommand(PluginScanCommand):
+    """Verify the validity of the server(s) certificate(s) against various trust stores (Mozilla, Apple, etc.), and
+    check for OCSP stapling support.
     """
 
     def __init__(self, ca_file=None, print_full_certificate=False):
         # type: (Optional[Text], Optional[bool]) -> None
-        super(CertificateInfoPluginScanCommand, self).__init__()
+        """
+
+        Args:
+            ca_file (Text): The path to a custom trust store file to use for certificate validation. The file should
+                contain PEM-formatted root certificates.
+            print_full_certificate (bool): Deprecated - do not use.
+        """
+        super(CertificateInfoScanCommand, self).__init__()
         self.custom_ca_file = ca_file
         self.should_print_full_certificate = print_full_certificate
 
@@ -41,13 +48,15 @@ class CertificateInfoPluginScanCommand(PluginScanCommand):
 
 class PathValidationResult(object):
     """The result of trying to validate a server's certificate chain using a specific trust store.
+
+    Attributes:
+        trust_store (TrustStore): The trust store used for validation.
+        verify_string (Text): The string returned by OpenSSL's validation function.
+        is_certificate_trusted (bool): Whether the certificate chain is trusted when using supplied the trust_store.
     """
     def __init__(self, trust_store, verify_string):
         # type: (TrustStore, Text) -> None
-        # The trust store used for validation
         self.trust_store = trust_store
-
-        # The string returned by OpenSSL's validation function
         self.verify_string = verify_string
         self.is_certificate_trusted = True if verify_string == 'ok' else False
 
@@ -55,6 +64,10 @@ class PathValidationResult(object):
 class PathValidationError(object):
     """An exception was raised while trying to validate a server's certificate using a specific trust store; should
     never happen.
+
+    Attributes:
+        trust_store (TrustStore): The trust store used for validation.
+        error_message (Text): The exception that was raised formatted as a string.
     """
     def __init__(self, trust_store, exception):
         # type: (TrustStore, Exception) -> None
@@ -69,7 +82,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [CertificateInfoPluginScanCommand]
+        return [CertificateInfoScanCommand]
 
     @classmethod
     def get_cli_option_group(cls):
@@ -97,7 +110,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, CertificateInfoPluginScanCommand) -> CertificateInfoScanScanResult
+        # type: (ServerConnectivityInfo, CertificateInfoScanCommand) -> CertificateInfoScanResult
         final_trust_store_list = list(TrustStoresRepository.get_all())
         if scan_command.custom_ca_file:
             final_trust_store_list.append(TrustStore(scan_command.custom_ca_file, u'Custom --ca_file', u'N/A'))
@@ -136,8 +149,8 @@ class CertificateInfoPlugin(plugin_base.Plugin):
             raise RuntimeError(u'Could not connect to the server; last error: {}'.format(last_exception))
 
         # All done
-        return CertificateInfoScanScanResult(server_info, scan_command, certificate_chain, path_validation_result_list,
-                                             path_validation_error_list, ocsp_response)
+        return CertificateInfoScanResult(server_info, scan_command, certificate_chain, path_validation_result_list,
+                                        path_validation_error_list, ocsp_response)
 
 
     @staticmethod
@@ -170,7 +183,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         return x509_cert_chain, verify_str, ocsp_response
 
 
-class CertificateInfoScanScanResult(PluginScanResult):
+class CertificateInfoScanResult(PluginScanResult):
     """The result of running a CertificateInfoScanCommand on a specific server.
 
     Attributes:
@@ -181,7 +194,7 @@ class CertificateInfoScanScanResult(PluginScanResult):
             validation failed or the verified chain could not be built.
         is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
         path_validation_result_list (List[PathValidationResult]): A list of attempts at validating the server's
-            certificate chain path using various trust stores.
+            certificate chain path using various trust stores (Mozilla, Apple, etc.).
         path_validation_error_list (List[PathValidationError]):  A list of attempts at validating the server's
             certificate chain path that triggered an unexpected error.
         hostname_validation_result (int): Validation result of the certificate hostname.
@@ -198,14 +211,14 @@ class CertificateInfoScanScanResult(PluginScanResult):
     def __init__(
             self,
             server_info,                    # type: ServerConnectivityInfo
-            scan_command,                   # type: CertificateInfoPluginScanCommand
+            scan_command,                   # type: CertificateInfoScanCommand
             certificate_chain,              # type: List[X509Certificate]
             path_validation_result_list,    # type: List[PathValidationResult]
             path_validation_error_list,     # type: List[PathValidationError]
             ocsp_response                   # type: OcspResponse
             ):
         # type: (...) -> None
-        super(CertificateInfoScanScanResult, self).__init__(server_info, scan_command)
+        super(CertificateInfoScanResult, self).__init__(server_info, scan_command)
 
         main_trust_store = TrustStoresRepository.get_main()
 

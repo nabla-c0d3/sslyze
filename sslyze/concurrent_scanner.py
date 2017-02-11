@@ -17,6 +17,9 @@ from typing import Text
 
 class PluginRaisedExceptionScanResult(PluginScanResult):
     """The result returned when a scan command threw an exception while being run by a ConcurrentScanner.
+
+    Attributes:
+        error_message (Text): Text-formatted details about the exception that occurred.
     """
 
     def __init__(self, server_info, scan_command, exception):

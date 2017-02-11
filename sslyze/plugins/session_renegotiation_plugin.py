@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Plugin to test the server server for insecure rengotiation.
-"""
 
 import socket
 from xml.etree.ElementTree import Element
@@ -12,7 +10,7 @@ from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class SessionRenegotiationPluginScanCommand(plugin_base.PluginScanCommand):
+class SessionRenegotiationScanCommand(plugin_base.PluginScanCommand):
     """Test the server(s) for client-initiated renegotiation and secure renegotiation support.
     """
 
@@ -31,7 +29,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, SessionRenegotiationPluginScanCommand) -> SessionRenegotiationScanResult
+        # type: (ServerConnectivityInfo, SessionRenegotiationScanCommand) -> SessionRenegotiationScanResult
         accepts_client_renegotiation = self._test_client_renegotiation(server_info)
         supports_secure_renegotiation = self._test_secure_renegotiation(server_info)
         return SessionRenegotiationScanResult(server_info, scan_command, accepts_client_renegotiation,
@@ -116,6 +114,7 @@ class SessionRenegotiationScanResult(PluginScanResult):
     COMMAND_TITLE = u'Session Renegotiation'
 
     def __init__(self, server_info, scan_command, accepts_client_renegotiation, supports_secure_renegotiation):
+        # type: (ServerConnectivityInfo, SessionRenegotiationScanCommand, bool, bool) -> None
         super(SessionRenegotiationScanResult, self).__init__(server_info, scan_command)
         self.accepts_client_renegotiation = accepts_client_renegotiation
         self.supports_secure_renegotiation = supports_secure_renegotiation

@@ -238,10 +238,10 @@ class CertificateInfoScanResult(PluginScanResult):
         self.is_leaf_certificate_ev = main_trust_store.is_extended_validation(self.certificate_chain[0])
 
         # Try to build the verified chain
-        self.verified_certificate_chain = []
+        tentative_verified_chain = []
         self.is_certificate_chain_order_valid = True
         try:
-            self.verified_certificate_chain = main_trust_store.build_verified_certificate_chain(self.certificate_chain)
+            tentative_verified_chain = main_trust_store.build_verified_certificate_chain(self.certificate_chain)
         except InvalidCertificateChainOrderError:
             self.is_certificate_chain_order_valid = False
         except AnchorCertificateNotInTrustStoreError:
@@ -256,6 +256,8 @@ class CertificateInfoScanResult(PluginScanResult):
         if not is_chain_trusted_by_main_store:
             # Somehow we were able to build a verified chain but the validation failed - expired cert?
             self.verified_certificate_chain = []
+        else:
+            self.verified_certificate_chain = tentative_verified_chain
 
         self.has_anchor_in_certificate_chain = None
         if self.verified_certificate_chain:
@@ -311,7 +313,6 @@ class CertificateInfoScanResult(PluginScanResult):
             if path_result.is_certificate_trusted:
                 # EV certs - Only Mozilla supported for now
                 ev_txt = u''
-                # TODO: Validate tath this works
                 if self.is_leaf_certificate_ev and TrustStoresRepository.get_main() == path_result.trust_store:
                     ev_txt = u', Extended Validation'
                 path_txt = u'OK - Certificate is trusted{}'.format(ev_txt)

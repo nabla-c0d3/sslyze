@@ -5,12 +5,11 @@ from __future__ import print_function
 import os
 import sys
 
-from sslyze.concurrent_scanner import ConcurrentScanner
-from sslyze.plugins.plugins_repository import PluginsRepository
-
 if not hasattr(sys,"frozen"):
     sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
 
+from sslyze.concurrent_scanner import ConcurrentScanner
+from sslyze.plugins.plugins_repository import PluginsRepository
 from sslyze.cli.output_hub import OutputHub
 from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze import __version__

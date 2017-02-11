@@ -25,7 +25,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [SessionRenegotiationPluginScanCommand]
+        return [SessionRenegotiationScanCommand]
 
 
     def process_task(self, server_info, scan_command):

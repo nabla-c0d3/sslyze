@@ -1,5 +1,5 @@
 import unittest
-from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin, FallbackScsvPluginScanCommand
+from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin, FallbackScsvScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -10,7 +10,7 @@ class FallbackScsvPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = FallbackScsvPlugin()
-        plugin_result = plugin.process_task(server_info, FallbackScsvPluginScanCommand())
+        plugin_result = plugin.process_task(server_info, FallbackScsvScanCommand())
 
         self.assertTrue(plugin_result.supports_fallback_scsv)
 

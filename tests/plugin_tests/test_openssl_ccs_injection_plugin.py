@@ -1,7 +1,6 @@
 import unittest
 
-from sslyze.plugins.heartbleed_plugin import HeartbleedPluginScanCommand
-from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin
+from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin, OpenSslCcsInjectionScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -12,7 +11,7 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCcsInjectionPlugin()
-        plugin_result = plugin.process_task(server_info, HeartbleedPluginScanCommand())
+        plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
 
         self.assertFalse(plugin_result.is_vulnerable_to_ccs_injection)
 

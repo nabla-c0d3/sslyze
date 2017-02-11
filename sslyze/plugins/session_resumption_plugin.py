@@ -350,12 +350,16 @@ class SessionResumptionSupportScanResult(PluginScanResult):
             self.ticket_resumption_error = u'{} - {}'.format(str(ticket_resumption_exception.__class__.__name__),
                                                              str(ticket_resumption_exception))
 
+        # We use a SessionResumptionRateScanResult to re-use code in as_text() and as_xml()
+        self._rate_result = SessionResumptionRateScanResult(server_info, scan_command, attempted_resumptions_nb,
+                                                            successful_resumptions_nb, errored_resumptions_list)
+
     COMMAND_TITLE = u'Session Resumption'
     RESUMPTION_LINE_FORMAT = u'      {resumption_type:<35}{result}'
 
     def as_text(self):
         # Same output as --resum_rate but add a line about TLS ticket resumption at the end
-        result_txt = super(SessionResumptionSupportScanResult, self).as_text()
+        result_txt = self._rate_result.as_text()
 
         if self.ticket_resumption_error:
             ticket_txt = u'ERROR: {}'.format(self.ticket_resumption_error)
@@ -373,7 +377,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
 
         # We keep the session resumption XML node
-        resum_rate_xml = super(SessionResumptionSupportScanResult, self).as_xml()
+        resum_rate_xml = self._rate_result.as_xml()
         session_resum_xml = resum_rate_xml[0]
         xml_result.append(session_resum_xml)
 

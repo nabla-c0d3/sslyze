@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoPluginScanCommand
+from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import HttpConnectTunnelingSettings
 from tiny_proxy import ProxyHandler
@@ -51,7 +51,7 @@ class HttpsTunnelTestCase(unittest.TestCase):
 
 
             plugin = CertificateInfoPlugin()
-            plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
+            plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
             self.assertTrue(plugin_result.certificate_chain)
 

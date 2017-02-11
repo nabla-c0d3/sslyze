@@ -93,7 +93,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
                     is_vulnerable = False
 
         self._sock.close()
-        return OpenSslCcsInjectionScanScanResult(server_info, scan_command, is_vulnerable)
+        return OpenSslCcsInjectionScanResult(server_info, scan_command, is_vulnerable)
 
 
     ssl_tokens = {

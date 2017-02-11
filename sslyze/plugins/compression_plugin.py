@@ -9,7 +9,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from typing import Text
 
 
-class CompressionPluginScanCommand(PluginScanCommand):
+class CompressionScanCommand(PluginScanCommand):
     """Test the server(s) for Zlib compression support.
     """
 
@@ -24,10 +24,10 @@ class CompressionPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [CompressionPluginScanCommand]
+        return [CompressionScanCommand]
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, CompressionPluginScanCommand) -> CompressionScanResult
+        # type: (ServerConnectivityInfo, CompressionScanCommand) -> CompressionScanResult
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives
@@ -58,7 +58,7 @@ class CompressionScanResult(PluginScanResult):
     COMMAND_TITLE = u'Deflate Compression'
 
     def __init__(self, server_info, scan_command, compression_name):
-        # type: (ServerConnectivityInfo, CompressionPluginScanCommand, Text) -> None
+        # type: (ServerConnectivityInfo, CompressionScanCommand, Text) -> None
         super(CompressionScanResult, self).__init__(server_info, scan_command)
         self.compression_name = compression_name
 

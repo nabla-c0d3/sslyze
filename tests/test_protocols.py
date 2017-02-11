@@ -4,7 +4,7 @@ import unittest
 
 import logging
 
-from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoPluginScanCommand
+from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthenticationServerConfigurationEnum
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 
@@ -18,7 +18,7 @@ class ProtocolsTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertEquals(len(plugin_result.certificate_chain), 3)
 
@@ -47,7 +47,7 @@ class ProtocolsTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertEquals(len(plugin_result.certificate_chain), 3)
 
@@ -60,7 +60,7 @@ class ProtocolsTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertEquals(len(plugin_result.certificate_chain), 3)
 
@@ -75,7 +75,7 @@ class ProtocolsTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertEquals(len(plugin_result.certificate_chain), 3)
 
@@ -96,7 +96,7 @@ class ProtocolsTestCase(unittest.TestCase):
             server_info.test_connectivity_to_server()
 
             plugin = CertificateInfoPlugin()
-            plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
+            plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
             self.assertTrue(plugin_result.as_text())
             self.assertTrue(plugin_result.as_xml())
@@ -109,7 +109,7 @@ class ProtocolsTestCase(unittest.TestCase):
             self.assertEquals(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
 
             plugin = CertificateInfoPlugin()
-            plugin_result = plugin.process_task(server_info, CertificateInfoPluginScanCommand())
+            plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
             self.assertTrue(plugin_result.as_text())
             self.assertTrue(plugin_result.as_xml())

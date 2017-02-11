@@ -9,8 +9,8 @@ import sys
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 
 from sslyze.concurrent_scanner import ConcurrentScanner, PluginRaisedExceptionScanResult
-from sslyze.plugins.certificate_info_plugin import CertificateInfoPluginScanCommand
-from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPluginScanCommand
+from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
+from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.synchronous_scanner import SynchronousScanner
@@ -43,8 +43,8 @@ if __name__ == u'__main__':
     # Queue some scan commands
     print(u'\nQueuing some commands...')
     concurrent_scanner.queue_scan_command(server_info, Sslv30ScanCommand())
-    concurrent_scanner.queue_scan_command(server_info, SessionRenegotiationPluginScanCommand())
-    concurrent_scanner.queue_scan_command(server_info, CertificateInfoPluginScanCommand())
+    concurrent_scanner.queue_scan_command(server_info, SessionRenegotiationScanCommand())
+    concurrent_scanner.queue_scan_command(server_info, CertificateInfoScanCommand())
 
     # Process the results
     reneg_result = None
@@ -62,12 +62,12 @@ if __name__ == u'__main__':
             for cipher in plugin_result.accepted_cipher_list:
                 print(u'    {}'.format(cipher.name))
 
-        elif isinstance(plugin_result.scan_command, SessionRenegotiationPluginScanCommand):
+        elif isinstance(plugin_result.scan_command, SessionRenegotiationScanCommand):
             reneg_result = plugin_result
             print(u'Client renegotiation: {}'.format(plugin_result.accepts_client_renegotiation))
             print(u'Secure renegotiation: {}'.format(plugin_result.supports_secure_renegotiation))
 
-        elif isinstance(plugin_result.scan_command, CertificateInfoPluginScanCommand):
+        elif isinstance(plugin_result.scan_command, CertificateInfoScanCommand):
             print(u'Server Certificate CN: {}'.format(
                 plugin_result.certificate_chain[0].as_dict[u'subject'][u'commonName']
             ))

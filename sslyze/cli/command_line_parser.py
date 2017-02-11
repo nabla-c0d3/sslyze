@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from optparse import OptionParser, OptionGroup
 
-from nassl import SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM
 import socket
 
+from nassl import OpenSslFileTypeEnum
 from typing import Text
 from typing import Tuple
 from sslyze.cli import FailedServerScan
@@ -198,9 +198,9 @@ class CommandLineParser(object):
         elif args_command_list.cert:
             # Private key formats
             if args_command_list.keyform == u'DER':
-                key_type = SSL_FILETYPE_ASN1
+                key_type = OpenSslFileTypeEnum.ASN1
             elif args_command_list.keyform == u'PEM':
-                key_type = SSL_FILETYPE_PEM
+                key_type = OpenSslFileTypeEnum.PEM
             else:
                 raise CommandLineParsingError(u'--keyform should be DER or PEM.')
 

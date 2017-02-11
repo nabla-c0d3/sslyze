@@ -84,15 +84,14 @@ class ProtocolsTestCase(unittest.TestCase):
 
 
     def test_starttls(self):
-        for hostname, protocol in [(u'imap.comcast.net', TlsWrappedProtocolEnum.STARTTLS_IMAP),
-                                   (u'pop.comcast.net', TlsWrappedProtocolEnum.STARTTLS_POP3),
-                                   (u'ldap.virginia.edu', TlsWrappedProtocolEnum.STARTTLS_LDAP),
-                                   (u'jabber.org', TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER),
-
-                                   # Some Heroku Postgres instance I created
-                                   (u'ec2-54-235-80-86.compute-1.amazonaws.com',
-                                    TlsWrappedProtocolEnum.STARTTLS_POSTGRES)]:
-
+        for hostname, protocol in [
+            (u'imap.comcast.net', TlsWrappedProtocolEnum.STARTTLS_IMAP),
+            (u'pop.comcast.net', TlsWrappedProtocolEnum.STARTTLS_POP3),
+            (u'ldap.uchicago.edu', TlsWrappedProtocolEnum.STARTTLS_LDAP),
+            (u'jabber.org', TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER),
+            # Some Heroku Postgres instance I created
+            (u'ec2-54-75-226-17.eu-west-1.compute.amazonaws.com', TlsWrappedProtocolEnum.STARTTLS_POSTGRES)
+        ]:
             server_info = ServerConnectivityInfo(hostname=hostname, tls_wrapped_protocol=protocol)
             server_info.test_connectivity_to_server()
 

@@ -7,7 +7,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class SessionResumptionPluginPluginTestCase(unittest.TestCase):
 
     def test_resumption_support(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.yahoo.com')
+        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = SessionResumptionPlugin()
@@ -23,7 +23,7 @@ class SessionResumptionPluginPluginTestCase(unittest.TestCase):
 
 
     def test_resumption_rate(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.yahoo.com')
+        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = SessionResumptionPlugin()

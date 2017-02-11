@@ -53,3 +53,6 @@ nassl/*
 # Certificates
 ca/*
 *.key
+
+# Sphynx
+docs/_build/*

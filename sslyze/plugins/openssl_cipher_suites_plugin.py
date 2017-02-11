@@ -20,13 +20,14 @@ from typing import Optional
 from typing import Text
 
 
-class CipherSuitePluginScanCommand(PluginScanCommand):
+class CipherSuiteScanCommand(PluginScanCommand):
 
     __metaclass__ = ABCMeta
 
     def __init__(self, http_get=False, hide_rejected_ciphers=False):
-        # type: (bool, bool) -> None
-        super(CipherSuitePluginScanCommand, self).__init__()
+        # type: (Optional[bool], Optional[bool]) -> None
+        super(CipherSuiteScanCommand, self).__init__()
+        # TODO(ad): Move these options to the CLI parser ?
         self.http_get = http_get
         self.hide_rejected_ciphers = hide_rejected_ciphers
 
@@ -35,7 +36,7 @@ class CipherSuitePluginScanCommand(PluginScanCommand):
         return True
 
 
-class Sslv20ScanCommand(CipherSuitePluginScanCommand):
+class Sslv20ScanCommand(CipherSuiteScanCommand):
     """List the SSL 2.0 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
@@ -48,7 +49,7 @@ class Sslv20ScanCommand(CipherSuitePluginScanCommand):
         return False
 
 
-class Sslv30ScanCommand(CipherSuitePluginScanCommand):
+class Sslv30ScanCommand(CipherSuiteScanCommand):
     """List the SSL 3.0 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
@@ -56,7 +57,7 @@ class Sslv30ScanCommand(CipherSuitePluginScanCommand):
         return u'sslv3'
 
 
-class Tlsv10ScanCommand(CipherSuitePluginScanCommand):
+class Tlsv10ScanCommand(CipherSuiteScanCommand):
     """List the TLS 1.0 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
@@ -64,7 +65,7 @@ class Tlsv10ScanCommand(CipherSuitePluginScanCommand):
         return u'tlsv1'
 
 
-class Tlsv11ScanCommand(CipherSuitePluginScanCommand):
+class Tlsv11ScanCommand(CipherSuiteScanCommand):
     """List the TLS 1.1 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
@@ -72,7 +73,7 @@ class Tlsv11ScanCommand(CipherSuitePluginScanCommand):
         return u'tlsv1_1'
 
 
-class Tlsv12ScanCommand(CipherSuitePluginScanCommand):
+class Tlsv12ScanCommand(CipherSuiteScanCommand):
     """List the TLS 1.2 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
@@ -125,7 +126,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
 
     def process_task(self, server_connectivity_info, scan_command):
-        # type: (ServerConnectivityInfo, CipherSuitePluginScanCommand) -> OpenSSLCipherSuitesResult
+        # type: (ServerConnectivityInfo, CipherSuiteScanCommand) -> CipherSuiteScanResult
         ssl_version = self.SSL_VERSIONS_MAPPING[scan_command.__class__]
 
         # Get the list of available cipher suites for the given ssl version
@@ -168,8 +169,8 @@ class OpenSslCipherSuitesPlugin(Plugin):
         preferred_cipher = self._get_preferred_cipher_suite(server_connectivity_info, ssl_version, accepted_cipher_list)
 
         # Generate the results
-        plugin_result = CipherSuiteScanScanResult(server_connectivity_info, scan_command, preferred_cipher,
-                                                  accepted_cipher_list, rejected_cipher_list, errored_cipher_list)
+        plugin_result = CipherSuiteScanResult(server_connectivity_info, scan_command, preferred_cipher,
+                                              accepted_cipher_list, rejected_cipher_list, errored_cipher_list)
         return plugin_result
 
 
@@ -257,14 +258,25 @@ class CipherSuite(object):
 
 
 class AcceptedCipherSuite(CipherSuite):
-    """The server accepted this cipher suite.
+    """An SSL cipher suite the server accepted.
+
+    Attributes:
+        name (Text): The cipher suite's RFC name.
+        openssl_name (Text): The cipher suite's OpenSSL name.
+        ssl_version (OpenSslVersionEnum): The cipher suite's corresponding SSL/TLS version.
+        is_anonymous (bool): True if the cipher suite is an anonymous cipher suite (ie. no server authentication).
+        key_size (int): The key size of the cipher suite's algorithm in bits.
+        dh_info (Optional[Dict]): Additional details about the Diffie Helmann parameters for DH and ECDH cipher suites.
+            None if the cipher suite is not DH or ECDH.
+        post_handshake_response (Text): The server's response after completing the SSL/TLS handshake and sending a
+            request, based on the TlsWrappedProtocolEnum set for this server. For example, this will contain an HTTP
+            response when scanning an HTTPS server with TlsWrappedProtocolEnum.HTTPS as the tls_wrapped_protocol.
     """
     def __init__(self, openssl_name, ssl_version, key_size, dh_info=None, post_handshake_response=None):
         # type: (Text, OpenSslVersionEnum, int, Optional[Dict], Optional[bytes]) -> None
         super(AcceptedCipherSuite, self).__init__(openssl_name, ssl_version)
         self.key_size = key_size
         self.dh_info = dh_info
-        # The server's response after completing the handshake
         self.post_handshake_response = post_handshake_response.decode(u'utf-8')
 
     @classmethod
@@ -284,7 +296,14 @@ class AcceptedCipherSuite(CipherSuite):
 
 
 class RejectedCipherSuite(CipherSuite):
-    """The server explicitly rejected this cipher suite.
+    """An SSL cipher suite the server explicitly rejected.
+
+    Attributes:
+        name (Text): The cipher suite's RFC name.
+        openssl_name (Text): The cipher suite's OpenSSL name.
+        ssl_version (OpenSslVersionEnum): The cipher suite's corresponding SSL/TLS version.
+        is_anonymous (bool): True if the cipher suite is an anonymous cipher suite (ie. no server authentication).
+        handshake_error_message (Text): The SSL/TLS error returned by the server to close the handshake.
     """
     def __init__(self, openssl_name, ssl_version, handshake_error_message):
         # type: (Text, OpenSslVersionEnum, bytes) -> None
@@ -293,7 +312,14 @@ class RejectedCipherSuite(CipherSuite):
 
 
 class ErroredCipherSuite(CipherSuite):
-    """An unexpected error happened while trying to negotiate this cipher suite with the server.
+    """An SSL cipher suite that triggered an unexpected error during the SSL handshake with the server.
+
+    Attributes:
+        name (Text): The cipher suite's RFC name.
+        openssl_name (Text): The cipher suite's OpenSSL name.
+        ssl_version (OpenSslVersionEnum): The cipher suite's corresponding SSL/TLS version.
+        is_anonymous (bool): True if the cipher suite is an anonymous cipher suite (ie. no server authentication).
+        error_message (Text): The text-formatted exception that was raised during the handshake.
     """
     def __init__(self, openssl_name, ssl_version, exception):
         # type: (Text, OpenSslVersionEnum, Exception) -> None
@@ -302,7 +328,7 @@ class ErroredCipherSuite(CipherSuite):
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
 
-class CipherSuiteScanScanResult(PluginScanResult):
+class CipherSuiteScanResult(PluginScanResult):
     """The result of running a CipherSuiteScanCommand on a specific server.
 
     Attributes:
@@ -320,14 +346,14 @@ class CipherSuiteScanScanResult(PluginScanResult):
     def __init__(
             self,
             server_info,           # type: ServerConnectivityInfo
-            scan_command,          # type: CipherSuitePluginScanCommand
+            scan_command,          # type: CipherSuiteScanCommand
             preferred_cipher,      # type: AcceptedCipherSuite
             accepted_cipher_list,  # type: List[AcceptedCipherSuite]
             rejected_cipher_list,  # type: List[RejectedCipherSuite]
             errored_cipher_list    # type: List[ErroredCipherSuite]
             ):
         # type: (...) -> None
-        super(CipherSuiteScanScanResult, self).__init__(server_info, scan_command)
+        super(CipherSuiteScanResult, self).__init__(server_info, scan_command)
 
         self.preferred_cipher = preferred_cipher
 

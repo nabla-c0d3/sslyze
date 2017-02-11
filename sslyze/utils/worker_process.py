@@ -2,24 +2,26 @@
 """The main process class responsible for instantiating and running the plugins.
 """
 
-
 from multiprocessing import Process
-from sslyze.utils.ssl_connection import SSLConnection
+from multiprocessing import JoinableQueue
+from sslyze.synchronous_scanner import SynchronousScanner
 
 
 class WorkerProcess(Process):
 
-    def __init__(self, priority_queue_in, queue_in, queue_out, available_commands, network_retries, network_timeout):
+    def __init__(self, priority_queue_in, queue_in, queue_out, network_retries, network_timeout):
+        # type: (JoinableQueue, JoinableQueue, JoinableQueue, int, int) -> None
         Process.__init__(self)
         self.priority_queue_in = priority_queue_in
         self.queue_in = queue_in
         self.queue_out = queue_out
-        self.available_commands = available_commands
 
-        # Set global network settings; needs to be done in each process
-        SSLConnection.set_global_network_settings(network_retries, network_timeout)
+        # The object that will actually run the scan commands
+        self._synchronous_scanner = SynchronousScanner(network_retries, network_timeout)
+
 
     def run(self):
+        # type: () -> None
         """The process will first complete tasks it gets from self.queue_in.
         Once it gets notified that all the tasks have been completed, it terminates.
         """
@@ -43,10 +45,8 @@ class WorkerProcess(Process):
                     break
 
             server_info, scan_command = task
-            plugin_instance = scan_command.get_plugin_class()()
             try:
-                # Process the task
-                result = plugin_instance.process_task(server_info, scan_command)
+                result = self._synchronous_scanner.run_scan_command(server_info, scan_command)
             except Exception as e:
                 #raise
                 result = PluginRaisedExceptionResult(server_info, scan_command, e)

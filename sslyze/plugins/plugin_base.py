@@ -44,10 +44,6 @@ class ScanCommand(object):
         return False
 
     @classmethod
-    def get_plugin_class(cls):
-        raise NotImplementedError()
-
-    @classmethod
     def get_optional_arguments(cls):
         # type: () -> List[str]
         """Some commands support optional arguments which are automatically passed to the command's constructor.

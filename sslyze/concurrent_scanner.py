@@ -3,50 +3,38 @@
 import random
 from multiprocessing import JoinableQueue
 
-from sslyze.plugins.plugin_base import ScanCommand
 from sslyze.plugins.plugin_base import PluginResult
-from sslyze.plugins_finder import PluginsFinder
+from sslyze.plugins.plugin_base import ScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.synchronous_scanner import SynchronousScanner
 from sslyze.utils.worker_process import WorkerProcess
 from typing import Iterable
 from typing import Optional
 from typing import Text
 
 
-class PluginsProcessPool(object):
-    """Manage a pool of processes to dispatch scanning commands so they can be run concurrently.
+class ConcurrentScanner(object):
+    """An object to run SSL scanning commands concurrently by dispatching them using a pool of processes.
     """
 
-    DEFAULT_MAX_PROCESSES_NB = 12
-    DEFAULT_PROCESSES_PER_HOSTNAME_NB = 3
-
-    # Controls every socket connection done by every plugin
-    DEFAULT_NETWORK_RETRIES = 3
-    DEFAULT_NETWORK_TIMEOUT = 5  # in seconds
+    _DEFAULT_MAX_PROCESSES_NB = 12
+    _DEFAULT_PROCESSES_PER_HOSTNAME_NB = 3
 
     def __init__(self,
-                 available_plugins,
-                 network_retries=DEFAULT_NETWORK_RETRIES,
-                 network_timeout=DEFAULT_NETWORK_TIMEOUT,
-                 max_processes_nb=DEFAULT_MAX_PROCESSES_NB,
-                 max_processes_per_hostname_nb=DEFAULT_PROCESSES_PER_HOSTNAME_NB
-                 ):
-        # type: (PluginsFinder, Optional[int], Optional[int], Optional[int], Optional[int]) -> None
-        """Create a pool of processes for running scanning commands concurrently.
+                 network_retries=SynchronousScanner.DEFAULT_NETWORK_RETRIES,
+                 network_timeout=SynchronousScanner.DEFAULT_NETWORK_TIMEOUT,
+                 max_processes_nb=_DEFAULT_MAX_PROCESSES_NB,
+                 max_processes_per_hostname_nb=_DEFAULT_PROCESSES_PER_HOSTNAME_NB):
+        # type: (Optional[int], Optional[int], Optional[int], Optional[int]) -> None
+        """Create a scanner for running scanning commands concurrently using a pool of processes.
 
         Args:
-            available_plugins (PluginsFinder): An object encapsulating the list of available plugins.
             network_retries (Optional[int]): How many times plugins should retry a connection that timed out.
             network_timeout (Optional[int]): The time until an ongoing connection times out within all plugins.
             max_processes_nb (Optional[int]): The maximum number of processes to spawn for running scans concurrently.
             max_processes_per_hostname_nb (Optional[int]): The maximum of processes that can be used for running scans
-                concurrently on a single server.
-
-        Returns:
-            PluginsProcessPool: An object for queueing scan commands to be run concurrently.
+                concurrently against a single server. A lower value will reduce the chances of DOS-ing the server.
         """
-
-        self._available_plugins = available_plugins
         self._network_retries = network_retries
         self._network_timeout = network_timeout
         self._max_processes_nb = max_processes_nb
@@ -62,14 +50,14 @@ class PluginsProcessPool(object):
         self._queued_tasks_nb = 0
 
 
-    def queue_plugin_task(self, server_connectivity_info, scan_command):
+    def queue_scan_command(self, server_connectivity_info, scan_command):
         # type: (ServerConnectivityInfo, ScanCommand) -> None
         """Queue a scan command targeting a specific server.
 
         Args:
-            server_connectivity_info (ServerConnectivityInfo): The information for connecting to the server.
-            scan_command (str): The plugin scan command to be run on the server. Available commands for each plugin
-                are described in the sslyze CLI --help text or in the API documentation.
+            server_info: The server's connectivity information. The test_connectivity_to_server() method must have
+                been called first to ensure that the server is online and accessible.
+            scan_command: The scan command to run against this server.
         """
         # Ensure we have the right processes and queues in place for this hostname
         self._check_and_create_process(server_connectivity_info.hostname)
@@ -94,8 +82,7 @@ class PluginsProcessPool(object):
                 hostname_queue = JoinableQueue()
                 self._hostname_queues_dict[hostname] = hostname_queue
 
-                process = WorkerProcess(hostname_queue, self._task_queue, self._result_queue,
-                                        self._available_plugins.get_commands(), self._network_retries,
+                process = WorkerProcess(hostname_queue, self._task_queue, self._result_queue, self._network_retries,
                                         self._network_timeout)
                 process.start()
                 self._processes_dict[hostname] = [process]
@@ -111,8 +98,7 @@ class PluginsProcessPool(object):
                     and self._get_current_processes_nb() < self._max_processes_nb:
                 # We can create a new process; no need to create a queue as it already exists
                 process = WorkerProcess(self._hostname_queues_dict[hostname], self._task_queue, self._result_queue,
-                                        self._available_plugins.get_commands(), self._network_retries,
-                                        self._network_timeout)
+                                        self._network_retries, self._network_timeout)
                 process.start()
                 self._processes_dict[hostname].append(process)
 
@@ -124,13 +110,10 @@ class PluginsProcessPool(object):
 
     def get_results(self):
         # type: () -> Iterable[PluginResult]
-        """Return the result of previously queued scan commands; new tasks can no longer be queued once this is called.
+        """Return the result of previously queued scan commands; new commands cannot be queued once this is called.
 
         Yields:
-            PluginResult: The result of a scan command run on a server. The server and command information are available
-                within the server_info and plugin_command attributes. The PluginResult object also has
-                command/plugin-specific attributes with the result of the scan command that was run; see
-                specific PluginResult subclasses for the list of attributes.
+            PluginResult: The result of the scan command.
         """
         # Put a 'None' sentinel in the queue to let the each process know when every task has been completed
         for _ in range(self._get_current_processes_nb()):

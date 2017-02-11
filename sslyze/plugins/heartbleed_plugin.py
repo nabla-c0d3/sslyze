@@ -22,10 +22,6 @@ class HeartbleedScanCommand(ScanCommand):
     def get_cli_argument(cls):
         return u'heartbleed'
 
-    @classmethod
-    def get_plugin_class(cls):
-        return HeartbleedPlugin
-
 
 class HeartbleedPlugin(plugin_base.Plugin):
     """Test the server(s) for the OpenSSL Heartbleed vulnerability.

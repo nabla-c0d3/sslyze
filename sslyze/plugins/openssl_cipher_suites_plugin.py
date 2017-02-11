@@ -31,10 +31,6 @@ class CipherSuiteScanCommand(ScanCommand):
     def is_aggressive(cls):
         return True
 
-    @classmethod
-    def get_plugin_class(cls):
-        return OpenSslCipherSuitesPlugin
-
 
 class Sslv20ScanCommand(CipherSuiteScanCommand):
     """List the SSL 2.0 OpenSSL cipher suites supported by the server(s).

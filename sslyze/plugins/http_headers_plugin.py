@@ -25,10 +25,6 @@ class HttpHeadersScanCommand(plugin_base.ScanCommand):
     def get_cli_argument(cls):
         return u'http_headers'
 
-    @classmethod
-    def get_plugin_class(cls):
-        return HttpHeadersPlugin
-
 
 class HttpHeadersPlugin(plugin_base.Plugin):
     """Test the server(s) for the presence of security-related HTTP headers.

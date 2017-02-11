@@ -1,9 +1,12 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+
 import os
 import sys
 
+from sslyze.concurrent_scanner import ConcurrentScanner
+from sslyze.plugins.plugins_repository import PluginsRepository
 
 if not hasattr(sys,"frozen"):
     sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
@@ -15,8 +18,6 @@ from sslyze.cli.command_line_parser import CommandLineParsingError, CommandLineP
 import signal
 from multiprocessing import freeze_support
 from time import time
-from sslyze.plugins_process_pool import PluginsProcessPool
-from sslyze.plugins_finder import PluginsFinder
 from sslyze.server_connectivity import ServersConnectivityTester
 
 
@@ -24,7 +25,7 @@ from sslyze.server_connectivity import ServersConnectivityTester
 plugins_process_pool = None
 
 def sigint_handler(signum, frame):
-    print('Scan interrupted... shutting down.')
+    print(u'Scan interrupted... shutting down.')
     if plugins_process_pool:
         plugins_process_pool.emergency_shutdown()
     sys.exit()
@@ -36,14 +37,11 @@ def main():
 
     # Handle SIGINT to terminate processes
     signal.signal(signal.SIGINT, sigint_handler)
-
     start_time = time()
 
-    # Retrieve available plugins
-    # TODO: Change this
-    sslyze_plugins = PluginsFinder.get()
-    available_plugins = sslyze_plugins.get_plugins()
-    available_commands = sslyze_plugins.get_commands()
+    plugins_repository = PluginsRepository()
+    available_plugins = plugins_repository.get_available_plugins()
+    available_commands = plugins_repository.get_available_commands()
 
     # Create the command line parser and the list of available options
     sslyze_parser = CommandLineParser(available_plugins, __version__)
@@ -60,11 +58,10 @@ def main():
     # Initialize the pool of processes that will run each plugin
     if args_command_list.https_tunnel:
         # Maximum one process to not kill the proxy
-        plugins_process_pool = PluginsProcessPool(sslyze_plugins, args_command_list.nb_retries,
-                                                  args_command_list.timeout, max_processes_nb=1)
+        plugins_process_pool = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout,
+                                                 max_processes_nb=1)
     else:
-        plugins_process_pool = PluginsProcessPool(sslyze_plugins, args_command_list.nb_retries,
-                                                  args_command_list.timeout)
+        plugins_process_pool = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout)
 
 
     # Figure out which hosts are up and fill the task queue with work to do
@@ -92,7 +89,7 @@ def main():
                         optional_args[optional_arg_name] = getattr(args_command_list, optional_arg_name)
                 scan_command = scan_command_class(**optional_args)
 
-                plugins_process_pool.queue_plugin_task(server_connectivity_info, scan_command)
+                plugins_process_pool.queue_scan_command(server_connectivity_info, scan_command)
 
 
     # Store and print servers we were NOT able to connect to
@@ -131,11 +128,10 @@ def main():
             # Done with this server; send the result to the output hub
             output_hub.server_scan_completed(CompletedServerScan(server_info, plugin_result_list))
 
-
     # All done
     exec_time = time()-start_time
     output_hub.scans_completed(exec_time)
 
 
-if __name__ == "__main__":
+if __name__ == u'__main__':
     main()

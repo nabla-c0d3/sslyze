@@ -16,10 +16,6 @@ class CompressionScanCommand(ScanCommand):
     def get_cli_argument(cls):
         return u'compression'
 
-    @classmethod
-    def get_plugin_class(cls):
-        return CompressionPlugin
-
 
 class CompressionPlugin(plugin_base.Plugin):
     """Test the server(s) for Zlib compression support.

@@ -20,10 +20,6 @@ class SessionRenegotiationScanCommand(plugin_base.ScanCommand):
     def get_cli_argument(cls):
         return u'reneg'
 
-    @classmethod
-    def get_plugin_class(cls):
-        return SessionRenegotiationPlugin
-
 
 class SessionRenegotiationPlugin(plugin_base.Plugin):
     """Test the server(s)' implementation of session renegotiation.

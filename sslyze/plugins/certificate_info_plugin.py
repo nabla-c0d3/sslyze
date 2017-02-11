@@ -23,6 +23,22 @@ from typing import Text
 from typing import Tuple
 
 
+class CertificateInfoScanCommand(ScanCommand):
+    """Verify the validity of the server(s) certificate(s) against various trust stores and checks for OCSP stapling
+    support.
+    """
+
+    def __init__(self, ca_file=None, print_full_certificate=False):
+        # type: (Optional[Text], Optional[bool]) -> None
+        super(CertificateInfoScanCommand, self).__init__()
+        self.custom_ca_file = ca_file
+        self.should_print_full_certificate = print_full_certificate
+
+    @classmethod
+    def get_cli_argument(cls):
+        return u'certinfo'
+
+
 class PathValidationResult(object):
     """The result of trying to validate a server's certificate chain using a specific trust store.
     """
@@ -45,26 +61,6 @@ class PathValidationError(object):
         self.trust_store = trust_store
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
-
-
-class CertificateInfoScanCommand(ScanCommand):
-    """Verify the validity of the server(s) certificate(s) against various trust stores and checks for OCSP stapling
-    support.
-    """
-
-    def __init__(self, ca_file=None, print_full_certificate=False):
-        # type: (Optional[Text], bool) -> None
-        super(CertificateInfoScanCommand, self).__init__()
-        self.custom_ca_file = ca_file
-        self.should_print_full_certificate = print_full_certificate
-
-    @classmethod
-    def get_cli_argument(cls):
-        return u'certinfo'
-
-    @classmethod
-    def get_plugin_class(cls):
-        return CertificateInfoPlugin
 
 
 class CertificateInfoPlugin(plugin_base.Plugin):
@@ -141,7 +137,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
         # All done
         return CertificateInfoResult(server_info, scan_command, certificate_chain, path_validation_result_list,
-                            path_validation_error_list, ocsp_response)
+                                     path_validation_error_list, ocsp_response)
 
 
     @staticmethod

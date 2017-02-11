@@ -19,10 +19,6 @@ class OpenSslCcsInjectionScanCommand(plugin_base.ScanCommand):
     def get_cli_argument(cls):
         return u'openssl_ccs'
 
-    @classmethod
-    def get_plugin_class(cls):
-        return OpenSslCcsInjectionPlugin
-
 
 class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
     """Test the server(s) for CVE-2014-0224.

@@ -17,10 +17,6 @@ class FallbackScsvScanCommand(ScanCommand):
     def get_cli_argument(cls):
         return u'fallback'
 
-    @classmethod
-    def get_plugin_class(cls):
-        return FallbackScsvPlugin
-
 
 class FallbackScsvPlugin(plugin_base.Plugin):
     """Test the server(s) for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.

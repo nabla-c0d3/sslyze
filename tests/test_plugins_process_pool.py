@@ -2,9 +2,9 @@ import unittest
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
 from sslyze.plugins.compression_plugin import CompressionScanCommand
+from sslyze.plugins.plugins_repository import PluginsFinder
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanCommand
-from sslyze.plugins_finder import PluginsFinder
-from sslyze.plugins_process_pool import PluginsProcessPool
+from sslyze.concurrent_scanner import PluginsProcessPool
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 

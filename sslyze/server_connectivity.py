@@ -78,7 +78,7 @@ class ServerConnectivityInfo(object):
             self,
             hostname,                                              # type: Text
             port=None,                                             # type: Optional[int]
-            ip_address=None,                                       # type: Optional[str]
+            ip_address=None,                                       # type: Optional[Text]
             tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS, # type: TlsWrappedProtocolEnum
             tls_server_name_indication=None,                       # type: Optional[Text]
             xmpp_to_hostname=None,                                 # type: Optional[Text]
@@ -94,10 +94,10 @@ class ServerConnectivityInfo(object):
             hostname (Text): The server's hostname.
             port (Optional[int]): The server's TLS port number. If not supplied, the default port number for the specified
                 `tls_wrapped_protocol` will be used.
-            ip_address (Optional[str]): The server's IP address. If not supplied, a DNS lookup for the specified
+            ip_address (Optional[Text]): The server's IP address. If not supplied, a DNS lookup for the specified
                 `hostname` will be performed. If `http_tunneling_settings` is specified, `ip_address` cannot be supplied
                 as the HTTP proxy will be responsible for looking up and connecting to the server to be scanned.
-            tls_wrapped_protocol (Optional[TlsWrappedProtocolEnum]): The protocol wrapped in TLS that the server
+            tls_wrapped_protocol (TlsWrappedProtocolEnum): The protocol wrapped in TLS that the server
                 expects. It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what
                 kind of "hello" message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If
                 not supplied, standard TLS will be used.
@@ -212,9 +212,10 @@ class ServerConnectivityInfo(object):
         ssl_version_supported = None
         ssl_cipher_supported = None
 
-        for ssl_version in OpenSslVersionEnum. [TLSV1_2, TLSV1_1, TLSV1, SSLV3, SSLV23]:
+        for ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_1, OpenSslVersionEnum.TLSV1,
+                            OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.SSLV23]:
             # First try the default cipher list, and then all ciphers
-            for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
+            for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, u'ALL:COMPLEMENTOFALL']:
                 ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
                                                                        should_ignore_client_auth=False)
                 ssl_connection.set_cipher_list(cipher_list)
@@ -301,7 +302,7 @@ class ServerConnectivityInfo(object):
                                                          self.http_tunneling_settings.basic_auth_password)
 
         # Add Server Name Indication
-        if ssl_version != SSLV2:
+        if ssl_version != OpenSslVersionEnum.SSLV2:
             ssl_connection.set_tlsext_host_name(self.tls_server_name_indication)
 
         # Add well-known supported cipher suite

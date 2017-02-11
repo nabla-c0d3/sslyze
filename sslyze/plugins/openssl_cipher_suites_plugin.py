@@ -5,7 +5,7 @@ from abc import ABCMeta
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
-from nassl import SSLV2, SSLV3, TLSV1, TLSV1_1, TLSV1_2
+from nassl import OpenSslVersionEnum
 from nassl.ssl_client import SslClient
 
 from sslyze.plugins.plugin_base import Plugin, ScanCommand
@@ -22,7 +22,7 @@ class CipherSuiteScanCommand(ScanCommand):
     __metaclass__ = ABCMeta
 
     def __init__(self, http_get=False, hide_rejected_ciphers=False):
-        # type: (Optional[Bool], Optional[Bool]) -> None
+        # type: (bool, bool) -> None
         super(CipherSuiteScanCommand, self).__init__()
         self.http_get = http_get
         self.hide_rejected_ciphers = hide_rejected_ciphers
@@ -87,11 +87,11 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
     MAX_THREADS = 15
     SSL_VERSIONS_MAPPING = {
-        Sslv20ScanCommand: SSLV2,
-        Sslv30ScanCommand: SSLV3,
-        Tlsv10ScanCommand: TLSV1,
-        Tlsv11ScanCommand: TLSV1_1,
-        Tlsv12ScanCommand: TLSV1_2
+        Sslv20ScanCommand: OpenSslVersionEnum.SSLV2,
+        Sslv30ScanCommand: OpenSslVersionEnum.SSLV3,
+        Tlsv10ScanCommand: OpenSslVersionEnum.TLSV1,
+        Tlsv11ScanCommand: OpenSslVersionEnum.TLSV1_1,
+        Tlsv12ScanCommand: OpenSslVersionEnum.TLSV1_2
     }
 
     @classmethod
@@ -660,9 +660,9 @@ TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
 }
 
 OPENSSL_TO_RFC_NAMES_MAPPING = {
-    SSLV2: SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING,
-    SSLV3: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    TLSV1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    TLSV1_1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    TLSV1_2: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    OpenSslVersionEnum.SSLV2: SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING,
+    OpenSslVersionEnum.SSLV3: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    OpenSslVersionEnum.TLSV1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    OpenSslVersionEnum.TLSV1_1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    OpenSslVersionEnum.TLSV1_2: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
 }

@@ -7,6 +7,7 @@ from base64 import b64encode
 from urllib import quote
 
 from enum import Enum
+from nassl import OpenSslFileTypeEnum
 from typing import Optional
 from typing import Text
 
@@ -19,7 +20,6 @@ except ImportError:
     # noinspection PyCompatibility
     from urlparse import urlparse
 
-from nassl import SSL_FILETYPE_PEM, SSL_FILETYPE_ASN1
 from nassl.ssl_client import SslClient
 
 
@@ -46,16 +46,10 @@ class ClientAuthenticationCredentials(object):
     """Parameters needed to perform SSL/TLS client/mutual authentication with a server.
     """
 
-    def __init__(self, client_certificate_chain_path, client_key_path, client_key_type=SSL_FILETYPE_PEM,
-                 client_key_password=''):
-        # type: (str, str, int, Optional[str]) -> None
+    def __init__(self, client_certificate_chain_path, client_key_path, client_key_type=OpenSslFileTypeEnum.PEM,
+                 client_key_password=u''):
+        # type: (Text, Text, OpenSslFileTypeEnum, Text) -> None
         """Create a container for SSL/TLS client authentication settings.
-
-        Args:
-            client_certificate_chain_path (str): Path to the client's certificate chain.
-            client_key_path (str): Path to the client's private key.
-            client_key_type (int): SSL_FILETYPE_PEM or SSL_FILETYPE_DER.
-            client_key_password (Optional[str]): Password needed to decrypt the private key.
         """
         self.client_certificate_chain_path = client_certificate_chain_path
         if not os.path.isfile(self.client_certificate_chain_path):
@@ -68,7 +62,7 @@ class ClientAuthenticationCredentials(object):
         self.client_key_password = client_key_password
 
         self.client_key_type = client_key_type
-        if self.client_key_type not in [SSL_FILETYPE_ASN1, SSL_FILETYPE_PEM]:
+        if self.client_key_type not in OpenSslFileTypeEnum:
             raise ValueError(u'Invalid certificate format specified')
 
         # Try to load the cert and key in OpenSSL; will raise an exception if something is wrong

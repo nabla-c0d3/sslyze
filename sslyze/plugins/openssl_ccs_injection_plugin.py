@@ -2,8 +2,8 @@
 
 from xml.etree.ElementTree import Element
 
+from nassl import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
-from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
 import socket, struct, random
 
 from sslyze.plugins.plugin_base import PluginResult
@@ -101,10 +101,10 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
 
 
     ssl_tokens = {
-        SSLV3   : "\x03\x00",
-        TLSV1   : "\x03\x01",
-        TLSV1_1 : "\x03\x02",
-        TLSV1_2 : "\x03\x03",
+        OpenSslVersionEnum.SSLV3: b"\x03\x00",
+        OpenSslVersionEnum.TLSV1: b"\x03\x01",
+        OpenSslVersionEnum.TLSV1_1: b"\x03\x02",
+        OpenSslVersionEnum.TLSV1_2 : b"\x03\x03",
     }
 
     ssl3_cipher = [

@@ -8,7 +8,7 @@ from nassl._nassl import OpenSSLError
 
 from nassl.ocsp_response import OcspResponse, OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
-from nassl.x509_certificate import X509Certificate
+from nassl.x509_certificate import X509Certificate, HostnameValidationResultEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult, ScanCommand
 from sslyze.plugins.utils.certificate import Certificate
@@ -267,13 +267,13 @@ class CertificateInfoResult(PluginResult):
                     break
 
 
-    HOSTNAME_VALIDATION_TEXT = {
-        X509_NAME_MATCHES_SAN: u'OK - Subject Alternative Name matches {hostname}'.format,
-        X509_NAME_MATCHES_CN: u'OK - Common Name matches {hostname}'.format,
-        X509_NAME_MISMATCH: u'FAILED - Certificate does NOT match {hostname}'.format
+    HOST_VALIDATION_TEXT = {
+        HostnameValidationResultEnum.NAME_MATCHES_SAN: u'OK - Subject Alternative Name matches {hostname}',
+        HostnameValidationResultEnum.NAME_MATCHES_CN: u'OK - Common Name matches {hostname}',
+        HostnameValidationResultEnum.NAME_DOES_NOT_MATCH: u'FAILED - Certificate does NOT match {hostname}'
     }
 
-    TRUST_FORMAT = u'{store_name} CA Store ({store_version}):'.format
+    TRUST_FORMAT = u'{store_name} CA Store ({store_version}):'
 
     NO_VERIFIED_CHAIN_ERROR_TXT = u'ERROR - Could not build verified chain (certificate untrusted?)'
 
@@ -293,9 +293,9 @@ class CertificateInfoResult(PluginResult):
             text_output.append(self._format_field(u"SNI enabled with virtual domain:", server_name_indication))
 
         text_output.append(self._format_field(
-                u"Hostname Validation:",
-                self.HOSTNAME_VALIDATION_TEXT[self.hostname_validation_result](hostname=server_name_indication))
-        )
+            u"Hostname Validation:",
+            self.HOST_VALIDATION_TEXT[self.hostname_validation_result].format(hostname=server_name_indication)
+        ))
 
         # Path validation that was successfully tested
         for path_result in self.path_validation_result_list:
@@ -310,16 +310,18 @@ class CertificateInfoResult(PluginResult):
             else:
                 path_txt = u'FAILED - Certificate is NOT Trusted: {}'.format(path_result.verify_string)
 
-            text_output.append(self._format_field(self.TRUST_FORMAT(store_name=path_result.trust_store.name,
-                                                                    store_version=path_result.trust_store.version),
-                                                  path_txt))
+            text_output.append(self._format_field(
+                self.TRUST_FORMAT.format(store_name=path_result.trust_store.name,
+                                         store_version=path_result.trust_store.version),
+                path_txt))
 
         # Path validation that ran into errors
         for path_error in self.path_validation_error_list:
             error_txt = u'ERROR: {}'.format(path_error.error_message)
-            text_output.append(self._format_field(self.TRUST_FORMAT(store_name=path_result.trust_store.name,
-                                                                    store_version=path_result.trust_store.version),
-                                                  error_txt))
+            text_output.append(self._format_field(
+                self.TRUST_FORMAT.format(store_name=path_result.trust_store.name,
+                                         store_version=path_result.trust_store.version),
+                error_txt))
 
         # Print the Common Names within the certificate chain
         cns_in_certificate_chain = [cert.printable_subject_name for cert in self.certificate_chain]
@@ -328,7 +330,7 @@ class CertificateInfoResult(PluginResult):
         # Print the Common Names within the verified certificate chain if validation was successful
         if self.verified_certificate_chain:
             cns_in_certificate_chain = [cert.printable_subject_name for cert in self.verified_certificate_chain]
-            verified_chain_txt = ' --> '.join(cns_in_certificate_chain)
+            verified_chain_txt = u' --> '.join(cns_in_certificate_chain)
         else:
             verified_chain_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
         text_output.append(self._format_field(u'Verified Chain w/ Mozilla Store:', verified_chain_txt))
@@ -365,17 +367,17 @@ class CertificateInfoResult(PluginResult):
                     if self.is_ocsp_response_trusted \
                     else u'FAILED - Response is NOT trusted'
             except OpenSSLError as e:
-                if 'certificate verify error' in str(e):
+                if u'certificate verify error' in str(e):
                     ocsp_trust_txt = u'FAILED - Response is NOT trusted'
                 else:
                     raise
 
             ocsp_resp_txt = [
-                self._format_field(u'OCSP Response Status:', self.ocsp_response['responseStatus']),
+                self._format_field(u'OCSP Response Status:', self.ocsp_response[u'responseStatus']),
                 self._format_field(u'Validation w/ Mozilla Store:', ocsp_trust_txt),
-                self._format_field(u'Responder Id:', self.ocsp_response['responderID'])]
+                self._format_field(u'Responder Id:', self.ocsp_response[u'responderID'])]
 
-            if 'successful' in self.ocsp_response['responseStatus']:
+            if u'successful' in self.ocsp_response[u'responseStatus']:
                 ocsp_resp_txt.extend([
                     self._format_field(u'Cert Status:', self.ocsp_response['responses'][0]['certStatus']),
                     self._format_field(u'Cert Serial Number:', self.ocsp_response['responses'][0]['certID']['serialNumber']),
@@ -427,7 +429,9 @@ class CertificateInfoResult(PluginResult):
         trust_validation_xml = Element('certificateValidation')
 
         # Hostname validation
-        is_hostname_valid = 'False' if self.hostname_validation_result == X509_NAME_MISMATCH else 'True'
+        is_hostname_valid = 'False' \
+            if self.hostname_validation_result == HostnameValidationResultEnum.NAME_DOES_NOT_MATCH \
+            else 'True'
         host_validation_xml = Element('hostnameValidation', serverHostname=self.server_info.tls_server_name_indication,
                                       certificateMatchesServerHostname=is_hostname_valid)
         trust_validation_xml.append(host_validation_xml)
@@ -520,24 +524,24 @@ class CertificateInfoResult(PluginResult):
             self._format_field(u"SHA1 Fingerprint:", self.certificate_chain[0].sha1_fingerprint),
             self._format_field(u"Common Name:", self.certificate_chain[0].printable_subject_name),
             self._format_field(u"Issuer:", self.certificate_chain[0].printable_issuer_name),
-            self._format_field(u"Serial Number:", cert_dict['serialNumber']),
-            self._format_field(u"Not Before:", cert_dict['validity']['notBefore']),
-            self._format_field(u"Not After:", cert_dict['validity']['notAfter']),
-            self._format_field(u"Signature Algorithm:", cert_dict['signatureAlgorithm']),
-            self._format_field(u"Public Key Algorithm:", cert_dict['subjectPublicKeyInfo']['publicKeyAlgorithm']),
-            self._format_field(u"Key Size:", cert_dict['subjectPublicKeyInfo']['publicKeySize'])]
+            self._format_field(u"Serial Number:", cert_dict[u'serialNumber']),
+            self._format_field(u"Not Before:", cert_dict[u'validity'][u'notBefore']),
+            self._format_field(u"Not After:", cert_dict[u'validity'][u'notAfter']),
+            self._format_field(u"Signature Algorithm:", cert_dict[u'signatureAlgorithm']),
+            self._format_field(u"Public Key Algorithm:", cert_dict[u'subjectPublicKeyInfo'][u'publicKeyAlgorithm']),
+            self._format_field(u"Key Size:", cert_dict[u'subjectPublicKeyInfo'][u'publicKeySize'])]
 
         try:
             # Print the Public key exponent if there's one; EC public keys don't have one for example
             text_output.append(self._format_field(u"Exponent:", u"{0} (0x{0:x})".format(
-                int(cert_dict['subjectPublicKeyInfo']['publicKey']['exponent']))))
+                int(cert_dict[u'subjectPublicKeyInfo'][u'publicKey'][u'exponent']))))
         except KeyError:
             pass
 
         try:
             # Print the SAN extension if there's one
             text_output.append(self._format_field(u'X509v3 Subject Alternative Name:',
-                                                  cert_dict['extensions']['X509v3 Subject Alternative Name']))
+                                                  cert_dict[u'extensions'][u'X509v3 Subject Alternative Name']))
         except KeyError:
             pass
 
@@ -562,7 +566,7 @@ def _create_xml_node(key, value=''):
 
 def _keyvalue_pair_to_xml(key, value=''):
 
-    if type(value) is str:  # value is a string
+    if type(value) in [str, unicode]:  # value is a string
         key_xml = _create_xml_node(key, value)
 
     elif type(value) is int:

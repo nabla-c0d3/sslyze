@@ -6,7 +6,6 @@ from xml.etree.ElementTree import Element
 
 import nassl
 from enum import Enum
-from nassl import SSL_OP_NO_TICKET
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult
@@ -14,6 +13,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
 from typing import List
 from typing import Optional
+from typing import Text
 from typing import Tuple
 
 
@@ -99,7 +99,7 @@ class SessionResumptionPlugin(plugin_base.Plugin):
 
 
     def _test_session_resumption_rate(self, server_info, resumption_attempts_nb):
-        # type: (ServerConnectivityInfo, int) -> Tuple[int, List[str]]
+        # type: (ServerConnectivityInfo, int) -> Tuple[int, List[Text]]
         """Attempt several session ID resumption with the server.
         """
         thread_pool = ThreadPool()
@@ -186,21 +186,21 @@ class SessionResumptionPlugin(plugin_base.Plugin):
 
     @staticmethod
     def _extract_session_id(ssl_session):
-        # type: (nassl._nassl.SSL_SESSION) -> str
+        # type: (nassl._nassl.SSL_SESSION) -> Text
         """Extract the SSL session ID from a SSL session object or raises IndexError if the session ID was not set.
         """
-        session_string = ((ssl_session.as_text()).split("Session-ID:"))[1]
-        session_id = (session_string.split("Session-ID-ctx:"))[0].strip()
+        session_string = ((ssl_session.as_text()).split(u'Session-ID:'))[1]
+        session_id = (session_string.split(u'Session-ID-ctx:'))[0].strip()
         return session_id
 
 
     @staticmethod
     def _extract_tls_session_ticket(ssl_session):
-        # type: (nassl._nassl.SSL_SESSION) -> str
+        # type: (nassl._nassl.SSL_SESSION) -> Text
         """Extract the TLS session ticket from a SSL session object or raises IndexError if the ticket was not set.
         """
-        session_string = ((ssl_session.as_text()).split("TLS session ticket:"))[1]
-        session_tls_ticket = (session_string.split("Compression:"))[0]
+        session_string = ((ssl_session.as_text()).split(u'TLS session ticket:'))[1]
+        session_tls_ticket = (session_string.split(u'Compression:'))[0]
         return session_tls_ticket
 
 
@@ -212,17 +212,18 @@ class SessionResumptionPlugin(plugin_base.Plugin):
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         if not should_enable_tls_ticket:
-        # Need to disable TLS tickets to test session IDs, according to rfc5077:
-        # If a ticket is presented by the client, the server MUST NOT attempt
-        # to use the Session ID in the ClientHello for stateful session resumption
-            ssl_connection.set_options(SSL_OP_NO_TICKET) # Turning off TLS tickets.
+            # Need to disable TLS tickets to test session IDs, according to rfc5077:
+            # If a ticket is presented by the client, the server MUST NOT attempt
+            # to use the Session ID in the ClientHello for stateful session resumption
+            ssl_connection.disable_stateless_session_resumption()  # Turning off TLS tickets.
 
         if ssl_session:
             ssl_connection.set_session(ssl_session)
 
-        try: # Perform the SSL handshake
+        try:
+            # Perform the SSL handshake
             ssl_connection.connect()
-            new_session = ssl_connection.get_session() # Get session data
+            new_session = ssl_connection.get_session()  # Get session data
         finally:
             ssl_connection.close()
 
@@ -248,7 +249,7 @@ class ResumptionRateResult(PluginResult):
             scan_command,               # type: SessionResumptionRateScanCommand
             attempted_resumptions_nb,   # type: int
             successful_resumptions_nb,  # type: int
-            errored_resumptions_list    # type: List[str]
+            errored_resumptions_list    # type: List[Text]
     ):
         super(ResumptionRateResult, self).__init__(server_info, scan_command)
         self.attempted_resumptions_nb = attempted_resumptions_nb
@@ -330,9 +331,9 @@ class ResumptionResult(ResumptionRateResult):
             scan_command,                           # type: SessionResumptionRateScanCommand
             attempted_resumptions_nb,               # type: int
             successful_resumptions_nb,              # type: int
-            errored_resumptions_list,               # type: List[str]
+            errored_resumptions_list,               # type: List[Text]
             is_ticket_resumption_supported,         # type: int
-            ticket_resumption_failed_reason=None,   # type: Optional[str]
+            ticket_resumption_failed_reason=None,   # type: Optional[Text]
             ticket_resumption_exception=None        # type: Optional[Exception]
     ):
         super(ResumptionResult, self).__init__(server_info, scan_command, attempted_resumptions_nb,

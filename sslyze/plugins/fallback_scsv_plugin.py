@@ -2,7 +2,7 @@
 
 
 from xml.etree.ElementTree import Element
-from nassl import SSLV3, SSL_MODE_SEND_FALLBACK_SCSV, _nassl
+from nassl import _nassl, OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult, ScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -32,13 +32,13 @@ class FallbackScsvPlugin(plugin_base.Plugin):
 
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, FallbackScsvScanCommand) -> FallbackScsvResult
-        if server_info.highest_ssl_version_supported <= SSLV3:
-            raise ValueError('Server only supports SSLv3; no downgrade attacks are possible')
+        if server_info.highest_ssl_version_supported.value <= OpenSslVersionEnum.SSLV3.value:
+            raise ValueError(u'Server only supports SSLv3; no downgrade attacks are possible')
 
         # Try to connect using a lower TLS version with the fallback cipher suite enabled
-        ssl_version_downgrade = server_info.highest_ssl_version_supported - 1
+        ssl_version_downgrade = OpenSslVersionEnum(server_info.highest_ssl_version_supported.value - 1)
         ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version_downgrade)
-        ssl_connection.set_mode(SSL_MODE_SEND_FALLBACK_SCSV)
+        ssl_connection.enable_fallback_scsv()
 
         supports_fallback_scsv = False
         try:
@@ -47,7 +47,7 @@ class FallbackScsvPlugin(plugin_base.Plugin):
 
         except _nassl.OpenSSLError as e:
             # This is the right, specific alert the server should return
-            if 'tlsv1 alert inappropriate fallback' in str(e.args):
+            if u'tlsv1 alert inappropriate fallback' in str(e.args):
                 supports_fallback_scsv = True
             else:
                 raise

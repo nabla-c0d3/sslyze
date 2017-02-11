@@ -5,9 +5,9 @@
 import types
 from xml.etree.ElementTree import Element
 
-from nassl import TLSV1, TLSV1_1, TLSV1_2, SSLV3
 from nassl._nassl import WantX509LookupError, WantReadError
 
+from nassl import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginResult, ScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -93,25 +93,28 @@ class HeartbleedResult(PluginResult):
 
 
 def heartbleed_payload(ssl_version):
+    print ssl_version
     # This heartbleed payload does not exploit the server
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
 
     SSL_VERSION_MAPPING = {
-        SSLV3 :  b'\x00', # Surprising that it works with SSL 3 which doesn't define TLS extensions
-        TLSV1 :  b'\x01',
-        TLSV1_1: b'\x02',
-        TLSV1_2: b'\x03'}
+        OpenSslVersionEnum.SSLV3: b'\x00', # Surprising that it works with SSL 3 which doesn't define TLS extensions
+        OpenSslVersionEnum.TLSV1: b'\x01',
+        OpenSslVersionEnum.TLSV1_1: b'\x02',
+        OpenSslVersionEnum.TLSV1_2: b'\x03'
+    }
 
     payload = (
-        b'\x18'           # Record type - Heartbeat
-        b'\x03{0}'               # TLS version
-        b'\x40\x00'              # Record length
-        b'\x01'                  # Heartbeat type - Request
-        b'\x3f\xfd')             # Heartbeat length
+        b'\x18'             # Record type - Heartbeat
+        b'\x03{0}'          # TLS version
+        b'\x40\x00'         # Record length
+        b'\x01'             # Heartbeat type - Request
+        b'\x3f\xfd'         # Heartbeat length
+    )
 
     payload += '\x01'*16381     # Heartbeat data
 
-    payload += (                # Second Heartbeat request with no padding
+    payload += (                 # Second Heartbeat request with no padding
         b'\x18'                  # Record type - Heartbeat
         b'\x03{0}'
         b'\x00\x03\x01\x00\x00'

@@ -2,7 +2,7 @@
 import os
 import unittest
 
-from nassl import X509_NAME_MATCHES_SAN
+from nassl.x509_certificate import HostnameValidationResultEnum
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -53,7 +53,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
             self.assertTrue(path_validation_result.is_certificate_trusted)
 
         self.assertEquals(len(plugin_result.path_validation_error_list), 0)
-        self.assertEquals(plugin_result.hostname_validation_result, X509_NAME_MATCHES_SAN)
+        self.assertEquals(plugin_result.hostname_validation_result, HostnameValidationResultEnum.NAME_MATCHES_SAN)
         self.assertTrue(plugin_result.is_certificate_chain_order_valid)
 
         self.assertTrue(plugin_result.as_text())
@@ -87,7 +87,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
         self.assertEquals(len(plugin_result.path_validation_error_list), 0)
-        self.assertEquals(plugin_result.hostname_validation_result, X509_NAME_MATCHES_SAN)
+        self.assertEquals(plugin_result.hostname_validation_result, HostnameValidationResultEnum.NAME_MATCHES_SAN)
         self.assertTrue(plugin_result.is_certificate_chain_order_valid)
         self.assertIsNone(plugin_result.has_anchor_in_certificate_chain)
         self.assertIsNone(plugin_result.has_sha1_in_certificate_chain)
@@ -105,7 +105,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        san_list = plugin_result.certificate_chain[0].as_dict['extensions']['X509v3 Subject Alternative Name']['DNS']
+        san_list = plugin_result.certificate_chain[0].as_dict[u'extensions'][u'X509v3 Subject Alternative Name'][u'DNS']
         self.assertEquals(len(san_list), 1000)
 
 

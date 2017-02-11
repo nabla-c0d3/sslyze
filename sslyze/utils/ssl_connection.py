@@ -9,7 +9,7 @@ import time
 from base64 import b64encode
 from urllib import quote
 
-from nassl import _nassl, SSL_VERIFY_NONE
+from nassl import _nassl, OpenSslVerifyEnum
 from nassl.debug_ssl_client import DebugSslClient
 from nassl.ssl_client import ClientCertificateRequested
 from sslyze.utils.http_request_generator import HttpRequestGenerator
@@ -44,33 +44,33 @@ class SSLConnection(DebugSslClient):
 
     # The following errors mean that the server explicitly rejected the handshake. The goal to differentiate rejected
     # handshakes from random network errors such as the server going offline, etc.
-    HANDSHAKE_REJECTED_SOCKET_ERRORS = {'was forcibly closed': 'Received FIN',
-                                        'reset by peer': 'Received RST'}
+    HANDSHAKE_REJECTED_SOCKET_ERRORS = {u'was forcibly closed': 'Received FIN',
+                                        u'reset by peer': 'Received RST'}
 
-    HANDSHAKE_REJECTED_SSL_ERRORS = {'sslv3 alert handshake failure': 'Alert handshake failure',
-                                     'no ciphers available': 'No ciphers available',
-                                     'excessive message size': 'Excessive message size',
-                                     'bad mac decode': 'Bad mac decode',
-                                     'wrong version number': 'Wrong version number',
-                                     'no cipher match': 'No cipher match',
-                                     'bad decompression': 'Bad decompression',
-                                     'peer error no cipher': 'Peer error no cipher',
-                                     'no cipher list': 'No ciphers list',
-                                     'insufficient security': 'Insufficient security',
-                                     'block type is not 01': 'block type is not 01',  # Actually an RSA error
-                                     'tlsv1 alert protocol version': 'Alert: protocol version '}
+    HANDSHAKE_REJECTED_SSL_ERRORS = {u'sslv3 alert handshake failure': 'Alert handshake failure',
+                                     u'no ciphers available': 'No ciphers available',
+                                     u'excessive message size': 'Excessive message size',
+                                     u'bad mac decode': 'Bad mac decode',
+                                     u'wrong version number': 'Wrong version number',
+                                     u'no cipher match': 'No cipher match',
+                                     u'bad decompression': 'Bad decompression',
+                                     u'peer error no cipher': 'Peer error no cipher',
+                                     u'no cipher list': 'No ciphers list',
+                                     u'insufficient security': 'Insufficient security',
+                                     u'block type is not 01': 'block type is not 01',  # Actually an RSA error
+                                     u'tlsv1 alert protocol version': 'Alert: protocol version '}
 
     # Constants for tunneling the traffic through a proxy
-    HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
-    HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = 'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {2}\r\n\r\n'
+    HTTP_CONNECT_REQ = b'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
+    HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = b'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {2}\r\n\r\n'
 
     # Errors caused by the proxy
-    ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
-    ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
+    ERR_CONNECT_REJECTED = u'The proxy rejected the CONNECT request for this host'
+    ERR_PROXY_OFFLINE = u'Could not connect to the proxy: "{0}"'
 
     # Restrict cipher list to make the client hello smaller so we don't run into
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
-    DEFAULT_SSL_CIPHER_LIST = 'HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA'
+    DEFAULT_SSL_CIPHER_LIST = u'HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA'
 
     # Default socket settings global to all SSLyze connections; can be overridden
     NETWORK_MAX_RETRIES = 3
@@ -87,7 +87,7 @@ class SSLConnection(DebugSslClient):
         if client_auth_creds:
             # A client certificate and private key were provided
             super(SSLConnection, self).__init__(ssl_version=ssl_version,
-                                                ssl_verify=SSL_VERIFY_NONE,
+                                                ssl_verify=OpenSslVerifyEnum.NONE,
                                                 ssl_verify_locations=ssl_verify_locations,
                                                 client_certchain_file=client_auth_creds.client_certificate_chain_path,
                                                 client_key_file=client_auth_creds.client_key_path,
@@ -97,7 +97,7 @@ class SSLConnection(DebugSslClient):
         else:
             # No client cert and key
             super(SSLConnection, self).__init__(ssl_version=ssl_version,
-                                                ssl_verify=SSL_VERIFY_NONE,
+                                                ssl_verify=OpenSslVerifyEnum.NONE,
                                                 ssl_verify_locations=ssl_verify_locations,
                                                 ignore_client_authentication_requests=should_ignore_client_auth)
 

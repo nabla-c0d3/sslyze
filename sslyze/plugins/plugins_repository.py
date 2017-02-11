@@ -27,32 +27,34 @@ class PluginsRepository(object):
 
     def __init__(self, plugin_classes=_PLUGIN_CLASSES):
         # type: (Optional[List[Type[Plugin]]]) -> None
-        scan_commands_to_plugin_classes = {}
+        scan_command_classes_to_plugin_classes = {}
 
         # Create a dict of scan_commands -> plugin_classes
         for plugin_class in plugin_classes:
-            for scan_command in plugin_class.get_available_commands():
+            for scan_command_class in plugin_class.get_available_commands():
 
-                if scan_command in scan_commands_to_plugin_classes.keys():
-                    raise KeyError(u'Found duplicate scan command: {}'.format(scan_command))
-                scan_commands_to_plugin_classes[scan_command] = plugin_class
+                # Sanity check: no duplicate scan commands
+                if scan_command_class in scan_command_classes_to_plugin_classes.keys():
+                    raise KeyError(u'Found duplicate scan command: {}'.format(scan_command_class))
 
-        self._scan_commands_to_plugin_classes = scan_commands_to_plugin_classes
+                scan_command_classes_to_plugin_classes[scan_command_class] = plugin_class
+
+        self._scan_command_classes_to_plugin_classes = scan_command_classes_to_plugin_classes
 
     def get_plugin_class_for_command(self, scan_command):
         # type: (PluginScanCommand) -> Type[Plugin]
         """Get the class of the plugin implementing the supplied scan command.
         """
-        return self._scan_commands_to_plugin_classes[scan_command.__class__]
+        return self._scan_command_classes_to_plugin_classes[scan_command.__class__]
 
     def get_available_commands(self):
         # type: () -> List[PluginScanCommand]
         """Get the list of all available scan comands across all plugins.
         """
-        return self._scan_commands_to_plugin_classes.keys()
+        return self._scan_command_classes_to_plugin_classes.keys()
 
     def get_available_plugins(self):
         # type: () -> List[Type[Plugin]]
         """Get the list of all available plugin.
         """
-        return list(set(self._scan_commands_to_plugin_classes.values()))
+        return list(set(self._scan_command_classes_to_plugin_classes.values()))

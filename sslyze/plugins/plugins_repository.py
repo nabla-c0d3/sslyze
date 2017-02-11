@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.plugins.compression_plugin import CompressionPlugin
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin

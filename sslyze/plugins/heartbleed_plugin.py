@@ -89,7 +89,6 @@ class HeartbleedResult(PluginResult):
 
 
 def heartbleed_payload(ssl_version):
-    print ssl_version
     # This heartbleed payload does not exploit the server
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
 

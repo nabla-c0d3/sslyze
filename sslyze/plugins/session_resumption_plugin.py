@@ -17,7 +17,7 @@ from typing import Text
 from typing import Tuple
 
 
-class SessionResumptionSupportPluginScanCommand(plugin_base.PluginScanCommand):
+class SessionResumptionSupportScanCommand(plugin_base.PluginScanCommand):
     """Test the server(s) for session resumption support using session IDs and TLS session tickets (RFC 5077).
     """
 
@@ -26,7 +26,7 @@ class SessionResumptionSupportPluginScanCommand(plugin_base.PluginScanCommand):
         return u'resum'
 
 
-class SessionResumptionRatePluginScanCommand(plugin_base.PluginScanCommand):
+class SessionResumptionRateScanCommand(plugin_base.PluginScanCommand):
     """Perform 100 session ID resumptions with the server(s), in order to estimate the rate for successful resumptions.
     """
 
@@ -53,12 +53,12 @@ class SessionResumptionPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
-        return [SessionResumptionSupportPluginScanCommand, SessionResumptionRatePluginScanCommand]
+        return [SessionResumptionSupportScanCommand, SessionResumptionRateScanCommand]
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> SessionResumptionRateScanResult
-        if scan_command.__class__ == SessionResumptionSupportPluginScanCommand:
+        # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> PluginScanResult
+        if scan_command.__class__ == SessionResumptionSupportScanCommand:
             # Test Session ID support
             successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(server_info, 5)
 
@@ -81,7 +81,7 @@ class SessionResumptionPlugin(plugin_base.Plugin):
                                                         errored_resumptions_list,
                                       ticket_supported, ticket_reason, ticket_exception)
 
-        elif scan_command.__class__ == SessionResumptionRatePluginScanCommand:
+        elif scan_command.__class__ == SessionResumptionRateScanCommand:
             successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(server_info, 100)
             result = SessionResumptionRateScanResult(server_info, scan_command, 100, successful_resumptions_nb,
                                                      errored_resumptions_list)
@@ -227,11 +227,11 @@ class SessionResumptionRateScanResult(PluginScanResult):
     """The result of running SessionResumptionRateScanCommand on a specific server.
 
     Attributes:
-        attempted_resumptions_nb (int): The total number of session ID resumptions that were attempted.
+        attempted_resumptions_nb (int): The total number of session ID resumptions that were attempted, which is 100.
         successful_resumptions_nb (int): The number of session ID resumptions that were successful.
         failed_resumptions_nb (int): The number of session ID resumptions that failed.
-        errored_resumptions_list (Optional[List[(str)]): A list of unexpected errors triggered while trying to perform
-        session ID resumption with the server (should always be empty).
+        errored_resumptions_list (Optional[List[(Text)]): A list of unexpected errors triggered while trying to perform
+            session ID resumption with the server (should always be empty).
     """
 
     COMMAND_TITLE = u'Resumption Rate'
@@ -239,7 +239,7 @@ class SessionResumptionRateScanResult(PluginScanResult):
     def __init__(
             self,
             server_info,                # type: ServerConnectivityInfo
-            scan_command,               # type: SessionResumptionRatePluginScanCommand
+            scan_command,               # type: SessionResumptionRateScanCommand
             attempted_resumptions_nb,   # type: int
             successful_resumptions_nb,  # type: int
             errored_resumptions_list    # type: List[Text]
@@ -308,20 +308,25 @@ class SessionResumptionRateScanResult(PluginScanResult):
 
 
 
-class SessionResumptionSupportScanResult(SessionResumptionRateScanResult):
-    """The result of running --resum on a specific server; also has all the attributes of ResumptionRateResult.
+class SessionResumptionSupportScanResult(PluginScanResult):
+    """The result of running SessionResumptionRateScanCommand on a specific server.
 
     Attributes:
+        attempted_resumptions_nb (int): The total number of session ID resumptions that were attempted, which is 5.
+        successful_resumptions_nb (int): The number of session ID resumptions that were successful.
+        failed_resumptions_nb (int): The number of session ID resumptions that failed.
+        errored_resumptions_list (Optional[List[(Text)]): A list of unexpected errors triggered while trying to perform
+            session ID resumption with the server (should always be empty).
         is_ticket_resumption_supported (bool): True if the server honors client-initiated renegotiation attempts.
-        ticket_resumption_failed_reason (str): A message explaining why TLS ticket resumption failed.
-        ticket_resumption_exception (Optional[str]): An unexpected error that was raised while trying to perform ticket
+        ticket_resumption_failed_reason (Text): A message explaining why TLS ticket resumption failed.
+        ticket_resumption_exception (Optional[Text]): An unexpected error that was raised while trying to perform ticket
             resumption (should never happen).
     """
 
     def __init__(
             self,
             server_info,                            # type: ServerConnectivityInfo
-            scan_command,                           # type: SessionResumptionRatePluginScanCommand
+            scan_command,                           # type: SessionResumptionRateScanCommand
             attempted_resumptions_nb,               # type: int
             successful_resumptions_nb,              # type: int
             errored_resumptions_list,               # type: List[Text]
@@ -329,8 +334,12 @@ class SessionResumptionSupportScanResult(SessionResumptionRateScanResult):
             ticket_resumption_failed_reason=None,   # type: Optional[Text]
             ticket_resumption_exception=None        # type: Optional[Exception]
     ):
-        super(SessionResumptionSupportScanResult, self).__init__(server_info, scan_command, attempted_resumptions_nb,
-                                                                 successful_resumptions_nb, errored_resumptions_list)
+        super(SessionResumptionSupportScanResult, self).__init__(server_info, scan_command)
+        self.attempted_resumptions_nb = attempted_resumptions_nb
+        self.successful_resumptions_nb = successful_resumptions_nb
+        self.errored_resumptions_list = errored_resumptions_list
+        self.failed_resumptions_nb = attempted_resumptions_nb - successful_resumptions_nb - \
+                                     len(errored_resumptions_list)
 
         self.is_ticket_resumption_supported = is_ticket_resumption_supported
         self.ticket_resumption_failed_reason = ticket_resumption_failed_reason
@@ -342,6 +351,7 @@ class SessionResumptionSupportScanResult(SessionResumptionRateScanResult):
                                                              str(ticket_resumption_exception))
 
     COMMAND_TITLE = u'Session Resumption'
+    RESUMPTION_LINE_FORMAT = u'      {resumption_type:<35}{result}'
 
     def as_text(self):
         # Same output as --resum_rate but add a line about TLS ticket resumption at the end

@@ -196,16 +196,15 @@ class CertificateInfoScanResult(PluginScanResult):
         path_validation_error_list (List[PathValidationError]):  The list of attempts at validating the server's
             certificate chain path that triggered an unexpected error.
         successful_trust_store (Optional[TrustStore]): The first trust store that successfully validated the server's
-            certificate chain among all the trust stores packaged with SSLyze: Mozilla, Apple, Microsoft, etc. as well
+            certificate chain among all the trust stores packaged with SSLyze (Mozilla, Apple, Microsoft, etc.) as well
             as the custom store, if supplied using the ca_file option. This trust store is then used to build the
             server's verified certificate chain and to validate the OCSP response (if one is returned by the server).
             Will be None if none of the available trust stores were able to successfully validate the server's
             certificate chain.
-        verified_certificate_chain (List[Certificate]): The verified certificate chain built using the Mozilla trust
-            store; index 0 is the leaf certificate and the last element is the anchor/CA certificate from the trust
-            store. If the certificate chain is not trusted with the Mozilla store, the plugin will attempt to build the
-            verified chain using other trust stores available for which the validation was successful. Will be empty if
-            the validation failed with all available trust store, or the verified chain could not be built.
+        verified_certificate_chain (List[Certificate]): The verified certificate chain built using the
+            successful_trust_store; index 0 is the leaf certificate and the last element is the anchor/CA certificate
+            from the trust store. Will be empty if the validation failed with all available trust store, or the
+            verified chain could not be built.
         hostname_validation_result (HostnameValidationResultEnum): Validation result of the certificate hostname.
         is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
         ocsp_response (Optional[Dict]): The OCSP response returned by the server. None if no response was sent by the

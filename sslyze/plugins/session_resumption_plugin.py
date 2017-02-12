@@ -238,16 +238,15 @@ class SessionResumptionRateScanResult(PluginScanResult):
             self,
             server_info,                # type: ServerConnectivityInfo
             scan_command,               # type: SessionResumptionRateScanCommand
-            attempted_resumptions_nb,   # type: int
-            successful_resumptions_nb,  # type: int
+            attempted_resum_nb,         # type: int
+            successful_resum_nb,        # type: int
             errored_resumptions_list    # type: List[Text]
     ):
         super(SessionResumptionRateScanResult, self).__init__(server_info, scan_command)
-        self.attempted_resumptions_nb = attempted_resumptions_nb
-        self.successful_resumptions_nb = successful_resumptions_nb
+        self.attempted_resumptions_nb = attempted_resum_nb
+        self.successful_resumptions_nb = successful_resum_nb
         self.errored_resumptions_list = errored_resumptions_list
-        self.failed_resumptions_nb = attempted_resumptions_nb - successful_resumptions_nb - \
-                                     len(errored_resumptions_list)
+        self.failed_resumptions_nb = attempted_resum_nb - successful_resum_nb - len(errored_resumptions_list)
 
 
     RESUMPTION_RESULT_FORMAT = u'{4} ({0} successful, {1} failed, {2} errors, {3} total attempts).'
@@ -325,8 +324,8 @@ class SessionResumptionSupportScanResult(PluginScanResult):
             self,
             server_info,                            # type: ServerConnectivityInfo
             scan_command,                           # type: SessionResumptionRateScanCommand
-            attempted_resumptions_nb,               # type: int
-            successful_resumptions_nb,              # type: int
+            attempted_resum_nb,                     # type: int
+            successful_resum_nb,                    # type: int
             errored_resumptions_list,               # type: List[Text]
             is_ticket_resumption_supported,         # type: int
             ticket_resumption_failed_reason=None,   # type: Optional[Text]
@@ -336,8 +335,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
         self.attempted_resumptions_nb = attempted_resumptions_nb
         self.successful_resumptions_nb = successful_resumptions_nb
         self.errored_resumptions_list = errored_resumptions_list
-        self.failed_resumptions_nb = attempted_resumptions_nb - successful_resumptions_nb - \
-                                     len(errored_resumptions_list)
+        self.failed_resumptions_nb = attempted_resum_nb - successful_resum_nb - len(errored_resumptions_list)
 
         self.is_ticket_resumption_supported = is_ticket_resumption_supported
         self.ticket_resumption_failed_reason = ticket_resumption_failed_reason

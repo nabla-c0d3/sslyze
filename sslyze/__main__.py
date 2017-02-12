@@ -4,8 +4,7 @@ from __future__ import print_function
 
 import os
 import sys
-
-if not hasattr(sys,"frozen"):
+if not hasattr(sys, "frozen"):
     sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
 
 from sslyze.concurrent_scanner import ConcurrentScanner
@@ -20,13 +19,16 @@ from time import time
 from sslyze.server_connectivity import ServersConnectivityTester
 
 
-# Global so we can terminate processes when catching SIGINT
-scanner = None
+class _GlobalScanner(object):
+    """Global/hack so we can terminate processes created by the scanner when catching SIGINT.
+    """
+    SCANNER = None
+
 
 def sigint_handler(signum, frame):
     print(u'Scan interrupted... shutting down.')
-    if scanner:
-        scanner.emergency_shutdown()
+    if _GlobalScanner.SCANNER:
+        _GlobalScanner.SCANNER.emergency_shutdown()
     sys.exit()
 
 
@@ -57,10 +59,10 @@ def main():
     # Initialize the pool of processes that will run each plugin
     if args_command_list.https_tunnel:
         # Maximum one process to not kill the proxy
-        scanner = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout,
-                                    max_processes_nb=1)
+        _GlobalScanner.SCANNER = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout,
+                                                   max_processes_nb=1)
     else:
-        scanner = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout)
+        _GlobalScanner.SCANNER = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout)
 
 
     # Figure out which hosts are up and fill the task queue with work to do
@@ -88,7 +90,7 @@ def main():
                         optional_args[optional_arg_name] = getattr(args_command_list, optional_arg_name)
                 scan_command = scan_command_class(**optional_args)
 
-                scanner.queue_scan_command(server_connectivity_info, scan_command)
+                _GlobalScanner.SCANNER.queue_scan_command(server_connectivity_info, scan_command)
 
 
     # Store and print servers we were NOT able to connect to
@@ -108,20 +110,20 @@ def main():
     # Each host has a list of results
     result_dict = {}
     # We cannot use the server_info object directly as its address will change due to multiprocessing
-    RESULT_KEY_FORMAT = u'{hostname}:{ip_address}:{port}'.format
+    RESULT_KEY_FORMAT = u'{hostname}:{ip_address}:{port}'
     for server_info in online_servers_list:
-        result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname, ip_address=server_info.ip_address,
-                                      port=server_info.port)] = []
+        result_dict[RESULT_KEY_FORMAT.format(hostname=server_info.hostname, ip_address=server_info.ip_address,
+                                             port=server_info.port)] = []
 
     # Process the results as they come
-    for plugin_result in scanner.get_results():
+    for plugin_result in _GlobalScanner.SCANNER.get_results():
         server_info = plugin_result.server_info
-        result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname, ip_address=server_info.ip_address,
-                                      port=server_info.port)].append(plugin_result)
+        result_dict[RESULT_KEY_FORMAT.format(hostname=server_info.hostname, ip_address=server_info.ip_address,
+                                             port=server_info.port)].append(plugin_result)
 
-        plugin_result_list = result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname,
-                                                           ip_address=server_info.ip_address,
-                                                           port=server_info.port)]
+        plugin_result_list = result_dict[RESULT_KEY_FORMAT.format(hostname=server_info.hostname,
+                                                                  ip_address=server_info.ip_address,
+                                                                  port=server_info.port)]
 
         if len(plugin_result_list) == task_num:
             # Done with this server; send the result to the output hub

@@ -95,7 +95,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
                 u'--ca_file',
                 help=u'Path to a local trust store file (with root certificates in PEM format) to verify the validity '
                      u'of the server(s) certificate\'s chain(s) against.',
-            dest=u'ca_file'
+                dest=u'ca_file'
             )
         )
         # TODO(ad): Move this to the command line parser ?
@@ -152,7 +152,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
         # All done
         return CertificateInfoScanResult(server_info, scan_command, certificate_chain, path_validation_result_list,
-                                        path_validation_error_list, ocsp_response)
+                                         path_validation_error_list, ocsp_response)
 
 
     @staticmethod

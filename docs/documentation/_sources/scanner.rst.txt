@@ -1,0 +1,25 @@
+.. sslyze documentation master file, created by
+   sphinx-quickstart on Sun Jan 15 12:41:02 2017.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Step 2: Running Scan Commands Against a Server
+**********************************************
+
+
+Running Commands Sequentially
+=============================
+
+.. automodule:: sslyze.synchronous_scanner
+.. autoclass:: SynchronousScanner
+   :members: __init__, run_scan_command
+
+
+Running Commands Concurrently
+=============================
+
+.. automodule:: sslyze.concurrent_scanner
+.. autoclass:: ConcurrentScanner
+   :members: __init__, queue_scan_command, get_results
+.. autoclass:: PluginRaisedExceptionScanResult
+

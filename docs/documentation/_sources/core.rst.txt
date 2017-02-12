@@ -1,0 +1,42 @@
+.. sslyze documentation master file, created by
+   sphinx-quickstart on Sun Jan 15 12:41:02 2017.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to SSLyze's documentation!
+==================================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+.. Core classes
+.. automodule:: sslyze.server_connectivity
+.. autoclass:: ServerConnectivityInfo
+   :members: __init__, test_connectivity_to_server
+
+.. automodule:: sslyze.ssl_settings
+.. autoclass:: HttpConnectTunnelingSettings
+   :members: __init__, from_url
+.. autoclass:: ClientAuthenticationCredentials
+   :members: __init__
+.. autoclass:: TlsWrappedProtocolEnum
+   :undoc-members:
+   :members:
+
+.. automodule:: sslyze.concurrent_scanner
+.. autoclass:: ConcurrentScanner
+   :members: __init__, queue_scan_command, get_results
+.. autoclass:: PluginRaisedExceptionScanResult
+
+.. automodule:: sslyze.synchronous_scanner
+.. autoclass:: SynchronousScanner
+   :members: __init__, run_scan_command
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

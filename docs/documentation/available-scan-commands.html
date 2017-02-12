@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Available Scan Commands &#8212; SSLyze  documentation</title>
+    <title>Appendix: Available Scan Commands &#8212; SSLyze  documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -50,8 +50,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="available-scan-commands">
-<h1>Available Scan Commands<a class="headerlink" href="#available-scan-commands" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="appendix-available-scan-commands">
+<h1>Appendix: Available Scan Commands<a class="headerlink" href="#appendix-available-scan-commands" title="Permalink to this headline">¶</a></h1>
 <p>Every type of scan that SSLyze can run against a server (supported cippher suites, session renegotiation, etc.) is
 represented by a <cite>ScanCommand</cite>, which is implemented using a plugin system. Each <cite>ScanCommand</cite> will return a
 <cite>ScanResult</cite> when run against a server.</p>
@@ -279,6 +279,27 @@ certificate.</p>
 <code class="descname">version</code><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore.version" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Text</em> &#8211; The human-readable version or date of the trust store (such as &#8220;09/2016&#8221;).</p>
 </dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-nassl.x509_certificate"></span><dl class="class">
+<dt id="nassl.x509_certificate.HostnameValidationResultEnum">
+<em class="property">class </em><code class="descclassname">nassl.x509_certificate.</code><code class="descname">HostnameValidationResultEnum</code><a class="headerlink" href="#nassl.x509_certificate.HostnameValidationResultEnum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostname validation result constants.</p>
+<dl class="attribute">
+<dt id="nassl.x509_certificate.HostnameValidationResultEnum.NAME_DOES_NOT_MATCH">
+<code class="descname">NAME_DOES_NOT_MATCH</code><em class="property"> = 0</em><a class="headerlink" href="#nassl.x509_certificate.HostnameValidationResultEnum.NAME_DOES_NOT_MATCH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_CN">
+<code class="descname">NAME_MATCHES_CN</code><em class="property"> = 2</em><a class="headerlink" href="#nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_CN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_SAN">
+<code class="descname">NAME_MATCHES_SAN</code><em class="property"> = 1</em><a class="headerlink" href="#nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_SAN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -859,7 +880,7 @@ session ID resumption with the server (should always be empty).</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Available Scan Commands</a><ul>
+<li><a class="reference internal" href="#">Appendix: Available Scan Commands</a><ul>
 <li><a class="reference internal" href="#module-sslyze.plugins.certificate_info_plugin">CertificateInfoPlugin</a><ul>
 <li><a class="reference internal" href="#certificateinfoscancommand">CertificateInfoScanCommand</a></li>
 <li><a class="reference internal" href="#additional-helper-classes">Additional helper classes</a></li>

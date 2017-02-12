@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Available Scan Commands
-***********************
+Appendix: Available Scan Commands
+*********************************
 
 Every type of scan that SSLyze can run against a server (supported cippher suites, session renegotiation, etc.) is
 represented by a `ScanCommand`, which is implemented using a plugin system. Each `ScanCommand` will return a
@@ -35,7 +35,10 @@ Additional helper classes
 .. autoclass:: Certificate()
 .. automodule:: sslyze.plugins.utils.trust_store.trust_store
 .. autoclass:: TrustStore()
-
+.. module:: nassl.x509_certificate
+.. autoclass:: HostnameValidationResultEnum
+   :undoc-members:
+   :members:
 
 OpenSslCipherSuitesPlugin
 =========================

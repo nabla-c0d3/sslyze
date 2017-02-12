@@ -2,6 +2,7 @@
 
 
 import optparse
+import os
 from xml.etree.ElementTree import Element
 
 from nassl._nassl import OpenSSLError
@@ -93,9 +94,9 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         options.append(
             optparse.make_option(
                 u'--ca_file',
-                help=u'Local Certificate Authority file (in PEM format), to verify the validity of the server(s)'
-                     u' certificate(s) against.',
-                action=u'store_true'
+                help=u'Path to a local trust store file (with root certificates in PEM format) to verify the validity '
+                     u'of the server(s) certificate\'s chain(s) against.',
+            dest=u'ca_file'
             )
         )
         # TODO(ad): Move this to the command line parser ?
@@ -113,6 +114,8 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         # type: (ServerConnectivityInfo, CertificateInfoScanCommand) -> CertificateInfoScanResult
         final_trust_store_list = list(TrustStoresRepository.get_all())
         if scan_command.custom_ca_file:
+            if not os.path.isfile(scan_command.custom_ca_file):
+                raise ValueError(u'Could not open supplied CA file at "{}"'.format(scan_command.custom_ca_file))
             final_trust_store_list.append(TrustStore(scan_command.custom_ca_file, u'Custom --ca_file', u'N/A'))
 
         thread_pool = ThreadPool()

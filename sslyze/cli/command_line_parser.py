@@ -3,7 +3,7 @@ from optparse import OptionParser, OptionGroup
 
 import socket
 
-from nassl import OpenSslFileTypeEnum
+from nassl.ssl_client import OpenSslFileTypeEnum
 from typing import Text
 from typing import Tuple
 from sslyze.cli import FailedServerScan

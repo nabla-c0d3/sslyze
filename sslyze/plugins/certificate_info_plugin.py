@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Retrieve and validate the server(s)' certificate chain.
-"""
 
 import optparse
 import os
@@ -79,6 +77,8 @@ class PathValidationError(object):
 
 
 class CertificateInfoPlugin(plugin_base.Plugin):
+    """Retrieve and validate the server(s)' certificate chain.
+    """
 
     @classmethod
     def get_available_commands(cls):

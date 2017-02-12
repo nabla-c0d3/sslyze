@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test the server(s) for the OpenSSL CCS injection vulnerability (CVE-2014-0224).
-"""
+
 import socket
 import struct
 import random
@@ -23,16 +22,12 @@ class OpenSslCcsInjectionScanCommand(plugin_base.PluginScanCommand):
 
 
 class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
-
+    """Test the server(s) for the OpenSSL CCS injection vulnerability (CVE-2014-0224).
+    """
 
     @classmethod
     def get_available_commands(cls):
         return [OpenSslCcsInjectionScanCommand]
-
-    def srecv(self):
-        r = self._sock.recv(4096)
-        self._inbuffer += r
-        return r != ''
 
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, OpenSslCcsInjectionScanCommand) -> OpenSslCcsInjectionScanResult
@@ -50,7 +45,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         self._sock.send(self.make_hello())
         while not serverhello:  # or not servercert
             try:
-                if not self.srecv():
+                if not self._srecv():
                     break
             except:
                 break
@@ -69,7 +64,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
             self._sock.send(self.make_ccs())
             while not stop:
                 try:
-                    if not self.srecv():
+                    if not self._srecv():
                         break
                 except socket.timeout:
                     break
@@ -90,7 +85,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
                 self._sock.send('\x15' + self.ssl_tokens[self._ssl_version] + '\x00\x02\x01\x00')
 
                 try:
-                    if not self.srecv():
+                    if not self._srecv():
                         is_vulnerable = False
                 except:
                     is_vulnerable = False
@@ -98,6 +93,10 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         self._sock.close()
         return OpenSslCcsInjectionScanResult(server_info, scan_command, is_vulnerable)
 
+    def _srecv(self):
+        r = self._sock.recv(4096)
+        self._inbuffer += r
+        return r != ''
 
     ssl_tokens = {
         OpenSslVersionEnum.SSLV3: b"\x03\x00",

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Analyze the server(s) SSL session resumption capabilities.
-"""
 
 from xml.etree.ElementTree import Element
 import nassl
@@ -45,6 +43,8 @@ class TslSessionTicketSupportEnum(Enum):
 
 
 class SessionResumptionPlugin(plugin_base.Plugin):
+    """Analyze the server(s) SSL session resumption capabilities.
+    """
 
     MAX_THREADS_NB = 20
 
@@ -332,8 +332,8 @@ class SessionResumptionSupportScanResult(PluginScanResult):
             ticket_resumption_exception=None        # type: Optional[Exception]
     ):
         super(SessionResumptionSupportScanResult, self).__init__(server_info, scan_command)
-        self.attempted_resumptions_nb = attempted_resumptions_nb
-        self.successful_resumptions_nb = successful_resumptions_nb
+        self.attempted_resumptions_nb = attempted_resum_nb
+        self.successful_resumptions_nb = successful_resum_nb
         self.errored_resumptions_list = errored_resumptions_list
         self.failed_resumptions_nb = attempted_resum_nb - successful_resum_nb - len(errored_resumptions_list)
 
@@ -347,8 +347,8 @@ class SessionResumptionSupportScanResult(PluginScanResult):
                                                              str(ticket_resumption_exception))
 
         # We use a SessionResumptionRateScanResult to re-use code in as_text() and as_xml()
-        self._rate_result = SessionResumptionRateScanResult(server_info, scan_command, attempted_resumptions_nb,
-                                                            successful_resumptions_nb, errored_resumptions_list)
+        self._rate_result = SessionResumptionRateScanResult(server_info, scan_command, attempted_resum_nb,
+                                                            successful_resum_nb, errored_resumptions_list)
 
     COMMAND_TITLE = u'Session Resumption'
     RESUMPTION_LINE_FORMAT = u'      {resumption_type:<35}{result}'

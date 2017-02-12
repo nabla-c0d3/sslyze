@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Test the server(s) for the OpenSSL Heartbleed vulnerability (CVE-2014-0160).
-"""
 
 import types
 from xml.etree.ElementTree import Element
@@ -24,6 +22,8 @@ class HeartbleedScanCommand(PluginScanCommand):
 
 
 class HeartbleedPlugin(plugin_base.Plugin):
+    """Test the server(s) for the OpenSSL Heartbleed vulnerability (CVE-2014-0160).
+    """
 
     @classmethod
     def get_available_commands(cls):

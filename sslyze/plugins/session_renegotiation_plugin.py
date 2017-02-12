@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Test the server(s)' implementation of session renegotiation.
-"""
 
 import socket
 from xml.etree.ElementTree import Element
@@ -22,6 +20,8 @@ class SessionRenegotiationScanCommand(plugin_base.PluginScanCommand):
 
 
 class SessionRenegotiationPlugin(plugin_base.Plugin):
+    """Test the server(s)' implementation of session renegotiation.
+    """
 
     @classmethod
     def get_available_commands(cls):

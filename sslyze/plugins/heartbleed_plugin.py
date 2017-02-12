@@ -7,7 +7,7 @@ from xml.etree.ElementTree import Element
 
 from nassl._nassl import WantX509LookupError, WantReadError
 
-from nassl import OpenSslVersionEnum
+from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo

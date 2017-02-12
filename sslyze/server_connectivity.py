@@ -5,11 +5,10 @@
 import socket
 
 from enum import Enum
-from nassl import OpenSslVersionEnum
 from typing import Iterable
 from typing import List
 from typing import Optional
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
 
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
 from typing import Text

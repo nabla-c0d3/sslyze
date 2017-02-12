@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Test the server(s) for the OpenSSL CCS injection vulnerability (CVE-2014-0224).
 """
-
+import socket
+import struct
+import random
 from xml.etree.ElementTree import Element
 
-from nassl import OpenSslVersionEnum
+from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
-import socket, struct, random
-
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLConnection

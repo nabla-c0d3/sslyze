@@ -7,7 +7,6 @@ from base64 import b64encode
 from urllib import quote
 
 from enum import Enum
-from nassl import OpenSslFileTypeEnum
 from typing import Optional
 from typing import Text
 
@@ -20,7 +19,7 @@ except ImportError:
     # noinspection PyCompatibility
     from urlparse import urlparse
 
-from nassl.ssl_client import SslClient
+from nassl.ssl_client import SslClient, OpenSslFileTypeEnum
 
 
 class TlsWrappedProtocolEnum(Enum):

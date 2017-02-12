@@ -7,9 +7,7 @@ from abc import ABCMeta
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
-from nassl import OpenSslVersionEnum
-from nassl.ssl_client import SslClient
-
+from nassl.ssl_client import SslClient, OpenSslVersionEnum
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo

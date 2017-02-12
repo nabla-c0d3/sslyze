@@ -3,7 +3,8 @@
 """
 
 from xml.etree.ElementTree import Element
-from nassl import _nassl, OpenSslVersionEnum
+from nassl import _nassl
+from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo

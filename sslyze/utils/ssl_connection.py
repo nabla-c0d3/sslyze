@@ -9,9 +9,9 @@ import time
 from base64 import b64encode
 from urllib import quote
 
-from nassl import _nassl, OpenSslVerifyEnum
+from nassl import _nassl
 from nassl.debug_ssl_client import DebugSslClient
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested, OpenSslVerifyEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 
 from sslyze.utils.http_response_parser import HttpResponseParser

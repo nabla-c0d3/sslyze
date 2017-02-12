@@ -53,11 +53,11 @@
   <div class="section" id="sslyze-documentation">
 <h1>SSLyze Documentation<a class="headerlink" href="#sslyze-documentation" title="Permalink to this headline">¶</a></h1>
 <p>This is the documentation for using SSLyze as a Python module. The Python API has changed multiple times in the past,
-but should be now considered stable (as of version 0.15.0).</p>
+but should be now considered stable (as of version 1.0.0).</p>
 <p>This module gives full access to SSLyze&#8217;s SSL/TLS scanning engine, which can analyze the SSL configuration of a server
-by connecting to it and detect various issues (bad certificates, dangerous cipher suites, etc.). Using SSLyze as a
-Python module makes it easy to implement SSL/TLS scanning as part of continuous security testing platform, and detect
-any misconfiguration across a range of public and/or internal endpoints.</p>
+by connecting to it and detect various issues (bad certificates, dangerous cipher suites, lack of session resumption,
+etc.). Using SSLyze as a Python module makes it easy to implement SSL/TLS scanning as part of continuous security
+testing platform, and detect any misconfiguration across a range of public and/or internal endpoints.</p>
 <p>At high-level, running SSL/TLS scans against a server is a two-step process, described in the following sections:</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -86,6 +86,7 @@ any misconfiguration across a range of public and/or internal endpoints.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Available Scan Commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#shared-attributes">Shared Attributes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.certificate_info_plugin">CertificateInfoPlugin</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#certificateinfoscancommand">CertificateInfoScanCommand</a></li>
 <li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#additional-helper-classes">Additional helper classes</a></li>

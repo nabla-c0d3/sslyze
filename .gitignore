@@ -56,3 +56,4 @@ ca/*
 
 # Sphynx
 docs/_build/*
+docs/documentation/_sources/*

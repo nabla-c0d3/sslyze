@@ -133,7 +133,7 @@ and accessible.</li>
 </p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PluginScanResult</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult" title="sslyze.plugins.plugin_base.PluginScanResult">PluginScanResult</a></p>
 </td>
 </tr>
 </tbody>
@@ -166,6 +166,10 @@ large number of servers, and it has a dispatching mechanism to avoid DOS-ing a s
 <span class="c1"># Process the results</span>
 <span class="n">reneg_result</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="k">for</span> <span class="n">plugin_result</span> <span class="ow">in</span> <span class="n">concurrent_scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
+    <span class="c1"># All scan results have the corresponding scan_command and server_info as an attribute</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Received scan result for </span><span class="si">{}</span><span class="s1"> on host </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scan_result</span><span class="o">.</span><span class="n">scan_command</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                                             <span class="n">scan_result</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">hostname</span><span class="p">))</span>
+
     <span class="c1"># Sometimes a plugin command can unexpectedly fail (as a bug); it is returned as a PluginRaisedExceptionResult</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">plugin_result</span><span class="p">,</span> <span class="n">PluginRaisedExceptionScanResult</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;Scan command failed: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">plugin_result</span><span class="o">.</span><span class="n">as_text</span><span class="p">()))</span>

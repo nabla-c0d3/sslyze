@@ -56,9 +56,31 @@
 represented by a <cite>ScanCommand</cite>, which is implemented using a plugin system. Each <cite>ScanCommand</cite> will return a
 <cite>ScanResult</cite> when run against a server.</p>
 <p>This page lists all the <cite>ScanCommands</cite> and corresponding <cite>ScanResults</cite> available in the current release of SSLyze.</p>
+<div class="section" id="shared-attributes">
+<h2>Shared Attributes<a class="headerlink" href="#shared-attributes" title="Permalink to this headline">¶</a></h2>
+<p>The <cite>ScanResult</cite> classes described in this section have specific attributes containing the result of a specific
+<cite>ScanCommand</cite>, but also share two attributes.</p>
+<span class="target" id="module-sslyze.plugins.plugin_base"></span><dl class="class">
+<dt id="sslyze.plugins.plugin_base.PluginScanResult">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.plugin_base.</code><code class="descname">PluginScanResult</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>The parent class of all the scan result classes.</p>
+<dl class="attribute">
+<dt id="sslyze.plugins.plugin_base.PluginScanResult.server_info">
+<code class="descname">server_info</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult.server_info" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ServerConnectivityInfo</em> &#8211; The server against which the command was run.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.plugin_base.PluginScanResult.scan_command">
+<code class="descname">scan_command</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult.scan_command" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PluginScanCommand</em> &#8211; The scan command that was run against the server.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-sslyze.plugins.certificate_info_plugin">
 <span id="certificateinfoplugin"></span><h2>CertificateInfoPlugin<a class="headerlink" href="#module-sslyze.plugins.certificate_info_plugin" title="Permalink to this headline">¶</a></h2>
-<p>Retrieve and validate the server(s)&#8217; certificate chain.</p>
 <div class="section" id="certificateinfoscancommand">
 <h3>CertificateInfoScanCommand<a class="headerlink" href="#certificateinfoscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -306,7 +328,6 @@ certificate.</p>
 </div>
 <div class="section" id="module-sslyze.plugins.openssl_cipher_suites_plugin">
 <span id="opensslciphersuitesplugin"></span><h2>OpenSslCipherSuitesPlugin<a class="headerlink" href="#module-sslyze.plugins.openssl_cipher_suites_plugin" title="Permalink to this headline">¶</a></h2>
-<p>Scan the server(s) for supported OpenSSL cipher suites.</p>
 <div class="section" id="ciphersuitescancommands">
 <h3>CipherSuiteScanCommands<a class="headerlink" href="#ciphersuitescancommands" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -510,7 +531,6 @@ response when scanning an HTTPS server with TlsWrappedProtocolEnum.HTTPS as the 
 </div>
 <div class="section" id="module-sslyze.plugins.compression_plugin">
 <span id="compressionplugin"></span><h2>CompressionPlugin<a class="headerlink" href="#module-sslyze.plugins.compression_plugin" title="Permalink to this headline">¶</a></h2>
-<p>Test the server(s) for Zlib compression support.</p>
 <div class="section" id="compressionscancommand">
 <h3>CompressionScanCommand<a class="headerlink" href="#compressionscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -536,7 +556,6 @@ compression is not supported by the server.</p>
 </div>
 <div class="section" id="module-sslyze.plugins.fallback_scsv_plugin">
 <span id="fallbackscsvplugin"></span><h2>FallbackScsvPlugin<a class="headerlink" href="#module-sslyze.plugins.fallback_scsv_plugin" title="Permalink to this headline">¶</a></h2>
-<p>Test the server(s) for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.</p>
 <div class="section" id="fallbackscsvscancommand">
 <h3>FallbackScsvScanCommand<a class="headerlink" href="#fallbackscsvscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -566,7 +585,6 @@ compression is not supported by the server.</p>
 </div>
 <div class="section" id="module-sslyze.plugins.heartbleed_plugin">
 <span id="heartbleedplugin"></span><h2>HeartbleedPlugin<a class="headerlink" href="#module-sslyze.plugins.heartbleed_plugin" title="Permalink to this headline">¶</a></h2>
-<p>Test the server(s) for the OpenSSL Heartbleed vulnerability (CVE-2014-0160).</p>
 <div class="section" id="heartbleedscancommand">
 <h3>HeartbleedScanCommand<a class="headerlink" href="#heartbleedscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -591,7 +609,6 @@ compression is not supported by the server.</p>
 </div>
 <div class="section" id="module-sslyze.plugins.http_headers_plugin">
 <span id="httpheadersscanplugin"></span><h2>HttpHeadersScanPlugin<a class="headerlink" href="#module-sslyze.plugins.http_headers_plugin" title="Permalink to this headline">¶</a></h2>
-<p>Test the server(s) for the presence of security-related HTTP headers.</p>
 <div class="section" id="httpheadersscancommand">
 <h3>HttpHeadersScanCommand<a class="headerlink" href="#httpheadersscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -712,7 +729,6 @@ in the certificate&#8217;s hpkp_pin attribute. None if the verified chain could 
 </div>
 <div class="section" id="module-sslyze.plugins.openssl_ccs_injection_plugin">
 <span id="opensslccsinjectionplugin"></span><h2>OpenSslCcsInjectionPlugin<a class="headerlink" href="#module-sslyze.plugins.openssl_ccs_injection_plugin" title="Permalink to this headline">¶</a></h2>
-<p>Test the server(s) for the OpenSSL CCS injection vulnerability (CVE-2014-0224).</p>
 <div class="section" id="opensslccsinjectionscancommand">
 <h3>OpenSslCcsInjectionScanCommand<a class="headerlink" href="#opensslccsinjectionscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -737,7 +753,6 @@ in the certificate&#8217;s hpkp_pin attribute. None if the verified chain could 
 </div>
 <div class="section" id="module-sslyze.plugins.session_renegotiation_plugin">
 <span id="sessionrenegotiationplugin"></span><h2>SessionRenegotiationPlugin<a class="headerlink" href="#module-sslyze.plugins.session_renegotiation_plugin" title="Permalink to this headline">¶</a></h2>
-<p>Test the server(s)&#8217; implementation of session renegotiation.</p>
 <div class="section" id="sessionrenegotiationscancommand">
 <h3>SessionRenegotiationScanCommand<a class="headerlink" href="#sessionrenegotiationscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -768,7 +783,6 @@ in the certificate&#8217;s hpkp_pin attribute. None if the verified chain could 
 </div>
 <div class="section" id="module-sslyze.plugins.session_resumption_plugin">
 <span id="sessionresumptionplugin"></span><h2>SessionResumptionPlugin<a class="headerlink" href="#module-sslyze.plugins.session_resumption_plugin" title="Permalink to this headline">¶</a></h2>
-<p>Analyze the server(s) SSL session resumption capabilities.</p>
 <div class="section" id="sessionresumptionsupportscancommand">
 <h3>SessionResumptionSupportScanCommand<a class="headerlink" href="#sessionresumptionsupportscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
@@ -880,6 +894,7 @@ session ID resumption with the server (should always be empty).</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Appendix: Available Scan Commands</a><ul>
+<li><a class="reference internal" href="#shared-attributes">Shared Attributes</a></li>
 <li><a class="reference internal" href="#module-sslyze.plugins.certificate_info_plugin">CertificateInfoPlugin</a><ul>
 <li><a class="reference internal" href="#certificateinfoscancommand">CertificateInfoScanCommand</a></li>
 <li><a class="reference internal" href="#additional-helper-classes">Additional helper classes</a></li>

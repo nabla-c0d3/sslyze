@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Available Scan Commands" href="available-scan-commands.html" />
+    <link rel="next" title="Appendix: Available Scan Commands" href="available-scan-commands.html" />
     <link rel="prev" title="Step 1: Testing Connectivity to a Server" href="testing-connectivity.html" /> 
   </head>
   <body role="document">
@@ -40,7 +40,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="available-scan-commands.html" title="Available Scan Commands"
+          <a href="available-scan-commands.html" title="Appendix: Available Scan Commands"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="testing-connectivity.html" title="Step 1: Testing Connectivity to a Server"
@@ -56,17 +56,17 @@
             
   <div class="section" id="step-2-running-scan-commands-against-a-server">
 <h1>Step 2: Running Scan Commands Against a Server<a class="headerlink" href="#step-2-running-scan-commands-against-a-server" title="Permalink to this headline">¶</a></h1>
-<p>Every type of scan that SSLyze can run against a server (supported cippher suites, session renegotiation, etc.) is
+<p>Every type of scan that SSLyze can run against a server (supported cipher suites, session renegotiation, etc.) is
 represented by a <cite>ScanCommand</cite>.</p>
 <p>Once a <cite>ScanCommand</cite> is run against a server, it returns a <cite>ScanResult</cite> which is an object with attributes containing
 the results of the scan. The list of attributes and what they mean depends on what kind of scan was run (ie. which
 <cite>ScanCommand</cite>).</p>
-<p>All the available <cite>ScanCommands</cite> and corresponding <cite>ScanResults</cite> are described in <a class="reference internal" href="available-scan-commands.html"><span class="doc">Available Scan Commands</span></a>.</p>
-<p>As explained in <a class="reference internal" href="testing-connectivity.html"><span class="doc">Step 1: Testing Connectivity to a Server</span></a>, a properly initialized <cite>ServerConnectivityInfo</cite> is needed in order to scan
-a server. Then, SSLyze can run <cite>ScanCommands</cite> against this server either:</p>
+<p>All the available <cite>ScanCommands</cite> and corresponding <cite>ScanResults</cite> are described in <a class="reference internal" href="available-scan-commands.html"><span class="doc">Appendix: Available Scan Commands</span></a>.</p>
+<p>As explained in <a class="reference internal" href="testing-connectivity.html"><span class="doc">Step 1: Testing Connectivity to a Server</span></a>, a properly initialized <cite>ServerConnectivityInfo</cite> is needed before the
+corresponding server can be scanned. Then, SSLyze can run <cite>ScanCommands</cite> against this server either:</p>
 <ul class="simple">
 <li>Sequentially using the <cite>SynchronousScanner</cite> class.</li>
-<li>Concurrently using the <cite>ConcurrentScanner</cite> class; this class is slightly more complex to use, but is also a lot faster when running a lot of <cite>ScanCommand</cite> and/or scanning multiple servers.</li>
+<li>Concurrently using the <cite>ConcurrentScanner</cite> class; this class is slightly more complex to use, but is also a lot faster when running a several <cite>ScanCommand</cite> and/or scanning multiple servers.</li>
 </ul>
 <div class="section" id="running-commands-sequentially">
 <h2>Running Commands Sequentially<a class="headerlink" href="#running-commands-sequentially" title="Permalink to this headline">¶</a></h2>
@@ -118,14 +118,19 @@ a server. Then, SSLyze can run <cite>ScanCommands</cite> against this server eit
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>server_info</strong> &#8211; The server&#8217;s connectivity information. The test_connectivity_to_server() method must have
-been called first to ensure that the server is online and accessible.</li>
-<li><strong>scan_command</strong> &#8211; The scan command to run against this server.</li>
+<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) &#8211; The server&#8217;s connectivity information. The
+test_connectivity_to_server() method must have been called first to ensure that the server is online
+and accessible.</li>
+<li><strong>scan_command</strong> (<em>PluginScanCommand</em>) &#8211; The scan command to run against this server.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The result of the scan command, which will be an instance of the scan command&#8217;s
-corresponding PluginScanResult subclass.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>The result of the scan command, which will be an instance of the scan command&#8217;s</dt>
+<dd><p class="first last">corresponding PluginScanResult subclass.</p>
+</dd>
+</dl>
+</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PluginScanResult</p>
@@ -230,16 +235,17 @@ this will be a PluginRaisedExceptionScanResult instance instead.</td>
 
 <dl class="method">
 <dt id="sslyze.concurrent_scanner.ConcurrentScanner.queue_scan_command">
-<code class="descname">queue_scan_command</code><span class="sig-paren">(</span><em>server_connectivity_info</em>, <em>scan_command</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.concurrent_scanner.ConcurrentScanner.queue_scan_command" title="Permalink to this definition">¶</a></dt>
+<code class="descname">queue_scan_command</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.concurrent_scanner.ConcurrentScanner.queue_scan_command" title="Permalink to this definition">¶</a></dt>
 <dd><p>Queue a scan command targeting a specific server.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>server_info</strong> &#8211; The server&#8217;s connectivity information. The test_connectivity_to_server() method must have
-been called first to ensure that the server is online and accessible.</li>
-<li><strong>scan_command</strong> &#8211; The scan command to run against this server.</li>
+<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) &#8211; The server&#8217;s connectivity information. The
+test_connectivity_to_server() method must have been called first to ensure that the server is online
+and accessible.</li>
+<li><strong>scan_command</strong> (<em>PluginScanCommand</em>) &#8211; The scan command to run against this server.</li>
 </ul>
 </td>
 </tr>
@@ -293,7 +299,7 @@ been called first to ensure that the server is online and accessible.</li>
                         title="previous chapter">Step 1: Testing Connectivity to a Server</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="available-scan-commands.html"
-                        title="next chapter">Available Scan Commands</a></p>
+                        title="next chapter">Appendix: Available Scan Commands</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -325,7 +331,7 @@ been called first to ensure that the server is online and accessible.</li>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="available-scan-commands.html" title="Available Scan Commands"
+          <a href="available-scan-commands.html" title="Appendix: Available Scan Commands"
              >next</a> |</li>
         <li class="right" >
           <a href="testing-connectivity.html" title="Step 1: Testing Connectivity to a Server"

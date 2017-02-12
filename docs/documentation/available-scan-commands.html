@@ -115,7 +115,7 @@ certificate chain path that triggered an unexpected error.</p>
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.successful_trust_store">
 <code class="descname">successful_trust_store</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.successful_trust_store" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[TrustStore]</em> &#8211; The first trust store that successfully validated the server&#8217;s
-certificate chain among all the trust stores packaged with SSLyze: Mozilla, Apple, Microsoft, etc. as well
+certificate chain among all the trust stores packaged with SSLyze (Mozilla, Apple, Microsoft, etc.) as well
 as the custom store, if supplied using the ca_file option. This trust store is then used to build the
 server&#8217;s verified certificate chain and to validate the OCSP response (if one is returned by the server).
 Will be None if none of the available trust stores were able to successfully validate the server&#8217;s
@@ -125,11 +125,10 @@ certificate chain.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.verified_certificate_chain">
 <code class="descname">verified_certificate_chain</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.verified_certificate_chain" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[Certificate]</em> &#8211; The verified certificate chain built using the Mozilla trust
-store; index 0 is the leaf certificate and the last element is the anchor/CA certificate from the trust
-store. If the certificate chain is not trusted with the Mozilla store, the plugin will attempt to build the
-verified chain using other trust stores available for which the validation was successful. Will be empty if
-the validation failed with all available trust store, or the verified chain could not be built.</p>
+<dd><p><em>List[Certificate]</em> &#8211; The verified certificate chain built using the
+successful_trust_store; index 0 is the leaf certificate and the last element is the anchor/CA certificate
+from the trust store. Will be empty if the validation failed with all available trust store, or the
+verified chain could not be built.</p>
 </dd></dl>
 
 <dl class="attribute">

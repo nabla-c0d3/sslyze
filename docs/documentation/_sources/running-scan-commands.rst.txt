@@ -6,7 +6,7 @@
 Step 2: Running Scan Commands Against a Server
 **********************************************
 
-Every type of scan that SSLyze can run against a server (supported cippher suites, session renegotiation, etc.) is
+Every type of scan that SSLyze can run against a server (supported cipher suites, session renegotiation, etc.) is
 represented by a `ScanCommand`.
 
 Once a `ScanCommand` is run against a server, it returns a `ScanResult` which is an object with attributes containing
@@ -15,11 +15,11 @@ the results of the scan. The list of attributes and what they mean depends on wh
 
 All the available `ScanCommands` and corresponding `ScanResults` are described in :doc:`available-scan-commands`.
 
-As explained in :doc:`testing-connectivity`, a properly initialized `ServerConnectivityInfo` is needed in order to scan
-a server. Then, SSLyze can run `ScanCommands` against this server either:
+As explained in :doc:`testing-connectivity`, a properly initialized `ServerConnectivityInfo` is needed before the
+corresponding server can be scanned. Then, SSLyze can run `ScanCommands` against this server either:
 
 * Sequentially using the `SynchronousScanner` class.
-* Concurrently using the `ConcurrentScanner` class; this class is slightly more complex to use, but is also a lot faster when running a lot of `ScanCommand` and/or scanning multiple servers.
+* Concurrently using the `ConcurrentScanner` class; this class is slightly more complex to use, but is also a lot faster when running a several `ScanCommand` and/or scanning multiple servers.
 
 
 Running Commands Sequentially

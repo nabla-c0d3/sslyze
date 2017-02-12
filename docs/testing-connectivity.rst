@@ -61,7 +61,7 @@ Enabling client authentication
 .. autoclass:: ClientAuthenticationCredentials()
    :members: __init__
 
-.. module:: nassl
+.. module:: nassl.ssl_client
 .. autoclass:: OpenSslFileTypeEnum
    :undoc-members:
    :members:

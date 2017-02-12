@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Utility classes to ensure that the servers to be scanned are actually reachable.
+"""Core classes to ensure that the servers to be scanned are actually online and reachable.
 """
 
 import socket
@@ -35,10 +35,8 @@ class ClientAuthenticationServerConfigurationEnum(Enum):
 
 
 class ServerConnectivityInfo(object):
-    """All settings (hostname, port, SSL version, etc.) needed to successfully connect to a specific SSL server.
-
-    After initializing a ServerConnectivityInfo, the test_connectivity_to_server() method must be called next to
-    ensure that the server is actually reachable.
+    """An object encapsulating all the settings (hostname, port, SSL version, etc.) needed to successfully connect to a
+    specific SSL/TLS server.
     """
 
     TLS_DEFAULT_PORTS = {
@@ -90,6 +88,9 @@ class ServerConnectivityInfo(object):
 
         Most arguments are optional but can be supplied in order to be more specific about the server's configuration.
 
+        After initializing a ServerConnectivityInfo, the `test_connectivity_to_server()` method must be called next to
+        ensure that the server is actually reachable.
+
         Args:
             hostname (Text): The server's hostname.
             port (Optional[int]): The server's TLS port number. If not supplied, the default port number for the specified
@@ -112,10 +113,6 @@ class ServerConnectivityInfo(object):
             http_tunneling_settings (Optional[HttpConnectTunnelingSettings]): The HTTP proxy configuration to use in
                 order to tunnel the scans through a proxy. If not supplied, sslyze will run the scans by directly
                 connecting to the server.
-
-        Returns:
-            ServerConnectivityInfo: An object representing all the information needed to connect to a specific server.
-            This information must be validated by calling the `test_connectivity_to_server()` method.
 
         Raises:
             ServerConnectivityError: If a DNS lookup was attempted and failed.
@@ -168,11 +165,12 @@ class ServerConnectivityInfo(object):
 
     def test_connectivity_to_server(self, network_timeout=None):
         # type: (Optional[int]) -> None
-        """Attempts to perform a full SSL handshake with the server.
+        """Attempts to perform a full SSL/TLS handshake with the server.
 
         This method will ensure that the server can be reached, and will also identify one SSL/TLS version and one
-        cipher suite supported by the server. If the connectivity test is successful, the ServerConnectivityInfo object
-        is then ready to be passed to plugins in order to run scan commands on the server.
+        cipher suite supported by the server. If the connectivity test is successful, the `ServerConnectivityInfo`
+        object is then ready to be passed to a `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands
+        on the server.
 
         Args:
             network_timeout (Optional[int]): Network timeout value in seconds passed to the underlying socket.

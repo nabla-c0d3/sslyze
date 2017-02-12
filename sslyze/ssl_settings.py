@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Settings to be used for configuring an SSL connection via the ServerConnectivityInfo class.
+"""Settings to be used for configuring a server's ServerConnectivityInfo.
 """
 
 import os
@@ -43,13 +43,18 @@ class TlsWrappedProtocolEnum(Enum):
 
 
 class ClientAuthenticationCredentials(object):
-    """Parameters needed to perform SSL/TLS client/mutual authentication with a server.
+    """Container for specifying the settings to perform SSL/TLS client authentication with the server.
     """
 
     def __init__(self, client_certificate_chain_path, client_key_path, client_key_type=OpenSslFileTypeEnum.PEM,
                  client_key_password=u''):
-        # type: (Text, Text, OpenSslFileTypeEnum, Text) -> None
-        """Create a container for SSL/TLS client authentication settings.
+        # type: (Text, Text, OpenSslFileTypeEnum, Optional[Text]) -> None
+        """
+        Args:
+            client_certificate_chain_path (Text): Path to the file containing the client's certificate.
+            client_key_path (Text): Path to the file containing the client's private key.
+            client_key_type (OpenSslFileTypeEnum): The format of the key file.
+            client_key_password (Optional[Text]): The password to decrypt the private key.
         """
         self.client_certificate_chain_path = client_certificate_chain_path
         if not os.path.isfile(self.client_certificate_chain_path):
@@ -71,11 +76,18 @@ class ClientAuthenticationCredentials(object):
 
 
 class HttpConnectTunnelingSettings(object):
-    """Parameters needed to tunnel SSL/TLS traffic through an HTTP Connect Proxy.
+    """Container for specifying the settings to tunnel all traffic through an HTTP Connect Proxy.
     """
 
     def __init__(self, hostname, port, basic_auth_user=None, basic_auth_password=None):
         # type: (Text, int, Optional[Text], Optional[Text]) -> None
+        """
+        Args:
+            hostname (Text): The proxy's hostname.
+            port (int): The proxy's port.
+            basic_auth_user (Optional[Text]): The username to use if the proxy requires Basic Authentication.
+            basic_auth_password (Optional[Text]): The password to use if the proxy requires Basic Authentication.
+        """
         self.hostname = hostname
         self.port = port
         self.basic_auth_user = basic_auth_user

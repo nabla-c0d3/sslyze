@@ -7,7 +7,7 @@ SSLyze Documentation
 ====================
 
 This is the documentation for using SSLyze as a Python module. The Python API has changed multiple times in the past,
-but should be now considered stable (as of version 0.15.0).
+but should be now considered stable (as of version 1.0.0).
 
 This module gives full access to SSLyze's SSL/TLS scanning engine, which can analyze the SSL configuration of a server
 by connecting to it and detect various issues (bad certificates, dangerous cipher suites, lack of session resumption,

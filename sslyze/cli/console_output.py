@@ -8,7 +8,7 @@ from typing import Text
 
 class ConsoleOutputGenerator(OutputGenerator):
 
-    TITLE_FORMAT =  u' {title}\n {underline}\n'
+    TITLE_FORMAT = u' {title}\n {underline}\n'
 
     SERVER_OK_FORMAT = u'   {host}:{port:<25} => {network_route} {client_auth_msg}'
     SERVER_INVALID_FORMAT = u'   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.'
@@ -36,7 +36,7 @@ class ConsoleOutputGenerator(OutputGenerator):
     def server_connectivity_test_failed(self, failed_scan):
         # type: (FailedServerScan) -> None
         self._file_to.write(self.SERVER_INVALID_FORMAT.format(server_string=failed_scan.server_string,
-                                                       error_msg=failed_scan.error_message))
+                                                              error_msg=failed_scan.error_message))
 
 
     def server_connectivity_test_succeeded(self, server_connectivity_info):

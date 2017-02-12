@@ -21,12 +21,12 @@ from sslyze.server_connectivity import ServersConnectivityTester
 
 
 # Global so we can terminate processes when catching SIGINT
-plugins_process_pool = None
+scanner = None
 
 def sigint_handler(signum, frame):
     print(u'Scan interrupted... shutting down.')
-    if plugins_process_pool:
-        plugins_process_pool.emergency_shutdown()
+    if scanner:
+        scanner.emergency_shutdown()
     sys.exit()
 
 
@@ -57,10 +57,10 @@ def main():
     # Initialize the pool of processes that will run each plugin
     if args_command_list.https_tunnel:
         # Maximum one process to not kill the proxy
-        plugins_process_pool = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout,
-                                                 max_processes_nb=1)
+        scanner = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout,
+                                    max_processes_nb=1)
     else:
-        plugins_process_pool = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout)
+        scanner = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout)
 
 
     # Figure out which hosts are up and fill the task queue with work to do
@@ -88,7 +88,7 @@ def main():
                         optional_args[optional_arg_name] = getattr(args_command_list, optional_arg_name)
                 scan_command = scan_command_class(**optional_args)
 
-                plugins_process_pool.queue_scan_command(server_connectivity_info, scan_command)
+                scanner.queue_scan_command(server_connectivity_info, scan_command)
 
 
     # Store and print servers we were NOT able to connect to
@@ -114,7 +114,7 @@ def main():
                                       port=server_info.port)] = []
 
     # Process the results as they come
-    for plugin_result in plugins_process_pool.get_results():
+    for plugin_result in scanner.get_results():
         server_info = plugin_result.server_info
         result_dict[RESULT_KEY_FORMAT(hostname=server_info.hostname, ip_address=server_info.ip_address,
                                       port=server_info.port)].append(plugin_result)

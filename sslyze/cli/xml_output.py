@@ -94,6 +94,6 @@ class XmlOutputGenerator(OutputGenerator):
         xml_sanitized_final_string = illegal_xml_chars_re.sub('', xml_final_string)
 
         # Hack: Prettify the XML file so it's (somewhat) diff-able
-        xml_final_pretty = minidom.parseString(xml_sanitized_final_string).toprettyxml(indent="  ", encoding="utf-8" )
+        xml_final_pretty = minidom.parseString(xml_sanitized_final_string).toprettyxml(indent="  ", encoding="utf-8")
         self._file_to.write(xml_final_pretty)
 

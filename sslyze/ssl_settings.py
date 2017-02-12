@@ -102,9 +102,9 @@ class HttpConnectTunnelingSettings(object):
             raise ValueError(u'Invalid Proxy URL.')
 
         if parsed_url.scheme == u'http':
-           default_port = 80
+            default_port = 80
         elif parsed_url.scheme == u'https':
-           default_port = 443
+            default_port = 443
         else:
             raise ValueError(u'Invalid URL scheme')
 

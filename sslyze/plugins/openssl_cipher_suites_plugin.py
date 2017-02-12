@@ -209,7 +209,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
         first_cipher_string = ', '.join([cipher.openssl_name for cipher in accepted_cipher_list])
         # Swap the first two ciphers in the list to see if the server always picks the client's first cipher
         second_cipher_string = ', '.join([accepted_cipher_list[1].openssl_name, accepted_cipher_list[0].openssl_name]
-                                        + [cipher.openssl_name for cipher in accepted_cipher_list[2:]])
+                                         + [cipher.openssl_name for cipher in accepted_cipher_list[2:]])
 
         first_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, first_cipher_string)
         second_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, second_cipher_string)
@@ -419,34 +419,34 @@ class CipherSuiteScanResult(PluginScanResult):
                                      'connectionStatus': cipher.post_handshake_response,
                                      'keySize': str(cipher.key_size),
                                      'anonymous': str(cipher.is_anonymous)})
-        if cipher.dh_info :
+        if cipher.dh_info:
             cipher_xml.append(Element('keyExchange', attrib=cipher.dh_info))
 
         return cipher_xml
 
 
-    ACCEPTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {status:<60}'.format
-    REJECTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}{error_message:<60}'.format
-    CIPHER_LIST_TITLE_FORMAT = '      {section_title:<32} '.format
-    VERSION_TITLE_FORMAT = '{ssl_version} Cipher Suites'.format
+    ACCEPTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {status:<60}'
+    REJECTED_CIPHER_LINE_FORMAT = u'        {cipher_name:<50}{error_message:<60}'
+    CIPHER_LIST_TITLE_FORMAT = u'      {section_title:<32} '
+    VERSION_TITLE_FORMAT = u'{ssl_version} Cipher Suites'
 
     def as_text(self):
         ssl_version = self.scan_command.get_cli_argument()
-        result_txt = [self._format_title(self.VERSION_TITLE_FORMAT(ssl_version=ssl_version.upper()))]
+        result_txt = [self._format_title(self.VERSION_TITLE_FORMAT.format(ssl_version=ssl_version.upper()))]
 
         # Output all the accepted ciphers if any
         if len(self.accepted_cipher_list) > 0:
             # Start with the preferred cipher
-            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Preferred:'))
+            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT.format(section_title=u'Preferred:'))
             if self.preferred_cipher:
                 result_txt.append(self._format_accepted_cipher_txt(self.preferred_cipher))
             else:
-                result_txt.append(self.REJECTED_CIPHER_LINE_FORMAT(
-                    cipher_name='None - Server followed client cipher suite preference.', error_message=''
+                result_txt.append(self.REJECTED_CIPHER_LINE_FORMAT.format(
+                    cipher_name=u'None - Server followed client cipher suite preference.', error_message=u''
                 ))
 
             # Then display all ciphers that were accepted
-            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Accepted:'))
+            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT.format(section_title='Accepted:'))
             for cipher in self.accepted_cipher_list:
                 result_txt.append(self._format_accepted_cipher_txt(cipher))
         elif self.scan_command.hide_rejected_ciphers:
@@ -454,18 +454,20 @@ class CipherSuiteScanResult(PluginScanResult):
 
         # Output all errors if any
         if len(self.errored_cipher_list) > 0:
-            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Undefined - An unexpected error happened:'))
+            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT.format(
+                section_title=u'Undefined - An unexpected error happened:')
+            )
             for cipher in self.errored_cipher_list:
-                cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT(cipher_name=cipher.name,
-                                                                   error_message=cipher.error_message)
+                cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT.format(cipher_name=cipher.name,
+                                                                          error_message=cipher.error_message)
                 result_txt.append(cipher_line_txt)
 
         # Output all rejected ciphers if needed
         if len(self.rejected_cipher_list) > 0 and not self.scan_command.hide_rejected_ciphers:
-            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT(section_title='Rejected:'))
+            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT.format(section_title='Rejected:'))
             for cipher in self.rejected_cipher_list:
-                cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT(cipher_name=cipher.name,
-                                                                   error_message=cipher.handshake_error_message)
+                cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT.format(cipher_name=cipher.name,
+                                                                          error_message=cipher.handshake_error_message)
                 result_txt.append(cipher_line_txt)
 
         return result_txt
@@ -480,8 +482,9 @@ class CipherSuiteScanResult(PluginScanResult):
             keysize_str = 'ANONYMOUS'
 
         dh_txt = "{}-{} bits".format(cipher.dh_info["Type"], cipher.dh_info["GroupSize"]) if cipher.dh_info else '-'
-        cipher_line_txt = self.ACCEPTED_CIPHER_LINE_FORMAT(cipher_name=cipher.name, dh_size=dh_txt,
-                                                           key_size=keysize_str, status=cipher.post_handshake_response)
+        cipher_line_txt = self.ACCEPTED_CIPHER_LINE_FORMAT.format(cipher_name=cipher.name, dh_size=dh_txt,
+                                                                  key_size=keysize_str,
+                                                                  status=cipher.post_handshake_response)
         return cipher_line_txt
 
 

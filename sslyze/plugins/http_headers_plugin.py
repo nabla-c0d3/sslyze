@@ -7,14 +7,13 @@ from xml.etree.ElementTree import Element
 from nassl.x509_certificate import X509Certificate
 from sslyze.plugins import plugin_base
 from sslyze.plugins.utils.certificate import Certificate
-from sslyze.plugins.utils.trust_store.trust_store import  CouldNotBuildVerifiedChainError
+from sslyze.plugins.utils.trust_store.trust_store import CouldNotBuildVerifiedChainError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.http_response_parser import HttpResponseParser
 from typing import List
-from typing import Optional
 from typing import Text
 
 
@@ -59,7 +58,7 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         http_resp = HttpResponseParser.parse(ssl_connection)
         ssl_connection.close()
 
-        if http_resp.version == 9 :
+        if http_resp.version == 9:
             # HTTP 0.9 => Probably not an HTTP response
             raise ValueError(u'Server did not return an HTTP response')
         else:

@@ -141,8 +141,10 @@ class TrustStore(object):
 class CouldNotBuildVerifiedChainError(ValueError):
     pass
 
+
 class AnchorCertificateNotInTrustStoreError(CouldNotBuildVerifiedChainError):
     pass
+
 
 class InvalidCertificateChainOrderError(CouldNotBuildVerifiedChainError):
     pass

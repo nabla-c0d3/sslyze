@@ -76,27 +76,28 @@ class ConcurrentScanner(object):
         self._queued_tasks_nb = 0
 
 
-    def queue_scan_command(self, server_connectivity_info, scan_command):
+    def queue_scan_command(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, PluginScanCommand) -> None
         """Queue a scan command targeting a specific server.
 
         Args:
-            server_info: The server's connectivity information. The test_connectivity_to_server() method must have
-                been called first to ensure that the server is online and accessible.
-            scan_command: The scan command to run against this server.
+            server_info(ServerConnectivityInfo): The server's connectivity information. The
+                test_connectivity_to_server() method must have been called first to ensure that the server is online
+                and accessible.
+            scan_command (PluginScanCommand): The scan command to run against this server.
         """
         # Ensure we have the right processes and queues in place for this hostname
-        self._check_and_create_process(server_connectivity_info.hostname)
+        self._check_and_create_process(server_info.hostname)
 
         # Add the task to the right queue
         self._queued_tasks_nb += 1
         if scan_command.is_aggressive:
             # Aggressive commands should not be run in parallel against
             # a given server so we use the priority queues to prevent this
-            self._hostname_queues_dict[server_connectivity_info.hostname].put((server_connectivity_info, scan_command))
+            self._hostname_queues_dict[server_info.hostname].put((server_info, scan_command))
         else:
             # Normal commands get put in the standard/shared queue
-            self._task_queue.put((server_connectivity_info, scan_command))
+            self._task_queue.put((server_info, scan_command))
 
 
     def _check_and_create_process(self, hostname):

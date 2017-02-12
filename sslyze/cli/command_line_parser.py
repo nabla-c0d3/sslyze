@@ -397,8 +397,8 @@ class CommandLineParser(object):
         )
         connect_group.add_option(
             u'--xmpp_to',
-            help=u'Optional setting for STARTTLS XMPP. XMPP_TO should be the hostname to be put in the \'to\' attribute '
-                 u'of the XMPP stream. Default is the server\'s hostname.',
+            help=u'Optional setting for STARTTLS XMPP. XMPP_TO should be the hostname to be put in the \'to\' '
+                 u'attribute of the XMPP stream. Default is the server\'s hostname.',
             dest=u'xmpp_to',
             default=None
         )

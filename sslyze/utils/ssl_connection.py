@@ -161,7 +161,8 @@ class SSLConnection(DebugSslClient):
                 # StartTLS negotiation or proxy setup if needed
                 self.do_pre_handshake(final_timeout)
 
-                try: # SSL handshake
+                try:
+                    # SSL handshake
                     self.do_handshake()
 
                 # The goal here to differentiate rejected SSL handshakes (which will
@@ -170,7 +171,7 @@ class SSLConnection(DebugSslClient):
                     for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                         if error_msg in str(e.args):
                             raise SSLHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
-                    raise # Unknown socket error
+                    raise  # Unknown socket error
                 except ClientCertificateRequested:
                     # Server expected a client certificate and we didn't provide one
                     raise
@@ -182,7 +183,7 @@ class SSLConnection(DebugSslClient):
                     for error_msg in self.HANDSHAKE_REJECTED_SSL_ERRORS.keys():
                         if error_msg in str(e.args):
                             raise SSLHandshakeRejected('TLS / ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
-                    raise # Unknown SSL error if we get there
+                    raise  # Unknown SSL error if we get there
 
             # Pass on exceptions for rejected handshakes
             except SSLHandshakeRejected:
@@ -202,10 +203,12 @@ class SSLConnection(DebugSslClient):
                     raise
                 elif retry_attempts == 1:
                     delay = random.random()
-                else: # Exponential back off
-                    delay = min(6, 2*delay) # Cap max delay at 6 seconds
+                else:
+                    # Exponential back off
+                    delay = min(6, 2*delay)  # Cap max delay at 6 seconds
 
-            else: # No network error occurred
+            else:
+                # No network error occurred
                 break
 
 
@@ -239,7 +242,7 @@ class HTTPSConnection(SSLConnection):
 
             # Parse the response and print the Location header
             http_response = HttpResponseParser.parse(self)
-            if http_response.version == 9 :
+            if http_response.version == 9:
                 # HTTP 0.9 => Probably not an HTTP response
                 result = self.ERR_NOT_HTTP
             else:
@@ -280,7 +283,7 @@ class SMTPConnection(SSLConnection):
 
         # Send a STARTTLS
         self._sock.send('STARTTLS\r\n')
-        if '220'  not in self._sock.recv(2048):
+        if '220' not in self._sock.recv(2048):
             raise StartTLSError(self.ERR_NO_SMTP_STARTTLS)
 
 
@@ -298,14 +301,14 @@ class XMPPConnection(SSLConnection):
     """SSL connection class that performs an XMPP StartTLS negotiation before the SSL handshake.
     """
 
-    ERR_XMPP_REJECTED = 'Error opening XMPP stream, try --xmpp_to'
-    ERR_XMPP_HOST_UNKNOWN = 'Error opening XMPP stream: server returned host-unknown error, try --xmpp_to'
-    ERR_XMPP_NO_STARTTLS = 'XMPP STARTTLS not supported'
+    ERR_XMPP_REJECTED = u'Error opening XMPP stream, try --xmpp_to'
+    ERR_XMPP_HOST_UNKNOWN = u'Error opening XMPP stream: server returned host-unknown error, try --xmpp_to'
+    ERR_XMPP_NO_STARTTLS = u'XMPP STARTTLS not supported'
 
-    XMPP_OPEN_STREAM = ("<stream:stream xmlns='jabber:client' xmlns:stream='"
-        "http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
-        "rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>" )
-    XMPP_STARTTLS = "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
+    XMPP_OPEN_STREAM = (u"<stream:stream xmlns='jabber:client' xmlns:stream='"
+                        u"http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
+                        u"rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>")
+    XMPP_STARTTLS = u"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
 
     def __init__(self, host, ip, port, ssl_version, ssl_verify_locations=None, client_auth_creds=None,
@@ -348,21 +351,22 @@ class XMPPConnection(SSLConnection):
 
 
 class XMPPServerConnection(XMPPConnection):
-    XMPP_OPEN_STREAM = ("<stream:stream xmlns='jabber:server' xmlns:stream='"
-        "http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
-        "rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>" )
+    XMPP_OPEN_STREAM = (u"<stream:stream xmlns='jabber:server' xmlns:stream='"
+                        u"http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
+                        u"rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>")
 
 
 class LDAPConnection(SSLConnection):
     """SSL connection class that performs an LDAP StartTLS negotiation before the SSL handshake.
     """
 
-    ERR_NO_STARTTLS = 'LDAP AUTH TLS was rejected'
+    ERR_NO_STARTTLS = u'LDAP AUTH TLS was rejected'
 
     START_TLS_CMD = bytearray(b'0\x1d\x02\x01\x01w\x18\x80\x161.3.6.1.4.1.1466.20037')
-    START_TLS_OK = '\x30\x0c\x02\x01\x01\x78\x07\x0a\x01\x00\x04\x00\x04'
+    START_TLS_OK = b'\x30\x0c\x02\x01\x01\x78\x07\x0a\x01\x00\x04\x00\x04'
     START_TLS_OK2 = 'Start TLS request accepted'
-    START_TLS_OK_APACHEDS = '\x30\x26\x02\x01\x01\x78\x21\x0a\x01\x00\x04\x00\x04\x00\x8a\x16\x31\x2e\x33\x2e\x36\x2e\x31\x2e\x34\x2e\x31\x2e\x31\x34\x36\x36\x2e\x32\x30\x30\x33\x37\x8b\x00'
+    START_TLS_OK_APACHEDS = b'\x30\x26\x02\x01\x01\x78\x21\x0a\x01\x00\x04\x00\x04\x00\x8a\x16\x31\x2e\x33\x2e\x36' \
+                            b'\x2e\x31\x2e\x34\x2e\x31\x2e\x31\x34\x36\x36\x2e\x32\x30\x30\x33\x37\x8b\x00'
 
 
     def do_pre_handshake(self, network_timeout):
@@ -395,14 +399,13 @@ class RDPConnection(SSLConnection):
 
         self._sock.send(self.START_TLS_CMD)
         data = self._sock.recv(4)
-        if not data or len(data) != 4 or data[:2] != '\x03\x00' :
+        if not data or len(data) != 4 or data[:2] != '\x03\x00':
             raise StartTLSError(self.ERR_NO_STARTTLS)
         packet_len = struct.unpack(">H", data[2:])[0] - 4
         data = self._sock.recv(packet_len)
 
-        if not data or len(data) != packet_len :
+        if not data or len(data) != packet_len:
             raise StartTLSError(self.ERR_NO_STARTTLS)
-
 
 
 class GenericStartTLSConnection(SSLConnection):
@@ -430,7 +433,6 @@ class GenericStartTLSConnection(SSLConnection):
             raise StartTLSError(self.ERR_NO_STARTTLS)
 
 
-
 class IMAPConnection(GenericStartTLSConnection):
     """SSL connection class that performs an IMAP StartTLS negotiation before the SSL handshake.
     """
@@ -439,7 +441,6 @@ class IMAPConnection(GenericStartTLSConnection):
 
     START_TLS_CMD = '. STARTTLS\r\n'
     START_TLS_OK = '. OK'
-
 
 
 class POP3Connection(GenericStartTLSConnection):
@@ -452,7 +453,6 @@ class POP3Connection(GenericStartTLSConnection):
     START_TLS_OK = '+OK'
 
 
-
 class FTPConnection(GenericStartTLSConnection):
     """SSL connection class that performs an FTP StartTLS negotiation before the SSL handshake.
     """
@@ -461,7 +461,6 @@ class FTPConnection(GenericStartTLSConnection):
 
     START_TLS_CMD = 'AUTH TLS\r\n'
     START_TLS_OK = '234'
-
 
 
 class PostgresConnection(GenericStartTLSConnection):

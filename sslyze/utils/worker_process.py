@@ -49,7 +49,7 @@ class WorkerProcess(Process):
             try:
                 result = self._synchronous_scanner.run_scan_command(server_info, scan_command)
             except Exception as e:
-                #raise
+                # raise
                 result = PluginRaisedExceptionScanResult(server_info, scan_command, e)
 
             # Send the result to queue_out

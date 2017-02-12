@@ -73,14 +73,14 @@ class ServerConnectivityInfo(object):
 
     def __init__(
             self,
-            hostname,                                              # type: Text
-            port=None,                                             # type: Optional[int]
-            ip_address=None,                                       # type: Optional[Text]
-            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS, # type: Optional[TlsWrappedProtocolEnum]
-            tls_server_name_indication=None,                       # type: Optional[Text]
-            xmpp_to_hostname=None,                                 # type: Optional[Text]
-            client_auth_credentials=None,                          # type: Optional[ClientAuthenticationCredentials]
-            http_tunneling_settings=None                           # type: Optional[HttpConnectTunnelingSettings]
+            hostname,                                               # type: Text
+            port=None,                                              # type: Optional[int]
+            ip_address=None,                                        # type: Optional[Text]
+            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS,  # type: Optional[TlsWrappedProtocolEnum]
+            tls_server_name_indication=None,                        # type: Optional[Text]
+            xmpp_to_hostname=None,                                  # type: Optional[Text]
+            client_auth_credentials=None,                           # type: Optional[ClientAuthenticationCredentials]
+            http_tunneling_settings=None                            # type: Optional[HttpConnectTunnelingSettings]
             ):
         # type: (...) -> None
         """Constructor to specify how to connect to a server to be scanned.
@@ -92,8 +92,8 @@ class ServerConnectivityInfo(object):
 
         Args:
             hostname (Text): The server's hostname.
-            port (Optional[int]): The server's TLS port number. If not supplied, the default port number for the specified
-                `tls_wrapped_protocol` will be used.
+            port (Optional[int]): The server's TLS port number. If not supplied, the default port number for the
+                specified `tls_wrapped_protocol` will be used.
             ip_address (Optional[Text]): The server's IP address. If not supplied, a DNS lookup for the specified
                 `hostname` will be performed. If `http_tunneling_settings` is specified, `ip_address` cannot be supplied
                 as the HTTP proxy will be responsible for looking up and connecting to the server to be scanned.

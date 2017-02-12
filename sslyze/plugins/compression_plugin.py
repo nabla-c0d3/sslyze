@@ -34,7 +34,8 @@ class CompressionPlugin(plugin_base.Plugin):
             raise RuntimeError(u'OpenSSL was not built with support for zlib / compression. '
                                u'Did you build nassl yourself ?')
 
-        try: # Perform the SSL handshake
+        try:
+            # Perform the SSL handshake
             ssl_connection.connect()
             compression_name = ssl_connection.get_current_compression_method()
         except ClientCertificateRequested:

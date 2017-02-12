@@ -40,7 +40,8 @@ class HeartbleedPlugin(plugin_base.Plugin):
         ssl_connection.do_handshake = types.MethodType(do_handshake_with_heartbleed, ssl_connection)
 
         heartbleed = None
-        try: # Perform the SSL handshake
+        try:
+            # Perform the SSL handshake
             ssl_connection.connect()
         except HeartbleedSent:
             # Awful hack #2: directly read the underlying network socket
@@ -91,7 +92,7 @@ def heartbleed_payload(ssl_version):
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
 
     SSL_VERSION_MAPPING = {
-        OpenSslVersionEnum.SSLV3: b'\x00', # Surprising that it works with SSL 3 which doesn't define TLS extensions
+        OpenSslVersionEnum.SSLV3: b'\x00',  # Surprising that it works with SSL 3 which doesn't define TLS extensions
         OpenSslVersionEnum.TLSV1: b'\x01',
         OpenSslVersionEnum.TLSV1_1: b'\x02',
         OpenSslVersionEnum.TLSV1_2: b'\x03'
@@ -163,6 +164,6 @@ def do_handshake_with_heartbleed(self):
     except WantX509LookupError:
         # Server asked for a client certificate and we didn't provide one
         # Heartbleed should work anyway
-        self._sock.send(heartbleed_payload(self.ssl_version)) # The heartbleed payload
-        raise HeartbleedSent(u'') # Signal that we sent the heartbleed payload
+        self._sock.send(heartbleed_payload(self.ssl_version))  # The heartbleed payload
+        raise HeartbleedSent(u'')  # Signal that we sent the heartbleed payload
 

@@ -398,7 +398,8 @@ class CertificateInfoScanResult(PluginScanResult):
             if u'successful' in self.ocsp_response[u'responseStatus']:
                 ocsp_resp_txt.extend([
                     self._format_field(u'Cert Status:', self.ocsp_response['responses'][0]['certStatus']),
-                    self._format_field(u'Cert Serial Number:', self.ocsp_response['responses'][0]['certID']['serialNumber']),
+                    self._format_field(u'Cert Serial Number:',
+                                       self.ocsp_response['responses'][0]['certID']['serialNumber']),
                     self._format_field(u'This Update:', self.ocsp_response['responses'][0]['thisUpdate']),
                     self._format_field(u'Next Update:', self.ocsp_response['responses'][0]['nextUpdate'])
                 ])
@@ -432,7 +433,7 @@ class CertificateInfoScanResult(PluginScanResult):
             cert_xml_list.append(cert_xml)
 
 
-        cert_chain_attrs ={'isChainOrderValid': str(self.is_certificate_chain_order_valid)}
+        cert_chain_attrs = {'isChainOrderValid': str(self.is_certificate_chain_order_valid)}
         if self.verified_certificate_chain:
             cert_chain_attrs['containsAnchorCertificate'] = str(False) if not self.has_anchor_in_certificate_chain \
                 else str(True)

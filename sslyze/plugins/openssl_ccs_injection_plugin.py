@@ -48,9 +48,10 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         # Send hello and wait for server hello & cert
         serverhello, servercert = False, False
         self._sock.send(self.make_hello())
-        while not serverhello: #  or not servercert
+        while not serverhello:  # or not servercert
             try:
-                if not self.srecv(): break
+                if not self.srecv():
+                    break
             except:
                 break
             rs = self.parse_records()
@@ -58,17 +59,18 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
                 if record['type'] == 22:
                     for p in record['proto']:
                         if p['type'] == 2:
-                            serverhello= True
+                            serverhello = True
                         if p['type'] == 11:
-                            servercert= True
+                            servercert = True
 
         # Send the CCS
-        if serverhello: # and servercert:
+        if serverhello:  # and servercert:
             is_vulnerable, stop = True, False
             self._sock.send(self.make_ccs())
             while not stop:
                 try:
-                    if not self.srecv(): break
+                    if not self.srecv():
+                        break
                 except socket.timeout:
                     break
                 except:
@@ -101,7 +103,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         OpenSslVersionEnum.SSLV3: b"\x03\x00",
         OpenSslVersionEnum.TLSV1: b"\x03\x01",
         OpenSslVersionEnum.TLSV1_1: b"\x03\x02",
-        OpenSslVersionEnum.TLSV1_2 : b"\x03\x03",
+        OpenSslVersionEnum.TLSV1_2: b"\x03\x03",
     }
 
     ssl3_cipher = [
@@ -165,24 +167,24 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
 
     # Create a TLS record out of a protocol packet
     def make_record(self, t, body):
-        l = struct.pack("!H",len(body))
+        l = struct.pack("!H", len(body))
         return chr(t) + self.ssl_tokens[self._ssl_version] + l + body
 
     def make_hello(self):
         suites = "".join(self.ssl3_cipher)
-        rand = "".join([ chr(int(256 * random.random())) for x in range(32) ])
-        l  = struct.pack("!L", 39+len(suites))[1:] # 3 bytes
+        rand = "".join([chr(int(256 * random.random())) for x in range(32)])
+        l = struct.pack("!L", 39+len(suites))[1:]  # 3 bytes
         sl = struct.pack("!H", len(suites))
 
         # Client hello, lenght and version
         # Random data + session ID + cipher suites + compression suites
-        data  = "\x01" + l + self.ssl_tokens[self._ssl_version] + rand + "\x00"
+        data = "\x01" + l + self.ssl_tokens[self._ssl_version] + rand + "\x00"
         data += sl + suites + "\x01\x00"
 
         return self.make_record(22, data)
 
     def make_ccs(self):
-        ccsbody = "\x01" # Empty CCS
+        ccsbody = "\x01"  # Empty CCS
         return self.make_record(20, ccsbody)
 
     @staticmethod
@@ -195,7 +197,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
             if mlen+4 > len(buf):
                 break
 
-            r.append( {"type":mt, "data": buf[4:4+mlen]} )
+            r.append({"type": mt, "data": buf[4:4+mlen]})
             buf = buf[4+mlen:]
         return r
 
@@ -209,19 +211,19 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         while len(self._inbuffer) >= 5:
             mtype = ord(self._inbuffer[0])
             mtlsv = self._inbuffer[1:3]
-            mlen  = struct.unpack("!H", self._inbuffer[3:5])[0]
+            mlen = struct.unpack("!H", self._inbuffer[3:5])[0]
 
             if len(self._inbuffer) < 5 + mlen:
                 break
 
-            if mtype == 22: # Handshake
+            if mtype == 22:  # Handshake
                 protp = self.parse_handshake_pkt(self._inbuffer[5:5 + mlen])
-            elif mtype == 21: # Alert
+            elif mtype == 21:  # Alert
                 protp = self.parse_alert_pkt(self._inbuffer[5:5 + mlen])
             else:
                 protp = []
 
-            r.append( {"type":mtype, "sslv":mtlsv, "proto":protp} )
+            r.append({"type": mtype, "sslv": mtlsv, "proto": protp})
 
             self._inbuffer = self._inbuffer[5+mlen:]
 

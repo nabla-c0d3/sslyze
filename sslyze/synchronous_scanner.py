@@ -15,7 +15,7 @@ class SynchronousScanner(object):
     DEFAULT_NETWORK_TIMEOUT = 5  # in seconds
 
     def __init__(self,
-                 network_retries= DEFAULT_NETWORK_RETRIES,
+                 network_retries=DEFAULT_NETWORK_RETRIES,
                  network_timeout=DEFAULT_NETWORK_TIMEOUT):
         # type: (Optional[int], Optional[int]) -> None
         """Create a scanner for running scanning commands synchronously.
@@ -34,13 +34,14 @@ class SynchronousScanner(object):
         """Run a single scan command against a server; will block until the scan command has been completed.
 
         Args:
-            server_info: The server's connectivity information. The test_connectivity_to_server() method must have
-                been called first to ensure that the server is online and accessible.
-            scan_command: The scan command to run against this server.
+            server_info(ServerConnectivityInfo): The server's connectivity information. The
+                test_connectivity_to_server() method must have been called first to ensure that the server is online
+                and accessible.
+            scan_command (PluginScanCommand): The scan command to run against this server.
 
         Returns:
             PluginScanResult: The result of the scan command, which will be an instance of the scan command's
-            corresponding PluginScanResult subclass.
+                corresponding PluginScanResult subclass.
         """
         plugin_class = self._plugins_repository.get_plugin_class_for_command(scan_command)
         plugin = plugin_class()

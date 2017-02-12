@@ -75,8 +75,8 @@ class SessionResumptionPlugin(plugin_base.Plugin):
                 ticket_exception = e
 
             result = SessionResumptionSupportScanResult(server_info, scan_command, 5, successful_resumptions_nb,
-                                                        errored_resumptions_list,
-                                      ticket_supported, ticket_reason, ticket_exception)
+                                                        errored_resumptions_list, ticket_supported, ticket_reason,
+                                                        ticket_exception)
 
         elif scan_command.__class__ == SessionResumptionRateScanCommand:
             successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(server_info, 100)
@@ -134,7 +134,8 @@ class SessionResumptionPlugin(plugin_base.Plugin):
 
         # Try to resume that SSL session
         session2 = self._resume_ssl_session(server_info, session1)
-        try: # Recover the session ID
+        try:
+            # Recover the session ID
             session2_id = self._extract_session_id(session2)
         except IndexError:
             # Session ID not assigned

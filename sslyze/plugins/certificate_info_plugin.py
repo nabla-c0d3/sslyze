@@ -192,16 +192,24 @@ class CertificateInfoScanResult(PluginScanResult):
     Attributes:
         certificate_chain (List[Certificate]): The certificate chain sent by the server; index 0 is the leaf
             certificate.
-        verified_certificate_chain (List[Certificate]): The verified certificate chain; index 0 is the leaf
-            certificate and the last element is the anchor/CA certificate from the Mozilla trust store. Will be empty if
-            validation failed or the verified chain could not be built.
-        is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
-        path_validation_result_list (List[PathValidationResult]): A list of attempts at validating the server's
-            certificate chain path using various trust stores (Mozilla, Apple, etc.).
-        path_validation_error_list (List[PathValidationError]):  A list of attempts at validating the server's
+        path_validation_result_list (List[PathValidationResult]): The list of attempts at validating the server's
+            certificate chain path using the trust stores packaged with SSLyze (Mozilla, Apple, etc.).
+        path_validation_error_list (List[PathValidationError]):  The list of attempts at validating the server's
             certificate chain path that triggered an unexpected error.
-        hostname_validation_result (int): Validation result of the certificate hostname.
-        ocsp_response (Optional[dict]): The OCSP response returned by the server.
+        successful_trust_store (Optional[TrustStore]): The first trust store that successfully validated the server's
+            certificate chain among all the trust stores packaged with SSLyze: Mozilla, Apple, Microsoft, etc. as well
+            as the custom store, if supplied using the ca_file option. This trust store is then used to build the
+            server's verified certificate chain and to validate the OCSP response (if one is returned by the server).
+            Will be None if none of the available trust stores were able to successfully validate the server's
+            certificate chain.
+        verified_certificate_chain (List[Certificate]): The verified certificate chain built using the Mozilla trust
+            store; index 0 is the leaf certificate and the last element is the anchor/CA certificate from the trust
+            store. If the certificate chain is not trusted with the Mozilla store, the plugin will attempt to build the
+            verified chain using other trust stores available for which the validation was successful. Will be empty if
+            the validation failed with all available trust store, or the verified chain could not be built.
+        hostname_validation_result (HostnameValidationResultEnum): Validation result of the certificate hostname.
+        is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
+        ocsp_response (Optional[Dict]): The OCSP response returned by the server.
         is_ocsp_response_trusted (Optional[bool]): True if the OCSP response is trusted using the Mozilla trust store.
         has_sha1_in_certificate_chain (bool): True if any of the leaf or intermediate certificates are signed using the
             SHA-1 algorithm. None if the verified chain could not be built or no HPKP header was returned.
@@ -222,45 +230,42 @@ class CertificateInfoScanResult(PluginScanResult):
             ):
         # type: (...) -> None
         super(CertificateInfoScanResult, self).__init__(server_info, scan_command)
-
-        main_trust_store = TrustStoresRepository.get_main()
+        # Find the first trust store that successfully validated the certificate chain
+        self.successful_trust_store = None
+        for path_result in path_validation_result_list:
+            if path_result.is_certificate_trusted:
+                self.successful_trust_store = path_result.trust_store
 
         self.ocsp_response = None
         self.is_ocsp_response_trusted = None
         if ocsp_response:
             # We only keep the dictionary as a nassl.OcspResponse is not pickable
             self.ocsp_response = ocsp_response.as_dict()
-            try:
-                ocsp_response.verify(main_trust_store.path)
-                self.is_ocsp_response_trusted = True
-            except OcspResponseNotTrustedError:
-                self.is_ocsp_response_trusted = False
+            if self.successful_trust_store:
+                try:
+                    ocsp_response.verify(self.successful_trust_store.path)
+                    self.is_ocsp_response_trusted = True
+                except OcspResponseNotTrustedError:
+                    self.is_ocsp_response_trusted = False
 
         # We create pickable Certificates from nassl.X509Certificates which are not pickable
         self.certificate_chain = [Certificate.from_nassl(x509_cert) for x509_cert in certificate_chain]
-        self.is_leaf_certificate_ev = main_trust_store.is_extended_validation(self.certificate_chain[0])
+
+        # Check if it is EV - we only have the EV OIDs for Mozilla
+        self.is_leaf_certificate_ev = TrustStoresRepository.get_main().is_extended_validation(self.certificate_chain[0])
 
         # Try to build the verified chain
-        tentative_verified_chain = []
+        self.verified_certificate_chain = []
         self.is_certificate_chain_order_valid = True
-        try:
-            tentative_verified_chain = main_trust_store.build_verified_certificate_chain(self.certificate_chain)
-        except InvalidCertificateChainOrderError:
-            self.is_certificate_chain_order_valid = False
-        except AnchorCertificateNotInTrustStoreError:
-            pass
-
-        # Find the result of the validation with the main trust store (Mozilla)
-        is_chain_trusted_by_main_store = False
-        for path_result in path_validation_result_list:
-            if path_result.trust_store == main_trust_store:
-                is_chain_trusted_by_main_store = path_result.is_certificate_trusted
-
-        if not is_chain_trusted_by_main_store:
-            # Somehow we were able to build a verified chain but the validation failed - expired cert?
-            self.verified_certificate_chain = []
-        else:
-            self.verified_certificate_chain = tentative_verified_chain
+        if self.successful_trust_store:
+            try:
+                self.verified_certificate_chain = self.successful_trust_store.build_verified_certificate_chain(
+                    self.certificate_chain
+                )
+            except InvalidCertificateChainOrderError:
+                self.is_certificate_chain_order_valid = False
+            except AnchorCertificateNotInTrustStoreError:
+                pass
 
         self.has_anchor_in_certificate_chain = None
         if self.verified_certificate_chain:
@@ -346,7 +351,7 @@ class CertificateInfoScanResult(PluginScanResult):
             verified_chain_txt = u' --> '.join(cns_in_certificate_chain)
         else:
             verified_chain_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
-        text_output.append(self._format_field(u'Verified Chain w/ Mozilla Store:', verified_chain_txt))
+        text_output.append(self._format_field(u'Verified Chain:', verified_chain_txt))
 
         if self.verified_certificate_chain:
             chain_with_anchor_txt = u'OK - Anchor certificate not sent' if not self.has_anchor_in_certificate_chain \

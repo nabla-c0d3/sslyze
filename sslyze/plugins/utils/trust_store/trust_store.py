@@ -54,24 +54,30 @@ class TrustStore(object):
         cert_dict = {}
         with io.open(self.path) as store_file:
             store_content = store_file.read()
-            # Each certificate is separated by two new lines and there are
-            pem_cert_list = store_content.split(u'\n\n')[1::]
+            # Each certificate is separated by -----BEGIN CERTIFICATE-----
+            pem_cert_list = store_content.split(u'-----BEGIN CERTIFICATE-----')[1::]
             for pem_split in pem_cert_list:
                 # Remove comments as they may cause Unicode errors
                 final_pem = u'-----BEGIN CERTIFICATE-----{}-----END CERTIFICATE-----'.format(
-                    pem_split.split(u'-----BEGIN CERTIFICATE-----')[1].split(u'-----END CERTIFICATE-----')[0]
-                )
+                    pem_split.split(u'-----END CERTIFICATE-----')[0]
+                ).strip()
                 cert = Certificate.from_pem(final_pem)
                 # Store a dictionary of subject->certificate for easy lookup
                 cert_dict[self._hash_subject(cert.as_dict[u'subject'])] = cert
-            return cert_dict
+        return cert_dict
 
 
     @staticmethod
     def _hash_subject(certificate_subjet_dict):
         # type: (Dict) -> Text
-        hashed_subject = u''.join([u'{}{}'.format(key.decode(encoding=u'utf-8'), value.decode(encoding=u'utf-8'))
-                                   for key, value in certificate_subjet_dict.items()])
+        hashed_subject = u''
+        for key, value in certificate_subjet_dict.items():
+            try:
+                decoded_value = value.decode(encoding=u'utf-8')
+            except UnicodeDecodeError:
+                # Some really exotic certificates like to use a different encoding
+                decoded_value = value.decode(encoding=u'utf-16')
+            hashed_subject += u'{}{}'.format(key, decoded_value)
         return hashed_subject
 
 

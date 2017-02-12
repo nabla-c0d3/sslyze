@@ -6,7 +6,8 @@ from StringIO import StringIO
 from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze.cli.json_output import JsonOutputGenerator
 from sslyze.server_connectivity import ServerConnectivityError
-from tests.cli_tests import MockServerConnectivityInfo, MockPluginResult, MockCommandLineValues
+from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, MockCommandLineValues, \
+    MockPluginScanCommandOne, MockPluginScanCommandTwo
 
 
 class JsonOutputGeneratorTestCase(unittest.TestCase):
@@ -30,9 +31,9 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
         generator.scans_started()
 
         # noinspection PyTypeChecker
-        plugin_result_1 = MockPluginResult(u'plugin1', u'Plugin ûnicôdé output', None)
+        plugin_result_1 = MockPluginScanResult(server_info, MockPluginScanCommandOne(), u'Plugin ûnicôdé output', None)
         # noinspection PyTypeChecker
-        plugin_result_2 = MockPluginResult(u'plugin2', u'other plugin Output', None)
+        plugin_result_2 = MockPluginScanResult(server_info, MockPluginScanCommandTwo(), u'other plugin Output', None)
         # noinspection PyTypeChecker
         server_scan = CompletedServerScan(server_info, [plugin_result_1, plugin_result_2])
         generator.server_scan_completed(server_scan)
@@ -53,13 +54,13 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
         self.assertIn(server_info.ip_address, received_output)
 
         # Ensure the output displayed the plugin's attributes as JSON
-        self.assertIn(plugin_result_1.plugin_command, received_output)
-        self.assertIn(plugin_result_2.plugin_command, received_output)
-        self.assertIn('"text_output":', received_output)
+        self.assertIn(plugin_result_1.scan_command.get_cli_argument(), received_output)
+        self.assertIn(plugin_result_2.scan_command.get_cli_argument(), received_output)
+        self.assertIn(u'"text_output":', received_output)
         self.assertIn(json.dumps(plugin_result_1.text_output, ensure_ascii=True), received_output)
         self.assertIn(plugin_result_2.text_output, received_output)
 
         # Ensure the console output displayed the total scan time
         self.assertIn(str(scan_time), received_output)
-        self.assertIn('"network_timeout": "{}"'.format(MockCommandLineValues().timeout), received_output)
-        self.assertIn('"network_max_retries": "{}"'.format(MockCommandLineValues().nb_retries), received_output)
+        self.assertIn(u'"network_timeout": "{}"'.format(MockCommandLineValues().timeout), received_output)
+        self.assertIn(u'"network_max_retries": "{}"'.format(MockCommandLineValues().nb_retries), received_output)

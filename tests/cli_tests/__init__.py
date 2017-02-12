@@ -1,9 +1,13 @@
 # coding=utf-8
 from xml.etree.ElementTree import Element
+
+from sslyze.plugins.plugin_base import PluginScanCommand
+from sslyze.plugins.plugin_base import PluginScanResult
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 
 
-class MockServerConnectivityInfo(object):
+class MockServerConnectivityInfo(ServerConnectivityInfo):
     def __init__(self, client_auth_requirement=None, http_tunneling_settings=None):
         self.hostname = u'unicödeéè.com'
         self.port = 443
@@ -17,12 +21,27 @@ class MockServerConnectivityInfo(object):
             self.ip_address = None
 
 
-class MockPluginResult(object):
-    def __init__(self, plugin_command, text_output, xml_output):
-        # type: (str, unicode, Element) -> None
+class MockPluginScanCommandOne(PluginScanCommand):
+
+    @classmethod
+    def get_cli_argument(cls):
+        return u'plugin1'
+
+
+class MockPluginScanCommandTwo(PluginScanCommand):
+
+    @classmethod
+    def get_cli_argument(cls):
+        return u'plugin2'
+
+
+class MockPluginScanResult(PluginScanResult):
+    def __init__(self, server_info, scan_command, text_output, xml_output):
+        # type: (ServerConnectivityInfo, PluginScanCommand, unicode, Element) -> None
+        super(MockPluginScanResult, self).__init__(server_info, scan_command)
         self.text_output = text_output
         self.xml_output = xml_output
-        self.plugin_command = plugin_command
+        self.scan_command = scan_command
 
     def as_xml(self):
         return self.xml_output

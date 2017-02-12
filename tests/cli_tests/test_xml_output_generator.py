@@ -7,7 +7,8 @@ from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze.cli.xml_output import XmlOutputGenerator
 from sslyze.server_connectivity import ServerConnectivityError
 from sslyze.ssl_settings import HttpConnectTunnelingSettings
-from tests.cli_tests import MockServerConnectivityInfo, MockPluginResult, MockCommandLineValues
+from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, MockCommandLineValues, \
+    MockPluginScanCommandOne, MockPluginScanCommandTwo
 
 
 class XmlOutputGeneratorTestCase(unittest.TestCase):
@@ -30,12 +31,12 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
 
         generator.scans_started()
 
-        plugin_xml_out_1 = Element(u'plugin1', attrib={'test1': 'value1'})
+        plugin_xml_out_1 = Element(u'plugin1', attrib={u'test1': u'value1'})
         plugin_xml_out_1.text = u'Plugin ûnicôdé output'
-        plugin_result_1 = MockPluginResult('plugin1', u'', plugin_xml_out_1)
-        plugin_xml_out_2 = Element(u'plugin2', attrib={'test2': 'value2'})
+        plugin_result_1 = MockPluginScanResult(server_info, MockPluginScanCommandOne(), u'', plugin_xml_out_1)
+        plugin_xml_out_2 = Element(u'plugin2', attrib={u'test2': u'value2'})
         plugin_xml_out_2.text = u'other plugin Output'
-        plugin_result_2 = MockPluginResult('plugin2', u'', plugin_xml_out_2)
+        plugin_result_2 = MockPluginScanResult(server_info, MockPluginScanCommandTwo(), u'', plugin_xml_out_2)
 
         # noinspection PyTypeChecker
         server_scan = CompletedServerScan(server_info, [plugin_result_1, plugin_result_2])
@@ -57,8 +58,8 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         self.assertIn(server_info.ip_address, received_output)
 
         # Ensure the output displayed the plugin's XML output
-        self.assertIn(plugin_result_1.plugin_command, received_output)
-        self.assertIn(plugin_result_2.plugin_command, received_output)
+        self.assertIn(plugin_result_1.scan_command.get_cli_argument(), received_output)
+        self.assertIn(plugin_result_2.scan_command.get_cli_argument(), received_output)
         self.assertIn(plugin_result_1.as_xml().text, received_output)
         self.assertIn(plugin_result_2.as_xml().text, received_output)
 

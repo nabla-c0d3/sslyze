@@ -4,7 +4,7 @@ from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin, Se
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class SessionResumptionPluginPluginTestCase(unittest.TestCase):
+class SessionResumptionPluginTestCase(unittest.TestCase):
 
     def test_resumption_support(self):
         server_info = ServerConnectivityInfo(hostname=u'www.google.com')

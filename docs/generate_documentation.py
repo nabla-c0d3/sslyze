@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+#!/usr/bin/python
+
 import os
 from subprocess import Popen, PIPE
 import shutil

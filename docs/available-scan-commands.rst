@@ -13,6 +13,16 @@ represented by a `ScanCommand`, which is implemented using a plugin system. Each
 This page lists all the `ScanCommands` and corresponding `ScanResults` available in the current release of SSLyze.
 
 
+Shared Attributes
+=================
+
+The `ScanResult` classes described in this section have specific attributes containing the result of a specific
+`ScanCommand`, but also share two attributes.
+
+.. module:: sslyze.plugins.plugin_base
+.. autoclass:: PluginScanResult()
+
+
 CertificateInfoPlugin
 =====================
 

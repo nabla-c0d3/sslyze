@@ -49,27 +49,31 @@ if __name__ == u'__main__':
     # Process the results
     reneg_result = None
     print(u'\nProcessing results...')
-    for plugin_result in concurrent_scanner.get_results():
+    for scan_result in concurrent_scanner.get_results():
+        # All scan results have the corresponding scan_command and server_info as an attribute
+        print(u'\nReceived scan result for {} on host {}'.format(scan_result.scan_command.__class__.__name__,
+                                                                 scan_result.server_info.hostname))
+
         # Sometimes a plugin command can unexpectedly fail (as a bug); it is returned as a PluginRaisedExceptionResult
-        if isinstance(plugin_result, PluginRaisedExceptionScanResult):
-            raise RuntimeError(u'Scan command failed: {}'.format(plugin_result.as_text()))
+        if isinstance(scan_result, PluginRaisedExceptionScanResult):
+            raise RuntimeError(u'Scan command failed: {}'.format(scan_result.as_text()))
 
         # Each plugin result has attributes with the information you're looking for, specific to each plugin
         # All these attributes are documented within each plugin's module
-        if isinstance(plugin_result.scan_command, Sslv30ScanCommand):
+        if isinstance(scan_result.scan_command, Sslv30ScanCommand):
             # Do something with the result
             print(u'SSLV3 cipher suites')
-            for cipher in plugin_result.accepted_cipher_list:
+            for cipher in scan_result.accepted_cipher_list:
                 print(u'    {}'.format(cipher.name))
 
-        elif isinstance(plugin_result.scan_command, SessionRenegotiationScanCommand):
-            reneg_result = plugin_result
-            print(u'Client renegotiation: {}'.format(plugin_result.accepts_client_renegotiation))
-            print(u'Secure renegotiation: {}'.format(plugin_result.supports_secure_renegotiation))
+        elif isinstance(scan_result.scan_command, SessionRenegotiationScanCommand):
+            reneg_result = scan_result
+            print(u'Client renegotiation: {}'.format(scan_result.accepts_client_renegotiation))
+            print(u'Secure renegotiation: {}'.format(scan_result.supports_secure_renegotiation))
 
-        elif isinstance(plugin_result.scan_command, CertificateInfoScanCommand):
+        elif isinstance(scan_result.scan_command, CertificateInfoScanCommand):
             print(u'Server Certificate CN: {}'.format(
-                plugin_result.certificate_chain[0].as_dict[u'subject'][u'commonName']
+                scan_result.certificate_chain[0].as_dict[u'subject'][u'commonName']
             ))
 
 

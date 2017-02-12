@@ -76,6 +76,10 @@ The commands can be queued using the `queue_scan_command()` method, and the resu
     # Process the results
     reneg_result = None
     for plugin_result in concurrent_scanner.get_results():
+        # All scan results have the corresponding scan_command and server_info as an attribute
+        print(u'\nReceived scan result for {} on host {}'.format(scan_result.scan_command.__class__.__name__,
+                                                                 scan_result.server_info.hostname))
+
         # Sometimes a plugin command can unexpectedly fail (as a bug); it is returned as a PluginRaisedExceptionResult
         if isinstance(plugin_result, PluginRaisedExceptionScanResult):
             print(u'Scan command failed: {}'.format(plugin_result.as_text()))

@@ -39,7 +39,7 @@ class PluginScanCommand(object):
         # type: () -> bool
         """Should return True if command will open many simultaneous connections to the server.
 
-        When using the PluginsProcessPool to run scan commands, only one aggressive command will be run concurrently per
+        When using the ConcurrentScanner to run scan commands, only one aggressive command will be run concurrently per
         server, to avoid DOS-ing the server.
         """
         return False
@@ -94,7 +94,11 @@ class Plugin(object):
 
 
 class PluginScanResult(object):
-    """Plugins should return the result of process_task() as a subclass of this.
+    """The parent class of all the scan result classes.
+
+    Attributes:
+        server_info (ServerConnectivityInfo):  The server against which the command was run.
+        scan_command (PluginScanCommand): The scan command that was run against the server.
     """
     __metaclass__ = abc.ABCMeta
 

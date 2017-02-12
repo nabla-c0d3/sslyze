@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+"""Retrieve and validate the server(s)' certificate chain.
+"""
 
 import optparse
 import os
@@ -78,8 +79,6 @@ class PathValidationError(object):
 
 
 class CertificateInfoPlugin(plugin_base.Plugin):
-    """Retrieve and validate the server(s)' certificate chain.
-    """
 
     @classmethod
     def get_available_commands(cls):
@@ -209,8 +208,10 @@ class CertificateInfoScanResult(PluginScanResult):
             the validation failed with all available trust store, or the verified chain could not be built.
         hostname_validation_result (HostnameValidationResultEnum): Validation result of the certificate hostname.
         is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
-        ocsp_response (Optional[Dict]): The OCSP response returned by the server.
+        ocsp_response (Optional[Dict]): The OCSP response returned by the server. None if no response was sent by the
+            server.
         is_ocsp_response_trusted (Optional[bool]): True if the OCSP response is trusted using the Mozilla trust store.
+            None if no OCSP response was sent by the server.
         has_sha1_in_certificate_chain (bool): True if any of the leaf or intermediate certificates are signed using the
             SHA-1 algorithm. None if the verified chain could not be built or no HPKP header was returned.
         has_anchor_in_certificate_chain (bool): True if the server included the anchor/root certificate in the chain it

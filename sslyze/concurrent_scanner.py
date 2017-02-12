@@ -55,11 +55,11 @@ class ConcurrentScanner(object):
         """Create a scanner for running scanning commands concurrently using a pool of processes.
 
         Args:
-            network_retries (Optional[int]): How many times plugins should retry a connection that timed out.
-            network_timeout (Optional[int]): The time until an ongoing connection times out within all plugins.
+            network_retries (Optional[int]): How many times SSLyze should retry a connection that timed out.
+            network_timeout (Optional[int]): The time until an ongoing connection times out.
             max_processes_nb (Optional[int]): The maximum number of processes to spawn for running scans concurrently.
-            max_processes_per_hostname_nb (Optional[int]): The maximum of processes that can be used for running scans
-                concurrently against a single server. A lower value will reduce the chances of DOS-ing the server.
+            max_processes_per_hostname_nb (Optional[int]): The maximum number of processes that can be used for running
+                scans concurrently against a single server. A lower value will reduce the chances of DOS-ing the server.
         """
         self._network_retries = network_retries
         self._network_timeout = network_timeout

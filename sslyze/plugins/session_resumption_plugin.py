@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Plugin to analyze the server's SSL session resumption capabilities.
+"""Analyze the server(s) SSL session resumption capabilities.
 """
 
 from xml.etree.ElementTree import Element
-
 import nassl
 from enum import Enum
 
@@ -46,8 +45,6 @@ class TslSessionTicketSupportEnum(Enum):
 
 
 class SessionResumptionPlugin(plugin_base.Plugin):
-    """Test the server(s) for session resumption support.
-    """
 
     MAX_THREADS_NB = 20
 

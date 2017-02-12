@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Scan the server(s) for supported OpenSSL cipher suites.
+"""
 
 import optparse
 from abc import ABCMeta
@@ -82,8 +84,6 @@ class Tlsv12ScanCommand(CipherSuiteScanCommand):
 
 
 class OpenSslCipherSuitesPlugin(Plugin):
-    """Scan the server(s) for supported OpenSSL cipher suites.
-    """
 
     MAX_THREADS = 15
     SSL_VERSIONS_MAPPING = {

@@ -21,8 +21,8 @@ class SynchronousScanner(object):
         """Create a scanner for running scanning commands synchronously.
 
         Args:
-            network_retries (Optional[int]): How many times plugins should retry a connection that timed out.
-            network_timeout (Optional[int]): The time until an ongoing connection times out within all plugins.
+            network_retries (Optional[int]): How many times SSLyze should retry a connection that timed out.
+            network_timeout (Optional[int]): The time until an ongoing connection times out.
         """
         self._plugins_repository = PluginsRepository()
 

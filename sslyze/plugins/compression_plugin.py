@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+"""Test the server(s) for Zlib compression support.
+"""
 
 from xml.etree.ElementTree import Element
 from nassl.ssl_client import ClientCertificateRequested
@@ -19,8 +20,6 @@ class CompressionScanCommand(PluginScanCommand):
 
 
 class CompressionPlugin(plugin_base.Plugin):
-    """Test the server(s) for Zlib compression support.
-    """
 
     @classmethod
     def get_available_commands(cls):

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+"""Test the server(s) for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.
+"""
 
 from xml.etree.ElementTree import Element
 from nassl import _nassl, OpenSslVersionEnum
@@ -19,8 +20,6 @@ class FallbackScsvScanCommand(PluginScanCommand):
 
 
 class FallbackScsvPlugin(plugin_base.Plugin):
-    """Test the server(s) for support of the TLS_FALLBACK_SCSV cipher suite which prevents downgrade attacks.
-    """
 
     @classmethod
     def get_available_commands(cls):

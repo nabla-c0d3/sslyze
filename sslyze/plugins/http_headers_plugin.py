@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Test the server(s) for the presence of security-related HTTP headers.
+"""
 
 from xml.etree.ElementTree import Element
 
@@ -27,8 +29,6 @@ class HttpHeadersScanCommand(plugin_base.PluginScanCommand):
 
 
 class HttpHeadersPlugin(plugin_base.Plugin):
-    """Test the server(s) for the presence of security-related HTTP headers.
-    """
 
     @classmethod
     def get_available_commands(cls):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin to test the server for CVE-2014-0160.
+"""Test the server(s) for the OpenSSL Heartbleed vulnerability (CVE-2014-0160).
 """
 
 import types
@@ -24,8 +24,6 @@ class HeartbleedScanCommand(PluginScanCommand):
 
 
 class HeartbleedPlugin(plugin_base.Plugin):
-    """Test the server(s) for the OpenSSL Heartbleed vulnerability.
-    """
 
     @classmethod
     def get_available_commands(cls):

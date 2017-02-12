@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Test the server(s) for the OpenSSL CCS injection vulnerability (CVE-2014-0224).
+"""
 
 from xml.etree.ElementTree import Element
 
@@ -21,8 +23,7 @@ class OpenSslCcsInjectionScanCommand(plugin_base.PluginScanCommand):
 
 
 class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
-    """Test the server(s) for CVE-2014-0224.
-    """
+
 
     @classmethod
     def get_available_commands(cls):

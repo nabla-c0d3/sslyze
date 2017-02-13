@@ -110,4 +110,4 @@ License
 GPLv2 - See LICENSE.txt.
 
 
-[documentation]: https://nabla-c0d3.github.io/SSLyze/documentation
+[documentation]: https://nabla-c0d3.github.io/sslyze/documentation

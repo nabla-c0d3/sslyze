@@ -337,7 +337,7 @@ class CommandLineParser(object):
             help=u'Write the scan results as a JSON document to the file JSON_FILE. If JSON_FILE is set to "-", the '
                  u'JSON output will instead be printed to stdout. The resulting JSON file is a serialized version of '
                  u'the ScanResult objects described in SSLyze\'s Python API: the nodes and attributes will be the same. '
-                 u'See https://nabla-c0d3.github.io/SSLyze/documentation/available-scan-commands.html for more details.',
+                 u'See https://nabla-c0d3.github.io/sslyze/documentation/available-scan-commands.html for more details.',
             dest=u'json_file',
             default=None
         )

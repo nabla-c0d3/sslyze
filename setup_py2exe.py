@@ -12,18 +12,19 @@ data_files = [
 
 # Trust Stores
 plugin_data_files = []
-for file in os.listdir('sslyze\\plugins\\data\\trust_stores'):
-    file = os.path.join('sslyze\\plugins\\data\\trust_stores', file)
+trust_stores_pem_path = os.path.join('sslyze', 'plugins', 'utils', 'trust_store', 'pem_files')
+for file in os.listdir(trust_stores_pem_path):
+    file = os.path.join(trust_stores_pem_path, file)
     if os.path.isfile(file):  # skip directories
         plugin_data_files.append(file)
 
-data_files.append(('data\\trust_stores', plugin_data_files))
+data_files.append((os.path.join('utils', 'trust_store', 'pem_files'), plugin_data_files))
 
 sslyze_setup_py2exe = SSLYZE_SETUP.copy()
+# Add nassl to the list of packages
+sslyze_setup_py2exe['packages'].append('nassl')
 sslyze_setup_py2exe.update(
         {
-            # Add nassl to the list of packages
-            'packages': ['sslyze', 'sslyze.plugins', 'sslyze.utils', 'sslyze.cli', 'nassl',],
             # Force the packaging of the C extension
             'package_data': {'nassl': ['_nassl.pyd']},
             'console': ['sslyze\\__main__.py'],

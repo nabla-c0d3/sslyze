@@ -121,7 +121,7 @@ corresponding server can be scanned. Then, SSLyze can run <cite>ScanCommands</ci
 <li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) &#8211; The server&#8217;s connectivity information. The
 test_connectivity_to_server() method must have been called first to ensure that the server is online
 and accessible.</li>
-<li><strong>scan_command</strong> (<em>PluginScanCommand</em>) &#8211; The scan command to run against this server.</li>
+<li><strong>scan_command</strong> (<a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><em>PluginScanCommand</em></a>) &#8211; The scan command to run against this server.</li>
 </ul>
 </td>
 </tr>
@@ -222,22 +222,6 @@ scans concurrently against a single server. A lower value will reduce the chance
 </dd></dl>
 
 <dl class="method">
-<dt id="sslyze.concurrent_scanner.ConcurrentScanner.get_results">
-<code class="descname">get_results</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.concurrent_scanner.ConcurrentScanner.get_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the result of previously queued scan commands; new commands cannot be queued once this is called.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Yields:</th><td class="field-body"><em>PluginScanResult</em> &#8211; The result of the scan command, which will be an instance of the scan command&#8217;s
-corresponding PluginScanResult subclass. If there was an unexpected error while running the scan command,
-this will be a PluginRaisedExceptionScanResult instance instead.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="sslyze.concurrent_scanner.ConcurrentScanner.queue_scan_command">
 <code class="descname">queue_scan_command</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.concurrent_scanner.ConcurrentScanner.queue_scan_command" title="Permalink to this definition">¶</a></dt>
 <dd><p>Queue a scan command targeting a specific server.</p>
@@ -249,9 +233,25 @@ this will be a PluginRaisedExceptionScanResult instance instead.</td>
 <li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) &#8211; The server&#8217;s connectivity information. The
 test_connectivity_to_server() method must have been called first to ensure that the server is online
 and accessible.</li>
-<li><strong>scan_command</strong> (<em>PluginScanCommand</em>) &#8211; The scan command to run against this server.</li>
+<li><strong>scan_command</strong> (<a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><em>PluginScanCommand</em></a>) &#8211; The scan command to run against this server.</li>
 </ul>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sslyze.concurrent_scanner.ConcurrentScanner.get_results">
+<code class="descname">get_results</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.concurrent_scanner.ConcurrentScanner.get_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the result of previously queued scan commands; new commands cannot be queued once this is called.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Yields:</th><td class="field-body"><em>PluginScanResult</em> &#8211; The result of the scan command, which will be an instance of the scan command&#8217;s
+corresponding PluginScanResult subclass. If there was an unexpected error while running the scan command,
+this will be a PluginRaisedExceptionScanResult instance instead.</td>
 </tr>
 </tbody>
 </table>

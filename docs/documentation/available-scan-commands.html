@@ -26,6 +26,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Appendix: Writing Your Own Plugins" href="writing-a-plugin.html" />
     <link rel="prev" title="Step 2: Running Scan Commands Against a Server" href="running-scan-commands.html" /> 
   </head>
   <body role="document">
@@ -38,6 +39,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="writing-a-plugin.html" title="Appendix: Writing Your Own Plugins"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="running-scan-commands.html" title="Step 2: Running Scan Commands Against a Server"
              accesskey="P">previous</a> |</li>
@@ -63,7 +67,7 @@ represented by a <cite>ScanCommand</cite>, which is implemented using a plugin s
 <span class="target" id="module-sslyze.plugins.plugin_base"></span><dl class="class">
 <dt id="sslyze.plugins.plugin_base.PluginScanResult">
 <em class="property">class </em><code class="descclassname">sslyze.plugins.plugin_base.</code><code class="descname">PluginScanResult</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult" title="Permalink to this definition">¶</a></dt>
-<dd><p>The parent class of all the scan result classes.</p>
+<dd><p>Abstract class to represent the result of running a specific PluginScanCommand against a server .</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.plugin_base.PluginScanResult.server_info">
 <code class="descname">server_info</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult.server_info" title="Permalink to this definition">¶</a></dt>
@@ -313,13 +317,13 @@ certificate.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_CN">
-<code class="descname">NAME_MATCHES_CN</code><em class="property"> = 2</em><a class="headerlink" href="#nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_CN" title="Permalink to this definition">¶</a></dt>
+<dt id="nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_SAN">
+<code class="descname">NAME_MATCHES_SAN</code><em class="property"> = 1</em><a class="headerlink" href="#nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_SAN" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_SAN">
-<code class="descname">NAME_MATCHES_SAN</code><em class="property"> = 1</em><a class="headerlink" href="#nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_SAN" title="Permalink to this definition">¶</a></dt>
+<dt id="nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_CN">
+<code class="descname">NAME_MATCHES_CN</code><em class="property"> = 2</em><a class="headerlink" href="#nassl.x509_certificate.HostnameValidationResultEnum.NAME_MATCHES_CN" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -942,6 +946,9 @@ session ID resumption with the server (should always be empty).</p>
   <h4>Previous topic</h4>
   <p class="topless"><a href="running-scan-commands.html"
                         title="previous chapter">Step 2: Running Scan Commands Against a Server</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="writing-a-plugin.html"
+                        title="next chapter">Appendix: Writing Your Own Plugins</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -972,6 +979,9 @@ session ID resumption with the server (should always be empty).</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="writing-a-plugin.html" title="Appendix: Writing Your Own Plugins"
+             >next</a> |</li>
         <li class="right" >
           <a href="running-scan-commands.html" title="Step 2: Running Scan Commands Against a Server"
              >previous</a> |</li>

@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Appendix: Writing Your Own Plugins &#8212; SSLyze  documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Appendix: Available Scan Commands" href="available-scan-commands.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="available-scan-commands.html" title="Appendix: Available Scan Commands"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SSLyze  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="appendix-writing-your-own-plugins">
+<h1>Appendix: Writing Your Own Plugins<a class="headerlink" href="#appendix-writing-your-own-plugins" title="Permalink to this headline">¶</a></h1>
+<p>Things that SSLyze can scan for are implemented using a plugin system. If you want to create a new plugin, the easiest
+way to get started is to review a simple existing plugin such as the <cite>CompressionPlugin</cite> in
+<cite>sslyze.plugins.compression_plugin</cite>.</p>
+<div class="section" id="high-level-overview">
+<h2>High Level Overview<a class="headerlink" href="#high-level-overview" title="Permalink to this headline">¶</a></h2>
+<p>A plugin is made of one <cite>Plugin</cite> subclass and one or multiple subclasses of <cite>PluginScanCommand</cite> and <cite>PluginScanResult</cite>.
+The <cite>Plugin</cite> receives a <cite>PluginScanCommand</cite>, performs the corresponding scan, and returns a <cite>PluginScanResult</cite>.</p>
+<p>For the <cite>Plugin</cite> to be discovered by SSLyze, it needs to be added to <cite>sslyze.plugins.plugin_repository</cite>.</p>
+<div class="section" id="module-sslyze.plugins.plugin_base">
+<span id="core-parent-classes"></span><h3>Core parent classes<a class="headerlink" href="#module-sslyze.plugins.plugin_base" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="sslyze.plugins.plugin_base.Plugin">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.plugin_base.</code><code class="descname">Plugin</code><a class="headerlink" href="#sslyze.plugins.plugin_base.Plugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class to represent one plugin which can implement one multiple PluginScanCommand and PluginScanResult.</p>
+<dl class="method">
+<dt id="sslyze.plugins.plugin_base.Plugin.process_task">
+<code class="descname">process_task</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.plugin_base.Plugin.process_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should run the supplied scan command on the server and return the result.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) &#8211; The server to run the scan command on.</li>
+<li><strong>scan_command</strong> (<a class="reference internal" href="#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><em>PluginScanCommand</em></a>) &#8211; The scan command.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The result of the scan command run on the supplied server.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PluginScanResult</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sslyze.plugins.plugin_base.PluginScanCommand">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.plugin_base.</code><code class="descname">PluginScanCommand</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class to represent one specific thing a Plugin can scan for.</p>
+<dl class="method">
+<dt id="sslyze.plugins.plugin_base.PluginScanCommand.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanCommand.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional arguments for a command can be passed as keyword arguments here.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sslyze.plugins.plugin_base.PluginScanCommand.get_cli_argument">
+<em class="property">classmethod </em><code class="descname">get_cli_argument</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanCommand.get_cli_argument" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should return the command line option to be used to run the scan command via the CLI.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sslyze.plugins.plugin_base.PluginScanCommand.is_aggressive">
+<em class="property">classmethod </em><code class="descname">is_aggressive</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanCommand.is_aggressive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should return True if command will open many simultaneous connections to the server.</p>
+<p>When using the ConcurrentScanner to run scan commands, only one aggressive command will be run concurrently per
+server, to avoid DOS-ing the server.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.plugin_base.</code><code class="descname">PluginScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em><span class="sig-paren">)</span></dt>
+<dd><p>Abstract class to represent the result of running a specific PluginScanCommand against a server .</p>
+<dl class="attribute">
+<dt id="sslyze.plugins.plugin_base.PluginScanResult.server_info">
+<code class="descname">server_info</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult.server_info" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ServerConnectivityInfo</em> &#8211; The server against which the command was run.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.plugin_base.PluginScanResult.scan_command">
+<code class="descname">scan_command</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult.scan_command" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PluginScanCommand</em> &#8211; The scan command that was run against the server.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">as_xml</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Should return the XML output to be returned by the CLI tool when &#8211;xml_out is used.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">as_text</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Should return the text output to be displayed in the console by the CLI tool.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Appendix: Writing Your Own Plugins</a><ul>
+<li><a class="reference internal" href="#high-level-overview">High Level Overview</a><ul>
+<li><a class="reference internal" href="#module-sslyze.plugins.plugin_base">Core parent classes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="available-scan-commands.html"
+                        title="previous chapter">Appendix: Available Scan Commands</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/writing-a-plugin.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="available-scan-commands.html" title="Appendix: Available Scan Commands"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">SSLyze  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, SSLyze.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.2.
+    </div>
+  </body>
+</html>

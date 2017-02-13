@@ -80,6 +80,8 @@
       <ul>
         <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand.__init__">(sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand method)</a>
 </li>
+        <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand.__init__">(sslyze.plugins.plugin_base.PluginScanCommand method)</a>
+</li>
         <li><a href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo.__init__">(sslyze.server_connectivity.ServerConnectivityInfo method)</a>
 </li>
         <li><a href="testing-connectivity.html#sslyze.ssl_settings.ClientAuthenticationCredentials.__init__">(sslyze.ssl_settings.ClientAuthenticationCredentials method)</a>
@@ -203,6 +205,10 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand.get_cli_argument">get_cli_argument() (sslyze.plugins.plugin_base.PluginScanCommand class method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="running-scan-commands.html#sslyze.concurrent_scanner.ConcurrentScanner.get_results">get_results() (sslyze.concurrent_scanner.ConcurrentScanner method)</a>
 </li>
   </ul></td>
@@ -253,6 +259,8 @@
         <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHstsHeader.include_subdomains">(sslyze.plugins.http_headers_plugin.ParsedHstsHeader attribute)</a>
 </li>
       </ul></li>
+      <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand.is_aggressive">is_aggressive() (sslyze.plugins.plugin_base.PluginScanCommand class method)</a>
+</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.is_anonymous">is_anonymous (sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite attribute)</a>
 
       <ul>
@@ -371,15 +379,19 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.PathValidationResult">PathValidationResult (class in sslyze.plugins.certificate_info_plugin)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="testing-connectivity.html#nassl.ssl_client.OpenSslFileTypeEnum.PEM">PEM (nassl.ssl_client.OpenSslFileTypeEnum attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.pin_sha256_list">pin_sha256_list (sslyze.plugins.http_headers_plugin.ParsedHpkpHeader attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="testing-connectivity.html#sslyze.ssl_settings.TlsWrappedProtocolEnum.PLAIN_TLS">PLAIN_TLS (sslyze.ssl_settings.TlsWrappedProtocolEnum attribute)</a>
 </li>
+      <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.Plugin">Plugin (class in sslyze.plugins.plugin_base)</a>
+</li>
       <li><a href="running-scan-commands.html#sslyze.concurrent_scanner.PluginRaisedExceptionScanResult">PluginRaisedExceptionScanResult (class in sslyze.concurrent_scanner)</a>
+</li>
+      <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand">PluginScanCommand (class in sslyze.plugins.plugin_base)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult">PluginScanResult (class in sslyze.plugins.plugin_base)</a>
 </li>
@@ -388,6 +400,8 @@
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher">preferred_cipher (sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHstsHeader.preload">preload (sslyze.plugins.http_headers_plugin.ParsedHstsHeader attribute)</a>
+</li>
+      <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.Plugin.process_task">process_task() (sslyze.plugins.plugin_base.Plugin method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -421,9 +435,9 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult.scan_command">scan_command (sslyze.plugins.plugin_base.PluginScanResult attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult.scan_command">scan_command (sslyze.plugins.plugin_base.PluginScanResult attribute)</a>, <a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanResult.scan_command">[1]</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult.server_info">server_info (sslyze.plugins.plugin_base.PluginScanResult attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult.server_info">server_info (sslyze.plugins.plugin_base.PluginScanResult attribute)</a>, <a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanResult.server_info">[1]</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo">ServerConnectivityInfo (class in sslyze.server_connectivity)</a>
 </li>
@@ -471,7 +485,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#module-sslyze.plugins.plugin_base">sslyze.plugins.plugin_base (module)</a>
+      <li><a href="available-scan-commands.html#module-sslyze.plugins.plugin_base">sslyze.plugins.plugin_base (module)</a>, <a href="writing-a-plugin.html#module-sslyze.plugins.plugin_base">[1]</a>
 </li>
       <li><a href="available-scan-commands.html#module-sslyze.plugins.session_renegotiation_plugin">sslyze.plugins.session_renegotiation_plugin (module)</a>
 </li>

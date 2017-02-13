@@ -22,6 +22,7 @@ At high-level, running SSL/TLS scans against a server is a two-step process, des
    testing-connectivity
    running-scan-commands
    available-scan-commands
+   writing-a-plugin
 
 
 Indices and tables

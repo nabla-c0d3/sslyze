@@ -152,5 +152,5 @@ texinfo_documents = [
      'Security'),
 ]
 
-
+autodoc_member_order = 'bysource'
 

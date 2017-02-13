@@ -13,6 +13,8 @@ from typing import Text
 
 
 class PluginScanCommand(object):
+    """Abstract class to represent one specific thing a Plugin can scan for.
+    """
 
     __metaclass__ = abc.ABCMeta
 
@@ -53,6 +55,8 @@ class PluginScanCommand(object):
 
 
 class Plugin(object):
+    """Abstract class to represent one plugin which can implement one multiple PluginScanCommand and PluginScanResult.
+    """
 
     __metaclass__ = abc.ABCMeta
 
@@ -79,13 +83,13 @@ class Plugin(object):
 
 
     @abc.abstractmethod
-    def process_task(self, server_connectivity_info, command):
+    def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, PluginScanCommand) -> PluginScanResult
-        """Run the supplied scan command on the server.
+        """Should run the supplied scan command on the server and return the result.
 
         Args:
-            server_connectivity_info (ServerConnectivityInfo): The server to run the scan command on.
-            command (PluginScanCommand): The scan command.
+            server_info (ServerConnectivityInfo): The server to run the scan command on.
+            scan_command (PluginScanCommand): The scan command.
 
         Returns:
             PluginScanResult: The result of the scan command run on the supplied server.
@@ -94,7 +98,7 @@ class Plugin(object):
 
 
 class PluginScanResult(object):
-    """The parent class of all the scan result classes.
+    """Abstract class to represent the result of running a specific PluginScanCommand against a server .
 
     Attributes:
         server_info (ServerConnectivityInfo):  The server against which the command was run.
@@ -110,11 +114,15 @@ class PluginScanResult(object):
     @abc.abstractmethod
     def as_xml(self):
         # type: () -> Element
+        """Should return the XML output to be returned by the CLI tool when --xml_out is used.
+        """
         raise NotImplementedError()
 
     @abc.abstractmethod
     def as_text(self):
         # type: () -> List[Text]
+        """Should return the text output to be displayed in the console by the CLI tool.
+        """
         raise NotImplementedError()
 
     # Common formatting methods to have a consistent console output

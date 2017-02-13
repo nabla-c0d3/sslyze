@@ -10,23 +10,23 @@ Fast and powerful SSL/TLS server scanning library for Python 2.7.
 Description
 -----------
 
-SSLyze is a Python tool that can analyze the SSL configuration of a server by connecting to it. It is designed to be
-fast and comprehensive, and should help organizations and testers identify mis-configurations affecting their SSL
-servers.
+SSLyze is a Python library and a CLI tool that can analyze the SSL configuration of a server by connecting to it. It is 
+designed to be fast and comprehensive, and should help organizations and testers identify mis-configurations affecting 
+their SSL/TLS servers.
 
 Key features include:
-* Multi-processed and multi-threaded scanning: it's very fast.
-* **NEW:** SSLyze can also be used as a library, in order to run scans and process the results directly from Python.
+* Python API, in order to run scans and process the results directly from Python.
+* Scans are automatically dispatched among multiple processes, making them very fast.
 * Performance testing: session resumption and TLS tickets support.
 * Security testing: weak cipher suites, insecure renegotiation, CRIME, Heartbleed and more.
 * Server certificate validation and revocation checking through OCSP stapling.
 * Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP, PostGres and FTP.
 * Support for client certificates when scanning servers that perform mutual authentication.
 * Scan results can be written to an XML or JSON file for further processing.
-* And much more !
+* And much more!
 
 
-Getting Started
+Getting started
 ---------------
 
 SSLyze can be installed directly via pip:
@@ -50,46 +50,34 @@ SSLyze has been tested on the following platforms: Windows 7 (32 and 64 bits), D
 Usage as a library
 ------------------
 
-Starting with version 0.13.0, SSLyze can be used as a Python module in order to run scans and process the results
-directly in Python:
+SSLyze can be used as a Python module in order to run scans and process the results directly in Python. 
+Full documentation is [available here][documentation].
+
+A simple example follows:
 
 ```python
-# Script to get the list of SSLv3 cipher suites supported by smtp.gmail.com
-hostname = 'smtp.gmail.com'
+# Setup the server to scan and ensure it is online/reachable
+hostname = u'smtp.gmail.com'
 try:
-    # First we must ensure that the server is reachable
     server_info = ServerConnectivityInfo(hostname=hostname, port=587,
                                          tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
     server_info.test_connectivity_to_server()
 except ServerConnectivityError as e:
-    raise RuntimeError('Error when connecting to {}: {}'.format(hostname, e.error_msg))
+    # Could not establish an SSL connection to the server
+    raise RuntimeError(u'Error when connecting to {}: {}'.format(hostname, e.error_msg))
 
-# Get the list of available plugins
-sslyze_plugins = PluginsFinder.get()
-
-# Create a process pool to run scanning commands concurrently
-plugins_process_pool = PluginsProcessPool(sslyze_plugins)
-
-# Queue a scan command to get the server's certificate
-plugins_process_pool.queue_plugin_task(server_info, 'sslv3')
-
-# Process the result and print the certificate CN
-for plugin_result in plugins_process_pool.get_results():
-    if plugin_result.plugin_command == 'sslv3':
-        # Do something with the result
-        print 'SSLV3 cipher suites'
-        for cipher in plugin_result.accepted_cipher_list:
-            print '    {}'.format(cipher.name)
+# Run one scan command synchronously to list the server's TLS 1.0 cipher suites
+print(u'\nRunning one scan command synchronously...')
+synchronous_scanner = SynchronousScanner()
+command = Tlsv10ScanCommand()
+scan_result = synchronous_scanner.run_scan_command(server_info, command)
+for cipher in scan_result.accepted_cipher_list:
+    print(u'    {}'.format(cipher.name))
 ```
 
-The scan commands are same as the ones described in the `sslyze_cli.py --help` text.
-
-They will all be run concurrently using Python's multiprocessing module. Each command will return a `PluginResult`
-object with attributes that contain the result of the scan command run on the server (such as list of supported cipher
-suites for the `--tlsv1` command). These attributes are specific to each plugin and command but are all documented
-(within each plugin's module).
-
-See _api\_sample.py_ for more examples of SSLyze's Python API.
+More advanced examples (such as running scan commands concurrently) are available in the
+[api_sample.py](https://github.com/nabla-c0d3/sslyze/blob/master/api_sample.py) file and in the 
+[SSLyze documentation][documentation].
 
 
 Windows executable
@@ -120,3 +108,6 @@ License
 -------
 
 GPLv2 - See LICENSE.txt.
+
+
+[documentation]: https://nabla-c0d3.github.io/SSLyze/documentation

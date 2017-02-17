@@ -232,6 +232,14 @@ class CertificateInfoScanResult(PluginScanResult):
         super(CertificateInfoScanResult, self).__init__(server_info, scan_command)
         # Find the first trust store that successfully validated the certificate chain
         self.successful_trust_store = None
+
+        # Sort the path_validation_result_list so the same successful_trust_store always get picked for a given server
+        # because threading timings change the order of path_validation_result_list
+        def sort_function(path_validation):
+            # type: (PathValidationResult) -> Text
+            return path_validation.trust_store.name.lower()
+
+        path_validation_result_list.sort(key=sort_function)
         for path_result in path_validation_result_list:
             if path_result.is_certificate_trusted:
                 self.successful_trust_store = path_result.trust_store

@@ -164,14 +164,14 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
 
-    def test_not_trusted_by_mozilla_but_trusted_by_apple(self):
+    def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
         server_info = ServerConnectivityInfo(hostname=u'webmail.russia.nasa.gov')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertEqual(plugin_result.successful_trust_store.name, u'Apple')
+        self.assertEqual(plugin_result.successful_trust_store.name, u'Microsoft')
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())

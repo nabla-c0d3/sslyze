@@ -54,12 +54,12 @@ if __name__ == u'__main__':
         print(u'\nReceived scan result for {} on host {}'.format(scan_result.scan_command.__class__.__name__,
                                                                  scan_result.server_info.hostname))
 
-        # Sometimes a plugin command can unexpectedly fail (as a bug); it is returned as a PluginRaisedExceptionResult
+        # Sometimes a scan command can unexpectedly fail (as a bug); it is returned as a PluginRaisedExceptionResult
         if isinstance(scan_result, PluginRaisedExceptionScanResult):
             raise RuntimeError(u'Scan command failed: {}'.format(scan_result.as_text()))
 
-        # Each plugin result has attributes with the information you're looking for, specific to each plugin
-        # All these attributes are documented within each plugin's module
+        # Each scan result has attributes with the information you're looking for, specific to each scan command
+        # All these attributes are documented within each scan command's module
         if isinstance(scan_result.scan_command, Sslv30ScanCommand):
             # Do something with the result
             print(u'SSLV3 cipher suites')
@@ -77,8 +77,7 @@ if __name__ == u'__main__':
             ))
 
 
-    # All the plugin results have specific attributes with the scan results depending on the scan command, but they also
-    # always expose two APIs:
+    # All the scan command results also always expose two APIs
     # What the SSLyze CLI would output to the console
     print(u'\nSSLyze text output')
     for line in reneg_result.as_text():

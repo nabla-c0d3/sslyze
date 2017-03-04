@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import re
 from xml.dom import minidom
 
@@ -89,11 +93,11 @@ class XmlOutputGenerator(OutputGenerator):
         # Generate the final output
         # Remove characters that are illegal for XML
         # https://lsimons.wordpress.com/2011/03/17/stripping-illegal-characters-out-of-xml-in-python/
-        xml_final_string = tostring(self._xml_root_node, encoding='UTF-8')
+        xml_final_string = tostring(self._xml_root_node, encoding='utf-8').decode('utf-8')
         illegal_xml_chars_re = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]')
         xml_sanitized_final_string = illegal_xml_chars_re.sub('', xml_final_string)
 
         # Hack: Prettify the XML file so it's (somewhat) diff-able
         xml_final_pretty = minidom.parseString(xml_sanitized_final_string).toprettyxml(indent="  ", encoding="utf-8")
-        self._file_to.write(xml_final_pretty)
+        self._file_to.write(xml_final_pretty.decode('utf-8'))
 

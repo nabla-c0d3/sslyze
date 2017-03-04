@@ -1,4 +1,8 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 from nassl.x509_certificate import X509Certificate
+from sslyze.utils.python_compatibility import IS_PYTHON_2
 from typing import Dict
 from typing import Text
 
@@ -64,25 +68,31 @@ class Certificate(object):
         # type: () -> Text
         try:
             # Extract the CN if there's one
-            cert_name = self.as_dict[u'subject'][u'commonName']
+            cert_name = self.as_dict['subject']['commonName']
         except KeyError:
             # If no common name, display the organizational unit instead
             try:
-                cert_name = self.as_dict[u'subject'][u'organizationalUnitName']
+                cert_name = self.as_dict['subject']['organizationalUnitName']
             except KeyError:
                 # Give up
-                cert_name = u'No Common Name'
+                cert_name = 'No Common Name'
         # TODO(ad): nassl should return a unicode dict
-        return cert_name.decode('utf-8')
+
+        if IS_PYTHON_2:
+            cert_name = cert_name.decode('utf-8')
+        return cert_name
+
 
     @property
     def printable_issuer_name(self):
         # type: () -> Text
         try:
             # Extract the CN from the issuer if there's one
-            issuer_name = self.as_dict[u'subject'][u'commonName']
+            issuer_name = self.as_dict['subject']['commonName']
         except KeyError:
             # Otherwise show the whole Issuer field
-            issuer_name = u' - '.join([u'{}: {}'.format(key, value) for key, value in self.as_dict[u'issuer'].items()])
+            issuer_name = ' - '.join(['{}: {}'.format(key, value) for key, value in self.as_dict['issuer'].items()])
 
-        return issuer_name.decode(u'utf-8')
+        if IS_PYTHON_2:
+            issuer_name = issuer_name.decode('utf-8')
+        return issuer_name

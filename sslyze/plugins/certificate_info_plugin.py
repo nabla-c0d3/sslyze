@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import optparse
 import os
@@ -16,6 +18,7 @@ from sslyze.plugins.utils.trust_store.trust_store import TrustStore, \
     InvalidCertificateChainOrderError, AnchorCertificateNotInTrustStoreError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.utils.python_compatibility import IS_PYTHON_2
 from sslyze.utils.thread_pool import ThreadPool
 from typing import List
 from typing import Optional
@@ -43,7 +46,7 @@ class CertificateInfoScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
-        return u'certinfo'
+        return 'certinfo'
 
 
 class PathValidationResult(object):
@@ -92,18 +95,18 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         # They must match the names in the commands' contructor
         options.append(
             optparse.make_option(
-                u'--ca_file',
-                help=u'Path to a local trust store file (with root certificates in PEM format) to verify the validity '
-                     u'of the server(s) certificate\'s chain(s) against.',
-                dest=u'ca_file'
+                '--ca_file',
+                help='Path to a local trust store file (with root certificates in PEM format) to verify the validity '
+                     'of the server(s) certificate\'s chain(s) against.',
+                dest='ca_file'
             )
         )
         # TODO(ad): Move this to the command line parser ?
         options.append(
             optparse.make_option(
-                u'--print_full_certificate',
-                help=u'Option - Print the full content of server certificate instead of selected fields.',
-                action=u'store_true'
+                '--print_full_certificate',
+                help='Option - Print the full content of server certificate instead of selected fields.',
+                action='store_true'
             )
         )
         return options
@@ -114,8 +117,8 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         final_trust_store_list = list(TrustStoresRepository.get_all())
         if scan_command.custom_ca_file:
             if not os.path.isfile(scan_command.custom_ca_file):
-                raise ValueError(u'Could not open supplied CA file at "{}"'.format(scan_command.custom_ca_file))
-            final_trust_store_list.append(TrustStore(scan_command.custom_ca_file, u'Custom --ca_file', u'N/A'))
+                raise ValueError('Could not open supplied CA file at "{}"'.format(scan_command.custom_ca_file))
+            final_trust_store_list.append(TrustStore(scan_command.custom_ca_file, 'Custom --ca_file', 'N/A'))
 
         thread_pool = ThreadPool()
         for trust_store in final_trust_store_list:
@@ -148,7 +151,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
         if len(path_validation_error_list) == len(final_trust_store_list):
             # All connections failed unexpectedly; raise an exception instead of returning a result
-            raise RuntimeError(u'Could not connect to the server; last error: {}'.format(last_exception))
+            raise RuntimeError('Could not connect to the server; last error: {}'.format(last_exception))
 
         # All done
         return CertificateInfoScanResult(server_info, scan_command, certificate_chain, path_validation_result_list,
@@ -217,7 +220,7 @@ class CertificateInfoScanResult(PluginScanResult):
             send back to clients. None if the verified chain could not be built or no HPKP header was returned.
     """
 
-    COMMAND_TITLE = u'Certificate Basic Information'
+    COMMAND_TITLE = 'Certificate Basic Information'
 
     def __init__(
             self,
@@ -289,20 +292,20 @@ class CertificateInfoScanResult(PluginScanResult):
         if self.verified_certificate_chain:
             self.has_sha1_in_certificate_chain = False
             for cert in self.verified_certificate_chain[:-1]:
-                if u"sha1" in cert.as_dict['signatureAlgorithm']:
+                if "sha1" in cert.as_dict['signatureAlgorithm']:
                     self.has_sha1_in_certificate_chain = True
                     break
 
 
     HOST_VALIDATION_TEXT = {
-        HostnameValidationResultEnum.NAME_MATCHES_SAN: u'OK - Subject Alternative Name matches {hostname}',
-        HostnameValidationResultEnum.NAME_MATCHES_CN: u'OK - Common Name matches {hostname}',
-        HostnameValidationResultEnum.NAME_DOES_NOT_MATCH: u'FAILED - Certificate does NOT match {hostname}'
+        HostnameValidationResultEnum.NAME_MATCHES_SAN: 'OK - Subject Alternative Name matches {hostname}',
+        HostnameValidationResultEnum.NAME_MATCHES_CN: 'OK - Common Name matches {hostname}',
+        HostnameValidationResultEnum.NAME_DOES_NOT_MATCH: 'FAILED - Certificate does NOT match {hostname}'
     }
 
-    TRUST_FORMAT = u'{store_name} CA Store ({store_version}):'
+    TRUST_FORMAT = '{store_name} CA Store ({store_version}):'
 
-    NO_VERIFIED_CHAIN_ERROR_TXT = u'ERROR - Could not build verified chain (certificate untrusted?)'
+    NO_VERIFIED_CHAIN_ERROR_TXT = 'ERROR - Could not build verified chain (certificate untrusted?)'
 
     def as_text(self):
         text_output = [self._format_title(self.COMMAND_TITLE)]
@@ -312,15 +315,15 @@ class CertificateInfoScanResult(PluginScanResult):
             text_output.extend(self._get_basic_certificate_text())
 
         # Trust section
-        text_output.extend(['', self._format_title(u'Certificate - Trust')])
+        text_output.extend(['', self._format_title('Certificate - Trust')])
 
         # Hostname validation
         server_name_indication = self.server_info.tls_server_name_indication
         if self.server_info.tls_server_name_indication != self.server_info.hostname:
-            text_output.append(self._format_field(u"SNI enabled with virtual domain:", server_name_indication))
+            text_output.append(self._format_field("SNI enabled with virtual domain:", server_name_indication))
 
         text_output.append(self._format_field(
-            u"Hostname Validation:",
+            "Hostname Validation:",
             self.HOST_VALIDATION_TEXT[self.hostname_validation_result].format(hostname=server_name_indication)
         ))
 
@@ -328,13 +331,13 @@ class CertificateInfoScanResult(PluginScanResult):
         for path_result in self.path_validation_result_list:
             if path_result.is_certificate_trusted:
                 # EV certs - Only Mozilla supported for now
-                ev_txt = u''
+                ev_txt = ''
                 if self.is_leaf_certificate_ev and TrustStoresRepository.get_main() == path_result.trust_store:
-                    ev_txt = u', Extended Validation'
-                path_txt = u'OK - Certificate is trusted{}'.format(ev_txt)
+                    ev_txt = ', Extended Validation'
+                path_txt = 'OK - Certificate is trusted{}'.format(ev_txt)
 
             else:
-                path_txt = u'FAILED - Certificate is NOT Trusted: {}'.format(path_result.verify_string)
+                path_txt = 'FAILED - Certificate is NOT Trusted: {}'.format(path_result.verify_string)
 
             text_output.append(self._format_field(
                 self.TRUST_FORMAT.format(store_name=path_result.trust_store.name,
@@ -343,7 +346,7 @@ class CertificateInfoScanResult(PluginScanResult):
 
         # Path validation that ran into errors
         for path_error in self.path_validation_error_list:
-            error_txt = u'ERROR: {}'.format(path_error.error_message)
+            error_txt = 'ERROR: {}'.format(path_error.error_message)
             text_output.append(self._format_field(
                 self.TRUST_FORMAT.format(store_name=path_result.trust_store.name,
                                          store_version=path_result.trust_store.version),
@@ -351,65 +354,65 @@ class CertificateInfoScanResult(PluginScanResult):
 
         # Print the Common Names within the certificate chain
         cns_in_certificate_chain = [cert.printable_subject_name for cert in self.certificate_chain]
-        text_output.append(self._format_field(u'Received Chain:', u' --> '.join(cns_in_certificate_chain)))
+        text_output.append(self._format_field('Received Chain:', ' --> '.join(cns_in_certificate_chain)))
 
         # Print the Common Names within the verified certificate chain if validation was successful
         if self.verified_certificate_chain:
             cns_in_certificate_chain = [cert.printable_subject_name for cert in self.verified_certificate_chain]
-            verified_chain_txt = u' --> '.join(cns_in_certificate_chain)
+            verified_chain_txt = ' --> '.join(cns_in_certificate_chain)
         else:
             verified_chain_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
-        text_output.append(self._format_field(u'Verified Chain:', verified_chain_txt))
+        text_output.append(self._format_field('Verified Chain:', verified_chain_txt))
 
         if self.verified_certificate_chain:
-            chain_with_anchor_txt = u'OK - Anchor certificate not sent' if not self.has_anchor_in_certificate_chain \
-                else u'WARNING - Received certificate chain contains the anchor certificate'
+            chain_with_anchor_txt = 'OK - Anchor certificate not sent' if not self.has_anchor_in_certificate_chain \
+                else 'WARNING - Received certificate chain contains the anchor certificate'
         else:
             chain_with_anchor_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
-        text_output.append(self._format_field(u'Received Chain Contains Anchor:', chain_with_anchor_txt))
+        text_output.append(self._format_field('Received Chain Contains Anchor:', chain_with_anchor_txt))
 
-        chain_order_txt = u'OK - Order is valid' if self.is_certificate_chain_order_valid \
-            else u'FAILED - Certificate chain out of order!'
-        text_output.append(self._format_field(u'Received Chain Order:', chain_order_txt))
+        chain_order_txt = 'OK - Order is valid' if self.is_certificate_chain_order_valid \
+            else 'FAILED - Certificate chain out of order!'
+        text_output.append(self._format_field('Received Chain Order:', chain_order_txt))
 
         if self.verified_certificate_chain:
-            sha1_text = u'OK - No SHA1-signed certificate in the verified certificate chain' \
+            sha1_text = 'OK - No SHA1-signed certificate in the verified certificate chain' \
                 if not self.has_sha1_in_certificate_chain \
-                else u'INSECURE - SHA1-signed certificate in the verified certificate chain'
+                else 'INSECURE - SHA1-signed certificate in the verified certificate chain'
         else:
             sha1_text = self.NO_VERIFIED_CHAIN_ERROR_TXT
 
-        text_output.append(self._format_field(u'Verified Chain contains SHA1:', sha1_text))
+        text_output.append(self._format_field('Verified Chain contains SHA1:', sha1_text))
 
         # OCSP stapling
-        text_output.extend(['', self._format_title(u'Certificate - OCSP Stapling')])
+        text_output.extend(['', self._format_title('Certificate - OCSP Stapling')])
 
         if self.ocsp_response is None:
-            text_output.append(self._format_field(u'', u'NOT SUPPORTED - Server did not send back an OCSP response.'))
+            text_output.append(self._format_field('', 'NOT SUPPORTED - Server did not send back an OCSP response.'))
 
         else:
             try:
-                ocsp_trust_txt = u'OK - Response is trusted' \
+                ocsp_trust_txt = 'OK - Response is trusted' \
                     if self.is_ocsp_response_trusted \
-                    else u'FAILED - Response is NOT trusted'
+                    else 'FAILED - Response is NOT trusted'
             except OpenSSLError as e:
-                if u'certificate verify error' in str(e):
-                    ocsp_trust_txt = u'FAILED - Response is NOT trusted'
+                if 'certificate verify error' in str(e):
+                    ocsp_trust_txt = 'FAILED - Response is NOT trusted'
                 else:
                     raise
 
             ocsp_resp_txt = [
-                self._format_field(u'OCSP Response Status:', self.ocsp_response[u'responseStatus']),
-                self._format_field(u'Validation w/ Mozilla Store:', ocsp_trust_txt),
-                self._format_field(u'Responder Id:', self.ocsp_response[u'responderID'])]
+                self._format_field('OCSP Response Status:', self.ocsp_response['responseStatus']),
+                self._format_field('Validation w/ Mozilla Store:', ocsp_trust_txt),
+                self._format_field('Responder Id:', self.ocsp_response['responderID'])]
 
-            if u'successful' in self.ocsp_response[u'responseStatus']:
+            if 'successful' in self.ocsp_response['responseStatus']:
                 ocsp_resp_txt.extend([
-                    self._format_field(u'Cert Status:', self.ocsp_response['responses'][0]['certStatus']),
-                    self._format_field(u'Cert Serial Number:',
+                    self._format_field('Cert Status:', self.ocsp_response['responses'][0]['certStatus']),
+                    self._format_field('Cert Serial Number:',
                                        self.ocsp_response['responses'][0]['certID']['serialNumber']),
-                    self._format_field(u'This Update:', self.ocsp_response['responses'][0]['thisUpdate']),
-                    self._format_field(u'Next Update:', self.ocsp_response['responses'][0]['nextUpdate'])
+                    self._format_field('This Update:', self.ocsp_response['responses'][0]['thisUpdate']),
+                    self._format_field('Next Update:', self.ocsp_response['responses'][0]['nextUpdate'])
                 ])
             text_output.extend(ocsp_resp_txt)
 
@@ -548,27 +551,27 @@ class CertificateInfoScanResult(PluginScanResult):
         cert_dict = self.certificate_chain[0].as_dict
 
         text_output = [
-            self._format_field(u"SHA1 Fingerprint:", self.certificate_chain[0].sha1_fingerprint),
-            self._format_field(u"Common Name:", self.certificate_chain[0].printable_subject_name),
-            self._format_field(u"Issuer:", self.certificate_chain[0].printable_issuer_name),
-            self._format_field(u"Serial Number:", cert_dict[u'serialNumber']),
-            self._format_field(u"Not Before:", cert_dict[u'validity'][u'notBefore']),
-            self._format_field(u"Not After:", cert_dict[u'validity'][u'notAfter']),
-            self._format_field(u"Signature Algorithm:", cert_dict[u'signatureAlgorithm']),
-            self._format_field(u"Public Key Algorithm:", cert_dict[u'subjectPublicKeyInfo'][u'publicKeyAlgorithm']),
-            self._format_field(u"Key Size:", cert_dict[u'subjectPublicKeyInfo'][u'publicKeySize'])]
+            self._format_field("SHA1 Fingerprint:", self.certificate_chain[0].sha1_fingerprint),
+            self._format_field("Common Name:", self.certificate_chain[0].printable_subject_name),
+            self._format_field("Issuer:", self.certificate_chain[0].printable_issuer_name),
+            self._format_field("Serial Number:", cert_dict['serialNumber']),
+            self._format_field("Not Before:", cert_dict['validity']['notBefore']),
+            self._format_field("Not After:", cert_dict['validity']['notAfter']),
+            self._format_field("Signature Algorithm:", cert_dict['signatureAlgorithm']),
+            self._format_field("Public Key Algorithm:", cert_dict['subjectPublicKeyInfo']['publicKeyAlgorithm']),
+            self._format_field("Key Size:", cert_dict['subjectPublicKeyInfo']['publicKeySize'])]
 
         try:
             # Print the Public key exponent if there's one; EC public keys don't have one for example
-            text_output.append(self._format_field(u"Exponent:", u"{0} (0x{0:x})".format(
-                int(cert_dict[u'subjectPublicKeyInfo'][u'publicKey'][u'exponent']))))
+            text_output.append(self._format_field("Exponent:", "{0} (0x{0:x})".format(
+                int(cert_dict['subjectPublicKeyInfo']['publicKey']['exponent']))))
         except KeyError:
             pass
 
         try:
             # Print the SAN extension if there's one
-            text_output.append(self._format_field(u'X509v3 Subject Alternative Name:',
-                                                  cert_dict[u'extensions'][u'X509v3 Subject Alternative Name']))
+            text_output.append(self._format_field('X509v3 Subject Alternative Name:',
+                                                  cert_dict['extensions']['X509v3 Subject Alternative Name']))
         except KeyError:
             pass
 
@@ -587,7 +590,10 @@ def _create_xml_node(key, value=''):
             key = 'oid-' + key
 
     xml_node = Element(key)
-    xml_node.text = value.decode("utf-8").strip()
+    if IS_PYTHON_2:
+        xml_node.text = value.decode("utf-8").strip()
+    else:
+        xml_node.text = value.strip()
     return xml_node
 
 
@@ -597,7 +603,7 @@ def _keyvalue_pair_to_xml(key, value=''):
         key_xml = _create_xml_node(key, value)
 
     elif type(value) is int:
-        key_xml = _create_xml_node(key, str(value))
+        key_xml = _create_xml_node(key, value)
 
     elif value is None:  # no value
         key_xml = _create_xml_node(key)

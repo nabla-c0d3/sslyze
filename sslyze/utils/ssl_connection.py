@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Main classes for performing all the SSL connections within the plugins.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import random
 import socket
@@ -51,33 +53,33 @@ class SSLConnection(DebugSslClient):
 
     # The following errors mean that the server explicitly rejected the handshake. The goal to differentiate rejected
     # handshakes from random network errors such as the server going offline, etc.
-    HANDSHAKE_REJECTED_SOCKET_ERRORS = {u'was forcibly closed': 'Received FIN',
-                                        u'reset by peer': 'Received RST'}
+    HANDSHAKE_REJECTED_SOCKET_ERRORS = {'was forcibly closed': 'Received FIN',
+                                        'reset by peer': 'Received RST'}
 
-    HANDSHAKE_REJECTED_SSL_ERRORS = {u'sslv3 alert handshake failure': 'Alert handshake failure',
-                                     u'no ciphers available': 'No ciphers available',
-                                     u'excessive message size': 'Excessive message size',
-                                     u'bad mac decode': 'Bad mac decode',
-                                     u'wrong version number': 'Wrong version number',
-                                     u'no cipher match': 'No cipher match',
-                                     u'bad decompression': 'Bad decompression',
-                                     u'peer error no cipher': 'Peer error no cipher',
-                                     u'no cipher list': 'No ciphers list',
-                                     u'insufficient security': 'Insufficient security',
-                                     u'block type is not 01': 'block type is not 01',  # Actually an RSA error
-                                     u'tlsv1 alert protocol version': 'Alert: protocol version '}
+    HANDSHAKE_REJECTED_SSL_ERRORS = {'sslv3 alert handshake failure': 'Alert handshake failure',
+                                     'no ciphers available': 'No ciphers available',
+                                     'excessive message size': 'Excessive message size',
+                                     'bad mac decode': 'Bad mac decode',
+                                     'wrong version number': 'Wrong version number',
+                                     'no cipher match': 'No cipher match',
+                                     'bad decompression': 'Bad decompression',
+                                     'peer error no cipher': 'Peer error no cipher',
+                                     'no cipher list': 'No ciphers list',
+                                     'insufficient security': 'Insufficient security',
+                                     'block type is not 01': 'block type is not 01',  # Actually an RSA error
+                                     'tlsv1 alert protocol version': 'Alert: protocol version '}
 
     # Constants for tunneling the traffic through a proxy
     HTTP_CONNECT_REQ = b'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
     HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = b'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {2}\r\n\r\n'
 
     # Errors caused by the proxy
-    ERR_CONNECT_REJECTED = u'The proxy rejected the CONNECT request for this host'
-    ERR_PROXY_OFFLINE = u'Could not connect to the proxy: "{0}"'
+    ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
+    ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
 
     # Restrict cipher list to make the client hello smaller so we don't run into
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
-    DEFAULT_SSL_CIPHER_LIST = u'HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA'
+    DEFAULT_SSL_CIPHER_LIST = 'HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA'
 
     # Default socket settings global to all SSLyze connections; can be overridden
     NETWORK_MAX_RETRIES = 3
@@ -284,19 +286,19 @@ class SMTPConnection(SSLConnection):
         self._sock.recv(2048)
 
         # Send a EHLO and wait for the 250 status
-        self._sock.send('EHLO sslyze.scan\r\n')
-        if '250 ' not in self._sock.recv(2048):
+        self._sock.send(b'EHLO sslyze.scan\r\n')
+        if b'250 ' not in self._sock.recv(2048):
             raise StartTLSError(self.ERR_SMTP_REJECTED)
 
         # Send a STARTTLS
-        self._sock.send('STARTTLS\r\n')
-        if '220' not in self._sock.recv(2048):
+        self._sock.send(b'STARTTLS\r\n')
+        if b'220' not in self._sock.recv(2048):
             raise StartTLSError(self.ERR_NO_SMTP_STARTTLS)
 
 
     def post_handshake_check(self):
         try:
-            self.write('NOOP\r\n')
+            self.write(b'NOOP\r\n')
             result = self.read(2048).strip()
         except socket.timeout:
             result = 'Timeout on SMTP NOOP'
@@ -308,14 +310,14 @@ class XMPPConnection(SSLConnection):
     """SSL connection class that performs an XMPP StartTLS negotiation before the SSL handshake.
     """
 
-    ERR_XMPP_REJECTED = u'Error opening XMPP stream, try --xmpp_to'
-    ERR_XMPP_HOST_UNKNOWN = u'Error opening XMPP stream: server returned host-unknown error, try --xmpp_to'
-    ERR_XMPP_NO_STARTTLS = u'XMPP STARTTLS not supported'
+    ERR_XMPP_REJECTED = 'Error opening XMPP stream, try --xmpp_to'
+    ERR_XMPP_HOST_UNKNOWN = 'Error opening XMPP stream: server returned host-unknown error, try --xmpp_to'
+    ERR_XMPP_NO_STARTTLS = 'XMPP STARTTLS not supported'
 
-    XMPP_OPEN_STREAM = (u"<stream:stream xmlns='jabber:client' xmlns:stream='"
-                        u"http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
-                        u"rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>")
-    XMPP_STARTTLS = u"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
+    XMPP_OPEN_STREAM = (b"<stream:stream xmlns='jabber:client' xmlns:stream='"
+                        b"http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
+                        b"rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>")
+    XMPP_STARTTLS = b"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
 
     def __init__(self, host, ip, port, ssl_version, ssl_verify_locations=None, client_auth_creds=None,
@@ -358,20 +360,20 @@ class XMPPConnection(SSLConnection):
 
 
 class XMPPServerConnection(XMPPConnection):
-    XMPP_OPEN_STREAM = (u"<stream:stream xmlns='jabber:server' xmlns:stream='"
-                        u"http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
-                        u"rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>")
+    XMPP_OPEN_STREAM = (b"<stream:stream xmlns='jabber:server' xmlns:stream='"
+                        b"http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
+                        b"rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>")
 
 
 class LDAPConnection(SSLConnection):
     """SSL connection class that performs an LDAP StartTLS negotiation before the SSL handshake.
     """
 
-    ERR_NO_STARTTLS = u'LDAP AUTH TLS was rejected'
+    ERR_NO_STARTTLS = 'LDAP AUTH TLS was rejected'
 
-    START_TLS_CMD = bytearray(b'0\x1d\x02\x01\x01w\x18\x80\x161.3.6.1.4.1.1466.20037')
+    START_TLS_CMD = b'0\x1d\x02\x01\x01w\x18\x80\x161.3.6.1.4.1.1466.20037'
     START_TLS_OK = b'\x30\x0c\x02\x01\x01\x78\x07\x0a\x01\x00\x04\x00\x04'
-    START_TLS_OK2 = 'Start TLS request accepted'
+    START_TLS_OK2 = b'Start TLS request accepted'
     START_TLS_OK_APACHEDS = b'\x30\x26\x02\x01\x01\x78\x21\x0a\x01\x00\x04\x00\x04\x00\x8a\x16\x31\x2e\x33\x2e\x36' \
                             b'\x2e\x31\x2e\x34\x2e\x31\x2e\x31\x34\x36\x36\x2e\x32\x30\x30\x33\x37\x8b\x00'
 
@@ -394,8 +396,8 @@ class RDPConnection(SSLConnection):
 
     ERR_NO_STARTTLS = 'RDP AUTH TLS was rejected'
 
-    START_TLS_CMD = bytearray(b'\x03\x00\x00\x13\x0E\xE0\x00\x00\x00\x00\x00\x01\x00\x08\x00\x03\x00\x00\x00')
-    START_TLS_OK = 'Start TLS request accepted.'
+    START_TLS_CMD = b'\x03\x00\x00\x13\x0E\xE0\x00\x00\x00\x00\x00\x01\x00\x08\x00\x03\x00\x00\x00'
+    START_TLS_OK = b'Start TLS request accepted.'
 
     def do_pre_handshake(self, network_timeout):
         """
@@ -420,9 +422,9 @@ class GenericStartTLSConnection(SSLConnection):
     """
 
     # To be defined in subclasses
-    ERR_NO_STARTTLS = ''
-    START_TLS_CMD = ''
-    START_TLS_OK = ''
+    ERR_NO_STARTTLS = b''
+    START_TLS_CMD = b''
+    START_TLS_OK = b''
     SHOULD_WAIT_FOR_SERVER_BANNER = True
 
     def do_pre_handshake(self, network_timeout):
@@ -444,38 +446,38 @@ class IMAPConnection(GenericStartTLSConnection):
     """SSL connection class that performs an IMAP StartTLS negotiation before the SSL handshake.
     """
 
-    ERR_NO_STARTTLS = 'IMAP START TLS was rejected'
+    ERR_NO_STARTTLS = b'IMAP START TLS was rejected'
 
-    START_TLS_CMD = '. STARTTLS\r\n'
-    START_TLS_OK = '. OK'
+    START_TLS_CMD = b'. STARTTLS\r\n'
+    START_TLS_OK = b'. OK'
 
 
 class POP3Connection(GenericStartTLSConnection):
     """SSL connection class that performs a POP3 StartTLS negotiation before the SSL handshake.
     """
 
-    ERR_NO_STARTTLS = 'POP START TLS was rejected'
+    ERR_NO_STARTTLS = b'POP START TLS was rejected'
 
-    START_TLS_CMD = 'STLS\r\n'
-    START_TLS_OK = '+OK'
+    START_TLS_CMD = b'STLS\r\n'
+    START_TLS_OK = b'+OK'
 
 
 class FTPConnection(GenericStartTLSConnection):
     """SSL connection class that performs an FTP StartTLS negotiation before the SSL handshake.
     """
 
-    ERR_NO_STARTTLS = 'FTP AUTH TLS was rejected'
+    ERR_NO_STARTTLS = b'FTP AUTH TLS was rejected'
 
-    START_TLS_CMD = 'AUTH TLS\r\n'
-    START_TLS_OK = '234'
+    START_TLS_CMD = b'AUTH TLS\r\n'
+    START_TLS_OK = b'234'
 
 
 class PostgresConnection(GenericStartTLSConnection):
     """PostgreSQL SSL Connection.
     """
 
-    ERR_NO_STARTTLS = 'Postgres AUTH TLS was rejected'
+    ERR_NO_STARTTLS = b'Postgres AUTH TLS was rejected'
 
-    START_TLS_CMD = bytearray(b'\x00\x00\x00\x08\x04\xD2\x16\x2F')
-    START_TLS_OK = 'S'
+    START_TLS_CMD = b'\x00\x00\x00\x08\x04\xD2\x16\x2F'
+    START_TLS_OK = b'S'
     SHOULD_WAIT_FOR_SERVER_BANNER = False

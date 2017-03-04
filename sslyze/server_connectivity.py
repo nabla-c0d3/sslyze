@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Core classes to ensure that the servers to be scanned are actually online and reachable.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import socket
 
@@ -65,10 +67,10 @@ class ServerConnectivityInfo(object):
         TlsWrappedProtocolEnum.STARTTLS_POSTGRES: PostgresConnection,
     }
 
-    CONNECTIVITY_ERROR_NAME_NOT_RESOLVED = u'Could not resolve {hostname}'
-    CONNECTIVITY_ERROR_TIMEOUT = u'Could not connect (timeout)'
-    CONNECTIVITY_ERROR_REJECTED = u'Connection rejected'
-    CONNECTIVITY_ERROR_HANDSHAKE_ERROR = u'Could not complete an SSL handshake'
+    CONNECTIVITY_ERROR_NAME_NOT_RESOLVED = 'Could not resolve {hostname}'
+    CONNECTIVITY_ERROR_TIMEOUT = 'Could not connect (timeout)'
+    CONNECTIVITY_ERROR_REJECTED = 'Connection rejected'
+    CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
 
 
     def __init__(
@@ -119,7 +121,7 @@ class ServerConnectivityInfo(object):
             ValueError: If both `ip_address` and `http_tunneling_settings` were supplied.
         """
         # Store the hostname in ACE format in the case the domain name is unicode
-        self.hostname = hostname.encode(u'idna')
+        self.hostname = hostname.encode('idna').decode('utf-8')
         self.tls_wrapped_protocol = tls_wrapped_protocol
 
         self.port = port
@@ -127,7 +129,7 @@ class ServerConnectivityInfo(object):
             self.port = self.TLS_DEFAULT_PORTS[tls_wrapped_protocol]
 
         if ip_address and http_tunneling_settings:
-            raise ValueError(u'Cannot specify both ip_address and http_tunneling_settings.')
+            raise ValueError('Cannot specify both ip_address and http_tunneling_settings.')
 
         elif not ip_address and not http_tunneling_settings:
             # Do a DNS lookup
@@ -151,7 +153,7 @@ class ServerConnectivityInfo(object):
         self.xmpp_to_hostname = xmpp_to_hostname
         if self.xmpp_to_hostname and self.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.STARTTLS_XMPP,
                                                                        TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER]:
-            raise ValueError(u'Can only specify xmpp_to for the XMPP StartTLS protocol.')
+            raise ValueError('Can only specify xmpp_to for the XMPP StartTLS protocol.')
 
         self.client_auth_credentials = client_auth_credentials
         self.http_tunneling_settings = http_tunneling_settings
@@ -200,7 +202,7 @@ class ServerConnectivityInfo(object):
 
         # Other errors
         except Exception as e:
-            raise ServerConnectivityError(u'{0}: {1}'.format(str(type(e).__name__), e[0]))
+            raise ServerConnectivityError('{0}: {1}'.format(str(type(e).__name__), e))
 
         finally:
             ssl_connection.close()
@@ -212,7 +214,7 @@ class ServerConnectivityInfo(object):
         for ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_1, OpenSslVersionEnum.TLSV1,
                             OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.SSLV23]:
             # First try the default cipher list, and then all ciphers
-            for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, u'ALL:COMPLEMENTOFALL']:
+            for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
                 ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
                                                                        should_ignore_client_auth=False)
                 ssl_connection.set_cipher_list(cipher_list)
@@ -267,8 +269,8 @@ class ServerConnectivityInfo(object):
         Used by all plugins to connect to the server and run scans.
         """
         if self.highest_ssl_version_supported is None and override_ssl_version is None:
-            raise ValueError(u'Cannot return an SSLConnection without testing connectivity; '
-                             u'call test_connectivity_to_server() first')
+            raise ValueError('Cannot return an SSLConnection without testing connectivity; '
+                             'call test_connectivity_to_server() first')
 
         if should_ignore_client_auth is None:
             # Ignore client auth requests if the server allows optional TLS client authentication

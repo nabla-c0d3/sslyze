@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import io
 
 from sslyze.plugins.utils.certificate import Certificate
+from sslyze.utils.python_compatibility import IS_PYTHON_2
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Text
+
+
 
 
 class TrustStore(object):
@@ -36,11 +42,11 @@ class TrustStore(object):
         """Is the supplied server certificate EV ?
         """
         if not self._ev_oids:
-            raise ValueError(u'No EV OIDs supplied for {} store - cannot detect EV certificates'.format(self.name))
+            raise ValueError('No EV OIDs supplied for {} store - cannot detect EV certificates'.format(self.name))
 
         is_ev = False
         try:
-            policy = certificate.as_dict[u'extensions'][u'X509v3 Certificate Policies'][u'Policy']
+            policy = certificate.as_dict['extensions']['X509v3 Certificate Policies']['Policy']
         except:
             # Certificate which don't have this extension
             pass
@@ -55,29 +61,32 @@ class TrustStore(object):
         with io.open(self.path) as store_file:
             store_content = store_file.read()
             # Each certificate is separated by -----BEGIN CERTIFICATE-----
-            pem_cert_list = store_content.split(u'-----BEGIN CERTIFICATE-----')[1::]
+            pem_cert_list = store_content.split('-----BEGIN CERTIFICATE-----')[1::]
             for pem_split in pem_cert_list:
                 # Remove comments as they may cause Unicode errors
-                final_pem = u'-----BEGIN CERTIFICATE-----{}-----END CERTIFICATE-----'.format(
-                    pem_split.split(u'-----END CERTIFICATE-----')[0]
+                final_pem = '-----BEGIN CERTIFICATE-----{}-----END CERTIFICATE-----'.format(
+                    pem_split.split('-----END CERTIFICATE-----')[0]
                 ).strip()
                 cert = Certificate.from_pem(final_pem)
                 # Store a dictionary of subject->certificate for easy lookup
-                cert_dict[self._hash_subject(cert.as_dict[u'subject'])] = cert
+                cert_dict[self._hash_subject(cert.as_dict['subject'])] = cert
         return cert_dict
 
 
     @staticmethod
     def _hash_subject(certificate_subjet_dict):
         # type: (Dict) -> Text
-        hashed_subject = u''
+        hashed_subject = ''
         for key, value in certificate_subjet_dict.items():
-            try:
-                decoded_value = value.decode(encoding=u'utf-8')
-            except UnicodeDecodeError:
-                # Some really exotic certificates like to use a different encoding
-                decoded_value = value.decode(encoding=u'utf-16')
-            hashed_subject += u'{}{}'.format(key, decoded_value)
+            if IS_PYTHON_2:
+                try:
+                    decoded_value = value.decode(encoding='utf-8')
+                except UnicodeDecodeError:
+                    # Some really exotic certificates like to use a different encoding
+                    decoded_value = value.decode(encoding='utf-16')
+            else:
+                decoded_value = value
+            hashed_subject += '{}{}'.format(key, decoded_value)
         return hashed_subject
 
 
@@ -94,14 +103,14 @@ class TrustStore(object):
         # type: (List[Certificate]) -> bool
         previous_issuer = None
         for index, cert in enumerate(certificate_chain):
-            current_subject = cert.as_dict[u'subject']
+            current_subject = cert.as_dict['subject']
 
             if index > 0:
                 # Compare the current subject with the previous issuer in the chain
                 if current_subject != previous_issuer:
                     return False
             try:
-                previous_issuer = cert.as_dict[u'issuer']
+                previous_issuer = cert.as_dict['issuer']
             except KeyError:
                 # Missing issuer; this is okay if this is the last cert
                 previous_issuer = u"missing issuer {}".format(index)
@@ -125,7 +134,7 @@ class TrustStore(object):
         anchor_cert = None
         # Assume that the certificates were sent in the correct order or give up
         for cert in received_certificate_chain:
-            anchor_cert = self._get_certificate_with_subject(cert.as_dict[u'issuer'])
+            anchor_cert = self._get_certificate_with_subject(cert.as_dict['issuer'])
             verified_certificate_chain.append(cert)
             if anchor_cert:
                 verified_certificate_chain.append(anchor_cert)

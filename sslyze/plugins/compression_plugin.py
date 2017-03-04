@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 from xml.etree.ElementTree import Element
 from nassl.ssl_client import ClientCertificateRequested
@@ -14,7 +16,7 @@ class CompressionScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
-        return u'compression'
+        return 'compression'
 
 
 class CompressionPlugin(plugin_base.Plugin):
@@ -30,9 +32,9 @@ class CompressionPlugin(plugin_base.Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives
-        if u'zlib compression' not in ssl_connection.get_available_compression_methods():
-            raise RuntimeError(u'OpenSSL was not built with support for zlib / compression. '
-                               u'Did you build nassl yourself ?')
+        if 'zlib compression' not in ssl_connection.get_available_compression_methods():
+            raise RuntimeError('OpenSSL was not built with support for zlib / compression. '
+                               'Did you build nassl yourself ?')
 
         try:
             # Perform the SSL handshake
@@ -55,7 +57,7 @@ class CompressionScanResult(PluginScanResult):
             compression is not supported by the server.
     """
 
-    COMMAND_TITLE = u'Deflate Compression'
+    COMMAND_TITLE = 'Deflate Compression'
 
     def __init__(self, server_info, scan_command, compression_name):
         # type: (ServerConnectivityInfo, CompressionScanCommand, Text) -> None
@@ -65,9 +67,9 @@ class CompressionScanResult(PluginScanResult):
     def as_text(self):
         txt_result = [self._format_title(self.COMMAND_TITLE)]
         if self.compression_name:
-            txt_result.append(self._format_field(u'', u'VULNERABLE - Server supports Deflate compression'))
+            txt_result.append(self._format_field('', 'VULNERABLE - Server supports Deflate compression'))
         else:
-            txt_result.append(self._format_field(u'', u'OK - Compression disabled'))
+            txt_result.append(self._format_field('', 'OK - Compression disabled'))
         return txt_result
 
     def as_xml(self):

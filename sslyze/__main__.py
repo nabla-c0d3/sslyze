@@ -1,5 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from __future__ import print_function
 
 import os
@@ -26,7 +28,7 @@ class _GlobalScanner(object):
 
 
 def sigint_handler(signum, frame):
-    print(u'Scan interrupted... shutting down.')
+    print('Scan interrupted... shutting down.')
     if _GlobalScanner.SCANNER:
         _GlobalScanner.SCANNER.emergency_shutdown()
     sys.exit()
@@ -110,7 +112,7 @@ def main():
     # Each host has a list of results
     result_dict = {}
     # We cannot use the server_info object directly as its address will change due to multiprocessing
-    RESULT_KEY_FORMAT = u'{hostname}:{ip_address}:{port}'
+    RESULT_KEY_FORMAT = '{hostname}:{ip_address}:{port}'
     for server_info in online_servers_list:
         result_dict[RESULT_KEY_FORMAT.format(hostname=server_info.hostname, ip_address=server_info.ip_address,
                                              port=server_info.port)] = []
@@ -134,5 +136,5 @@ def main():
     output_hub.scans_completed(exec_time)
 
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
     main()

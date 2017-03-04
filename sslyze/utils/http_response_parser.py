@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Utility to parse HTTP responses - http://pythonwise.blogspot.com/2010/02/parse-http-response.html.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 from io import BytesIO
 try:
@@ -29,7 +31,7 @@ class HttpResponseParser(object):
         except AttributeError:
             response = sock.recv(4096)
 
-        while 'HTTP/' not in response or '\r\n\r\n' not in response:
+        while b'HTTP/' not in response or b'\r\n\r\n' not in response:
             # Parse until the end of the headers
             try:
                 response += sock.read(4096)
@@ -39,6 +41,5 @@ class HttpResponseParser(object):
         fake_sock = FakeSocket(response)
         response = HTTPResponse(fake_sock)
         response.begin()
-
         return response
 

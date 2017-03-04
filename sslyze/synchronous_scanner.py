@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.plugins.plugin_base import PluginScanCommand
 from sslyze.plugins.plugins_repository import PluginsRepository

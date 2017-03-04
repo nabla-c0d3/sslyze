@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import socket
 from xml.etree.ElementTree import Element
@@ -16,7 +18,7 @@ class SessionRenegotiationScanCommand(plugin_base.PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
-        return u'reneg'
+        return 'reneg'
 
 
 class SessionRenegotiationPlugin(plugin_base.Plugin):
@@ -111,7 +113,7 @@ class SessionRenegotiationScanResult(PluginScanResult):
         supports_secure_renegotiation (bool): True if the server supports secure renegotiation.
     """
 
-    COMMAND_TITLE = u'Session Renegotiation'
+    COMMAND_TITLE = 'Session Renegotiation'
 
     def __init__(self, server_info, scan_command, accepts_client_renegotiation, supports_secure_renegotiation):
         # type: (ServerConnectivityInfo, SessionRenegotiationScanCommand, bool, bool) -> None
@@ -124,16 +126,16 @@ class SessionRenegotiationScanResult(PluginScanResult):
         result_txt = [self._format_title(self.COMMAND_TITLE)]
 
         # Client-initiated reneg
-        client_reneg_txt = u'VULNERABLE - Server honors client-initiated renegotiations' \
+        client_reneg_txt = 'VULNERABLE - Server honors client-initiated renegotiations' \
             if self.accepts_client_renegotiation \
-            else u'OK - Rejected'
-        result_txt.append(self._format_field(u'Client-initiated Renegotiation:', client_reneg_txt))
+            else 'OK - Rejected'
+        result_txt.append(self._format_field('Client-initiated Renegotiation:', client_reneg_txt))
 
         # Secure reneg
-        secure_txt = u'OK - Supported' \
+        secure_txt = 'OK - Supported' \
             if self.supports_secure_renegotiation \
-            else u'VULNERABLE - Secure renegotiation not supported'
-        result_txt.append(self._format_field(u'Secure Renegotiation:', secure_txt))
+            else 'VULNERABLE - Secure renegotiation not supported'
+        result_txt.append(self._format_field('Secure Renegotiation:', secure_txt))
 
         return result_txt
 

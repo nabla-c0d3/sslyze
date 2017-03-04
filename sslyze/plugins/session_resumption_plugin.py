@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 from xml.etree.ElementTree import Element
 import nassl
@@ -20,7 +22,7 @@ class SessionResumptionSupportScanCommand(plugin_base.PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
-        return u'resum'
+        return 'resum'
 
 
 class SessionResumptionRateScanCommand(plugin_base.PluginScanCommand):
@@ -29,7 +31,7 @@ class SessionResumptionRateScanCommand(plugin_base.PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
-        return u'resum_rate'
+        return 'resum_rate'
 
     @classmethod
     def is_aggressive(cls):
@@ -68,9 +70,9 @@ class SessionResumptionPlugin(plugin_base.Plugin):
                 if ticket_result == TslSessionTicketSupportEnum.SUCCEEDED:
                     ticket_supported = True
                 else:
-                    ticket_reason = u'TLS ticket not assigned' \
+                    ticket_reason = 'TLS ticket not assigned' \
                         if ticket_result == TslSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED \
-                        else u'TLS ticket assigned but not accepted'
+                        else 'TLS ticket assigned but not accepted'
             except Exception as e:
                 ticket_exception = e
 
@@ -83,7 +85,7 @@ class SessionResumptionPlugin(plugin_base.Plugin):
             result = SessionResumptionRateScanResult(server_info, scan_command, 100, successful_resumptions_nb,
                                                      errored_resumptions_list)
         else:
-            raise ValueError(u'PluginSessionResumption: Unknown command.')
+            raise ValueError('PluginSessionResumption: Unknown command.')
 
         return result
 
@@ -109,7 +111,7 @@ class SessionResumptionPlugin(plugin_base.Plugin):
         errored_resumptions_list = []
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
-            error_msg = u'{} - {}'.format(str(exception.__class__.__name__), str(exception))
+            error_msg = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
             errored_resumptions_list.append(error_msg)
 
         thread_pool.join()
@@ -180,8 +182,8 @@ class SessionResumptionPlugin(plugin_base.Plugin):
         # type: (nassl._nassl.SSL_SESSION) -> Text
         """Extract the SSL session ID from a SSL session object or raises IndexError if the session ID was not set.
         """
-        session_string = ((ssl_session.as_text()).split(u'Session-ID:'))[1]
-        session_id = (session_string.split(u'Session-ID-ctx:'))[0].strip()
+        session_string = ((ssl_session.as_text()).split('Session-ID:'))[1]
+        session_id = (session_string.split('Session-ID-ctx:'))[0].strip()
         return session_id
 
 
@@ -190,8 +192,8 @@ class SessionResumptionPlugin(plugin_base.Plugin):
         # type: (nassl._nassl.SSL_SESSION) -> Text
         """Extract the TLS session ticket from a SSL session object or raises IndexError if the ticket was not set.
         """
-        session_string = ((ssl_session.as_text()).split(u'TLS session ticket:'))[1]
-        session_tls_ticket = (session_string.split(u'Compression:'))[0]
+        session_string = ((ssl_session.as_text()).split('TLS session ticket:'))[1]
+        session_tls_ticket = (session_string.split('Compression:'))[0]
         return session_tls_ticket
 
 
@@ -232,7 +234,7 @@ class SessionResumptionRateScanResult(PluginScanResult):
             session ID resumption with the server (should always be empty).
     """
 
-    COMMAND_TITLE = u'Resumption Rate'
+    COMMAND_TITLE = 'Resumption Rate'
 
     def __init__(
             self,
@@ -249,29 +251,29 @@ class SessionResumptionRateScanResult(PluginScanResult):
         self.failed_resumptions_nb = attempted_resum_nb - successful_resum_nb - len(errored_resumptions_list)
 
 
-    RESUMPTION_RESULT_FORMAT = u'{4} ({0} successful, {1} failed, {2} errors, {3} total attempts).'
-    RESUMPTION_LINE_FORMAT = u'      {resumption_type:<35}{result}'
-    RESUMPTION_ERROR_FORMAT = u'        ERROR #{error_nb}: {error_msg}'
+    RESUMPTION_RESULT_FORMAT = '{4} ({0} successful, {1} failed, {2} errors, {3} total attempts).'
+    RESUMPTION_LINE_FORMAT = '      {resumption_type:<35}{result}'
+    RESUMPTION_ERROR_FORMAT = '        ERROR #{error_nb}: {error_msg}'
 
     def as_text(self):
         result_txt = [self._format_title(self.COMMAND_TITLE)]
 
         # Create the line which summarizes the session resumption rate
         if self.successful_resumptions_nb == self.attempted_resumptions_nb:
-            resumption_supported_txt = u'OK - Supported'
+            resumption_supported_txt = 'OK - Supported'
         elif self.successful_resumptions_nb > 0:
-            resumption_supported_txt = u'PARTIALLY SUPPORTED'
+            resumption_supported_txt = 'PARTIALLY SUPPORTED'
         elif self.failed_resumptions_nb == self.attempted_resumptions_nb:
-            resumption_supported_txt = u'NOT SUPPORTED'
+            resumption_supported_txt = 'NOT SUPPORTED'
         else:
-            resumption_supported_txt = u'ERROR'
+            resumption_supported_txt = 'ERROR'
 
         resum_rate_txt = self.RESUMPTION_RESULT_FORMAT.format(str(self.successful_resumptions_nb),
                                                               str(self.failed_resumptions_nb),
                                                               str(len(self.errored_resumptions_list)),
                                                               str(self.attempted_resumptions_nb),
                                                               resumption_supported_txt)
-        result_txt.append(self.RESUMPTION_LINE_FORMAT.format(resumption_type=u'With Session IDs:',
+        result_txt.append(self.RESUMPTION_LINE_FORMAT.format(resumption_type='With Session IDs:',
                                                              result=resum_rate_txt))
 
         # Add error messages if there was any
@@ -343,29 +345,29 @@ class SessionResumptionSupportScanResult(PluginScanResult):
         # An exception was raised while trying to perform ticket resumption (should never happen)
         self.ticket_resumption_error = None
         if ticket_resumption_exception:
-            self.ticket_resumption_error = u'{} - {}'.format(str(ticket_resumption_exception.__class__.__name__),
+            self.ticket_resumption_error = '{} - {}'.format(str(ticket_resumption_exception.__class__.__name__),
                                                              str(ticket_resumption_exception))
 
         # We use a SessionResumptionRateScanResult to re-use code in as_text() and as_xml()
         self._rate_result = SessionResumptionRateScanResult(server_info, scan_command, attempted_resum_nb,
                                                             successful_resum_nb, errored_resumptions_list)
 
-    COMMAND_TITLE = u'Session Resumption'
-    RESUMPTION_LINE_FORMAT = u'      {resumption_type:<35}{result}'
+    COMMAND_TITLE = 'Session Resumption'
+    RESUMPTION_LINE_FORMAT = '      {resumption_type:<35}{result}'
 
     def as_text(self):
         # Same output as --resum_rate but add a line about TLS ticket resumption at the end
         result_txt = self._rate_result.as_text()
 
         if self.ticket_resumption_error:
-            ticket_txt = u'ERROR: {}'.format(self.ticket_resumption_error)
+            ticket_txt = 'ERROR: {}'.format(self.ticket_resumption_error)
         else:
-            ticket_txt = u'OK - Supported' \
+            ticket_txt = 'OK - Supported' \
                 if self.is_ticket_resumption_supported \
-                else u'NOT SUPPORTED - {}.'.format(self.ticket_resumption_failed_reason)
+                else 'NOT SUPPORTED - {}.'.format(self.ticket_resumption_failed_reason)
 
 
-        result_txt.append(self.RESUMPTION_LINE_FORMAT.format(resumption_type=u'With TLS Tickets:', result=ticket_txt))
+        result_txt.append(self.RESUMPTION_LINE_FORMAT.format(resumption_type='With TLS Tickets:', result=ticket_txt))
         return result_txt
 
 

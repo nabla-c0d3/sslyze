@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The main process class responsible for instantiating and running the plugins.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 from multiprocessing import Process
 from multiprocessing import JoinableQueue

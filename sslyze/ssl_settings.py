@@ -2,6 +2,9 @@
 """Settings to be used for configuring a server's ServerConnectivityInfo.
 """
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import os
 from base64 import b64encode
 
@@ -47,7 +50,7 @@ class ClientAuthenticationCredentials(object):
     """
 
     def __init__(self, client_certificate_chain_path, client_key_path, client_key_type=OpenSslFileTypeEnum.PEM,
-                 client_key_password=u''):
+                 client_key_password=''):
         # type: (Text, Text, OpenSslFileTypeEnum, Optional[Text]) -> None
         """
         Args:
@@ -58,17 +61,17 @@ class ClientAuthenticationCredentials(object):
         """
         self.client_certificate_chain_path = client_certificate_chain_path
         if not os.path.isfile(self.client_certificate_chain_path):
-            raise ValueError(u'Could not open the client certificate file')
+            raise ValueError('Could not open the client certificate file')
 
         self.client_key_path = client_key_path
         if not os.path.isfile(self.client_key_path):
-            raise ValueError(u'Could not open the client private key file')
+            raise ValueError('Could not open the client private key file')
 
         self.client_key_password = client_key_password
 
         self.client_key_type = client_key_type
         if self.client_key_type not in OpenSslFileTypeEnum:
-            raise ValueError(u'Invalid certificate format specified')
+            raise ValueError('Invalid certificate format specified')
 
         # Try to load the cert and key in OpenSSL; will raise an exception if something is wrong
         SslClient(client_certchain_file=self.client_certificate_chain_path, client_key_file=self.client_key_path,
@@ -100,14 +103,14 @@ class HttpConnectTunnelingSettings(object):
         parsed_url = urlparse(proxy_url)
 
         if not parsed_url.netloc or not parsed_url.hostname:
-            raise ValueError(u'Invalid Proxy URL.')
+            raise ValueError('Invalid Proxy URL')
 
-        if parsed_url.scheme == u'http':
+        if parsed_url.scheme == 'http':
             default_port = 80
-        elif parsed_url.scheme == u'https':
+        elif parsed_url.scheme == 'https':
             default_port = 443
         else:
-            raise ValueError(u'Invalid URL scheme')
+            raise ValueError('Invalid URL scheme')
 
         port = parsed_url.port if parsed_url.port else default_port
         return cls(parsed_url.hostname, port, parsed_url.username, parsed_url.password)
@@ -119,5 +122,5 @@ class HttpConnectTunnelingSettings(object):
         """
         header = ''
         if self.basic_auth_user is not None:
-            header = b64encode(u'{0}:{1}'.format(quote(self.basic_auth_user), quote(self.basic_auth_password)))
+            header = b64encode('{0}:{1}'.format(quote(self.basic_auth_user), quote(self.basic_auth_password)))
         return header

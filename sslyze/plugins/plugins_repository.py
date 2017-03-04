@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.plugins.compression_plugin import CompressionPlugin
@@ -35,7 +37,7 @@ class PluginsRepository(object):
 
                 # Sanity check: no duplicate scan commands
                 if scan_command_class in scan_command_classes_to_plugin_classes.keys():
-                    raise KeyError(u'Found duplicate scan command: {}'.format(scan_command_class))
+                    raise KeyError('Found duplicate scan command: {}'.format(scan_command_class))
 
                 scan_command_classes_to_plugin_classes[scan_command_class] = plugin_class
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Generic, simple thread pool used in some of the plugins.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import threading
 

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import random
 from _elementtree import Element
@@ -26,9 +28,9 @@ class PluginRaisedExceptionScanResult(PluginScanResult):
         # type: (ServerConnectivityInfo, PluginScanCommand, Exception) -> None
         super(PluginRaisedExceptionScanResult, self).__init__(server_info, scan_command)
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
-        self.error_message = u'{} - {}'.format(str(exception.__class__.__name__), str(exception))
+        self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
-    TITLE_TXT_FORMAT = u'Unhandled exception while running --{command}:'
+    TITLE_TXT_FORMAT = 'Unhandled exception while running --{command}:'
 
     def as_text(self):
         # type: () -> List[Text]

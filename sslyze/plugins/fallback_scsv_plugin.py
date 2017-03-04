@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 from xml.etree.ElementTree import Element
 from nassl import _nassl
@@ -15,7 +17,7 @@ class FallbackScsvScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
-        return u'fallback'
+        return 'fallback'
 
 
 class FallbackScsvPlugin(plugin_base.Plugin):
@@ -29,7 +31,7 @@ class FallbackScsvPlugin(plugin_base.Plugin):
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, FallbackScsvScanCommand) -> FallbackScsvScanResult
         if server_info.highest_ssl_version_supported.value <= OpenSslVersionEnum.SSLV3.value:
-            raise ValueError(u'Server only supports SSLv3; no downgrade attacks are possible')
+            raise ValueError('Server only supports SSLv3; no downgrade attacks are possible')
 
         # Try to connect using a lower TLS version with the fallback cipher suite enabled
         ssl_version_downgrade = OpenSslVersionEnum(server_info.highest_ssl_version_supported.value - 1)
@@ -43,7 +45,7 @@ class FallbackScsvPlugin(plugin_base.Plugin):
 
         except _nassl.OpenSSLError as e:
             # This is the right, specific alert the server should return
-            if u'tlsv1 alert inappropriate fallback' in str(e.args):
+            if 'tlsv1 alert inappropriate fallback' in str(e.args):
                 supports_fallback_scsv = True
             else:
                 raise
@@ -68,7 +70,7 @@ class FallbackScsvScanResult(PluginScanResult):
         attacks.
     """
 
-    COMMAND_TITLE = u'Downgrade Attacks'
+    COMMAND_TITLE = 'Downgrade Attacks'
 
     def __init__(self, server_info, scan_command, supports_fallback_scsv):
         # type: (ServerConnectivityInfo, FallbackScsvScanCommand, bool) -> None
@@ -77,10 +79,10 @@ class FallbackScsvScanResult(PluginScanResult):
 
     def as_text(self):
         result_txt = [self._format_title(self.COMMAND_TITLE)]
-        downgrade_txt = u'OK - Supported' \
+        downgrade_txt = 'OK - Supported' \
             if self.supports_fallback_scsv \
-            else u'VULNERABLE - Signaling cipher suite not supported'
-        result_txt.append(self._format_field(u'TLS_FALLBACK_SCSV:', downgrade_txt))
+            else 'VULNERABLE - Signaling cipher suite not supported'
+        result_txt.append(self._format_field('TLS_FALLBACK_SCSV:', downgrade_txt))
         return result_txt
 
     def as_xml(self):

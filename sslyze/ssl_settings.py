@@ -4,7 +4,6 @@
 
 import os
 from base64 import b64encode
-from urllib import quote
 
 from enum import Enum
 from typing import Optional
@@ -14,10 +13,12 @@ try:
     # Python 3
     # noinspection PyCompatibility
     from urllib.parse import urlparse
+    from urllib.parse import quote
 except ImportError:
     # Python 2
     # noinspection PyCompatibility
     from urlparse import urlparse
+    from urllib import quote
 
 from nassl.ssl_client import SslClient, OpenSslFileTypeEnum
 

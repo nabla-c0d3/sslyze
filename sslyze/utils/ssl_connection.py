@@ -7,7 +7,14 @@ import socket
 import struct
 import time
 from base64 import b64encode
-from urllib import quote
+try:
+    # Python 3
+    # noinspection PyCompatibility
+    from urllib.parse import quote
+except ImportError:
+    # Python 2
+    # noinspection PyCompatibility
+    from urllib import quote
 
 from nassl import _nassl
 from nassl.debug_ssl_client import DebugSslClient

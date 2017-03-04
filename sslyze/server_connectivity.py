@@ -13,10 +13,10 @@ from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
 from typing import Text
 from typing import Tuple
-from utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, XMPPConnection, \
+from sslyze.utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, XMPPConnection, \
     XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \
     PostgresConnection, HTTPSConnection
-from utils.thread_pool import ThreadPool
+from sslyze.utils.thread_pool import ThreadPool
 
 
 class ServerConnectivityError(ValueError):

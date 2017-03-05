@@ -59,15 +59,15 @@ class ProxyHandler (BaseHTTPRequestHandler):
             return 0
         return 1
 
+    RESPONSE_FORMAT = '{protocol} 200 Connection established\r\nProxy-agent: {version}\r\n\r\n'
+
     def do_CONNECT(self):
         soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             if self._connect_to(self.path, soc):
                 self.log_request(200)
-                self.wfile.write(self.protocol_version +
-                                 " 200 Connection established\r\n")
-                self.wfile.write("Proxy-agent: %s\r\n" % self.version_string())
-                self.wfile.write("\r\n")
+                response = self.RESPONSE_FORMAT.format(protocol=self.protocol_version, version=self.version_string())
+                self.wfile.write(response.encode('ascii'))
                 self._read_write(soc, 300)
         finally:
             print("\t" "bye")

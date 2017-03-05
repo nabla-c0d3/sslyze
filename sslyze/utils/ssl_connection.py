@@ -70,8 +70,8 @@ class SSLConnection(DebugSslClient):
                                      'tlsv1 alert protocol version': 'Alert: protocol version '}
 
     # Constants for tunneling the traffic through a proxy
-    HTTP_CONNECT_REQ = b'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
-    HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = b'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {2}\r\n\r\n'
+    HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
+    HTTP_CONNECT_REQ_PROXY_AUTH_BASIC = 'CONNECT {0}:{1} HTTP/1.1\r\nProxy-Authorization: Basic {2}\r\n\r\n'
 
     # Errors caused by the proxy
     ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
@@ -143,10 +143,11 @@ class SSLConnection(DebugSslClient):
 
             # Send a CONNECT request with the host we want to tunnel to
             if self._tunnel_basic_auth_token is None:
-                self._sock.send(self.HTTP_CONNECT_REQ.format(self._host, self._port))
+                self._sock.send(self.HTTP_CONNECT_REQ.format(self._host, self._port).encode('utf-8'))
             else:
-                self._sock.send(self.HTTP_CONNECT_REQ_PROXY_AUTH_BASIC.format(self._host, self._port,
-                                                                              self._tunnel_basic_auth_token))
+                self._sock.send(self.HTTP_CONNECT_REQ_PROXY_AUTH_BASIC.format(
+                    self._host, self._port, self._tunnel_basic_auth_token
+                ).encode('utf-8'))
             http_response = HttpResponseParser.parse(self._sock)
 
             # Check if the proxy was able to connect to the host

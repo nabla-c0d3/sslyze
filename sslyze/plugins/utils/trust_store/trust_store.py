@@ -58,7 +58,7 @@ class TrustStore(object):
 
     def _compute_subject_certificate_dict(self):
         cert_dict = {}
-        with io.open(self.path) as store_file:
+        with io.open(self.path, encoding='utf-8') as store_file:
             store_content = store_file.read()
             # Each certificate is separated by -----BEGIN CERTIFICATE-----
             pem_cert_list = store_content.split('-----BEGIN CERTIFICATE-----')[1::]

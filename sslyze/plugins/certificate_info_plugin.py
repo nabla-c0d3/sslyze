@@ -599,11 +599,14 @@ def _create_xml_node(key, value=''):
 
 def _keyvalue_pair_to_xml(key, value=''):
 
+    if not IS_PYTHON_2:
+        unicode = str
+
     if type(value) in [str, unicode]:  # value is a string
         key_xml = _create_xml_node(key, value)
 
     elif type(value) is int:
-        key_xml = _create_xml_node(key, value)
+        key_xml = _create_xml_node(key, str(value))
 
     elif value is None:  # no value
         key_xml = _create_xml_node(key)

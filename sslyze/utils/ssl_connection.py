@@ -32,19 +32,16 @@ class SSLHandshakeRejected(IOError):
     pass
 
 
-
 class StartTLSError(IOError):
     """The server rejected the StartTLS negotiation.
     """
     pass
 
 
-
 class ProxyError(IOError):
     """The proxy was offline or did not return HTTP 200 to our CONNECT request.
     """
     pass
-
 
 
 class SSLConnection(DebugSslClient):
@@ -308,7 +305,6 @@ class SMTPConnection(SSLConnection):
         return result
 
 
-
 class XMPPConnection(SSLConnection):
     """SSL connection class that performs an XMPP StartTLS negotiation before the SSL handshake.
     """
@@ -317,9 +313,8 @@ class XMPPConnection(SSLConnection):
     ERR_XMPP_HOST_UNKNOWN = 'Error opening XMPP stream: server returned host-unknown error, try --xmpp_to'
     ERR_XMPP_NO_STARTTLS = 'XMPP STARTTLS not supported'
 
-    XMPP_OPEN_STREAM = ("<stream:stream xmlns='jabber:client' xmlns:stream='"
-                        "http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
-                        "rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>")
+    XMPP_OPEN_STREAM = "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' " \
+                       "xmlns:tls='http://www.ietf.org/rfc/rfc2595.txt' to='{xmpp_to}' xml:lang='en' version='1.0'>"
     XMPP_STARTTLS = b"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
 
@@ -341,13 +336,13 @@ class XMPPConnection(SSLConnection):
         super(XMPPConnection, self).do_pre_handshake(network_timeout)
 
         # Open an XMPP stream
-        self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to).encode('utf-8'))
+        self._sock.send(self.XMPP_OPEN_STREAM.format(xmpp_to=self._xmpp_to).encode('utf-8'))
 
         # Get the server's features and check for an error
         server_resp = self._sock.recv(4096)
-        if '<stream:error>' in server_resp:
+        if b'<stream:error>' in server_resp:
             raise StartTLSError(self.ERR_XMPP_REJECTED)
-        elif '</stream:features>' not in server_resp:
+        elif b'</stream:features>' not in server_resp:
             # Get all the server features before initiating startTLS
             self._sock.recv(4096)
 
@@ -355,17 +350,16 @@ class XMPPConnection(SSLConnection):
         self._sock.send(self.XMPP_STARTTLS)
         xmpp_resp = self._sock.recv(2048)
 
-        if 'host-unknown' in xmpp_resp:
+        if b'host-unknown' in xmpp_resp:
             raise StartTLSError(self.ERR_XMPP_HOST_UNKNOWN)
 
-        if 'proceed' not in xmpp_resp:
+        if b'proceed' not in xmpp_resp:
             raise StartTLSError(self.ERR_XMPP_NO_STARTTLS)
 
 
 class XMPPServerConnection(XMPPConnection):
-    XMPP_OPEN_STREAM = (b"<stream:stream xmlns='jabber:server' xmlns:stream='"
-                        b"http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
-                        b"rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>")
+    XMPP_OPEN_STREAM = "<stream:stream xmlns='jabber:server' xmlns:stream='http://etherx.jabber.org/streams' " \
+                       "xmlns:tls='http://www.ietf.org/rfc/rfc2595.txt' to='{xmpp_to}' xml:lang='en' version='1.0'>"
 
 
 class LDAPConnection(SSLConnection):
@@ -411,7 +405,7 @@ class RDPConnection(SSLConnection):
 
         self._sock.send(self.START_TLS_CMD)
         data = self._sock.recv(4)
-        if not data or len(data) != 4 or data[:2] != '\x03\x00':
+        if not data or len(data) != 4 or data[:2] != b'\x03\x00':
             raise StartTLSError(self.ERR_NO_STARTTLS)
         packet_len = struct.unpack(">H", data[2:])[0] - 4
         data = self._sock.recv(packet_len)

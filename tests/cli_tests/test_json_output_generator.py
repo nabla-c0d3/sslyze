@@ -1,7 +1,7 @@
 # coding=utf-8
 import json
 import unittest
-from StringIO import StringIO
+from io import StringIO
 
 from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze.cli.json_output import JsonOutputGenerator

@@ -1,6 +1,6 @@
 # coding=utf-8
 import unittest
-from StringIO import StringIO
+from io import StringIO
 from xml.etree.ElementTree import Element
 
 from sslyze.cli import FailedServerScan, CompletedServerScan

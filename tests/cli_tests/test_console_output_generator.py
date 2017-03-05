@@ -1,6 +1,6 @@
 # coding=utf-8
 import unittest
-from StringIO import StringIO
+from io import StringIO
 
 from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze.cli.console_output import ConsoleOutputGenerator

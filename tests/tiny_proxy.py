@@ -1,5 +1,6 @@
 #!/bin/sh -
 "exec" "python" "-O" "$0" "$@"
+from __future__ import print_function
 
 __doc__ = """Tiny HTTP Proxy.
 
@@ -11,12 +12,25 @@ tested yet.
 Any help will be greatly appreciated.		SUZUKI Hisao
 """
 
-__version__ = "0.2.1"
+# Ported to Python 3 by @nabla_c0d3
+__version__ = "0.3.0"
+try:
+    # Python 3
+    from http.server import HTTPServer, BaseHTTPRequestHandler, test
+    from urllib.parse import urlparse, urlunparse
+    from socketserver import ThreadingMixIn
+except ImportError:
+    # Python 2
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer, test
+    from SocketServer import ThreadingMixIn
+    from urlparse import urlparse, urlunparse
 
-import BaseHTTPServer, select, socket, SocketServer, urlparse
+import select
+import socket
 
-class ProxyHandler (BaseHTTPServer.BaseHTTPRequestHandler):
-    __base = BaseHTTPServer.BaseHTTPRequestHandler
+
+class ProxyHandler (BaseHTTPRequestHandler):
+    __base = BaseHTTPRequestHandler
     __base_handle = __base.handle
 
     server_version = "TinyHTTPProxy/" + __version__
@@ -36,9 +50,9 @@ class ProxyHandler (BaseHTTPServer.BaseHTTPRequestHandler):
             host_port = netloc[:i], int(netloc[i+1:])
         else:
             host_port = netloc, 80
-        print "\t" "connect to %s:%d" % host_port
+        print("\t" "connect to %s:%d" % host_port)
         try: soc.connect(host_port)
-        except socket.error, arg:
+        except socket.error as arg:
             try: msg = arg[1]
             except: msg = arg
             self.send_error(404, msg)
@@ -56,12 +70,12 @@ class ProxyHandler (BaseHTTPServer.BaseHTTPRequestHandler):
                 self.wfile.write("\r\n")
                 self._read_write(soc, 300)
         finally:
-            print "\t" "bye"
+            print("\t" "bye")
             soc.close()
             self.connection.close()
 
     def do_GET(self):
-        (scm, netloc, path, params, query, fragment) = urlparse.urlparse(
+        (scm, netloc, path, params, query, fragment) = urlparse(
             self.path, 'http')
         if scm != 'http' or fragment or not netloc:
             self.send_error(400, "bad url %s" % self.path)
@@ -72,7 +86,7 @@ class ProxyHandler (BaseHTTPServer.BaseHTTPRequestHandler):
                 self.log_request()
                 soc.send("%s %s %s\r\n" % (
                     self.command,
-                    urlparse.urlunparse(('', '', path, params, query, '')),
+                    urlunparse(('', '', path, params, query, '')),
                     self.request_version))
                 self.headers['Connection'] = 'close'
                 del self.headers['Proxy-Connection']
@@ -81,7 +95,7 @@ class ProxyHandler (BaseHTTPServer.BaseHTTPRequestHandler):
                 soc.send("\r\n")
                 self._read_write(soc)
         finally:
-            print "\t" "bye"
+            print("\t" "bye")
             soc.close()
             self.connection.close()
 
@@ -104,7 +118,7 @@ class ProxyHandler (BaseHTTPServer.BaseHTTPRequestHandler):
                         out.send(data)
                         count = 0
             else:
-                print "\t" "idle", count
+                print("\t" "idle", count)
             if count == max_idling: break
 
     do_HEAD = do_GET
@@ -112,22 +126,22 @@ class ProxyHandler (BaseHTTPServer.BaseHTTPRequestHandler):
     do_PUT  = do_GET
     do_DELETE=do_GET
 
-class ThreadingHTTPServer (SocketServer.ThreadingMixIn,
-                           BaseHTTPServer.HTTPServer): pass
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+    pass
 
 if __name__ == '__main__':
     from sys import argv
     if argv[1:] and argv[1] in ('-h', '--help'):
-        print argv[0], "[port [allowed_client_name ...]]"
+        print (argv[0], "[port [allowed_client_name ...]]")
     else:
         if argv[2:]:
             allowed = []
             for name in argv[2:]:
                 client = socket.gethostbyname(name)
                 allowed.append(client)
-                print "Accept: %s (%s)" % (client, name)
+                print("Accept: %s (%s)" % (client, name))
             ProxyHandler.allowed_clients = allowed
             del argv[2:]
         else:
-            print "Any clients will be served..."
-        BaseHTTPServer.test(ProxyHandler, ThreadingHTTPServer)
+            print("Any clients will be served...")
+        test(ProxyHandler, ThreadingHTTPServer)

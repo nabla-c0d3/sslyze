@@ -126,7 +126,9 @@ class SSLConnection(DebugSslClient):
         self._tunnel_port = tunnel_port
         self._tunnel_basic_auth_token = None
         if tunnel_user is not None:
-            self._tunnel_basic_auth_token = b64encode('{0}:{1}'.format(quote(tunnel_user), quote(tunnel_password)))
+            self._tunnel_basic_auth_token = b64encode(
+                '{0}:{1}'.format(quote(tunnel_user), quote(tunnel_password)).encode('utf-8')
+            )
 
 
     def do_pre_handshake(self, network_timeout):
@@ -315,9 +317,9 @@ class XMPPConnection(SSLConnection):
     ERR_XMPP_HOST_UNKNOWN = 'Error opening XMPP stream: server returned host-unknown error, try --xmpp_to'
     ERR_XMPP_NO_STARTTLS = 'XMPP STARTTLS not supported'
 
-    XMPP_OPEN_STREAM = (b"<stream:stream xmlns='jabber:client' xmlns:stream='"
-                        b"http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
-                        b"rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>")
+    XMPP_OPEN_STREAM = ("<stream:stream xmlns='jabber:client' xmlns:stream='"
+                        "http://etherx.jabber.org/streams' xmlns:tls='http://www.ietf.org/rfc/"
+                        "rfc2595.txt' to='{0}' xml:lang='en' version='1.0'>")
     XMPP_STARTTLS = b"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
 
@@ -339,7 +341,7 @@ class XMPPConnection(SSLConnection):
         super(XMPPConnection, self).do_pre_handshake(network_timeout)
 
         # Open an XMPP stream
-        self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to))
+        self._sock.send(self.XMPP_OPEN_STREAM.format(self._xmpp_to).encode('utf-8'))
 
         # Get the server's features and check for an error
         server_resp = self._sock.recv(4096)

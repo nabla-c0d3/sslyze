@@ -78,7 +78,7 @@ class XmlOutputGenerator(OutputGenerator):
             target_attrib['ip'] = server_info.ip_address
 
         server_scan_node = Element('target', attrib=target_attrib)
-        server_scan_result.plugin_result_list.sort(key=lambda result: result)  # Sort results
+        server_scan_result.plugin_result_list.sort(key=lambda result: result.scan_command.get_cli_argument())
 
         # Add each plugins's XML output
         for plugin_result in server_scan_result.plugin_result_list:

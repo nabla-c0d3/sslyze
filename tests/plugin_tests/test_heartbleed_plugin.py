@@ -25,7 +25,7 @@ class HeartbleedPluginTestCase(unittest.TestCase):
 
     def test_heartbleed_bad(self):
         try:
-            server = VulnerableOpenSslServer(port=4002)
+            server = VulnerableOpenSslServer(port=8011)
         except NotOnLinux64Error:
             # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
             logging.warning('WARNING: Not on Linux - skipping test_heartbleed_bad() test')

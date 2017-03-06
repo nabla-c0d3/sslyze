@@ -13,7 +13,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
     def test_sslv2_enabled(self):
         try:
-            server = VulnerableOpenSslServer(port=5003)
+            server = VulnerableOpenSslServer(port=8013)
         except NotOnLinux64Error:
             # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
             logging.warning('WARNING: Not on Linux - skipping test_sslv2_enabled() test')
@@ -59,7 +59,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
     def test_sslv3_enabled(self):
         try:
-            server = VulnerableOpenSslServer(port=5007)
+            server = VulnerableOpenSslServer(port=8014)
         except NotOnLinux64Error:
             # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
             logging.warning('WARNING: Not on Linux - skipping test_sslv3_enabled() test')

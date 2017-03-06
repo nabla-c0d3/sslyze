@@ -24,7 +24,7 @@ class FallbackScsvPluginTestCase(unittest.TestCase):
 
     def test_fallback_bad(self):
         try:
-            server = VulnerableOpenSslServer(port=5012)
+            server = VulnerableOpenSslServer(port=8010)
         except NotOnLinux64Error:
             # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
             logging.warning('WARNING: Not on Linux - skipping test_fallback_bad() test')

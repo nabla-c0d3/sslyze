@@ -37,6 +37,7 @@ class FallbackScsvPluginTestCase(unittest.TestCase):
 
         plugin = FallbackScsvPlugin()
         plugin_result = plugin.process_task(server_info, FallbackScsvScanCommand())
+        server.terminate()
 
         self.assertFalse(plugin_result.supports_fallback_scsv)
 

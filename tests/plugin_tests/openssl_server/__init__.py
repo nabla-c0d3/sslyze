@@ -19,7 +19,7 @@ class VulnerableOpenSslServer(object):
     CERT_PATH = os.path.join(os.path.dirname(__file__), 'self-signed-cert.pem')
     KEY_PATH = os.path.join(os.path.dirname(__file__), 'self-signed-key.pem')
 
-    OPENSSL_CMD_LINE = '{openssl} s_server -quiet -cert {cert} -key {key} -accept {port}'
+    OPENSSL_CMD_LINE = '{openssl} s_server -quiet -cert {cert} -key {key} -accept {port} -cipher "ALL:COMPLEMENTOFALL"'
 
     def __init__(self, port):
         # type: (int) -> None

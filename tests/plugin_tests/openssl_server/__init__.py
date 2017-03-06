@@ -30,7 +30,7 @@ class VulnerableOpenSslServer(object):
             raise NotOnLinux64Error()
 
         self.hostname = 'localhost.localdomain'
-        self.ip_address = '127.0.0.1'
+        self.ip_address = None
         self.port = port
         self._process = None
 

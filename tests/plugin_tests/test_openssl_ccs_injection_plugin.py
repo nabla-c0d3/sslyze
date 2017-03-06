@@ -1,7 +1,15 @@
+import os
+import shlex
 import unittest
+from sys import platform
+
+import logging
+
+import subprocess
 
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin, OpenSslCcsInjectionScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
+from tests.plugin_tests.openssl_server import VulnerableOpenSslServer, NotOnLinux64Error
 
 
 class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
@@ -19,5 +27,21 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_ccs_injection_bad(self):
-        # TBD
-        pass
+        try:
+            VulnerableOpenSslServer.start()
+        except NotOnLinux64Error:
+            # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
+            logging.warning('WARNING: Not on Linux - skipping OpenSSL CCS test')
+            return
+
+        server_info = ServerConnectivityInfo(hostname=u'localhost', port=4433)
+        server_info.test_connectivity_to_server()
+
+        plugin = OpenSslCcsInjectionPlugin()
+        plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
+
+        self.assertTrue(plugin_result.is_vulnerable_to_ccs_injection)
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+        VulnerableOpenSslServer.terminate()

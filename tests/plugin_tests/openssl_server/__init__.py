@@ -19,7 +19,7 @@ class VulnerableOpenSslServer(object):
     CERT_PATH = os.path.join(os.path.dirname(__file__), 'self-signed-cert.pem')
     KEY_PATH = os.path.join(os.path.dirname(__file__), 'self-signed-key.pem')
 
-    OPENSSL_CMD_LINE = '{openssl} s_server -quiet -cert {cert} -key {key} -accept {port} -cipher "ALL:COMPLEMENTOFALL"'
+    OPENSSL_CMD_LINE = '{openssl} s_server -cert {cert} -key {key} -accept {port} -cipher "ALL:COMPLEMENTOFALL"'
 
     def __init__(self, port):
         # type: (int) -> None
@@ -29,8 +29,8 @@ class VulnerableOpenSslServer(object):
         if architecture()[0] != '64bit':
             raise NotOnLinux64Error()
 
-        self.hostname = 'localhost.localdomain'
-        self.ip_address = None
+        self.hostname = 'localhost'
+        self.ip_address = '127.0.0.1'
         self.port = port
         self._process = None
 

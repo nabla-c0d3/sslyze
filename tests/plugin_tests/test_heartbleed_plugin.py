@@ -29,13 +29,14 @@ class HeartbleedPluginTestCase(unittest.TestCase):
 
     def test_heartbleed_bad(self):
         try:
-            VulnerableOpenSslServer.start()
+            server = VulnerableOpenSslServer(port=4002)
         except NotOnLinux64Error:
             # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
             logging.warning('WARNING: Not on Linux - skipping Heartbleed test')
             return
 
-        server_info = ServerConnectivityInfo(hostname=u'localhost', port=4433)
+        server.start()
+        server_info = ServerConnectivityInfo(hostname='localhost', ip_address='127.0.0.1',  port=4002)
         server_info.test_connectivity_to_server()
 
         plugin = HeartbleedPlugin()
@@ -45,4 +46,4 @@ class HeartbleedPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
-        VulnerableOpenSslServer.terminate()
+        server.terminate()

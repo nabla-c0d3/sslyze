@@ -19,27 +19,25 @@ class VulnerableOpenSslServer(object):
     CERT_PATH = os.path.join(os.path.dirname(__file__), 'self-signed-cert.pem')
     KEY_PATH = os.path.join(os.path.dirname(__file__), 'self-signed-key.pem')
 
-    OPENSSL_CMD_LINE = '{openssl} s_server -quiet -cert {cert} -key {key} -accept 4433'
+    OPENSSL_CMD_LINE = '{openssl} s_server -quiet -cert {cert} -key {key} -accept {port}'
 
-    _PROCESS = None
-
-    @classmethod
-    def start(cls):
+    def __init__(self, port):
+        # type: (int) -> None
         if platform not in ['linux', 'linux2']:
             raise NotOnLinux64Error()
 
         if architecture()[0] != '64bit':
             raise NotOnLinux64Error()
 
-        if cls._PROCESS:
-            raise RuntimeError('OpenSSL server is already running')
+        self._port = port
+        self._process = None
 
-        final_cmd_line = cls.OPENSSL_CMD_LINE.format(openssl=cls.OPENSSL_PATH, key=cls.KEY_PATH, cert=cls.CERT_PATH)
+    def start(self):
+        final_cmd_line = self.OPENSSL_CMD_LINE.format(openssl=self.OPENSSL_PATH, key=self.KEY_PATH, cert=self.CERT_PATH,
+                                                      port=self._port)
         args = shlex.split(final_cmd_line)
-        cls._PROCESS = subprocess.Popen(args)
+        self._process = subprocess.Popen(args)
 
-
-    @classmethod
-    def terminate(cls):
-        cls._PROCESS.terminate()
-        cls._PROCESS = None
+    def terminate(self):
+        if self._process and self._process.poll() is None:
+            self._process.terminate()

@@ -29,8 +29,8 @@ class VulnerableOpenSslServer(object):
         if architecture()[0] != '64bit':
             raise NotOnLinux64Error()
 
+        self.hostname = 'localhost.localdomain'
         self.ip_address = '127.0.0.1'
-        self.hostname = '127.0.0.1'
         self.port = port
         self._process = None
 

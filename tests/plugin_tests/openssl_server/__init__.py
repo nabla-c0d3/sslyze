@@ -29,12 +29,14 @@ class VulnerableOpenSslServer(object):
         if architecture()[0] != '64bit':
             raise NotOnLinux64Error()
 
-        self._port = port
+        self.ip_address = '127.0.0.1'
+        self.hostname = '127.0.0.1'
+        self.port = port
         self._process = None
 
     def start(self):
         final_cmd_line = self.OPENSSL_CMD_LINE.format(openssl=self.OPENSSL_PATH, key=self.KEY_PATH, cert=self.CERT_PATH,
-                                                      port=self._port)
+                                                      port=self.port)
         args = shlex.split(final_cmd_line)
         self._process = subprocess.Popen(args)
 

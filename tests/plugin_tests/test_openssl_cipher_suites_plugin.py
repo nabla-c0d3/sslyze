@@ -12,15 +12,14 @@ from tests.plugin_tests.openssl_server import VulnerableOpenSslServer
 class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
     def test_sslv2_enabled(self):
-        port = 5003
         try:
-            server = VulnerableOpenSslServer(port=port)
+            server = VulnerableOpenSslServer(port=5003)
         except NotOnLinux64Error:
             # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
             logging.warning('WARNING: Not on Linux - skipping test_sslv2_enabled() test')
             return
         server.start()
-        server_info = ServerConnectivityInfo(hostname='localhost', ip_address='127.0.0.1',  port=port)
+        server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,  port=server.port)
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -59,15 +58,14 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_sslv3_enabled(self):
-        port = 5007
         try:
-            server = VulnerableOpenSslServer(port=port)
+            server = VulnerableOpenSslServer(port=5007)
         except NotOnLinux64Error:
             # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
             logging.warning('WARNING: Not on Linux - skipping test_sslv3_enabled() test')
             return
         server.start()
-        server_info = ServerConnectivityInfo(hostname='localhost', ip_address='127.0.0.1',  port=port)
+        server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,  port=server.port)
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()

@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import socket
 import types
 from xml.etree.ElementTree import Element
 
@@ -58,10 +59,14 @@ class HeartbleedPlugin(plugin_base.Plugin):
             is_vulnerable_to_heartbleed = True
         elif b'\x0e\x00\x00\x00' in raw_ssl_bytes:
             # Received ServerHelloDone - keep asking for more data
-            raw_ssl_bytes = ssl_connection._sock.recv(16381)
-            if heartbleed_payload in raw_ssl_bytes:
-                # Server replied with our hearbeat payload
-                is_vulnerable_to_heartbleed = True
+            try:
+                raw_ssl_bytes = ssl_connection._sock.recv(16381)
+
+                if heartbleed_payload in raw_ssl_bytes:
+                    # Server replied with our hearbeat payload
+                    is_vulnerable_to_heartbleed = True
+            except socket.timeout:
+                pass
 
         ssl_connection.close()
 

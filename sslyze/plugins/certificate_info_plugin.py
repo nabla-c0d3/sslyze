@@ -598,11 +598,7 @@ def _create_xml_node(key, value=''):
 
 
 def _keyvalue_pair_to_xml(key, value=''):
-
-    if not IS_PYTHON_2:
-        unicode = str
-
-    if type(value) in [str, unicode]:  # value is a string
+    if type(value) in [str, Text]:  # value is a str on Py3, a str or unicode on Py2
         key_xml = _create_xml_node(key, value)
 
     elif type(value) is int:

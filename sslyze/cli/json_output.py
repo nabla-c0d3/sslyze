@@ -8,6 +8,8 @@ from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
 from sslyze.cli import FailedServerScan
 from sslyze.cli.output_generator import OutputGenerator
+from sslyze.plugins.plugin_base import PluginScanResult
+from sslyze.utils.python_compatibility import IS_PYTHON_2
 
 
 class JsonOutputGenerator(OutputGenerator):
@@ -17,26 +19,21 @@ class JsonOutputGenerator(OutputGenerator):
         self._json_dict = {'sslyze_version': __version__,
                            'sslyze_url': PROJECT_URL}
 
-
     def command_line_parsed(self, available_plugins, args_command_list):
         self._json_dict.update({'network_timeout': str(args_command_list.timeout),
                                 'network_max_retries': str(args_command_list.nb_retries),
                                 'invalid_targets': [],
                                 'accepted_targets': []})
 
-
     def server_connectivity_test_failed(self, failed_scan):
         # type: (FailedServerScan) -> None
         self._json_dict['invalid_targets'].append({failed_scan.server_string: failed_scan.error_message})
 
-
     def server_connectivity_test_succeeded(self, server_connectivity_info):
         pass
 
-
     def scans_started(self):
         pass
-
 
     def server_scan_completed(self, server_scan_result):
         # type: (CompletedServerScan) -> None
@@ -58,29 +55,31 @@ class JsonOutputGenerator(OutputGenerator):
         server_scan_dict['commands_results'] = dict_command_result
         self._json_dict['accepted_targets'].append(server_scan_dict)
 
-
     def scans_completed(self, total_scan_time):
         # type: (float) -> None
         self._json_dict['total_scan_time'] = total_scan_time
-        json.dump(self._json_dict, self._file_to, default=self._object_to_json_dict, sort_keys=True, indent=4)
-
+        json_out = json.dumps(self._json_dict, default=self._object_to_json_dict, sort_keys=True, indent=4,
+                              ensure_ascii=True)
+        if IS_PYTHON_2:
+            json_out = unicode(json_out)
+        self._file_to.write(json_out)
 
     @staticmethod
-    def _object_to_json_dict(plugin_object):
-        """Convert an object to a dictionnary suitable for the JSON output.
+    def _object_to_json_dict(obj):
+        """Convert an object to a dictionary suitable for the JSON output.
         """
-        final_fict = {}
-        for key, value in plugin_object.__dict__.items():
-
-            if key.startswith('_'):
+        result = obj
+        if isinstance(obj, PluginScanResult):
+            result = {}
+            for key, value in obj.__dict__.items():
                 # Remove private attributes
-                continue
+                if key.startswith('_'):
+                    continue
 
-            final_value = value
-            if isinstance(value, Enum):
-                # Properly serialize Enums (such as OpenSslVersionEnum)
-                final_value = value.name
+                result[key] = value
 
-            final_fict[key] = final_value
+        elif isinstance(obj, Enum):
+            # Properly serialize Enums (such as OpenSslVersionEnum)
+            result = obj.name
 
-        return final_fict
+        return result

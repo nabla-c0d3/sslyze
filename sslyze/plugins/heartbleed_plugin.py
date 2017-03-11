@@ -36,28 +36,34 @@ class HeartbleedPlugin(plugin_base.Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         ssl_connection.ssl_version = server_info.highest_ssl_version_supported  # Needed by the heartbleed payload
 
-        # Awful hack #1: replace nassl.sslClient.do_handshake() with a heartbleed
-        # checking SSL handshake so that all the SSLyze options
+        # Replace nassl.sslClient.do_handshake() with a heartbleed checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work
         ssl_connection.do_handshake = types.MethodType(do_handshake_with_heartbleed, ssl_connection)
 
-        heartbleed = None
+        raw_ssl_bytes = None
         try:
             # Perform the SSL handshake
             ssl_connection.connect()
         except HeartbleedSent:
             # Awful hack #2: directly read the underlying network socket
-            heartbleed = ssl_connection._sock.recv(16381)
-        finally:
-            ssl_connection.close()
+            raw_ssl_bytes = ssl_connection._sock.recv(16381)
 
-        # Text output
+        heartbleed_payload = b'\x01\x01\x01\x01\x01\x01\x01\x01\x01'
         is_vulnerable_to_heartbleed = False
-        if heartbleed is None:
-            raise ValueError('Error: connection failed.')
-        elif b'\x01\x01\x01\x01\x01\x01\x01\x01\x01' in heartbleed:
+
+        if raw_ssl_bytes is None:
+            raise IOError(u'Error: connection failed.')
+        elif heartbleed_payload in raw_ssl_bytes:
             # Server replied with our hearbeat payload
             is_vulnerable_to_heartbleed = True
+        elif b'\x0e\x00\x00\x00' in raw_ssl_bytes:
+            # Received ServerHelloDone - keep asking for more data
+            raw_ssl_bytes = ssl_connection._sock.recv(16381)
+            if heartbleed_payload in raw_ssl_bytes:
+                # Server replied with our hearbeat payload
+                is_vulnerable_to_heartbleed = True
+
+        ssl_connection.close()
 
         return HeartbleedScanResult(server_info, scan_command, is_vulnerable_to_heartbleed)
 
@@ -115,16 +121,14 @@ def heartbleed_payload(ssl_version):
 
 
 class HeartbleedSent(SSLHandshakeRejected):
-    # Awful hack #3: Use an exception to hack the handshake's control flow in
-    # a super obscure way
-    pass
+    """Exception to raise during the handshake (after the ServerHello) to hijack the flow and test for Heartbleed.
+    """
 
 
 def do_handshake_with_heartbleed(self):
-    # This is nassl's code for do_handshake() modified to send a heartbleed
-    # payload that will send the heartbleed checking payload
-    # I copied nassl's code here so I could leave anything heartbleed-related
-    # outside of the nassl code base
+    # This is nassl's code for do_handshake() modified to send a heartbleed payload that will send the heartbleed
+    # checking payload - the handshake will be stopped halfway, after receiving the Server Hello Done
+
     try:
         self._ssl.do_handshake()
         self._handshakeDone = True
@@ -155,7 +159,7 @@ def do_handshake_with_heartbleed(self):
         self._network_bio.write(handshakeDataIn)
 
         # Signal that we sent the heartbleed payload and just stop the handshake
-        raise HeartbleedSent("")
+        raise HeartbleedSent('')
 
 
     except WantX509LookupError:

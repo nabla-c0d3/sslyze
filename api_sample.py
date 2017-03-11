@@ -22,8 +22,6 @@ if __name__ == '__main__':
     try:
         server_info = ServerConnectivityInfo(hostname=hostname, port=587,
                                              tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
-        server_info = ServerConnectivityInfo(hostname=hostname, port=587,
-                                             tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
         server_info.test_connectivity_to_server()
     except ServerConnectivityError as e:
         # Could not establish an SSL connection to the server

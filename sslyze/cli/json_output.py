@@ -9,6 +9,7 @@ from sslyze.cli import CompletedServerScan
 from sslyze.cli import FailedServerScan
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.plugins.plugin_base import PluginScanResult
+from sslyze.plugins.utils.certificate import Certificate
 from sslyze.utils.python_compatibility import IS_PYTHON_2
 
 
@@ -68,8 +69,10 @@ class JsonOutputGenerator(OutputGenerator):
     def _object_to_json_dict(obj):
         """Convert an object to a dictionary suitable for the JSON output.
         """
-        result = obj
-        if isinstance(obj, PluginScanResult):
+        if isinstance(obj, Enum):
+            # Properly serialize Enums (such as OpenSslVersionEnum)
+            result = obj.name
+        elif isinstance(obj, object):
             result = {}
             for key, value in obj.__dict__.items():
                 # Remove private attributes
@@ -77,9 +80,7 @@ class JsonOutputGenerator(OutputGenerator):
                     continue
 
                 result[key] = value
-
-        elif isinstance(obj, Enum):
-            # Properly serialize Enums (such as OpenSslVersionEnum)
-            result = obj.name
+        else:
+            raise TypeError('Unknown type: {}'.format(repr(obj)))
 
         return result

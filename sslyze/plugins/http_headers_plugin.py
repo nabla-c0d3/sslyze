@@ -263,7 +263,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         is_hsts_supported = True if self.hsts_header else False
         xml_hsts_attr = {'isSupported': str(is_hsts_supported)}
         if is_hsts_supported:
-            xml_hsts_attr['maxAge'] = self.hsts_header.max_age
+            xml_hsts_attr['maxAge'] = str(self.hsts_header.max_age)
             xml_hsts_attr['includeSubDomains'] = str(self.hsts_header.include_subdomains)
             xml_hsts_attr['preload'] = str(self.hsts_header.preload)
 
@@ -275,7 +275,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         xml_hpkp_attr = {'isSupported': str(is_hpkp_support)}
         xml_pin_list = []
         if is_hpkp_support:
-            xml_hpkp_attr['maxAge'] = self.hpkp_header.max_age
+            xml_hpkp_attr['maxAge'] = str(self.hpkp_header.max_age)
             xml_hpkp_attr['includeSubDomains'] = str(self.hpkp_header.include_subdomains)
             xml_hpkp_attr['reportOnly'] = str(self.hpkp_header.report_only)
             xml_hpkp_attr['reportUri'] = str(self.hpkp_header.report_uri)

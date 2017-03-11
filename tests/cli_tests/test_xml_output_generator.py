@@ -47,9 +47,6 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         generator.scans_completed(scan_time)
 
         received_output = output_file.getvalue()
-        if IS_PYTHON_2:
-            received_output = received_output.decode('utf-8')
-
         output_file.close()
 
         # Ensure the output properly listed the connectivity error with unicode escaped as \u sequences
@@ -88,8 +85,6 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         generator.scans_completed(1.3)
 
         received_output = output_file.getvalue()
-        if IS_PYTHON_2:
-            received_output = received_output.decode('utf-8')
         output_file.close()
 
         # Ensure the output displayed the tunneling settings

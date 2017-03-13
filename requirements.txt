@@ -1,3 +1,4 @@
 nassl>=0.15.0,<0.16.0
 typing
 enum34
+cryptography

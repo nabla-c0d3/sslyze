@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import optparse
 import os
 from xml.etree.ElementTree import Element
-
+import cryptography
 from nassl._nassl import OpenSSLError
 
 from nassl.ocsp_response import OcspResponse, OcspResponseNotTrustedError
@@ -185,14 +185,15 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         finally:
             ssl_connection.close()
 
-        return x509_cert_chain, verify_str, ocsp_response
+        parsed_x509_chain = [cryptography.x509.load_pem_x509_certificate(x509_cert) for x509_cert in x509_cert_chain]
+        return parsed_x509_chain, verify_str, ocsp_response
 
 
 class CertificateInfoScanResult(PluginScanResult):
     """The result of running a CertificateInfoScanCommand on a specific server.
 
     Attributes:
-        certificate_chain (List[Certificate]): The certificate chain sent by the server; index 0 is the leaf
+        certificate_chain (List[cryptography.x509.Certificate]): The certificate chain sent by the server; index 0 is the leaf
             certificate.
         path_validation_result_list (List[PathValidationResult]): The list of attempts at validating the server's
             certificate chain path using the trust stores packaged with SSLyze (Mozilla, Apple, etc.).
@@ -204,7 +205,7 @@ class CertificateInfoScanResult(PluginScanResult):
             server's verified certificate chain and to validate the OCSP response (if one is returned by the server).
             Will be None if none of the available trust stores were able to successfully validate the server's
             certificate chain.
-        verified_certificate_chain (List[Certificate]): The verified certificate chain built using the
+        verified_certificate_chain (List[cryptography.x509.Certificate]): The verified certificate chain built using the
             successful_trust_store; index 0 is the leaf certificate and the last element is the anchor/CA certificate
             from the trust store. Will be empty if the validation failed with all available trust store, or the
             verified chain could not be built.
@@ -226,7 +227,7 @@ class CertificateInfoScanResult(PluginScanResult):
             self,
             server_info,                    # type: ServerConnectivityInfo
             scan_command,                   # type: CertificateInfoScanCommand
-            certificate_chain,              # type: List[X509Certificate]
+            certificate_chain,              # type: List[cryptography.x509.Certificate]
             path_validation_result_list,    # type: List[PathValidationResult]
             path_validation_error_list,     # type: List[PathValidationError]
             ocsp_response                   # type: OcspResponse

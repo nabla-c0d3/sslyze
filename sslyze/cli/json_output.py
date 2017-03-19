@@ -8,8 +8,6 @@ from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
 from sslyze.cli import FailedServerScan
 from sslyze.cli.output_generator import OutputGenerator
-from sslyze.plugins.plugin_base import PluginScanResult
-from sslyze.plugins.utils.certificate import Certificate
 from sslyze.utils.python_compatibility import IS_PYTHON_2
 
 

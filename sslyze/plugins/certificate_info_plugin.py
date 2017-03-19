@@ -9,11 +9,14 @@ from xml.etree.ElementTree import Element
 
 import binascii
 
+import pickle
+
 import cryptography
 from nassl._nassl import OpenSSLError
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.serialization import Encoding
 from nassl.ocsp_response import OcspResponse, OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
 from nassl.x509_certificate import X509Certificate
@@ -310,8 +313,35 @@ class CertificateInfoScanResult(PluginScanResult):
                     self.has_sha1_in_certificate_chain = True
                     break
 
-    TRUST_FORMAT = '{store_name} CA Store ({store_version}):'
+    def __getstate__(self):
+        # This object needs to be pick-able as it gets sent through multiprocessing.Queues
+        pickable_dict = self.__dict__.copy()
+        # Manually handle non-pickable entries
+        pickable_dict['successful_trust_store'] = pickle.dumps(pickable_dict['successful_trust_store'])
+        pickable_dict['path_validation_result_list'] = pickle.dumps(pickable_dict['path_validation_result_list'])
 
+        pem_certificate_chain = [cert.public_bytes(Encoding.PEM) for cert in pickable_dict['certificate_chain']]
+        pickable_dict['certificate_chain'] = pem_certificate_chain
+
+        pem_verified_chain = [cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']]
+        pickable_dict['verified_certificate_chain'] = pem_verified_chain
+        return pickable_dict
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Manually restore non-pickable entries
+        self.__dict__['successful_trust_store'] = pickle.loads(self.__dict__['successful_trust_store'])
+        self.__dict__['path_validation_result_list'] = pickle.loads(self.__dict__['path_validation_result_list'])
+
+        certificate_chain = [cryptography.x509.load_pem_x509_certificate(cert_pem, default_backend())
+                             for cert_pem in self.__dict__['certificate_chain']]
+        self.__dict__['certificate_chain'] = certificate_chain
+
+        verified_chain = [cryptography.x509.load_pem_x509_certificate(cert_pem, default_backend())
+                          for cert_pem in self.__dict__['verified_certificate_chain']]
+        self.__dict__['verified_certificate_chain'] = verified_chain
+
+    TRUST_FORMAT = '{store_name} CA Store ({store_version}):'
     NO_VERIFIED_CHAIN_ERROR_TXT = 'ERROR - Could not build verified chain (certificate untrusted?)'
 
     def as_text(self):

@@ -32,11 +32,27 @@ class TrustStore(object):
         self.path = path
         self.name = name
         self.version = version
+        self.__ev_oids_arg = ev_oids
         self._ev_oids = []
-        if ev_oids:
-            self._ev_oids = [ObjectIdentifier(oid) for oid in ev_oids]
+        self.__parse_ev_oids()
 
         self._subject_to_certificate_dict = None
+
+    def __parse_ev_oids(self):
+        if self.__ev_oids_arg:
+            self._ev_oids = [ObjectIdentifier(oid) for oid in self.__ev_oids_arg]
+
+    def __getstate__(self):
+        pickable_dict = self.__dict__.copy()
+        # Remove non-pickable entries
+        pickable_dict['_subject_to_certificate_dict'] = None
+        pickable_dict['_ev_oids'] = []
+        return pickable_dict
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Manually restore non-pickable entries
+        self.__parse_ev_oids()
 
     def is_extended_validation(self, certificate):
         # type: (Certificate) -> bool

@@ -68,7 +68,7 @@ class TrustStore(object):
                 final_pem = '-----BEGIN CERTIFICATE-----{}-----END CERTIFICATE-----'.format(
                     pem_split.split('-----END CERTIFICATE-----')[0]
                 ).strip()
-                cert = load_pem_x509_certificate(final_pem.encode(encoding='utf-8'), default_backend())
+                cert = load_pem_x509_certificate(final_pem.encode(encoding='ascii'), default_backend())
                 # Store a dictionary of subject->certificate for easy lookup
                 try:
                     cert_dict[cert.subject] = cert

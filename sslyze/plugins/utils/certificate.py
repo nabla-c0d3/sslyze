@@ -2,98 +2,56 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from nassl.x509_certificate import X509Certificate
-from sslyze.utils.python_compatibility import IS_PYTHON_2
-from typing import Dict
+import ssl
+
+import cryptography
+from cryptography.x509 import DNSName
+from cryptography.x509 import ExtensionNotFound
+from cryptography.x509 import ExtensionOID
+from cryptography.x509 import NameOID
+from typing import List
 from typing import Text
 
 
-# Pick-able object for storing information contained within an nassl.X509Certificate.
-# This is needed because we cannot directly send an X509Certificate to a different process (which would happen during
-# a scan with the ConcurrentScanner) as it is not pickable.
+class CertificateUtils(object):
 
-class Certificate(object):
-    """An X509 certificate.
+    @staticmethod
+    def get_common_names(name_field):
+        # type: (cryptography.x509.Name) -> List[Text]
+        return [cn.value for cn in name_field.get_attributes_for_oid(NameOID.COMMON_NAME)]
 
-    Attributes:
-        as_pem (Text): The certificate in PEM format.
-        as_text (Text): The certificate in human-readable format.
-        as_dict (Dict): The certificate as a dictionary.
-        sha1_fingerprint (Text): The SHA1 fingerprint of the certificate.
-        hpkp_pin (Text): The HPKP pin (ie. base64-encoded SHA256 of the SPKI, as described in RFC 7469) of the
-            certificate.
-    """
+    @staticmethod
+    def get_dns_subject_alternative_names(certificate):
+        # type: (cryptography.x509.Certificate) -> List[Text]
+        """Retrieve all the DNS entries of the Subject Alternative Name extension.
+        """
+        subj_alt_names = []
+        try:
+            san_ext = certificate.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
+            subj_alt_names = san_ext.value.get_values_for_type(DNSName)
+        except ExtensionNotFound:
+            pass
+        return subj_alt_names
 
     @classmethod
-    def from_nassl(cls, nassl_x509_certificate):
-        # type: (X509Certificate) -> Certificate
-
-        cert_dict = nassl_x509_certificate.as_dict()
-        for key, value in cert_dict.items():
-            if 'subjectPublicKeyInfo' in key:
-                # Remove the bit suffix so the element is just a number for the key size
-                if 'publicKeySize' in value.keys():
-                    value['publicKeySize'] = value['publicKeySize'].split(' bit')[0]
-
-        return cls(nassl_x509_certificate.as_pem().strip(),
-                   nassl_x509_certificate.as_text(),
-                   cert_dict,
-                   nassl_x509_certificate.get_SHA1_fingerprint(),
-                   nassl_x509_certificate.get_hpkp_pin())
+    def matches_hostname(cls, certificate, hostname):
+        # type: (cryptography.x509.Certificate, Text) -> None
+        # Extract the names from the certificate to create the properly-formatted dictionary
+        certificate_names = {
+            'subject': tuple([('commonName', name) for name in cls.get_common_names(certificate.subject)]),
+            'subjectAltName': tuple([('DNS', name) for name in cls.get_dns_subject_alternative_names(certificate)]),
+        }
+        # CertificateError is raised on failure
+        ssl.match_hostname(certificate_names, hostname)
 
     @classmethod
-    def from_pem(cls, pem_cert):
-        # type: (Text) -> Certificate
-        # Somewhat convoluted
-        return cls.from_nassl(X509Certificate.from_pem(pem_cert))
-
-    def __init__(self, as_pem, as_text, as_dict, sha1_fingerprint, hpkp_pin):
-        # type: (Text, Text, Dict, Text, Text) -> None
-        self.as_pem = as_pem
-        self.as_text = as_text
-        self.as_dict = as_dict
-        self.sha1_fingerprint = sha1_fingerprint
-        self.hpkp_pin = hpkp_pin
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.as_pem == other.as_pem
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.as_pem)
-
-    @property
-    def printable_subject_name(self):
-        # type: () -> Text
-        try:
-            # Extract the CN if there's one
-            cert_name = self.as_dict['subject']['commonName']
-        except KeyError:
-            # If no common name, display the organizational unit instead
-            try:
-                cert_name = self.as_dict['subject']['organizationalUnitName']
-            except KeyError:
-                # Give up
-                cert_name = 'No Common Name'
-        # TODO(ad): nassl should return a unicode dict
-
-        if IS_PYTHON_2:
-            cert_name = cert_name.decode('utf-8')
-        return cert_name
-
-
-    @property
-    def printable_issuer_name(self):
-        # type: () -> Text
-        try:
-            # Extract the CN from the issuer if there's one
-            issuer_name = self.as_dict['subject']['commonName']
-        except KeyError:
+    def get_printable_name(cls, name_field):
+        # type: (cryptography.x509.Name) -> Text
+        # Name_field is supposed to be a Subject or an Issuer; print the CN if there is one
+        common_names = cls.get_common_names(name_field)
+        if common_names:
+            # We don't support certs with multiple CNs
+            return common_names[0]
+        else:
             # Otherwise show the whole Issuer field
-            issuer_name = ' - '.join(['{}: {}'.format(key, value) for key, value in self.as_dict['issuer'].items()])
-
-        if IS_PYTHON_2:
-            issuer_name = issuer_name.decode('utf-8')
-        return issuer_name
+            return ', '.join(['{}={}'.format(attr.oid._name, attr.value) for attr in name_field])

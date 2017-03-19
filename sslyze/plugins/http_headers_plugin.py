@@ -6,7 +6,7 @@ from xml.etree.ElementTree import Element
 
 from nassl.x509_certificate import X509Certificate
 from sslyze.plugins import plugin_base
-from sslyze.plugins.utils.certificate import Certificate
+from sslyze.plugins.utils.certificate import CertificateUtils
 from sslyze.plugins.utils.trust_store.trust_store import CouldNotBuildVerifiedChainError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo

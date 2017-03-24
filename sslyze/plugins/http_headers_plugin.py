@@ -2,7 +2,13 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+from base64 import b64encode
+from hashlib import sha256
 from xml.etree.ElementTree import Element
+
+import cryptography
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 from nassl.x509_certificate import X509Certificate
 from sslyze.plugins import plugin_base
@@ -53,8 +59,11 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         # Perform the SSL handshake
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         ssl_connection.connect()
-        certificate_chain = ssl_connection.get_peer_cert_chain()
-
+        certificate_chain = [
+            cryptography.x509.load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'),
+                                                                         backend=default_backend())
+            for x509_cert in ssl_connection.get_peer_cert_chain()
+        ]
         # Send an HTTP GET request to the server
         ssl_connection.write(HttpRequestGenerator.get_request(host=server_info.hostname))
         http_resp = HttpResponseParser.parse(ssl_connection)
@@ -176,11 +185,10 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
 
-        parsed_certificate_chain = [Certificate.from_nassl(x509_cert) for x509_cert in cert_chain]
         self.verified_certificate_chain = []
         try:
             self.verified_certificate_chain = TrustStoresRepository.get_main().build_verified_certificate_chain(
-                parsed_certificate_chain
+                cert_chain
             )
         except CouldNotBuildVerifiedChainError:
             pass
@@ -216,12 +224,18 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         computed_hpkp_pins_text = ['', self._format_title('Computed HPKP Pins for Current Chain')]
         if self.verified_certificate_chain:
             for index, cert in enumerate(self.verified_certificate_chain, start=0):
-                final_subject = cert.printable_subject_name
-                if len(cert.printable_subject_name) > 40:
+                final_subject = CertificateUtils.get_printable_name(cert.subject)
+                if len(final_subject) > 40:
                     # Make the CN shorter when displaying it
-                    final_subject = '{}...'.format(cert.printable_subject_name[:40])
+                    final_subject = '{}...'.format(final_subject[:40])
+                pub_bytes = cert.public_key().public_bytes(
+                    encoding=Encoding.DER,
+                    format=PublicFormat.SubjectPublicKeyInfo
+                )
+                digest = sha256(pub_bytes).digest()
+                hpkp_pin = b64encode(digest).decode('utf-8')
                 computed_hpkp_pins_text.append(
-                    self.PIN_TXT_FORMAT(('{} - {}'.format(index, final_subject)), cert.hpkp_pin)
+                    self.PIN_TXT_FORMAT(('{} - {}'.format(index, final_subject)), hpkp_pin)
                 )
         else:
             computed_hpkp_pins_text.append(

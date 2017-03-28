@@ -80,7 +80,7 @@ class Certificate(object):
         # type: () -> Text
         try:
             # Extract the CN from the issuer if there's one
-            issuer_name = self.as_dict[u'subject'][u'commonName']
+            issuer_name = self.as_dict[u'issuer'][u'commonName']
         except KeyError:
             # Otherwise show the whole Issuer field
             issuer_name = u' - '.join([u'{}: {}'.format(key, value) for key, value in self.as_dict[u'issuer'].items()])

@@ -110,14 +110,6 @@ class CertificateInfoPlugin(plugin_base.Plugin):
                 dest='ca_file'
             )
         )
-        # TODO(ad): Move this to the command line parser ?
-        options.append(
-            optparse.make_option(
-                '--print_full_certificate',
-                help='Option - Print the full content of server certificate instead of selected fields.',
-                action='store_true'
-            )
-        )
         return options
 
 

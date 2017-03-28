@@ -191,7 +191,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         if self.verified_certificate_chain and self.hpkp_header:
             # Is one of the configured pins in the current server chain?
             self.is_valid_pin_configured = False
-            server_pin_list = [cert.hpkp_pin for cert in self.verified_certificate_chain]
+            server_pin_list = [CertificateUtils.get_hpkp_pin(cert) for cert in self.verified_certificate_chain]
             for pin in self.hpkp_header.pin_sha256_list:
                 if pin in server_pin_list:
                     self.is_valid_pin_configured = True
@@ -207,9 +207,9 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         txt_result = [self._format_title('HTTP Strict Transport Security (HSTS)')]
 
         if self.hsts_header:
-            txt_result.append(self._format_field("Max Age:", self.hsts_header.max_age))
-            txt_result.append(self._format_field("Include Subdomains:", self.hsts_header.include_subdomains))
-            txt_result.append(self._format_field("Preload:", self.hsts_header.preload))
+            txt_result.append(self._format_field("Max Age:", str(self.hsts_header.max_age)))
+            txt_result.append(self._format_field("Include Subdomains:", str(self.hsts_header.include_subdomains)))
+            txt_result.append(self._format_field("Preload:", str(self.hsts_header.preload)))
         else:
             txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an HSTS header", ""))
 
@@ -221,7 +221,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
                     # Make the CN shorter when displaying it
                     final_subject = '{}...'.format(cert.printable_subject_name[:40])
                 computed_hpkp_pins_text.append(
-                    self.PIN_TXT_FORMAT(('{} - {}'.format(index, final_subject)), cert.hpkp_pin)
+                    self.PIN_TXT_FORMAT(('{} - {}'.format(index, final_subject)), CertificateUtils.get_hpkp_pin(cert))
                 )
         else:
             computed_hpkp_pins_text.append(
@@ -230,10 +230,10 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
 
         txt_result.extend(['', self._format_title('HTTP Public Key Pinning (HPKP)')])
         if self.hpkp_header:
-            txt_result.append(self._format_field("Max Age:", self.hpkp_header.max_age))
-            txt_result.append(self._format_field("Include Subdomains:", self.hpkp_header.include_subdomains))
+            txt_result.append(self._format_field("Max Age:", str(self.hpkp_header.max_age)))
+            txt_result.append(self._format_field("Include Subdomains:", str(self.hpkp_header.include_subdomains)))
             txt_result.append(self._format_field("Report URI:", self.hpkp_header.report_uri))
-            txt_result.append(self._format_field("Report Only:", self.hpkp_header.report_only))
+            txt_result.append(self._format_field("Report Only:", str(self.hpkp_header.report_only)))
             txt_result.append(self._format_field("SHA-256 Pin List:", ', '.join(self.hpkp_header.pin_sha256_list)))
 
             if self.verified_certificate_chain:
@@ -250,7 +250,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         else:
             txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an HPKP header", ""))
 
-        # Dispay computed HPKP pins last
+        # Dislpay computed HPKP pins last
         txt_result.extend(computed_hpkp_pins_text)
 
         return txt_result

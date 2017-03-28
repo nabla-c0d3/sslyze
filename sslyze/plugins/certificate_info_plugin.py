@@ -197,8 +197,8 @@ class CertificateInfoScanResult(PluginScanResult):
     """The result of running a CertificateInfoScanCommand on a specific server.
 
     Attributes:
-        certificate_chain (List[cryptography.x509.Certificate]): The certificate chain sent by the server; index 0 is the leaf
-            certificate.
+        certificate_chain (List[cryptography.x509.Certificate]): The certificate chain sent by the server; index 0 is 
+            the leaf certificate.
         path_validation_result_list (List[PathValidationResult]): The list of attempts at validating the server's
             certificate chain path using the trust stores packaged with SSLyze (Mozilla, Apple, etc.).
         path_validation_error_list (List[PathValidationError]):  The list of attempts at validating the server's
@@ -216,8 +216,8 @@ class CertificateInfoScanResult(PluginScanResult):
         certificate_matches_hostname (bool): True if hostname validation was successful ie. the leaf certificate was
             issued for the server's hostname.
         is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
-        ocsp_response (Optional[Dict]): The OCSP response returned by the server. None if no response was sent by the
-            server.
+        ocsp_response (Optional[Dict[Text, Any]]): The OCSP response returned by the server. None if no response was
+            sent by the server.
         is_ocsp_response_trusted (Optional[bool]): True if the OCSP response is trusted using the Mozilla trust store.
             None if no OCSP response was sent by the server.
         has_sha1_in_certificate_chain (bool): True if any of the leaf or intermediate certificates are signed using the
@@ -338,10 +338,7 @@ class CertificateInfoScanResult(PluginScanResult):
 
     def as_text(self):
         text_output = [self._format_title(self.COMMAND_TITLE)]
-        if self.scan_command.should_print_full_certificate:
-            text_output.extend(self._get_full_certificate_text())
-        else:
-            text_output.extend(self._get_basic_certificate_text())
+        text_output.extend(self._get_basic_certificate_text())
 
         # Trust section
         text_output.extend(['', self._format_title('Certificate - Trust')])
@@ -461,19 +458,13 @@ class CertificateInfoScanResult(PluginScanResult):
                 'sha1Fingerprint': certificate.sha1_fingerprint,
                 'position': 'leaf' if index == 0 else 'intermediate',
                 'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
-                'hpkpSha256Pin': certificate.hpkp_pin
+                'hpkpSha256Pin': CertificateUtils.get_hpkp_pin(certificate)
             })
 
             # Add the PEM cert
             cert_as_pem_xml = Element('asPEM')
             cert_as_pem_xml.text = certificate.as_pem
             cert_xml.append(cert_as_pem_xml)
-
-            # Add the parsed certificate
-            for key, value in certificate.as_dict.items():
-                cert_xml.append(_keyvalue_pair_to_xml(key, value))
-            cert_xml_list.append(cert_xml)
-
 
         cert_chain_attrs = {'isChainOrderValid': str(self.is_certificate_chain_order_valid)}
         if self.verified_certificate_chain:
@@ -484,7 +475,6 @@ class CertificateInfoScanResult(PluginScanResult):
         for cert_xml in cert_xml_list:
             cert_chain_xml.append(cert_xml)
         xml_output.append(cert_chain_xml)
-
 
         # Trust
         trust_validation_xml = Element('certificateValidation')
@@ -570,11 +560,6 @@ class CertificateInfoScanResult(PluginScanResult):
         # All done
         return xml_output
 
-
-    def _get_full_certificate_text(self):
-        return [self.certificate_chain[0].as_text]
-
-
     def _get_basic_certificate_text(self):
         certificate = self.certificate_chain[0]
         public_key = self.certificate_chain[0].public_key()
@@ -606,7 +591,7 @@ class CertificateInfoScanResult(PluginScanResult):
         return text_output
 
 
-# XML generation
+# XML generation for the OCSP response
 def _create_xml_node(key, value=''):
     key = key.replace(' ', '').strip()  # Remove spaces
     key = key.replace('/', '').strip()  # Remove slashes (S/MIME Capabilities)

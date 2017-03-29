@@ -19,12 +19,12 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from nassl.ocsp_response import OcspResponse, OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
-from nassl.x509_certificate import X509Certificate
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.plugins.utils.certificate import CertificateUtils
-from sslyze.plugins.utils.trust_store.trust_store import TrustStore, \
-    InvalidCertificateChainOrderError, AnchorCertificateNotInTrustStoreError
+from sslyze.plugins.utils.trust_store.trust_store import TrustStore
+from sslyze.plugins.utils.trust_store.trust_store import InvalidCertificateChainOrderError
+from sslyze.plugins.utils.trust_store.trust_store import AnchorCertificateNotInTrustStoreError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.python_compatibility import IS_PYTHON_2
@@ -161,7 +161,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
     @staticmethod
     def _get_and_verify_certificate_chain(server_info, trust_store):
-        # type: (ServerConnectivityInfo, TrustStore) -> Tuple[List[X509Certificate], Text, Optional[OcspResponse]]
+        # type: (ServerConnectivityInfo, TrustStore) -> Tuple[List[cryptography.x509.Certificate], Text, Optional[OcspResponse]]
         """Connects to the target server and uses the supplied trust store to validate the server's certificate.
         Returns the server's certificate and OCSP response.
         """

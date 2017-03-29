@@ -8,7 +8,7 @@ import unittest
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
-from sslyze.plugins.utils.certificate import CertificateUtils
+from sslyze.plugins.utils.certificate_utils import CertificateUtils
 
 
 class CertificateUtilsTestCase(unittest.TestCase):

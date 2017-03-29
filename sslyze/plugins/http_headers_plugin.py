@@ -8,7 +8,7 @@ import cryptography
 from cryptography.hazmat.backends import default_backend
 
 from sslyze.plugins import plugin_base
-from sslyze.plugins.utils.certificate import CertificateUtils
+from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.plugins.utils.trust_store.trust_store import CouldNotBuildVerifiedChainError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo

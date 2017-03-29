@@ -21,7 +21,7 @@ from nassl.ocsp_response import OcspResponse, OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
-from sslyze.plugins.utils.certificate import CertificateUtils
+from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.plugins.utils.trust_store.trust_store import TrustStore
 from sslyze.plugins.utils.trust_store.trust_store import InvalidCertificateChainOrderError
 from sslyze.plugins.utils.trust_store.trust_store import AnchorCertificateNotInTrustStoreError

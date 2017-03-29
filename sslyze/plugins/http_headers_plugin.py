@@ -4,7 +4,9 @@ from __future__ import unicode_literals
 
 from xml.etree.ElementTree import Element
 
-from nassl.x509_certificate import X509Certificate
+import cryptography
+from cryptography.hazmat.backends import default_backend
+
 from sslyze.plugins import plugin_base
 from sslyze.plugins.utils.certificate import CertificateUtils
 from sslyze.plugins.utils.trust_store.trust_store import CouldNotBuildVerifiedChainError
@@ -53,8 +55,11 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         # Perform the SSL handshake
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         ssl_connection.connect()
-        certificate_chain = ssl_connection.get_peer_cert_chain()
-
+        certificate_chain = [
+            cryptography.x509.load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'),
+                                                                         backend=default_backend())
+            for x509_cert in ssl_connection.get_peer_cert_chain()
+        ]
         # Send an HTTP GET request to the server
         ssl_connection.write(HttpRequestGenerator.get_request(host=server_info.hostname))
         http_resp = HttpResponseParser.parse(ssl_connection)
@@ -171,16 +176,15 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
     COMMAND_TITLE = 'HTTP Security Headers'
 
     def __init__(self, server_info, scan_command, raw_hsts_header, raw_hpkp_header, hpkp_report_only, cert_chain):
-        # type: (ServerConnectivityInfo, HttpHeadersScanCommand, Text, Text, bool, List[X509Certificate]) -> None
+        # type: (ServerConnectivityInfo, HttpHeadersScanCommand, Text, Text, bool, List[cryptography.x509.Certificate]) -> None
         super(HttpHeadersScanResult, self).__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
 
-        parsed_certificate_chain = [Certificate.from_nassl(x509_cert) for x509_cert in cert_chain]
         self.verified_certificate_chain = []
         try:
             self.verified_certificate_chain = TrustStoresRepository.get_main().build_verified_certificate_chain(
-                parsed_certificate_chain
+                cert_chain
             )
         except CouldNotBuildVerifiedChainError:
             pass
@@ -216,10 +220,10 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         computed_hpkp_pins_text = ['', self._format_title('Computed HPKP Pins for Current Chain')]
         if self.verified_certificate_chain:
             for index, cert in enumerate(self.verified_certificate_chain, start=0):
-                final_subject = cert.printable_subject_name
-                if len(cert.printable_subject_name) > 40:
+                final_subject = CertificateUtils.get_printable_name(cert.subject)
+                if len(final_subject) > 40:
                     # Make the CN shorter when displaying it
-                    final_subject = '{}...'.format(cert.printable_subject_name[:40])
+                    final_subject = '{}...'.format(final_subject[:40])
                 computed_hpkp_pins_text.append(
                     self.PIN_TXT_FORMAT(('{} - {}'.format(index, final_subject)), CertificateUtils.get_hpkp_pin(cert))
                 )

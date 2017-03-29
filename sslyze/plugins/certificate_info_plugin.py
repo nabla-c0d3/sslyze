@@ -455,7 +455,7 @@ class CertificateInfoScanResult(PluginScanResult):
         cert_xml_list = []
         for index, certificate in enumerate(self.certificate_chain, start=0):
             cert_xml = Element('certificate', attrib={
-                'sha1Fingerprint': certificate.sha1_fingerprint,
+                'sha1Fingerprint': binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode('ascii'),
                 'position': 'leaf' if index == 0 else 'intermediate',
                 'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
                 'hpkpSha256Pin': CertificateUtils.get_hpkp_pin(certificate)
@@ -463,7 +463,7 @@ class CertificateInfoScanResult(PluginScanResult):
 
             # Add the PEM cert
             cert_as_pem_xml = Element('asPEM')
-            cert_as_pem_xml.text = certificate.as_pem
+            cert_as_pem_xml.text = certificate.public_bytes(Encoding.PEM)
             cert_xml.append(cert_as_pem_xml)
 
         cert_chain_attrs = {'isChainOrderValid': str(self.is_certificate_chain_order_valid)}
@@ -507,20 +507,15 @@ class CertificateInfoScanResult(PluginScanResult):
                     )
                     for certificate in self.certificate_chain:
                         cert_xml = Element('certificate', attrib={
-                            'sha1Fingerprint': certificate.sha1_fingerprint,
+                            'sha1Fingerprint': binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode('ascii'),
                             'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
-                            'hpkpSha256Pin': certificate.hpkp_pin
+                            'hpkpSha256Pin': CertificateUtils.get_hpkp_pin(certificate)
                         })
 
                         # Add the PEM cert
                         cert_as_pem_xml = Element('asPEM')
-                        cert_as_pem_xml.text = certificate.as_pem
+                        cert_as_pem_xml.text = certificate.public_bytes(Encoding.PEM)
                         cert_xml.append(cert_as_pem_xml)
-
-                        # Add the parsed certificate
-                        for key, value in certificate.as_dict.items():
-                            cert_xml.append(_keyvalue_pair_to_xml(key, value))
-                        cert_xml_list.append(cert_xml)
 
                         verified_cert_chain_xml.append(cert_xml)
 

@@ -9,14 +9,14 @@ from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresR
 class TrustStoreTestCase(unittest.TestCase):
 
     def test(self):
-        intermediate_path = os.path.join(os.path.dirname(__file__), u'..', u'utils',
-                                         u'DigiCertSHA2ExtendedValidationServerCA.pem')
+        intermediate_path = os.path.join(os.path.dirname(__file__), '..', 'utils',
+                                         'DigiCertSHA2ExtendedValidationServerCA.pem')
         with open(intermediate_path) as intermediate_file:
-            intermediate_pem = intermediate_file.read()
+            intermediate_pem = intermediate_file.read().encode('ascii')
 
-        leaf_path = os.path.join(os.path.dirname(__file__), u'..', u'utils', u'github.com.pem')
+        leaf_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'github.com.pem')
         with open(leaf_path) as leaf_file:
-            leaf_pem = leaf_file.read()
+            leaf_pem = leaf_file.read().encode('ascii')
 
         certificate_chain = [load_pem_x509_certificate(leaf_pem, default_backend()),
                              load_pem_x509_certificate(intermediate_pem, default_backend())]

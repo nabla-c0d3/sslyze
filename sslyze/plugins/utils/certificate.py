@@ -47,7 +47,7 @@ class CertificateUtils(object):
         """
         # Extract the names from the certificate to create the properly-formatted dictionary
         certificate_names = {
-            'subject': tuple([('commonName', name) for name in cls.get_common_names(certificate.subject)]),
+            'subject': (tuple([('commonName', name) for name in cls.get_common_names(certificate.subject)]),),
             'subjectAltName': tuple([('DNS', name) for name in cls.get_dns_subject_alternative_names(certificate)]),
         }
         # CertificateError is raised on failure

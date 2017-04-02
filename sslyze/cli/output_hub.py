@@ -1,5 +1,9 @@
-import sys
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
+import sys
+from io import open
 from sslyze.cli.console_output import ConsoleOutputGenerator
 from sslyze.cli.json_output import JsonOutputGenerator
 from sslyze.cli.xml_output import XmlOutputGenerator
@@ -21,14 +25,14 @@ class OutputHub(object):
         # Configure the JSON output
         json_file_to = None
         if args_command_list.json_file:
-            json_file_to = sys.stdout if args_command_list.json_file == '-' else open(args_command_list.json_file, 'w')
+            json_file_to = sys.stdout if args_command_list.json_file == '-' else open(args_command_list.json_file, 'wt')
         if json_file_to:
             self._output_generator_list.append(JsonOutputGenerator(json_file_to))
 
         # Configure the XML output
         xml_file_to = None
         if args_command_list.xml_file:
-            xml_file_to = sys.stdout if args_command_list.xml_file == '-' else open(args_command_list.xml_file, 'w')
+            xml_file_to = sys.stdout if args_command_list.xml_file == '-' else open(args_command_list.xml_file, 'wt')
         if xml_file_to:
             self._output_generator_list.append(XmlOutputGenerator(xml_file_to))
 

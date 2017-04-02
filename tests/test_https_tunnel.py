@@ -35,7 +35,8 @@ class HttpsTunnelTestCase(unittest.TestCase):
 
         try:
             # Run a scan through the proxy
-            tunnel_settings = HttpConnectTunnelingSettings(u'localhost', proxy_port)
+            tunnel_settings = HttpConnectTunnelingSettings(u'localhost', proxy_port, basic_auth_user='test',
+                                                           basic_auth_password='test123!')
             server_info = ServerConnectivityInfo(hostname=u'www.google.com', http_tunneling_settings=tunnel_settings)
 
             # Try to connect to the proxy - retry if the proxy subprocess wasn't ready

@@ -1,12 +1,13 @@
 # coding=utf-8
 import unittest
-from StringIO import StringIO
+from io import StringIO
 from xml.etree.ElementTree import Element
 
 from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze.cli.xml_output import XmlOutputGenerator
 from sslyze.server_connectivity import ServerConnectivityError
 from sslyze.ssl_settings import HttpConnectTunnelingSettings
+from sslyze.utils.python_compatibility import IS_PYTHON_2
 from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, MockCommandLineValues, \
     MockPluginScanCommandOne, MockPluginScanCommandTwo
 
@@ -45,7 +46,7 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         scan_time = 1.3
         generator.scans_completed(scan_time)
 
-        received_output = output_file.getvalue().decode('utf-8')
+        received_output = output_file.getvalue()
         output_file.close()
 
         # Ensure the output properly listed the connectivity error with unicode escaped as \u sequences
@@ -83,7 +84,7 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         generator.server_scan_completed(server_scan)
         generator.scans_completed(1.3)
 
-        received_output = output_file.getvalue().decode('utf-8')
+        received_output = output_file.getvalue()
         output_file.close()
 
         # Ensure the output displayed the tunneling settings

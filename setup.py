@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 from sslyze import PROJECT_URL, PROJECT_DESC, __author__, __email__, __version__, __license__
 
 
@@ -14,7 +14,9 @@ SSLYZE_SETUP = {
     'packages': ['sslyze', 'sslyze.cli', 'sslyze.utils', 'sslyze.plugins', 'sslyze.plugins.utils',
                  'sslyze.plugins.utils.trust_store'],
     'package_data': {'sslyze.plugins.utils.trust_store': ['pem_files/*.pem']},
-    'install_requires': ['nassl>=0.15.0,<0.16.0', 'typing', 'enum34'],
+    'install_requires': ['nassl>=0.16.0,<0.17.0'],
+    'extras_require': {':python_version < "3.4"': ['enum34'],
+                       ':python_version < "3.5"': ['typing']},
     'classifiers': [
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
@@ -23,6 +25,10 @@ SSLYZE_SETUP = {
         'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: System :: Networking',
         'Topic :: Security'
     ],

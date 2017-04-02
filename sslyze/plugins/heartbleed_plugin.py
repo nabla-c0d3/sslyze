@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
+import socket
 import types
 from xml.etree.ElementTree import Element
 
@@ -18,7 +21,7 @@ class HeartbleedScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
-        return u'heartbleed'
+        return 'heartbleed'
 
 
 class HeartbleedPlugin(plugin_base.Plugin):
@@ -48,6 +51,7 @@ class HeartbleedPlugin(plugin_base.Plugin):
 
         heartbleed_payload = b'\x01\x01\x01\x01\x01\x01\x01\x01\x01'
         is_vulnerable_to_heartbleed = False
+
         if raw_ssl_bytes is None:
             raise IOError(u'Error: connection failed.')
         elif heartbleed_payload in raw_ssl_bytes:
@@ -55,10 +59,14 @@ class HeartbleedPlugin(plugin_base.Plugin):
             is_vulnerable_to_heartbleed = True
         elif b'\x0e\x00\x00\x00' in raw_ssl_bytes:
             # Received ServerHelloDone - keep asking for more data
-            raw_ssl_bytes = ssl_connection._sock.recv(16381)
-            if heartbleed_payload in raw_ssl_bytes:
-                # Server replied with our hearbeat payload
-                is_vulnerable_to_heartbleed = True
+            try:
+                raw_ssl_bytes = ssl_connection._sock.recv(16381)
+
+                if heartbleed_payload in raw_ssl_bytes:
+                    # Server replied with our hearbeat payload
+                    is_vulnerable_to_heartbleed = True
+            except socket.timeout:
+                pass
 
         ssl_connection.close()
 
@@ -72,7 +80,7 @@ class HeartbleedScanResult(PluginScanResult):
         is_vulnerable_to_heartbleed (bool): True if the server is vulnerable to the Heartbleed attack.
     """
 
-    COMMAND_TITLE = u'OpenSSL Heartbleed'
+    COMMAND_TITLE = 'OpenSSL Heartbleed'
 
     def __init__(self, server_info, scan_command, is_vulnerable_to_heartbleed):
         # type: (ServerConnectivityInfo, HeartbleedScanCommand, bool) -> None
@@ -80,11 +88,11 @@ class HeartbleedScanResult(PluginScanResult):
         self.is_vulnerable_to_heartbleed = is_vulnerable_to_heartbleed
 
     def as_text(self):
-        heartbleed_txt = u'VULNERABLE - Server is vulnerable to Heartbleed' \
+        heartbleed_txt = 'VULNERABLE - Server is vulnerable to Heartbleed' \
             if self.is_vulnerable_to_heartbleed \
-            else u'OK - Not vulnerable to Heartbleed'
+            else 'OK - Not vulnerable to Heartbleed'
 
-        return [self._format_title(self.COMMAND_TITLE), self._format_field(u"", heartbleed_txt)]
+        return [self._format_title(self.COMMAND_TITLE), self._format_field('', heartbleed_txt)]
 
     def as_xml(self):
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
@@ -93,6 +101,7 @@ class HeartbleedScanResult(PluginScanResult):
 
 
 def heartbleed_payload(ssl_version):
+    # type: (OpenSslVersionEnum) -> bytes
     # This heartbleed payload does not exploit the server
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
 
@@ -102,24 +111,18 @@ def heartbleed_payload(ssl_version):
         OpenSslVersionEnum.TLSV1_1: b'\x02',
         OpenSslVersionEnum.TLSV1_2: b'\x03'
     }
+    ssl_version_bytes = SSL_VERSION_MAPPING[ssl_version]
 
-    payload = (
-        b'\x18'             # Record type - Heartbeat
-        b'\x03{0}'          # TLS version
-        b'\x40\x00'         # Record length
-        b'\x01'             # Heartbeat type - Request
-        b'\x3f\xfd'         # Heartbeat length
-    )
-
-    payload += '\x01'*16381     # Heartbeat data
-
-    payload += (                 # Second Heartbeat request with no padding
-        b'\x18'                  # Record type - Heartbeat
-        b'\x03{0}'
-        b'\x00\x03\x01\x00\x00'
-    )
-
-    return payload.format(SSL_VERSION_MAPPING[ssl_version])
+    payload = b'\x18'                           # Record type - Heartbeat
+    payload += b'\x03' + ssl_version_bytes      # TLS version
+    payload += b'\x40\x00'                      # Record length
+    payload += b'\x01'                          # Heartbeat type - Request
+    payload += b'\x3f\xfd'                      # Heartbeat length
+    payload += b'\x01'*16381                    # Heartbeat data
+    payload += b'\x18'                          # Record type - Heartbeat
+    payload += b'\x03' + ssl_version_bytes
+    payload += b'\x00\x03\x01\x00\x00'
+    return payload
 
 
 class HeartbleedSent(SSLHandshakeRejected):
@@ -156,7 +159,7 @@ def do_handshake_with_heartbleed(self):
         # In this heartbleed handshake we only receive the server hello
         handshakeDataIn = self._sock.recv(2048)
         if len(handshakeDataIn) == 0:
-            raise IOError(u'Nassl SSL handshake failed: peer did not send data back.')
+            raise IOError('Nassl SSL handshake failed: peer did not send data back.')
         # Pass the data to the SSL engine
         self._network_bio.write(handshakeDataIn)
 

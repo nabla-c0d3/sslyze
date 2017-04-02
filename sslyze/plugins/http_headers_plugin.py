@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 from xml.etree.ElementTree import Element
 
-from nassl.x509_certificate import X509Certificate
+import cryptography
+from cryptography.hazmat.backends import default_backend
+
 from sslyze.plugins import plugin_base
-from sslyze.plugins.utils.certificate import Certificate
+from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.plugins.utils.trust_store.trust_store import CouldNotBuildVerifiedChainError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -22,7 +26,7 @@ class HttpHeadersScanCommand(plugin_base.PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
-        return u'http_headers'
+        return 'http_headers'
 
 
 class HttpHeadersPlugin(plugin_base.Plugin):
@@ -38,7 +42,7 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         # type: (ServerConnectivityInfo, HttpHeadersScanCommand) -> HttpHeadersScanResult
 
         if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
-            raise ValueError(u'Cannot test for HTTP headers on a StartTLS connection.')
+            raise ValueError('Cannot test for HTTP headers on a StartTLS connection.')
 
         hsts_header, hpkp_header, hpkp_report_only, certificate_chain = self._get_security_headers(server_info)
         return HttpHeadersScanResult(server_info, scan_command, hsts_header, hpkp_header, hpkp_report_only,
@@ -51,8 +55,11 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         # Perform the SSL handshake
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         ssl_connection.connect()
-        certificate_chain = ssl_connection.get_peer_cert_chain()
-
+        certificate_chain = [
+            cryptography.x509.load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'),
+                                                                         backend=default_backend())
+            for x509_cert in ssl_connection.get_peer_cert_chain()
+        ]
         # Send an HTTP GET request to the server
         ssl_connection.write(HttpRequestGenerator.get_request(host=server_info.hostname))
         http_resp = HttpResponseParser.parse(ssl_connection)
@@ -60,7 +67,7 @@ class HttpHeadersPlugin(plugin_base.Plugin):
 
         if http_resp.version == 9:
             # HTTP 0.9 => Probably not an HTTP response
-            raise ValueError(u'Server did not return an HTTP response')
+            raise ValueError('Server did not return an HTTP response')
         else:
             hsts_header = http_resp.getheader('strict-transport-security', None)
             hpkp_header = http_resp.getheader('public-key-pins', None)
@@ -103,7 +110,7 @@ class ParsedHstsHeader(object):
             elif 'preload' in hsts_directive:
                 self.preload = True
             else:
-                raise ValueError(u'Unexpected value in HSTS header: {}'.format(repr(hsts_directive)))
+                raise ValueError('Unexpected value in HSTS header: {}'.format(repr(hsts_directive)))
 
 
 class ParsedHpkpHeader(object):
@@ -142,7 +149,7 @@ class ParsedHpkpHeader(object):
             elif 'report-uri' in hpkp_directive:
                 self.report_uri = hpkp_directive.split('report-uri=')[1].strip(' "')
             else:
-                raise ValueError(u'Unexpected value in HPKP header: {}'.format(repr(hpkp_directive)))
+                raise ValueError('Unexpected value in HPKP header: {}'.format(repr(hpkp_directive)))
 
         self.pin_sha256_list = pin_sha256_list
 
@@ -166,19 +173,18 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
 
     """
 
-    COMMAND_TITLE = u'HTTP Security Headers'
+    COMMAND_TITLE = 'HTTP Security Headers'
 
     def __init__(self, server_info, scan_command, raw_hsts_header, raw_hpkp_header, hpkp_report_only, cert_chain):
-        # type: (ServerConnectivityInfo, HttpHeadersScanCommand, Text, Text, bool, List[X509Certificate]) -> None
+        # type: (ServerConnectivityInfo, HttpHeadersScanCommand, Text, Text, bool, List[cryptography.x509.Certificate]) -> None
         super(HttpHeadersScanResult, self).__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
 
-        parsed_certificate_chain = [Certificate.from_nassl(x509_cert) for x509_cert in cert_chain]
         self.verified_certificate_chain = []
         try:
             self.verified_certificate_chain = TrustStoresRepository.get_main().build_verified_certificate_chain(
-                parsed_certificate_chain
+                cert_chain
             )
         except CouldNotBuildVerifiedChainError:
             pass
@@ -189,7 +195,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         if self.verified_certificate_chain and self.hpkp_header:
             # Is one of the configured pins in the current server chain?
             self.is_valid_pin_configured = False
-            server_pin_list = [cert.hpkp_pin for cert in self.verified_certificate_chain]
+            server_pin_list = [CertificateUtils.get_hpkp_pin(cert) for cert in self.verified_certificate_chain]
             for pin in self.hpkp_header.pin_sha256_list:
                 if pin in server_pin_list:
                     self.is_valid_pin_configured = True
@@ -199,56 +205,56 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
             self.is_backup_pin_configured = set(self.hpkp_header.pin_sha256_list) != set(server_pin_list)
 
 
-    PIN_TXT_FORMAT = u'      {0:<50}{1}'.format
+    PIN_TXT_FORMAT = '      {0:<50}{1}'.format
 
     def as_text(self):
-        txt_result = [self._format_title(u'HTTP Strict Transport Security (HSTS)')]
+        txt_result = [self._format_title('HTTP Strict Transport Security (HSTS)')]
 
         if self.hsts_header:
-            txt_result.append(self._format_field(u"Max Age:", self.hsts_header.max_age))
-            txt_result.append(self._format_field(u"Include Subdomains:", self.hsts_header.include_subdomains))
-            txt_result.append(self._format_field(u"Preload:", self.hsts_header.preload))
+            txt_result.append(self._format_field("Max Age:", str(self.hsts_header.max_age)))
+            txt_result.append(self._format_field("Include Subdomains:", str(self.hsts_header.include_subdomains)))
+            txt_result.append(self._format_field("Preload:", str(self.hsts_header.preload)))
         else:
-            txt_result.append(self._format_field(u"NOT SUPPORTED - Server did not send an HSTS header", u""))
+            txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an HSTS header", ""))
 
-        computed_hpkp_pins_text = ['', self._format_title(u'Computed HPKP Pins for Current Chain')]
+        computed_hpkp_pins_text = ['', self._format_title('Computed HPKP Pins for Current Chain')]
         if self.verified_certificate_chain:
             for index, cert in enumerate(self.verified_certificate_chain, start=0):
-                final_subject = cert.printable_subject_name
-                if len(cert.printable_subject_name) > 40:
+                final_subject = CertificateUtils.get_printable_name(cert.subject)
+                if len(final_subject) > 40:
                     # Make the CN shorter when displaying it
-                    final_subject = u'{}...'.format(cert.printable_subject_name[:40])
+                    final_subject = '{}...'.format(final_subject[:40])
                 computed_hpkp_pins_text.append(
-                    self.PIN_TXT_FORMAT((u'{} - {}'.format(index, final_subject)), cert.hpkp_pin)
+                    self.PIN_TXT_FORMAT(('{} - {}'.format(index, final_subject)), CertificateUtils.get_hpkp_pin(cert))
                 )
         else:
             computed_hpkp_pins_text.append(
-                self._format_field(u'ERROR - Could not build verified chain (certificate untrusted?)', u'')
+                self._format_field('ERROR - Could not build verified chain (certificate untrusted?)', '')
             )
 
-        txt_result.extend(['', self._format_title(u'HTTP Public Key Pinning (HPKP)')])
+        txt_result.extend(['', self._format_title('HTTP Public Key Pinning (HPKP)')])
         if self.hpkp_header:
-            txt_result.append(self._format_field(u"Max Age:", self.hpkp_header.max_age))
-            txt_result.append(self._format_field(u"Include Subdomains:", self.hpkp_header.include_subdomains))
-            txt_result.append(self._format_field(u"Report URI:", self.hpkp_header.report_uri))
-            txt_result.append(self._format_field(u"Report Only:", self.hpkp_header.report_only))
-            txt_result.append(self._format_field(u"SHA-256 Pin List:", ', '.join(self.hpkp_header.pin_sha256_list)))
+            txt_result.append(self._format_field("Max Age:", str(self.hpkp_header.max_age)))
+            txt_result.append(self._format_field("Include Subdomains:", str(self.hpkp_header.include_subdomains)))
+            txt_result.append(self._format_field("Report URI:", self.hpkp_header.report_uri))
+            txt_result.append(self._format_field("Report Only:", str(self.hpkp_header.report_only)))
+            txt_result.append(self._format_field("SHA-256 Pin List:", ', '.join(self.hpkp_header.pin_sha256_list)))
 
             if self.verified_certificate_chain:
-                pin_validation_txt = u'OK - One of the configured pins was found in the certificate chain' \
+                pin_validation_txt = 'OK - One of the configured pins was found in the certificate chain' \
                     if self.is_valid_pin_configured \
-                    else u'FAILED - Could NOT find any of the configured pins in the certificate chain!'
-                txt_result.append(self._format_field(u"Valid Pin:", pin_validation_txt))
+                    else 'FAILED - Could NOT find any of the configured pins in the certificate chain!'
+                txt_result.append(self._format_field("Valid Pin:", pin_validation_txt))
 
-                backup_txt = u'OK - Backup pin found in the configured pins' \
+                backup_txt = 'OK - Backup pin found in the configured pins' \
                     if self.is_backup_pin_configured \
-                    else u'FAILED - No backup pin found: all the configured pins are in the certificate chain!'
-                txt_result.append(self._format_field(u"Backup Pin:", backup_txt))
+                    else 'FAILED - No backup pin found: all the configured pins are in the certificate chain!'
+                txt_result.append(self._format_field("Backup Pin:", backup_txt))
 
         else:
-            txt_result.append(self._format_field(u"NOT SUPPORTED - Server did not send an HPKP header", u""))
+            txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an HPKP header", ""))
 
-        # Dispay computed HPKP pins last
+        # Dislpay computed HPKP pins last
         txt_result.extend(computed_hpkp_pins_text)
 
         return txt_result
@@ -261,7 +267,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         is_hsts_supported = True if self.hsts_header else False
         xml_hsts_attr = {'isSupported': str(is_hsts_supported)}
         if is_hsts_supported:
-            xml_hsts_attr['maxAge'] = self.hsts_header.max_age
+            xml_hsts_attr['maxAge'] = str(self.hsts_header.max_age)
             xml_hsts_attr['includeSubDomains'] = str(self.hsts_header.include_subdomains)
             xml_hsts_attr['preload'] = str(self.hsts_header.preload)
 
@@ -273,7 +279,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         xml_hpkp_attr = {'isSupported': str(is_hpkp_support)}
         xml_pin_list = []
         if is_hpkp_support:
-            xml_hpkp_attr['maxAge'] = self.hpkp_header.max_age
+            xml_hpkp_attr['maxAge'] = str(self.hpkp_header.max_age)
             xml_hpkp_attr['includeSubDomains'] = str(self.hpkp_header.include_subdomains)
             xml_hpkp_attr['reportOnly'] = str(self.hpkp_header.report_only)
             xml_hpkp_attr['reportUri'] = str(self.hpkp_header.report_uri)

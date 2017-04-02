@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Main abstract plugin classes from which all the plugins should inherit.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import abc
 import inspect
@@ -48,7 +50,7 @@ class PluginScanCommand(object):
 
     @classmethod
     def get_optional_arguments(cls):
-        # type: () -> List[str]
+        # type: () -> List[Text]
         """Some commands support optional arguments which are automatically passed to the command's constructor.
         """
         return inspect.getargspec(cls.__init__).args[1::]

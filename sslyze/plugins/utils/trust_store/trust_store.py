@@ -1,7 +1,15 @@
 # -*- coding: utf-8 -*-
-import io
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-from sslyze.plugins.utils.certificate import Certificate
+import io
+from cryptography.x509.base import load_pem_x509_certificate
+from cryptography.hazmat.backends import default_backend
+from cryptography.x509.base import Certificate
+from cryptography.x509.name import Name
+from cryptography.x509.extensions import ExtensionNotFound
+from cryptography.x509.oid import ObjectIdentifier
+from cryptography.x509.oid import ExtensionOID
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -24,89 +32,91 @@ class TrustStore(object):
         self.path = path
         self.name = name
         self.version = version
+        self.__ev_oids_arg = ev_oids
         self._ev_oids = []
-        if ev_oids:
-            self._ev_oids = ev_oids
+        self.__parse_ev_oids()
 
         self._subject_to_certificate_dict = None
 
+    def __parse_ev_oids(self):
+        if self.__ev_oids_arg:
+            self._ev_oids = [ObjectIdentifier(oid) for oid in self.__ev_oids_arg]
+
+    def __getstate__(self):
+        pickable_dict = self.__dict__.copy()
+        # Remove non-pickable entries
+        pickable_dict['_subject_to_certificate_dict'] = None
+        pickable_dict['_ev_oids'] = []
+        return pickable_dict
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Manually restore non-pickable entries
+        self.__parse_ev_oids()
 
     def is_extended_validation(self, certificate):
         # type: (Certificate) -> bool
-        """Is the supplied server certificate EV ?
+        """Is the supplied server certificate EV?
         """
         if not self._ev_oids:
-            raise ValueError(u'No EV OIDs supplied for {} store - cannot detect EV certificates'.format(self.name))
+            raise ValueError('No EV OIDs supplied for {} store - cannot detect EV certificates'.format(self.name))
 
-        is_ev = False
         try:
-            policy = certificate.as_dict[u'extensions'][u'X509v3 Certificate Policies'][u'Policy']
-        except:
-            # Certificate which don't have this extension
-            pass
-        else:
-            if policy[0] in self._ev_oids:
-                is_ev = True
-        return is_ev
+            cert_policies_ext = certificate.extensions.get_extension_for_oid(ExtensionOID.CERTIFICATE_POLICIES)
+        except ExtensionNotFound:
+            return False
 
-
-    def _compute_subject_certificate_dict(self):
-        cert_dict = {}
-        with io.open(self.path) as store_file:
-            store_content = store_file.read()
-            # Each certificate is separated by -----BEGIN CERTIFICATE-----
-            pem_cert_list = store_content.split(u'-----BEGIN CERTIFICATE-----')[1::]
-            for pem_split in pem_cert_list:
-                # Remove comments as they may cause Unicode errors
-                final_pem = u'-----BEGIN CERTIFICATE-----{}-----END CERTIFICATE-----'.format(
-                    pem_split.split(u'-----END CERTIFICATE-----')[0]
-                ).strip()
-                cert = Certificate.from_pem(final_pem)
-                # Store a dictionary of subject->certificate for easy lookup
-                cert_dict[self._hash_subject(cert.as_dict[u'subject'])] = cert
-        return cert_dict
-
+        for policy in cert_policies_ext.value:
+            if policy.policy_identifier in self._ev_oids:
+                return True
+        return False
 
     @staticmethod
-    def _hash_subject(certificate_subjet_dict):
-        # type: (Dict) -> Text
-        hashed_subject = u''
-        for key, value in certificate_subjet_dict.items():
-            try:
-                decoded_value = value.decode(encoding=u'utf-8')
-            except UnicodeDecodeError:
-                # Some really exotic certificates like to use a different encoding
-                decoded_value = value.decode(encoding=u'utf-16')
-            hashed_subject += u'{}{}'.format(key, decoded_value)
-        return hashed_subject
+    def _compute_subject_certificate_dict(path):
+        # type: (Text) -> Dict[Name, Certificate]
+        cert_dict = {}
+        with io.open(path, encoding='utf-8') as store_file:
+            store_content = store_file.read()
+            # Each certificate is separated by -----BEGIN CERTIFICATE-----
+            pem_cert_list = store_content.split('-----BEGIN CERTIFICATE-----')[1::]
+            for pem_split in pem_cert_list:
+                # Remove PEM comments as they may cause Unicode errors
+                final_pem = '-----BEGIN CERTIFICATE-----{}-----END CERTIFICATE-----'.format(
+                    pem_split.split('-----END CERTIFICATE-----')[0]
+                ).strip()
+                cert = load_pem_x509_certificate(final_pem.encode(encoding='ascii'), default_backend())
+                # Store a dictionary of subject->certificate for easy lookup
+                try:
+                    cert_dict[cert.subject] = cert
+                except ValueError:
+                    # TODO(AD): Handle failing cert
+                    raise
 
+        return cert_dict
 
-    def _get_certificate_with_subject(self, certificate_subject_dict):
-        # type: (Dict) -> Certificate
+    def _get_certificate_with_subject(self, certificate_subject):
+        # type: (Name) -> Certificate
         if self._subject_to_certificate_dict is None:
-            self._subject_to_certificate_dict = self._compute_subject_certificate_dict()
-
-        return self._subject_to_certificate_dict.get(self._hash_subject(certificate_subject_dict), None)
-
+            self._subject_to_certificate_dict = self._compute_subject_certificate_dict(self.path)
+        return self._subject_to_certificate_dict.get(certificate_subject, None)
 
     @staticmethod
     def _is_certificate_chain_order_valid(certificate_chain):
         # type: (List[Certificate]) -> bool
         previous_issuer = None
         for index, cert in enumerate(certificate_chain):
-            current_subject = cert.as_dict[u'subject']
+            current_subject = cert.subject
 
             if index > 0:
                 # Compare the current subject with the previous issuer in the chain
                 if current_subject != previous_issuer:
                     return False
             try:
-                previous_issuer = cert.as_dict[u'issuer']
+                previous_issuer = cert.issuer
             except KeyError:
                 # Missing issuer; this is okay if this is the last cert
                 previous_issuer = u"missing issuer {}".format(index)
         return True
-
 
     def build_verified_certificate_chain(self, received_certificate_chain):
         # type: (List[Certificate]) -> List[Certificate]
@@ -125,7 +135,7 @@ class TrustStore(object):
         anchor_cert = None
         # Assume that the certificates were sent in the correct order or give up
         for cert in received_certificate_chain:
-            anchor_cert = self._get_certificate_with_subject(cert.as_dict[u'issuer'])
+            anchor_cert = self._get_certificate_with_subject(cert.issuer)
             verified_certificate_chain.append(cert)
             if anchor_cert:
                 verified_certificate_chain.append(anchor_cert)

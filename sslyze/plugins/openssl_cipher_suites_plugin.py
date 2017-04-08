@@ -7,7 +7,7 @@ from abc import ABCMeta
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
-from nassl.ssl_client import SslClient, OpenSslVersionEnum
+from nassl.ssl_client import SslClient, OpenSslVersionEnum, ClientCertificateRequested
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -193,6 +193,9 @@ class OpenSslCipherSuitesPlugin(Plugin):
         except SSLHandshakeRejected as e:
             cipher_result = RejectedCipherSuite(openssl_cipher_name, ssl_version, str(e))
 
+        except ClientCertificateRequested as e:
+            cipher_result = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
+
         except Exception as e:
             cipher_result = ErroredCipherSuite(openssl_cipher_name, ssl_version, e)
             
@@ -235,9 +238,13 @@ class OpenSslCipherSuitesPlugin(Plugin):
         ssl_connection.set_cipher_list(openssl_cipher_string)
 
         # Perform the SSL handshake
-        ssl_connection.connect()
-        selected_cipher = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
-        ssl_connection.close()
+        try:
+            ssl_connection.connect()
+            selected_cipher = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
+        except ClientCertificateRequested as e:
+            selected_cipher = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
+        finally:
+            ssl_connection.close()
         return selected_cipher
 
 

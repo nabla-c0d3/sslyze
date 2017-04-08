@@ -41,34 +41,24 @@ class HeartbleedPlugin(plugin_base.Plugin):
         # (startTLS, proxy, etc.) still work
         ssl_connection.do_handshake = types.MethodType(do_handshake_with_heartbleed, ssl_connection)
 
-        raw_ssl_bytes = None
+        is_vulnerable_to_heartbleed = False
         try:
             # Perform the SSL handshake
             ssl_connection.connect()
         except HeartbleedSent:
             # Awful hack #2: directly read the underlying network socket
-            raw_ssl_bytes = ssl_connection._sock.recv(16381)
-
-        heartbleed_payload = b'\x01\x01\x01\x01\x01\x01\x01\x01\x01'
-        is_vulnerable_to_heartbleed = False
-
-        if raw_ssl_bytes is None:
-            raise IOError(u'Error: connection failed.')
-        elif heartbleed_payload in raw_ssl_bytes:
-            # Server replied with our hearbeat payload
-            is_vulnerable_to_heartbleed = True
-        elif b'\x0e\x00\x00\x00' in raw_ssl_bytes:
-            # Received ServerHelloDone - keep asking for more data
-            try:
+            # Retrieve data until we get to the ServerHelloDone
+            raw_ssl_bytes = b''
+            while b'\x0e\x00\x00\x00' not in raw_ssl_bytes:
                 raw_ssl_bytes = ssl_connection._sock.recv(16381)
 
-                if heartbleed_payload in raw_ssl_bytes:
-                    # Server replied with our hearbeat payload
-                    is_vulnerable_to_heartbleed = True
-            except socket.timeout:
-                pass
-
-        ssl_connection.close()
+            heartbleed_payload = b'\x01\x01\x01\x01\x01\x01\x01\x01\x01'
+            raw_ssl_bytes = ssl_connection._sock.recv(16381)
+            if heartbleed_payload in raw_ssl_bytes:
+                # Server replied with our hearbeat payload
+                is_vulnerable_to_heartbleed = True
+        finally:
+            ssl_connection.close()
 
         return HeartbleedScanResult(server_info, scan_command, is_vulnerable_to_heartbleed)
 

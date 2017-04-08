@@ -60,17 +60,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
 
-    def test_valid_chain_print_full_certificate(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.hotmail.com')
-        server_info.test_connectivity_to_server()
-
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(print_full_certificate=True))
-
-        # The only difference with the previous test is the text output
-        self.assertTrue(plugin_result.as_text())
-
-
     def test_invalid_chain(self):
         server_info = ServerConnectivityInfo(hostname=u'self-signed.badssl.com')
         server_info.test_connectivity_to_server()
@@ -182,6 +171,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
 
         self.assertEqual(plugin_result.successful_trust_store.name, u'Custom --ca_file')
+        self.assertTrue(plugin_result.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())

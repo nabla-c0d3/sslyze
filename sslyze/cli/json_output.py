@@ -3,6 +3,9 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import json
+
+import cryptography
+from cryptography.hazmat.primitives.serialization import Encoding
 from enum import Enum
 from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
@@ -70,6 +73,9 @@ class JsonOutputGenerator(OutputGenerator):
         if isinstance(obj, Enum):
             # Properly serialize Enums (such as OpenSslVersionEnum)
             result = obj.name
+        elif isinstance(obj, cryptography.hazmat.backends.openssl.x509._Certificate):
+            # Properly serialize certificates; only return the PEM string
+            result = {'as_pem': obj.public_bytes(Encoding.PEM).decode('ascii')}
         elif isinstance(obj, object):
             result = {}
             for key, value in obj.__dict__.items():
@@ -78,6 +84,7 @@ class JsonOutputGenerator(OutputGenerator):
                     continue
 
                 result[key] = value
+
         else:
             raise TypeError('Unknown type: {}'.format(repr(obj)))
 

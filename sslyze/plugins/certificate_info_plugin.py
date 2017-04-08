@@ -40,18 +40,16 @@ class CertificateInfoScanCommand(PluginScanCommand):
     check for OCSP stapling support.
     """
 
-    def __init__(self, ca_file=None, print_full_certificate=False):
+    def __init__(self, ca_file=None):
         # type: (Optional[Text], Optional[bool]) -> None
         """
 
         Args:
             ca_file (Text): The path to a custom trust store file to use for certificate validation. The file should
                 contain PEM-formatted root certificates.
-            print_full_certificate (bool): Deprecated - do not use.
         """
         super(CertificateInfoScanCommand, self).__init__()
         self.custom_ca_file = ca_file
-        self.should_print_full_certificate = print_full_certificate
 
     @classmethod
     def get_cli_argument(cls):

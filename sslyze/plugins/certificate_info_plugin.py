@@ -544,8 +544,18 @@ class CertificateInfoScanResult(PluginScanResult):
         if self.ocsp_response:
             ocsp_resp_xmp = Element('ocspResponse',
                                     attrib={'isTrustedByMozillaCAStore': str(self.is_ocsp_response_trusted)})
-            for (key, value) in self.ocsp_response.items():
-                ocsp_resp_xmp.append(_keyvalue_pair_to_xml(key, value))
+
+            responder_xml = Element('responderID')
+            responder_xml.text = self.ocsp_response['responderID']
+            ocsp_resp_xmp.append(responder_xml)
+
+            produced_xml = Element('producedAt')
+            produced_xml.text = self.ocsp_response['producedAt']
+            ocsp_resp_xmp.append(produced_xml)
+
+            response_status_xml = Element('responseStatus')
+            response_status_xml.text = self.ocsp_response['responseStatus']
+            ocsp_resp_xmp.append(response_status_xml)
 
             ocsp_xml.append(ocsp_resp_xmp)
         xml_output.append(ocsp_xml)
@@ -582,48 +592,3 @@ class CertificateInfoScanResult(PluginScanResult):
             pass
 
         return text_output
-
-
-# XML generation for the OCSP response
-def _create_xml_node(key, value=''):
-    key = key.replace(' ', '').strip()  # Remove spaces
-    key = key.replace('/', '').strip()  # Remove slashes (S/MIME Capabilities)
-    key = key.replace('<', '_')
-    key = key.replace('>', '_')
-
-    # Things that would generate invalid XML
-    if key[0].isdigit():  # Tags cannot start with a digit
-            key = 'oid-' + key
-
-    xml_node = Element(key)
-    if IS_PYTHON_2:
-        xml_node.text = value.decode("utf-8").strip()
-    else:
-        xml_node.text = value.strip()
-    return xml_node
-
-
-def _keyvalue_pair_to_xml(key, value=''):
-    if type(value) in [str, Text]:  # value is a str on Py3, a str or unicode on Py2
-        key_xml = _create_xml_node(key, value)
-
-    elif type(value) is int:
-        key_xml = _create_xml_node(key, str(value))
-
-    elif value is None:  # no value
-        key_xml = _create_xml_node(key)
-
-    elif type(value) is list:
-        key_xml = _create_xml_node(key)
-        for val in value:
-            key_xml.append(_keyvalue_pair_to_xml('listEntry', val))
-
-    elif type(value) is dict:  # value is a list of subnodes
-        key_xml = _create_xml_node(key)
-        for subkey in value.keys():
-            key_xml.append(_keyvalue_pair_to_xml(subkey, value[subkey]))
-    else:
-        raise Exception()
-
-    return key_xml
-

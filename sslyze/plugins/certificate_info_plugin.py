@@ -12,12 +12,12 @@ import binascii
 import pickle
 
 import cryptography
-from nassl._nassl import OpenSSLError
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
-from nassl.ocsp_response import OcspResponse, OcspResponseNotTrustedError
+from nassl.ocsp_response import OcspResponse
+from nassl.ocsp_response import OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
@@ -27,7 +27,6 @@ from sslyze.plugins.utils.trust_store.trust_store import InvalidCertificateChain
 from sslyze.plugins.utils.trust_store.trust_store import AnchorCertificateNotInTrustStoreError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
-from sslyze.utils.python_compatibility import IS_PYTHON_2
 from sslyze.utils.thread_pool import ThreadPool
 from typing import List
 from typing import Optional
@@ -417,15 +416,9 @@ class CertificateInfoScanResult(PluginScanResult):
             text_output.append(self._format_field('', 'NOT SUPPORTED - Server did not send back an OCSP response.'))
 
         else:
-            try:
-                ocsp_trust_txt = 'OK - Response is trusted' \
-                    if self.is_ocsp_response_trusted \
-                    else 'FAILED - Response is NOT trusted'
-            except OpenSSLError as e:
-                if 'certificate verify error' in str(e):
-                    ocsp_trust_txt = 'FAILED - Response is NOT trusted'
-                else:
-                    raise
+            ocsp_trust_txt = 'OK - Response is trusted' \
+                if self.is_ocsp_response_trusted \
+                else 'FAILED - Response is NOT trusted'
 
             ocsp_resp_txt = [
                 self._format_field('OCSP Response Status:', self.ocsp_response['responseStatus']),

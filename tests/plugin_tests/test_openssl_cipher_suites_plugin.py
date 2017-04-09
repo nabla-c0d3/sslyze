@@ -1,5 +1,8 @@
-import unittest
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
+import unittest
 import logging
 
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, Sslv30ScanCommand, \
@@ -43,7 +46,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_sslv2_disabled(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -106,7 +109,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_sslv3_disabled(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -121,7 +124,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_tlsv1_0_enabled(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -147,7 +150,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
 
     def test_tlsv1_1_enabled(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -169,7 +172,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
 
     def test_tlsv1_2_enabled(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -194,19 +197,19 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_dh_info(self):
-        server_info = ServerConnectivityInfo(hostname=u'dh1024.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='dh1024.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
         self.assertTrue(plugin_result.preferred_cipher)
-        self.assertEquals(plugin_result.preferred_cipher.dh_info['GroupSize'], u'1024')
+        self.assertEquals(plugin_result.preferred_cipher.dh_info['GroupSize'], '1024')
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
     def test_null_cipher_suites(self):
-        server_info = ServerConnectivityInfo(hostname=u'null.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='null.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -227,7 +230,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
 
     def test_rc4_cipher_suites(self):
-        server_info = ServerConnectivityInfo(hostname=u'rc4.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='rc4.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -242,7 +245,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
 
     def test_rc4_md5_cipher_suites(self):
-        server_info = ServerConnectivityInfo(hostname=u'rc4-md5.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='rc4-md5.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -257,7 +260,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
     def test_follows_client_cipher_suite_preference(self):
         # Google.com does not follow client cipher suite preference
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()
@@ -267,7 +270,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.accepted_cipher_list)
         
         # Sogou.com follows client cipher suite preference
-        server_info = ServerConnectivityInfo(hostname=u'www.sogou.com')
+        server_info = ServerConnectivityInfo(hostname='www.sogou.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()

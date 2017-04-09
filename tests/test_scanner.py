@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import unittest
 
 from sslyze.concurrent_scanner import ConcurrentScanner
@@ -11,7 +15,7 @@ from sslyze.synchronous_scanner import SynchronousScanner
 class ScannerTestCase(unittest.TestCase):
 
     def test_synchronous_scanner(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         sync_scanner = SynchronousScanner()
@@ -21,7 +25,7 @@ class ScannerTestCase(unittest.TestCase):
 
 
     def test_concurrent_scanner(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         # Queue some scan commands that are quick

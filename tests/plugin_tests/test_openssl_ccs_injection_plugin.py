@@ -1,11 +1,9 @@
-import os
-import shlex
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import unittest
-from sys import platform
-
 import logging
-
-import subprocess
 
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin, OpenSslCcsInjectionScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -15,7 +13,7 @@ from tests.plugin_tests.openssl_server import VulnerableOpenSslServer, NotOnLinu
 class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
 
     def test_ccs_injection_good(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCcsInjectionPlugin()

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import os
 import unittest
 
@@ -9,32 +12,32 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class CertificateInfoPluginTestCase(unittest.TestCase):
 
     def test_ca_file_bad_file(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.hotmail.com')
+        server_info = ServerConnectivityInfo(hostname='www.hotmail.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
         with self.assertRaises(ValueError):
-            plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=u'doesntexist'))
+            plugin.process_task(server_info, CertificateInfoScanCommand(ca_file='doesntexist'))
 
 
     def test_ca_file(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.hotmail.com')
+        server_info = ServerConnectivityInfo(hostname='www.hotmail.com')
         server_info.test_connectivity_to_server()
 
-        ca_file_path = os.path.join(os.path.dirname(__file__), u'..', u'utils', u'wildcard-self-signed.pem')
+        ca_file_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'wildcard-self-signed.pem')
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
 
         self.assertEquals(len(plugin_result.path_validation_result_list), 6)
         for path_validation_result in plugin_result.path_validation_result_list:
-            if path_validation_result.trust_store.name == u'Custom --ca_file':
+            if path_validation_result.trust_store.name == 'Custom --ca_file':
                 self.assertFalse(path_validation_result.is_certificate_trusted)
             else:
                 self.assertTrue(path_validation_result.is_certificate_trusted)
 
 
     def test_valid_chain(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.hotmail.com')
+        server_info = ServerConnectivityInfo(hostname='www.hotmail.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -61,7 +64,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_invalid_chain(self):
-        server_info = ServerConnectivityInfo(hostname=u'self-signed.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='self-signed.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -88,7 +91,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
     def test_1000_sans_chain(self):
         # Ensure SSLyze can process a leaf cert with 1000 SANs
-        server_info = ServerConnectivityInfo(hostname=u'1000-sans.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='1000-sans.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -98,7 +101,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
     def test_sha1_chain(self):
         # The test server no longer works
         return
-        server_info = ServerConnectivityInfo(hostname=u'sha1-2017.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='sha1-2017.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -111,7 +114,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_sha256_chain(self):
-        server_info = ServerConnectivityInfo(hostname=u'sha256.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='sha256.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -124,7 +127,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_unicode_certificate(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.főgáz.hu')
+        server_info = ServerConnectivityInfo(hostname='www.főgáz.h')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -137,7 +140,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_chain_with_anchor(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.verizon.com')
+        server_info = ServerConnectivityInfo(hostname='www.verizon.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -150,27 +153,27 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
-        server_info = ServerConnectivityInfo(hostname=u'webmail.russia.nasa.gov')
+        server_info = ServerConnectivityInfo(hostname='webmail.russia.nasa.gov')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertEqual(plugin_result.successful_trust_store.name, u'Microsoft')
+        self.assertEqual(plugin_result.successful_trust_store.name, 'Microsoft')
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
 
     def test_only_trusted_by_custom_ca_file(self):
-        server_info = ServerConnectivityInfo(hostname=u'self-signed.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='self-signed.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        ca_file_path = os.path.join(os.path.dirname(__file__), u'..', u'utils', u'self-signed.badssl.com.pem')
+        ca_file_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'self-signed.badssl.com.pem')
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
 
-        self.assertEqual(plugin_result.successful_trust_store.name, u'Custom --ca_file')
+        self.assertEqual(plugin_result.successful_trust_store.name, 'Custom --ca_file')
         self.assertTrue(plugin_result.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())

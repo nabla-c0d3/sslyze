@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import unittest
 
 import logging
@@ -11,7 +15,7 @@ from tests.plugin_tests.openssl_server import VulnerableOpenSslServer
 class FallbackScsvPluginTestCase(unittest.TestCase):
 
     def test_fallback_good(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = FallbackScsvPlugin()

@@ -1,4 +1,7 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import unittest
 from io import StringIO
 from xml.etree.ElementTree import Element
@@ -7,7 +10,6 @@ from sslyze.cli import FailedServerScan, CompletedServerScan
 from sslyze.cli.xml_output import XmlOutputGenerator
 from sslyze.server_connectivity import ServerConnectivityError
 from sslyze.ssl_settings import HttpConnectTunnelingSettings
-from sslyze.utils.python_compatibility import IS_PYTHON_2
 from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, MockCommandLineValues, \
     MockPluginScanCommandOne, MockPluginScanCommandTwo
 
@@ -23,8 +25,8 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
 
         generator.command_line_parsed(None, MockCommandLineValues())
 
-        failed_scan = FailedServerScan(server_string=u'unibadeéè.com',
-                                       connection_exception=ServerConnectivityError(error_msg=u'Some érrôr'))
+        failed_scan = FailedServerScan(server_string='unibadeéè.com',
+                                       connection_exception=ServerConnectivityError(error_msg='Some érrôr'))
         generator.server_connectivity_test_failed(failed_scan)
 
         server_info = MockServerConnectivityInfo()
@@ -32,12 +34,12 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
 
         generator.scans_started()
 
-        plugin_xml_out_1 = Element(u'plugin1', attrib={u'test1': u'value1'})
-        plugin_xml_out_1.text = u'Plugin ûnicôdé output'
-        plugin_result_1 = MockPluginScanResult(server_info, MockPluginScanCommandOne(), u'', plugin_xml_out_1)
-        plugin_xml_out_2 = Element(u'plugin2', attrib={u'test2': u'value2'})
-        plugin_xml_out_2.text = u'other plugin Output'
-        plugin_result_2 = MockPluginScanResult(server_info, MockPluginScanCommandTwo(), u'', plugin_xml_out_2)
+        plugin_xml_out_1 = Element('plugin1', attrib={'test1': 'value1'})
+        plugin_xml_out_1.text = 'Plugin ûnicôdé output'
+        plugin_result_1 = MockPluginScanResult(server_info, MockPluginScanCommandOne(), '', plugin_xml_out_1)
+        plugin_xml_out_2 = Element('plugin2', attrib={'test2': 'value2'})
+        plugin_xml_out_2.text = 'other plugin Output'
+        plugin_result_2 = MockPluginScanResult(server_info, MockPluginScanCommandTwo(), '', plugin_xml_out_2)
 
         # noinspection PyTypeChecker
         server_scan = CompletedServerScan(server_info, [plugin_result_1, plugin_result_2])
@@ -50,8 +52,8 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the output properly listed the connectivity error with unicode escaped as \u sequences
-        self.assertIn(u'unibadeéè.com', received_output)
-        self.assertIn(u'Some érrôr', received_output)
+        self.assertIn('unibadeéè.com', received_output)
+        self.assertIn('Some érrôr', received_output)
 
         # Ensure the output properly listed the online domain
         self.assertIn(server_info.hostname, received_output)
@@ -76,7 +78,7 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
 
         # When scanning through a proxy, we do not know the final server's IP address
         # This makes sure the XML output properly handles that
-        tunneling_settings = HttpConnectTunnelingSettings(u'prôxyé.com', 3128)
+        tunneling_settings = HttpConnectTunnelingSettings('prôxyé.com', 3128)
         server_info = MockServerConnectivityInfo(http_tunneling_settings=tunneling_settings)
 
         # noinspection PyTypeChecker
@@ -88,5 +90,5 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the output displayed the tunneling settings
-        self.assertIn(u'httpsTunnelHostname="{}"'.format(tunneling_settings.hostname), received_output)
-        self.assertIn(u'httpsTunnelPort="{}"'.format(tunneling_settings.port), received_output)
+        self.assertIn('httpsTunnelHostname="{}"'.format(tunneling_settings.hostname), received_output)
+        self.assertIn('httpsTunnelPort="{}"'.format(tunneling_settings.port), received_output)

@@ -1,4 +1,7 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import unittest
 from io import StringIO
 
@@ -28,25 +31,25 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output properly listed the available plugins
-        self.assertIn(u'FakePlugin1', received_output)
-        self.assertIn(u'FakePlugin2', received_output)
+        self.assertIn('FakePlugin1', received_output)
+        self.assertIn('FakePlugin2', received_output)
 
 
     def test_server_connectivity_test_failed(self):
         output_file = StringIO()
         generator = ConsoleOutputGenerator(output_file)
 
-        failed_scan = FailedServerScan(server_string=u'unicödeéè.com',
-                                       connection_exception=ServerConnectivityError(error_msg=u'Some érrôr'))
+        failed_scan = FailedServerScan(server_string='unicödeéè.com',
+                                       connection_exception=ServerConnectivityError(error_msg='Some érrôr'))
         generator.server_connectivity_test_failed(failed_scan)
 
         received_output = output_file.getvalue()
         output_file.close()
 
         # Ensure the console output properly listed the connectivity error with unicode
-        self.assertIn(u'unicödeéè.com', received_output)
-        self.assertIn(u'Some érrôr', received_output)
-        self.assertIn(u'discarding corresponding tasks', received_output)
+        self.assertIn('unicödeéè.com', received_output)
+        self.assertIn('Some érrôr', received_output)
+        self.assertIn('discarding corresponding tasks', received_output)
 
 
     def test_server_connectivity_test_succeeded(self):
@@ -77,7 +80,7 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output properly warned about client authentication
-        self.assertIn(u'Server REQUIRED client authentication', received_output)
+        self.assertIn('Server REQUIRED client authentication', received_output)
 
 
     def test_server_connectivity_test_succeeded_with_optional_client_auth(self):
@@ -92,7 +95,7 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output properly warned about client authentication
-        self.assertIn(u'Server requested optional client authentication', received_output)
+        self.assertIn('Server requested optional client authentication', received_output)
 
 
     def test_server_connectivity_test_succeeded_with_http_tunneling(self):
@@ -101,7 +104,7 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
 
         # When scanning through a proxy, we do not know the final server's IP address
         # This makes sure the console output properly handles that
-        tunneling_settings = HttpConnectTunnelingSettings(u'ûnicôdé.com', 3128)
+        tunneling_settings = HttpConnectTunnelingSettings('ûnicôdé.com', 3128)
         server_info = MockServerConnectivityInfo(http_tunneling_settings=tunneling_settings)
 
         generator.server_connectivity_test_succeeded(server_info)
@@ -112,7 +115,7 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         # Ensure the console output properly listed the online domain and that it was going through a proxy
         self.assertIn(server_info.hostname, received_output)
         self.assertIn(str(server_info.port), received_output)
-        self.assertIn(u'Proxy', received_output)
+        self.assertIn('Proxy', received_output)
         self.assertIn(tunneling_settings.hostname, received_output)
         self.assertIn(str(tunneling_settings.port), received_output)
 
@@ -135,8 +138,8 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         generator = ConsoleOutputGenerator(output_file)
 
         server_info = MockServerConnectivityInfo()
-        plugin_result_1 = MockPluginScanResult(server_info, MockPluginScanCommandOne(), u'Plugin ûnicôdé output', None)
-        plugin_result_2 = MockPluginScanResult(server_info, MockPluginScanCommandTwo(), u'other plugin Output', None)
+        plugin_result_1 = MockPluginScanResult(server_info, MockPluginScanCommandOne(), 'Plugin ûnicôdé output', None)
+        plugin_result_2 = MockPluginScanResult(server_info, MockPluginScanCommandTwo(), 'other plugin Output', None)
         server_scan = CompletedServerScan(server_info, [plugin_result_1, plugin_result_2])
         generator.server_scan_completed(server_scan)
 
@@ -159,7 +162,7 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
 
         # When scanning through a proxy, we do not know the final server's IP address
         # This makes sure the console output properly handles that
-        tunneling_settings = HttpConnectTunnelingSettings(u'ûnicôdé.com', 3128)
+        tunneling_settings = HttpConnectTunnelingSettings('ûnicôdé.com', 3128)
         server_info = MockServerConnectivityInfo(http_tunneling_settings=tunneling_settings)
 
         server_scan = CompletedServerScan(server_info, [])

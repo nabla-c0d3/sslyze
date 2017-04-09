@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import HttpConnectTunnelingSettings
-from tiny_proxy import ProxyHandler
-from tiny_proxy import ThreadingHTTPServer
+from tests.tiny_proxy import ProxyHandler
+from tests.tiny_proxy import ThreadingHTTPServer
 import multiprocessing
 
 
@@ -22,9 +24,9 @@ class HttpsTunnelTestCase(unittest.TestCase):
 
     def test_https_tunneling_bad_arguments(self):
         # Ensure that an IP address cannot be specified when using an HTTP proxy for scans
-        tunnel_settings = HttpConnectTunnelingSettings(u'fakedomain', 443)
-        with self.assertRaisesRegexp(ValueError, u'Cannot specify both ip_address and http_tunneling_settings'):
-            ServerConnectivityInfo(hostname=u'www.google.com', ip_address='1.2.3.4',
+        tunnel_settings = HttpConnectTunnelingSettings('fakedomain', 443)
+        with self.assertRaisesRegexp(ValueError, 'Cannot specify both ip_address and http_tunneling_settings'):
+            ServerConnectivityInfo(hostname='www.google.com', ip_address='1.2.3.4',
                                    http_tunneling_settings=tunnel_settings)
 
     def test_https_tunneling(self):
@@ -35,9 +37,9 @@ class HttpsTunnelTestCase(unittest.TestCase):
 
         try:
             # Run a scan through the proxy
-            tunnel_settings = HttpConnectTunnelingSettings(u'localhost', proxy_port, basic_auth_user='test',
+            tunnel_settings = HttpConnectTunnelingSettings('localhost', proxy_port, basic_auth_user='test',
                                                            basic_auth_password='test123!')
-            server_info = ServerConnectivityInfo(hostname=u'www.google.com', http_tunneling_settings=tunnel_settings)
+            server_info = ServerConnectivityInfo(hostname='www.google.com', http_tunneling_settings=tunnel_settings)
 
             # Try to connect to the proxy - retry if the proxy subprocess wasn't ready
             proxy_connection_attempts = 0

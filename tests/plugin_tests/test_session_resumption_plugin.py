@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import unittest
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin, SessionResumptionSupportScanCommand, \
     SessionResumptionRateScanCommand
@@ -7,7 +11,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class SessionResumptionPluginTestCase(unittest.TestCase):
 
     def test_resumption_support(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = SessionResumptionPlugin()
@@ -23,7 +27,7 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
 
 
     def test_resumption_rate(self):
-        server_info = ServerConnectivityInfo(hostname=u'www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
 
         plugin = SessionResumptionPlugin()

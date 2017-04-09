@@ -79,6 +79,7 @@ class TrustStore(object):
             store_content = store_file.read()
             # Each certificate is separated by -----BEGIN CERTIFICATE-----
             pem_cert_list = store_content.split('-----BEGIN CERTIFICATE-----')[1::]
+            pem_cert_nb = 0
             for pem_split in pem_cert_list:
                 # Remove PEM comments as they may cause Unicode errors
                 final_pem = '-----BEGIN CERTIFICATE-----{}-----END CERTIFICATE-----'.format(
@@ -89,8 +90,12 @@ class TrustStore(object):
                 try:
                     cert_dict[cert.subject] = cert
                 except ValueError:
-                    # TODO(AD): Handle failing cert
+                    if pem_cert_nb == 311:
+                        # Cert number 311 in the Mozilla store can't be parsed by cryptography
+                        continue
                     raise
+
+                pem_cert_nb += 1
 
         return cert_dict
 

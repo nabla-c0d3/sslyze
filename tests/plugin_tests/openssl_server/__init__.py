@@ -9,6 +9,8 @@ import subprocess
 from platform import architecture
 from sys import platform
 
+import logging
+
 
 class NotOnLinux64Error(EnvironmentError):
     """The embedded OpenSSL server is only available on Linux 64.
@@ -23,9 +25,11 @@ class VulnerableOpenSslServer(object):
     CERT_PATH = os.path.join(os.path.dirname(__file__), 'self-signed-cert.pem')
     KEY_PATH = os.path.join(os.path.dirname(__file__), 'self-signed-key.pem')
 
+    AVAILABLE_LOCAL_PORTS = set(range(8110, 8150))
+
     OPENSSL_CMD_LINE = '{openssl} s_server -cert {cert} -key {key} -accept {port} -cipher "ALL:COMPLEMENTOFALL"'
 
-    def __init__(self, port):
+    def __init__(self):
         # type: (int) -> None
         if platform not in ['linux', 'linux2']:
             raise NotOnLinux64Error()
@@ -35,15 +39,35 @@ class VulnerableOpenSslServer(object):
 
         self.hostname = 'localhost'
         self.ip_address = '127.0.0.1'
-        self.port = port
+
+        # Retrieve one of the available local ports; set.pop() is thread safe
+        self.port = self.AVAILABLE_LOCAL_PORTS.pop()
         self._process = None
 
-    def start(self):
+    def __enter__(self):
         final_cmd_line = self.OPENSSL_CMD_LINE.format(openssl=self.OPENSSL_PATH, key=self.KEY_PATH, cert=self.CERT_PATH,
                                                       port=self.port)
         args = shlex.split(final_cmd_line)
-        self._process = subprocess.Popen(args)
+        self._process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-    def terminate(self):
+        # Block until s_server is ready to accept requests
+        s_server_out = self._process.stdout.readline()
+        logging.warning('s_server output: {}'.format(s_server_out))
+        while b'ACCEPT' not in s_server_out:
+            s_server_out = self._process.stdout.readline()
+            logging.warning('s_server output: {}'.format(s_server_out))
+
+        if self._process.poll() is not None:
+            # s_server has terminated early - get the error
+            s_server_out = self._process.stdout.readline()
+            raise RuntimeError('Could not start s_server: {}'.format(s_server_out))
+
+        return self
+
+    def __exit__(self, *args):
         if self._process and self._process.poll() is None:
             self._process.terminate()
+
+        # Free the port that was used; not thread safe but should be fine
+        self.AVAILABLE_LOCAL_PORTS.add(self.port)
+        return False

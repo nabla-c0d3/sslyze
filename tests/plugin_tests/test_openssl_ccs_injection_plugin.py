@@ -26,19 +26,17 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
 
     def test_ccs_injection_bad(self):
         try:
-            server = VulnerableOpenSslServer(port=8012)
+            with VulnerableOpenSslServer() as server:
+                server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,
+                                                     port=server.port)
+                server_info.test_connectivity_to_server()
+
+                plugin = OpenSslCcsInjectionPlugin()
+                plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
         except NotOnLinux64Error:
             # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
             logging.warning('WARNING: Not on Linux - skipping test_ccs_injection_bad() test')
             return
-
-        server.start()
-        server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,  port=server.port)
-        server_info.test_connectivity_to_server()
-
-        plugin = OpenSslCcsInjectionPlugin()
-        plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
-        server.terminate()
 
         self.assertTrue(plugin_result.is_vulnerable_to_ccs_injection)
         self.assertTrue(plugin_result.as_text())

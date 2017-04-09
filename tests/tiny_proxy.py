@@ -26,10 +26,11 @@ except ImportError:
     from urlparse import urlparse, urlunparse
 
 import select
+import logging
 import socket
 
 
-class ProxyHandler (BaseHTTPRequestHandler):
+class ProxyHandler(BaseHTTPRequestHandler):
     __base = BaseHTTPRequestHandler
     __base_handle = __base.handle
 
@@ -50,7 +51,7 @@ class ProxyHandler (BaseHTTPRequestHandler):
             host_port = netloc[:i], int(netloc[i+1:])
         else:
             host_port = netloc, 80
-        print("\t" "connect to %s:%d" % host_port)
+        logging.warning('Connecting to {}'.format(host_port))
         try: soc.connect(host_port)
         except socket.error as arg:
             try: msg = arg[1]
@@ -70,7 +71,7 @@ class ProxyHandler (BaseHTTPRequestHandler):
                 self.wfile.write(response.encode('ascii'))
                 self._read_write(soc, 300)
         finally:
-            print("\t" "bye")
+            logging.warning('Finished do_CONNECT()')
             soc.close()
             self.connection.close()
 
@@ -95,7 +96,7 @@ class ProxyHandler (BaseHTTPRequestHandler):
                 soc.send("\r\n")
                 self._read_write(soc)
         finally:
-            print("\t" "bye")
+            logging.warning('Finished do_GET()')
             soc.close()
             self.connection.close()
 
@@ -118,7 +119,7 @@ class ProxyHandler (BaseHTTPRequestHandler):
                         out.send(data)
                         count = 0
             else:
-                print("\t" "idle", count)
+                logging.warning('Idle')
             if count == max_idling: break
 
     do_HEAD = do_GET
@@ -132,16 +133,16 @@ class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
 if __name__ == '__main__':
     from sys import argv
     if argv[1:] and argv[1] in ('-h', '--help'):
-        print (argv[0], "[port [allowed_client_name ...]]")
+        print(argv[0], "[port [allowed_client_name ...]]")
     else:
         if argv[2:]:
             allowed = []
             for name in argv[2:]:
                 client = socket.gethostbyname(name)
                 allowed.append(client)
-                print("Accept: %s (%s)" % (client, name))
+                logging.warning('Accepted: {} ({})'.format(client, name))
             ProxyHandler.allowed_clients = allowed
             del argv[2:]
         else:
-            print("Any clients will be served...")
+            logging.warning('Waiting for clients')
         test(ProxyHandler, ThreadingHTTPServer)

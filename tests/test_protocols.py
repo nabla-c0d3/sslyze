@@ -89,7 +89,7 @@ class ProtocolsTestCase(unittest.TestCase):
         for hostname, protocol in [
             ('imap.comcast.net', TlsWrappedProtocolEnum.STARTTLS_IMAP),
             ('pop.comcast.net', TlsWrappedProtocolEnum.STARTTLS_POP3),
-            ('ldap.uchicago.ed', TlsWrappedProtocolEnum.STARTTLS_LDAP),
+            ('ldap.uchicago.edu', TlsWrappedProtocolEnum.STARTTLS_LDAP),
             ('jabber.org', TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER),
             # Some Heroku Postgres instance I created
             ('ec2-54-75-226-17.eu-west-1.compute.amazonaws.com', TlsWrappedProtocolEnum.STARTTLS_POSTGRES)

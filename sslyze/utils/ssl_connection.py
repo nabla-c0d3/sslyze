@@ -185,6 +185,10 @@ class SSLConnection(DebugSslClient):
                     if 'Nassl SSL handshake failed' in str(e.args):
                         raise SSLHandshakeRejected('TLS / Unexpected EOF')
 
+                    if 'timed out' in str(e.args):
+                        # Network timeout, propagate the error to trigger a retry
+                        raise
+
                     # This block is meant to handle socket.errors
                     for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                         if error_msg in str(e.args):

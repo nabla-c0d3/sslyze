@@ -193,7 +193,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
         except SSLHandshakeRejected as e:
             cipher_result = RejectedCipherSuite(openssl_cipher_name, ssl_version, str(e))
 
-        except ClientCertificateRequested as e:
+        except ClientCertificateRequested:
             cipher_result = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
 
         except Exception as e:
@@ -241,7 +241,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
         try:
             ssl_connection.connect()
             selected_cipher = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
-        except ClientCertificateRequested as e:
+        except ClientCertificateRequested:
             selected_cipher = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
         finally:
             ssl_connection.close()

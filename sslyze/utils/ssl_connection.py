@@ -178,16 +178,15 @@ class SSLConnection(DebugSslClient):
                 except ClientCertificateRequested:
                     # Server expected a client certificate and we didn't provide one
                     raise
+                except socket.timeout:
+                    # Network timeout, propagate the error to trigger a retry
+                    raise
                 except (socket.error, IOError) as e:
                     # On Python 3.3+ socket.error == IOError but on Python 2.7 they are different
                     # We use the same except block so it works on all versions of Python
                     # This block is meant to handle IOErrors
                     if 'Nassl SSL handshake failed' in str(e.args):
                         raise SSLHandshakeRejected('TLS / Unexpected EOF')
-
-                    if 'timed out' in str(e.args):
-                        # Network timeout, propagate the error to trigger a retry
-                        raise
 
                     # This block is meant to handle socket.errors
                     for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
@@ -210,9 +209,8 @@ class SSLConnection(DebugSslClient):
             except _nassl.OpenSSLError:
                 # Raise unknown OpenSSL errors
                 raise
-
-            # Attempt to retry connection if a network error occurred
-            except IOError:
+            except socket.timeout:
+                # Attempt to retry connection if a network error occurred during connection or the handshake
                 retry_attempts += 1
                 if retry_attempts >= final_max_retries:
                     # Exhausted the number of retry attempts, give up
@@ -221,7 +219,7 @@ class SSLConnection(DebugSslClient):
                     delay = random.random()
                 else:
                     # Exponential back off
-                    delay = min(6, 2*delay)  # Cap max delay at 6 seconds
+                    delay = min(6, 2 * delay)  # Cap max delay at 6 seconds
 
             else:
                 # No network error occurred

@@ -175,19 +175,22 @@ class SSLConnection(DebugSslClient):
                     # SSL handshake
                     self.do_handshake()
 
-                # The goal here to differentiate rejected SSL handshakes (which will
-                # raise SSLHandshakeRejected) from random network errors
-                except socket.error as e:
-                    for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
-                        if error_msg in str(e.args):
-                            raise SSLHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
-                    raise  # Unknown socket error
                 except ClientCertificateRequested:
                     # Server expected a client certificate and we didn't provide one
                     raise
-                except IOError as e:
+                except (socket.error, IOError) as e:
+                    # On Python 3.3+ socket.error == IOError but on Python 2.7 they are different
+                    # We use the same except block so it works on all versions of Python
+                    # This block is meant to handle IOErrors
                     if 'Nassl SSL handshake failed' in str(e.args):
                         raise SSLHandshakeRejected('TLS / Unexpected EOF')
+
+                    # This block is meant to handle socket.errors
+                    for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
+                        if error_msg in str(e.args):
+                            raise SSLHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
+
+                    # Unknown socket error
                     raise
                 except _nassl.OpenSSLError as e:
                     for error_msg in self.HANDSHAKE_REJECTED_SSL_ERRORS.keys():
@@ -205,7 +208,7 @@ class SSLConnection(DebugSslClient):
                 raise
 
             # Attempt to retry connection if a network error occurred
-            except:
+            except IOError:
                 retry_attempts += 1
                 if retry_attempts >= final_max_retries:
                     # Exhausted the number of retry attempts, give up

@@ -347,7 +347,7 @@ class CertificateInfoScanResult(PluginScanResult):
 
         hostname_validation_text = 'OK - Certificate matches {hostname}'.format(hostname=server_name_indication) \
             if self.certificate_matches_hostname \
-            else 'FAILED - Certificate does NOT match {hostname}'
+            else 'FAILED - Certificate does NOT match {hostname}'.format(hostname=server_name_indication)
         text_output.append(self._format_field('Hostname Validation:', hostname_validation_text))
 
         # Path validation that was successfully tested

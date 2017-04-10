@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import random
 import socket
+from typing import Text
 import struct
 import time
 from base64 import b64encode
@@ -87,7 +88,6 @@ class SSLConnection(DebugSslClient):
         cls.NETWORK_MAX_RETRIES = network_max_retries
         cls.NETWORK_TIMEOUT = network_timeout
 
-
     def __init__(self, host, ip, port, ssl_version, ssl_verify_locations=None, client_auth_creds=None,
                  should_ignore_client_auth=False):
         if client_auth_creds:
@@ -116,9 +116,10 @@ class SSLConnection(DebugSslClient):
         self._tunnel_basic_auth_token = None
         self.set_cipher_list(self.DEFAULT_SSL_CIPHER_LIST)
 
-
     def enable_http_connect_tunneling(self, tunnel_host, tunnel_port, tunnel_user=None, tunnel_password=None):
-        """Proxy the traffic through an HTTP Connect proxy."""
+        # type: (Text, int, Text, Text) -> None
+        """Proxy the traffic through an HTTP Connect proxy.
+        """
         self._tunnel_host = tunnel_host
         self._tunnel_port = tunnel_port
         self._tunnel_basic_auth_token = None
@@ -127,8 +128,8 @@ class SSLConnection(DebugSslClient):
                 '{0}:{1}'.format(quote(tunnel_user), quote(tunnel_password)).encode('utf-8')
             )
 
-
     def do_pre_handshake(self, network_timeout):
+        # type: (int) -> None
         """Open a socket to the server; setup HTTP tunneling if a proxy was configured.
         """
         if self._tunnel_host:
@@ -154,10 +155,10 @@ class SSLConnection(DebugSslClient):
                 raise ProxyError(self.ERR_CONNECT_REJECTED)
         else:
             # No proxy; connect directly to the server
-            self._sock = socket.create_connection((self._ip, self._port), network_timeout)
-
+            self._sock = socket.create_connection(address=(self._ip, self._port), timeout=network_timeout)
 
     def connect(self, network_timeout=None, network_max_retries=None):
+        # type: (int, int) -> None
         final_timeout = self.NETWORK_TIMEOUT if network_timeout is None else network_timeout
         final_max_retries = self.NETWORK_MAX_RETRIES if network_max_retries is None else network_max_retries
         retry_attempts = 0
@@ -199,7 +200,6 @@ class SSLConnection(DebugSslClient):
                 raise
             except ClientCertificateRequested:
                 raise
-
             except _nassl.OpenSSLError:
                 # Raise unknown OpenSSL errors
                 raise
@@ -220,14 +220,14 @@ class SSLConnection(DebugSslClient):
                 # No network error occurred
                 break
 
-
     def close(self):
+        # type: () -> None
         self.shutdown()
         if self._sock:
             self._sock.close()
 
-
     def post_handshake_check(self):
+        # type: () -> Text
         return ''
 
 

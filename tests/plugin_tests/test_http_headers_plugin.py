@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import unittest
+import pickle
 from sslyze.plugins.http_headers_plugin import HttpHeadersPlugin, HttpHeadersScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -24,6 +25,9 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
     def test_hsts_and_hpkp_disabled(self):
         server_info = ServerConnectivityInfo(hostname='expired.badssl.com')
         server_info.test_connectivity_to_server()
@@ -39,6 +43,9 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
     def test_hpkp_enabled(self):
         server_info = ServerConnectivityInfo(hostname='github.com')
         server_info.test_connectivity_to_server()
@@ -53,3 +60,6 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))

@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 import unittest
 import logging
 
+import pickle
+
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, Sslv30ScanCommand, \
     Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -44,6 +46,9 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
     def test_sslv2_disabled(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
@@ -58,6 +63,9 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_sslv3_enabled(self):
         try:
@@ -106,6 +114,9 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
     def test_sslv3_disabled(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
@@ -120,6 +131,9 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_tlsv1_0_enabled(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')
@@ -141,6 +155,9 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_tlsv1_0_disabled(self):
         # TBD
@@ -168,6 +185,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_tlsv1_2_enabled(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')
@@ -194,6 +213,9 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
     def test_dh_info(self):
         server_info = ServerConnectivityInfo(hostname='dh1024.badssl.com')
         server_info.test_connectivity_to_server()
@@ -205,6 +227,9 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertEquals(plugin_result.preferred_cipher.dh_info['GroupSize'], '1024')
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_null_cipher_suites(self):
         server_info = ServerConnectivityInfo(hostname='null.badssl.com')
@@ -226,6 +251,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_rc4_cipher_suites(self):
         server_info = ServerConnectivityInfo(hostname='rc4.badssl.com')
@@ -241,6 +268,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_rc4_md5_cipher_suites(self):
         server_info = ServerConnectivityInfo(hostname='rc4-md5.badssl.com')
@@ -255,6 +284,9 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_follows_client_cipher_suite_preference(self):
         # Google.com does not follow client cipher suite preference
@@ -276,3 +308,6 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         self.assertIsNone(plugin_result.preferred_cipher)
         self.assertTrue(plugin_result.accepted_cipher_list)
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))

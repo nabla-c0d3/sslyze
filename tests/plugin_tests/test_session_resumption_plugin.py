@@ -3,6 +3,9 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import unittest
+
+import pickle
+
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin, SessionResumptionSupportScanCommand, \
     SessionResumptionRateScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -25,6 +28,8 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_resumption_rate(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')
@@ -39,4 +44,7 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 

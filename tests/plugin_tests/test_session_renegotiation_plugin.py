@@ -3,6 +3,9 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import unittest
+
+import pickle
+
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin, SessionRenegotiationScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -21,6 +24,9 @@ class SessionRenegotiationPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_renegotiation_bad(self):
         # TBD

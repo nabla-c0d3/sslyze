@@ -6,6 +6,8 @@ import unittest
 
 import logging
 
+import pickle
+
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin, FallbackScsvScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from tests.plugin_tests.openssl_server import NotOnLinux64Error
@@ -26,6 +28,9 @@ class FallbackScsvPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
     def test_fallback_bad(self):
         try:
             with VulnerableOpenSslServer() as server:
@@ -43,3 +48,6 @@ class FallbackScsvPluginTestCase(unittest.TestCase):
         self.assertFalse(plugin_result.supports_fallback_scsv)
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))

@@ -11,6 +11,7 @@ from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.utils.python_compatibility import IS_PYTHON_2
 from sslyze.utils.ssl_connection import SSLConnection
 
 
@@ -98,8 +99,9 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
     def _srecv(self):
         r = self._sock.recv(4096)
         self._inbuffer += r
-        return r != ''
+        return r
 
+    # TODO(AD): Merge this code with the Heartbleed code
     ssl_tokens = {
         OpenSslVersionEnum.SSLV3: b'\x03\x00',
         OpenSslVersionEnum.TLSV1: b'\x03\x01',
@@ -165,15 +167,15 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         b'\xfe\xfe', b'\xfe\xff', b'\xff\xe0', b'\xff\xe1'
     ]
 
-
-    # Create a TLS record out of a protocol packet
     def make_record(self, t, body):
+        """Create a TLS record out of a protocol packet.
+        """
         l = struct.pack("!H", len(body))
         return t + self.ssl_tokens[self._ssl_version] + l + body
 
     def make_hello(self):
         suites = b''.join(self.ssl3_cipher)
-        rand = bytes(random.getrandbits(8) for _ in range(32))
+        rand = bytearray(random.getrandbits(8) for _ in range(32))
         l = struct.pack("!L", 39+len(suites))[1:]  # 3 bytes
         sl = struct.pack("!H", len(suites))
 
@@ -194,6 +196,8 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         r = []
         while len(buf) >= 4:
             mt = buf[0]
+            if IS_PYTHON_2:
+                mt = ord(buf[0])
             mlen = struct.unpack("!L", buf[0:4])[0] & 0xFFFFFF
 
             if mlen+4 > len(buf):
@@ -205,13 +209,20 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
 
     @staticmethod
     def parse_alert_pkt(buf):
-        return [{"level": buf[0], "desc": buf[1]}]
+        level = buf[0]
+        desc = buf[1]
+        if IS_PYTHON_2:
+            level = ord(buf[0])
+            desc = ord(buf[1])
+        return [{"level": level, "desc": desc}]
 
     def parse_records(self):
         r = []
         # 5 byte header
         while len(self._inbuffer) >= 5:
             mtype = self._inbuffer[0]
+            if IS_PYTHON_2:
+                mtype = ord(mtype)
             mtlsv = self._inbuffer[1:3]
             mlen = struct.unpack("!H", self._inbuffer[3:5])[0]
 

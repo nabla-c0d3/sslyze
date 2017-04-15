@@ -36,7 +36,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         self._ssl_version = server_info.highest_ssl_version_supported
         is_vulnerable = False
-        self._inbuffer = ""
+        self._inbuffer = b''
         ssl_connection.do_pre_handshake(network_timeout=SSLConnection.NETWORK_TIMEOUT)
 
         # H4ck to directly send the CCS payload
@@ -49,7 +49,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
             try:
                 if not self._srecv():
                     break
-            except:
+            except IOError:
                 break
             rs = self.parse_records()
             for record in rs:
@@ -70,7 +70,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
                         break
                 except socket.timeout:
                     break
-                except:
+                except IOError:
                     is_vulnerable = False
                     stop = True
 
@@ -84,12 +84,12 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
 
             # If we receive no alert message check whether it is really is_vulnerable
             if is_vulnerable:
-                self._sock.send('\x15' + self.ssl_tokens[self._ssl_version] + b'\x00\x02\x01\x00')
+                self._sock.send(b'\x15' + self.ssl_tokens[self._ssl_version] + b'\x00\x02\x01\x00')
 
                 try:
                     if not self._srecv():
                         is_vulnerable = False
-                except:
+                except IOError:
                     is_vulnerable = False
 
         self._sock.close()
@@ -169,11 +169,11 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
     # Create a TLS record out of a protocol packet
     def make_record(self, t, body):
         l = struct.pack("!H", len(body))
-        return bytearray(t) + self.ssl_tokens[self._ssl_version] + l + body
+        return t + self.ssl_tokens[self._ssl_version] + l + body
 
     def make_hello(self):
         suites = b''.join(self.ssl3_cipher)
-        rand = bytearray(random.getrandbits(8) for _ in range(32))
+        rand = bytes(random.getrandbits(8) for _ in range(32))
         l = struct.pack("!L", 39+len(suites))[1:]  # 3 bytes
         sl = struct.pack("!H", len(suites))
 
@@ -181,18 +181,19 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         # Random data + session ID + cipher suites + compression suites
         data = b'\x01' + l + self.ssl_tokens[self._ssl_version] + rand + b'\x00'
         data += sl + suites + b'\x01\x00'
-
-        return self.make_record(22, data)
+        result = self.make_record(b'\x16', data)
+        return result
 
     def make_ccs(self):
-        ccsbody = "\x01"  # Empty CCS
-        return self.make_record(20, ccsbody)
+        ccsbody = b'\x01'  # Empty CCS
+        result =  self.make_record(b'\x14', ccsbody)
+        return result
 
     @staticmethod
     def parse_handshake_pkt(buf):
         r = []
         while len(buf) >= 4:
-            mt = ord(buf[0])
+            mt = buf[0]
             mlen = struct.unpack("!L", buf[0:4])[0] & 0xFFFFFF
 
             if mlen+4 > len(buf):
@@ -204,13 +205,13 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
 
     @staticmethod
     def parse_alert_pkt(buf):
-        return [{"level": ord(buf[0]), "desc": ord(buf[1])}]
+        return [{"level": buf[0], "desc": buf[1]}]
 
     def parse_records(self):
         r = []
         # 5 byte header
         while len(self._inbuffer) >= 5:
-            mtype = ord(self._inbuffer[0])
+            mtype = self._inbuffer[0]
             mtlsv = self._inbuffer[1:3]
             mlen = struct.unpack("!H", self._inbuffer[3:5])[0]
 

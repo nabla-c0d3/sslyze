@@ -6,6 +6,8 @@ import unittest
 
 import logging
 
+import pickle
+
 from sslyze.plugins.heartbleed_plugin import HeartbleedPlugin, HeartbleedScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -27,6 +29,9 @@ class HeartbleedPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
     def test_heartbleed_bad(self):
         try:
             with VulnerableOpenSslServer() as server:
@@ -44,4 +49,7 @@ class HeartbleedPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.is_vulnerable_to_heartbleed)
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 

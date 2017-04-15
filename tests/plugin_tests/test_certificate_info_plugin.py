@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 import os
 import unittest
 
+import pickle
+
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -62,6 +64,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
 
     def test_invalid_chain(self):
         server_info = ServerConnectivityInfo(hostname='self-signed.badssl.com')
@@ -88,6 +93,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
 
     def test_1000_sans_chain(self):
         # Ensure SSLyze can process a leaf cert with 1000 SANs
@@ -95,7 +103,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        plugin.process_task(server_info, CertificateInfoScanCommand())
 
 
     def test_sha1_chain(self):
@@ -125,6 +133,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
 
     def test_unicode_certificate(self):
         server_info = ServerConnectivityInfo(hostname='www.főgáz.hu')
@@ -137,6 +148,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
 
     def test_chain_with_anchor(self):
@@ -151,6 +165,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
 
     def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
         server_info = ServerConnectivityInfo(hostname='webmail.russia.nasa.gov')
@@ -163,6 +180,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
 
     def test_only_trusted_by_custom_ca_file(self):
@@ -178,3 +198,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))

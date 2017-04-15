@@ -4,8 +4,11 @@ from __future__ import unicode_literals
 
 from xml.etree.ElementTree import Element
 
+import pickle
+
 import cryptography
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import Encoding
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
@@ -175,8 +178,16 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
 
     COMMAND_TITLE = 'HTTP Security Headers'
 
-    def __init__(self, server_info, scan_command, raw_hsts_header, raw_hpkp_header, hpkp_report_only, cert_chain):
-        # type: (ServerConnectivityInfo, HttpHeadersScanCommand, Text, Text, bool, List[cryptography.x509.Certificate]) -> None
+    def __init__(
+            self,
+            server_info,        # type: ServerConnectivityInfo
+            scan_command,       # type: HttpHeadersScanCommand
+            raw_hsts_header,    # type: Text
+            raw_hpkp_header,    # type: Text
+            hpkp_report_only,   # type: bool
+            cert_chain          # type: List[cryptography.x509.Certificate]
+    ):
+        # type: (...) -> None
         super(HttpHeadersScanResult, self).__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
@@ -204,6 +215,20 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
             # Is a backup pin configured?
             self.is_backup_pin_configured = set(self.hpkp_header.pin_sha256_list) != set(server_pin_list)
 
+    def __getstate__(self):
+        # This object needs to be pick-able as it gets sent through multiprocessing.Queues
+        pickable_dict = self.__dict__.copy()
+        # Manually handle non-pickable entries
+        pem_verified_chain = [cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']]
+        pickable_dict['verified_certificate_chain'] = pem_verified_chain
+        return pickable_dict
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Manually restore non-pickable entries
+        verified_chain = [cryptography.x509.load_pem_x509_certificate(cert_pem, default_backend())
+                          for cert_pem in self.__dict__['verified_certificate_chain']]
+        self.__dict__['verified_certificate_chain'] = verified_chain
 
     PIN_TXT_FORMAT = '      {0:<50}{1}'.format
 
@@ -258,7 +283,6 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         txt_result.extend(computed_hpkp_pins_text)
 
         return txt_result
-
 
     def as_xml(self):
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)

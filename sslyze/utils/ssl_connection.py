@@ -184,11 +184,11 @@ class SSLConnection(DebugSslClient):
                 except (socket.error, IOError) as e:
                     # On Python 3.3+ socket.error == IOError but on Python 2.7 they are different
                     # We use the same except block so it works on all versions of Python
-                    # This block is meant to handle IOErrors
+                    # This section is meant to handle IOErrors
                     if 'Nassl SSL handshake failed' in str(e.args):
                         raise SSLHandshakeRejected('TLS / Unexpected EOF')
 
-                    # This block is meant to handle socket.errors
+                    # This section is meant to handle socket.errors
                     for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                         if error_msg in str(e.args):
                             raise SSLHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])

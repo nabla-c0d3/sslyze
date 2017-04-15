@@ -138,6 +138,8 @@ class OpenSslCipherSuitesPlugin(Plugin):
         # Scan for every available cipher suite
         thread_pool = ThreadPool()
         for cipher in cipher_list:
+            # Test for Travis
+            self._test_cipher_suite(server_connectivity_info, ssl_version, cipher)
             thread_pool.add_job((self._test_cipher_suite, (server_connectivity_info, ssl_version, cipher)))
 
         # Start processing the jobs; One thread per cipher

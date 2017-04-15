@@ -14,8 +14,8 @@ class ConsoleOutputGenerator(OutputGenerator):
 
     TITLE_FORMAT = ' {title}\n {underline}\n'
 
-    SERVER_OK_FORMAT = '   {host}:{port:<25} => {network_route} {client_auth_msg}'
-    SERVER_INVALID_FORMAT = '   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.'
+    SERVER_OK_FORMAT = '   {host}:{port:<25} => {network_route} {client_auth_msg}\n'
+    SERVER_INVALID_FORMAT = '   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.\n'
 
     SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}'
 

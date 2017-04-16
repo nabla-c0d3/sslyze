@@ -141,6 +141,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
             thread_pool.add_job((self._test_cipher_suite, (server_connectivity_info, ssl_version, cipher)))
 
         # Test for Travis
+        print('manual')
         self._test_cipher_suite(server_connectivity_info, ssl_version, cipher)
 
         # Start processing the jobs; One thread per cipher
@@ -200,6 +201,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
             cipher_result = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
 
         except Exception as e:
+            raise
             cipher_result = ErroredCipherSuite(openssl_cipher_name, ssl_version, e)
             
         finally:

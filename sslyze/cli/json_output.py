@@ -11,6 +11,7 @@ from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
 from sslyze.cli import FailedServerScan
 from sslyze.cli.output_generator import OutputGenerator
+from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.utils.python_compatibility import IS_PYTHON_2
 
 
@@ -75,7 +76,9 @@ class JsonOutputGenerator(OutputGenerator):
             result = obj.name
         elif isinstance(obj, cryptography.hazmat.backends.openssl.x509._Certificate):
             # Properly serialize certificates; only return the PEM string
-            result = {'as_pem': obj.public_bytes(Encoding.PEM).decode('ascii')}
+            result = {'as_pem': obj.public_bytes(Encoding.PEM).decode('ascii'),
+                      'hpkp_pin': CertificateUtils.get_hpkp_pin(obj),
+                      'subject_name': CertificateUtils.get_printable_name(obj.subject)}
         elif isinstance(obj, object):
             result = {}
             for key, value in obj.__dict__.items():

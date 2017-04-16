@@ -32,8 +32,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         # The embedded server does not have a preference
         self.assertFalse(plugin_result.preferred_cipher)
-        for error in plugin_result.errored_cipher_list:
-            print(error.error_message)
+
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
         self.assertEquals({'SSL_CK_RC4_128_EXPORT40_WITH_MD5', 'SSL_CK_IDEA_128_CBC_WITH_MD5',
                            'SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5', 'SSL_CK_DES_192_EDE3_CBC_WITH_MD5',

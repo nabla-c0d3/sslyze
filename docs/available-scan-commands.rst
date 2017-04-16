@@ -41,14 +41,9 @@ Additional helper classes
 
 .. autoclass:: PathValidationResult()
 .. autoclass:: PathValidationError()
-.. automodule:: sslyze.plugins.utils.certificate
-.. autoclass:: Certificate()
 .. automodule:: sslyze.plugins.utils.trust_store.trust_store
 .. autoclass:: TrustStore()
-.. module:: nassl.x509_certificate
-.. autoclass:: HostnameValidationResultEnum
-   :undoc-members:
-   :members:
+
 
 OpenSslCipherSuitesPlugin
 =========================

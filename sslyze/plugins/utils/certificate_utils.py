@@ -16,7 +16,7 @@ from typing import Text
 
 
 class CertificateUtils(object):
-    """Various utility methods for handling X509 certificates.
+    """Various utility methods for handling X509 certificates as parsed by the cryptography module.
     """
 
     @staticmethod
@@ -56,6 +56,8 @@ class CertificateUtils(object):
     @classmethod
     def get_printable_name(cls, name_field):
         # type: (cryptography.x509.Name) -> Text
+        """Convert a name field returned by the cryptography module to a string suitable for displaying it to the user.
+        """
         # Name_field is supposed to be a Subject or an Issuer; print the CN if there is one
         common_names = cls.get_common_names(name_field)
         if common_names:
@@ -68,7 +70,7 @@ class CertificateUtils(object):
     @staticmethod
     def get_hpkp_pin(certificate):
         # type: (cryptography.x509.Certificate) -> Text
-        """Generate the HTTP Public Key Pinning hash (RFC XXX) for the given certificate.
+        """Generate the HTTP Public Key Pinning hash (RFC 7469) for the given certificate.
         """
         pub_bytes = certificate.public_key().public_bytes(
             encoding=Encoding.DER,

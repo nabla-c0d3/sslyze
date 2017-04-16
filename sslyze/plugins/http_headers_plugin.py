@@ -172,8 +172,9 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         verified_certificate_chain (List[Certificate]): The verified certificate chain; index 0 is the leaf
             certificate and the last element is the anchor/CA certificate from the Mozilla trust store. Will be empty if
             validation failed or the verified chain could not be built. The HPKP pin for each certificate is available
-            in the certificate's hpkp_pin attribute. None if the verified chain could not be built.
-
+            in the certificate's hpkp_pin attribute. None if the verified chain could not be built. Each certificate is 
+            parsed using the cryptography module; documentation is available at 
+            https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
     """
 
     COMMAND_TITLE = 'HTTP Security Headers'

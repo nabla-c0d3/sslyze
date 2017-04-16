@@ -118,6 +118,9 @@ class CertificateInfoPlugin(plugin_base.Plugin):
                 raise ValueError('Could not open supplied CA file at "{}"'.format(scan_command.custom_ca_file))
             final_trust_store_list.append(TrustStore(scan_command.custom_ca_file, 'Custom --ca_file', 'N/A'))
 
+        # Workaround for https://github.com/pyca/cryptography/issues/3495
+        default_backend()
+
         thread_pool = ThreadPool()
         for trust_store in final_trust_store_list:
             # Try to connect with each trust store

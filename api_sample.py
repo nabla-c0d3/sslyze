@@ -6,15 +6,18 @@ from __future__ import unicode_literals
 # Add ./lib to the path for importing nassl
 import os
 import sys
+
+
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 
 from sslyze.concurrent_scanner import ConcurrentScanner, PluginRaisedExceptionScanResult
+from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.synchronous_scanner import SynchronousScanner
-from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv10ScanCommand, Sslv30ScanCommand
+from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv10ScanCommand, Tlsv12ScanCommand
 
 if __name__ == '__main__':
     # Setup the server to scan and ensure it is online/reachable
@@ -42,7 +45,7 @@ if __name__ == '__main__':
 
     # Queue some scan commands
     print('\nQueuing some commands...')
-    concurrent_scanner.queue_scan_command(server_info, Sslv30ScanCommand())
+    concurrent_scanner.queue_scan_command(server_info, Tlsv12ScanCommand())
     concurrent_scanner.queue_scan_command(server_info, SessionRenegotiationScanCommand())
     concurrent_scanner.queue_scan_command(server_info, CertificateInfoScanCommand())
 
@@ -60,9 +63,9 @@ if __name__ == '__main__':
 
         # Each scan result has attributes with the information yo're looking for, specific to each scan command
         # All these attributes are documented within each scan command's module
-        if isinstance(scan_result.scan_command, Sslv30ScanCommand):
+        if isinstance(scan_result.scan_command, Tlsv12ScanCommand):
             # Do something with the result
-            print('SSLV3 cipher suites')
+            print('TLS 1.2 cipher suites')
             for cipher in scan_result.accepted_cipher_list:
                 print('    {}'.format(cipher.name))
 
@@ -72,9 +75,10 @@ if __name__ == '__main__':
             print('Secure renegotiation: {}'.format(scan_result.supports_secure_renegotiation))
 
         elif isinstance(scan_result.scan_command, CertificateInfoScanCommand):
-            print('Server Certificate CN: {}'.format(
-                scan_result.certificate_chain[0].as_dict['subject']['commonName']
-            ))
+            # Print the Common Names within the certificate chain
+            cns_in_certificate_chain = [CertificateUtils.get_printable_name(cert.subject)
+                                        for cert in scan_result.verified_certificate_chain]
+            print('Certificate Chain CNn: {}'.format(cns_in_certificate_chain))
 
 
     # All the scan command results also always expose two APIs

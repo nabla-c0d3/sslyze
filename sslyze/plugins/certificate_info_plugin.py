@@ -166,7 +166,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
     def process_task(self, server_info, scan_command):
         certificate_info = self.get_certificate_info(server_info, scan_command)
-        return CertificateInfoScanResult(server_info, scan_command, certificate_info)
+        return CertificateInfoScanResult(server_info, scan_command, [certificate_info, ])
 
 
     @staticmethod
@@ -372,7 +372,6 @@ class CertificateInfoScanResult(PluginScanResult):
     Attributes:
     """
 
-    COMMAND_TITLE = 'Certificate Basic Information'
     TRUST_FORMAT = '{store_name} CA Store ({store_version}):'
     NO_VERIFIED_CHAIN_ERROR_TXT = 'ERROR - Could not build verified chain (certificate untrusted?)'
 
@@ -380,28 +379,32 @@ class CertificateInfoScanResult(PluginScanResult):
             self,
             server_info,                    # type: ServerConnectivityInfo
             scan_command,                   # type: CertificateInfoScanCommand
-            certificate_info                # type: CertificateInfo
+            certificate_infos               # type: List[CertificateInfo]
             ):
         # type: (...) -> None
         super(CertificateInfoScanResult, self).__init__(server_info, scan_command)
 
-        self.certificate_info = certificate_info
+        self.certificate_infos = certificate_infos
+
+    CERT_INFO_BASIC_TITLE = 'Certificate Basic Information'
+    CERT_INFO_SECTION_TITLE_FORMAT = '    {section_title:<32} '
+    CERT_INFO_STORE_SECTION_FORMAT = '{store_name} CA Store ({store_version}):'
 
     def as_text(self):
         text_output = []
-        text_output.extend(self._get_cert_info_as_text(self.certificate_info))
+        for cert_info in self.certificate_infos:
+            text_output.extend(self._get_cert_info_as_text(cert_info))
         return text_output
 
     def _get_cert_info_as_text(self, cert_info):
-        text_output = [self._format_title(self.scan_command.get_title())]
-        text_output.append(self._format_subtitle('Content'))
-        text_output = [self._format_title(self.COMMAND_TITLE)]
+        text_output = [self._format_title(self.CERT_INFO_BASIC_TITLE.format())]
 
         # Basic info
+        text_output.append(self.CERT_INFO_SECTION_TITLE_FORMAT.format(section_title='Certificate - Content:'))
         text_output.extend(self._get_basic_certificate_text(cert_info))
 
         # Trust section
-        text_output.extend(['', self._format_subtitle('Trust')])
+        text_output.append(self.CERT_INFO_SECTION_TITLE_FORMAT.format(section_title='Certificate - Trust:'))
 
         # Hostname validation
         server_name_indication = self.server_info.tls_server_name_indication
@@ -426,16 +429,16 @@ class CertificateInfoScanResult(PluginScanResult):
                 path_txt = 'FAILED - Certificate is NOT Trusted: {}'.format(path_result.verify_string)
 
             text_output.append(self._format_field(
-                self.TRUST_FORMAT.format(store_name=path_result.trust_store.name,
-                                         store_version=path_result.trust_store.version),
+                self.CERT_INFO_STORE_SECTION_FORMAT.format(store_name=path_result.trust_store.name,
+                                                           store_version=path_result.trust_store.version),
                 path_txt))
 
         # Path validation that ran into errors
         for path_error in cert_info.path_validation_error_list:
             error_txt = 'ERROR: {}'.format(path_error.error_message)
             text_output.append(self._format_field(
-                self.TRUST_FORMAT.format(store_name=path_result.trust_store.name,
-                                         store_version=path_result.trust_store.version),
+                self.CERT_INFO_STORE_SECTION_FORMAT.format(store_name=path_result.trust_store.name,
+                                                           store_version=path_result.trust_store.version),
                 error_txt))
 
         # Print the Common Names within the certificate chain
@@ -491,7 +494,7 @@ class CertificateInfoScanResult(PluginScanResult):
         text_output.append(self._format_field('Certificate Transparency:', sct_txt))
 
         # OCSP stapling
-        text_output.extend(['', self._format_subtitle('OCSP Stapling')])
+        text_output.append(self.CERT_INFO_SECTION_TITLE_FORMAT.format(section_title='Certificate - OCSP Stapling:'))
 
         if cert_info.ocsp_response is None:
             text_output.append(self._format_field('', 'NOT SUPPORTED - Server did not send back an OCSP response'))
@@ -589,8 +592,9 @@ class CertificateInfoScanResult(PluginScanResult):
         return cert_xml_list
 
     def as_xml(self):
-        xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-        xml_output.append(self._get_cert_info_as_xml(self.certificate_info))
+        xml_output = Element(self.scan_command.get_cli_argument(), title=self.CERT_INFO_BASIC_TITLE)
+        for cert_info in self.certificate_infos:
+            xml_output.append(self._get_cert_info_as_xml(cert_info))
         return xml_output
 
     def _get_cert_info_as_xml(self, cert_info):

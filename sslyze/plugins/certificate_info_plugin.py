@@ -118,7 +118,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         )
         return options
 
-    def get_certificate_info(self, server_info, scan_command, ssl_version=None, cipher_list=None):
+    def get_certificate_info(self, server_info, scan_command, ssl_version=None, cipher_list=None, set_server_name_indication=True):
         # type: (ServerConnectivityInfo, CertificateInfoScanCommand) -> CertificateInfoScanResult
         final_trust_store_list = list(TrustStoresRepository.get_all())
         if scan_command.custom_ca_file:
@@ -132,7 +132,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         thread_pool = ThreadPool()
         for trust_store in final_trust_store_list:
             # Try to connect with each trust store
-            thread_pool.add_job((self._get_and_verify_certificate_chain, (server_info, trust_store, ssl_version, cipher_list)))
+            thread_pool.add_job((self._get_and_verify_certificate_chain, (server_info, trust_store, ssl_version, cipher_list, set_server_name_indication)))
 
         # Start processing the jobs; one thread per trust
         thread_pool.start(len(final_trust_store_list))
@@ -144,7 +144,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         ocsp_response = None
 
         for (job, result) in thread_pool.get_result():
-            (_, (_, trust_store, _, _)) = job
+            (_, (_, trust_store, _, _, _)) = job
             certificate_chain, validation_result, ocsp_response = result
             # Store the returned verify string for each trust store
             path_validation_result_list.append(PathValidationResult(trust_store, validation_result))
@@ -152,7 +152,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         # Store thread pool errors
         last_exception = None
         for (job, exception) in thread_pool.get_error():
-            (_, (_, trust_store, _, _)) = job
+            (_, (_, trust_store, _, _, _)) = job
             path_validation_error_list.append(PathValidationError(trust_store, exception))
             last_exception = exception
 
@@ -187,6 +187,13 @@ class CertificateInfoPlugin(plugin_base.Plugin):
                     except SSLHandshakeRejected:
                         break
 
+                    try:
+                        cert_info = self.get_certificate_info(server_info, scan_command, ssl_version=ssl_version, cipher_list=cipher_list, set_server_name_indication=False)
+                        if cert_info not in certificate_infos:
+                            certificate_infos.append(cert_info)
+                    except SSLHandshakeRejected as e:
+                        pass
+               
                     public_key = cert_info.certificate_chain[0].public_key()
                     if isinstance(public_key, EllipticCurvePublicKey):
                         cipher_list += ':!aECDSA'
@@ -200,12 +207,12 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         return CertificateInfoScanResult(server_info, scan_command, certificate_infos, certificate_infos[0])
 
     @staticmethod
-    def _get_and_verify_certificate_chain(server_info, trust_store, ssl_version, cipher_list):
+    def _get_and_verify_certificate_chain(server_info, trust_store, ssl_version, cipher_list, set_server_name_indication):
         # type: (ServerConnectivityInfo, TrustStore) -> Tuple[List[cryptography.x509.Certificate], Text, Optional[OcspResponse]]
         """Connects to the target server and uses the supplied trust store to validate the server's certificate.
         Returns the server's certificate and OCSP response.
         """
-        ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version, ssl_verify_locations=trust_store.path, override_cipher_list=cipher_list)
+        ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version, ssl_verify_locations=trust_store.path, override_cipher_list=cipher_list, set_server_name_indication=set_server_name_indication)
 
         # Enable OCSP stapling
         ssl_connection.ssl_client.set_tlsext_status_ocsp()

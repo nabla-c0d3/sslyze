@@ -12,6 +12,11 @@ from nassl.ocsp_response import OcspResponseStatusEnum
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
+from cryptography.hazmat.primitives.hashes import SHA1
+from cryptography.x509.oid import NameOID
+
 
 class CertificateInfoPluginTestCase(SslyzeTestCase):
 
@@ -281,3 +286,46 @@ class CertificateInfoPluginTestCase(SslyzeTestCase):
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
+
+    def test_multiple_certificates(self):
+        server_info = ServerConnectivityInfo(hostname='www.cloudflare.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
+
+        self.assertIsInstance(default_certificate.certificate_chain[0].public_key(), EllipticCurvePublicKey)
+
+        rsa_certificates = [
+            certificate_info
+            for certificate_info in plugin_result.certificate_infos
+            if isinstance(certificate_info.certificate_chain[0].public_key(), RSAPublicKey)
+        ]
+        self.assertEqual(len(rsa_certificates), 2)
+
+        compatibility_certificates = [
+            certificate_info
+            for certificate_info in rsa_certificates
+            if isinstance(certificate_info.certificate_chain[0].signature_hash_algorithm, SHA1)
+        ]
+        self.assertEqual(len(compatibility_certificates), 1)
+
+        server_info = ServerConnectivityInfo(hostname='docs.google.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
+
+        self.assertIsInstance(default_certificate.certificate_chain[0].public_key(), EllipticCurvePublicKey)
+
+        rsa_certificates = [
+            certificate_info
+            for certificate_info in plugin_result.certificate_infos
+            if isinstance(certificate_info.certificate_chain[0].public_key(), RSAPublicKey)
+        ]
+        self.assertEqual(len(rsa_certificates), 1)
+
+        compatibility_certificate = rsa_certificates[0].certificate_chain[0]
+        self.assertEqual(compatibility_certificate.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value, '*.google.com')

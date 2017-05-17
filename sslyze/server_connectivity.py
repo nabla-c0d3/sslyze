@@ -274,6 +274,7 @@ class ServerConnectivityInfo(object):
             should_ignore_client_auth=None, # type: Optional[bool]
             should_use_legacy_openssl=None, # type: Optional[bool]
             override_cipher_list=None,      # type: Optional[str]
+            set_server_name_indication=True # type: Optional[bool]
     ):
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
 
@@ -326,7 +327,7 @@ class ServerConnectivityInfo(object):
                                                          self.http_tunneling_settings.basic_auth_password)
 
         # Add Server Name Indication
-        if ssl_version != OpenSslVersionEnum.SSLV2:
+        if ssl_version != OpenSslVersionEnum.SSLV2 and set_server_name_indication:
             ssl_connection.ssl_client.set_tlsext_host_name(self.tls_server_name_indication)
 
         if self.ssl_ciphers_supported.get(ssl_version, None):

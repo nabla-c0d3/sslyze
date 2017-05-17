@@ -23,7 +23,7 @@ class ProtocolsTestCase(SslyzeTestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_infos[0].certificate_chain), 1)
+        self.assertGreaterEqual(len(plugin_result.default_certificate.certificate_chain), 1)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -52,7 +52,7 @@ class ProtocolsTestCase(SslyzeTestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_infos[0].certificate_chain), 1)
+        self.assertGreaterEqual(len(plugin_result.default_certificate.certificate_chain), 1)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -64,7 +64,7 @@ class ProtocolsTestCase(SslyzeTestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_infos[0].certificate_chain), 1)
+        self.assertGreaterEqual(len(plugin_result.default_certificate.certificate_chain), 1)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -77,15 +77,16 @@ class ProtocolsTestCase(SslyzeTestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertGreaterEqual(len(plugin_result.certificate_infos[0].certificate_chain), 1)
+        self.assertGreaterEqual(len(default_certificate.certificate_chain), 1)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
     def test_starttls(self):
         for hostname, protocol in [
-            ('imap.comcast.net', TlsWrappedProtocolEnum.STARTTLS_IMAP),
+            ('arclab.net', TlsWrappedProtocolEnum.STARTTLS_IMAP),
             ('pop.comcast.net', TlsWrappedProtocolEnum.STARTTLS_POP3),
             ('ldap.uchicago.edu', TlsWrappedProtocolEnum.STARTTLS_LDAP),
             ('jabber.org', TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER),

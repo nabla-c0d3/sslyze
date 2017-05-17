@@ -18,9 +18,11 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
+from cryptography.hazmat.primitives.asymmetric.dsa import DSAPublicKey
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from nassl.ocsp_response import OcspResponse, OcspResponseStatusEnum
 from nassl.ocsp_response import OcspResponseNotTrustedError
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
@@ -29,6 +31,7 @@ from sslyze.plugins.utils.trust_store.trust_store import InvalidCertificateChain
 from sslyze.plugins.utils.trust_store.trust_store import AnchorCertificateNotInTrustStoreError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.utils.ssl_connection import SSLHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
 from typing import List
 from typing import Optional
@@ -115,7 +118,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         )
         return options
 
-    def get_certificate_info(self, server_info, scan_command):
+    def get_certificate_info(self, server_info, scan_command, ssl_version=None, cipher_list=None):
         # type: (ServerConnectivityInfo, CertificateInfoScanCommand) -> CertificateInfoScanResult
         final_trust_store_list = list(TrustStoresRepository.get_all())
         if scan_command.custom_ca_file:
@@ -129,7 +132,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         thread_pool = ThreadPool()
         for trust_store in final_trust_store_list:
             # Try to connect with each trust store
-            thread_pool.add_job((self._get_and_verify_certificate_chain, (server_info, trust_store)))
+            thread_pool.add_job((self._get_and_verify_certificate_chain, (server_info, trust_store, ssl_version, cipher_list)))
 
         # Start processing the jobs; one thread per trust
         thread_pool.start(len(final_trust_store_list))
@@ -141,7 +144,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         ocsp_response = None
 
         for (job, result) in thread_pool.get_result():
-            (_, (_, trust_store)) = job
+            (_, (_, trust_store, _, _)) = job
             certificate_chain, validation_result, ocsp_response = result
             # Store the returned verify string for each trust store
             path_validation_result_list.append(PathValidationResult(trust_store, validation_result))
@@ -149,7 +152,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         # Store thread pool errors
         last_exception = None
         for (job, exception) in thread_pool.get_error():
-            (_, (_, trust_store)) = job
+            (_, (_, trust_store, _, _)) = job
             path_validation_error_list.append(PathValidationError(trust_store, exception))
             last_exception = exception
 
@@ -165,17 +168,44 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         return certificate_info
 
     def process_task(self, server_info, scan_command):
-        certificate_info = self.get_certificate_info(server_info, scan_command)
-        return CertificateInfoScanResult(server_info, scan_command, [certificate_info, ])
+        certificate_infos = []
+        for ssl_version in server_info.ssl_versions_supported:
+            if ssl_version == OpenSslVersionEnum.TLSV1_3:
+                try:
+                    cert_info = self.get_certificate_info(server_info, scan_command, ssl_version=ssl_version)
+                    if cert_info not in certificate_infos:
+                        certificate_infos.append(cert_info)
+                except SSLHandshakeRejected:
+                    pass
+            else:
+                cipher_list = 'ALL:COMPLEMENTOFALL:-aNULL:-PSK:-SRP'
+                while True:
+                    try:
+                        cert_info = self.get_certificate_info(server_info, scan_command, ssl_version=ssl_version, cipher_list=cipher_list)
+                        if cert_info not in certificate_infos:
+                            certificate_infos.append(cert_info)
+                    except SSLHandshakeRejected:
+                        break
 
+                    public_key = cert_info.certificate_chain[0].public_key()
+                    if isinstance(public_key, EllipticCurvePublicKey):
+                        cipher_list += ':!aECDSA'
+                    elif isinstance(public_key, RSAPublicKey):
+                        cipher_list += ':!aRSA'
+                    elif isinstance(public_key, DSAPublicKey):
+                        cipher_list += ':!aDSA'
+                    else:
+                        raise KeyError
+
+        return CertificateInfoScanResult(server_info, scan_command, certificate_infos, certificate_infos[0])
 
     @staticmethod
-    def _get_and_verify_certificate_chain(server_info, trust_store):
+    def _get_and_verify_certificate_chain(server_info, trust_store, ssl_version, cipher_list):
         # type: (ServerConnectivityInfo, TrustStore) -> Tuple[List[cryptography.x509.Certificate], Text, Optional[OcspResponse]]
         """Connects to the target server and uses the supplied trust store to validate the server's certificate.
         Returns the server's certificate and OCSP response.
         """
-        ssl_connection = server_info.get_preconfigured_ssl_connection(ssl_verify_locations=trust_store.path)
+        ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version, ssl_verify_locations=trust_store.path, override_cipher_list=cipher_list)
 
         # Enable OCSP stapling
         ssl_connection.ssl_client.set_tlsext_status_ocsp()
@@ -379,12 +409,14 @@ class CertificateInfoScanResult(PluginScanResult):
             self,
             server_info,                    # type: ServerConnectivityInfo
             scan_command,                   # type: CertificateInfoScanCommand
-            certificate_infos               # type: List[CertificateInfo]
+            certificate_infos,              # type: List[CertificateInfo]
+            default_certificate             # type: CertificateInfo
             ):
         # type: (...) -> None
         super(CertificateInfoScanResult, self).__init__(server_info, scan_command)
 
         self.certificate_infos = certificate_infos
+        self.default_certificate = default_certificate
 
     CERT_INFO_BASIC_TITLE = 'Certificate Basic Information'
     CERT_INFO_SECTION_TITLE_FORMAT = '    {section_title:<32} '

@@ -62,8 +62,9 @@ class HttpsTunnelTestCase(SslyzeTestCase):
 
             plugin = CertificateInfoPlugin()
             plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+            default_certificate = plugin_result.default_certificate
 
-            self.assertGreaterEqual(len(plugin_result.certificate_infos[0].certificate_chain), 1)
+            self.assertGreaterEqual(len(default_certificate.certificate_chain), 1)
 
             self.assertTrue(plugin_result.as_text())
             self.assertTrue(plugin_result.as_xml())

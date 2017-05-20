@@ -153,6 +153,22 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
 
+    def test_ecdsa_certificate(self):
+        server_info = ServerConnectivityInfo(hostname='www.cloudflare.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+
+        self.assertTrue(plugin_result.certificate_chain)
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
+
     def test_chain_with_anchor(self):
         server_info = ServerConnectivityInfo(hostname='www.verizon.com')
         server_info.test_connectivity_to_server()

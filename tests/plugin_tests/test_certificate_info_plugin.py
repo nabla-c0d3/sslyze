@@ -138,7 +138,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_unicode_certificate(self):
-        server_info = ServerConnectivityInfo(hostname='www.főgáz.hu')
+        server_info = ServerConnectivityInfo(hostname='เพย์สบาย.th')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()

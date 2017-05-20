@@ -16,6 +16,7 @@ import cryptography
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from nassl.ocsp_response import OcspResponse
 from nassl.ocsp_response import OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
@@ -573,14 +574,14 @@ class CertificateInfoScanResult(PluginScanResult):
             self._format_field('Not Before:', certificate.not_valid_before),
             self._format_field('Not After:', certificate.not_valid_after),
             self._format_field('Signature Algorithm:', certificate.signature_hash_algorithm.name),
-            self._format_field('Public Key Algorithm:', public_key.__class__.__name__),
-            self._format_field('Key Size:', public_key.key_size)]
+            self._format_field('Public Key Algorithm:', public_key.__class__.__name__)]
 
-        try:
-            # Print the Public key exponent if there's one; EC public keys don't have one for example
+        if isinstance(public_key, EllipticCurvePublicKey):
+            text_output.append(self._format_field('Key Size:', public_key.curve.key_size))
+            text_output.append(self._format_field('Curve:', public_key.curve.name))
+        else:
+            text_output.append(self._format_field('Key Size:', public_key.key_size))
             text_output.append(self._format_field('Exponent:', '{0} (0x{0:x})'.format(public_key.public_numbers().e)))
-        except KeyError:
-            pass
 
         try:
             # Print the SAN extension if there's one

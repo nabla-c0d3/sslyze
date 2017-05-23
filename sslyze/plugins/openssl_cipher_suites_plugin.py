@@ -7,8 +7,16 @@ from abc import ABCMeta
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
+import cryptography
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
+from cryptography.hazmat.primitives.asymmetric.dsa import DSAPublicKey
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
+
 from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
+
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -320,15 +328,24 @@ class CipherSuite(object):
         # type: (Text, OpenSslVersionEnum) -> None
         self.openssl_name = openssl_name
         self.ssl_version = ssl_version
-        self.is_anonymous = True if 'anon' in self.name else False
+        self.is_anonymous = self.is_anonymous(ssl_version, openssl_name)
 
     @property
     def name(self):
         # type: () -> Text
+        return self.get_rfc_name_from_openssl_name(self.ssl_version, self.openssl_name)
+
+    @staticmethod
+    def get_rfc_name_from_openssl_name(ssl_version, openssl_name):
         """OpenSSL uses a different naming convention than the corresponding RFCs.
         """
 
-        return OPENSSL_TO_RFC_NAMES_MAPPING[self.ssl_version].get(self.openssl_name, self.openssl_name)
+        return OPENSSL_TO_RFC_NAMES_MAPPING[ssl_version].get(openssl_name, openssl_name)
+
+    @staticmethod
+    def is_anonymous(ssl_version, openssl_name):
+        name = CipherSuite.get_rfc_name_from_openssl_name(ssl_version, openssl_name)
+        return True if 'anon' in name else False
 
 
 class AcceptedCipherSuite(CipherSuite):
@@ -346,10 +363,11 @@ class AcceptedCipherSuite(CipherSuite):
             request, based on the TlsWrappedProtocolEnum set for this server. For example, this will contain an HTTP
             response when scanning an HTTPS server with TlsWrappedProtocolEnum.HTTPS as the tls_wrapped_protocol.
     """
-    def __init__(self, openssl_name, ssl_version, key_size, dh_info=None, post_handshake_response=None):
+    def __init__(self, openssl_name, ssl_version, key_size, dh_info=None, post_handshake_response=None, auth_info=None):
         # type: (Text, OpenSslVersionEnum, int, Optional[Dict], Optional[Text]) -> None
         super(AcceptedCipherSuite, self).__init__(openssl_name, ssl_version)
         self.key_size = key_size
+        self.auth_info = auth_info
         self.dh_info = dh_info
         self.post_handshake_response = post_handshake_response
         if IS_PYTHON_2:
@@ -370,8 +388,27 @@ class AcceptedCipherSuite(CipherSuite):
             elif 'DH' in picked_cipher_name:
                 dh_infos = ssl_connection.ssl_client.get_dh_param()
 
+        if not CipherSuite.is_anonymous(ssl_version, picked_cipher_name):
+            x509_cert = ssl_connection.ssl_client.get_peer_certificate()
+            certificate = cryptography.x509.load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'),
+                                                                      backend=default_backend())
+            if isinstance(certificate.public_key(), EllipticCurvePublicKey):
+                auth_key_size = certificate.public_key().curve.key_size
+                auth_type = 'EC'
+            else:
+                auth_key_size = certificate.public_key().key_size
+                if isinstance(certificate.public_key(), RSAPublicKey):
+                    auth_type = 'RSA'
+                elif isinstance(certificate.public_key(), DSAPublicKey):
+                    auth_type = 'DSA'
+                else:
+                    raise ValueError('Unsupported certificate public key type')
+            auth_info = { 'Type': auth_type, 'KeySize': int(auth_key_size) }
+        else:
+            auth_info = None
+
         status_msg = ssl_connection.post_handshake_check()
-        return AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, dh_infos, status_msg)
+        return AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, dh_infos, status_msg, auth_info=auth_info)
 
 
 class RejectedCipherSuite(CipherSuite):
@@ -501,11 +538,13 @@ class CipherSuiteScanResult(PluginScanResult):
                                      'anonymous': str(cipher.is_anonymous)})
         if cipher.dh_info:
             cipher_xml.append(Element('keyExchange', attrib=cipher.dh_info))
+        if cipher.auth_info:
+            cipher_xml.append(Element('authentication', attrib=cipher.auth_info))
 
         return cipher_xml
 
 
-    ACCEPTED_CIPHER_LINE_FORMAT = '        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {status:<60}'
+    ACCEPTED_CIPHER_LINE_FORMAT = '        {cipher_name:<50}{dh_size:<15}{auth_key_size:<15}{key_size:<10}    {status:<60}'
     REJECTED_CIPHER_LINE_FORMAT = '        {cipher_name:<50}{error_message:<60}'
 
     def as_text(self):
@@ -556,9 +595,13 @@ class CipherSuiteScanResult(PluginScanResult):
         if cipher.is_anonymous:
             # Always display ANON as the key size for anonymous ciphers to make it visible
             keysize_str = 'ANONYMOUS'
+            auth_txt = 'ANONYMOUS'
+        else:
+            auth_txt = '{}-{} bits'.format(cipher.auth_info['Type'], cipher.auth_info['KeySize'])
 
         dh_txt = "{}-{} bits".format(cipher.dh_info["Type"], cipher.dh_info["GroupSize"]) if cipher.dh_info else '-'
         cipher_line_txt = self.ACCEPTED_CIPHER_LINE_FORMAT.format(cipher_name=cipher.name, dh_size=dh_txt,
+                                                                  auth_key_size=auth_txt,
                                                                   key_size=keysize_str,
                                                                   status=cipher.post_handshake_response)
         return cipher_line_txt

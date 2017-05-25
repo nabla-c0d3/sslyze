@@ -36,8 +36,7 @@
     <xs:element name="target">
         <xs:complexType>
             <xs:all>
-                <xs:element minOccurs="0" ref="certinfo_full"/>
-                <xs:element minOccurs="0" ref="certinfo_basic"/>
+                <xs:element minOccurs="0" ref="certinfo"/>
                 <xs:element minOccurs="0" ref="compression"/>
                 <xs:element minOccurs="0" ref="heartbleed"/>
                 <xs:element minOccurs="0" ref="http_headers"/>
@@ -88,18 +87,7 @@
             <xs:attribute name="isVulnerable" use="required"/>
         </xs:complexType>
     </xs:element>
-    <xs:element name="certinfo_full">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="receivedCertificateChain"/>
-                <xs:element ref="certificateValidation"/>
-                <xs:element ref="ocspStapling"/>
-            </xs:sequence>
-            <xs:attribute name="title"/>
-            <xs:attribute name="exception"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="certinfo_basic">
+    <xs:element name="certinfo">
         <xs:complexType>
             <xs:sequence>
                 <xs:element ref="receivedCertificateChain"/>

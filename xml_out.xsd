@@ -430,7 +430,6 @@
             <xs:attribute name="Prime"/>
             <xs:attribute name="Seed"/>
             <xs:attribute name="Type" use="required"/>
-            <xs:attribute name="prime"/>
         </xs:complexType>
     </xs:element>
 </xs:schema>

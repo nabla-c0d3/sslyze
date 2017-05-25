@@ -119,7 +119,7 @@
             <xs:attribute name="containsAnchorCertificate"/>
         </xs:complexType>
     </xs:element>
-        <xs:element name="verifiedCertificateChain">
+    <xs:element name="verifiedCertificateChain">
         <xs:complexType>
             <xs:sequence>
                 <xs:element maxOccurs="unbounded" ref="certificate"/>
@@ -222,7 +222,7 @@
             <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
-        <xs:element name="httpPublicKeyPinning">
+    <xs:element name="httpPublicKeyPinning">
         <xs:complexType>
             <xs:sequence>
                 <xs:element minOccurs="0" maxOccurs="unbounded" ref="pinSha256"/>

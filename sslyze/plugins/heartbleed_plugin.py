@@ -127,23 +127,24 @@ def do_handshake_with_heartbleed(self):
     # Send the payload
     self._sock.send(payload)
 
+    # TODO(AD): This will still sometimes fail with google.com
     # Retrieve the server's response - directly read the underlying network socket
     # Retrieve data until we get to the ServerHelloDone
     # The server may send back a ServerHello, an Alert or a CertificateRequest first
     did_receive_hello_done = False
     remaining_bytes = b''
     while not did_receive_hello_done:
-        raw_ssl_bytes = remaining_bytes + self._sock.recv(16381)
-        if not raw_ssl_bytes:
-            # No data?
-            break
-
         try:
-            tls_record, len_consumed = TlsRecord.from_bytes(raw_ssl_bytes)
-            remaining_bytes = raw_ssl_bytes[len_consumed::]
+            tls_record, len_consumed = TlsRecord.from_bytes(remaining_bytes)
+            remaining_bytes = remaining_bytes[len_consumed::]
         except NotEnoughData:
             # Try to get more data
-            remaining_bytes = raw_ssl_bytes
+            raw_ssl_bytes = self._sock.recv(16381)
+            if not raw_ssl_bytes:
+                # No data?
+                break
+
+            remaining_bytes = remaining_bytes + raw_ssl_bytes
             continue
 
         if isinstance(tls_record, TlsServerHelloDoneRecord):
@@ -164,7 +165,12 @@ def do_handshake_with_heartbleed(self):
             # Server replied with our hearbeat payload
             is_vulnerable_to_heartbleed = True
         else:
-            raw_ssl_bytes = self._sock.recv(16381)
+            try:
+                raw_ssl_bytes = self._sock.recv(16381)
+            except socket.error:
+                # Server closed the connection after receiving the heartbleed payload
+                raise NotVulnerableToHeartbleed()
+
             if expected_heartbleed_payload in raw_ssl_bytes:
                 # Server replied with our hearbeat payload
                 is_vulnerable_to_heartbleed = True

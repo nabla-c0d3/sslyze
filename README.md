@@ -4,7 +4,7 @@ SSLyze
 [![Build Status](https://travis-ci.org/nabla-c0d3/sslyze.svg?branch=master)](https://travis-ci.org/nabla-c0d3/sslyze)
 [![PyPI version](https://badge.fury.io/py/SSLyze.svg)](https://badge.fury.io/py/SSLyze)
 
-Fast and powerful SSL/TLS server scanning library for Python 2.7 and 3.6.
+Fast and powerful SSL/TLS server scanning library for Python 2.7 and 3.3+.
 
 
 Description
@@ -31,6 +31,7 @@ Getting started
 
 SSLyze can be installed directly via pip:
 
+    pip install --upgrade setuptools
     pip install sslyze
     sslyze --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
 

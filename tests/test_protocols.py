@@ -105,13 +105,12 @@ class ProtocolsTestCase(unittest.TestCase):
 
 
     def test_optional_client_authentication(self):
-        for hostname in ['auth.startssl.com', 'xnet-eu.intellij.net']:
-            server_info = ServerConnectivityInfo(hostname=hostname)
-            server_info.test_connectivity_to_server()
-            self.assertEquals(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
+        server_info = ServerConnectivityInfo(hostname='xnet-eu.intellij.net')
+        server_info.test_connectivity_to_server()
+        self.assertEquals(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
 
-            plugin = CertificateInfoPlugin()
-            plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-            self.assertTrue(plugin_result.as_text())
-            self.assertTrue(plugin_result.as_xml())
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())

@@ -48,15 +48,23 @@ class HeartbleedPlugin(plugin_base.Plugin):
         except HeartbleedSent:
             # Awful hack #2: directly read the underlying network socket
             # Retrieve data until we get to the ServerHelloDone
+            # TODO(AD): Remove this as it also ignores --timeout and --max_retries options
             raw_ssl_bytes = b''
-            while b'\x0e\x00\x00\x00' not in raw_ssl_bytes:
+            did_receive_hello_done = False
+            while not did_receive_hello_done:
                 raw_ssl_bytes = ssl_connection._sock.recv(16381)
+                if not raw_ssl_bytes:
+                    # Most likely received a TLS alert
+                    break
+                if b'\x0e\x00\x00\x00' in raw_ssl_bytes:
+                    did_receive_hello_done = True
 
-            heartbleed_payload = b'\x01\x01\x01\x01\x01\x01\x01\x01\x01'
-            raw_ssl_bytes = ssl_connection._sock.recv(16381)
-            if heartbleed_payload in raw_ssl_bytes:
-                # Server replied with our hearbeat payload
-                is_vulnerable_to_heartbleed = True
+            if did_receive_hello_done:
+                heartbleed_payload = b'\x01\x01\x01\x01\x01\x01\x01\x01\x01'
+                raw_ssl_bytes = ssl_connection._sock.recv(16381)
+                if heartbleed_payload in raw_ssl_bytes:
+                    # Server replied with our hearbeat payload
+                    is_vulnerable_to_heartbleed = True
         finally:
             ssl_connection.close()
 

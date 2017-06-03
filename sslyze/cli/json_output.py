@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 import json
 
-import cryptography
+from cryptography.hazmat.backends.openssl import x509
 from cryptography.hazmat.primitives.serialization import Encoding
 from enum import Enum
 from sslyze import PROJECT_URL, __version__
@@ -74,7 +74,7 @@ class JsonOutputGenerator(OutputGenerator):
         if isinstance(obj, Enum):
             # Properly serialize Enums (such as OpenSslVersionEnum)
             result = obj.name
-        elif isinstance(obj, cryptography.hazmat.backends.openssl.x509._Certificate):
+        elif isinstance(obj, x509._Certificate):
             # Properly serialize certificates; only return the PEM string
             result = {'as_pem': obj.public_bytes(Encoding.PEM).decode('ascii'),
                       'hpkp_pin': CertificateUtils.get_hpkp_pin(obj),

@@ -21,20 +21,19 @@ from time import time
 from sslyze.server_connectivity import ServersConnectivityTester
 
 
-class _GlobalScanner(object):
-    """Global/hack so we can terminate processes created by the scanner when catching SIGINT.
-    """
-    SCANNER = None
+global_scanner = None
 
 
 def sigint_handler(signum, frame):
     print('Scan interrupted... shutting down.')
-    if _GlobalScanner.SCANNER:
-        _GlobalScanner.SCANNER.emergency_shutdown()
+    if global_scanner:
+        global_scanner.emergency_shutdown()
     sys.exit()
 
 
 def main():
+    global global_scanner
+
     # For py2exe builds
     freeze_support()
 
@@ -61,10 +60,9 @@ def main():
     # Initialize the pool of processes that will run each plugin
     if args_command_list.https_tunnel:
         # Maximum one process to not kill the proxy
-        _GlobalScanner.SCANNER = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout,
-                                                   max_processes_nb=1)
+        global_scanner  = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout, max_processes_nb=1)
     else:
-        _GlobalScanner.SCANNER = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout)
+        global_scanner = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout)
 
 
     # Figure out which hosts are up and fill the task queue with work to do
@@ -92,7 +90,7 @@ def main():
                         optional_args[optional_arg_name] = getattr(args_command_list, optional_arg_name)
                 scan_command = scan_command_class(**optional_args)
 
-                _GlobalScanner.SCANNER.queue_scan_command(server_connectivity_info, scan_command)
+                global_scanner.queue_scan_command(server_connectivity_info, scan_command)
 
 
     # Store and print servers we were NOT able to connect to
@@ -118,7 +116,7 @@ def main():
                                              port=server_info.port)] = []
 
     # Process the results as they come
-    for plugin_result in _GlobalScanner.SCANNER.get_results():
+    for plugin_result in global_scanner.get_results():
         server_info = plugin_result.server_info
         result_dict[RESULT_KEY_FORMAT.format(hostname=server_info.hostname, ip_address=server_info.ip_address,
                                              port=server_info.port)].append(plugin_result)

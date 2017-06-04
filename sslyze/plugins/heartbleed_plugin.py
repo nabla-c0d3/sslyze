@@ -8,13 +8,15 @@ from xml.etree.ElementTree import Element
 
 from nassl._nassl import WantX509LookupError, WantReadError
 
-from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
-from sslyze.plugins.utils.tls_parser import TlsHeartbeatRequestRecord, TlsHandshakeRecord, TlsServerHelloDoneRecord, \
-    TlsVersionEnum, TlsRecord, TlsAlertRecord, NotEnoughData
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
+from tls_parser.alert_protocol import TlsAlertRecord
+from tls_parser.exceptions import NotEnoughData
+from tls_parser.handshake_protocol import TlsServerHelloDoneRecord, TlsHandshakeRecord
+from tls_parser.heartbeat_protocol import TlsHeartbeatRequestRecord
+from tls_parser.record_protocol import TlsVersionEnum, TlsRecord
 
 
 class HeartbleedScanCommand(PluginScanCommand):

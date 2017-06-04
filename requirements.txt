@@ -2,3 +2,4 @@ nassl>=0.16.0,<0.17.0
 typing; python_version < '3.5'
 enum34; python_version < '3.4'
 cryptography
+git+https://github.com/nabla-c0d3/tls_parser.git#egg=tls_parser

@@ -307,6 +307,16 @@ class CertificateInfoScanResult(PluginScanResult):
                 if isinstance(cert.signature_hash_algorithm, hashes.SHA1):
                     self.has_sha1_in_certificate_chain = True
                     break
+        # Check as a fallback if the certificate is trusted but the certificate chain is incorrect
+        elif self.successful_trust_store and not self.is_certificate_chain_order_valid:
+            for cert in self.certificate_chain:
+                if isinstance(cert.signature_hash_algorithm, hashes.SHA1):
+                    # Get certificate name
+                    cert_name = CertificateUtils.get_printable_name(cert.subject).lower()
+                    # Avoid root certificate that can still be signed with SHA1
+                    if "root" not in cert_name:
+                        self.has_sha1_in_certificate_chain = True
+                        break
 
     def __getstate__(self):
         # This object needs to be pick-able as it gets sent through multiprocessing.Queues

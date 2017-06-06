@@ -4,13 +4,12 @@ from __future__ import unicode_literals
 
 import unittest
 
-import logging
-
 import pickle
+import unittest
 
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin, FallbackScsvScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
-from tests.plugin_tests.openssl_server import NotOnLinux64Error
+from tests.plugin_tests.openssl_server import NOT_ON_LINUX_64BIT
 from tests.plugin_tests.openssl_server import VulnerableOpenSslServer
 
 
@@ -31,19 +30,16 @@ class FallbackScsvPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
+    @unittest.skipIf(NOT_ON_LINUX_64BIT,
+                     'test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits')
     def test_fallback_bad(self):
-        try:
-            with VulnerableOpenSslServer() as server:
-                    server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,
-                                                         port=server.port)
-                    server_info.test_connectivity_to_server()
+        with VulnerableOpenSslServer() as server:
+                server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,
+                                                     port=server.port)
+                server_info.test_connectivity_to_server()
 
-                    plugin = FallbackScsvPlugin()
-                    plugin_result = plugin.process_task(server_info, FallbackScsvScanCommand())
-        except NotOnLinux64Error:
-            # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
-            logging.warning('WARNING: Not on Linux - skipping test_fallback_bad() test')
-            return
+                plugin = FallbackScsvPlugin()
+                plugin_result = plugin.process_task(server_info, FallbackScsvScanCommand())
 
         self.assertFalse(plugin_result.supports_fallback_scsv)
         self.assertTrue(plugin_result.as_text())

@@ -255,3 +255,29 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         return
         self.assertEqual({'TLS_CHACHA20_POLY1305_SHA256', 'TLS_AES_256_GCM_SHA384', 'TLS_AES_128_GCM_SHA256'},
                          set(accepted_cipher_name_list))
+
+    def test_dh_size(self):
+        plugin_result = self._get_plugin_result('dh2048.badssl.com')
+        self.assertEqual(plugin_result.preferred_cipher.dh_info['Type'], 'DH')
+        self.assertEqual(plugin_result.preferred_cipher.dh_info['GroupSize'], '2048')
+
+        plugin_result = self._get_plugin_result('dh1024.badssl.com')
+        self.assertEqual(plugin_result.preferred_cipher.dh_info['Type'], 'DH')
+        self.assertEqual(plugin_result.preferred_cipher.dh_info['GroupSize'], '1024')
+
+    def test_auth_key_size(self):
+        plugin_result = self._get_plugin_result('ecc256.badssl.com')
+        self.assertEqual(plugin_result.preferred_cipher.auth_info['Type'], 'EC')
+        self.assertEqual(plugin_result.preferred_cipher.auth_info['KeySize'], 256)
+
+        plugin_result = self._get_plugin_result('ecc384.badssl.com')
+        self.assertEqual(plugin_result.preferred_cipher.auth_info['Type'], 'EC')
+        self.assertEqual(plugin_result.preferred_cipher.auth_info['KeySize'], 384)
+
+        plugin_result = self._get_plugin_result('rsa2048.badssl.com')
+        self.assertEqual(plugin_result.preferred_cipher.auth_info['Type'], 'RSA')
+        self.assertEqual(plugin_result.preferred_cipher.auth_info['KeySize'], 2048)
+
+        plugin_result = self._get_plugin_result('rsa8192.badssl.com')
+        self.assertEqual(plugin_result.preferred_cipher.auth_info['Type'], 'RSA')
+        self.assertEqual(plugin_result.preferred_cipher.auth_info['KeySize'], 8192)

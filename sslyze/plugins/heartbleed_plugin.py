@@ -16,6 +16,7 @@ from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsServerHelloDoneRecord, TlsHandshakeRecord
 from tls_parser.heartbeat_protocol import TlsHeartbeatRequestRecord
+from tls_parser.parser import TlsRecordParser
 from tls_parser.record_protocol import TlsVersionEnum, TlsRecord
 
 
@@ -129,7 +130,6 @@ def do_handshake_with_heartbleed(self):
     # Send the payload
     self._sock.send(payload)
 
-    # TODO(AD): This will still sometimes fail with google.com
     # Retrieve the server's response - directly read the underlying network socket
     # Retrieve data until we get to the ServerHelloDone
     # The server may send back a ServerHello, an Alert or a CertificateRequest first
@@ -137,7 +137,7 @@ def do_handshake_with_heartbleed(self):
     remaining_bytes = b''
     while not did_receive_hello_done:
         try:
-            tls_record, len_consumed = TlsRecord.from_bytes(remaining_bytes)
+            tls_record, len_consumed = TlsRecordParser.parse_bytes(remaining_bytes)
             remaining_bytes = remaining_bytes[len_consumed::]
         except NotEnoughData:
             # Try to get more data

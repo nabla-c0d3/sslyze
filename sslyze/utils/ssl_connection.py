@@ -107,6 +107,7 @@ class SSLConnection(DebugSslClient):
                                                 ssl_verify_locations=ssl_verify_locations,
                                                 ignore_client_authentication_requests=should_ignore_client_auth)
 
+        self._ssl_version = ssl_version
         self._sock = None
         self._host = host
         self._ip = ip

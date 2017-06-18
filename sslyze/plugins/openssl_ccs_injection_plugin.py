@@ -6,7 +6,7 @@ import socket
 import types
 from xml.etree.ElementTree import Element
 
-from nassl._nassl import WantX509LookupError, WantReadError
+from nassl._nassl import WantReadError
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo

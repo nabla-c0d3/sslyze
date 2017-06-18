@@ -11,13 +11,12 @@ from nassl._nassl import WantX509LookupError, WantReadError
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
-from sslyze.utils.ssl_connection import SSLHandshakeRejected
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsServerHelloDoneRecord, TlsHandshakeRecord
 from tls_parser.heartbeat_protocol import TlsHeartbeatRequestRecord
 from tls_parser.parser import TlsRecordParser
-from tls_parser.record_protocol import TlsVersionEnum, TlsRecord
+from tls_parser.record_protocol import TlsVersionEnum
 
 
 class HeartbleedScanCommand(PluginScanCommand):
@@ -40,8 +39,6 @@ class HeartbleedPlugin(plugin_base.Plugin):
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, HeartbleedScanCommand) -> HeartbleedScanResult
         ssl_connection = server_info.get_preconfigured_ssl_connection()
-        ssl_connection.ssl_version = server_info.highest_ssl_version_supported  # Needed by the heartbleed payload
-
         # Replace nassl.sslClient.do_handshake() with a heartbleed checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work
         ssl_connection.do_handshake = types.MethodType(do_handshake_with_heartbleed, ssl_connection)
@@ -50,7 +47,7 @@ class HeartbleedPlugin(plugin_base.Plugin):
         try:
             # Start the SSL handshake
             ssl_connection.connect()
-        except IsVulnerableToHeartbleed:
+        except VulnerableToHeartbleed:
             # The test was completed and the server is vulnerable
             is_vulnerable_to_heartbleed = True
         except NotVulnerableToHeartbleed:
@@ -89,12 +86,12 @@ class HeartbleedScanResult(PluginScanResult):
         return xml_output
 
 
-class IsVulnerableToHeartbleed(SSLHandshakeRejected):
+class VulnerableToHeartbleed(Exception):
     """Exception to raise during the handshake to hijack the flow and test for Heartbleed.
     """
 
 
-class NotVulnerableToHeartbleed(SSLHandshakeRejected):
+class NotVulnerableToHeartbleed(Exception):
     """Exception to raise during the handshake to hijack the flow and test for Heartbleed.
     """
 
@@ -118,12 +115,12 @@ def do_handshake_with_heartbleed(self):
     # Build the heartbleed payload - based on
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
     payload = TlsHeartbeatRequestRecord.from_parameters(
-        tls_version=TlsVersionEnum[self.ssl_version.name],
+        tls_version=TlsVersionEnum[self._ssl_version.name],
         heartbeat_data=b'\x01' * 16381
     ).to_bytes()
 
     payload += TlsHeartbeatRequestRecord.from_parameters(
-        TlsVersionEnum[self.ssl_version.name],
+        TlsVersionEnum[self._ssl_version.name],
         heartbeat_data=b'\x01\x00\x00'
     ).to_bytes()
 

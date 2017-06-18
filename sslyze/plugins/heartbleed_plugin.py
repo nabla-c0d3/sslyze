@@ -175,6 +175,6 @@ def do_handshake_with_heartbleed(self):
                 is_vulnerable_to_heartbleed = True
 
     if is_vulnerable_to_heartbleed:
-        raise IsVulnerableToHeartbleed()
+        raise VulnerableToHeartbleed()
     else:
         raise NotVulnerableToHeartbleed()

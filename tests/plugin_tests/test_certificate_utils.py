@@ -4,14 +4,14 @@ from __future__ import unicode_literals
 
 import os
 import ssl
-import unittest
+from tests import SslyzeTestCase
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
 
 
-class CertificateUtilsTestCase(unittest.TestCase):
+class CertificateUtilsTestCase(SslyzeTestCase):
 
     def test(self):
         leaf_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'github.com.pem')

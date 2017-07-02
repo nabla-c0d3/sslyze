@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import unittest
+from tests import SslyzeTestCase
 
 import pickle
 
@@ -10,7 +10,7 @@ from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlug
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class SessionRenegotiationPluginTestCase(unittest.TestCase):
+class SessionRenegotiationPluginTestCase(SslyzeTestCase):
 
     def test_renegotiation_good(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')

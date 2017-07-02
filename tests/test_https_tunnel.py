@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import unicode_literals
-import unittest
+from tests import SslyzeTestCase
 
 import time
 
@@ -21,7 +21,7 @@ def proxy_worker(hostname, port):
     httpd.serve_forever()
 
 
-class HttpsTunnelTestCase(unittest.TestCase):
+class HttpsTunnelTestCase(SslyzeTestCase):
 
 
     def test_https_tunneling_bad_arguments(self):

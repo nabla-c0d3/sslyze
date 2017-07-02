@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
-import unittest
+from tests import SslyzeTestCase
 
 import pickle
 
@@ -13,7 +13,7 @@ from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, Certif
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class CertificateInfoPluginTestCase(unittest.TestCase):
+class CertificateInfoPluginTestCase(SslyzeTestCase):
 
     def test_ca_file_bad_file(self):
         server_info = ServerConnectivityInfo(hostname='www.hotmail.com')

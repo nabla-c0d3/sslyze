@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import socket
-import unittest
+from tests import SslyzeTestCase
 import logging
 
 from nassl.ssl_client import OpenSslVersionEnum
@@ -13,7 +13,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthenticat
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 
 
-class ProtocolsTestCase(unittest.TestCase):
+class ProtocolsTestCase(SslyzeTestCase):
 
     def test_smtp_custom_port(self):
         server_info = ServerConnectivityInfo(hostname='smtp.gmail.com', port=587,

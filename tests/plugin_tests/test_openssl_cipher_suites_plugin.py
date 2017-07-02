@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import unittest
+from tests import SslyzeTestCase
 import logging
 
 import pickle
@@ -15,7 +15,7 @@ from tests.plugin_tests.openssl_server import NotOnLinux64Error
 from tests.plugin_tests.openssl_server import VulnerableOpenSslServer
 
 
-class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
+class OpenSslCipherSuitesPluginTestCase(SslyzeTestCase):
 
     def test_sslv2_enabled(self):
         try:

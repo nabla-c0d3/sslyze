@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import unittest
+from tests import SslyzeTestCase
 from io import StringIO
 from xml.etree.ElementTree import Element
 
@@ -14,7 +14,7 @@ from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, Mo
     MockPluginScanCommandOne, MockPluginScanCommandTwo
 
 
-class XmlOutputGeneratorTestCase(unittest.TestCase):
+class XmlOutputGeneratorTestCase(SslyzeTestCase):
 
     def test(self):
         """The final output only gets written at the end, when calling scans_completed(). Hence we need to call all the

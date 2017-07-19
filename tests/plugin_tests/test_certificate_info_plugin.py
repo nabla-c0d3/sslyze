@@ -9,6 +9,7 @@ import pickle
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.synchronous_scanner import SynchronousScanner
 
 
 class CertificateInfoPluginTestCase(unittest.TestCase):
@@ -187,7 +188,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
     def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
         server_info = ServerConnectivityInfo(hostname='webmail.russia.nasa.gov')
-        server_info.test_connectivity_to_server()
+        server_info.test_connectivity_to_server(network_timeout=SynchronousScanner.DEFAULT_NETWORK_TIMEOUT * 2)
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())

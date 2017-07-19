@@ -88,7 +88,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertEquals(plugin_result.certificate_matches_hostname, True)
         self.assertTrue(plugin_result.is_certificate_chain_order_valid)
         self.assertIsNone(plugin_result.has_anchor_in_certificate_chain)
-        self.assertIsNone(plugin_result.has_sha1_in_certificate_chain)
+        self.assertFalse(plugin_result.has_sha1_in_certificate_chain)
         self.assertFalse(plugin_result.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())

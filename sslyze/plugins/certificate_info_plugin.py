@@ -300,13 +300,11 @@ class CertificateInfoScanResult(PluginScanResult):
 
         # Check if a SHA1-signed certificate is in the chain
         # Root certificates can still be signed with SHA1 so we only check leaf and intermediate certificates
-        self.has_sha1_in_certificate_chain = None
-        if self.verified_certificate_chain:
-            self.has_sha1_in_certificate_chain = False
-            for cert in self.verified_certificate_chain[:-1]:
-                if isinstance(cert.signature_hash_algorithm, hashes.SHA1):
-                    self.has_sha1_in_certificate_chain = True
-                    break
+        self.has_sha1_in_certificate_chain = False
+        for cert in self.certificate_chain:
+            if cert.subject != cert.issuer and isinstance(cert.signature_hash_algorithm, hashes.SHA1):
+                self.has_sha1_in_certificate_chain = True
+                break
 
     def __getstate__(self):
         # This object needs to be pick-able as it gets sent through multiprocessing.Queues
@@ -406,14 +404,11 @@ class CertificateInfoScanResult(PluginScanResult):
             else 'FAILED - Certificate chain out of order!'
         text_output.append(self._format_field('Received Chain Order:', chain_order_txt))
 
-        if self.verified_certificate_chain:
-            sha1_text = 'OK - No SHA1-signed certificate in the verified certificate chain' \
-                if not self.has_sha1_in_certificate_chain \
-                else 'INSECURE - SHA1-signed certificate in the verified certificate chain'
-        else:
-            sha1_text = self.NO_VERIFIED_CHAIN_ERROR_TXT
+        sha1_text = 'OK - No SHA1-signed certificate in the received certificate chain' \
+            if not self.has_sha1_in_certificate_chain \
+            else 'INSECURE - SHA1-signed certificate in the received certificate chain'
 
-        text_output.append(self._format_field('Verified Chain contains SHA1:', sha1_text))
+        text_output.append(self._format_field('Received Chain contains SHA1:', sha1_text))
 
         # OCSP stapling
         text_output.extend(['', self._format_title('Certificate - OCSP Stapling')])

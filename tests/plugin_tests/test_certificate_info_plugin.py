@@ -109,8 +109,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
     def test_sha1_chain(self):
         # The test server no longer works
-        return
-        server_info = ServerConnectivityInfo(hostname='sha1-2017.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='sha1-intermediate.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()

@@ -9,6 +9,7 @@ import pickle
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.synchronous_scanner import SynchronousScanner
 
 
 class CertificateInfoPluginTestCase(unittest.TestCase):
@@ -39,7 +40,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_valid_chain(self):
-        server_info = ServerConnectivityInfo(hostname='login.live.com')
+        server_info = ServerConnectivityInfo(hostname='www.cloudflare.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -87,7 +88,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertEquals(plugin_result.certificate_matches_hostname, True)
         self.assertTrue(plugin_result.is_certificate_chain_order_valid)
         self.assertIsNone(plugin_result.has_anchor_in_certificate_chain)
-        self.assertIsNone(plugin_result.has_sha1_in_certificate_chain)
+        self.assertFalse(plugin_result.has_sha1_in_certificate_chain)
         self.assertFalse(plugin_result.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())
@@ -108,8 +109,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
     def test_sha1_chain(self):
         # The test server no longer works
-        return
-        server_info = ServerConnectivityInfo(hostname='sha1-2017.badssl.com')
+        server_info = ServerConnectivityInfo(hostname='sha1-intermediate.badssl.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()
@@ -187,7 +187,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
     def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
         server_info = ServerConnectivityInfo(hostname='webmail.russia.nasa.gov')
-        server_info.test_connectivity_to_server()
+        server_info.test_connectivity_to_server(network_timeout=SynchronousScanner.DEFAULT_NETWORK_TIMEOUT * 2)
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())

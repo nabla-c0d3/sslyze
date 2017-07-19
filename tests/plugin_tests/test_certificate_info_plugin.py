@@ -39,7 +39,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
 
     def test_valid_chain(self):
-        server_info = ServerConnectivityInfo(hostname='login.live.com')
+        server_info = ServerConnectivityInfo(hostname='www.cloudflare.com')
         server_info.test_connectivity_to_server()
 
         plugin = CertificateInfoPlugin()

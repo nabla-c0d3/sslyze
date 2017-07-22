@@ -26,6 +26,13 @@ class PluginScanCommand(object):
         pass
 
     @classmethod
+    def get_title(cls):
+        # type: () -> Text
+        """The title of the scan command, to be displayed along with the results.
+        """
+        raise NotImplementedError()
+
+    @classmethod
     def get_description(cls):
         """The description is expected to be the command class' docstring.
         """
@@ -131,9 +138,14 @@ class PluginScanResult(object):
     @staticmethod
     def _format_title(title):
         # type: (Text) -> Text
-        return '  * {0}:'.format(title)
+        return ' * {0}:'.format(title)
+
+    @staticmethod
+    def _format_subtitle(subtitle):
+        # type: (Text) -> Text
+        return '     {0}'.format(subtitle)
 
     @staticmethod
     def _format_field(title, value):
         # type: (Text, Text) -> Text
-        return u'      {0:<35}{1}'.format(title, value)
+        return '       {0:<35}{1}'.format(title, value)

@@ -27,6 +27,10 @@ class OpenSslCcsInjectionScanCommand(plugin_base.PluginScanCommand):
     def get_cli_argument(cls):
         return 'openssl_ccs'
 
+    @classmethod
+    def get_title(cls):
+        return 'OpenSSL CCS Injection'
+
 
 class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
     """Test the server(s) for the OpenSSL CCS injection vulnerability (CVE-2014-0224).
@@ -166,21 +170,19 @@ class OpenSslCcsInjectionScanResult(PluginScanResult):
         is_vulnerable_to_ccs_injection (bool): True if the server is vulnerable to OpenSSL's CCS injection issue.
     """
 
-    COMMAND_TITLE = 'OpenSSL CCS Injection'
-
     def __init__(self, server_info, scan_command, is_vulnerable_to_ccs_injection):
         # type: (ServerConnectivityInfo, OpenSslCcsInjectionScanCommand, bool) -> None
         super(OpenSslCcsInjectionScanResult, self).__init__(server_info, scan_command)
         self.is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection
 
     def as_xml(self):
-        result_xml = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
+        result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         result_xml.append(Element('openSslCcsInjection',
                                   attrib={'isVulnerable': str(self.is_vulnerable_to_ccs_injection)}))
         return result_xml
 
     def as_text(self):
-        result_txt = [self._format_title(self.COMMAND_TITLE)]
+        result_txt = [self._format_title(self.scan_command.get_title())]
 
         ccs_text = 'VULNERABLE - Server is vulnerable to OpenSSL CCS injection' \
             if self.is_vulnerable_to_ccs_injection \

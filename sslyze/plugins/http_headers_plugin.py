@@ -31,6 +31,10 @@ class HttpHeadersScanCommand(plugin_base.PluginScanCommand):
     def get_cli_argument(cls):
         return 'http_headers'
 
+    @classmethod
+    def get_title(cls):
+        return 'HTTP Security Headers'
+
 
 class HttpHeadersPlugin(plugin_base.Plugin):
     """Test the server(s) for the presence of security-related HTTP headers.
@@ -177,8 +181,6 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
             https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
     """
 
-    COMMAND_TITLE = 'HTTP Security Headers'
-
     def __init__(
             self,
             server_info,        # type: ServerConnectivityInfo
@@ -234,16 +236,17 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
     PIN_TXT_FORMAT = '      {0:<50}{1}'.format
 
     def as_text(self):
-        txt_result = [self._format_title('HTTP Strict Transport Security (HSTS)')]
+        txt_result = [self._format_title(self.scan_command.get_title())]
 
         if self.hsts_header:
+            txt_result.append(self._format_subtitle('HTTP Strict Transport Security (HSTS)'))
             txt_result.append(self._format_field("Max Age:", str(self.hsts_header.max_age)))
             txt_result.append(self._format_field("Include Subdomains:", str(self.hsts_header.include_subdomains)))
             txt_result.append(self._format_field("Preload:", str(self.hsts_header.preload)))
         else:
             txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an HSTS header", ""))
 
-        computed_hpkp_pins_text = ['', self._format_title('Computed HPKP Pins for Current Chain')]
+        computed_hpkp_pins_text = ['', self._format_subtitle('Computed HPKP Pins for Current Chain')]
         if self.verified_certificate_chain:
             for index, cert in enumerate(self.verified_certificate_chain, start=0):
                 final_subject = CertificateUtils.get_printable_name(cert.subject)
@@ -258,7 +261,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
                 self._format_field('ERROR - Could not build verified chain (certificate untrusted?)', '')
             )
 
-        txt_result.extend(['', self._format_title('HTTP Public Key Pinning (HPKP)')])
+        txt_result.extend(['', self._format_subtitle('HTTP Public Key Pinning (HPKP)')])
         if self.hpkp_header:
             txt_result.append(self._format_field("Max Age:", str(self.hpkp_header.max_age)))
             txt_result.append(self._format_field("Include Subdomains:", str(self.hpkp_header.include_subdomains)))
@@ -286,7 +289,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         return txt_result
 
     def as_xml(self):
-        xml_result = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
+        xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         # HSTS header
         is_hsts_supported = True if self.hsts_header else False

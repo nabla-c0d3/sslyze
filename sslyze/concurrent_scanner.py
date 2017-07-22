@@ -30,15 +30,17 @@ class PluginRaisedExceptionScanResult(PluginScanResult):
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
-    TITLE_TXT_FORMAT = 'Unhandled exception while running --{command}:'
+    ERROR_TXT_FORMAT = 'Unhandled exception while running --{command}:'
 
     def as_text(self):
         # type: () -> List[Text]
-        return [self.TITLE_TXT_FORMAT.format(command=self.scan_command.get_cli_argument()), self.error_message]
+        return [self._format_title(self.scan_command.get_title()),
+                self.ERROR_TXT_FORMAT.format(command=self.scan_command.get_cli_argument()),
+                self.error_message]
 
     def as_xml(self):
         # type: () -> Element
-        return Element(self.scan_command.get_cli_argument(), exception=self.as_text()[1])
+        return Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title(), exception=self.as_text()[1])
 
 
 class ConcurrentScanner(object):

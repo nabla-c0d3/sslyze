@@ -24,6 +24,10 @@ class SessionResumptionSupportScanCommand(plugin_base.PluginScanCommand):
     def get_cli_argument(cls):
         return 'resum'
 
+    @classmethod
+    def get_title(cls):
+        return 'Resumption Support'
+
 
 class SessionResumptionRateScanCommand(plugin_base.PluginScanCommand):
     """Perform 100 session ID resumptions with the server(s), in order to estimate the rate for successful resumptions.
@@ -32,6 +36,10 @@ class SessionResumptionRateScanCommand(plugin_base.PluginScanCommand):
     @classmethod
     def get_cli_argument(cls):
         return 'resum_rate'
+
+    @classmethod
+    def get_title(cls):
+        return 'Resumption Rate'
 
     @classmethod
     def is_aggressive(cls):
@@ -234,8 +242,6 @@ class SessionResumptionRateScanResult(PluginScanResult):
             session ID resumption with the server (should always be empty).
     """
 
-    COMMAND_TITLE = 'Resumption Rate'
-
     def __init__(
             self,
             server_info,                # type: ServerConnectivityInfo
@@ -256,7 +262,7 @@ class SessionResumptionRateScanResult(PluginScanResult):
     RESUMPTION_ERROR_FORMAT = '        ERROR #{error_nb}: {error_msg}'
 
     def as_text(self):
-        result_txt = [self._format_title(self.COMMAND_TITLE)]
+        result_txt = [self._format_title(self.scan_command.get_title())]
 
         # Create the line which summarizes the session resumption rate
         if self.successful_resumptions_nb == self.attempted_resumptions_nb:
@@ -286,7 +292,7 @@ class SessionResumptionRateScanResult(PluginScanResult):
 
 
     def as_xml(self):
-        xml_result = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
+        xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         resumption_rate_xml = Element(
                 'sessionResumptionWithSessionIDs',
@@ -352,7 +358,6 @@ class SessionResumptionSupportScanResult(PluginScanResult):
         self._rate_result = SessionResumptionRateScanResult(server_info, scan_command, attempted_resum_nb,
                                                             successful_resum_nb, errored_resumptions_list)
 
-    COMMAND_TITLE = 'Session Resumption'
     RESUMPTION_LINE_FORMAT = '      {resumption_type:<35}{result}'
 
     def as_text(self):
@@ -372,7 +377,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
 
 
     def as_xml(self):
-        xml_result = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
+        xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         # We keep the session resumption XML node
         resum_rate_xml = self._rate_result.as_xml()

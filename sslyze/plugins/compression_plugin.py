@@ -18,6 +18,10 @@ class CompressionScanCommand(PluginScanCommand):
     def get_cli_argument(cls):
         return 'compression'
 
+    @classmethod
+    def get_title(cls):
+        return 'Deflate Compression'
+
 
 class CompressionPlugin(plugin_base.Plugin):
     """Test the server(s) for Zlib compression support.
@@ -57,15 +61,13 @@ class CompressionScanResult(PluginScanResult):
             compression is not supported by the server.
     """
 
-    COMMAND_TITLE = 'Deflate Compression'
-
     def __init__(self, server_info, scan_command, compression_name):
         # type: (ServerConnectivityInfo, CompressionScanCommand, Text) -> None
         super(CompressionScanResult, self).__init__(server_info, scan_command)
         self.compression_name = compression_name
 
     def as_text(self):
-        txt_result = [self._format_title(self.COMMAND_TITLE)]
+        txt_result = [self._format_title(self.scan_command.get_title())]
         if self.compression_name:
             txt_result.append(self._format_field('', 'VULNERABLE - Server supports Deflate compression'))
         else:
@@ -73,7 +75,7 @@ class CompressionScanResult(PluginScanResult):
         return txt_result
 
     def as_xml(self):
-        xml_result = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
+        xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         if self.compression_name:
             xml_result.append(Element('compressionMethod', type="DEFLATE", isSupported="True"))
         else:

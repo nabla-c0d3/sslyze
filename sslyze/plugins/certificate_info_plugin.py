@@ -52,6 +52,10 @@ class CertificateInfoScanCommand(PluginScanCommand):
         self.custom_ca_file = ca_file
 
     @classmethod
+    def get_title(cls):
+        return 'Certificate Information'
+
+    @classmethod
     def get_cli_argument(cls):
         return 'certinfo'
 
@@ -229,8 +233,6 @@ class CertificateInfoScanResult(PluginScanResult):
             send back to clients. None if the verified chain could not be built or no HPKP header was returned.
     """
 
-    COMMAND_TITLE = 'Certificate Basic Information'
-
     def __init__(
             self,
             server_info,                    # type: ServerConnectivityInfo
@@ -340,11 +342,12 @@ class CertificateInfoScanResult(PluginScanResult):
     NO_VERIFIED_CHAIN_ERROR_TXT = 'ERROR - Could not build verified chain (certificate untrusted?)'
 
     def as_text(self):
-        text_output = [self._format_title(self.COMMAND_TITLE)]
+        text_output = [self._format_title(self.scan_command.get_title())]
+        text_output.append(self._format_subtitle('Content'))
         text_output.extend(self._get_basic_certificate_text())
 
         # Trust section
-        text_output.extend(['', self._format_title('Certificate - Trust')])
+        text_output.extend(['', self._format_subtitle('Trust')])
 
         # Hostname validation
         server_name_indication = self.server_info.tls_server_name_indication
@@ -416,7 +419,7 @@ class CertificateInfoScanResult(PluginScanResult):
         text_output.append(self._format_field('Verified Chain contains SHA1:', sha1_text))
 
         # OCSP stapling
-        text_output.extend(['', self._format_title('Certificate - OCSP Stapling')])
+        text_output.extend(['', self._format_subtitle('OCSP Stapling')])
 
         if self.ocsp_response is None:
             text_output.append(self._format_field('', 'NOT SUPPORTED - Server did not send back an OCSP response.'))
@@ -446,7 +449,7 @@ class CertificateInfoScanResult(PluginScanResult):
 
 
     def as_xml(self):
-        xml_output = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
+        xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         # Certificate chain
         cert_xml_list = []

@@ -27,6 +27,10 @@ class HeartbleedScanCommand(PluginScanCommand):
     def get_cli_argument(cls):
         return 'heartbleed'
 
+    @classmethod
+    def get_title(cls):
+       return 'OpenSSL Heartbleed'
+
 
 class HeartbleedPlugin(plugin_base.Plugin):
     """Test the server(s) for the OpenSSL Heartbleed vulnerability (CVE-2014-0160).
@@ -66,8 +70,6 @@ class HeartbleedScanResult(PluginScanResult):
         is_vulnerable_to_heartbleed (bool): True if the server is vulnerable to the Heartbleed attack.
     """
 
-    COMMAND_TITLE = 'OpenSSL Heartbleed'
-
     def __init__(self, server_info, scan_command, is_vulnerable_to_heartbleed):
         # type: (ServerConnectivityInfo, HeartbleedScanCommand, bool) -> None
         super(HeartbleedScanResult, self).__init__(server_info, scan_command)
@@ -78,10 +80,10 @@ class HeartbleedScanResult(PluginScanResult):
             if self.is_vulnerable_to_heartbleed \
             else 'OK - Not vulnerable to Heartbleed'
 
-        return [self._format_title(self.COMMAND_TITLE), self._format_field('', heartbleed_txt)]
+        return [self._format_title(self.scan_command.get_title()), self._format_field('', heartbleed_txt)]
 
     def as_xml(self):
-        xml_output = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
+        xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         xml_output.append(Element('openSslHeartbleed', isVulnerable=str(self.is_vulnerable_to_heartbleed)))
         return xml_output
 

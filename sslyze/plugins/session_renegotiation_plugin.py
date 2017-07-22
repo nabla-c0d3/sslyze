@@ -20,6 +20,10 @@ class SessionRenegotiationScanCommand(plugin_base.PluginScanCommand):
     def get_cli_argument(cls):
         return 'reneg'
 
+    @classmethod
+    def get_title(cls):
+        return 'Session Renegotiation'
+
 
 class SessionRenegotiationPlugin(plugin_base.Plugin):
     """Test the server(s)' implementation of session renegotiation.
@@ -113,8 +117,6 @@ class SessionRenegotiationScanResult(PluginScanResult):
         supports_secure_renegotiation (bool): True if the server supports secure renegotiation.
     """
 
-    COMMAND_TITLE = 'Session Renegotiation'
-
     def __init__(self, server_info, scan_command, accepts_client_renegotiation, supports_secure_renegotiation):
         # type: (ServerConnectivityInfo, SessionRenegotiationScanCommand, bool, bool) -> None
         super(SessionRenegotiationScanResult, self).__init__(server_info, scan_command)
@@ -123,7 +125,7 @@ class SessionRenegotiationScanResult(PluginScanResult):
 
 
     def as_text(self):
-        result_txt = [self._format_title(self.COMMAND_TITLE)]
+        result_txt = [self._format_title(self.scan_command.get_title())]
 
         # Client-initiated reneg
         client_reneg_txt = 'VULNERABLE - Server honors client-initiated renegotiations' \
@@ -141,7 +143,7 @@ class SessionRenegotiationScanResult(PluginScanResult):
 
 
     def as_xml(self):
-        result_xml = Element(self.scan_command.get_cli_argument(), title=self.COMMAND_TITLE)
+        result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         result_xml.append(Element('sessionRenegotiation',
                                   attrib={'canBeClientInitiated': str(self.accepts_client_renegotiation),
                                           'isSecure': str(self.supports_secure_renegotiation)}))

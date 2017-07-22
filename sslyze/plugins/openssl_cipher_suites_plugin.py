@@ -36,6 +36,10 @@ class CipherSuiteScanCommand(PluginScanCommand):
     def is_aggressive(cls):
         return True
 
+    @classmethod
+    def get_title(cls):
+        return '{} Cipher Suites'.format(cls.get_cli_argument().upper())
+
 
 class Sslv20ScanCommand(CipherSuiteScanCommand):
     """List the SSL 2.0 OpenSSL cipher suites supported by the server(s).
@@ -379,9 +383,8 @@ class CipherSuiteScanResult(PluginScanResult):
 
 
     def as_xml(self):
-        ssl_version = self.scan_command.get_cli_argument()
         is_protocol_supported = True if len(self.accepted_cipher_list) > 0 else False
-        result_xml = Element(ssl_version, title='{0} Cipher Suites'.format(ssl_version.upper()),
+        result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title(),
                              isProtocolSupported=str(is_protocol_supported))
 
         # Output the preferred cipher
@@ -439,17 +442,14 @@ class CipherSuiteScanResult(PluginScanResult):
 
     ACCEPTED_CIPHER_LINE_FORMAT = '        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {status:<60}'
     REJECTED_CIPHER_LINE_FORMAT = '        {cipher_name:<50}{error_message:<60}'
-    CIPHER_LIST_TITLE_FORMAT = '      {section_title:<32} '
-    VERSION_TITLE_FORMAT = '{ssl_version} Cipher Suites'
 
     def as_text(self):
-        ssl_version = self.scan_command.get_cli_argument()
-        result_txt = [self._format_title(self.VERSION_TITLE_FORMAT.format(ssl_version=ssl_version.upper()))]
+        result_txt = [self._format_title(self.scan_command.get_title())]
 
         # Output all the accepted ciphers if any
         if len(self.accepted_cipher_list) > 0:
             # Start with the preferred cipher
-            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT.format(section_title='Preferred:'))
+            result_txt.append(self._format_subtitle('Preferred:'))
             if self.preferred_cipher:
                 result_txt.append(self._format_accepted_cipher_txt(self.preferred_cipher))
             else:
@@ -458,7 +458,7 @@ class CipherSuiteScanResult(PluginScanResult):
                 ))
 
             # Then display all ciphers that were accepted
-            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT.format(section_title='Accepted:'))
+            result_txt.append(self._format_subtitle('Accepted:'))
             for cipher in self.accepted_cipher_list:
                 result_txt.append(self._format_accepted_cipher_txt(cipher))
         elif self.scan_command.hide_rejected_ciphers:
@@ -466,8 +466,7 @@ class CipherSuiteScanResult(PluginScanResult):
 
         # Output all errors if any
         if len(self.errored_cipher_list) > 0:
-            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT.format(
-                section_title='Undefined - An unexpected error happened:')
+            result_txt.append(self._format_subtitle('Undefined - An unexpected error happened:')
             )
             for cipher in self.errored_cipher_list:
                 cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT.format(cipher_name=cipher.name,
@@ -476,7 +475,7 @@ class CipherSuiteScanResult(PluginScanResult):
 
         # Output all rejected ciphers if needed
         if len(self.rejected_cipher_list) > 0 and not self.scan_command.hide_rejected_ciphers:
-            result_txt.append(self.CIPHER_LIST_TITLE_FORMAT.format(section_title='Rejected:'))
+            result_txt.append(self._format_subtitle('Rejected:'))
             for cipher in self.rejected_cipher_list:
                 cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT.format(cipher_name=cipher.name,
                                                                           error_message=cipher.handshake_error_message)

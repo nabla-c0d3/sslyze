@@ -105,6 +105,7 @@
             </xs:sequence>
             <xs:attribute name="isChainOrderValid" use="required"/>
             <xs:attribute name="containsAnchorCertificate"/>
+            <xs:attribute name="suppliedServerNameIndication" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="verifiedCertificateChain">
@@ -113,6 +114,8 @@
                 <xs:element maxOccurs="unbounded" ref="certificate"/>
             </xs:sequence>
             <xs:attribute name="hasSha1SignedCertificate" use="required"/>
+            <xs:attribute name="suppliedServerNameIndication" use="required"/>
+            <xs:attribute name="successfulTrustStore" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="certificateValidation">
@@ -120,6 +123,7 @@
             <xs:sequence>
                 <xs:element ref="hostnameValidation"/>
                 <xs:element maxOccurs="unbounded" ref="pathValidation"/>
+                <xs:element minOccurs="0" ref="verifiedCertificateChain"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -131,9 +135,6 @@
     </xs:element>
     <xs:element name="pathValidation">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element minOccurs="0" ref="verifiedCertificateChain"/>
-            </xs:sequence>
             <xs:attribute name="isExtendedValidationCertificate"/>
             <xs:attribute name="trustStoreVersion" use="required"/>
             <xs:attribute name="usingTrustStore" use="required"/>
@@ -341,10 +342,8 @@
             <xs:sequence>
                 <xs:element ref="asPEM"/>
             </xs:sequence>
-            <xs:attribute name="position"/>
             <xs:attribute name="sha1Fingerprint" use="required"/>
             <xs:attribute name="hpkpSha256Pin" use="required"/>
-            <xs:attribute name="suppliedServerNameIndication" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="asPEM" type="xs:string"/>

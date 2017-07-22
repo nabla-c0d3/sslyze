@@ -447,17 +447,13 @@ class CertificateInfoScanResult(PluginScanResult):
         # All done
         return text_output
 
-
-    def as_xml(self):
-        xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-
-        # Certificate chain
+    @staticmethod
+    def _certificate_chain_to_xml(certificate_chain):
+        # type: (List[cryptography.x509.Certificate]) -> List[Element]
         cert_xml_list = []
-        for index, certificate in enumerate(self.certificate_chain, start=0):
+        for certificate in certificate_chain:
             cert_xml = Element('certificate', attrib={
                 'sha1Fingerprint': binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode('ascii'),
-                'position': 'leaf' if index == 0 else 'intermediate',
-                'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
                 'hpkpSha256Pin': CertificateUtils.get_hpkp_pin(certificate)
             })
 
@@ -465,14 +461,20 @@ class CertificateInfoScanResult(PluginScanResult):
             cert_as_pem_xml = Element('asPEM')
             cert_as_pem_xml.text = certificate.public_bytes(Encoding.PEM)
             cert_xml.append(cert_as_pem_xml)
+            cert_xml_list.append(cert_xml)
+        return cert_xml_list
 
-        cert_chain_attrs = {'isChainOrderValid': str(self.is_certificate_chain_order_valid)}
-        if self.verified_certificate_chain:
-            cert_chain_attrs['containsAnchorCertificate'] = str(False) if not self.has_anchor_in_certificate_chain \
-                else str(True)
+    def as_xml(self):
+        xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
+
+        # Certificate chain
+        cert_chain_attrs = {
+            'isChainOrderValid': str(self.is_certificate_chain_order_valid),
+            'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
+            'containsAnchorCertificate': str(False) if not self.has_anchor_in_certificate_chain else str(True)
+        }
         cert_chain_xml = Element('receivedCertificateChain', attrib=cert_chain_attrs)
-
-        for cert_xml in cert_xml_list:
+        for cert_xml in self._certificate_chain_to_xml(self.certificate_chain):
             cert_chain_xml.append(cert_xml)
         xml_output.append(cert_chain_xml)
 
@@ -493,38 +495,13 @@ class CertificateInfoScanResult(PluginScanResult):
             }
 
             # Things we only do with the Mozilla store
-            verified_cert_chain_xml = None
             if 'Mozilla' in path_result.trust_store.name:
                 # EV certs
                 if self.is_leaf_certificate_ev:
                     path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
 
-                # Verified chain
-                if self.verified_certificate_chain:
-                    verified_cert_chain_xml = Element(
-                        'verifiedCertificateChain',
-                        {'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain)}
-                    )
-                    for certificate in self.certificate_chain:
-                        cert_xml = Element('certificate', attrib={
-                            'sha1Fingerprint': binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode('ascii'),
-                            'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
-                            'hpkpSha256Pin': CertificateUtils.get_hpkp_pin(certificate)
-                        })
-
-                        # Add the PEM cert
-                        cert_as_pem_xml = Element('asPEM')
-                        cert_as_pem_xml.text = certificate.public_bytes(Encoding.PEM)
-                        cert_xml.append(cert_as_pem_xml)
-
-                        verified_cert_chain_xml.append(cert_xml)
-
             path_valid_xml = Element('pathValidation', attrib=path_attrib_xml)
-            if verified_cert_chain_xml is not None:
-                path_valid_xml.append(verified_cert_chain_xml)
-
             trust_validation_xml.append(path_valid_xml)
-
 
         # Path validation that ran into errors
         for path_error in self.path_validation_error_list:
@@ -534,8 +511,19 @@ class CertificateInfoScanResult(PluginScanResult):
                 'trustStoreVersion': path_result.trust_store.version,
                 'error': error_txt
             }
-
             trust_validation_xml.append(Element('pathValidation', attrib=path_attrib_xml))
+
+        # Verified chain
+        if self.verified_certificate_chain:
+            verified_cert_chain_xml = Element(
+                'verifiedCertificateChain',
+                {'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain),
+                 'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
+                 'successfulTrustStore': self.successful_trust_store.name}
+            )
+            for cert_xml in self._certificate_chain_to_xml(self.verified_certificate_chain):
+                verified_cert_chain_xml.append(cert_xml)
+            trust_validation_xml.append(verified_cert_chain_xml)
 
         xml_output.append(trust_validation_xml)
 

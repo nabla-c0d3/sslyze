@@ -270,7 +270,6 @@ class CommandLineParser(object):
                     ip_address = touple[1]
                     port = touple[2]
                     show_string = touple[3]
-                    print(touple)
                     server_info = ServerConnectivityInfo(
                         hostname=hostname,
                         port=port,

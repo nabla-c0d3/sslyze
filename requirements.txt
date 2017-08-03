@@ -3,3 +3,4 @@ typing; python_version < '3.5'
 enum34; python_version < '3.4'
 cryptography==1.9
 tls-parser==1.0.0
+netaddr >= 0.7.5

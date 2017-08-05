@@ -15,7 +15,7 @@ designed to be fast and comprehensive, and should help organizations and testers
 their SSL/TLS servers.
 
 Key features include:
-* Python API, in order to run scans and process the results directly from Python.
+* Fully [documented Python API](https://nabla-c0d3.github.io/sslyze/documentation/), in order to run scans and process the results directly from Python.
 * Scans are automatically dispatched among multiple processes, making them very fast.
 * Performance testing: session resumption and TLS tickets support.
 * Security testing: weak cipher suites, insecure renegotiation, CRIME, Heartbleed and more.

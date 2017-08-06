@@ -51,7 +51,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
         try:
             # Perform the SSL handshake
             ssl_connection.connect()
-            supports_secure_renegotiation = ssl_connection.get_secure_renegotiation_support()
+            supports_secure_renegotiation = ssl_connection.ssl_client.get_secure_renegotiation_support()
 
         finally:
             ssl_connection.close()
@@ -71,7 +71,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
 
             try:
                 # Let's try to renegotiate
-                ssl_connection.do_renegotiate()
+                ssl_connection.ssl_client.do_renegotiate()
                 accepts_client_renegotiation = True
 
             # Errors caused by a server rejecting the renegotiation

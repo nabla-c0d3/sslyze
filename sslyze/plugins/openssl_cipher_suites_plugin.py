@@ -185,8 +185,8 @@ class OpenSslCipherSuitesPlugin(Plugin):
         """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
         """
         ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-        ssl_connection.set_cipher_list(openssl_cipher_name)
-        if len(ssl_connection.get_cipher_list()) != 1:
+        ssl_connection.ssl_client.set_cipher_list(openssl_cipher_name)
+        if len(ssl_connection.ssl_client.get_cipher_list()) != 1:
             raise ValueError('Passed an OpenSSL string for multiple cipher suites: "{}"'.format(openssl_cipher_name))
 
         try:
@@ -239,7 +239,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
         selected by the server during the SSL handshake.
         """
         ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-        ssl_connection.set_cipher_list(openssl_cipher_string)
+        ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
 
         # Perform the SSL handshake
         try:
@@ -296,12 +296,12 @@ class AcceptedCipherSuite(CipherSuite):
     @classmethod
     def from_ongoing_ssl_connection(cls, ssl_connection, ssl_version):
         # type: (SSLConnection, OpenSslVersionEnum) -> AcceptedCipherSuite
-        keysize = ssl_connection.get_current_cipher_bits()
-        picked_cipher_name = ssl_connection.get_current_cipher_name()
+        keysize = ssl_connection.ssl_client.get_current_cipher_bits()
+        picked_cipher_name = ssl_connection.ssl_client.get_current_cipher_name()
         if 'ECDH' in picked_cipher_name:
-            dh_infos = ssl_connection.get_ecdh_param()
+            dh_infos = ssl_connection.ssl_client.get_ecdh_param()
         elif 'DH' in picked_cipher_name:
-            dh_infos = ssl_connection.get_dh_param()
+            dh_infos = ssl_connection.ssl_client.get_dh_param()
         else:
             dh_infos = None
 

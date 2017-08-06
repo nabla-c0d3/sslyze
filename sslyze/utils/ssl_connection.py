@@ -331,7 +331,7 @@ class SMTPConnection(SSLConnection):
         # type: () -> Text
         try:
             self.write(b'NOOP\r\n')
-            result = self.ssl_client.read(2048).strip()
+            result = self.ssl_client.read(2048).strip().decode('utf-8')
         except socket.timeout:
             result = 'Timeout on SMTP NOOP'
         return result

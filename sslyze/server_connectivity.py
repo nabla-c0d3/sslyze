@@ -217,12 +217,12 @@ class ServerConnectivityInfo(object):
             for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
                 ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
                                                                        should_ignore_client_auth=False)
-                ssl_connection.set_cipher_list(cipher_list)
+                ssl_connection.ssl_client.set_cipher_list(cipher_list)
                 try:
                     # Only do one attempt when testing connectivity
                     ssl_connection.connect(network_timeout=network_timeout, network_max_retries=0)
                     ssl_version_supported = ssl_version
-                    ssl_cipher_supported = ssl_connection.get_current_cipher_name()
+                    ssl_cipher_supported = ssl_connection.ssl_client.get_current_cipher_name()
                     break
                 except ClientCertificateRequested:
                     # Connection successful but the servers wants a client certificate which wasn't supplied to sslyze
@@ -233,10 +233,10 @@ class ServerConnectivityInfo(object):
                     # Try a new connection to see if client authentication is optional
                     ssl_connection_auth = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
                                                                                 should_ignore_client_auth=True)
-                    ssl_connection_auth.set_cipher_list(cipher_list)
+                    ssl_connection_auth.ssl_client.set_cipher_list(cipher_list)
                     try:
                         ssl_connection_auth.connect(network_max_retries=0)
-                        ssl_cipher_supported = ssl_connection_auth.get_current_cipher_name()
+                        ssl_cipher_supported = ssl_connection_auth.ssl_client.get_current_cipher_name()
                         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.OPTIONAL
                     except:
                         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
@@ -302,11 +302,11 @@ class ServerConnectivityInfo(object):
 
         # Add Server Name Indication
         if ssl_version != OpenSslVersionEnum.SSLV2:
-            ssl_connection.set_tlsext_host_name(self.tls_server_name_indication)
+            ssl_connection.ssl_client.set_tlsext_host_name(self.tls_server_name_indication)
 
         # Add well-known supported cipher suite
         if self.ssl_cipher_supported and override_ssl_version is None:
-            ssl_connection.set_cipher_list(self.ssl_cipher_supported)
+            ssl_connection.ssl_client.set_cipher_list(self.ssl_cipher_supported)
 
         return ssl_connection
 

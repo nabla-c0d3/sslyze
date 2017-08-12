@@ -40,7 +40,7 @@ class FallbackScsvPlugin(plugin_base.Plugin):
         # Try to connect using a lower TLS version with the fallback cipher suite enabled
         ssl_version_downgrade = OpenSslVersionEnum(server_info.highest_ssl_version_supported.value - 1)
         ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version_downgrade)
-        ssl_connection.enable_fallback_scsv()
+        ssl_connection.ssl_client.enable_fallback_scsv()
 
         supports_fallback_scsv = False
         try:

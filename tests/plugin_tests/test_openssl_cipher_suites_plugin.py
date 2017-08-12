@@ -10,6 +10,7 @@ import pickle
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, Sslv30ScanCommand, \
     Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from tests.plugin_tests.openssl_server import NotOnLinux64Error
 from tests.plugin_tests.openssl_server import VulnerableOpenSslServer
 
@@ -312,3 +313,15 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
+
+    def test_smtp_post_handshake_response(self):
+        server_info = ServerConnectivityInfo(hostname='smtp.gmail.com', port=587,
+                                             tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
+        server_info.test_connectivity_to_server()
+
+        plugin = OpenSslCipherSuitesPlugin()
+        plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
+
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())

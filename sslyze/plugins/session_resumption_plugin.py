@@ -216,15 +216,15 @@ class SessionResumptionPlugin(plugin_base.Plugin):
             # Need to disable TLS tickets to test session IDs, according to rfc5077:
             # If a ticket is presented by the client, the server MUST NOT attempt
             # to use the Session ID in the ClientHello for stateful session resumption
-            ssl_connection.disable_stateless_session_resumption()  # Turning off TLS tickets.
+            ssl_connection.ssl_client.disable_stateless_session_resumption()  # Turning off TLS tickets.
 
         if ssl_session:
-            ssl_connection.set_session(ssl_session)
+            ssl_connection.ssl_client.set_session(ssl_session)
 
         try:
             # Perform the SSL handshake
             ssl_connection.connect()
-            new_session = ssl_connection.get_session()  # Get session data
+            new_session = ssl_connection.ssl_client.get_session()  # Get session data
         finally:
             ssl_connection.close()
 

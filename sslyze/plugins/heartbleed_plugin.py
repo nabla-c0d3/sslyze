@@ -45,7 +45,8 @@ class HeartbleedPlugin(plugin_base.Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         # Replace nassl.sslClient.do_handshake() with a heartbleed checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work
-        ssl_connection.do_handshake = types.MethodType(do_handshake_with_heartbleed, ssl_connection)
+        ssl_connection.ssl_client.do_handshake = types.MethodType(do_handshake_with_heartbleed,
+                                                                  ssl_connection.ssl_client)
 
         is_vulnerable_to_heartbleed = False
         try:

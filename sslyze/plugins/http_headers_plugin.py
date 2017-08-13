@@ -63,9 +63,8 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         ssl_connection.connect()
         certificate_chain = [
-            cryptography.x509.load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'),
-                                                                         backend=default_backend())
-            for x509_cert in ssl_connection.get_peer_cert_chain()
+            cryptography.x509.load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'), backend=default_backend())
+            for x509_cert in ssl_connection.ssl_client.get_peer_cert_chain()
         ]
         # Send an HTTP GET request to the server
         ssl_connection.write(HttpRequestGenerator.get_request(host=server_info.hostname))

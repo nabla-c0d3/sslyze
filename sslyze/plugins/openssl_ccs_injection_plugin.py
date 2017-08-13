@@ -45,7 +45,8 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         # Replace nassl.sslClient.do_handshake() with a CCS checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work
-        ssl_connection.do_handshake = types.MethodType(do_handshake_with_ccs_injection, ssl_connection)
+        ssl_connection.ssl_client.do_handshake = types.MethodType(do_handshake_with_ccs_injection,
+                                                                  ssl_connection.ssl_client)
 
         is_vulnerable = False
         try:

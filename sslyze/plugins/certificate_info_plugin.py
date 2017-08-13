@@ -173,20 +173,20 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection(ssl_verify_locations=trust_store.path)
 
         # Enable OCSP stapling
-        ssl_connection.set_tlsext_status_ocsp()
+        ssl_connection.ssl_client.set_tlsext_status_ocsp()
 
         try:  # Perform the SSL handshake
             ssl_connection.connect()
 
-            ocsp_response = ssl_connection.get_tlsext_status_ocsp_resp()
-            x509_cert_chain = ssl_connection.get_peer_cert_chain()
-            (_, verify_str) = ssl_connection.get_certificate_chain_verify_result()
+            ocsp_response = ssl_connection.ssl_client.get_tlsext_status_ocsp_resp()
+            x509_cert_chain = ssl_connection.ssl_client.get_peer_cert_chain()
+            (_, verify_str) = ssl_connection.ssl_client.get_certificate_chain_verify_result()
 
         except ClientCertificateRequested:  # The server asked for a client cert
             # We can get the server cert anyway
-            ocsp_response = ssl_connection.get_tlsext_status_ocsp_resp()
-            x509_cert_chain = ssl_connection.get_peer_cert_chain()
-            (_, verify_str) = ssl_connection.get_certificate_chain_verify_result()
+            ocsp_response = ssl_connection.ssl_client.get_tlsext_status_ocsp_resp()
+            x509_cert_chain = ssl_connection.ssl_client.get_peer_cert_chain()
+            (_, verify_str) = ssl_connection.ssl_client.get_certificate_chain_verify_result()
 
         finally:
             ssl_connection.close()

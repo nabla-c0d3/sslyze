@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from optparse import OptionParser, OptionGroup
 
 import socket
-
+from netaddr import IPNetwork
 from nassl.ssl_client import OpenSslFileTypeEnum
 from typing import Text
 from typing import Tuple
@@ -33,8 +33,9 @@ class CommandLineServerStringParser(object):
 
     @classmethod
     def parse_server_string(cls, server_str):
-        # type: (Text) -> Tuple[Text, Text, int]
+        # type: (list) of Tuple[Text, Text, int]
         # Extract ip from target
+        list_H_I_P = [] 
         if '{' in server_str and '}' in server_str:
             raw_target = server_str.split('{')
             raw_ip = raw_target[1]
@@ -45,19 +46,28 @@ class CommandLineServerStringParser(object):
             server_str = raw_target[0]
         else:
             ip = None
-
-        # Look for ipv6 hint in target
-        if '[' in server_str:
-            (host, port) = cls._parse_ipv6_server_string(server_str)
+        #enable CIDR notation
+        if '/' in server_str:
+            list_servers = IPNetwork(server_str)
         else:
-            # Look for ipv6 hint in the ip
-            if ip is not None and '[' in ip:
-                (ip, port) = cls._parse_ipv6_server_string(ip)
+            list_servers = [server_str]
+        
+        for ips in list_servers:
+            server_str = str(ips)
+            show_server = server_str
 
-            # Fallback to ipv4
-            (host, port) = cls._parse_ipv4_server_string(server_str)
+            # Look for ipv6 hint in target
+            if '[' in server_str:
+                (host, port) = cls._parse_ipv6_server_string(server_str)
+            else:
+                # Look for ipv6 hint in the ip
+                if ip is not None and '[' in ip:
+                    (ip, port) = cls._parse_ipv6_server_string(ip)
 
-        return host, ip, port
+                # Fallback to ipv4
+                (host, port) = cls._parse_ipv4_server_string(server_str)
+            list_H_I_P.append((host, ip, port, show_server))
+        return list_H_I_P
 
     @classmethod
     def _parse_ipv4_server_string(cls, server_str):
@@ -250,23 +260,30 @@ class CommandLineParser(object):
         bad_server_list = []
         for server_string in args_target_list:
             try:
-                hostname, ip_address, port = CommandLineServerStringParser.parse_server_string(server_string)
+                #hostname, ip_address, port, show_string = CommandLineServerStringParser.parse_server_string(server_string)
+                list_H_I_P =  CommandLineServerStringParser.parse_server_string(server_string)
                 # TODO(AD): Unicode hostnames may fail on Python2
                 #hostname = hostname.decode('utf-8')
-                server_info = ServerConnectivityInfo(
-                    hostname=hostname,
-                    port=port,
-                    ip_address=ip_address,
-                    tls_wrapped_protocol=tls_wrapped_protocol,
-                    tls_server_name_indication=args_command_list.sni,
-                    xmpp_to_hostname=args_command_list.xmpp_to,
-                    client_auth_credentials=client_auth_creds,
-                    http_tunneling_settings=http_tunneling_settings
-                )
-                # Keep the original server string to display it in the CLI output if there was a connection error
-                server_info.server_string = server_string
                 
-                good_server_list.append(server_info)
+                for touple in list_H_I_P:
+                    hostname = touple[0]
+                    ip_address = touple[1]
+                    port = touple[2]
+                    show_string = touple[3]
+                    server_info = ServerConnectivityInfo(
+                        hostname=hostname,
+                        port=port,
+                        ip_address=ip_address,
+                        tls_wrapped_protocol=tls_wrapped_protocol,
+                        tls_server_name_indication=args_command_list.sni,
+                        xmpp_to_hostname=args_command_list.xmpp_to,
+                        client_auth_credentials=client_auth_creds,
+                        http_tunneling_settings=http_tunneling_settings
+                    )
+                    # Keep the original server string to display it in the CLI output if there was a connection error
+                    server_info.server_string = show_string
+                
+                    good_server_list.append(server_info)
             except ServerConnectivityError as e:
                 # Will happen for example if the DNS lookup failed or the server string is malformed
                 bad_server_list.append(FailedServerScan(server_string, e))

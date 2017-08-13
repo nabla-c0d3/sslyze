@@ -120,7 +120,7 @@ class ConcurrentScanner(object):
             else:
                 # We are already using the maximum number of processes
                 # Do not create a process and re-use a random existing hostname queue
-                self._hostname_queues_dict[hostname] = random.choice(self._hostname_queues_dict.values())
+                self._hostname_queues_dict[hostname] = random.choice(list(self._hostname_queues_dict.values()))
                 self._processes_dict[hostname] = []
 
         else:

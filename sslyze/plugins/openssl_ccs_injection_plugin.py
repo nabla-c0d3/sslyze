@@ -14,7 +14,7 @@ from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.application_data_protocol import TlsApplicationDataRecord
 from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
 from tls_parser.exceptions import NotEnoughData
-from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsServerHelloDoneRecord
+from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte
 from tls_parser.parser import TlsRecordParser
 from tls_parser.tls_version import TlsVersionEnum
 
@@ -109,11 +109,13 @@ def do_handshake_with_ccs_injection(self):
             remaining_bytes = remaining_bytes + raw_ssl_bytes
             continue
 
-        if isinstance(tls_record, TlsServerHelloDoneRecord):
-            did_receive_hello_done = True
-        elif isinstance(tls_record, TlsHandshakeRecord):
-            # Could be a ServerHello, a Certificate or a CertificateRequest if the server requires client auth
-            pass
+        if isinstance(tls_record, TlsHandshakeRecord):
+            # Does the record contain a ServerDone message?
+            for handshake_message in tls_record.subprotocol_messages:
+                if handshake_message.handshake_type == TlsHandshakeTypeByte.SERVER_DONE:
+                    did_receive_hello_done = True
+                    break
+            # If not, it could be a ServerHello, Certificate or a CertificateRequest if the server requires client auth
         elif isinstance(tls_record, TlsAlertRecord):
             # Server returned a TLS alert
             break
@@ -136,14 +138,12 @@ def do_handshake_with_ccs_injection(self):
             try:
                 tls_record, len_consumed = TlsRecordParser.parse_bytes(remaining_bytes)
                 remaining_bytes = remaining_bytes[len_consumed::]
-            except socket.error:
-                # Server closed the connection after receiving the CCS payload
-                raise NotVulnerableToCcsInjection()
             except NotEnoughData:
                 # Try to get more data
-                raw_ssl_bytes = self._sock.recv(16381)
-                if not raw_ssl_bytes:
-                    # No data?
+                try:
+                    raw_ssl_bytes = self._sock.recv(16381)
+                except socket.error:
+                    # Server closed the connection after receiving the CCS payload
                     raise NotVulnerableToCcsInjection()
 
                 remaining_bytes = remaining_bytes + raw_ssl_bytes
@@ -151,7 +151,7 @@ def do_handshake_with_ccs_injection(self):
 
             if isinstance(tls_record, TlsAlertRecord):
                 # Server returned a TLS alert but which one?
-                if tls_record.subprotocol_message.alert_description == 0x14:
+                if tls_record.alert_description == 0x14:
                     # BAD_RECORD_MAC: This means that the server actually tried to decrypt our early application data
                     # record instead of ignoring it; server is vulnerable
                     raise VulnerableToCcsInjection()

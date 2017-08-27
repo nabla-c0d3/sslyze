@@ -13,7 +13,7 @@ from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.exceptions import NotEnoughData
-from tls_parser.handshake_protocol import TlsServerHelloDoneRecord, TlsHandshakeRecord
+from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte
 from tls_parser.heartbeat_protocol import TlsHeartbeatRequestRecord
 from tls_parser.parser import TlsRecordParser
 from tls_parser.record_protocol import TlsVersionEnum
@@ -132,7 +132,7 @@ def do_handshake_with_heartbleed(self):
 
     # Retrieve the server's response - directly read the underlying network socket
     # Retrieve data until we get to the ServerHelloDone
-    # The server may send back a ServerHello, an Alert or a CertificateRequest first
+    # The server may send back a ServerHello, an Alert, a CertificateRequest or may just close the connection
     did_receive_hello_done = False
     remaining_bytes = b''
     while not did_receive_hello_done:
@@ -141,19 +141,22 @@ def do_handshake_with_heartbleed(self):
             remaining_bytes = remaining_bytes[len_consumed::]
         except NotEnoughData:
             # Try to get more data
-            raw_ssl_bytes = self._sock.recv(16381)
-            if not raw_ssl_bytes:
-                # No data?
-                break
+            try:
+                raw_ssl_bytes = self._sock.recv(16381)
+            except socket.error:
+                # Server closed the connection as soon as it received the Heartbleed payload
+                raise NotVulnerableToHeartbleed()
 
             remaining_bytes = remaining_bytes + raw_ssl_bytes
             continue
 
-        if isinstance(tls_record, TlsServerHelloDoneRecord):
-            did_receive_hello_done = True
-        elif isinstance(tls_record, TlsHandshakeRecord):
-            # Could be a ServerHello, a Certificate or a CertificateRequest if the server requires client auth
-            pass
+        if isinstance(tls_record, TlsHandshakeRecord):
+            # Does the record contain a ServerDone message?
+            for handshake_message in tls_record.subprotocol_messages:
+                if handshake_message.handshake_type == TlsHandshakeTypeByte.SERVER_DONE:
+                    did_receive_hello_done = True
+                    break
+            # If not, it could be a ServerHello, Certificate or a CertificateRequest if the server requires client auth
         elif isinstance(tls_record, TlsAlertRecord):
             # Server returned a TLS alert
             break

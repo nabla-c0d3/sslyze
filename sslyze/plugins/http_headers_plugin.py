@@ -248,7 +248,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         computed_hpkp_pins_text = ['', self._format_subtitle('Computed HPKP Pins for Current Chain')]
         if self.verified_certificate_chain:
             for index, cert in enumerate(self.verified_certificate_chain, start=0):
-                final_subject = CertificateUtils.get_printable_name(cert.subject)
+                final_subject = CertificateUtils.get_name_as_short_text(cert.subject)
                 if len(final_subject) > 40:
                     # Make the CN shorter when displaying it
                     final_subject = '{}...'.format(final_subject[:40])

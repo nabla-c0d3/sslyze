@@ -385,13 +385,13 @@ class CertificateInfoScanResult(PluginScanResult):
                 error_txt))
 
         # Print the Common Names within the certificate chain
-        cns_in_certificate_chain = [CertificateUtils.get_printable_name(cert.subject)
+        cns_in_certificate_chain = [CertificateUtils.get_name_as_short_text(cert.subject)
                                     for cert in self.certificate_chain]
         text_output.append(self._format_field('Received Chain:', ' --> '.join(cns_in_certificate_chain)))
 
         # Print the Common Names within the verified certificate chain if validation was successful
         if self.verified_certificate_chain:
-            cns_in_certificate_chain = [CertificateUtils.get_printable_name(cert.subject)
+            cns_in_certificate_chain = [CertificateUtils.get_name_as_short_text(cert.subject)
                                         for cert in self.verified_certificate_chain]
             verified_chain_txt = ' --> '.join(cns_in_certificate_chain)
         else:
@@ -459,8 +459,46 @@ class CertificateInfoScanResult(PluginScanResult):
 
             # Add the PEM cert
             cert_as_pem_xml = Element('asPEM')
-            cert_as_pem_xml.text = certificate.public_bytes(Encoding.PEM)
+            cert_as_pem_xml.text = certificate.public_bytes(Encoding.PEM).decode('ascii')
             cert_xml.append(cert_as_pem_xml)
+
+            # Add some of the fields of the cert
+            elem_xml = Element('subject')
+            elem_xml.text = CertificateUtils.get_name_as_text(certificate.subject)
+            cert_xml.append(elem_xml)
+
+            elem_xml = Element('issuer')
+            elem_xml.text = CertificateUtils.get_name_as_text(certificate.issuer)
+            cert_xml.append(elem_xml)
+
+            elem_xml = Element('serialNumber')
+            elem_xml.text = str(certificate.serial_number)
+            cert_xml.append(elem_xml)
+
+            elem_xml = Element('notBefore')
+            elem_xml.text = certificate.not_valid_before.strftime("%Y-%m-%d %H:%M:%S")
+            cert_xml.append(elem_xml)
+
+            elem_xml = Element('notAfter')
+            elem_xml.text = certificate.not_valid_after.strftime("%Y-%m-%d %H:%M:%S")
+            cert_xml.append(elem_xml)
+
+            elem_xml = Element('signatureAlgorithm')
+            elem_xml.text = certificate.signature_hash_algorithm.name
+            cert_xml.append(elem_xml)
+
+            key_attrs = {'algorithm': CertificateUtils.get_public_key_type(certificate)}
+            public_key = certificate.public_key()
+            if isinstance(public_key, EllipticCurvePublicKey):
+                key_attrs['size'] = str(public_key.curve.key_size)
+                key_attrs['curve'] =  public_key.curve.name
+            else:
+                key_attrs['size'] = str(public_key.key_size)
+                key_attrs['exponent'] = str(public_key.public_numbers().e)
+
+            elem_xml = Element('publicKey', attrib=key_attrs)
+            cert_xml.append(elem_xml)
+
             cert_xml_list.append(cert_xml)
         return cert_xml_list
 
@@ -559,13 +597,13 @@ class CertificateInfoScanResult(PluginScanResult):
         text_output = [
             self._format_field('SHA1 Fingerprint:',
                                binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode('ascii')),
-            self._format_field('Common Name:', CertificateUtils.get_printable_name(certificate.subject)),
-            self._format_field('Issuer:', CertificateUtils.get_printable_name(certificate.issuer)),
+            self._format_field('Common Name:', CertificateUtils.get_name_as_short_text(certificate.subject)),
+            self._format_field('Issuer:', CertificateUtils.get_name_as_short_text(certificate.issuer)),
             self._format_field('Serial Number:', certificate.serial_number),
             self._format_field('Not Before:', certificate.not_valid_before),
             self._format_field('Not After:', certificate.not_valid_after),
             self._format_field('Signature Algorithm:', certificate.signature_hash_algorithm.name),
-            self._format_field('Public Key Algorithm:', public_key.__class__.__name__)]
+            self._format_field('Public Key Algorithm:', CertificateUtils.get_public_key_type(certificate))]
 
         if isinstance(public_key, EllipticCurvePublicKey):
             text_output.append(self._format_field('Key Size:', public_key.curve.key_size))

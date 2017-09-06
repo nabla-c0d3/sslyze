@@ -28,6 +28,6 @@ class CertificateUtilsTestCase(unittest.TestCase):
         self.assertEqual(CertificateUtils.get_dns_subject_alternative_names(certificate), ['github.com',
                                                                                            'www.github.com'])
 
-        self.assertEqual(CertificateUtils.get_printable_name(certificate.issuer),
+        self.assertEqual(CertificateUtils.get_name_as_short_text(certificate.issuer),
                          'DigiCert SHA2 Extended Validation Server CA')
 

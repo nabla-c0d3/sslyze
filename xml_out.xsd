@@ -3,8 +3,8 @@
     <xs:element name="document">
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="invalidTargets"/>
                 <xs:element ref="results"/>
+                <xs:element ref="invalidTargets"/>
             </xs:sequence>
             <xs:attribute name="SSLyzeVersion" use="required"/>
             <xs:attribute name="SSLyzeWeb" use="required"/>
@@ -341,12 +341,33 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element ref="asPEM"/>
+                <xs:element ref="subject"/>
+                <xs:element ref="issuer"/>
+                <xs:element ref="serialNumber"/>
+                <xs:element ref="notBefore"/>
+                <xs:element ref="notAfter"/>
+                <xs:element ref="signatureAlgorithm"/>
+                <xs:element ref="publicKey"/>
             </xs:sequence>
             <xs:attribute name="sha1Fingerprint" use="required"/>
             <xs:attribute name="hpkpSha256Pin" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="asPEM" type="xs:string"/>
+    <xs:element name="subject" type="xs:string"/>
+    <xs:element name="issuer" type="xs:string"/>
+    <xs:element name="serialNumber" type="xs:string"/>
+    <xs:element name="notBefore" type="xs:string"/>
+    <xs:element name="notAfter" type="xs:string"/>
+    <xs:element name="signatureAlgorithm" type="xs:string"/>
+    <xs:element name="publicKey">
+        <xs:complexType>
+            <xs:attribute name="algorithm" use="required"/>
+            <xs:attribute name="size" use="required"/>
+            <xs:attribute name="curve"/>
+            <xs:attribute name="exponent"/>
+        </xs:complexType>
+    </xs:element>
     <xs:complexType name="sessionResumptionWithSessionIDs">
         <xs:sequence>
             <xs:element ref="sessionResumptionWithSessionIDs"/>

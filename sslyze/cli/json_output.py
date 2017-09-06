@@ -78,7 +78,7 @@ class JsonOutputGenerator(OutputGenerator):
             # Properly serialize certificates; only return the PEM string
             result = {'as_pem': obj.public_bytes(Encoding.PEM).decode('ascii'),
                       'hpkp_pin': CertificateUtils.get_hpkp_pin(obj),
-                      'subject_name': CertificateUtils.get_printable_name(obj.subject)}
+                      'subject_name': CertificateUtils.get_name_as_short_text(obj.subject)}
         elif isinstance(obj, object):
             result = {}
             for key, value in obj.__dict__.items():

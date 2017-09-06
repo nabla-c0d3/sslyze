@@ -6,6 +6,7 @@ import ssl
 from base64 import b64encode
 from hashlib import sha256
 import cryptography
+from cryptography.hazmat.primitives.asymmetric import rsa, dsa, ec
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.x509 import DNSName
 from cryptography.x509 import ExtensionNotFound
@@ -54,7 +55,7 @@ class CertificateUtils(object):
         ssl.match_hostname(certificate_names, hostname)
 
     @classmethod
-    def get_printable_name(cls, name_field):
+    def get_name_as_short_text(cls, name_field):
         # type: (cryptography.x509.Name) -> Text
         """Convert a name field returned by the cryptography module to a string suitable for displaying it to the user.
         """
@@ -64,8 +65,13 @@ class CertificateUtils(object):
             # We don't support certs with multiple CNs
             return common_names[0]
         else:
-            # Otherwise show the whole Issuer field
-            return ', '.join(['{}={}'.format(attr.oid._name, attr.value) for attr in name_field])
+            # Otherwise show the whole field
+            return cls.get_name_as_text(name_field)
+
+    @classmethod
+    def get_name_as_text(cls, name_field):
+        # type: (cryptography.x509.Name) -> Text
+        return ', '.join(['{}={}'.format(attr.oid._name, attr.value) for attr in name_field])
 
     @staticmethod
     def get_hpkp_pin(certificate):
@@ -78,4 +84,17 @@ class CertificateUtils(object):
         )
         digest = sha256(pub_bytes).digest()
         return b64encode(digest).decode('utf-8')
+
+    @staticmethod
+    def get_public_key_type(certificate):
+        # type: (cryptography.x509.Certificate) -> Text
+        public_key = certificate.public_key()
+        if isinstance(public_key, rsa.RSAPublicKey):
+            return 'RSA'
+        elif isinstance(public_key, dsa.DSAPublicKey):
+            return 'DSA'
+        elif isinstance(public_key, ec.EllipticCurvePublicKey):
+            return 'EllipticCurve'
+        else:
+            raise ValueError('Unexpected key algorithm')
 

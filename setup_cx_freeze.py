@@ -25,7 +25,7 @@ build_exe_options = {"packages": ['cffi', 'cryptography', 'idna'],
 
 sslyze_setup_py2exe.update({
     'options':  {"build_exe": build_exe_options},
-    'executables': [Executable(os.path.join('sslyze', '__main__.py'))],
+    'executables': [Executable(os.path.join('sslyze', '__main__.py'), targetName='sslyze.exe')],
     })
 
 if __name__ == "__main__":

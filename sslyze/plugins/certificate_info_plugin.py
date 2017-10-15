@@ -532,11 +532,9 @@ class CertificateInfoScanResult(PluginScanResult):
                 'validationResult': path_result.verify_string
             }
 
-            # Things we only do with the Mozilla store
-            if 'Mozilla' in path_result.trust_store.name:
-                # EV certs
-                if self.is_leaf_certificate_ev:
-                    path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
+            # Things we only do with the Mozilla store: EV certs
+            if self.is_leaf_certificate_ev and TrustStoresRepository.get_main() == path_result.trust_store:
+                path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
 
             path_valid_xml = Element('pathValidation', attrib=path_attrib_xml)
             trust_validation_xml.append(path_valid_xml)

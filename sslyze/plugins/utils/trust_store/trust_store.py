@@ -38,6 +38,12 @@ class TrustStore(object):
 
         self._subject_to_certificate_dict = None
 
+    def __eq__(self, other):
+        # type: (TrustStore) -> bool
+        if self.path == other.path and self._ev_oids == other._ev_oids:
+            return True
+        return False
+
     def __parse_ev_oids(self):
         if self.__ev_oids_arg:
             self._ev_oids = [ObjectIdentifier(oid) for oid in self.__ev_oids_arg]

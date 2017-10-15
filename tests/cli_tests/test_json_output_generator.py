@@ -65,5 +65,5 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
 
         # Ensure the console output displayed the total scan time
         self.assertIn(str(scan_time), received_output)
-        self.assertIn('"network_timeout": "{}"'.format(MockCommandLineValues().timeout), received_output)
-        self.assertIn('"network_max_retries": "{}"'.format(MockCommandLineValues().nb_retries), received_output)
+        self.assertIn('"network_timeout": {}'.format(MockCommandLineValues().timeout), received_output)
+        self.assertIn('"network_max_retries": {}'.format(MockCommandLineValues().nb_retries), received_output)

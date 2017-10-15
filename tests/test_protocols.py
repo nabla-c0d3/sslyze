@@ -64,7 +64,7 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertEquals(len(plugin_result.certificate_chain), 3)
+        self.assertEquals(len(plugin_result.certificate_chain), 2)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())

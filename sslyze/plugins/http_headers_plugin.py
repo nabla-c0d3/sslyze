@@ -4,8 +4,6 @@ from __future__ import unicode_literals
 
 from xml.etree.ElementTree import Element
 
-import pickle
-
 import cryptography
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import Encoding
@@ -99,6 +97,10 @@ class ParsedHstsHeader(object):
     """
     def __init__(self, raw_hsts_header):
         # type: (Text) -> None
+        # Handle headers defined multiple times by picking the first value
+        if ',' in raw_hsts_header:
+            raw_hsts_header = raw_hsts_header.split(',')[0]
+
         self.max_age = None
         self.include_subdomains = False
         self.preload = False
@@ -133,6 +135,10 @@ class ParsedHpkpHeader(object):
 
     def __init__(self, raw_hpkp_header, report_only=False):
         # type: (Text, bool) -> None
+        # Handle headers defined multiple times by picking the first value
+        if ',' in raw_hpkp_header:
+            raw_hpkp_header = raw_hpkp_header.split(',')[0]
+
         self.report_only = report_only
         self.report_uri = None
         self.include_subdomains = False

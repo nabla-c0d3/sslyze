@@ -5,6 +5,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from io import BytesIO
+from socket import socket
+
 try:
     # Python 3
     # noinspection PyCompatibility
@@ -24,7 +26,7 @@ class HttpResponseParser(object):
 
     @staticmethod
     def parse(sock):
-
+        # type: (socket) -> HTTPResponse
         try:
             # H4ck to standardize the API between sockets and SSLConnection objects
             response = sock.read(4096)

@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
         elif isinstance(scan_result.scan_command, CertificateInfoScanCommand):
             # Print the Common Names within the certificate chain
-            cns_in_certificate_chain = [CertificateUtils.get_printable_name(cert.subject)
+            cns_in_certificate_chain = [CertificateUtils.get_name_as_short_text(cert.subject)
                                         for cert in scan_result.verified_certificate_chain]
             print('Certificate Chain CNn: {}'.format(cns_in_certificate_chain))
 

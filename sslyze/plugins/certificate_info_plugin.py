@@ -17,7 +17,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
-from nassl.ocsp_response import OcspResponse
+from nassl.ocsp_response import OcspResponse, OcspResponseStatusEnum
 from nassl.ocsp_response import OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins import plugin_base
@@ -225,6 +225,9 @@ class CertificateInfoScanResult(PluginScanResult):
         is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
         ocsp_response (Optional[Dict[Text, Any]]): The OCSP response returned by the server. None if no response was
             sent by the server.
+        is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
+        ocsp_response_status (Optional[OcspResponseStatusEnum]): The status of the OCSP response returned by the server.
+            None if no response was sent by the server.
         is_ocsp_response_trusted (Optional[bool]): True if the OCSP response is trusted using the Mozilla trust store.
             None if no OCSP response was sent by the server.
         has_sha1_in_certificate_chain (bool): True if any of the leaf or intermediate certificates are signed using the
@@ -260,10 +263,12 @@ class CertificateInfoScanResult(PluginScanResult):
 
         self.ocsp_response = None
         self.is_ocsp_response_trusted = None
+        self.ocsp_response_status = None
         if ocsp_response:
+            self.ocsp_response_status = ocsp_response.status
             # We only keep the dictionary as a nassl.OcspResponse is not pickable
             self.ocsp_response = ocsp_response.as_dict()
-            if self.successful_trust_store:
+            if self.successful_trust_store and self.ocsp_response_status == OcspResponseStatusEnum.SUCCESSFUL:
                 try:
                     ocsp_response.verify(self.successful_trust_store.path)
                     self.is_ocsp_response_trusted = True
@@ -425,23 +430,28 @@ class CertificateInfoScanResult(PluginScanResult):
             text_output.append(self._format_field('', 'NOT SUPPORTED - Server did not send back an OCSP response.'))
 
         else:
-            ocsp_trust_txt = 'OK - Response is trusted' \
-                if self.is_ocsp_response_trusted \
-                else 'FAILED - Response is NOT trusted'
+            if self.ocsp_response_status != OcspResponseStatusEnum.SUCCESSFUL:
+                ocsp_resp_txt = [self._format_field('', 'ERROR - OCSP response status is not successful: {}'.format(
+                    self.ocsp_response_status.name
+                ))]
+            else:
+                ocsp_trust_txt = 'OK - Response is trusted' \
+                    if self.is_ocsp_response_trusted \
+                    else 'FAILED - Response is NOT trusted'
 
-            ocsp_resp_txt = [
-                self._format_field('OCSP Response Status:', self.ocsp_response['responseStatus']),
-                self._format_field('Validation w/ Mozilla Store:', ocsp_trust_txt),
-                self._format_field('Responder Id:', self.ocsp_response['responderID'])]
+                ocsp_resp_txt = [
+                    self._format_field('OCSP Response Status:', self.ocsp_response['responseStatus']),
+                    self._format_field('Validation w/ Mozilla Store:', ocsp_trust_txt),
+                    self._format_field('Responder Id:', self.ocsp_response['responderID'])]
 
-            if 'successful' in self.ocsp_response['responseStatus']:
-                ocsp_resp_txt.extend([
-                    self._format_field('Cert Status:', self.ocsp_response['responses'][0]['certStatus']),
-                    self._format_field('Cert Serial Number:',
-                                       self.ocsp_response['responses'][0]['certID']['serialNumber']),
-                    self._format_field('This Update:', self.ocsp_response['responses'][0]['thisUpdate']),
-                    self._format_field('Next Update:', self.ocsp_response['responses'][0]['nextUpdate'])
-                ])
+                if 'successful' in self.ocsp_response['responseStatus']:
+                    ocsp_resp_txt.extend([
+                        self._format_field('Cert Status:', self.ocsp_response['responses'][0]['certStatus']),
+                        self._format_field('Cert Serial Number:',
+                                           self.ocsp_response['responses'][0]['certID']['serialNumber']),
+                        self._format_field('This Update:', self.ocsp_response['responses'][0]['thisUpdate']),
+                        self._format_field('Next Update:', self.ocsp_response['responses'][0]['nextUpdate'])
+                    ])
             text_output.extend(ocsp_resp_txt)
 
         # All done
@@ -568,20 +578,21 @@ class CertificateInfoScanResult(PluginScanResult):
         ocsp_xml = Element('ocspStapling', attrib={'isSupported': 'False' if self.ocsp_response is None else 'True'})
 
         if self.ocsp_response:
-            ocsp_resp_xmp = Element('ocspResponse',
-                                    attrib={'isTrustedByMozillaCAStore': str(self.is_ocsp_response_trusted)})
+            if self.ocsp_response_status != OcspResponseStatusEnum.SUCCESSFUL:
+                ocsp_resp_xmp = Element('ocspResponse',
+                                        attrib={'status': self.ocsp_response_status.name})
+            else:
+                ocsp_resp_xmp = Element('ocspResponse',
+                                        attrib={'isTrustedByMozillaCAStore': str(self.is_ocsp_response_trusted),
+                                                'status': self.ocsp_response_status.name})
 
-            responder_xml = Element('responderID')
-            responder_xml.text = self.ocsp_response['responderID']
-            ocsp_resp_xmp.append(responder_xml)
+                responder_xml = Element('responderID')
+                responder_xml.text = self.ocsp_response['responderID']
+                ocsp_resp_xmp.append(responder_xml)
 
-            produced_xml = Element('producedAt')
-            produced_xml.text = self.ocsp_response['producedAt']
-            ocsp_resp_xmp.append(produced_xml)
-
-            response_status_xml = Element('responseStatus')
-            response_status_xml.text = self.ocsp_response['responseStatus']
-            ocsp_resp_xmp.append(response_status_xml)
+                produced_xml = Element('producedAt')
+                produced_xml.text = self.ocsp_response['producedAt']
+                ocsp_resp_xmp.append(produced_xml)
 
             ocsp_xml.append(ocsp_resp_xmp)
         xml_output.append(ocsp_xml)

@@ -8,7 +8,7 @@ import logging
 import pickle
 
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, Sslv30ScanCommand, \
-    Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand
+    Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand, Tlsv13ScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from tests.plugin_tests.openssl_server import NotOnLinux64Error
@@ -322,6 +322,16 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
-
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+    def test_tls_1_3_cipher_suites(self):
+        server_info = ServerConnectivityInfo(hostname='tls13.crypto.mozilla.org')
+        server_info.test_connectivity_to_server()
+
+        plugin = OpenSslCipherSuitesPlugin()
+        plugin_result = plugin.process_task(server_info, Tlsv13ScanCommand())
+
+        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
+        self.assertEquals({'TLS13-AES-128-GCM-SHA256', 'TLS13-AES-256-GCM-SHA384', 'TLS13-CHACHA20-POLY1305-SHA256'},
+                          set(accepted_cipher_name_list))

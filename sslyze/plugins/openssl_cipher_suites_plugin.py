@@ -7,7 +7,8 @@ from abc import ABCMeta
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
-from nassl.ssl_client import SslClient, OpenSslVersionEnum, ClientCertificateRequested
+from nassl.legacy_ssl_client import LegacySslClient
+from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -86,6 +87,14 @@ class Tlsv12ScanCommand(CipherSuiteScanCommand):
         return 'tlsv1_2'
 
 
+class Tlsv13ScanCommand(CipherSuiteScanCommand):
+    """List the TLS 1.3 OpenSSL cipher suites supported by the server(s).
+    """
+    @classmethod
+    def get_cli_argument(cls):
+        return 'tlsv1_3'
+
+
 class OpenSslCipherSuitesPlugin(Plugin):
     """Scan the server(s) for supported OpenSSL cipher suites.
     """
@@ -96,13 +105,13 @@ class OpenSslCipherSuitesPlugin(Plugin):
         Sslv30ScanCommand: OpenSslVersionEnum.SSLV3,
         Tlsv10ScanCommand: OpenSslVersionEnum.TLSV1,
         Tlsv11ScanCommand: OpenSslVersionEnum.TLSV1_1,
-        Tlsv12ScanCommand: OpenSslVersionEnum.TLSV1_2
+        Tlsv12ScanCommand: OpenSslVersionEnum.TLSV1_2,
+        Tlsv13ScanCommand: OpenSslVersionEnum.TLSV1_3,
     }
 
     @classmethod
     def get_available_commands(cls):
-        return [Sslv20ScanCommand, Sslv30ScanCommand, Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand]
-
+        return cls.SSL_VERSIONS_MAPPING.keys()
 
     @classmethod
     def get_cli_option_group(cls):
@@ -129,15 +138,14 @@ class OpenSslCipherSuitesPlugin(Plugin):
         )
         return options
 
-
     def process_task(self, server_connectivity_info, scan_command):
         # type: (ServerConnectivityInfo, CipherSuiteScanCommand) -> CipherSuiteScanResult
         ssl_version = self.SSL_VERSIONS_MAPPING[scan_command.__class__]
 
         # Get the list of available cipher suites for the given ssl version
-        ssl_client = SslClient(ssl_version=ssl_version)
-        ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
-        cipher_list = ssl_client.get_cipher_list()
+        ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
+        ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
+        cipher_list = ssl_connection.ssl_client.get_cipher_list()
 
         # Scan for every available cipher suite
         thread_pool = ThreadPool()
@@ -298,12 +306,15 @@ class AcceptedCipherSuite(CipherSuite):
         # type: (SSLConnection, OpenSslVersionEnum) -> AcceptedCipherSuite
         keysize = ssl_connection.ssl_client.get_current_cipher_bits()
         picked_cipher_name = ssl_connection.ssl_client.get_current_cipher_name()
-        if 'ECDH' in picked_cipher_name:
-            dh_infos = ssl_connection.ssl_client.get_ecdh_param()
-        elif 'DH' in picked_cipher_name:
-            dh_infos = ssl_connection.ssl_client.get_dh_param()
-        else:
-            dh_infos = None
+
+        # Only the legacy client has the APIs to extract DH info
+        # TODO(AD): Add the APIs to the modern client
+        dh_infos = None
+        if isinstance(ssl_connection.ssl_client, LegacySslClient):
+            if 'ECDH' in picked_cipher_name:
+                dh_infos = ssl_connection.ssl_client.get_ecdh_param()
+            elif 'DH' in picked_cipher_name:
+                dh_infos = ssl_connection.ssl_client.get_dh_param()
 
         status_msg = ssl_connection.post_handshake_check()
         return AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, dh_infos, status_msg)
@@ -712,4 +723,5 @@ OPENSSL_TO_RFC_NAMES_MAPPING = {
     OpenSslVersionEnum.TLSV1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
     OpenSslVersionEnum.TLSV1_1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
     OpenSslVersionEnum.TLSV1_2: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    OpenSslVersionEnum.TLSV1_3: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
 }

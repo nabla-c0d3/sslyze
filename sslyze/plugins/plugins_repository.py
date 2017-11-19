@@ -15,7 +15,6 @@ from sslyze.plugins.plugin_base import PluginScanCommand
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin
 from typing import List
-from typing import Optional
 from typing import Type
 
 
@@ -28,7 +27,7 @@ class PluginsRepository(object):
                        SessionResumptionPlugin]
 
     def __init__(self, plugin_classes=_PLUGIN_CLASSES):
-        # type: (Optional[List[Type[Plugin]]]) -> None
+        # type: (List[Type[Plugin]]) -> None
         scan_command_classes_to_plugin_classes = {}
 
         # Create a dict of scan_commands -> plugin_classes

@@ -211,8 +211,9 @@ class ServerConnectivityInfo(object):
         ssl_version_supported = None
         ssl_cipher_supported = None
 
+        # TODO(AD): Switch to using the protocol discovery logic available in OpenSSL 1.1.0 with TLS_client_method()
         for ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_1, OpenSslVersionEnum.TLSV1,
-                            OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.SSLV23]:
+                            OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.TLSV1_3, OpenSslVersionEnum.SSLV23]:
             # First try the default cipher list, and then all ciphers
             for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
                 ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
@@ -261,13 +262,17 @@ class ServerConnectivityInfo(object):
         self.client_auth_requirement = client_auth_requirement
 
 
-    def get_preconfigured_ssl_connection(self, override_ssl_version=None, ssl_verify_locations=None,
-                                         should_ignore_client_auth=None):
-        # type: (Optional[int], Optional[bool], Optional[bool]) -> SSLConnection
+    def get_preconfigured_ssl_connection(
+            self,
+            override_ssl_version=None,      # type: Optional[OpenSslVersionEnum]
+            ssl_verify_locations=None,      # type: Optional[bool]
+            should_ignore_client_auth=None  # type: Optional[bool]
+    ):
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
 
         Used by all plugins to connect to the server and run scans.
         """
+        # type: (...) -> SSLConnection
         if self.highest_ssl_version_supported is None and override_ssl_version is None:
             raise ValueError('Cannot return an SSLConnection without testing connectivity; '
                              'call test_connectivity_to_server() first')
@@ -282,10 +287,20 @@ class ServerConnectivityInfo(object):
 
         # Create the right SSLConnection object
         ssl_version = override_ssl_version if override_ssl_version is not None else self.highest_ssl_version_supported
+
+        # For older versions of TLS/SSL, we have to use a legacy OpenSSL
+        should_use_legacy_openssl = False if ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_3] \
+            else True
+
         ssl_connection = self.TLS_CONNECTION_CLASSES[self.tls_wrapped_protocol](
-            self.hostname, self.ip_address, self.port, ssl_version, ssl_verify_locations=ssl_verify_locations,
+            self.hostname,
+            self.ip_address,
+            self.port,
+            ssl_version,
+            ssl_verify_locations=ssl_verify_locations,
             client_auth_creds=self.client_auth_credentials,
-            should_ignore_client_auth=should_ignore_client_auth
+            should_ignore_client_auth=should_ignore_client_auth,
+            should_use_legacy_openssl=should_use_legacy_openssl,
         )
 
         # Add XMPP configuration

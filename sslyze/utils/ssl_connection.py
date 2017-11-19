@@ -24,7 +24,8 @@ except ImportError:
     from urllib import quote
 
 from nassl import _nassl
-from nassl.debug_ssl_client import DebugSslClient
+from nassl.ssl_client import SslClient
+from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import ClientCertificateRequested, OpenSslVerifyEnum, OpenSslVersionEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 
@@ -100,12 +101,15 @@ class SSLConnection(object):
                  ssl_version,                           # type: OpenSslVersionEnum
                  ssl_verify_locations=None,             # type: Optional[Text]
                  client_auth_creds=None,                # type: Optional[ClientAuthenticationCredentials]
-                 should_ignore_client_auth=False        # type: bool
+                 should_ignore_client_auth=False,       # type: bool
+                 should_use_legacy_openssl=False        # type: bool
                  ):
         # type: (...) -> None
+        ssl_client_cls = LegacySslClient if should_use_legacy_openssl else SslClient
+
         if client_auth_creds:
             # A client certificate and private key were provided
-            self.ssl_client = DebugSslClient(ssl_version=ssl_version,
+            self.ssl_client = ssl_client_cls(ssl_version=ssl_version,
                                              ssl_verify=OpenSslVerifyEnum.NONE,
                                              ssl_verify_locations=ssl_verify_locations,
                                              client_certchain_file=client_auth_creds.client_certificate_chain_path,
@@ -115,7 +119,7 @@ class SSLConnection(object):
                                              ignore_client_authentication_requests=False)
         else:
             # No client cert and key
-            self.ssl_client = DebugSslClient(ssl_version=ssl_version,
+            self.ssl_client = ssl_client_cls(ssl_version=ssl_version,
                                              ssl_verify=OpenSslVerifyEnum.NONE,
                                              ssl_verify_locations=ssl_verify_locations,
                                              ignore_client_authentication_requests=should_ignore_client_auth)

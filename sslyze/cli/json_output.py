@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import json
 
 from cryptography.hazmat.backends.openssl import x509
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
 from enum import Enum
 from sslyze import PROJECT_URL, __version__
@@ -81,10 +82,32 @@ def _object_to_json_dict(obj):
         # Properly serialize Enums (such as OpenSslVersionEnum)
         result = obj.name
     elif isinstance(obj, x509._Certificate):
-        # Properly serialize certificates; only return the PEM string
-        result = {'as_pem': obj.public_bytes(Encoding.PEM).decode('ascii'),
-                  'hpkp_pin': CertificateUtils.get_hpkp_pin(obj),
-                  'subject_name': CertificateUtils.get_name_as_short_text(obj.subject)}
+        # Properly serialize certificates
+        certificate = obj
+        result = {
+            # Add general info
+            'as_pem': obj.public_bytes(Encoding.PEM).decode('ascii'),
+            'hpkp_pin': CertificateUtils.get_hpkp_pin(obj),
+
+            # Add some of the fields of the cert
+            'subject': CertificateUtils.get_name_as_text(certificate.subject),
+            'issuer': CertificateUtils.get_name_as_text(certificate.issuer),
+            'serialNumber': str(certificate.serial_number),
+            'notBefore': certificate.not_valid_before.strftime("%Y-%m-%d %H:%M:%S"),
+            'notAfter': certificate.not_valid_after.strftime("%Y-%m-%d %H:%M:%S"),
+            'signatureAlgorithm': certificate.signature_hash_algorithm.name,
+            'publicKey': {'algorithm': CertificateUtils.get_public_key_type(certificate)}
+        }
+
+        # Add some info about the public key
+        public_key = certificate.public_key()
+        if isinstance(public_key, EllipticCurvePublicKey):
+            result['publicKey']['size'] = str(public_key.curve.key_size)
+            result['publicKey']['curve'] = public_key.curve.name
+        else:
+            result['publicKey']['size'] = str(public_key.key_size)
+            result['publicKey']['exponent'] = str(public_key.public_numbers().e)
+
     elif isinstance(obj, object):
         if hasattr(obj, '__dict__'):
             result = {}

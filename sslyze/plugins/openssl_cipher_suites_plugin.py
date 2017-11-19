@@ -88,7 +88,7 @@ class Tlsv12ScanCommand(CipherSuiteScanCommand):
 
 
 class Tlsv13ScanCommand(CipherSuiteScanCommand):
-    """List the TLS 1.3 OpenSSL cipher suites supported by the server(s).
+    """List the TLS 1.3 (draft 18) OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
     def get_cli_argument(cls):

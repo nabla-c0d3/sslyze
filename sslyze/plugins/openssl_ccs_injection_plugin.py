@@ -142,6 +142,9 @@ def do_handshake_with_ccs_injection(self):
                 # Try to get more data
                 try:
                     raw_ssl_bytes = self._sock.recv(16381)
+                    if not raw_ssl_bytes:
+                        # No data?
+                        raise NotVulnerableToCcsInjection()
                 except socket.error:
                     # Server closed the connection after receiving the CCS payload
                     raise NotVulnerableToCcsInjection()

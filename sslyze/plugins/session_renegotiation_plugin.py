@@ -46,7 +46,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
     def _test_secure_renegotiation(server_info):
         """Check whether the server supports secure renegotiation.
         """
-        ssl_connection = server_info.get_preconfigured_ssl_connection()
+        ssl_connection = server_info.get_preconfigured_ssl_connection(should_use_legacy_openssl=True)
 
         try:
             # Perform the SSL handshake
@@ -63,7 +63,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
     def _test_client_renegotiation(server_info):
         """Check whether the server honors session renegotiation requests.
         """
-        ssl_connection = server_info.get_preconfigured_ssl_connection()
+        ssl_connection = server_info.get_preconfigured_ssl_connection(should_use_legacy_openssl=True)
 
         try:
             # Perform the SSL handshake

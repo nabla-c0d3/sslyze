@@ -333,5 +333,5 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, Tlsv13ScanCommand())
 
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
-        self.assertEquals({'TLS13-AES-128-GCM-SHA256', 'TLS13-AES-256-GCM-SHA384', 'TLS13-CHACHA20-POLY1305-SHA256'},
-                          set(accepted_cipher_name_list))
+        self.assertEqual({'TLS13-AES-128-GCM-SHA256', 'TLS13-AES-256-GCM-SHA384', 'TLS13-CHACHA20-POLY1305-SHA256'},
+                         set(accepted_cipher_name_list))

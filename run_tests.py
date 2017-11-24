@@ -1,12 +1,9 @@
 #!/usr/bin/python
 import sys
 import unittest
-import os
 
 
 def main(test_path):
-    # Add nassl to the path
-    sys.path.insert(1, os.path.join(os.path.dirname(__file__), 'lib'))
     # Increase SSLyze timeout to 10s
     from sslyze.utils.ssl_connection import SSLConnection
     SSLConnection.set_global_network_settings(network_max_retries=3, network_timeout=10)

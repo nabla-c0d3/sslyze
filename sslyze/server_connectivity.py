@@ -72,7 +72,6 @@ class ServerConnectivityInfo(object):
     CONNECTIVITY_ERROR_REJECTED = 'Connection rejected'
     CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
 
-
     def __init__(
             self,
             hostname,                                               # type: Text
@@ -162,7 +161,6 @@ class ServerConnectivityInfo(object):
         self.highest_ssl_version_supported = None
         self.ssl_cipher_supported = None
         self.client_auth_requirement = None
-
 
     def test_connectivity_to_server(self, network_timeout=None):
         # type: (Optional[int]) -> None
@@ -261,7 +259,6 @@ class ServerConnectivityInfo(object):
         self.ssl_cipher_supported = ssl_cipher_supported
         self.client_auth_requirement = client_auth_requirement
 
-
     def get_preconfigured_ssl_connection(
             self,
             override_ssl_version=None,      # type: Optional[OpenSslVersionEnum]
@@ -323,7 +320,7 @@ class ServerConnectivityInfo(object):
             ssl_connection.ssl_client.set_tlsext_host_name(self.tls_server_name_indication)
 
         # Add well-known supported cipher suite
-        if self.ssl_cipher_supported and override_ssl_version is None:
+        if self.ssl_cipher_supported and override_ssl_version is None and should_use_legacy_openssl is None:
             ssl_connection.ssl_client.set_cipher_list(self.ssl_cipher_supported)
 
         return ssl_connection

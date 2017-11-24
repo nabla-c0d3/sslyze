@@ -21,6 +21,8 @@ from typing import List
 from typing import Optional
 from typing import Text
 
+from sslyze.utils.tls12_workaround import WorkaroundForTls12ForCipherSuites
+
 
 class CipherSuiteScanCommand(PluginScanCommand):
 
@@ -143,9 +145,23 @@ class OpenSslCipherSuitesPlugin(Plugin):
         ssl_version = self.SSL_VERSIONS_MAPPING[scan_command.__class__]
 
         # Get the list of available cipher suites for the given ssl version
-        ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-        ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
-        cipher_list = ssl_connection.ssl_client.get_cipher_list()
+        if ssl_version == OpenSslVersionEnum.TLSV1_2:
+            # For TLS 1.2, we have to use both the legacy and modern OpenSSL to cover all cipher suites
+            cipher_list = []
+            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
+                                                                                       should_use_legacy_openssl=True)
+            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
+            cipher_list.extend(ssl_connection.ssl_client.get_cipher_list())
+
+            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
+                                                                                       should_use_legacy_openssl=False)
+            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
+            cipher_list.extend(ssl_connection.ssl_client.get_cipher_list())
+            cipher_list = set(cipher_list)
+        else:
+            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
+            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
+            cipher_list = ssl_connection.ssl_client.get_cipher_list()
 
         # Scan for every available cipher suite
         thread_pool = ThreadPool()
@@ -186,13 +202,20 @@ class OpenSslCipherSuitesPlugin(Plugin):
                                               accepted_cipher_list, rejected_cipher_list, errored_cipher_list)
         return plugin_result
 
-
     @staticmethod
     def _test_cipher_suite(server_connectivity_info, ssl_version, openssl_cipher_name):
         # type: (ServerConnectivityInfo, OpenSslVersionEnum, Text) -> CipherSuite
         """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
         """
-        ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
+        requires_legacy_openssl = None
+        if ssl_version == OpenSslVersionEnum.TLSV1_2:
+            # For TLS 1.2, we need to pick the right version of OpenSSL depending on which cipher suite
+            requires_legacy_openssl = WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(openssl_cipher_name)
+
+        ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(
+            override_ssl_version=ssl_version,
+            should_use_legacy_openssl=requires_legacy_openssl
+        )
         ssl_connection.ssl_client.set_cipher_list(openssl_cipher_name)
         if len(ssl_connection.ssl_client.get_cipher_list()) != 1:
             raise ValueError('Passed an OpenSSL string for multiple cipher suites: "{}"'.format(openssl_cipher_name))

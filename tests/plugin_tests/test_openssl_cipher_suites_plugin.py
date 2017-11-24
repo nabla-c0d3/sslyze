@@ -42,7 +42,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
                           set(accepted_cipher_name_list))
 
         self.assertTrue(plugin_result.accepted_cipher_list)
-        self.assertTrue(plugin_result.rejected_cipher_list)
+        self.assertFalse(plugin_result.rejected_cipher_list)
         self.assertFalse(plugin_result.errored_cipher_list)
 
         self.assertTrue(plugin_result.as_text())

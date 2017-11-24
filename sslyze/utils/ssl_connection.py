@@ -72,10 +72,15 @@ class SSLConnection(object):
                                      'tlsv1 alert protocol version': 'Alert: protocol version ',
                                      'wrong ssl version' : 'Wrong SSL version',
 
-                                     # This issue has actually nothing to do with the server or the connection
-                                     # It is returned by OpenSSL when a cipher set via set_cipher_list() is not
+                                     # The following issues have nothing to do with the server or the connection
+                                     # They are client-side (SSLyze) issues
+
+                                     # This one is returned by OpenSSL when a cipher set via set_cipher_list() is not
                                      # actually supported
-                                     'no ciphers available': 'No ciphers available',}
+                                     'no ciphers available': 'No ciphers available',
+
+                                     # This one is when OpenSSL rejects DH parameters (to protect against Logjam)
+                                     'dh key too small': 'DH Key too small',}
 
     # Constants for tunneling the traffic through a proxy
     HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'

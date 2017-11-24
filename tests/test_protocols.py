@@ -100,7 +100,7 @@ class ProtocolsTestCase(unittest.TestCase):
             self.assertTrue(plugin_result.as_xml())
 
     def test_optional_client_authentication(self):
-        server_info = ServerConnectivityInfo(hostname='xnet-eu.intellij.net')
+        server_info = ServerConnectivityInfo(hostname='client.badssl.com')
         server_info.test_connectivity_to_server()
         self.assertEquals(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
 
@@ -110,7 +110,12 @@ class ProtocolsTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
-    def test_tls_1_3(self):
+    def test_tls_1_3_only(self):
         server_info = ServerConnectivityInfo(hostname='tls13.crypto.mozilla.org')
         server_info.test_connectivity_to_server()
         self.assertEqual(server_info.highest_ssl_version_supported, OpenSslVersionEnum.TLSV1_3)
+
+    def test_tls_1_only(self):
+        server_info = ServerConnectivityInfo(hostname='tls-v1-0.badssl.com', port=1010)
+        server_info.test_connectivity_to_server()
+        self.assertEqual(server_info.highest_ssl_version_supported, OpenSslVersionEnum.TLSV1)

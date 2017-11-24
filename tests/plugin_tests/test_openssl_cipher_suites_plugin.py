@@ -218,21 +218,6 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-    def test_dh_info(self):
-        server_info = ServerConnectivityInfo(hostname='dh1024.badssl.com')
-        server_info.test_connectivity_to_server()
-
-        plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
-
-        self.assertTrue(plugin_result.preferred_cipher)
-        self.assertEquals(plugin_result.preferred_cipher.dh_info['GroupSize'], '1024')
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
-
     def test_null_cipher_suites(self):
         server_info = ServerConnectivityInfo(hostname='null.badssl.com')
         server_info.test_connectivity_to_server()

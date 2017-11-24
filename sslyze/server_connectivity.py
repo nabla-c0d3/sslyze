@@ -295,8 +295,8 @@ class ServerConnectivityInfo(object):
 
         if should_use_legacy_openssl is None:
             # For older versions of TLS/SSL, we have to use a legacy OpenSSL
-            should_use_legacy_openssl = False if ssl_version in [OpenSslVersionEnum.TLSV1_2,
-                                                                 OpenSslVersionEnum.TLSV1_3] \
+            final_should_use_legacy_openssl = False if ssl_version in [OpenSslVersionEnum.TLSV1_2,
+                                                                       OpenSslVersionEnum.TLSV1_3] \
                 else True
 
         ssl_connection = self.TLS_CONNECTION_CLASSES[self.tls_wrapped_protocol](
@@ -307,7 +307,7 @@ class ServerConnectivityInfo(object):
             ssl_verify_locations=ssl_verify_locations,
             client_auth_creds=self.client_auth_credentials,
             should_ignore_client_auth=should_ignore_client_auth,
-            should_use_legacy_openssl=should_use_legacy_openssl,
+            should_use_legacy_openssl=final_should_use_legacy_openssl,
         )
 
         # Add XMPP configuration

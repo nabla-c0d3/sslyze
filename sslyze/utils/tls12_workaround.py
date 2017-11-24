@@ -2,6 +2,10 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from typing import Text
+from nassl.ssl_client import SslClient
+from nassl.ssl_client import OpenSslVerifyEnum
+from nassl.ssl_client import OpenSslVersionEnum
+from nassl.legacy_ssl_client import LegacySslClient
 
 
 class WorkaroundForTls12ForCipherSuites(object):
@@ -11,24 +15,15 @@ class WorkaroundForTls12ForCipherSuites(object):
     suites are only supported by one of the two implementation.
     """
 
-    # Cipher suites that are only supported by the legacy OpenSSL
-    _LEGACY_CIPHER_SUITES = {
-        'EXP-EDH-DSS-DES-CBC-SHA', 'DH-RSA-AES128-GCM-SHA256', 'DH-RSA-CAMELLIA256-SHA', 'DH-RSA-AES128-SHA256',
-        'ECDH-RSA-AES256-SHA', 'EXP-ADH-RC4-MD5', 'EDH-DSS-DES-CBC-SHA', 'ECDH-RSA-AES256-SHA384',
-        'ECDH-ECDSA-NULL-SHA', 'DH-RSA-CAMELLIA128-SHA', 'EXP-ADH-DES-CBC-SHA', 'DH-DSS-AES128-GCM-SHA256',
-        'ECDH-ECDSA-DES-CBC3-SHA', 'EXP-EDH-RSA-DES-CBC-SHA', 'DH-RSA-DES-CBC3-SHA', 'DH-DSS-DES-CBC3-SHA',
-        'DH-DSS-AES128-SHA256', 'DH-DSS-DES-CBC-SHA', 'ECDH-ECDSA-AES256-SHA', 'DH-RSA-AES128-SHA',
-        'DH-RSA-AES256-GCM-SHA384', 'ADH-DES-CBC-SHA', 'ECDH-ECDSA-AES128-SHA', 'ECDH-RSA-AES128-GCM-SHA256',
-        'DH-DSS-AES128-SHA', 'ECDH-RSA-NULL-SHA', 'DH-DSS-CAMELLIA256-SHA', 'ECDH-ECDSA-AES256-SHA384',
-        'EXP-RC2-CBC-MD5', 'DH-DSS-SEED-SHA', 'DH-DSS-AES256-GCM-SHA384', 'DH-DSS-CAMELLIA128-SHA',
-        'EDH-RSA-DES-CBC-SHA', 'DES-CBC-SHA', 'DH-DSS-AES256-SHA256', 'ECDH-ECDSA-AES128-GCM-SHA256',
-        'ECDH-RSA-DES-CBC3-SHA', 'ECDH-RSA-AES256-GCM-SHA384', 'ECDH-RSA-AES128-SHA256', 'DH-RSA-AES256-SHA',
-        'ECDH-ECDSA-RC4-SHA', 'DH-RSA-AES256-SHA256', 'EDH-DSS-DES-CBC3-SHA', 'DH-DSS-AES256-SHA',
-        'ECDH-ECDSA-AES128-SHA256', 'ECDH-ECDSA-AES256-GCM-SHA384', 'EXP-RC4-MD5', 'DH-RSA-SEED-SHA',
-        'ECDH-RSA-RC4-SHA', 'EXP-DES-CBC-SHA', 'EDH-RSA-DES-CBC3-SHA', 'ECDH-RSA-AES128-SHA', 'DH-RSA-DES-CBC-SHA'
-    }
-
     @classmethod
-    def requires_legacy_openssl(cls, cipher_name):
+    def requires_legacy_openssl(cls, openssl_cipher_name):
         # type: (Text) -> bool
-        return cipher_name in cls._LEGACY_CIPHER_SUITES
+        # Get the list of all ciphers supported by the legacy OpenSSL
+        legacy_client = LegacySslClient(ssl_version=OpenSslVersionEnum.TLSV1_2, ssl_verify=OpenSslVerifyEnum.NONE)
+        legacy_client.set_cipher_list('ALL:COMPLEMENTOFALL')
+        legacy_ciphers = legacy_client.get_cipher_list()
+
+        # Always use the legacy client if it supports the cipher suite, as the modern OpenSSL (1.1.x) does not support
+        # weak ciphers, even with the right compilation options; the handshake fails with a "no ciphers available" error
+        # but it actually means that OpenSSL does not support the cipher
+        return openssl_cipher_name in legacy_ciphers

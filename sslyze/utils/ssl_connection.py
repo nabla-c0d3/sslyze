@@ -60,7 +60,6 @@ class SSLConnection(object):
                                         'reset by peer': 'Received RST'}
 
     HANDSHAKE_REJECTED_SSL_ERRORS = {'sslv3 alert handshake failure': 'Alert handshake failure',
-                                     'no ciphers available': 'No ciphers available',
                                      'excessive message size': 'Excessive message size',
                                      'bad mac decode': 'Bad mac decode',
                                      'wrong version number': 'Wrong version number',
@@ -71,7 +70,12 @@ class SSLConnection(object):
                                      'insufficient security': 'Insufficient security',
                                      'block type is not 01': 'block type is not 01',  # Actually an RSA error
                                      'tlsv1 alert protocol version': 'Alert: protocol version ',
-                                     'wrong ssl version' : 'Wrong SSL version',}
+                                     'wrong ssl version' : 'Wrong SSL version',
+
+                                     # This issue has actually nothing to do with the server or the connection
+                                     # It is returned by OpenSSL when a cipher set via set_cipher_list() is not
+                                     # actually supported
+                                     'no ciphers available': 'No ciphers available',}
 
     # Constants for tunneling the traffic through a proxy
     HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'

@@ -147,6 +147,10 @@ def do_handshake_with_heartbleed(self):
                 # Server closed the connection as soon as it received the Heartbleed payload
                 raise NotVulnerableToHeartbleed()
 
+            if not raw_ssl_bytes:
+                # No data?
+                raise NotVulnerableToHeartbleed()
+
             remaining_bytes = remaining_bytes + raw_ssl_bytes
             continue
 

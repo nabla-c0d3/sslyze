@@ -136,8 +136,15 @@ class ServerConnectivityInfo(object):
                 addr_infos = socket.getaddrinfo(self.hostname, self.port, socket.AF_UNSPEC, socket.IPPROTO_IP)
                 family, socktype, proto, canonname, sockaddr = addr_infos[0]
 
-                # Works for both IPv4 and IPv6
-                self.ip_address = sockaddr[0]
+                # By default use the first DNS entry, IPv4 or IPv6
+                tentative_ip_addr = sockaddr[0]
+
+                # But try to use IPv4 if we have both IPv4 and IPv6 addresses, to work around buggy networks
+                for family, socktype, proto, canonname, sockaddr in addr_infos:
+                    if family == socket.AF_INET:
+                        tentative_ip_addr = sockaddr[0]
+
+                self.ip_address = tentative_ip_addr
 
             except (socket.gaierror, IndexError):
                 raise ServerConnectivityError(self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED.format(hostname=self.hostname))

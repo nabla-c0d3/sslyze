@@ -59,28 +59,30 @@ class SSLConnection(object):
     HANDSHAKE_REJECTED_SOCKET_ERRORS = {'was forcibly closed': 'Received FIN',
                                         'reset by peer': 'Received RST'}
 
-    HANDSHAKE_REJECTED_SSL_ERRORS = {'sslv3 alert handshake failure': 'Alert handshake failure',
-                                     'excessive message size': 'Excessive message size',
-                                     'bad mac decode': 'Bad mac decode',
-                                     'wrong version number': 'Wrong version number',
-                                     'no cipher match': 'No cipher match',
-                                     'bad decompression': 'Bad decompression',
-                                     'peer error no cipher': 'Peer error no cipher',
-                                     'no cipher list': 'No ciphers list',
-                                     'insufficient security': 'Insufficient security',
-                                     'block type is not 01': 'block type is not 01',  # Actually an RSA error
-                                     'tlsv1 alert protocol version': 'Alert: protocol version ',
-                                     'wrong ssl version' : 'Wrong SSL version',
+    HANDSHAKE_REJECTED_SSL_ERRORS = {
+        'sslv3 alert handshake failure': 'Alert handshake failure',
+        'excessive message size': 'Excessive message size',
+        'bad mac decode': 'Bad mac decode',
+        'wrong version number': 'Wrong version number',
+        'no cipher match': 'No cipher match',
+        'bad decompression': 'Bad decompression',
+        'peer error no cipher': 'Peer error no cipher',
+        'no cipher list': 'No ciphers list',
+        'insufficient security': 'Insufficient security',
+        'block type is not 01': 'block type is not 01',  # Actually an RSA error
+        'tlsv1 alert protocol version': 'Alert: protocol version ',
+        'wrong ssl version' : 'Wrong SSL version',
 
-                                     # The following issues have nothing to do with the server or the connection
-                                     # They are client-side (SSLyze) issues
+        # The following issues have nothing to do with the server or the connection
+        # They are client-side (SSLyze) issues
 
-                                     # This one is returned by OpenSSL when a cipher set via set_cipher_list() is not
-                                     # actually supported
-                                     'no ciphers available': 'No ciphers available',
+        # This one is returned by OpenSSL when a cipher set via set_cipher_list() is not
+        # actually supported
+        'no ciphers available': 'No ciphers available',
 
-                                     # This one is when OpenSSL rejects DH parameters (to protect against Logjam)
-                                     'dh key too small': 'DH Key too small',}
+        # This one is when OpenSSL rejects DH parameters (to protect against Logjam)
+        'dh key too small': 'DH Key too small',
+    }
 
     # Constants for tunneling the traffic through a proxy
     HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'

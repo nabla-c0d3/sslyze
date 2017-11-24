@@ -150,17 +150,18 @@ class OpenSslCipherSuitesPlugin(Plugin):
             cipher_list = []
             ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
                                                                                        should_use_legacy_openssl=True)
-            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
+            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
             cipher_list.extend(ssl_connection.ssl_client.get_cipher_list())
 
             ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
                                                                                        should_use_legacy_openssl=False)
-            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
+            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
             cipher_list.extend(ssl_connection.ssl_client.get_cipher_list())
             cipher_list = set(cipher_list)
         else:
             ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
+            # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
+            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
             cipher_list = ssl_connection.ssl_client.get_cipher_list()
 
         # Scan for every available cipher suite

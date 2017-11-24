@@ -70,7 +70,8 @@ class SSLConnection(object):
                                      'no cipher list': 'No ciphers list',
                                      'insufficient security': 'Insufficient security',
                                      'block type is not 01': 'block type is not 01',  # Actually an RSA error
-                                     'tlsv1 alert protocol version': 'Alert: protocol version '}
+                                     'tlsv1 alert protocol version': 'Alert: protocol version ',
+                                     'wrong ssl version' : 'Wrong SSL version',}
 
     # Constants for tunneling the traffic through a proxy
     HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'

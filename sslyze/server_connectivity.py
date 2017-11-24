@@ -293,6 +293,7 @@ class ServerConnectivityInfo(object):
         # Create the right SSLConnection object
         ssl_version = override_ssl_version if override_ssl_version is not None else self.highest_ssl_version_supported
 
+        final_should_use_legacy_openssl = should_use_legacy_openssl
         if should_use_legacy_openssl is None:
             # For older versions of TLS/SSL, we have to use a legacy OpenSSL
             final_should_use_legacy_openssl = False if ssl_version in [OpenSslVersionEnum.TLSV1_2,

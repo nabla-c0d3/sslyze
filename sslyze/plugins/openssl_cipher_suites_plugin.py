@@ -248,13 +248,30 @@ class OpenSslCipherSuitesPlugin(Plugin):
         if len(accepted_cipher_list) < 2:
             return None
 
-        first_cipher_string = ', '.join([cipher.openssl_name for cipher in accepted_cipher_list])
-        # Swap the first two ciphers in the list to see if the server always picks the client's first cipher
-        second_cipher_string = ', '.join([accepted_cipher_list[1].openssl_name, accepted_cipher_list[0].openssl_name]
-                                         + [cipher.openssl_name for cipher in accepted_cipher_list[2:]])
+        accepted_cipher_names = [cipher.openssl_name for cipher in accepted_cipher_list]
+        should_use_legacy_openssl = None
 
-        first_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, first_cipher_string)
-        second_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, second_cipher_string)
+        # For TLS 1.2, we need to figure whether the modern or legacy OpenSSL should be used to connect
+        if ssl_version == OpenSslVersionEnum.TLSV1_2:
+            should_use_legacy_openssl = True
+            # If there are more than two modern-supported cipher suites, use the modern OpenSSL
+            for cipher_name in accepted_cipher_names:
+                modern_supported_cipher_count = 0
+                if not WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_name):
+                    modern_supported_cipher_count += 1
+
+                if modern_supported_cipher_count > 1:
+                    should_use_legacy_openssl = False
+                    break
+
+        first_cipher_str = ', '.join(accepted_cipher_names)
+        # Swap the first two ciphers in the list to see if the server always picks the client's first cipher
+        second_cipher_str = ', '.join([accepted_cipher_names[1], accepted_cipher_names[0]] + accepted_cipher_names[2:])
+
+        first_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, first_cipher_str,
+                                                       should_use_legacy_openssl)
+        second_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, second_cipher_str,
+                                                        should_use_legacy_openssl)
 
         if first_cipher.name == second_cipher.name:
             # The server has its own preference for picking a cipher suite
@@ -265,13 +282,15 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
 
     @staticmethod
-    def _get_selected_cipher_suite(server_connectivity_info, ssl_version, openssl_cipher_string):
-        # type: (ServerConnectivityInfo, OpenSslVersionEnum, Text) -> AcceptedCipherSuite
+    def _get_selected_cipher_suite(server_connectivity, ssl_version, openssl_cipher_str, should_use_legacy_openssl):
+        # type: (ServerConnectivityInfo, OpenSslVersionEnum, Text, Optional[bool]) -> AcceptedCipherSuite
         """Given an OpenSSL cipher string (which may specify multiple cipher suites), return the cipher suite that was
         selected by the server during the SSL handshake.
         """
-        ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-        ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
+        ssl_connection = server_connectivity.get_preconfigured_ssl_connection(
+            override_ssl_version=ssl_version, should_use_legacy_openssl=should_use_legacy_openssl
+        )
+        ssl_connection.ssl_client.set_cipher_list(openssl_cipher_str)
 
         # Perform the SSL handshake
         try:

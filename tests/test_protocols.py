@@ -6,13 +6,14 @@ import socket
 import unittest
 import logging
 
+from nassl.ssl_client import OpenSslVersionEnum
+
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthenticationServerConfigurationEnum
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 
 
 class ProtocolsTestCase(unittest.TestCase):
-
 
     def test_smtp_custom_port(self):
         server_info = ServerConnectivityInfo(hostname='smtp.gmail.com', port=587,
@@ -27,7 +28,6 @@ class ProtocolsTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
-
     @staticmethod
     def _is_ipv6_available():
         has_ipv6 = False
@@ -38,7 +38,6 @@ class ProtocolsTestCase(unittest.TestCase):
         except:
             pass
         return has_ipv6
-
 
     def test_ipv6(self):
         if not self._is_ipv6_available():
@@ -56,7 +55,6 @@ class ProtocolsTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
-
     def test_international_names(self):
         server_info = ServerConnectivityInfo(hostname='www.sociétégénérale.com')
         server_info.test_connectivity_to_server()
@@ -68,7 +66,6 @@ class ProtocolsTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
-
 
     def test_xmpp_to(self):
         server_info = ServerConnectivityInfo(hostname='talk.google.com',
@@ -83,7 +80,6 @@ class ProtocolsTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
-
 
     def test_starttls(self):
         for hostname, protocol in [
@@ -103,9 +99,8 @@ class ProtocolsTestCase(unittest.TestCase):
             self.assertTrue(plugin_result.as_text())
             self.assertTrue(plugin_result.as_xml())
 
-
     def test_optional_client_authentication(self):
-        server_info = ServerConnectivityInfo(hostname='xnet-eu.intellij.net')
+        server_info = ServerConnectivityInfo(hostname='client.badssl.com')
         server_info.test_connectivity_to_server()
         self.assertEquals(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
 
@@ -114,3 +109,13 @@ class ProtocolsTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
+
+    def test_tls_1_3_only(self):
+        server_info = ServerConnectivityInfo(hostname='tls13.crypto.mozilla.org')
+        server_info.test_connectivity_to_server()
+        self.assertEqual(server_info.highest_ssl_version_supported, OpenSslVersionEnum.TLSV1_3)
+
+    def test_tls_1_only(self):
+        server_info = ServerConnectivityInfo(hostname='tls-v1-0.badssl.com', port=1010)
+        server_info.test_connectivity_to_server()
+        self.assertEqual(server_info.highest_ssl_version_supported, OpenSslVersionEnum.TLSV1)

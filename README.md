@@ -16,12 +16,12 @@ their SSL/TLS servers.
 
 Key features include:
 * Fully [documented Python API](https://nabla-c0d3.github.io/sslyze/documentation/), in order to run scans and process the results directly from Python.
+* **New: TLS 1.3 (draft 18) support.**
 * Scans are automatically dispatched among multiple processes, making them very fast.
 * Performance testing: session resumption and TLS tickets support.
 * Security testing: weak cipher suites, insecure renegotiation, CRIME, Heartbleed and more.
 * Server certificate validation and revocation checking through OCSP stapling.
 * Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP, PostGres and FTP.
-* Support for client certificates when scanning servers that perform mutual authentication.
 * Scan results can be written to an XML or JSON file for further processing.
 * And much more!
 

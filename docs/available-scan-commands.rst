@@ -59,7 +59,7 @@ CipherSuiteScanCommands
 .. autoclass:: Tlsv10ScanCommand()
 .. autoclass:: Tlsv11ScanCommand()
 .. autoclass:: Tlsv12ScanCommand()
-.. autoclass:: Tlsv12ScanCommand()
+.. autoclass:: Tlsv13ScanCommand()
 .. autoclass:: CipherSuiteScanResult()
 
 Additional helper classes

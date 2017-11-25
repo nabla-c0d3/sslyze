@@ -7,7 +7,8 @@ from abc import ABCMeta
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
-from nassl.ssl_client import SslClient, OpenSslVersionEnum, ClientCertificateRequested
+from nassl.legacy_ssl_client import LegacySslClient
+from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -19,6 +20,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Text
+
+from sslyze.utils.tls12_workaround import WorkaroundForTls12ForCipherSuites
 
 
 class CipherSuiteScanCommand(PluginScanCommand):
@@ -86,6 +89,14 @@ class Tlsv12ScanCommand(CipherSuiteScanCommand):
         return 'tlsv1_2'
 
 
+class Tlsv13ScanCommand(CipherSuiteScanCommand):
+    """List the TLS 1.3 (draft 18) OpenSSL cipher suites supported by the server(s).
+    """
+    @classmethod
+    def get_cli_argument(cls):
+        return 'tlsv1_3'
+
+
 class OpenSslCipherSuitesPlugin(Plugin):
     """Scan the server(s) for supported OpenSSL cipher suites.
     """
@@ -96,13 +107,13 @@ class OpenSslCipherSuitesPlugin(Plugin):
         Sslv30ScanCommand: OpenSslVersionEnum.SSLV3,
         Tlsv10ScanCommand: OpenSslVersionEnum.TLSV1,
         Tlsv11ScanCommand: OpenSslVersionEnum.TLSV1_1,
-        Tlsv12ScanCommand: OpenSslVersionEnum.TLSV1_2
+        Tlsv12ScanCommand: OpenSslVersionEnum.TLSV1_2,
+        Tlsv13ScanCommand: OpenSslVersionEnum.TLSV1_3,
     }
 
     @classmethod
     def get_available_commands(cls):
-        return [Sslv20ScanCommand, Sslv30ScanCommand, Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand]
-
+        return cls.SSL_VERSIONS_MAPPING.keys()
 
     @classmethod
     def get_cli_option_group(cls):
@@ -129,15 +140,29 @@ class OpenSslCipherSuitesPlugin(Plugin):
         )
         return options
 
-
     def process_task(self, server_connectivity_info, scan_command):
         # type: (ServerConnectivityInfo, CipherSuiteScanCommand) -> CipherSuiteScanResult
         ssl_version = self.SSL_VERSIONS_MAPPING[scan_command.__class__]
 
         # Get the list of available cipher suites for the given ssl version
-        ssl_client = SslClient(ssl_version=ssl_version)
-        ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL')
-        cipher_list = ssl_client.get_cipher_list()
+        if ssl_version == OpenSslVersionEnum.TLSV1_2:
+            # For TLS 1.2, we have to use both the legacy and modern OpenSSL to cover all cipher suites
+            cipher_list = []
+            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
+                                                                                       should_use_legacy_openssl=True)
+            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
+            cipher_list.extend(ssl_connection.ssl_client.get_cipher_list())
+
+            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
+                                                                                       should_use_legacy_openssl=False)
+            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
+            cipher_list.extend(ssl_connection.ssl_client.get_cipher_list())
+            cipher_list = set(cipher_list)
+        else:
+            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
+            # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
+            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
+            cipher_list = ssl_connection.ssl_client.get_cipher_list()
 
         # Scan for every available cipher suite
         thread_pool = ThreadPool()
@@ -178,13 +203,20 @@ class OpenSslCipherSuitesPlugin(Plugin):
                                               accepted_cipher_list, rejected_cipher_list, errored_cipher_list)
         return plugin_result
 
-
     @staticmethod
     def _test_cipher_suite(server_connectivity_info, ssl_version, openssl_cipher_name):
         # type: (ServerConnectivityInfo, OpenSslVersionEnum, Text) -> CipherSuite
         """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
         """
-        ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
+        requires_legacy_openssl = None
+        if ssl_version == OpenSslVersionEnum.TLSV1_2:
+            # For TLS 1.2, we need to pick the right version of OpenSSL depending on which cipher suite
+            requires_legacy_openssl = WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(openssl_cipher_name)
+
+        ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(
+            override_ssl_version=ssl_version,
+            should_use_legacy_openssl=requires_legacy_openssl
+        )
         ssl_connection.ssl_client.set_cipher_list(openssl_cipher_name)
         if len(ssl_connection.ssl_client.get_cipher_list()) != 1:
             raise ValueError('Passed an OpenSSL string for multiple cipher suites: "{}"'.format(openssl_cipher_name))
@@ -216,13 +248,30 @@ class OpenSslCipherSuitesPlugin(Plugin):
         if len(accepted_cipher_list) < 2:
             return None
 
-        first_cipher_string = ', '.join([cipher.openssl_name for cipher in accepted_cipher_list])
-        # Swap the first two ciphers in the list to see if the server always picks the client's first cipher
-        second_cipher_string = ', '.join([accepted_cipher_list[1].openssl_name, accepted_cipher_list[0].openssl_name]
-                                         + [cipher.openssl_name for cipher in accepted_cipher_list[2:]])
+        accepted_cipher_names = [cipher.openssl_name for cipher in accepted_cipher_list]
+        should_use_legacy_openssl = None
 
-        first_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, first_cipher_string)
-        second_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, second_cipher_string)
+        # For TLS 1.2, we need to figure whether the modern or legacy OpenSSL should be used to connect
+        if ssl_version == OpenSslVersionEnum.TLSV1_2:
+            should_use_legacy_openssl = True
+            # If there are more than two modern-supported cipher suites, use the modern OpenSSL
+            for cipher_name in accepted_cipher_names:
+                modern_supported_cipher_count = 0
+                if not WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_name):
+                    modern_supported_cipher_count += 1
+
+                if modern_supported_cipher_count > 1:
+                    should_use_legacy_openssl = False
+                    break
+
+        first_cipher_str = ', '.join(accepted_cipher_names)
+        # Swap the first two ciphers in the list to see if the server always picks the client's first cipher
+        second_cipher_str = ', '.join([accepted_cipher_names[1], accepted_cipher_names[0]] + accepted_cipher_names[2:])
+
+        first_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, first_cipher_str,
+                                                       should_use_legacy_openssl)
+        second_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, second_cipher_str,
+                                                        should_use_legacy_openssl)
 
         if first_cipher.name == second_cipher.name:
             # The server has its own preference for picking a cipher suite
@@ -233,13 +282,15 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
 
     @staticmethod
-    def _get_selected_cipher_suite(server_connectivity_info, ssl_version, openssl_cipher_string):
-        # type: (ServerConnectivityInfo, OpenSslVersionEnum, Text) -> AcceptedCipherSuite
+    def _get_selected_cipher_suite(server_connectivity, ssl_version, openssl_cipher_str, should_use_legacy_openssl):
+        # type: (ServerConnectivityInfo, OpenSslVersionEnum, Text, Optional[bool]) -> AcceptedCipherSuite
         """Given an OpenSSL cipher string (which may specify multiple cipher suites), return the cipher suite that was
         selected by the server during the SSL handshake.
         """
-        ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-        ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
+        ssl_connection = server_connectivity.get_preconfigured_ssl_connection(
+            override_ssl_version=ssl_version, should_use_legacy_openssl=should_use_legacy_openssl
+        )
+        ssl_connection.ssl_client.set_cipher_list(openssl_cipher_str)
 
         # Perform the SSL handshake
         try:
@@ -298,12 +349,15 @@ class AcceptedCipherSuite(CipherSuite):
         # type: (SSLConnection, OpenSslVersionEnum) -> AcceptedCipherSuite
         keysize = ssl_connection.ssl_client.get_current_cipher_bits()
         picked_cipher_name = ssl_connection.ssl_client.get_current_cipher_name()
-        if 'ECDH' in picked_cipher_name:
-            dh_infos = ssl_connection.ssl_client.get_ecdh_param()
-        elif 'DH' in picked_cipher_name:
-            dh_infos = ssl_connection.ssl_client.get_dh_param()
-        else:
-            dh_infos = None
+
+        # Only the legacy client has the APIs to extract DH info
+        # TODO(AD): Add the APIs to the modern client
+        dh_infos = None
+        if isinstance(ssl_connection.ssl_client, LegacySslClient):
+            if 'ECDH' in picked_cipher_name:
+                dh_infos = ssl_connection.ssl_client.get_ecdh_param()
+            elif 'DH' in picked_cipher_name:
+                dh_infos = ssl_connection.ssl_client.get_dh_param()
 
         status_msg = ssl_connection.post_handshake_check()
         return AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, dh_infos, status_msg)
@@ -712,4 +766,5 @@ OPENSSL_TO_RFC_NAMES_MAPPING = {
     OpenSslVersionEnum.TLSV1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
     OpenSslVersionEnum.TLSV1_1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
     OpenSslVersionEnum.TLSV1_2: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    OpenSslVersionEnum.TLSV1_3: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
 }

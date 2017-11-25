@@ -242,3 +242,35 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
+
+
+    def test_certificate_with_no_cn(self):
+        server_info = ServerConnectivityInfo(hostname='no-common-name.badssl.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+
+        self.assertTrue(plugin_result.verified_certificate_chain)
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
+
+    def test_certificate_with_no_subject(self):
+        server_info = ServerConnectivityInfo(hostname='no-subject.badssl.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+
+        self.assertTrue(plugin_result.verified_certificate_chain)
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))

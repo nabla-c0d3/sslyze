@@ -1,13 +1,11 @@
 # Only tested on Windows with Python 3.6 32 bits
+# Warning: this does not seem to work with virtual environments
+# D:\Python36-32\python.exe -m pip install -r requirements.txt --upgrade
 # D:\Python36-32\python.exe setup_cx_freeze.py build_exe
 
 import os
 from cx_Freeze import setup, Executable
 from setup import SSLYZE_SETUP
-
-# Add lib to the path
-import sys
-sys.path.insert(1, os.path.join(os.path.dirname(__file__), 'lib'))
 
 # Trust Stores
 plugin_data_files = []

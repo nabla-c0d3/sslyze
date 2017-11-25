@@ -72,7 +72,6 @@ class ServerConnectivityInfo(object):
     CONNECTIVITY_ERROR_REJECTED = 'Connection rejected'
     CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
 
-
     def __init__(
             self,
             hostname,                                               # type: Text
@@ -137,8 +136,15 @@ class ServerConnectivityInfo(object):
                 addr_infos = socket.getaddrinfo(self.hostname, self.port, socket.AF_UNSPEC, socket.IPPROTO_IP)
                 family, socktype, proto, canonname, sockaddr = addr_infos[0]
 
-                # Works for both IPv4 and IPv6
-                self.ip_address = sockaddr[0]
+                # By default use the first DNS entry, IPv4 or IPv6
+                tentative_ip_addr = sockaddr[0]
+
+                # But try to use IPv4 if we have both IPv4 and IPv6 addresses, to work around buggy networks
+                for family, socktype, proto, canonname, sockaddr in addr_infos:
+                    if family == socket.AF_INET:
+                        tentative_ip_addr = sockaddr[0]
+
+                self.ip_address = tentative_ip_addr
 
             except (socket.gaierror, IndexError):
                 raise ServerConnectivityError(self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED.format(hostname=self.hostname))
@@ -162,7 +168,6 @@ class ServerConnectivityInfo(object):
         self.highest_ssl_version_supported = None
         self.ssl_cipher_supported = None
         self.client_auth_requirement = None
-
 
     def test_connectivity_to_server(self, network_timeout=None):
         # type: (Optional[int]) -> None
@@ -211,8 +216,9 @@ class ServerConnectivityInfo(object):
         ssl_version_supported = None
         ssl_cipher_supported = None
 
+        # TODO(AD): Switch to using the protocol discovery logic available in OpenSSL 1.1.0 with TLS_client_method()
         for ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_1, OpenSslVersionEnum.TLSV1,
-                            OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.SSLV23]:
+                            OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.TLSV1_3, OpenSslVersionEnum.SSLV23]:
             # First try the default cipher list, and then all ciphers
             for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
                 ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
@@ -260,14 +266,18 @@ class ServerConnectivityInfo(object):
         self.ssl_cipher_supported = ssl_cipher_supported
         self.client_auth_requirement = client_auth_requirement
 
-
-    def get_preconfigured_ssl_connection(self, override_ssl_version=None, ssl_verify_locations=None,
-                                         should_ignore_client_auth=None):
-        # type: (Optional[int], Optional[bool], Optional[bool]) -> SSLConnection
+    def get_preconfigured_ssl_connection(
+            self,
+            override_ssl_version=None,      # type: Optional[OpenSslVersionEnum]
+            ssl_verify_locations=None,      # type: Optional[bool]
+            should_ignore_client_auth=None, # type: Optional[bool]
+            should_use_legacy_openssl=None, # type: Optional[bool]
+    ):
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
 
         Used by all plugins to connect to the server and run scans.
         """
+        # type: (...) -> SSLConnection
         if self.highest_ssl_version_supported is None and override_ssl_version is None:
             raise ValueError('Cannot return an SSLConnection without testing connectivity; '
                              'call test_connectivity_to_server() first')
@@ -282,10 +292,23 @@ class ServerConnectivityInfo(object):
 
         # Create the right SSLConnection object
         ssl_version = override_ssl_version if override_ssl_version is not None else self.highest_ssl_version_supported
+
+        final_should_use_legacy_openssl = should_use_legacy_openssl
+        if should_use_legacy_openssl is None:
+            # For older versions of TLS/SSL, we have to use a legacy OpenSSL
+            final_should_use_legacy_openssl = False if ssl_version in [OpenSslVersionEnum.TLSV1_2,
+                                                                       OpenSslVersionEnum.TLSV1_3] \
+                else True
+
         ssl_connection = self.TLS_CONNECTION_CLASSES[self.tls_wrapped_protocol](
-            self.hostname, self.ip_address, self.port, ssl_version, ssl_verify_locations=ssl_verify_locations,
+            self.hostname,
+            self.ip_address,
+            self.port,
+            ssl_version,
+            ssl_verify_locations=ssl_verify_locations,
             client_auth_creds=self.client_auth_credentials,
-            should_ignore_client_auth=should_ignore_client_auth
+            should_ignore_client_auth=should_ignore_client_auth,
+            should_use_legacy_openssl=final_should_use_legacy_openssl,
         )
 
         # Add XMPP configuration
@@ -305,7 +328,7 @@ class ServerConnectivityInfo(object):
             ssl_connection.ssl_client.set_tlsext_host_name(self.tls_server_name_indication)
 
         # Add well-known supported cipher suite
-        if self.ssl_cipher_supported and override_ssl_version is None:
+        if self.ssl_cipher_supported and override_ssl_version is None and should_use_legacy_openssl is None:
             ssl_connection.ssl_client.set_cipher_list(self.ssl_cipher_supported)
 
         return ssl_connection

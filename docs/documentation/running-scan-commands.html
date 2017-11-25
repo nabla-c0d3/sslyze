@@ -1,16 +1,13 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>Step 2: Running Scan Commands Against a Server &#8212; SSLyze  documentation</title>
-    
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -29,7 +26,7 @@
     <link rel="next" title="Appendix: Available Scan Commands" href="available-scan-commands.html" />
     <link rel="prev" title="Step 1: Testing Connectivity to a Server" href="testing-connectivity.html" /> 
   </head>
-  <body role="document">
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -100,8 +97,8 @@ corresponding server can be scanned. Then, SSLyze can run <cite>ScanCommands</ci
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>network_retries</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em></em>) &#8211; How many times SSLyze should retry a connection that timed out.</li>
-<li><strong>network_timeout</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em></em>) &#8211; The time until an ongoing connection times out.</li>
+<li><strong>network_retries</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – How many times SSLyze should retry a connection that timed out.</li>
+<li><strong>network_timeout</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The time until an ongoing connection times out.</li>
 </ul>
 </td>
 </tr>
@@ -118,15 +115,15 @@ corresponding server can be scanned. Then, SSLyze can run <cite>ScanCommands</ci
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) &#8211; The server&#8217;s connectivity information. The
+<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) – The server’s connectivity information. The
 test_connectivity_to_server() method must have been called first to ensure that the server is online
 and accessible.</li>
-<li><strong>scan_command</strong> (<a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><em>PluginScanCommand</em></a>) &#8211; The scan command to run against this server.</li>
+<li><strong>scan_command</strong> (<a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><em>PluginScanCommand</em></a>) – The scan command to run against this server.</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
-<dt>The result of the scan command, which will be an instance of the scan command&#8217;s</dt>
+<dt>The result of the scan command, which will be an instance of the scan command’s</dt>
 <dd><p class="first last">corresponding PluginScanResult subclass.</p>
 </dd>
 </dl>
@@ -210,10 +207,10 @@ large number of servers, and it has a dispatching mechanism to avoid DOS-ing a s
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>network_retries</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em></em>) &#8211; How many times SSLyze should retry a connection that timed out.</li>
-<li><strong>network_timeout</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em></em>) &#8211; The time until an ongoing connection times out.</li>
-<li><strong>max_processes_nb</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em></em>) &#8211; The maximum number of processes to spawn for running scans concurrently.</li>
-<li><strong>max_processes_per_hostname_nb</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em></em>) &#8211; The maximum number of processes that can be used for running
+<li><strong>network_retries</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – How many times SSLyze should retry a connection that timed out.</li>
+<li><strong>network_timeout</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The time until an ongoing connection times out.</li>
+<li><strong>max_processes_nb</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of processes to spawn for running scans concurrently.</li>
+<li><strong>max_processes_per_hostname_nb</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of processes that can be used for running
 scans concurrently against a single server. A lower value will reduce the chances of DOS-ing the server.</li>
 </ul>
 </td>
@@ -231,10 +228,10 @@ scans concurrently against a single server. A lower value will reduce the chance
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) &#8211; The server&#8217;s connectivity information. The
+<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) – The server’s connectivity information. The
 test_connectivity_to_server() method must have been called first to ensure that the server is online
 and accessible.</li>
-<li><strong>scan_command</strong> (<a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><em>PluginScanCommand</em></a>) &#8211; The scan command to run against this server.</li>
+<li><strong>scan_command</strong> (<a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><em>PluginScanCommand</em></a>) – The scan command to run against this server.</li>
 </ul>
 </td>
 </tr>
@@ -250,7 +247,7 @@ and accessible.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Yields:</th><td class="field-body"><em>PluginScanResult</em> &#8211; The result of the scan command, which will be an instance of the scan command&#8217;s
+<tr class="field-odd field"><th class="field-name">Yields:</th><td class="field-body"><em>PluginScanResult</em> – The result of the scan command, which will be an instance of the scan command’s
 corresponding PluginScanResult subclass. If there was an unexpected error while running the scan command,
 this will be a PluginRaisedExceptionScanResult instance instead.</td>
 </tr>
@@ -267,7 +264,7 @@ this will be a PluginRaisedExceptionScanResult instance instead.</td>
 <dl class="attribute">
 <dt id="sslyze.concurrent_scanner.PluginRaisedExceptionScanResult.error_message">
 <code class="descname">error_message</code><a class="headerlink" href="#sslyze.concurrent_scanner.PluginRaisedExceptionScanResult.error_message" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> &#8211; Text-formatted details about the exception that occurred.</p>
+<dd><p><em>Text</em> – Text-formatted details about the exception that occurred.</p>
 </dd></dl>
 
 </dd></dl>
@@ -346,7 +343,7 @@ this will be a PluginRaisedExceptionScanResult instance instead.</td>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, SSLyze.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
     </div>
   </body>
 </html>

@@ -24,7 +24,8 @@ except ImportError:
     from urllib import quote
 
 from nassl import _nassl
-from nassl.debug_ssl_client import DebugSslClient
+from nassl.ssl_client import SslClient
+from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import ClientCertificateRequested, OpenSslVerifyEnum, OpenSslVersionEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 
@@ -58,18 +59,30 @@ class SSLConnection(object):
     HANDSHAKE_REJECTED_SOCKET_ERRORS = {'was forcibly closed': 'Received FIN',
                                         'reset by peer': 'Received RST'}
 
-    HANDSHAKE_REJECTED_SSL_ERRORS = {'sslv3 alert handshake failure': 'Alert handshake failure',
-                                     'no ciphers available': 'No ciphers available',
-                                     'excessive message size': 'Excessive message size',
-                                     'bad mac decode': 'Bad mac decode',
-                                     'wrong version number': 'Wrong version number',
-                                     'no cipher match': 'No cipher match',
-                                     'bad decompression': 'Bad decompression',
-                                     'peer error no cipher': 'Peer error no cipher',
-                                     'no cipher list': 'No ciphers list',
-                                     'insufficient security': 'Insufficient security',
-                                     'block type is not 01': 'block type is not 01',  # Actually an RSA error
-                                     'tlsv1 alert protocol version': 'Alert: protocol version '}
+    HANDSHAKE_REJECTED_SSL_ERRORS = {
+        'sslv3 alert handshake failure': 'Alert handshake failure',
+        'excessive message size': 'Excessive message size',
+        'bad mac decode': 'Bad mac decode',
+        'wrong version number': 'Wrong version number',
+        'no cipher match': 'No cipher match',
+        'bad decompression': 'Bad decompression',
+        'peer error no cipher': 'Peer error no cipher',
+        'no cipher list': 'No ciphers list',
+        'insufficient security': 'Insufficient security',
+        'block type is not 01': 'block type is not 01',  # Actually an RSA error
+        'tlsv1 alert protocol version': 'Alert: protocol version ',
+        'wrong ssl version' : 'Wrong SSL version',
+
+        # The following issues have nothing to do with the server or the connection
+        # They are client-side (SSLyze) issues
+
+        # This one is returned by OpenSSL when a cipher set via set_cipher_list() is not
+        # actually supported
+        'no ciphers available': 'No ciphers available',
+
+        # This one is when OpenSSL rejects DH parameters (to protect against Logjam)
+        'dh key too small': 'DH Key too small',
+    }
 
     # Constants for tunneling the traffic through a proxy
     HTTP_CONNECT_REQ = 'CONNECT {0}:{1} HTTP/1.1\r\n\r\n'
@@ -100,12 +113,15 @@ class SSLConnection(object):
                  ssl_version,                           # type: OpenSslVersionEnum
                  ssl_verify_locations=None,             # type: Optional[Text]
                  client_auth_creds=None,                # type: Optional[ClientAuthenticationCredentials]
-                 should_ignore_client_auth=False        # type: bool
+                 should_ignore_client_auth=False,       # type: bool
+                 should_use_legacy_openssl=False        # type: bool
                  ):
         # type: (...) -> None
+        ssl_client_cls = LegacySslClient if should_use_legacy_openssl else SslClient
+
         if client_auth_creds:
             # A client certificate and private key were provided
-            self.ssl_client = DebugSslClient(ssl_version=ssl_version,
+            self.ssl_client = ssl_client_cls(ssl_version=ssl_version,
                                              ssl_verify=OpenSslVerifyEnum.NONE,
                                              ssl_verify_locations=ssl_verify_locations,
                                              client_certchain_file=client_auth_creds.client_certificate_chain_path,
@@ -115,7 +131,7 @@ class SSLConnection(object):
                                              ignore_client_authentication_requests=False)
         else:
             # No client cert and key
-            self.ssl_client = DebugSslClient(ssl_version=ssl_version,
+            self.ssl_client = ssl_client_cls(ssl_version=ssl_version,
                                              ssl_verify=OpenSslVerifyEnum.NONE,
                                              ssl_verify_locations=ssl_verify_locations,
                                              ignore_client_authentication_requests=should_ignore_client_auth)

@@ -1,16 +1,13 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>Step 1: Testing Connectivity to a Server &#8212; SSLyze  documentation</title>
-    
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -29,7 +26,7 @@
     <link rel="next" title="Step 2: Running Scan Commands Against a Server" href="running-scan-commands.html" />
     <link rel="prev" title="SSLyze Documentation" href="index.html" /> 
   </head>
-  <body role="document">
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -89,7 +86,7 @@ specific SSL/TLS server.</p>
 <dt id="sslyze.server_connectivity.ServerConnectivityInfo.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>hostname</em>, <em>port=None</em>, <em>ip_address=None</em>, <em>tls_wrapped_protocol=&lt;TlsWrappedProtocolEnum.PLAIN_TLS: 1&gt;</em>, <em>tls_server_name_indication=None</em>, <em>xmpp_to_hostname=None</em>, <em>client_auth_credentials=None</em>, <em>http_tunneling_settings=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity.ServerConnectivityInfo.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructor to specify how to connect to a server to be scanned.</p>
-<p>Most arguments are optional but can be supplied in order to be more specific about the server&#8217;s configuration.</p>
+<p>Most arguments are optional but can be supplied in order to be more specific about the server’s configuration.</p>
 <p>After initializing a ServerConnectivityInfo, the <cite>test_connectivity_to_server()</cite> method must be called next to
 ensure that the server is actually reachable.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -97,34 +94,34 @@ ensure that the server is actually reachable.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>hostname</strong> (<em>Text</em>) &#8211; The server&#8217;s hostname.</li>
-<li><strong>port</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em></em>) &#8211; The server&#8217;s TLS port number. If not supplied, the default port number for the
+<li><strong>hostname</strong> (<em>Text</em>) – The server’s hostname.</li>
+<li><strong>port</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The server’s TLS port number. If not supplied, the default port number for the
 specified <cite>tls_wrapped_protocol</cite> will be used.</li>
-<li><strong>ip_address</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em><em></em>) &#8211; The server&#8217;s IP address. If not supplied, a DNS lookup for the specified
+<li><strong>ip_address</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em>) – The server’s IP address. If not supplied, a DNS lookup for the specified
 <cite>hostname</cite> will be performed. If <cite>http_tunneling_settings</cite> is specified, <cite>ip_address</cite> cannot be supplied
 as the HTTP proxy will be responsible for looking up and connecting to the server to be scanned.</li>
-<li><strong>tls_wrapped_protocol</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum" title="sslyze.ssl_settings.TlsWrappedProtocolEnum"><em>TlsWrappedProtocolEnum</em></a><em>]</em><em></em>) &#8211; The protocol wrapped in TLS that the server
+<li><strong>tls_wrapped_protocol</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum" title="sslyze.ssl_settings.TlsWrappedProtocolEnum"><em>TlsWrappedProtocolEnum</em></a><em>]</em>) – The protocol wrapped in TLS that the server
 expects. It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what
-kind of &#8220;hello&#8221; message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If
+kind of “hello” message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If
 not supplied, standard TLS will be used.</li>
-<li><strong>tls_server_name_indication</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em><em></em>) &#8211; The hostname to set within the Server Name Indication TLS
+<li><strong>tls_server_name_indication</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em>) – The hostname to set within the Server Name Indication TLS
 extension. If not supplied, the specified <cite>hostname</cite> will be used.</li>
-<li><strong>xmpp_to_hostname</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em><em></em>) &#8211; The hostname to set within the <cite>to</cite> attribute of the XMPP stream. If not
+<li><strong>xmpp_to_hostname</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em>) – The hostname to set within the <cite>to</cite> attribute of the XMPP stream. If not
 supplied, the specified <cite>hostname</cite> will be used. Should only be set if the supplied
 <cite>tls_wrapped_protocol</cite> is an XMPP protocol.</li>
-<li><strong>client_auth_credentials</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#sslyze.ssl_settings.ClientAuthenticationCredentials" title="sslyze.ssl_settings.ClientAuthenticationCredentials"><em>ClientAuthenticationCredentials</em></a><em>]</em><em></em>) &#8211; The client certificate and private key
+<li><strong>client_auth_credentials</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#sslyze.ssl_settings.ClientAuthenticationCredentials" title="sslyze.ssl_settings.ClientAuthenticationCredentials"><em>ClientAuthenticationCredentials</em></a><em>]</em>) – The client certificate and private key
 needed to perform mutual authentication with the server. If not supplied, sslyze will attempt to connect
 to the server without performing mutual authentication.</li>
-<li><strong>http_tunneling_settings</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings" title="sslyze.ssl_settings.HttpConnectTunnelingSettings"><em>HttpConnectTunnelingSettings</em></a><em>]</em><em></em>) &#8211; The HTTP proxy configuration to use in
+<li><strong>http_tunneling_settings</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings" title="sslyze.ssl_settings.HttpConnectTunnelingSettings"><em>HttpConnectTunnelingSettings</em></a><em>]</em>) – The HTTP proxy configuration to use in
 order to tunnel the scans through a proxy. If not supplied, sslyze will run the scans by directly
 connecting to the server.</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
-<li><code class="xref py py-exc docutils literal"><span class="pre">ServerConnectivityError</span></code> &#8211; If a DNS lookup was attempted and failed.</li>
-<li><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211; If <cite>xmpp_to_hostname</cite> was specified for a non-XMPP protocol.</li>
-<li><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211; If both <cite>ip_address</cite> and <cite>http_tunneling_settings</cite> were supplied.</li>
+<li><code class="xref py py-exc docutils literal"><span class="pre">ServerConnectivityError</span></code> – If a DNS lookup was attempted and failed.</li>
+<li><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> – If <cite>xmpp_to_hostname</cite> was specified for a non-XMPP protocol.</li>
+<li><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> – If both <cite>ip_address</cite> and <cite>http_tunneling_settings</cite> were supplied.</li>
 </ul>
 </td>
 </tr>
@@ -144,9 +141,9 @@ on the server.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>network_timeout</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em></em>) &#8211; Network timeout value in seconds passed to the underlying socket.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>network_timeout</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Network timeout value in seconds passed to the underlying socket.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ServerConnectivityError</span></code> &#8211; If the server was not reachable or an SSL/TLS handshake could not be completed.</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ServerConnectivityError</span></code> – If the server was not reachable or an SSL/TLS handshake could not be completed.</td>
 </tr>
 </tbody>
 </table>
@@ -161,7 +158,7 @@ on the server.</p>
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum">
 <em class="property">class </em><code class="descclassname">sslyze.ssl_settings.</code><code class="descname">TlsWrappedProtocolEnum</code><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>The list of TLS-wrapped protocols supported by SSLyze.</p>
-<p>SSLyze uses this to figure out how to establish an SSL/TLS connection to the server and what kind of &#8220;hello&#8221; message
+<p>SSLyze uses this to figure out how to establish an SSL/TLS connection to the server and what kind of “hello” message
 to send after the handshake was completed.</p>
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.PLAIN_TLS">
@@ -235,10 +232,10 @@ to send after the handshake was completed.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>hostname</strong> (<em>Text</em>) &#8211; The proxy&#8217;s hostname.</li>
-<li><strong>port</strong> (<em>int</em>) &#8211; The proxy&#8217;s port.</li>
-<li><strong>basic_auth_user</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em><em></em>) &#8211; The username to use if the proxy requires Basic Authentication.</li>
-<li><strong>basic_auth_password</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em><em></em>) &#8211; The password to use if the proxy requires Basic Authentication.</li>
+<li><strong>hostname</strong> (<em>Text</em>) – The proxy’s hostname.</li>
+<li><strong>port</strong> (<em>int</em>) – The proxy’s port.</li>
+<li><strong>basic_auth_user</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em>) – The username to use if the proxy requires Basic Authentication.</li>
+<li><strong>basic_auth_password</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em>) – The password to use if the proxy requires Basic Authentication.</li>
 </ul>
 </td>
 </tr>
@@ -257,16 +254,16 @@ to send after the handshake was completed.</p>
 <dd><p>Container for specifying the settings to perform SSL/TLS client authentication with the server.</p>
 <dl class="method">
 <dt id="sslyze.ssl_settings.ClientAuthenticationCredentials.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>client_certificate_chain_path</em>, <em>client_key_path</em>, <em>client_key_type=&lt;OpenSslFileTypeEnum.PEM: 1&gt;</em>, <em>client_key_password=u''</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ssl_settings.ClientAuthenticationCredentials.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>client_certificate_chain_path</em>, <em>client_key_path</em>, <em>client_key_type=&lt;OpenSslFileTypeEnum.PEM: 1&gt;</em>, <em>client_key_password=''</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ssl_settings.ClientAuthenticationCredentials.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>client_certificate_chain_path</strong> (<em>Text</em>) &#8211; Path to the file containing the client&#8217;s certificate.</li>
-<li><strong>client_key_path</strong> (<em>Text</em>) &#8211; Path to the file containing the client&#8217;s private key.</li>
-<li><strong>client_key_type</strong> (<a class="reference internal" href="#nassl.ssl_client.OpenSslFileTypeEnum" title="nassl.ssl_client.OpenSslFileTypeEnum"><em>OpenSslFileTypeEnum</em></a>) &#8211; The format of the key file.</li>
-<li><strong>client_key_password</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em><em></em>) &#8211; The password to decrypt the private key.</li>
+<li><strong>client_certificate_chain_path</strong> (<em>Text</em>) – Path to the file containing the client’s certificate.</li>
+<li><strong>client_key_path</strong> (<em>Text</em>) – Path to the file containing the client’s private key.</li>
+<li><strong>client_key_type</strong> (<a class="reference internal" href="#nassl.ssl_client.OpenSslFileTypeEnum" title="nassl.ssl_client.OpenSslFileTypeEnum"><em>OpenSslFileTypeEnum</em></a>) – The format of the key file.</li>
+<li><strong>client_key_password</strong> (<em>Optional</em><em>[</em><em>Text</em><em>]</em>) – The password to decrypt the private key.</li>
 </ul>
 </td>
 </tr>
@@ -364,7 +361,7 @@ to send after the handshake was completed.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, SSLyze.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
     </div>
   </body>
 </html>

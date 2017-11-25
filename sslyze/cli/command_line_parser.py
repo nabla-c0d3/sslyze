@@ -94,7 +94,7 @@ class CommandLineServerStringParser(object):
 class CommandLineParser(object):
 
     # Defines what --regular means
-    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'reneg', 'resum', 'certinfo',
+    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'tlsv1_3', 'reneg', 'resum', 'certinfo',
                    'http_get', 'hide_rejected_ciphers', 'compression', 'heartbleed', 'openssl_ccs', 'fallback']
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 target3.com:443{ip} etc...'
 

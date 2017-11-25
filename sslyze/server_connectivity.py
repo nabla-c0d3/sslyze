@@ -220,7 +220,7 @@ class ServerConnectivityInfo(object):
         for ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_1, OpenSslVersionEnum.TLSV1,
                             OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.TLSV1_3, OpenSslVersionEnum.SSLV23]:
             # First try the default cipher list, and then all ciphers
-            for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL']:
+            for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL:-PSK:-SRP']:
                 ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
                                                                        should_ignore_client_auth=False)
                 ssl_connection.ssl_client.set_cipher_list(cipher_list)

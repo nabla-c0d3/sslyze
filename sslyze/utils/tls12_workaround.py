@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from typing import Text
-from nassl.ssl_client import SslClient
 from nassl.ssl_client import OpenSslVerifyEnum
 from nassl.ssl_client import OpenSslVersionEnum
 from nassl.legacy_ssl_client import LegacySslClient

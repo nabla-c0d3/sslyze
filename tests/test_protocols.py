@@ -113,7 +113,7 @@ class ProtocolsTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_tls_1_3_only(self):
-        server_info = ServerConnectivityInfo(hostname='tls13.crypto.mozilla.org')
+        server_info = ServerConnectivityInfo(hostname='www.cloudflare.com')
         server_info.test_connectivity_to_server()
         self.assertEqual(server_info.highest_ssl_version_supported, OpenSslVersionEnum.TLSV1_3)
 

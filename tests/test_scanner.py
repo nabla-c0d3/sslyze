@@ -23,7 +23,6 @@ class ScannerTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
-
     def test_concurrent_scanner(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')
         server_info.test_connectivity_to_server()
@@ -41,4 +40,4 @@ class ScannerTestCase(unittest.TestCase):
             self.assertTrue(plugin_result.as_xml())
             nb_results +=1
 
-        self.assertEquals(nb_results, 3)
+        self.assertEqual(nb_results, 3)

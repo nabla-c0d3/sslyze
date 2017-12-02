@@ -241,13 +241,13 @@ class ServerConnectivityInfo(object):
                                                                                 should_ignore_client_auth=True)
                     ssl_connection_auth.ssl_client.set_cipher_list(cipher_list)
                     try:
-                        ssl_connection_auth.connect(network_max_retries=0)
+                        ssl_connection_auth.connect(network_timeout=network_timeout, network_max_retries=0)
                         ssl_cipher_supported = ssl_connection_auth.ssl_client.get_current_cipher_name()
                         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.OPTIONAL
                     except:
                         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
                     finally:
-                        ssl_connection.close()
+                        ssl_connection_auth.close()
 
                 except:
                     # Could not complete a handshake with this server

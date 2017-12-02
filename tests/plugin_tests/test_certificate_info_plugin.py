@@ -30,7 +30,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
 
-        self.assertEquals(len(plugin_result.path_validation_result_list), 6)
+        self.assertEqual(len(plugin_result.path_validation_result_list), 6)
         for path_validation_result in plugin_result.path_validation_result_list:
             if path_validation_result.trust_store.name == 'Custom --ca_file':
                 self.assertFalse(path_validation_result.is_certificate_trusted)
@@ -48,16 +48,16 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.ocsp_response)
         self.assertTrue(plugin_result.is_ocsp_response_trusted)
 
-        self.assertEquals(len(plugin_result.certificate_chain), 2)
-        self.assertEquals(len(plugin_result.verified_certificate_chain), 3)
+        self.assertEqual(len(plugin_result.certificate_chain), 2)
+        self.assertEqual(len(plugin_result.verified_certificate_chain), 3)
         self.assertFalse(plugin_result.has_anchor_in_certificate_chain)
 
-        self.assertEquals(len(plugin_result.path_validation_result_list), 5)
+        self.assertEqual(len(plugin_result.path_validation_result_list), 5)
         for path_validation_result in plugin_result.path_validation_result_list:
             self.assertTrue(path_validation_result.is_certificate_trusted)
 
-        self.assertEquals(len(plugin_result.path_validation_error_list), 0)
-        self.assertEquals(plugin_result.certificate_matches_hostname, True)
+        self.assertEqual(len(plugin_result.path_validation_error_list), 0)
+        self.assertEqual(plugin_result.certificate_matches_hostname, True)
         self.assertTrue(plugin_result.is_certificate_chain_order_valid)
 
         self.assertTrue(plugin_result.as_text())
@@ -76,16 +76,16 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.is_leaf_certificate_ev)
 
-        self.assertEquals(len(plugin_result.certificate_chain), 3)
-        self.assertEquals(len(plugin_result.verified_certificate_chain), 3)
+        self.assertEqual(len(plugin_result.certificate_chain), 3)
+        self.assertEqual(len(plugin_result.verified_certificate_chain), 3)
         self.assertFalse(plugin_result.has_anchor_in_certificate_chain)
 
-        self.assertEquals(len(plugin_result.path_validation_result_list), 5)
+        self.assertEqual(len(plugin_result.path_validation_result_list), 5)
         for path_validation_result in plugin_result.path_validation_result_list:
             self.assertTrue(path_validation_result.is_certificate_trusted)
 
-        self.assertEquals(len(plugin_result.path_validation_error_list), 0)
-        self.assertEquals(plugin_result.certificate_matches_hostname, True)
+        self.assertEqual(len(plugin_result.path_validation_error_list), 0)
+        self.assertEqual(plugin_result.certificate_matches_hostname, True)
         self.assertTrue(plugin_result.is_certificate_chain_order_valid)
 
         self.assertTrue(plugin_result.as_text())
@@ -103,15 +103,15 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertIsNone(plugin_result.ocsp_response)
-        self.assertEquals(len(plugin_result.certificate_chain), 1)
+        self.assertEqual(len(plugin_result.certificate_chain), 1)
 
-        self.assertEquals(len(plugin_result.path_validation_result_list), 5)
+        self.assertEqual(len(plugin_result.path_validation_result_list), 5)
         for path_validation_result in plugin_result.path_validation_result_list:
             self.assertFalse(path_validation_result.is_certificate_trusted)
 
 
-        self.assertEquals(len(plugin_result.path_validation_error_list), 0)
-        self.assertEquals(plugin_result.certificate_matches_hostname, True)
+        self.assertEqual(len(plugin_result.path_validation_error_list), 0)
+        self.assertEqual(plugin_result.certificate_matches_hostname, True)
         self.assertTrue(plugin_result.is_certificate_chain_order_valid)
         self.assertIsNone(plugin_result.has_anchor_in_certificate_chain)
         self.assertIsNone(plugin_result.has_sha1_in_certificate_chain)

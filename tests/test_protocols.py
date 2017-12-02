@@ -23,7 +23,7 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertEquals(len(plugin_result.certificate_chain), 3)
+        self.assertEqual(len(plugin_result.certificate_chain), 2)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -37,6 +37,8 @@ class ProtocolsTestCase(unittest.TestCase):
             has_ipv6 = True
         except:
             pass
+        finally:
+            s.close()
         return has_ipv6
 
     def test_ipv6(self):
@@ -50,7 +52,7 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertEquals(len(plugin_result.certificate_chain), 3)
+        self.assertEqual(len(plugin_result.certificate_chain), 3)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -62,7 +64,7 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertEquals(len(plugin_result.certificate_chain), 2)
+        self.assertEqual(len(plugin_result.certificate_chain), 2)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -76,7 +78,7 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertEquals(len(plugin_result.certificate_chain), 3)
+        self.assertEqual(len(plugin_result.certificate_chain), 2)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -102,7 +104,7 @@ class ProtocolsTestCase(unittest.TestCase):
     def test_optional_client_authentication(self):
         server_info = ServerConnectivityInfo(hostname='client.badssl.com')
         server_info.test_connectivity_to_server()
-        self.assertEquals(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
+        self.assertEqual(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())

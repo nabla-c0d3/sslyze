@@ -3,12 +3,6 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-# Add ./lib to the path for importing nassl
-import os
-import sys
-
-
-sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 
 from sslyze.concurrent_scanner import ConcurrentScanner, PluginRaisedExceptionScanResult
 from sslyze.plugins.utils.certificate_utils import CertificateUtils

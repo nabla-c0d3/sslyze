@@ -217,8 +217,8 @@ class ServerConnectivityInfo(object):
         ssl_cipher_supported = None
 
         # TODO(AD): Switch to using the protocol discovery logic available in OpenSSL 1.1.0 with TLS_client_method()
-        for ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_1, OpenSslVersionEnum.TLSV1,
-                            OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.TLSV1_3, OpenSslVersionEnum.SSLV23]:
+        for ssl_version in [OpenSslVersionEnum.TLSV1_3, OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_1,
+                            OpenSslVersionEnum.TLSV1, OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.SSLV23]:
             # First try the default cipher list, and then all ciphers
             for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL:-PSK:-SRP']:
                 ssl_connection = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,

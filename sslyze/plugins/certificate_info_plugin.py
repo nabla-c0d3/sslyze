@@ -420,8 +420,13 @@ class CertificateInfoScanResult(PluginScanResult):
                 else 'INSECURE - SHA1-signed certificate in the verified certificate chain'
         else:
             sha1_text = self.NO_VERIFIED_CHAIN_ERROR_TXT
-
         text_output.append(self._format_field('Verified Chain contains SHA1:', sha1_text))
+
+        # Look for the OCSP must-staple extension
+        must_staple_txt = 'YES - Extension present' \
+            if CertificateUtils.has_ocsp_must_staple_extension(self.certificate_chain[0]) \
+            else 'NO - Extension not found'
+        text_output.append(self._format_field('OCSP Must-Staple Extension:', must_staple_txt))
 
         # OCSP stapling
         text_output.extend(['', self._format_subtitle('OCSP Stapling')])

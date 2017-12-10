@@ -98,3 +98,20 @@ class CertificateUtils(object):
         else:
             raise ValueError('Unexpected key algorithm')
 
+    @staticmethod
+    def has_ocsp_must_staple_extension(certificate):
+        # type: (cryptography.x509.Certificate) -> bool
+        """Return True if the certificate has the OCSP Must-Staple extension defined in RFC 6066.
+        """
+        has_ocsp_must_staple = False
+        try:
+            tls_feature_ext = certificate.extensions.get_extension_for_oid(ExtensionOID.TLS_FEATURE)
+            for feature_type in tls_feature_ext.value:
+                if feature_type == cryptography.x509.TLSFeatureType.status_request:
+                    has_ocsp_must_staple = True
+                    break
+        except ExtensionNotFound:
+            pass
+
+        return has_ocsp_must_staple
+

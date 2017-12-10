@@ -310,7 +310,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_tls_1_3_cipher_suites(self):
-        server_info = ServerConnectivityInfo(hostname='tls13.crypto.mozilla.org')
+        server_info = ServerConnectivityInfo(hostname='www.cloudflare.com')
         server_info.test_connectivity_to_server()
 
         plugin = OpenSslCipherSuitesPlugin()

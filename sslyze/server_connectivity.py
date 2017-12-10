@@ -217,6 +217,7 @@ class ServerConnectivityInfo(object):
         ssl_cipher_supported = None
 
         # TODO(AD): Switch to using the protocol discovery logic available in OpenSSL 1.1.0 with TLS_client_method()
+        # TODO(AD): Once TLS 1.3 is widely used, put it at the beginning of the list
         for ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_1, OpenSslVersionEnum.TLSV1,
                             OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.TLSV1_3, OpenSslVersionEnum.SSLV23]:
             # First try the default cipher list, and then all ciphers

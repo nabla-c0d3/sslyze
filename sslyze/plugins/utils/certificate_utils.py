@@ -115,3 +115,21 @@ class CertificateUtils(object):
 
         return has_ocsp_must_staple
 
+    @staticmethod
+    def count_scts_in_sct_extension(certificate):
+        """Return the number of Signed Certificate Timestamps (SCTs) embedded in the certificate.
+        """
+        # type: (cryptography.x509.Certificate) -> int
+        scts_count = 0
+        try:
+            # Look for the x509 extension
+            sct_ext = certificate.extensions.get_extension_for_oid(
+                ExtensionOID.PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS
+            )
+
+            # Count the number of entries in the extension
+            scts_count = len(sct_ext.value)
+        except ExtensionNotFound:
+            pass
+
+        return scts_count

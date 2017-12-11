@@ -198,6 +198,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         return parsed_x509_chain, verify_str, ocsp_response
 
 
+# TODO(AD): Rename some of the attributes to make the naming consistent (is_cert_xxx VS cert_is_xxx)
 class CertificateInfoScanResult(PluginScanResult):
     """The result of running a CertificateInfoScanCommand on a specific server.
 
@@ -223,9 +224,12 @@ class CertificateInfoScanResult(PluginScanResult):
         certificate_matches_hostname (bool): True if hostname validation was successful ie. the leaf certificate was
             issued for the server's hostname.
         is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
+        certificate_has_must_staple_extension (bool): True if the leaf certificate has the OCSP Must-Staple
+            extension as defined in RFC 6066.
+        certificate_included_scts_count (int): The number of Signed Certificate Timestamps (SCTs) for Certificate
+            Transparency embedded in the leaf certificate.
         ocsp_response (Optional[Dict[Text, Any]]): The OCSP response returned by the server. None if no response was
             sent by the server.
-        is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
         ocsp_response_status (Optional[OcspResponseStatusEnum]): The status of the OCSP response returned by the server.
             None if no response was sent by the server.
         is_ocsp_response_trusted (Optional[bool]): True if the OCSP response is trusted using the Mozilla trust store.
@@ -279,6 +283,13 @@ class CertificateInfoScanResult(PluginScanResult):
 
         # Check if it is EV - we only have the EV OIDs for Mozilla
         self.is_leaf_certificate_ev = TrustStoresRepository.get_main().is_extended_validation(self.certificate_chain[0])
+
+        # Look for the Must-Staple extension
+        has_must_staple = CertificateUtils.has_ocsp_must_staple_extension(self.certificate_chain[0])
+        self.certificate_has_must_staple_extension = has_must_staple
+
+        # Look for the certificate transparency extension
+        self.certificate_included_scts_count = CertificateUtils.count_scts_in_sct_extension(self.certificate_chain[0])
 
         # Try to build the verified chain
         self.verified_certificate_chain = []
@@ -422,17 +433,30 @@ class CertificateInfoScanResult(PluginScanResult):
             sha1_text = self.NO_VERIFIED_CHAIN_ERROR_TXT
         text_output.append(self._format_field('Verified Chain contains SHA1:', sha1_text))
 
-        # Look for the OCSP must-staple extension
-        must_staple_txt = 'YES - Extension present' \
-            if CertificateUtils.has_ocsp_must_staple_extension(self.certificate_chain[0]) \
-            else 'NO - Extension not found'
-        text_output.append(self._format_field('OCSP Must-Staple Extension:', must_staple_txt))
+        # Extensions section
+        text_output.extend(['', self._format_subtitle('Extensions')])
+
+        # OCSP must-staple
+        must_staple_txt = 'OK - Extension present' \
+            if self.certificate_has_must_staple_extension \
+            else 'NOT SUPPORTED - Extension not found'
+        text_output.append(self._format_field('OCSP Must-Staple:', must_staple_txt))
+
+        # Look for SCT extension
+        scts_count = self.certificate_included_scts_count
+        if scts_count == 0:
+            sct_txt = 'NOT SUPPORTED - Extension not found'
+        elif scts_count < 3:
+            sct_txt = 'WARNING - Only {} SCTs included but Google recommends 3 or more'.format(str(scts_count))
+        else:
+            sct_txt = 'OK - {} SCTs included'.format(str(scts_count))
+        text_output.append(self._format_field('Certificate Transparency:', sct_txt))
 
         # OCSP stapling
         text_output.extend(['', self._format_subtitle('OCSP Stapling')])
 
         if self.ocsp_response is None:
-            text_output.append(self._format_field('', 'NOT SUPPORTED - Server did not send back an OCSP response.'))
+            text_output.append(self._format_field('', 'NOT SUPPORTED - Server did not send back an OCSP response'))
 
         else:
             if self.ocsp_response_status != OcspResponseStatusEnum.SUCCESSFUL:
@@ -524,7 +548,9 @@ class CertificateInfoScanResult(PluginScanResult):
         cert_chain_attrs = {
             'isChainOrderValid': str(self.is_certificate_chain_order_valid),
             'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
-            'containsAnchorCertificate': str(False) if not self.has_anchor_in_certificate_chain else str(True)
+            'containsAnchorCertificate': str(False) if not self.has_anchor_in_certificate_chain else str(True),
+            'hasMustStapleExtension': self.certificate_has_must_staple_extension,
+            'includedSctsCount': self.certificate_included_scts_count,
         }
         cert_chain_xml = Element('receivedCertificateChain', attrib=cert_chain_attrs)
         for cert_xml in self._certificate_chain_to_xml(self.certificate_chain):
@@ -568,9 +594,13 @@ class CertificateInfoScanResult(PluginScanResult):
         if self.verified_certificate_chain:
             verified_cert_chain_xml = Element(
                 'verifiedCertificateChain',
-                {'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain),
-                 'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
-                 'successfulTrustStore': self.successful_trust_store.name}
+                {
+                    'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain),
+                    'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
+                    'successfulTrustStore': self.successful_trust_store.name,
+                    'hasMustStapleExtension': self.certificate_has_must_staple_extension,
+                    'includedSctsCount': self.certificate_included_scts_count,
+                }
             )
             for cert_xml in self._certificate_chain_to_xml(self.verified_certificate_chain):
                 verified_cert_chain_xml.append(cert_xml)

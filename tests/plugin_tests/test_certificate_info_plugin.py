@@ -23,7 +23,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             plugin.process_task(server_info, CertificateInfoScanCommand(ca_file='doesntexist'))
 
-
     def test_ca_file(self):
         server_info = ServerConnectivityInfo(hostname='www.hotmail.com')
         server_info.test_connectivity_to_server()
@@ -39,7 +38,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
             else:
                 self.assertTrue(path_validation_result.is_certificate_trusted)
 
-
     def test_valid_chain_with_ocsp_stapling_and_must_staple(self):
         server_info = ServerConnectivityInfo(hostname='www.scotthelme.co.uk')
         server_info.test_connectivity_to_server()
@@ -50,17 +48,13 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.ocsp_response)
         self.assertEqual(plugin_result.ocsp_response_status, OcspResponseStatusEnum.SUCCESSFUL)
         self.assertTrue(plugin_result.is_ocsp_response_trusted)
-
-        self.assertEqual(len(plugin_result.certificate_chain), 2)
-        self.assertEqual(len(plugin_result.verified_certificate_chain), 3)
-        self.assertFalse(plugin_result.has_anchor_in_certificate_chain)
+        self.assertTrue(plugin_result.certificate_has_must_staple_extension)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
-
 
     def test_valid_chain_with_ev_cert(self):
         server_info = ServerConnectivityInfo(hostname='www.comodo.com')
@@ -89,7 +83,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-
     def test_invalid_chain(self):
         server_info = ServerConnectivityInfo(hostname='self-signed.badssl.com')
         server_info.test_connectivity_to_server()
@@ -104,6 +97,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         for path_validation_result in plugin_result.path_validation_result_list:
             self.assertFalse(path_validation_result.is_certificate_trusted)
 
+        self.assertEqual(plugin_result.certificate_included_scts_count, 0)
 
         self.assertEqual(len(plugin_result.path_validation_error_list), 0)
         self.assertEqual(plugin_result.certificate_matches_hostname, True)
@@ -118,7 +112,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-
     def test_1000_sans_chain(self):
         # Ensure SSLyze can process a leaf cert with 1000 SANs
         server_info = ServerConnectivityInfo(hostname='1000-sans.badssl.com')
@@ -126,7 +119,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin.process_task(server_info, CertificateInfoScanCommand())
-
 
     def test_sha1_chain(self):
         server_info = ServerConnectivityInfo(hostname='sha1-intermediate.badssl.com')
@@ -139,7 +131,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
-
 
     def test_sha256_chain(self):
         server_info = ServerConnectivityInfo(hostname='sha256.badssl.com')
@@ -156,7 +147,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-
     def test_unicode_certificate(self):
         server_info = ServerConnectivityInfo(hostname='เพย์สบาย.th')
         server_info.test_connectivity_to_server()
@@ -171,7 +161,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
-
 
     def test_ecdsa_certificate(self):
         server_info = ServerConnectivityInfo(hostname='www.cloudflare.com')
@@ -188,7 +177,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-
     def test_chain_with_anchor(self):
         server_info = ServerConnectivityInfo(hostname='www.verizon.com')
         server_info.test_connectivity_to_server()
@@ -204,7 +192,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-
     def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
         server_info = ServerConnectivityInfo(hostname='webmail.russia.nasa.gov')
         server_info.test_connectivity_to_server()
@@ -219,7 +206,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
-
 
     def test_only_trusted_by_custom_ca_file(self):
         server_info = ServerConnectivityInfo(hostname='self-signed.badssl.com')
@@ -238,7 +224,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-
     def test_certificate_with_no_cn(self):
         server_info = ServerConnectivityInfo(hostname='no-common-name.badssl.com')
         server_info.test_connectivity_to_server()
@@ -254,7 +239,6 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-
     def test_certificate_with_no_subject(self):
         server_info = ServerConnectivityInfo(hostname='no-subject.badssl.com')
         server_info.test_connectivity_to_server()
@@ -263,6 +247,21 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertTrue(plugin_result.verified_certificate_chain)
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
+    def test_certificate_with_scts(self):
+        server_info = ServerConnectivityInfo(hostname='www.apple.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+
+        self.assertEqual(plugin_result.certificate_included_scts_count, 3)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())

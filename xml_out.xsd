@@ -106,6 +106,8 @@
             <xs:attribute name="isChainOrderValid" use="required"/>
             <xs:attribute name="containsAnchorCertificate"/>
             <xs:attribute name="suppliedServerNameIndication" use="required"/>
+            <xs:attribute name="hasMustStapleExtension" use="required"/>
+            <xs:attribute name="includedSctsCount" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="verifiedCertificateChain">
@@ -116,6 +118,8 @@
             <xs:attribute name="hasSha1SignedCertificate" use="required"/>
             <xs:attribute name="suppliedServerNameIndication" use="required"/>
             <xs:attribute name="successfulTrustStore" use="required"/>
+            <xs:attribute name="hasMustStapleExtension" use="required"/>
+            <xs:attribute name="includedSctsCount" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="certificateValidation">

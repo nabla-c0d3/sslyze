@@ -96,8 +96,14 @@ def _object_to_json_dict(obj):
             'notBefore': certificate.not_valid_before.strftime("%Y-%m-%d %H:%M:%S"),
             'notAfter': certificate.not_valid_after.strftime("%Y-%m-%d %H:%M:%S"),
             'signatureAlgorithm': certificate.signature_hash_algorithm.name,
-            'publicKey': {'algorithm': CertificateUtils.get_public_key_type(certificate)}
+            'publicKey': {
+                'algorithm': CertificateUtils.get_public_key_type(certificate)
+            },
         }
+
+        dns_alt_names = CertificateUtils.get_dns_subject_alternative_names(certificate)
+        if dns_alt_names:
+            result['subjectAlternativeName'] = {'DNS': dns_alt_names}
 
         # Add some info about the public key
         public_key = certificate.public_key()

@@ -538,6 +538,15 @@ class CertificateInfoScanResult(PluginScanResult):
             elem_xml = Element('publicKey', attrib=key_attrs)
             cert_xml.append(elem_xml)
 
+            dns_alt_names = CertificateUtils.get_dns_subject_alternative_names(certificate)
+            if dns_alt_names:
+                san_xml = Element('subjectAlternativeName')
+                for dns_name in dns_alt_names:
+                    dns_xml = Element('DNS')
+                    dns_xml.text = dns_name
+                    san_xml.append(dns_xml)
+                cert_xml.append(san_xml)
+
             cert_xml_list.append(cert_xml)
         return cert_xml_list
 
@@ -549,8 +558,8 @@ class CertificateInfoScanResult(PluginScanResult):
             'isChainOrderValid': str(self.is_certificate_chain_order_valid),
             'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
             'containsAnchorCertificate': str(False) if not self.has_anchor_in_certificate_chain else str(True),
-            'hasMustStapleExtension': self.certificate_has_must_staple_extension,
-            'includedSctsCount': self.certificate_included_scts_count,
+            'hasMustStapleExtension': str(self.certificate_has_must_staple_extension),
+            'includedSctsCount': str(self.certificate_included_scts_count),
         }
         cert_chain_xml = Element('receivedCertificateChain', attrib=cert_chain_attrs)
         for cert_xml in self._certificate_chain_to_xml(self.certificate_chain):
@@ -598,8 +607,8 @@ class CertificateInfoScanResult(PluginScanResult):
                     'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain),
                     'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
                     'successfulTrustStore': self.successful_trust_store.name,
-                    'hasMustStapleExtension': self.certificate_has_must_staple_extension,
-                    'includedSctsCount': self.certificate_included_scts_count,
+                    'hasMustStapleExtension': str(self.certificate_has_must_staple_extension),
+                    'includedSctsCount': str(self.certificate_included_scts_count),
                 }
             )
             for cert_xml in self._certificate_chain_to_xml(self.verified_certificate_chain):

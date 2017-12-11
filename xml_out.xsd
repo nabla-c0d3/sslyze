@@ -159,13 +159,12 @@
             <xs:sequence>
                 <xs:element ref="responderID"/>
                 <xs:element ref="producedAt"/>
-                <xs:element ref="responseStatus"/>
             </xs:sequence>
             <xs:attribute name="isTrustedByMozillaCAStore" use="required"/>
+            <xs:attribute name="status" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="responderID" type="xs:string"/>
-    <xs:element name="responseStatus" type="xs:string"/>
     <xs:element name="producedAt" type="xs:string"/>
     <xs:element name="compression">
         <xs:complexType>
@@ -352,6 +351,7 @@
                 <xs:element ref="notAfter"/>
                 <xs:element ref="signatureAlgorithm"/>
                 <xs:element ref="publicKey"/>
+                <xs:element ref="subjectAlternativeName"  minOccurs="0" maxOccurs="1"/>
             </xs:sequence>
             <xs:attribute name="sha1Fingerprint" use="required"/>
             <xs:attribute name="hpkpSha256Pin" use="required"/>
@@ -372,6 +372,14 @@
             <xs:attribute name="exponent"/>
         </xs:complexType>
     </xs:element>
+    <xs:element name="subjectAlternativeName">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element  minOccurs="0" maxOccurs="unbounded" ref="DNS"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="DNS" type="xs:string"/>
     <xs:complexType name="sessionResumptionWithSessionIDs">
         <xs:sequence>
             <xs:element ref="sessionResumptionWithSessionIDs"/>

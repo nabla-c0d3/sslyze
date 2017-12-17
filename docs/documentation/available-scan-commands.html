@@ -407,11 +407,10 @@ unexpected error during the TLS handshake with the server.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher">
-<code class="descname">preferred_cipher</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>AcceptedCipherSuite</em> – The server’s preferred cipher suite among all the cipher suites
-supported by SSLyze. None if the server follows the client’s preference or if none of SSLyze’s cipher suites
-are supported by the server.</p>
+<dt id="sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher_list">
+<code class="descname">preferred_cipher_list</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher_list" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[AcceptedCipherSuite]</em> – The list of cipher suites supported supported by both SSLyze
+and the server in the order of server preference.</p>
 </dd></dl>
 
 </dd></dl>

@@ -105,8 +105,8 @@ class RobotClientKeyExchangePayloads(object):
 class RobotScanResultEnum(Enum):
     """An enum to provide the result of running a RobotScanCommand.
     """
-    VULNERABLE_TO_WEAK_ORACLE = 1
-    VULNERABLE_TO_STRONG_ORACLE = 2
+    VULNERABLE_WEAK_ORACLE = 1
+    VULNERABLE_STRONG_ORACLE = 2
     NOT_VULNERABLE_NO_ORACLE = 3
     NOT_VULNERABLE_RSA_NOT_SUPPORTED = 4
     UNKNOWN_INCONSISTENT_RESULTS = 5
@@ -196,9 +196,9 @@ class RobotPlugin(plugin_base.Plugin):
         # correctly formatted PKCS#1 message with 0x00 on a correct position. This
         # makes our oracle weak
         if response_1 == response_2 == response_3:
-            result_enum = RobotScanResultEnum.VULNERABLE_TO_WEAK_ORACLE
+            result_enum = RobotScanResultEnum.VULNERABLE_WEAK_ORACLE
         else:
-            result_enum = RobotScanResultEnum.VULNERABLE_TO_STRONG_ORACLE
+            result_enum = RobotScanResultEnum.VULNERABLE_STRONG_ORACLE
 
         return RobotScanResult(server_info, scan_command, result_enum)
 
@@ -371,9 +371,9 @@ class RobotScanResult(PluginScanResult):
         self.result_enum = result_enum
 
     def as_text(self):
-        if self.result_enum == RobotScanResultEnum.VULNERABLE_TO_STRONG_ORACLE:
+        if self.result_enum == RobotScanResultEnum.VULNERABLE_STRONG_ORACLE:
             robot_txt = 'VULNERABLE - Strong oracle, a real attack is possible'
-        elif self.result_enum == RobotScanResultEnum.VULNERABLE_TO_WEAK_ORACLE:
+        elif self.result_enum == RobotScanResultEnum.VULNERABLE_WEAK_ORACLE:
             robot_txt = 'VULNERABLE - Weak oracle, the attack would take too long'
         elif self.result_enum == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE:
             robot_txt = 'OK - Not vulnerable'
@@ -388,5 +388,5 @@ class RobotScanResult(PluginScanResult):
 
     def as_xml(self):
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-        xml_output.append(Element('robot', resultEnum=self.result_enum.name))
+        xml_output.append(Element('robotAttack', resultEnum=self.result_enum.name))
         return xml_output

@@ -105,11 +105,11 @@ class RobotClientKeyExchangePayloads(object):
 class RobotScanResultEnum(Enum):
     """An enum to provide the result of running a RobotScanCommand.
     """
-    VULNERABLE_WEAK_ORACLE = 1
-    VULNERABLE_STRONG_ORACLE = 2
-    NOT_VULNERABLE_NO_ORACLE = 3
-    NOT_VULNERABLE_RSA_NOT_SUPPORTED = 4
-    UNKNOWN_INCONSISTENT_RESULTS = 5
+    VULNERABLE_WEAK_ORACLE = 1  #: The server is vulnerable but the attack would take too long
+    VULNERABLE_STRONG_ORACLE = 2  #: The server is vulnerable and real attacks are feasible
+    NOT_VULNERABLE_NO_ORACLE = 3  #: The server supports RSA cipher suites but does not act as an oracle
+    NOT_VULNERABLE_RSA_NOT_SUPPORTED = 4  #: The server does not supports RSA cipher suites
+    UNKNOWN_INCONSISTENT_RESULTS = 5  #: Could not determine whether the server is vulnerable or not
 
 
 class RobotPlugin(plugin_base.Plugin):
@@ -362,24 +362,24 @@ class RobotScanResult(PluginScanResult):
     """The result of running a RobotScanCommand on a specific server.
 
     Attributes:
-        result_enum (RobotScanResultEnum): An Enum providing the result of the Robot scan.
+        robot_result_enum (RobotScanResultEnum): An Enum providing the result of the Robot scan.
     """
 
-    def __init__(self, server_info, scan_command, result_enum):
+    def __init__(self, server_info, scan_command, robot_result_enum):
         # type: (ServerConnectivityInfo, RobotScanCommand, RobotScanResultEnum) -> None
         super(RobotScanResult, self).__init__(server_info, scan_command)
-        self.result_enum = result_enum
+        self.robot_result_enum = robot_result_enum
 
     def as_text(self):
-        if self.result_enum == RobotScanResultEnum.VULNERABLE_STRONG_ORACLE:
+        if self.robot_result_enum == RobotScanResultEnum.VULNERABLE_STRONG_ORACLE:
             robot_txt = 'VULNERABLE - Strong oracle, a real attack is possible'
-        elif self.result_enum == RobotScanResultEnum.VULNERABLE_WEAK_ORACLE:
+        elif self.robot_result_enum == RobotScanResultEnum.VULNERABLE_WEAK_ORACLE:
             robot_txt = 'VULNERABLE - Weak oracle, the attack would take too long'
-        elif self.result_enum == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE:
+        elif self.robot_result_enum == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE:
             robot_txt = 'OK - Not vulnerable'
-        elif self.result_enum == RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED:
+        elif self.robot_result_enum == RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED:
             robot_txt = 'OK - Not vulnerable, RSA cipher suites not supported'
-        elif self.result_enum == RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS:
+        elif self.robot_result_enum == RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS:
             robot_txt = 'UNKNOWN - Received inconsistent results'
         else:
             raise ValueError('Should never happen')
@@ -388,5 +388,5 @@ class RobotScanResult(PluginScanResult):
 
     def as_xml(self):
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-        xml_output.append(Element('robotAttack', resultEnum=self.result_enum.name))
+        xml_output.append(Element('robotAttack', resultEnum=self.robot_result_enum.name))
         return xml_output

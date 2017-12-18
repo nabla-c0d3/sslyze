@@ -16,7 +16,7 @@ class RobotPluginPluginTestCase(unittest.TestCase):
         plugin = RobotPlugin()
         plugin_result = plugin.process_task(server_info, RobotScanCommand())
 
-        self.assertEqual(plugin_result.result_enum, RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE)
+        self.assertEqual(plugin_result.robot_result_enum, RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())

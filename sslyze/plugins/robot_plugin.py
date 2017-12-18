@@ -41,6 +41,11 @@ class RobotScanCommand(PluginScanCommand):
     def get_title(cls):
        return 'ROBOT Attack'
 
+    @classmethod
+    def is_aggressive(cls):
+        # Each scan spawns 10 threads
+        return True
+
 
 class RobotPmsPaddingPayloadEnum(Enum):
     VALID = 0

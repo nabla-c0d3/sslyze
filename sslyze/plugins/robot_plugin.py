@@ -39,7 +39,7 @@ class RobotScanCommand(PluginScanCommand):
 
     @classmethod
     def get_title(cls):
-       return 'ROBOT'
+       return 'ROBOT Attack'
 
 
 class RobotPmsPaddingPayloadEnum(Enum):
@@ -102,6 +102,16 @@ class RobotClientKeyExchangePayloads(object):
         return b'\x16' + TlsRecordTlsVersionBytes[tls_version.name].value + bytearray.fromhex(cls._FINISHED_RECORD_HEX)
 
 
+class RobotScanResultEnum(Enum):
+    """An enum to provide the result of running a RobotScanCommand.
+    """
+    VULNERABLE_TO_WEAK_ORACLE = 1
+    VULNERABLE_TO_STRONG_ORACLE = 2
+    NOT_VULNERABLE_NO_ORACLE = 3
+    NOT_VULNERABLE_RSA_NOT_SUPPORTED = 4
+    UNKNOWN_INCONSISTENT_RESULTS = 5
+
+
 # This plugin is a re-implementation of/
 class RobotPlugin(plugin_base.Plugin):
     """Test the server(s) for the Return Of Bleichenbacher's Oracle Threat vulnerability.
@@ -113,7 +123,6 @@ class RobotPlugin(plugin_base.Plugin):
 
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, RobotScanCommand) -> RobotScanResult
-        is_vulnerable_to_robot = False
         rsa_params = None
 
         # With TLS 1.2 some servers are only vulnerable when using the GCM cipher suites - try them first
@@ -127,73 +136,73 @@ class RobotPlugin(plugin_base.Plugin):
             rsa_params = self._get_rsa_parameters(server_info, cipher_string)
 
         if rsa_params is None:
-            # Could not connect to the server using RSA
-            pass
-            # Not Vulnerable
-            # TODO(AD): Display a better explanation
+            # Could not connect to the server using RSA - not vulnerable
+            return RobotScanResult(server_info, scan_command, RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED)
+
+        # Use threads to speed things up
+        thread_pool = ThreadPool()
+
+        rsa_modulus, rsa_exponent = rsa_params
+        for payload_enum in RobotPmsPaddingPayloadEnum:
+            # Run each payload twice to ensure the results are consistent
+            thread_pool.add_job((self._run_oracle, (server_info, cipher_string, payload_enum, rsa_modulus,
+                                                    rsa_exponent)))
+            thread_pool.add_job((self._run_oracle, (server_info, cipher_string, payload_enum, rsa_modulus,
+                                                    rsa_exponent)))
+
+        # Use one thread per check
+        thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum)*2)
+
+        # Store the results - two attempts per ROBOT payload
+        payload_responses = {
+            RobotPmsPaddingPayloadEnum.VALID: [],
+            RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES: [],
+            RobotPmsPaddingPayloadEnum.WRONG_POSITION_00: [],
+            RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE: [],
+            RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER: [],
+        }
+        for completed_job in thread_pool.get_result():
+            (job, (payload_enum, server_response)) = completed_job
+            payload_responses[payload_enum].append(server_response)
+
+        for failed_job in thread_pool.get_error():
+            # Should never happen when running the Robot check as we catch all exceptions in the handshake
+            (_, exception) = failed_job
+            raise exception
+
+        thread_pool.join()
+
+        # Ensure the results were consistent
+        for payload_enum, server_responses in payload_responses.items():
+            # We ran the check twice per payload and the two responses should be the same
+            if server_responses[0] != server_responses[1]:
+                # Inconsistent results - abort
+                return RobotScanResult(server_info, scan_command, RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS)
+
+
+        # Check if the server acts as an oracle by checking if the server replied differently to the payloads
+        if len(set([server_responses[0] for server_responses in payload_responses.values()])) == 1:
+            # All server responses were identical - no oracle
+            return RobotScanResult(server_info, scan_command, RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE)
+
+        # All server responses were NOT identical, server is vulnerable
+        # Check to see if it is a weak oracle
+        response_1 = payload_responses[RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES][0]
+        response_2 = payload_responses[RobotPmsPaddingPayloadEnum.WRONG_POSITION_00][0]
+        response_3 = payload_responses[RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE][0]
+
+        # From the original script:
+        # If the response to the invalid PKCS#1 request (oracle_bad1) is equal to both
+        # requests starting with 0002, we have a weak oracle. This is because the only
+        # case where we can distinguish valid from invalid requests is when we send
+        # correctly formatted PKCS#1 message with 0x00 on a correct position. This
+        # makes our oracle weak
+        if response_1 == response_2 == response_3:
+            result_enum = RobotScanResultEnum.VULNERABLE_TO_WEAK_ORACLE
         else:
-            rsa_modulus, rsa_exponent = rsa_params
+            result_enum = RobotScanResultEnum.VULNERABLE_TO_STRONG_ORACLE
 
-            # Use threads to speed things up
-            thread_pool = ThreadPool()
-
-            for payload_enum in RobotPmsPaddingPayloadEnum:
-                # Run each payload twice to ensure the results are consistent
-                thread_pool.add_job((self._run_oracle, (server_info, cipher_string, payload_enum, rsa_modulus,
-                                                        rsa_exponent)))
-                thread_pool.add_job((self._run_oracle, (server_info, cipher_string, payload_enum, rsa_modulus,
-                                                        rsa_exponent)))
-
-            # Use one thread per check
-            thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum)*2)
-
-            # Store the results - two attempts per ROBOT payload
-            payload_responses = {
-                RobotPmsPaddingPayloadEnum.VALID: [],
-                RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES: [],
-                RobotPmsPaddingPayloadEnum.WRONG_POSITION_00: [],
-                RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE: [],
-                RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER: [],
-            }
-            for completed_job in thread_pool.get_result():
-                (job, (payload_enum, server_response)) = completed_job
-                payload_responses[payload_enum].append(server_response)
-
-            for failed_job in thread_pool.get_error():
-                # Should never happen when running the Robot check as we catch all exceptions in the handshake
-                (_, exception) = failed_job
-                raise exception
-
-            thread_pool.join()
-
-            # Ensure the results were consistent
-            for payload_enum, server_responses in payload_responses.items():
-                # We ran the check twice per payload and the two responses should be the same
-                if server_responses[0] != server_responses[1]:
-                    print('WARNING: Inconsistent results')
-
-            # Check if the server acts as an oracle by checking if the server replied differently to the payloads
-            if len(set([server_responses[0] for server_responses in payload_responses.values()])) > 1:
-                # All server responses were NOT identical, server is vulnerable
-                is_vulnerable_to_robot = True
-
-                # Check to see if it is a weak oracle
-                response_1 = payload_responses[RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES][0]
-                response_2 = payload_responses[RobotPmsPaddingPayloadEnum.WRONG_POSITION_00][0]
-                response_3 = payload_responses[RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE][0]
-
-                # From the original script:
-                # If the response to the invalid PKCS#1 request (oracle_bad1) is equal to both
-                # requests starting with 0002, we have a weak oracle. This is because the only
-                # case where we can distinguish valid from invalid requests is when we send
-                # correctly formatted PKCS#1 message with 0x00 on a correct position. This
-                # makes our oracle weak
-                if response_1 == response_2 == response_3:
-                    print('WEAK ORACLE')
-                else:
-                    print('STRONG ORACLE')
-
-        return RobotScanResult(server_info, scan_command, is_vulnerable_to_robot)
+        return RobotScanResult(server_info, scan_command, result_enum)
 
     @staticmethod
     def _get_rsa_parameters(server_info, openssl_cipher_string):
@@ -207,9 +216,9 @@ class RobotPlugin(plugin_base.Plugin):
             certificate = ssl_connection.ssl_client.get_peer_certificate()
             parsed_cert = cryptography.x509.load_pem_x509_certificate(certificate.as_pem().encode('ascii'),
                                                                       backend=default_backend())
-        except SSLHandshakeRejected as e:
+        except SSLHandshakeRejected:
             # Server does not support RSA cipher suites?
-            raise
+            pass
         except ClientCertificateRequested:  # The server asked for a client cert
             certificate = ssl_connection.ssl_client.get_peer_certificate()
             parsed_cert = cryptography.x509.load_pem_x509_certificate(certificate.as_pem().encode('ascii'),
@@ -244,13 +253,10 @@ class RobotPlugin(plugin_base.Plugin):
         server_response = ''
         try:
             # Start the SSL handshake
-            # TODO(AD): Remove print statements
-            print('Sending Payload')
             ssl_connection.connect()
         except ServerResponseToRobot as e:
             # Should always be thrown
             server_response = e.server_response
-            print('Received "{}"'.format(e.server_response))
         finally:
             ssl_connection.close()
 
@@ -358,22 +364,31 @@ class RobotScanResult(PluginScanResult):
     """The result of running a RobotScanCommand on a specific server.
 
     Attributes:
-        is_vulnerable_to_robot (bool): True if the server is vulnerable to the ROBOT attack.
+        result_enum (RobotScanResultEnum): An Enum providing the result of the Robot scan.
     """
 
-    def __init__(self, server_info, scan_command, is_vulnerable_to_robot):
-        # type: (ServerConnectivityInfo, RobotScanCommand, bool) -> None
+    def __init__(self, server_info, scan_command, result_enum):
+        # type: (ServerConnectivityInfo, RobotScanCommand, RobotScanResultEnum) -> None
         super(RobotScanResult, self).__init__(server_info, scan_command)
-        self.is_vulnerable_to_robot = is_vulnerable_to_robot
+        self.result_enum = result_enum
 
     def as_text(self):
-        robot_txt = 'VULNERABLE - Server is vulnerable to the ROBOT attack' \
-            if self.is_vulnerable_to_robot \
-            else 'OK - Not vulnerable to the ROBOT attack'
+        if self.result_enum == RobotScanResultEnum.VULNERABLE_TO_STRONG_ORACLE:
+            robot_txt = 'VULNERABLE - Strong oracle, a real attack is possible'
+        elif self.result_enum == RobotScanResultEnum.VULNERABLE_TO_WEAK_ORACLE:
+            robot_txt = 'VULNERABLE - Weak oracle, the attack would take too long'
+        elif self.result_enum == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE:
+            robot_txt = 'OK - Not vulnerable'
+        elif self.result_enum == RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED:
+            robot_txt = 'OK - Not vulnerable, RSA cipher suites not supported'
+        elif self.result_enum == RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS:
+            robot_txt = 'UNKNOWN - Received inconsistent results'
+        else:
+            raise ValueError('Should never happen')
 
         return [self._format_title(self.scan_command.get_title()), self._format_field('', robot_txt)]
 
     def as_xml(self):
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-        xml_output.append(Element('robot', isVulnerable=str(self.is_vulnerable_to_robot)))
+        xml_output.append(Element('robot', resultEnum=self.result_enum.name))
         return xml_output

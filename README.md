@@ -16,7 +16,7 @@ their SSL/TLS servers.
 
 Key features include:
 * Fully [documented Python API](https://nabla-c0d3.github.io/sslyze/documentation/), in order to run scans and process the results directly from Python.
-* **New: TLS 1.3 (draft 18) support.**
+* **New: Support for TLS 1.3 (draft 18) and the [ROBOT vulnerability](https://nabla-c0d3.github.io/blog/2017/12/17/sslyze-robot-scan/).**
 * Scans are automatically dispatched among multiple processes, making them very fast.
 * Performance testing: session resumption and TLS tickets support.
 * Security testing: weak cipher suites, insecure renegotiation, CRIME, Heartbleed and more.

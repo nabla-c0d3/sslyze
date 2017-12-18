@@ -11,6 +11,7 @@ from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugi
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.plugin_base import PluginScanCommand
+from sslyze.plugins.robot_plugin import RobotPlugin
 
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin
@@ -24,7 +25,7 @@ class PluginsRepository(object):
 
     _PLUGIN_CLASSES = [OpenSslCipherSuitesPlugin, CertificateInfoPlugin, CompressionPlugin, FallbackScsvPlugin,
                        HeartbleedPlugin, HttpHeadersPlugin, OpenSslCcsInjectionPlugin, SessionRenegotiationPlugin,
-                       SessionResumptionPlugin]
+                       SessionResumptionPlugin, RobotPlugin]
 
     def __init__(self, plugin_classes=_PLUGIN_CLASSES):
         # type: (List[Type[Plugin]]) -> None

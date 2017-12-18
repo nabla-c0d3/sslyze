@@ -41,6 +41,10 @@ Additional helper classes
 
 .. autoclass:: PathValidationResult()
 .. autoclass:: PathValidationError()
+.. autoclass:: OcspResponseStatusEnum()
+   :members:
+   :undoc-members:
+
 .. automodule:: sslyze.plugins.utils.trust_store.trust_store
 .. autoclass:: TrustStore()
 
@@ -168,3 +172,17 @@ SessionResumptionRateScanCommand
 
 .. autoclass:: SessionResumptionRateScanCommand()
 .. autoclass:: SessionResumptionRateScanResult()
+
+RobotPlugin
+===========
+
+.. automodule:: sslyze.plugins.robot_plugin
+
+RobotScanCommand
+----------------
+
+.. autoclass:: RobotScanCommand()
+.. autoclass:: RobotScanResultEnum()
+   :members:
+   :undoc-members:
+.. autoclass:: RobotScanResult()

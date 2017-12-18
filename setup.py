@@ -16,7 +16,7 @@ SSLYZE_SETUP = {
     'package_data': {'sslyze.plugins.utils.trust_store': ['pem_files/*.pem']},
     'install_requires': ['nassl>=1.0.0,<1.1.0',
                          'cryptography>=2.1.4',
-                         'tls-parser>=1.1.0,<1.2.0'],
+                         'tls-parser>=1.2.0,<1.3.0'],
     'extras_require': {':python_version < "3.4"': ['enum34'],
                        ':python_version < "3.5"': ['typing']},
     'classifiers': [

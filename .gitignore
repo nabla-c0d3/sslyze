@@ -57,3 +57,5 @@ ca/*
 # Sphynx
 docs/_build/*
 docs/documentation/_sources/*
+docs/documentation/.doctrees/*
+

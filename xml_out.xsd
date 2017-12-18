@@ -50,6 +50,7 @@
                 <xs:element minOccurs="0" ref="tlsv1_2"/>
                 <xs:element minOccurs="0" ref="fallback"/>
                 <xs:element minOccurs="0" ref="openssl_ccs"/>
+                <xs:element minOccurs="0" ref="robot"/>
             </xs:all>
             <xs:attribute name="host" use="required"/>
             <xs:attribute name="ip" use="optional"/>
@@ -85,6 +86,20 @@
     <xs:element name="openSslCcsInjection">
         <xs:complexType>
             <xs:attribute name="isVulnerable" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="robot">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="robotAttack"/>
+            </xs:sequence>
+            <xs:attribute name="title"/>
+            <xs:attribute name="exception"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="robotAttack">
+        <xs:complexType>
+            <xs:attribute name="resultEnum" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="certinfo">

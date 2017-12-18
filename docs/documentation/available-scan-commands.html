@@ -166,16 +166,24 @@ issued for the server’s hostname.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_has_must_staple_extension">
+<code class="descname">certificate_has_must_staple_extension</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_has_must_staple_extension" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – True if the leaf certificate has the OCSP Must-Staple
+extension as defined in RFC 6066.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_included_scts_count">
+<code class="descname">certificate_included_scts_count</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_included_scts_count" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – The number of Signed Certificate Timestamps (SCTs) for Certificate
+Transparency embedded in the leaf certificate.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.ocsp_response">
 <code class="descname">ocsp_response</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.ocsp_response" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[Dict[Text, Any]]</em> – The OCSP response returned by the server. None if no response was
 sent by the server.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">is_leaf_certificate_ev</code></dt>
-<dd><p><em>bool</em> – True if the leaf certificate is Extended Validation according to Mozilla.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -251,6 +259,42 @@ never happen.</p>
 <code class="descname">error_message</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.PathValidationError.error_message" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Text</em> – The exception that was raised formatted as a string.</p>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">OcspResponseStatusEnum</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+<dl class="attribute">
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL">
+<code class="descname">SUCCESSFUL</code><em class="property"> = 0</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.MALFORMED_REQUEST">
+<code class="descname">MALFORMED_REQUEST</code><em class="property"> = 1</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.MALFORMED_REQUEST" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR">
+<code class="descname">INTERNAL_ERROR</code><em class="property"> = 2</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.TRY_LATER">
+<code class="descname">TRY_LATER</code><em class="property"> = 3</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.TRY_LATER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SIG_REQUIRED">
+<code class="descname">SIG_REQUIRED</code><em class="property"> = 5</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SIG_REQUIRED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.UNAUTHORIZED">
+<code class="descname">UNAUTHORIZED</code><em class="property"> = 6</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.UNAUTHORIZED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -840,6 +884,66 @@ session ID resumption with the server (should always be empty).</p>
 
 </div>
 </div>
+<div class="section" id="module-sslyze.plugins.robot_plugin">
+<span id="robotplugin"></span><h2>RobotPlugin<a class="headerlink" href="#module-sslyze.plugins.robot_plugin" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="robotscancommand">
+<h3>RobotScanCommand<a class="headerlink" href="#robotscancommand" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="sslyze.plugins.robot_plugin.RobotScanCommand">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.robot_plugin.</code><code class="descname">RobotScanCommand</code><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the server(s) for the Return Of Bleichenbacher’s Oracle Threat vulnerability.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sslyze.plugins.robot_plugin.RobotScanResultEnum">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.robot_plugin.</code><code class="descname">RobotScanResultEnum</code><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResultEnum" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enum to provide the result of running a RobotScanCommand.</p>
+<dl class="attribute">
+<dt id="sslyze.plugins.robot_plugin.RobotScanResultEnum.VULNERABLE_WEAK_ORACLE">
+<code class="descname">VULNERABLE_WEAK_ORACLE</code><em class="property"> = 1</em><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResultEnum.VULNERABLE_WEAK_ORACLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The server is vulnerable but the attack would take too long</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.robot_plugin.RobotScanResultEnum.VULNERABLE_STRONG_ORACLE">
+<code class="descname">VULNERABLE_STRONG_ORACLE</code><em class="property"> = 2</em><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResultEnum.VULNERABLE_STRONG_ORACLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The server is vulnerable and real attacks are feasible</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.robot_plugin.RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE">
+<code class="descname">NOT_VULNERABLE_NO_ORACLE</code><em class="property"> = 3</em><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The server supports RSA cipher suites but does not act as an oracle</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.robot_plugin.RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED">
+<code class="descname">NOT_VULNERABLE_RSA_NOT_SUPPORTED</code><em class="property"> = 4</em><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED" title="Permalink to this definition">¶</a></dt>
+<dd><p>The server does not supports RSA cipher suites</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.robot_plugin.RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS">
+<code class="descname">UNKNOWN_INCONSISTENT_RESULTS</code><em class="property"> = 5</em><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Could not determine whether the server is vulnerable or not</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sslyze.plugins.robot_plugin.RobotScanResult">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.robot_plugin.</code><code class="descname">RobotScanResult</code><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>The result of running a RobotScanCommand on a specific server.</p>
+<dl class="attribute">
+<dt id="sslyze.plugins.robot_plugin.RobotScanResult.robot_result_enum">
+<code class="descname">robot_result_enum</code><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResult.robot_result_enum" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>RobotScanResultEnum</em> – An Enum providing the result of the Robot scan.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
 </div>
 
 
@@ -890,6 +994,10 @@ session ID resumption with the server (should always be empty).</p>
 <li><a class="reference internal" href="#module-sslyze.plugins.session_resumption_plugin">SessionResumptionPlugin</a><ul>
 <li><a class="reference internal" href="#sessionresumptionsupportscancommand">SessionResumptionSupportScanCommand</a></li>
 <li><a class="reference internal" href="#sessionresumptionratescancommand">SessionResumptionRateScanCommand</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sslyze.plugins.robot_plugin">RobotPlugin</a><ul>
+<li><a class="reference internal" href="#robotscancommand">RobotScanCommand</a></li>
 </ul>
 </li>
 </ul>

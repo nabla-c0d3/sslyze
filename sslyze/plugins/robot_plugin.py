@@ -112,7 +112,6 @@ class RobotScanResultEnum(Enum):
     UNKNOWN_INCONSISTENT_RESULTS = 5
 
 
-# This plugin is a re-implementation of/
 class RobotPlugin(plugin_base.Plugin):
     """Test the server(s) for the Return Of Bleichenbacher's Oracle Threat vulnerability.
     """
@@ -178,7 +177,6 @@ class RobotPlugin(plugin_base.Plugin):
             if server_responses[0] != server_responses[1]:
                 # Inconsistent results - abort
                 return RobotScanResult(server_info, scan_command, RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS)
-
 
         # Check if the server acts as an oracle by checking if the server replied differently to the payloads
         if len(set([server_responses[0] for server_responses in payload_responses.values()])) == 1:

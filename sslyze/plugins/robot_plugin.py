@@ -14,6 +14,7 @@ import math
 from cryptography.hazmat.backends import default_backend
 from nassl._nassl import WantReadError
 from nassl.ssl_client import ClientCertificateRequested
+from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
@@ -63,33 +64,42 @@ class RobotClientKeyExchangePayloads(object):
     _PMS_HEX = "aa112233445566778899112233445566778899112233445566778899112233445566778899112233445566778899"
 
     @classmethod
-    def get_all(cls, tls_version, modulus, exponent):
-        # type: (TlsVersionEnum, int, int) -> List[TlsRsaClientKeyExchangeRecord]
-        """The core logic of the check is to send multiple Client Key Exchanges records with different, valid or
-        invalid padding values for the pre_master_scret. Depending on how the server reacts to each payload, we can
-        tell if it can be used as a decryption oracle or not.
+    def get_client_key_exchange_record(cls, robot_payload_enum, tls_version, modulus, exponent):
+        """A client key exchange record with a hardcoded pre_master_secret, and a valid or invalid padding.
         """
-        test_cke_records = []
+        # type: (RobotPmsPaddingPayloadEnum, TlsVersionEnum, int, int) -> TlsRsaClientKeyExchangeRecord
+        pms_padding = cls._compute_pms_padding(modulus)
+        tls_version_hex = binascii.b2a_hex(TlsRecordTlsVersionBytes[tls_version.name].value).decode('ascii')
 
+        pms_with_padding_payload = cls._PAYLOADS_HEX[robot_payload_enum]
+        final_pms = pms_with_padding_payload.format(pms_padding=pms_padding, tls_version=tls_version_hex,
+                                                    pms=cls._PMS_HEX)
+        cke_robot_record = TlsRsaClientKeyExchangeRecord.from_parameters(
+            tls_version, exponent, modulus, int(final_pms, 16)
+        )
+        return cke_robot_record
+
+    @staticmethod
+    def _compute_pms_padding(modulus):
+        # type: (int) -> Text
         # Generate the padding for the pre_master_scecret
         modulus_bit_size = int(math.ceil(math.log(modulus, 2)))
         modulus_byte_size = (modulus_bit_size + 7) // 8
         # pad_len is length in hex chars, so bytelen * 2
         pad_len = (modulus_byte_size - 48 - 3) * 2
-        pms_padding = ("abcd" * (pad_len // 2 + 1))[:pad_len]
+        pms_padding_hex = ("abcd" * (pad_len // 2 + 1))[:pad_len]
+        return pms_padding_hex
 
-        tls_version_hex = binascii.b2a_hex(TlsRecordTlsVersionBytes[tls_version.name].value).decode('ascii')
+    # Encrypted Finished message - tied to the PMS used above
+    _FINISHED_RECORD_HEX = "005091a3b6aaa2b64d126e5583b04c113259c4efa48e40a19b8e5f2542c3b1d30f8d80b7582b72f08b21dfc" \
+                           "bff09d4b281676a0fb40d48c20c4f388617ff5c00808a96fbfe9bb6cc631101a6ba6b6bc696f0"
 
-        # The testing payloads
-        for payload_enum, pms_with_padding_payload in cls._PAYLOADS_HEX.items():
-            final_pms = pms_with_padding_payload.format(pms_padding=pms_padding, tls_version=tls_version_hex,
-                                                        pms=cls._PMS_HEX)
-            test_record = TlsRsaClientKeyExchangeRecord.from_parameters(
-                tls_version, exponent, modulus, int(final_pms, 16)
-            )
-            test_cke_records.append(test_record)
-
-        return test_cke_records
+    @classmethod
+    def get_finished_record_bytes(cls, tls_version):
+        """The Finished TLS record corresponding to the hardcoded PMS used in the Client Key Exchange record.
+        """
+        # type: TlsVersionEnum -> bytes
+        return b'\x16' + TlsRecordTlsVersionBytes[tls_version.name].value + bytearray.fromhex(cls._FINISHED_RECORD_HEX)
 
 
 # This plugin is a re-implementation of/
@@ -116,30 +126,60 @@ class RobotPlugin(plugin_base.Plugin):
 
             # Use threads to speed things up
             thread_pool = ThreadPool()
-            for cke_record_payload in RobotClientKeyExchangePayloads.get_all(
-                    server_info.highest_ssl_version_supported, rsa_modulus, rsa_exponent
-            ):
-                thread_pool.add_job((self._run_oracle, (server_info, cke_record_payload)))
 
-            # Store the results as they come
-            thread_pool.start(nb_threads=5)
-            server_responses = []
+            for payload_enum in RobotPmsPaddingPayloadEnum:
+                # Run each payload twice to ensure the results are consistent
+                thread_pool.add_job((self._run_oracle, (server_info, payload_enum, rsa_modulus, rsa_exponent)))
+                thread_pool.add_job((self._run_oracle, (server_info, payload_enum, rsa_modulus, rsa_exponent)))
+
+            # Use one thread per check
+            thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum)*2)
+
+            # Store the results - two attempts per ROBOT payload
+            payload_responses = {
+                RobotPmsPaddingPayloadEnum.VALID: [],
+                RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES: [],
+                RobotPmsPaddingPayloadEnum.WRONG_POSITION_00: [],
+                RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE: [],
+                RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER: [],
+            }
             for completed_job in thread_pool.get_result():
-                (job, response) = completed_job
-                server_responses.append(response)
+                (job, (payload_enum, server_response)) = completed_job
+                payload_responses[payload_enum].append(server_response)
 
             for failed_job in thread_pool.get_error():
-                # Should never happen when running Robot check as we catch all exceptions in the handshake
+                # Should never happen when running the Robot check as we catch all exceptions in the handshake
                 (_, exception) = failed_job
                 raise exception
 
             thread_pool.join()
 
-            if len(set(server_responses)) > 1:
+            # Ensure the results were consistent
+            for payload_enum, server_responses in payload_responses.items():
+                # We ran the check twice per payload and the two responses should be the same
+                if server_responses[0] != server_responses[1]:
+                    print('WARNING: Inconsistent results')
+
+            # Check if the server acts as an oracle by checking if the server replied differently to the payloads
+            if len(set([server_responses[0] for server_responses in payload_responses.values()])) > 1:
                 # All server responses were NOT identical, server is vulnerable
                 is_vulnerable_to_robot = True
 
-                # TODO(AD): Add logic to double check, like in robot-detect?
+                # Check to see if it is a weak oracle
+                response_1 = payload_responses[RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES][0]
+                response_2 = payload_responses[RobotPmsPaddingPayloadEnum.WRONG_POSITION_00][0]
+                response_3 = payload_responses[RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE][0]
+
+                # From the original script:
+                # If the response to the invalid PKCS#1 request (oracle_bad1) is equal to both
+                # requests starting with 0002, we have a weak oracle. This is because the only
+                # case where we can distinguish valid from invalid requests is when we send
+                # correctly formatted PKCS#1 message with 0x00 on a correct position. This
+                # makes our oracle weak
+                if response_1 == response_2 == response_3:
+                    print('WEAK ORACLE')
+                else:
+                    print('STRONG ORACLE')
 
         return RobotScanResult(server_info, scan_command, is_vulnerable_to_robot)
 
@@ -171,7 +211,8 @@ class RobotPlugin(plugin_base.Plugin):
             return None
 
     @staticmethod
-    def _run_oracle(server_info, cke_record_payload):
+    def _run_oracle(server_info, robot_payload_enum, rsa_modulus, rsa_exponent):
+        # type: (ServerConnectivityInfo, RobotPmsPaddingPayloadEnum, int, int) -> Tuple[RobotPmsPaddingPayloadEnum, Text]
         # Do a handshake which each record and keep track of what the server returned
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
@@ -182,8 +223,13 @@ class RobotPlugin(plugin_base.Plugin):
         # TODO(AD): Support GCM
         ssl_connection.ssl_client.set_cipher_list('RSA')
 
+        # Compute the  payload
+        cke_payload = RobotClientKeyExchangePayloads.get_client_key_exchange_record(
+            robot_payload_enum, server_info.highest_ssl_version_supported ,rsa_modulus, rsa_exponent
+        )
+
         # H4ck: we need to pass the CKE record to the handshake, we do that using an attribute
-        ssl_connection.ssl_client._cke_record = cke_record_payload
+        ssl_connection.ssl_client._cke_record = cke_payload
         server_response = ''
         try:
             # Start the SSL handshake
@@ -197,7 +243,7 @@ class RobotPlugin(plugin_base.Plugin):
         finally:
             ssl_connection.close()
 
-        return server_response
+        return robot_payload_enum, server_response
 
 
 class ServerResponseToRobot(Exception):
@@ -258,6 +304,15 @@ def do_handshake_with_robot(self):
     if did_receive_hello_done:
         # Send a special Client Key Exchange Record as the payload
         self._sock.send(self._cke_record.to_bytes())
+
+        # Then send a CCS record
+        ccs_record = TlsChangeCipherSpecRecord.from_parameters(
+            tls_version=TlsVersionEnum[self._ssl_version.name])
+        self._sock.send(ccs_record.to_bytes())
+
+        # Lastly send a Finished record
+        finished_record_bytes = RobotClientKeyExchangePayloads.get_finished_record_bytes(self._ssl_version)
+        self._sock.send(finished_record_bytes)
 
         # Return whatever the server sent back by raising an exception
         # The goal is to detect similar/different responses

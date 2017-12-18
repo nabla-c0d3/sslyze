@@ -13,7 +13,7 @@ import cryptography
 import math
 from cryptography.hazmat.backends import default_backend
 from nassl._nassl import WantReadError
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
 from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
 
 from sslyze.plugins import plugin_base
@@ -113,11 +113,21 @@ class RobotPlugin(plugin_base.Plugin):
 
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, RobotScanCommand) -> RobotScanResult
-        # TODO(AD): Handle GCM Only ciphers
-        # Use the discovered cipher suite too
         is_vulnerable_to_robot = False
-        rsa_params = self._get_rsa_parameters(server_info)
+        rsa_params = None
+
+        # With TLS 1.2 some servers are only vulnerable when using the GCM cipher suites - try them first
+        if server_info.highest_ssl_version_supported == OpenSslVersionEnum.TLSV1_2:
+            cipher_string = 'AES128-GCM-SHA256:AES256-GCM-SHA384'
+            rsa_params = self._get_rsa_parameters(server_info, cipher_string)
+
         if rsa_params is None:
+            # The attempts with GCM TLS 1.2 RSA cipher suites failed - try the normal RSA cipher suites
+            cipher_string = 'RSA'
+            rsa_params = self._get_rsa_parameters(server_info, cipher_string)
+
+        if rsa_params is None:
+            # Could not connect to the server using RSA
             pass
             # Not Vulnerable
             # TODO(AD): Display a better explanation
@@ -129,8 +139,10 @@ class RobotPlugin(plugin_base.Plugin):
 
             for payload_enum in RobotPmsPaddingPayloadEnum:
                 # Run each payload twice to ensure the results are consistent
-                thread_pool.add_job((self._run_oracle, (server_info, payload_enum, rsa_modulus, rsa_exponent)))
-                thread_pool.add_job((self._run_oracle, (server_info, payload_enum, rsa_modulus, rsa_exponent)))
+                thread_pool.add_job((self._run_oracle, (server_info, cipher_string, payload_enum, rsa_modulus,
+                                                        rsa_exponent)))
+                thread_pool.add_job((self._run_oracle, (server_info, cipher_string, payload_enum, rsa_modulus,
+                                                        rsa_exponent)))
 
             # Use one thread per check
             thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum)*2)
@@ -184,10 +196,10 @@ class RobotPlugin(plugin_base.Plugin):
         return RobotScanResult(server_info, scan_command, is_vulnerable_to_robot)
 
     @staticmethod
-    def _get_rsa_parameters(server_info):
-        # type: (ServerConnectivityInfo) -> Optional[Tuple[int, int]]
+    def _get_rsa_parameters(server_info, openssl_cipher_string):
+        # type: (ServerConnectivityInfo, Text) -> Optional[Tuple[int, int]]
         ssl_connection = server_info.get_preconfigured_ssl_connection()
-        ssl_connection.ssl_client.set_cipher_list('RSA')
+        ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
         parsed_cert = None
         try:
             # Perform the SSL handshake
@@ -197,7 +209,7 @@ class RobotPlugin(plugin_base.Plugin):
                                                                       backend=default_backend())
         except SSLHandshakeRejected as e:
             # Server does not support RSA cipher suites?
-            pass
+            raise
         except ClientCertificateRequested:  # The server asked for a client cert
             certificate = ssl_connection.ssl_client.get_peer_certificate()
             parsed_cert = cryptography.x509.load_pem_x509_certificate(certificate.as_pem().encode('ascii'),
@@ -211,8 +223,8 @@ class RobotPlugin(plugin_base.Plugin):
             return None
 
     @staticmethod
-    def _run_oracle(server_info, robot_payload_enum, rsa_modulus, rsa_exponent):
-        # type: (ServerConnectivityInfo, RobotPmsPaddingPayloadEnum, int, int) -> Tuple[RobotPmsPaddingPayloadEnum, Text]
+    def _run_oracle(server_info, rsa_cipher_string, robot_payload_enum, rsa_modulus, rsa_exponent):
+        # type: (ServerConnectivityInfo, Text, RobotPmsPaddingPayloadEnum, int, int) -> Tuple[RobotPmsPaddingPayloadEnum, Text]
         # Do a handshake which each record and keep track of what the server returned
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
@@ -220,8 +232,7 @@ class RobotPlugin(plugin_base.Plugin):
         # options (startTLS, proxy, etc.) still work
         ssl_connection.ssl_client.do_handshake = types.MethodType(do_handshake_with_robot,
                                                                   ssl_connection.ssl_client)
-        # TODO(AD): Support GCM
-        ssl_connection.ssl_client.set_cipher_list('RSA')
+        ssl_connection.ssl_client.set_cipher_list(rsa_cipher_string)
 
         # Compute the  payload
         cke_payload = RobotClientKeyExchangePayloads.get_client_key_exchange_record(

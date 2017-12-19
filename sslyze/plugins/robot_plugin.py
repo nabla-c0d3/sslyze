@@ -58,6 +58,9 @@ class RobotPmsPaddingPayloadEnum(Enum):
 class RobotClientKeyExchangePayloads(object):
 
     # From https://github.com/robotattackorg/robot-detect and testssl.sh
+    # The high level idea of an oracle attack is to send several payloads that are slightly wrong, in different ways,
+    # hoping that the server is going to give a different response (a TLS alert, a connection reset, no data, etc.) for
+    # each payload
     _PAYLOADS_HEX = {
         RobotPmsPaddingPayloadEnum.VALID:                   "0002{pms_padding}00{tls_version}{pms}",
         RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES:   "4117{pms_padding}00{tls_version}{pms}",

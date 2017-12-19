@@ -10,7 +10,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class RobotPluginPluginTestCase(unittest.TestCase):
 
     def test_robot_attack_good(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
+        server_info = ServerConnectivityInfo(hostname='www.facebook.com')
         server_info.test_connectivity_to_server()
 
         plugin = RobotPlugin()

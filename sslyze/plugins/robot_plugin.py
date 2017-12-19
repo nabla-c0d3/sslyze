@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import socket
 import types
 from enum import Enum
-from typing import Optional, Tuple, Text, List
+from typing import Optional, Tuple, Text, List, Dict
 from xml.etree.ElementTree import Element
 
 import binascii
@@ -117,6 +117,46 @@ class RobotScanResultEnum(Enum):
     UNKNOWN_INCONSISTENT_RESULTS = 5  #: Could not determine whether the server is vulnerable or not
 
 
+class RobotServerResponsesAnalyzer(object):
+
+        def __init__(self, payload_responses):
+            # type: (Dict[RobotPmsPaddingPayloadEnum, List[Text]]) -> None
+            # A mapping of a ROBOT payload enum -> a list of two server responses as text
+            self._payload_responses = payload_responses
+
+        def compute_result_enum(self):
+            # type: () -> RobotScanResultEnum
+            """Look at the server's response to each ROBOT payload and return the conclusion of the analysis.
+            """
+            # Ensure the results were consistent
+            for payload_enum, server_responses in self._payload_responses.items():
+                # We ran the check twice per payload and the two responses should be the same
+                if server_responses[0] != server_responses[1]:
+                    return RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS
+
+            # Check if the server acts as an oracle by checking if the server replied differently to the payloads
+            if len(set([server_responses[0] for server_responses in self._payload_responses.values()])) == 1:
+                # All server responses were identical - no oracle
+                return RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE
+
+            # All server responses were NOT identical, server is vulnerable
+            # Check to see if it is a weak oracle
+            response_1 = self._payload_responses[RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES][0]
+            response_2 = self._payload_responses[RobotPmsPaddingPayloadEnum.WRONG_POSITION_00][0]
+            response_3 = self._payload_responses[RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE][0]
+
+            # From the original script:
+            # If the response to the invalid PKCS#1 request (oracle_bad1) is equal to both
+            # requests starting with 0002, we have a weak oracle. This is because the only
+            # case where we can distinguish valid from invalid requests is when we send
+            # correctly formatted PKCS#1 message with 0x00 on a correct position. This
+            # makes our oracle weak
+            if response_1 == response_2 == response_3:
+                return RobotScanResultEnum.VULNERABLE_WEAK_ORACLE
+            else:
+                return RobotScanResultEnum.VULNERABLE_STRONG_ORACLE
+
+
 class RobotPlugin(plugin_base.Plugin):
     """Test the server(s) for the Return Of Bleichenbacher's Oracle Threat vulnerability.
     """
@@ -143,16 +183,33 @@ class RobotPlugin(plugin_base.Plugin):
             # Could not connect to the server using RSA - not vulnerable
             return RobotScanResult(server_info, scan_command, RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED)
 
+        rsa_modulus, rsa_exponent = rsa_params
+
+        # On the first attempt, finish the TLS handshake after sending the Robot payload
+        robot_should_complete_handshake = True
+        robot_result_enum = self._run_oracle_over_threads(server_info, cipher_string, rsa_modulus, rsa_exponent,
+                                                          robot_should_complete_handshake)
+
+        if robot_result_enum == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE:
+            # Try again but this time do not finish the TLS handshake - for some servers it will reveal an oracle
+            robot_should_complete_handshake = False
+            robot_result_enum = self._run_oracle_over_threads(server_info, cipher_string, rsa_modulus, rsa_exponent,
+                                                              robot_should_complete_handshake)
+
+        return RobotScanResult(server_info, scan_command, robot_result_enum)
+
+    @classmethod
+    def _run_oracle_over_threads(cls, server_info, cipher_string, rsa_modulus, rsa_exponent, should_complete_handshake):
+        # type: (ServerConnectivityInfo, Text, int, int, bool) -> RobotScanResultEnum
         # Use threads to speed things up
         thread_pool = ThreadPool()
 
-        rsa_modulus, rsa_exponent = rsa_params
         for payload_enum in RobotPmsPaddingPayloadEnum:
             # Run each payload twice to ensure the results are consistent
-            thread_pool.add_job((self._run_oracle, (server_info, cipher_string, payload_enum, rsa_modulus,
-                                                    rsa_exponent)))
-            thread_pool.add_job((self._run_oracle, (server_info, cipher_string, payload_enum, rsa_modulus,
-                                                    rsa_exponent)))
+            thread_pool.add_job((cls._send_robot_payload, (server_info, cipher_string, payload_enum,
+                                                           should_complete_handshake, rsa_modulus, rsa_exponent)))
+            thread_pool.add_job((cls._send_robot_payload, (server_info, cipher_string, payload_enum,
+                                                           should_complete_handshake, rsa_modulus, rsa_exponent)))
 
         # Use one thread per check
         thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum)*2)
@@ -175,37 +232,7 @@ class RobotPlugin(plugin_base.Plugin):
             raise exception
 
         thread_pool.join()
-
-        # Ensure the results were consistent
-        for payload_enum, server_responses in payload_responses.items():
-            # We ran the check twice per payload and the two responses should be the same
-            if server_responses[0] != server_responses[1]:
-                # Inconsistent results - abort
-                return RobotScanResult(server_info, scan_command, RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS)
-
-        # Check if the server acts as an oracle by checking if the server replied differently to the payloads
-        if len(set([server_responses[0] for server_responses in payload_responses.values()])) == 1:
-            # All server responses were identical - no oracle
-            return RobotScanResult(server_info, scan_command, RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE)
-
-        # All server responses were NOT identical, server is vulnerable
-        # Check to see if it is a weak oracle
-        response_1 = payload_responses[RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES][0]
-        response_2 = payload_responses[RobotPmsPaddingPayloadEnum.WRONG_POSITION_00][0]
-        response_3 = payload_responses[RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE][0]
-
-        # From the original script:
-        # If the response to the invalid PKCS#1 request (oracle_bad1) is equal to both
-        # requests starting with 0002, we have a weak oracle. This is because the only
-        # case where we can distinguish valid from invalid requests is when we send
-        # correctly formatted PKCS#1 message with 0x00 on a correct position. This
-        # makes our oracle weak
-        if response_1 == response_2 == response_3:
-            result_enum = RobotScanResultEnum.VULNERABLE_WEAK_ORACLE
-        else:
-            result_enum = RobotScanResultEnum.VULNERABLE_STRONG_ORACLE
-
-        return RobotScanResult(server_info, scan_command, result_enum)
+        return RobotServerResponsesAnalyzer(payload_responses).compute_result_enum()
 
     @staticmethod
     def _get_rsa_parameters(server_info, openssl_cipher_string):
@@ -235,8 +262,15 @@ class RobotPlugin(plugin_base.Plugin):
             return None
 
     @staticmethod
-    def _run_oracle(server_info, rsa_cipher_string, robot_payload_enum, rsa_modulus, rsa_exponent):
-        # type: (ServerConnectivityInfo, Text, RobotPmsPaddingPayloadEnum, int, int) -> Tuple[RobotPmsPaddingPayloadEnum, Text]
+    def _send_robot_payload(
+            server_info,                    # type: ServerConnectivityInfo
+            rsa_cipher_string,              # type: Text
+            robot_payload_enum,             # type: RobotPmsPaddingPayloadEnum
+            robot_should_finish_handshake,  # type: bool
+            rsa_modulus,                    # type: int
+            rsa_exponent                    # type: int
+    ):
+        # type: (...) -> Tuple[RobotPmsPaddingPayloadEnum, Text]
         # Do a handshake which each record and keep track of what the server returned
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
@@ -251,8 +285,10 @@ class RobotPlugin(plugin_base.Plugin):
             robot_payload_enum, server_info.highest_ssl_version_supported ,rsa_modulus, rsa_exponent
         )
 
-        # H4ck: we need to pass the CKE record to the handshake, we do that using an attribute
-        ssl_connection.ssl_client._cke_record = cke_payload
+        # H4ck: we need to pass some arguments to the handshake but there is no simple way to do it; we use an attribute
+        ssl_connection.ssl_client._robot_cke_record = cke_payload
+        ssl_connection.ssl_client._robot_should_finish_handshake = robot_should_finish_handshake
+
         server_response = ''
         try:
             # Start the SSL handshake
@@ -323,16 +359,18 @@ def do_handshake_with_robot(self):
 
     if did_receive_hello_done:
         # Send a special Client Key Exchange Record as the payload
-        self._sock.send(self._cke_record.to_bytes())
+        self._sock.send(self._robot_cke_record.to_bytes())
 
-        # Then send a CCS record
-        ccs_record = TlsChangeCipherSpecRecord.from_parameters(
-            tls_version=TlsVersionEnum[self._ssl_version.name])
-        self._sock.send(ccs_record.to_bytes())
+        if self._robot_should_finish_handshake:
+            # Then send a CCS record
+            ccs_record = TlsChangeCipherSpecRecord.from_parameters(
+                tls_version=TlsVersionEnum[self._ssl_version.name]
+            )
+            self._sock.send(ccs_record.to_bytes())
 
-        # Lastly send a Finished record
-        finished_record_bytes = RobotClientKeyExchangePayloads.get_finished_record_bytes(self._ssl_version)
-        self._sock.send(finished_record_bytes)
+            # Lastly send a Finished record
+            finished_record_bytes = RobotClientKeyExchangePayloads.get_finished_record_bytes(self._ssl_version)
+            self._sock.send(finished_record_bytes)
 
         # Return whatever the server sent back by raising an exception
         # The goal is to detect similar/different responses

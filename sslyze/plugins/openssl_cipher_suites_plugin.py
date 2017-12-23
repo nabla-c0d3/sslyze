@@ -157,12 +157,22 @@ class OpenSslCipherSuitesPlugin(Plugin):
                                                                                        should_use_legacy_openssl=False)
             ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
             cipher_list.extend(ssl_connection.ssl_client.get_cipher_list())
+
+            # Lastly we have to remove TLS 1.3 cipher suites
+            cipher_list = [cipher for cipher in ssl_connection.ssl_client.get_cipher_list() if 'TLS13' not in cipher]
+
+            # And remove duplicates (ie. supported by both legacy and modern OpenSSL)
             cipher_list = set(cipher_list)
+        elif ssl_version == OpenSslVersionEnum.TLSV1_3:
+            # For TLS 1.3 we need to manually pick the cipher suites as there is no OpenSSL cipher string to select them
+            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
+            cipher_list = [cipher for cipher in ssl_connection.ssl_client.get_cipher_list() if 'TLS13' in cipher]
         else:
             ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
             # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
             ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
-            cipher_list = ssl_connection.ssl_client.get_cipher_list()
+            # And remove TLS 1.3 cipher suites
+            cipher_list = [cipher for cipher in ssl_connection.ssl_client.get_cipher_list() if 'TLS13' not in cipher]
 
         # Scan for every available cipher suite
         thread_pool = ThreadPool()
@@ -317,6 +327,12 @@ class CipherSuite(object):
         # type: () -> Text
         """OpenSSL uses a different naming convention than the corresponding RFCs.
         """
+        try:
+            OPENSSL_TO_RFC_NAMES_MAPPING[self.ssl_version][self.openssl_name]
+        except KeyError:
+            print(self.ssl_version)
+            print(self.openssl_name)
+
         return OPENSSL_TO_RFC_NAMES_MAPPING[self.ssl_version].get(self.openssl_name, self.openssl_name)
 
 
@@ -758,7 +774,34 @@ TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
     "ECDHE-RSA-CHACHA20-POLY1305-OLD": "OLD_TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
     "ECDHE-ECDSA-CHACHA20-POLY1305-OLD": "OLD_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
     "DHE-RSA-CHACHA20-POLY1305-OLD": "OLD_TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+    "DHE-RSA-DES-CBC3-SHA": "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+    "DHE-DSS-DES-CBC3-SHA": "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+    "AES128-CCM": "RSA_WITH_AES_128_CCM",
+    "AES256-CCM": "RSA_WITH_AES_256_CCM",
+    "DHE-RSA-AES128-CCM": "DHE_RSA_WITH_AES_128_CCM",
+    "DHE-RSA-AES256-CCM": "TLS_DHE_RSA_WITH_AES_256_CCM",
+    "AES128-CCM8": "RSA_WITH_AES_128_CCM_8",
+    "AES256-CCM8": "RSA_WITH_AES_256_CCM_8",
+    "DHE-RSA-AES128-CCM8": "DHE_RSA_WITH_AES_128_CCM_8",
+    "DHE-RSA-AES256-CCM8": "DHE_RSA_WITH_AES_256_CCM_8",
+
+    "ECDHE-ECDSA-AES128-CCM": "ECDHE_ECDSA_WITH_AES_128_CCM",
+    "ECDHE-ECDSA-AES256-CCM": "ECDHE_ECDSA_WITH_AES_256_CCM",
+
+    "ECDHE-ECDSA-AES128-CCM8": "ECDHE_ECDSA_WITH_AES_128_CCM_8",
+    "ECDHE-ECDSA-AES256-CCM8": "ECDHE_ECDSA_WITH_AES_256_CCM_8",
+
+
 }
+
+TLS_1_3_OPENSSL_TO_RFC_NAMES_MAPPING = {
+    "TLS13-AES-128-GCM-SHA256": "TLS_AES_128_GCM_SHA256",
+    "TLS13-AES-256-GCM-SHA384": "TLS_AES_256_GCM_SHA384",
+    "TLS13-CHACHA20-POLY1305-SHA256": "TLS_CHACHA20_POLY1305_SHA256",
+    "TLS13-AES-128-CCM-SHA256": "TLS_AES_128_CCM_SHA256",
+    "TLS13-AES-128-CCM-8-SHA256": "TLS_AES_128_CCM_8_SHA256",
+}
+
 
 OPENSSL_TO_RFC_NAMES_MAPPING = {
     OpenSslVersionEnum.SSLV2: SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING,
@@ -766,5 +809,5 @@ OPENSSL_TO_RFC_NAMES_MAPPING = {
     OpenSslVersionEnum.TLSV1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
     OpenSslVersionEnum.TLSV1_1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
     OpenSslVersionEnum.TLSV1_2: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    OpenSslVersionEnum.TLSV1_3: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    OpenSslVersionEnum.TLSV1_3: TLS_1_3_OPENSSL_TO_RFC_NAMES_MAPPING,
 }

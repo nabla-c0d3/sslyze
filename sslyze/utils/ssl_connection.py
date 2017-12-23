@@ -72,6 +72,7 @@ class SSLConnection(object):
         'block type is not 01': 'block type is not 01',  # Actually an RSA error
         'tlsv1 alert protocol version': 'Alert: protocol version ',
         'wrong ssl version' : 'Wrong SSL version',
+        'tlsv1 alert decrypt error': 'Decrypt error',
 
         # The following issues have nothing to do with the server or the connection
         # They are client-side (SSLyze) issues

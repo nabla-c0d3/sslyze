@@ -56,8 +56,10 @@ class SSLConnection(object):
 
     # The following errors mean that the server explicitly rejected the handshake. The goal to differentiate rejected
     # handshakes from random network errors such as the server going offline, etc.
-    HANDSHAKE_REJECTED_SOCKET_ERRORS = {'was forcibly closed': 'Received FIN',
-                                        'reset by peer': 'Received RST'}
+    HANDSHAKE_REJECTED_SOCKET_ERRORS = {
+        'was forcibly closed': 'Received FIN',
+        'reset by peer': 'Received RST'
+    }
 
     HANDSHAKE_REJECTED_SSL_ERRORS = {
         'sslv3 alert handshake failure': 'Alert handshake failure',

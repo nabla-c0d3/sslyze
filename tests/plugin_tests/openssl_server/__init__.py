@@ -10,6 +10,7 @@ from platform import architecture
 from sys import platform
 
 import logging
+import time
 
 
 class NotOnLinux64Error(EnvironmentError):
@@ -61,6 +62,10 @@ class VulnerableOpenSslServer(object):
             # s_server has terminated early - get the error
             s_server_out = self._process.stdout.readline()
             raise RuntimeError('Could not start s_server: {}'.format(s_server_out))
+
+        # On Travis CI, the server sometimes is still not ready to accept connections when we get here
+        # Wait a bit more to make the test suite less flaky
+        time.sleep(0.5)
 
         return self
 

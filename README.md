@@ -105,10 +105,4 @@ The Mozilla, Microsoft, Apple and Java trust stores are downloaded using the fol
 https://github.com/nabla-c0d3/catt/blob/master/sslyze.md .
 
 
-License
--------
-
-GPLv2 - See LICENSE.txt.
-
-
 [documentation]: https://nabla-c0d3.github.io/sslyze/documentation

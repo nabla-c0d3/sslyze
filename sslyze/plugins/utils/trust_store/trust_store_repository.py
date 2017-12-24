@@ -45,14 +45,14 @@ class TrustStoresRepository(object):
 
     _TRUST_STORES_PATH = join(_get_script_dir(), 'pem_files')
 
-    _MAIN_STORE = TrustStore(join(_TRUST_STORES_PATH, 'mozilla.pem'), 'Mozilla', '09/2016', _MOZILLA_EV_OIDS)
+    _MAIN_STORE = TrustStore(join(_TRUST_STORES_PATH, 'mozilla.pem'), 'Mozilla', '12/2017', _MOZILLA_EV_OIDS)
 
     _ALL_STORES = [
         _MAIN_STORE,
-        TrustStore(join(_TRUST_STORES_PATH, 'microsoft.pem'), 'Microsoft', '09/2016'),
-        TrustStore(join(_TRUST_STORES_PATH, 'apple.pem'), 'Apple', 'OS X 10.11.6'),
-        TrustStore(join(_TRUST_STORES_PATH, 'java.pem'), 'Java 7', 'Update 79'),
-        TrustStore(join(_TRUST_STORES_PATH, 'aosp.pem'), 'AOSP', '7.0.0 r1'),
+        TrustStore(join(_TRUST_STORES_PATH, 'microsoft.pem'), 'Microsoft', '12/2017'),
+        TrustStore(join(_TRUST_STORES_PATH, 'apple.pem'), 'Apple', 'macOS 10.13.1'),
+        TrustStore(join(_TRUST_STORES_PATH, 'java.pem'), 'Java 8', 'Update 121'),
+        TrustStore(join(_TRUST_STORES_PATH, 'aosp.pem'), 'AOSP', '8.0.0 r36'),
     ]
 
     @classmethod

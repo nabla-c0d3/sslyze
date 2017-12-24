@@ -3,6 +3,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import unittest
 
+import time
+
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import HttpConnectTunnelingSettings
@@ -34,6 +36,10 @@ class HttpsTunnelTestCase(unittest.TestCase):
         proxy_port = 8000
         p = multiprocessing.Process(target=proxy_worker, args=(proxy_port, ))
         p.start()
+
+        # On Travis CI, the server sometimes is still not ready to accept connections when we get here
+        # Wait a bit more to make the test suite less flaky
+        time.sleep(0.5)
 
         try:
             # Run a scan through the proxy

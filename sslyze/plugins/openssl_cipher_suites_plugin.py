@@ -206,10 +206,10 @@ class OpenSslCipherSuitesPlugin(Plugin):
         thread_pool.join()
 
         # Test for the cipher suite preference
-        preferred_cipher = self._get_preferred_cipher_suite(server_connectivity_info, ssl_version, accepted_cipher_list)
+        preferred_cipher_list = self._get_preferred_cipher_suite_list(server_connectivity_info, ssl_version, accepted_cipher_list)
 
         # Generate the results
-        plugin_result = CipherSuiteScanResult(server_connectivity_info, scan_command, preferred_cipher,
+        plugin_result = CipherSuiteScanResult(server_connectivity_info, scan_command, preferred_cipher_list,
                                               accepted_cipher_list, rejected_cipher_list, errored_cipher_list)
         return plugin_result
 
@@ -271,7 +271,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
         return should_use_legacy_openssl
 
-    def _get_preferred_cipher_suite(self, server_connectivity_info, ssl_version, accepted_cipher_list):
+    def _get_preferred_cipher_suite_list(self, server_connectivity_info, ssl_version, accepted_cipher_list):
         # type: (ServerConnectivityInfo, OpenSslVersionEnum, List[AcceptedCipherSuite]) -> Optional[AcceptedCipherSuite]
         """Try to detect the server's preferred cipher suite among all cipher suites supported by SSLyze.
         """
@@ -290,8 +290,20 @@ class OpenSslCipherSuitesPlugin(Plugin):
                                                         should_use_legacy_openssl)
 
         if first_cipher.name == second_cipher.name:
+            accepted_cipher_set = set(accepted_cipher_list)
+
+            accepted_cipher_set.remove(first_cipher)
+            preferred_cipher_list = [first_cipher, ]
+
+            while accepted_cipher_set:
+                cipher_str = ", ".join([accepted_cipher.openssl_name for accepted_cipher in accepted_cipher_set])
+                should_use_legacy_openssl = self._should_use_legacy_openssl(ssl_version, accepted_cipher_set)
+                next_accepted_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, cipher_str, should_use_legacy_openssl)
+                accepted_cipher_set.remove(next_accepted_cipher)
+                preferred_cipher_list.append(next_accepted_cipher)
+
             # The server has its own preference for picking a cipher suite
-            return first_cipher
+            return preferred_cipher_list
         else:
             # The server has no preferred cipher suite as it follows the client's preference for picking a cipher suite
             return None
@@ -335,6 +347,12 @@ class CipherSuite(object):
         """
 
         return OPENSSL_TO_RFC_NAMES_MAPPING[self.ssl_version].get(self.openssl_name, self.openssl_name)
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __hash__(self):
+        return hash(self.name)
 
 
 class AcceptedCipherSuite(CipherSuite):
@@ -423,7 +441,7 @@ class CipherSuiteScanResult(PluginScanResult):
             rejected by the server.
         errored_cipher_list (List[ErroredCipherSuite]): The list of cipher suites supported by SSLyze that triggered an
             unexpected error during the TLS handshake with the server.
-        preferred_cipher (AcceptedCipherSuite): The server's preferred cipher suite among all the cipher suites
+        preferred_cipher_list (List[AcceptedCipherSuite]): The list of cipher suited in the order of server preference
             supported by SSLyze. None if the server follows the client's preference or if none of SSLyze's cipher suites
             are supported by the server.
     """
@@ -432,7 +450,7 @@ class CipherSuiteScanResult(PluginScanResult):
             self,
             server_info,           # type: ServerConnectivityInfo
             scan_command,          # type: CipherSuiteScanCommand
-            preferred_cipher,      # type: AcceptedCipherSuite
+            preferred_cipher_list, # type: List[AcceptedCipherSuite]
             accepted_cipher_list,  # type: List[AcceptedCipherSuite]
             rejected_cipher_list,  # type: List[RejectedCipherSuite]
             errored_cipher_list    # type: List[ErroredCipherSuite]
@@ -440,7 +458,7 @@ class CipherSuiteScanResult(PluginScanResult):
         # type: (...) -> None
         super(CipherSuiteScanResult, self).__init__(server_info, scan_command)
 
-        self.preferred_cipher = preferred_cipher
+        self.preferred_cipher_list = preferred_cipher_list
 
         # Sort all the lists
         self.accepted_cipher_list = accepted_cipher_list
@@ -453,15 +471,21 @@ class CipherSuiteScanResult(PluginScanResult):
         self.errored_cipher_list.sort(key=attrgetter('name'), reverse=True)
 
 
+    @property
+    def preferred_cipher(self):
+        return None if not self.preferred_cipher_list else self.preferred_cipher_list[0]
+
+
     def as_xml(self):
         is_protocol_supported = True if len(self.accepted_cipher_list) > 0 else False
         result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title(),
                              isProtocolSupported=str(is_protocol_supported))
 
         # Output the preferred cipher
-        preferred_xml = Element('preferredCipherSuite')
-        if self.preferred_cipher:
-            preferred_xml.append(self._format_accepted_cipher_xml(self.preferred_cipher))
+        preferred_xml = Element('serverCipherPreference')
+        if self.preferred_cipher_list:
+            for cipher in self.preferred_cipher_list:
+                preferred_xml.append(self._format_accepted_cipher_xml(cipher))
         result_xml.append(preferred_xml)
 
         # Output all the accepted ciphers if any
@@ -520,9 +544,10 @@ class CipherSuiteScanResult(PluginScanResult):
         # Output all the accepted ciphers if any
         if len(self.accepted_cipher_list) > 0:
             # Start with the preferred cipher
-            result_txt.append(self._format_subtitle('Preferred:'))
-            if self.preferred_cipher:
-                result_txt.append(self._format_accepted_cipher_txt(self.preferred_cipher))
+            result_txt.append(self._format_subtitle('Server cipher preference:'))
+            if self.preferred_cipher_list:
+                for cipher in self.preferred_cipher_list:
+                    result_txt.append(self._format_accepted_cipher_txt(cipher))
             else:
                 result_txt.append(self.REJECTED_CIPHER_LINE_FORMAT.format(
                     cipher_name='None - Server followed client cipher suite preference.', error_message=''

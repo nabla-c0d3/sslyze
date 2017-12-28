@@ -7,6 +7,7 @@ from abc import ABCMeta
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
+from nassl import _nassl
 from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
@@ -296,11 +297,20 @@ class OpenSslCipherSuitesPlugin(Plugin):
             preferred_cipher_list = [first_cipher, ]
 
             while accepted_cipher_set:
-                cipher_str = ", ".join([accepted_cipher.openssl_name for accepted_cipher in accepted_cipher_set])
+                cipher_str = self._get_cipher_str(accepted_cipher_set)
                 should_use_legacy_openssl = self._should_use_legacy_openssl(ssl_version, accepted_cipher_set)
-                next_accepted_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, cipher_str, should_use_legacy_openssl)
-                accepted_cipher_set.remove(next_accepted_cipher)
-                preferred_cipher_list.append(next_accepted_cipher)
+                try:
+                    next_accepted_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, cipher_str, should_use_legacy_openssl)
+                    accepted_cipher_set.remove(next_accepted_cipher)
+                except KeyError as e:
+                    if ssl_version == OpenSslVersionEnum.TLSV1_2:
+                        accepted_cipher_set.remove(CipherSuite('DHE-RSA-DES-CBC3-SHA', ssl_version))
+                    else:
+                        raise e
+                except _nassl.OpenSSLError as e:
+                    break
+                else:
+                    preferred_cipher_list.append(next_accepted_cipher)
 
             # The server has its own preference for picking a cipher suite
             return preferred_cipher_list

@@ -250,6 +250,26 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
         return cipher_result
 
+    def _get_cipher_str(self, ciphers):
+        return ', '.join([cipher.openssl_name for cipher in ciphers])
+
+    def _should_use_legacy_openssl(self, ssl_version, accepted_ciphers):
+        # For TLS 1.2, we need to figure whether the modern or legacy OpenSSL should be used to connect
+
+        should_use_legacy_openssl = None
+        if ssl_version == OpenSslVersionEnum.TLSV1_2:
+            should_use_legacy_openssl = True
+            # If there are more than two modern-supported cipher suites, use the modern OpenSSL
+            for cipher in accepted_ciphers:
+                modern_supported_cipher_count = 0
+                if not WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher.openssl_name):
+                    modern_supported_cipher_count += 1
+
+                if modern_supported_cipher_count > 1:
+                    should_use_legacy_openssl = False
+                    break
+
+        return should_use_legacy_openssl
 
     def _get_preferred_cipher_suite(self, server_connectivity_info, ssl_version, accepted_cipher_list):
         # type: (ServerConnectivityInfo, OpenSslVersionEnum, List[AcceptedCipherSuite]) -> Optional[AcceptedCipherSuite]
@@ -258,25 +278,11 @@ class OpenSslCipherSuitesPlugin(Plugin):
         if len(accepted_cipher_list) < 2:
             return None
 
-        accepted_cipher_names = [cipher.openssl_name for cipher in accepted_cipher_list]
-        should_use_legacy_openssl = None
+        should_use_legacy_openssl = self._should_use_legacy_openssl(ssl_version, accepted_cipher_list)
 
-        # For TLS 1.2, we need to figure whether the modern or legacy OpenSSL should be used to connect
-        if ssl_version == OpenSslVersionEnum.TLSV1_2:
-            should_use_legacy_openssl = True
-            # If there are more than two modern-supported cipher suites, use the modern OpenSSL
-            for cipher_name in accepted_cipher_names:
-                modern_supported_cipher_count = 0
-                if not WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_name):
-                    modern_supported_cipher_count += 1
-
-                if modern_supported_cipher_count > 1:
-                    should_use_legacy_openssl = False
-                    break
-
-        first_cipher_str = ', '.join(accepted_cipher_names)
+        first_cipher_str = self._get_cipher_str(accepted_cipher_list)
         # Swap the first two ciphers in the list to see if the server always picks the client's first cipher
-        second_cipher_str = ', '.join([accepted_cipher_names[1], accepted_cipher_names[0]] + accepted_cipher_names[2:])
+        second_cipher_str = self._get_cipher_str([accepted_cipher_list[1], accepted_cipher_list[0]] + accepted_cipher_list[2:])
 
         first_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, first_cipher_str,
                                                        should_use_legacy_openssl)

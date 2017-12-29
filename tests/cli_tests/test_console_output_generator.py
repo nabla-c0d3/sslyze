@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import unittest
+from tests import SslyzeTestCase
 from io import StringIO
 
 from sslyze.cli import FailedServerScan, CompletedServerScan
@@ -13,7 +13,7 @@ from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, Mo
     MockPluginScanCommandTwo
 
 
-class ConsoleOutputGeneratorTestCase(unittest.TestCase):
+class ConsoleOutputGeneratorTestCase(SslyzeTestCase):
 
     def test_command_line_parsed(self):
         output_file = StringIO()

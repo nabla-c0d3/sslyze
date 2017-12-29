@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import json
-import unittest
+from tests import SslyzeTestCase
 from io import StringIO
 
 from sslyze.cli import FailedServerScan, CompletedServerScan
@@ -13,7 +13,7 @@ from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, Mo
     MockPluginScanCommandOne, MockPluginScanCommandTwo
 
 
-class JsonOutputGeneratorTestCase(unittest.TestCase):
+class JsonOutputGeneratorTestCase(SslyzeTestCase):
 
     def test(self):
         """The final output only gets written at the end, when calling scans_completed(). Hence we need to call all the

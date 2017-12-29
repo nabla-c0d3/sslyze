@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
-import unittest
+from tests import SslyzeTestCase
 
 import pickle
 
@@ -12,8 +12,13 @@ from nassl.ocsp_response import OcspResponseStatusEnum
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
+from cryptography.hazmat.primitives.hashes import SHA1
+from cryptography.x509.oid import NameOID
 
-class CertificateInfoPluginTestCase(unittest.TestCase):
+
+class CertificateInfoPluginTestCase(SslyzeTestCase):
 
     def test_ca_file_bad_file(self):
         server_info = ServerConnectivityInfo(hostname='www.hotmail.com')
@@ -30,9 +35,10 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         ca_file_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'wildcard-self-signed.pem')
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
+        default_certificate = plugin_result.default_certificate
 
-        self.assertEqual(len(plugin_result.path_validation_result_list), 6)
-        for path_validation_result in plugin_result.path_validation_result_list:
+        self.assertEqual(len(default_certificate.path_validation_result_list), 6)
+        for path_validation_result in default_certificate.path_validation_result_list:
             if path_validation_result.trust_store.name == 'Custom --ca_file':
                 self.assertFalse(path_validation_result.is_certificate_trusted)
             else:
@@ -44,11 +50,12 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertTrue(plugin_result.ocsp_response)
-        self.assertEqual(plugin_result.ocsp_response_status, OcspResponseStatusEnum.SUCCESSFUL)
-        self.assertTrue(plugin_result.is_ocsp_response_trusted)
-        self.assertTrue(plugin_result.certificate_has_must_staple_extension)
+        self.assertTrue(plugin_result.default_certificate.ocsp_response)
+        self.assertEqual(plugin_result.default_certificate.ocsp_response_status, OcspResponseStatusEnum.SUCCESSFUL)
+        self.assertTrue(plugin_result.default_certificate.is_ocsp_response_trusted)
+        self.assertTrue(plugin_result.default_certificate.certificate_has_must_staple_extension)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -62,20 +69,21 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertTrue(plugin_result.is_leaf_certificate_ev)
+        self.assertTrue(default_certificate.is_leaf_certificate_ev)
 
-        self.assertEqual(len(plugin_result.certificate_chain), 3)
-        self.assertEqual(len(plugin_result.verified_certificate_chain), 3)
-        self.assertFalse(plugin_result.has_anchor_in_certificate_chain)
+        self.assertEqual(len(default_certificate.certificate_chain), 3)
+        self.assertEqual(len(default_certificate.verified_certificate_chain), 3)
+        self.assertFalse(default_certificate.has_anchor_in_certificate_chain)
 
-        self.assertEqual(len(plugin_result.path_validation_result_list), 5)
-        for path_validation_result in plugin_result.path_validation_result_list:
+        self.assertEqual(len(default_certificate.path_validation_result_list), 5)
+        for path_validation_result in default_certificate.path_validation_result_list:
             self.assertTrue(path_validation_result.is_certificate_trusted)
 
-        self.assertEqual(len(plugin_result.path_validation_error_list), 0)
-        self.assertEqual(plugin_result.certificate_matches_hostname, True)
-        self.assertTrue(plugin_result.is_certificate_chain_order_valid)
+        self.assertEqual(len(default_certificate.path_validation_error_list), 0)
+        self.assertEqual(default_certificate.certificate_matches_hostname, True)
+        self.assertTrue(default_certificate.is_certificate_chain_order_valid)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -89,22 +97,23 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertIsNone(plugin_result.ocsp_response)
-        self.assertEqual(len(plugin_result.certificate_chain), 1)
+        self.assertIsNone(default_certificate.ocsp_response)
+        self.assertEqual(len(default_certificate.certificate_chain), 1)
 
-        self.assertEqual(len(plugin_result.path_validation_result_list), 5)
-        for path_validation_result in plugin_result.path_validation_result_list:
+        self.assertEqual(len(default_certificate.path_validation_result_list), 5)
+        for path_validation_result in default_certificate.path_validation_result_list:
             self.assertFalse(path_validation_result.is_certificate_trusted)
 
-        self.assertEqual(plugin_result.certificate_included_scts_count, 0)
+        self.assertEqual(plugin_result.default_certificate.certificate_included_scts_count, 0)
 
-        self.assertEqual(len(plugin_result.path_validation_error_list), 0)
-        self.assertEqual(plugin_result.certificate_matches_hostname, True)
-        self.assertTrue(plugin_result.is_certificate_chain_order_valid)
-        self.assertIsNone(plugin_result.has_anchor_in_certificate_chain)
-        self.assertIsNone(plugin_result.has_sha1_in_certificate_chain)
-        self.assertFalse(plugin_result.verified_certificate_chain)
+        self.assertEqual(len(default_certificate.path_validation_error_list), 0)
+        self.assertEqual(default_certificate.certificate_matches_hostname, True)
+        self.assertTrue(default_certificate.is_certificate_chain_order_valid)
+        self.assertIsNone(default_certificate.has_anchor_in_certificate_chain)
+        self.assertIsNone(default_certificate.has_sha1_in_certificate_chain)
+        self.assertFalse(default_certificate.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -126,8 +135,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertTrue(plugin_result.has_sha1_in_certificate_chain)
+        self.assertTrue(default_certificate.has_sha1_in_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -138,8 +148,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertFalse(plugin_result.has_sha1_in_certificate_chain)
+        self.assertFalse(default_certificate.has_sha1_in_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -153,8 +164,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertGreaterEqual(len(plugin_result.certificate_chain), 1)
+        self.assertGreaterEqual(len(default_certificate.certificate_chain), 1)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -168,8 +180,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertGreaterEqual(len(plugin_result.certificate_chain), 1)
+        self.assertGreaterEqual(len(default_certificate.certificate_chain), 1)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -183,8 +196,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertTrue(plugin_result.has_anchor_in_certificate_chain)
+        self.assertTrue(default_certificate.has_anchor_in_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -198,8 +212,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertEqual(plugin_result.successful_trust_store.name, 'Microsoft')
+        self.assertEqual(default_certificate.successful_trust_store.name, 'Microsoft')
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -214,9 +229,10 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         ca_file_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'self-signed.badssl.com.pem')
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
+        default_certificate = plugin_result.default_certificate
 
-        self.assertEqual(plugin_result.successful_trust_store.name, 'Custom --ca_file')
-        self.assertTrue(plugin_result.verified_certificate_chain)
+        self.assertEqual(default_certificate.successful_trust_store.name, 'Custom --ca_file')
+        self.assertTrue(default_certificate.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -230,8 +246,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertTrue(plugin_result.verified_certificate_chain)
+        self.assertTrue(default_certificate.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -245,8 +262,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
 
-        self.assertTrue(plugin_result.verified_certificate_chain)
+        self.assertTrue(default_certificate.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -261,10 +279,53 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertEqual(plugin_result.certificate_included_scts_count, 3)
+        self.assertEqual(plugin_result.default_certificate.certificate_included_scts_count, 3)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
+
+    def test_multiple_certificates(self):
+        server_info = ServerConnectivityInfo(hostname='www.cloudflare.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
+
+        self.assertIsInstance(default_certificate.certificate_chain[0].public_key(), EllipticCurvePublicKey)
+
+        rsa_certificates = [
+            certificate_info
+            for certificate_info in plugin_result.certificate_infos
+            if isinstance(certificate_info.certificate_chain[0].public_key(), RSAPublicKey)
+        ]
+        self.assertEqual(len(rsa_certificates), 2)
+
+        compatibility_certificates = [
+            certificate_info
+            for certificate_info in rsa_certificates
+            if isinstance(certificate_info.certificate_chain[0].signature_hash_algorithm, SHA1)
+        ]
+        self.assertEqual(len(compatibility_certificates), 1)
+
+        server_info = ServerConnectivityInfo(hostname='docs.google.com')
+        server_info.test_connectivity_to_server()
+
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        default_certificate = plugin_result.default_certificate
+
+        self.assertIsInstance(default_certificate.certificate_chain[0].public_key(), EllipticCurvePublicKey)
+
+        rsa_certificates = [
+            certificate_info
+            for certificate_info in plugin_result.certificate_infos
+            if isinstance(certificate_info.certificate_chain[0].public_key(), RSAPublicKey)
+        ]
+        self.assertEqual(len(rsa_certificates), 1)
+
+        compatibility_certificate = rsa_certificates[0].certificate_chain[0]
+        self.assertEqual(compatibility_certificate.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value, '*.google.com')

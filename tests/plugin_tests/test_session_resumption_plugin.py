@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import unittest
+from tests import SslyzeTestCase
 
 import pickle
 
@@ -11,7 +11,7 @@ from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin, Se
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class SessionResumptionPluginTestCase(unittest.TestCase):
+class SessionResumptionPluginTestCase(SslyzeTestCase):
 
     def test_resumption_support(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')

@@ -327,11 +327,6 @@ class CipherSuite(object):
         # type: () -> Text
         """OpenSSL uses a different naming convention than the corresponding RFCs.
         """
-        try:
-            OPENSSL_TO_RFC_NAMES_MAPPING[self.ssl_version][self.openssl_name]
-        except KeyError:
-            print(self.ssl_version)
-            print(self.openssl_name)
 
         return OPENSSL_TO_RFC_NAMES_MAPPING[self.ssl_version].get(self.openssl_name, self.openssl_name)
 

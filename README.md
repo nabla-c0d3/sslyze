@@ -39,7 +39,7 @@ It is also easy to directly clone the repository and the fetch the requirements:
 
     git clone https://github.com/nabla-c0d3/sslyze.git
     cd sslyze
-    pip install -r requirements.txt --target ./lib
+    pip install -r requirements.txt --upgrade
     python -m sslyze --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
 
 On Linux, the `python-dev` package needs to be installed first so that the nassl C extension can be compiled:

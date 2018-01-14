@@ -202,9 +202,8 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
 
         self.verified_certificate_chain = []
         try:
-            self.verified_certificate_chain = TrustStoresRepository.get_main().build_verified_certificate_chain(
-                cert_chain
-            )
+            main_trust_store = TrustStoresRepository.get_default().get_main_store()
+            self.verified_certificate_chain = main_trust_store.build_verified_certificate_chain(cert_chain)
         except CouldNotBuildVerifiedChainError:
             pass
 

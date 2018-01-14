@@ -324,6 +324,22 @@ never happen.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-sslyze.plugins.utils.trust_store.trust_store_repository">
+<span id="updating-the-trust-stores"></span><h3>Updating the trust stores<a class="headerlink" href="#module-sslyze.plugins.utils.trust_store.trust_store_repository" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.utils.trust_store.trust_store_repository.</code><code class="descname">TrustStoresRepository</code><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of default trust stores used by SSLyze for certificate validation.</p>
+<dl class="classmethod">
+<dt id="sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository.update_default">
+<em class="property">classmethod </em><code class="descname">update_default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository.update_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the default trust stores used by SSLyze.</p>
+<p>The latest stores will be downloaded from <a class="reference external" href="https://github.com/nabla-c0d3/trust_stores_observatory">https://github.com/nabla-c0d3/trust_stores_observatory</a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 <div class="section" id="module-sslyze.plugins.openssl_cipher_suites_plugin">
 <span id="opensslciphersuitesplugin"></span><h2>OpenSslCipherSuitesPlugin<a class="headerlink" href="#module-sslyze.plugins.openssl_cipher_suites_plugin" title="Permalink to this headline">¶</a></h2>
@@ -959,6 +975,7 @@ session ID resumption with the server (should always be empty).</p>
 <li><a class="reference internal" href="#module-sslyze.plugins.certificate_info_plugin">CertificateInfoPlugin</a><ul>
 <li><a class="reference internal" href="#certificateinfoscancommand">CertificateInfoScanCommand</a></li>
 <li><a class="reference internal" href="#additional-helper-classes">Additional helper classes</a></li>
+<li><a class="reference internal" href="#module-sslyze.plugins.utils.trust_store.trust_store_repository">Updating the trust stores</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-sslyze.plugins.openssl_cipher_suites_plugin">OpenSslCipherSuitesPlugin</a><ul>
@@ -1051,7 +1068,7 @@ session ID resumption with the server (should always be empty).</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, SSLyze.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.
     </div>
   </body>
 </html>

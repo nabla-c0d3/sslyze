@@ -199,7 +199,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertEqual(plugin_result.successful_trust_store.name, 'Microsoft')
+        self.assertEqual(plugin_result.successful_trust_store.name, 'Windows')
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())

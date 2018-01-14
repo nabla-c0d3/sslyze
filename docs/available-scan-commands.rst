@@ -48,6 +48,12 @@ Additional helper classes
 .. automodule:: sslyze.plugins.utils.trust_store.trust_store
 .. autoclass:: TrustStore()
 
+Updating the trust stores
+-------------------------
+
+.. automodule:: sslyze.plugins.utils.trust_store.trust_store_repository
+.. autoclass:: TrustStoresRepository()
+   :members: update_default
 
 OpenSslCipherSuitesPlugin
 =========================

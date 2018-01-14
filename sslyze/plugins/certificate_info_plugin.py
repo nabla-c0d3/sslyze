@@ -117,7 +117,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, CertificateInfoScanCommand) -> CertificateInfoScanResult
-        final_trust_store_list = list(TrustStoresRepository.get_all())
+        final_trust_store_list = TrustStoresRepository.get_default().get_all_stores()
         if scan_command.custom_ca_file:
             if not os.path.isfile(scan_command.custom_ca_file):
                 raise ValueError('Could not open supplied CA file at "{}"'.format(scan_command.custom_ca_file))
@@ -282,7 +282,9 @@ class CertificateInfoScanResult(PluginScanResult):
         self.certificate_chain = certificate_chain
 
         # Check if it is EV - we only have the EV OIDs for Mozilla
-        self.is_leaf_certificate_ev = TrustStoresRepository.get_main().is_extended_validation(self.certificate_chain[0])
+        self.is_leaf_certificate_ev = TrustStoresRepository.get_default().get_main_store().is_extended_validation(
+            self.certificate_chain[0]
+        )
 
         # Look for the Must-Staple extension
         has_must_staple = CertificateUtils.has_ocsp_must_staple_extension(self.certificate_chain[0])
@@ -358,8 +360,7 @@ class CertificateInfoScanResult(PluginScanResult):
     NO_VERIFIED_CHAIN_ERROR_TXT = 'ERROR - Could not build verified chain (certificate untrusted?)'
 
     def as_text(self):
-        text_output = [self._format_title(self.scan_command.get_title())]
-        text_output.append(self._format_subtitle('Content'))
+        text_output = [self._format_title(self.scan_command.get_title()), self._format_subtitle('Content')]
         text_output.extend(self._get_basic_certificate_text())
 
         # Trust section
@@ -380,7 +381,7 @@ class CertificateInfoScanResult(PluginScanResult):
             if path_result.is_certificate_trusted:
                 # EV certs - Only Mozilla supported for now
                 ev_txt = ''
-                if self.is_leaf_certificate_ev and TrustStoresRepository.get_main() == path_result.trust_store:
+                if self.is_leaf_certificate_ev and path_result.trust_store.ev_oids:
                     ev_txt = ', Extended Validation'
                 path_txt = 'OK - Certificate is trusted{}'.format(ev_txt)
 
@@ -583,7 +584,7 @@ class CertificateInfoScanResult(PluginScanResult):
             }
 
             # Things we only do with the Mozilla store: EV certs
-            if self.is_leaf_certificate_ev and TrustStoresRepository.get_main() == path_result.trust_store:
+            if self.is_leaf_certificate_ev and path_result.trust_store.ev_oids:
                 path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
 
             path_valid_xml = Element('pathValidation', attrib=path_attrib_xml)

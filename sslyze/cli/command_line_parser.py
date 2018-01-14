@@ -9,6 +9,9 @@ import socket
 from nassl.ssl_client import OpenSslFileTypeEnum
 from typing import Text
 from typing import Tuple
+
+from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
+
 from sslyze.cli import FailedServerScan
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
@@ -21,6 +24,13 @@ class CommandLineParsingError(ValueError):
 
     def get_error_msg(self):
         return self.PARSING_ERROR_FORMAT.format(self)
+
+
+# TODO(AD): Somewhat hacky as this is not actually an error - need to refactor the command line parsing
+class TrustStoresUpdateCompleted(CommandLineParsingError):
+
+    def get_error_msg(self):
+        return 'Trust stores successfully updated.'
 
 
 class CommandLineServerStringParser(object):
@@ -151,6 +161,11 @@ class CommandLineParser(object):
         """
 
         (args_command_list, args_target_list) = self._parser.parse_args()
+
+        if args_command_list.update_trust_stores:
+            # Just update the trust stores and do nothing
+            TrustStoresRepository.update_default()
+            raise TrustStoresUpdateCompleted()
 
         # Handle the --targets_in command line and fill args_target_list
         if args_command_list.targets_in:
@@ -296,6 +311,17 @@ class CommandLineParser(object):
     def _add_default_options(self):
         """Add default command line options to the parser.
         """
+        # Updating the trust stores
+        update_stores_group = OptionGroup(self._parser, 'Trust stores options', '')
+        update_stores_group.add_option(
+            '--update_trust_stores',
+            help='Update the default trust stores used by SSLyze. The latest stores will be downloaded from '
+                 'https://github.com/nabla-c0d3/trust_stores_observatory. This option is meant to be used separately, '
+                 'and will silence any other command line option supplied to SSLyze.',
+            dest='update_trust_stores',
+            action='store_true',
+        )
+        self._parser.add_option_group(update_stores_group)
 
         # Client certificate options
         clientcert_group = OptionGroup(self._parser, 'Client certificate options', '')

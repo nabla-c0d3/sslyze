@@ -101,8 +101,20 @@ allowing SSLyze to access the low-level OpenSSL APIs needed to perform deep SSL 
 Where do the trust stores come from?
 ------------------------------------
 
-The Mozilla, Microsoft, Apple and Java trust stores are downloaded using the following tool:
-https://github.com/nabla-c0d3/catt/blob/master/sslyze.md .
+The trust stores (Mozilla, Microsoft, etc.) used by SSLyze for certificate validation are downloaded from the [Trust Stores Observatory](https://github.com/nabla-c0d3/trust_stores_observatory). 
 
+The trust stores can be updated to the latest version, using either the CLI:
+
+```
+python -m sslyze --update_trust_stores
+```
+
+or the Python API:
+    
+```python
+from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
+
+TrustStoresRepository.update_default()
+```
 
 [documentation]: https://nabla-c0d3.github.io/sslyze/documentation

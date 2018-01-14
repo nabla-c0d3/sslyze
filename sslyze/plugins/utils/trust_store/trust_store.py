@@ -33,20 +33,20 @@ class TrustStore(object):
         self.name = name
         self.version = version
         self.__ev_oids_arg = ev_oids
-        self._ev_oids = []
+        self.ev_oids = []
         self.__parse_ev_oids()
 
         self._subject_to_certificate_dict = None
 
     def __eq__(self, other):
         # type: (TrustStore) -> bool
-        if self.path == other.path and self._ev_oids == other._ev_oids:
+        if self.path == other.path and self.ev_oids == other._ev_oids:
             return True
         return False
 
     def __parse_ev_oids(self):
         if self.__ev_oids_arg:
-            self._ev_oids = [ObjectIdentifier(oid) for oid in self.__ev_oids_arg]
+            self.ev_oids = [ObjectIdentifier(oid) for oid in self.__ev_oids_arg]
 
     def __getstate__(self):
         pickable_dict = self.__dict__.copy()
@@ -64,7 +64,7 @@ class TrustStore(object):
         # type: (Certificate) -> bool
         """Is the supplied server certificate EV?
         """
-        if not self._ev_oids:
+        if not self.ev_oids:
             raise ValueError('No EV OIDs supplied for {} store - cannot detect EV certificates'.format(self.name))
 
         try:
@@ -73,7 +73,7 @@ class TrustStore(object):
             return False
 
         for policy in cert_policies_ext.value:
-            if policy.policy_identifier in self._ev_oids:
+            if policy.policy_identifier in self.ev_oids:
                 return True
         return False
 

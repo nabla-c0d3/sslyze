@@ -26,7 +26,7 @@ class TrustStoreTestCase(unittest.TestCase):
                              load_pem_x509_certificate(intermediate_pem, default_backend())]
 
         found_mozilla = False
-        for trust_store in TrustStoresRepository.get_all():
+        for trust_store in TrustStoresRepository.get_default().get_all_stores():
             verified_chain = trust_store.build_verified_certificate_chain(certificate_chain)
             self.assertTrue(verified_chain)
             if trust_store.name == 'Mozilla':

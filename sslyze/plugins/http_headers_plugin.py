@@ -49,9 +49,9 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
             raise ValueError('Cannot test for HTTP headers on a StartTLS connection.')
 
-        hsts_header, hpkp_header, hpkp_report_only, certificate_chain = self._get_security_headers(server_info)
+        hsts_header, hpkp_header, hpkp_report_only, certificate_chain, expect_ct_header = self._get_security_headers(server_info)
         return HttpHeadersScanResult(server_info, scan_command, hsts_header, hpkp_header, hpkp_report_only,
-                                     certificate_chain)
+                                     certificate_chain, expect_ct_header)
 
     @classmethod
     def _get_security_headers(cls, server_info):
@@ -75,6 +75,7 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         else:
             hsts_header = http_resp.getheader('strict-transport-security', None)
             hpkp_header = http_resp.getheader('public-key-pins', None)
+            expect_ct_header = http_resp.getheader('expect-ct', None)
             if hpkp_header is None:
                 hpkp_report_only = True
                 hpkp_header = http_resp.getheader('public-key-pins-report-only', None)
@@ -84,7 +85,7 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         # "If you are serving an additional redirect from your HTTPS site, that redirect must still have the HSTS
         # header (rather than the page it redirects to)."
 
-        return hsts_header, hpkp_header, hpkp_report_only, certificate_chain
+        return hsts_header, hpkp_header, hpkp_report_only, certificate_chain, expect_ct_header
 
 
 class ParsedHstsHeader(object):
@@ -166,6 +167,37 @@ class ParsedHpkpHeader(object):
         self.pin_sha256_list = pin_sha256_list
 
 
+class ParsedExpectCTHeader(object):
+  """Expect-CT header returned by the server.
+
+    Attributes:
+      max-age (int): The content of the max-age field.
+      report-uri (Text): The content of report-uri field.
+      enforce (bool): True if enforce directive is set.
+  """
+
+  def __init__(self, raw_expect_ct_header):
+    # type: (Text) -> None
+
+    self.max_age = None
+    self.report_uri = None
+    self.enforce = False
+
+    for expect_ct_directive in raw_expect_ct_header.split(','):
+      expect_ct_directive = expect_ct_directive.strip()
+
+      if not expect_ct_directive:
+        continue
+
+      if 'max-age' in expect_ct_directive:
+        self.max_age = int(expect_ct_directive.split('max-age=')[1].strip())
+      elif 'report-uri' in expect_ct_directive:
+        self.report_uri = expect_ct_directive.split('report-uri=')[1].strip(' "')
+      elif 'enforce' in expect_ct_directive:
+        self.enforce = True
+      else:
+        raise ValueError('Unexpected value in Expect-CT header: {}'.format(repr(expect_ct_directive)))
+
 class HttpHeadersScanResult(plugin_base.PluginScanResult):
     """The result of running a HttpHeadersScanCommand on a specific server.
 
@@ -174,6 +206,8 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
             was returned.
         hpkp_header (ParsedHpkpHeader): The content of the HPKP header returned by the server; None if no HPKP header
             was returned.
+        expect_ct_header (ParsedExpectCTHeader): The content of the Expect-CT header returned by the server; None if
+            no Expect-CT header was returned.
         is_valid_pin_configured (bool): True if at least one of the configured pins was found in the server's
             verified certificate chain. None if the verified chain could not be built or no HPKP header was returned.
         is_backup_pin_configured (bool): True if if at least one of the configured pins was NOT found in the server's
@@ -193,14 +227,15 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
             raw_hsts_header,    # type: Text
             raw_hpkp_header,    # type: Text
             hpkp_report_only,   # type: bool
-            cert_chain          # type: List[cryptography.x509.Certificate]
+            cert_chain,          # type: List[cryptography.x509.Certificate]
+            raw_expect_ct_header # type: Text
     ):
         # type: (...) -> None
         super(HttpHeadersScanResult, self).__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
-
-        self.verified_certificate_chain = []
+        self.expect_ct_header = ParsedExpectCTHeader(raw_expect_ct_header) if raw_expect_ct_header else None
+        self.verified_certificate_chain = []  # type: List[cryptography.x509.Certificate]
         try:
             main_trust_store = TrustStoresRepository.get_default().get_main_store()
             self.verified_certificate_chain = main_trust_store.build_verified_certificate_chain(cert_chain)
@@ -287,6 +322,14 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         else:
             txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an HPKP header", ""))
 
+        txt_result.extend(['', self._format_subtitle('HTTP Expect-CT')])
+        if self.expect_ct_header:
+          txt_result.append(self._format_field('Max Age:', str(self.expect_ct_header.max_age)))
+          txt_result.append(self._format_field('Report- URI:', self.expect_ct_header.report_uri))
+          txt_result.append(self._format_field('Enforce:', str(self.expect_ct_header.enforce)))
+        else:
+          txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an Expect-CT header", ""))
+
         # Dislpay computed HPKP pins last
         txt_result.extend(computed_hpkp_pins_text)
 
@@ -329,5 +372,16 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         for xml_pin in xml_pin_list:
             xml_hpkp.append(xml_pin)
         xml_result.append(xml_hpkp)
+
+        # Expect-CT header
+        is_expect_ct_supported = True if self.expect_ct_header else False
+        xml_expect_ct_attr = {'isSupported': str(is_expect_ct_supported)}
+        if is_expect_ct_supported:
+          xml_expect_ct_attr['maxAge'] = str(self.expect_ct_header.max_age)
+          xml_expect_ct_attr['reportUri'] = str(self.expect_ct_header.report_uri)
+          xml_expect_ct_attr['enforce'] = str(self.expect_ct_header.enforce)
+
+        xml_expect_ct = Element('httpExpectCT', attrib=xml_expect_ct_attr)
+        xml_result.append(xml_expect_ct)
 
         return xml_result

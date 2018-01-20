@@ -63,7 +63,7 @@ class RobotClientKeyExchangePayloads(object):
     # each payload
     _PAYLOADS_HEX = {
         RobotPmsPaddingPayloadEnum.VALID:                   "0002{pms_padding}00{tls_version}{pms}",
-        RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES:   "4117{pms_padding}00{tls_version}{pms}",
+        RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES:   "5117{pms_padding}00{tls_version}{pms}",
         RobotPmsPaddingPayloadEnum.WRONG_POSITION_00:       "0002{pms_padding}11{pms}0011",
         RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE:     "0002{pms_padding}111111{pms}",
         RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER:    "0002{pms_padding}000202{pms}",

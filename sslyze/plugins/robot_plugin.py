@@ -55,13 +55,13 @@ class RobotPmsPaddingPayloadEnum(Enum):
     WRONG_VERSION_NUMBER = 4
 
 
-class RobotClientKeyExchangePayloads(object):
+class RobotTlsRecordPayloads(object):
 
     # From https://github.com/robotattackorg/robot-detect and testssl.sh
     # The high level idea of an oracle attack is to send several payloads that are slightly wrong, in different ways,
     # hoping that the server is going to give a different response (a TLS alert, a connection reset, no data, etc.) for
     # each payload
-    _PAYLOADS_HEX = {
+    _CKE_PAYLOADS_HEX = {
         RobotPmsPaddingPayloadEnum.VALID:                   "0002{pms_padding}00{tls_version}{pms}",
         RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES:   "5117{pms_padding}00{tls_version}{pms}",
         RobotPmsPaddingPayloadEnum.WRONG_POSITION_00:       "0002{pms_padding}11{pms}0011",
@@ -79,7 +79,7 @@ class RobotClientKeyExchangePayloads(object):
         pms_padding = cls._compute_pms_padding(modulus)
         tls_version_hex = binascii.b2a_hex(TlsRecordTlsVersionBytes[tls_version.name].value).decode('ascii')
 
-        pms_with_padding_payload = cls._PAYLOADS_HEX[robot_payload_enum]
+        pms_with_padding_payload = cls._CKE_PAYLOADS_HEX[robot_payload_enum]
         final_pms = pms_with_padding_payload.format(pms_padding=pms_padding, tls_version=tls_version_hex,
                                                     pms=cls._PMS_HEX)
         cke_robot_record = TlsRsaClientKeyExchangeRecord.from_parameters(
@@ -98,17 +98,22 @@ class RobotClientKeyExchangePayloads(object):
         pms_padding_hex = ("abcd" * (pad_len // 2 + 1))[:pad_len]
         return pms_padding_hex
 
-    # Encrypted Finished message - tied to the PMS used above
-    _FINISHED_RECORD_HEX = "005091a3b6aaa2b64d126e5583b04c113259c4efa48e40a19b8e5f2542c3b1d30f8d80b7582b72f08b21dfc" \
-                           "bff09d4b281676a0fb40d48c20c4f388617ff5c00808a96fbfe9bb6cc631101a6ba6b6bc696f0"
+    # Encrypted Finished record corresponding to the PMS below and the ch_def client hello in the ROBOT poc script
+    _FINISHED_RECORD = bytearray.fromhex(
+        '005091a3b6aaa2b64d126e5583b04c113259c4efa48e40a19b8e5f2542c3b1d30f8d80b7582b72f08b21dfcbff09d4b281676a0fb40'
+        'd48c20c4f388617ff5c00808a96fbfe9bb6cc631101a6ba6b6bc696f0'
+    )
 
     @classmethod
     def get_finished_record_bytes(cls, tls_version):
         """The Finished TLS record corresponding to the hardcoded PMS used in the Client Key Exchange record.
         """
         # type: TlsVersionEnum -> bytes
-        return b'\x16' + TlsRecordTlsVersionBytes[tls_version.name].value + bytearray.fromhex(cls._FINISHED_RECORD_HEX)
-
+        # TODO(AD): The ROBOT poc script uses the same Finished record for all possible client hello (default, GCM,
+        # etc.); as the Finished record contains a hashes of all previous records, it will be wrong and will cause
+        # servers to send a TLS Alert 20
+        # Here just like in the poc script, the Finished message does not match the Client Hello we sent
+        return b'\x16' + TlsRecordTlsVersionBytes[tls_version.name].value + cls._FINISHED_RECORD
 
 class RobotScanResultEnum(Enum):
     """An enum to provide the result of running a RobotScanCommand.
@@ -284,7 +289,7 @@ class RobotPlugin(plugin_base.Plugin):
         ssl_connection.ssl_client.set_cipher_list(rsa_cipher_string)
 
         # Compute the  payload
-        cke_payload = RobotClientKeyExchangePayloads.get_client_key_exchange_record(
+        cke_payload = RobotTlsRecordPayloads.get_client_key_exchange_record(
             robot_payload_enum, server_info.highest_ssl_version_supported ,rsa_modulus, rsa_exponent
         )
 
@@ -372,7 +377,7 @@ def do_handshake_with_robot(self):
             self._sock.send(ccs_record.to_bytes())
 
             # Lastly send a Finished record
-            finished_record_bytes = RobotClientKeyExchangePayloads.get_finished_record_bytes(self._ssl_version)
+            finished_record_bytes = RobotTlsRecordPayloads.get_finished_record_bytes(self._ssl_version)
             self._sock.send(finished_record_bytes)
 
         # Return whatever the server sent back by raising an exception

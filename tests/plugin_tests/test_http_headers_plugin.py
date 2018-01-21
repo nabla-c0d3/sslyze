@@ -73,6 +73,7 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
       plugin_result = plugin.process_task(server_info, HttpHeadersScanCommand())
 
       self.assertTrue(plugin_result.expect_ct_header)
+      self.assertTrue(plugin_result.expect_ct_header.max_age)
 
       self.assertTrue(plugin_result.as_text())
       self.assertTrue(plugin_result.as_xml())

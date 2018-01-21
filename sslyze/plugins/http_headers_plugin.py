@@ -49,9 +49,9 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
             raise ValueError('Cannot test for HTTP headers on a StartTLS connection.')
 
-        hsts_header, hpkp_header, hpkp_report_only, certificate_chain, expect_ct_header = self._get_security_headers(server_info)
-        return HttpHeadersScanResult(server_info, scan_command, hsts_header, hpkp_header, hpkp_report_only,
-                                     certificate_chain, expect_ct_header)
+        hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain = self._get_security_headers(server_info)
+        return HttpHeadersScanResult(server_info, scan_command, hsts_header, hpkp_header, expect_ct_header, hpkp_report_only,
+                                     certificate_chain)
 
     @classmethod
     def _get_security_headers(cls, server_info):
@@ -85,7 +85,7 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         # "If you are serving an additional redirect from your HTTPS site, that redirect must still have the HSTS
         # header (rather than the page it redirects to)."
 
-        return hsts_header, hpkp_header, hpkp_report_only, certificate_chain, expect_ct_header
+        return hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain
 
 
 class ParsedHstsHeader(object):
@@ -222,13 +222,13 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
 
     def __init__(
             self,
-            server_info,        # type: ServerConnectivityInfo
-            scan_command,       # type: HttpHeadersScanCommand
-            raw_hsts_header,    # type: Text
-            raw_hpkp_header,    # type: Text
-            hpkp_report_only,   # type: bool
-            cert_chain,          # type: List[cryptography.x509.Certificate]
-            raw_expect_ct_header # type: Text
+            server_info,          # type: ServerConnectivityInfo
+            scan_command,         # type: HttpHeadersScanCommand
+            raw_hsts_header,      # type: Text
+            raw_hpkp_header,      # type: Text,
+            raw_expect_ct_header, # type: Text
+            hpkp_report_only,     # type: bool
+            cert_chain,           # type: List[cryptography.x509.Certificate]
     ):
         # type: (...) -> None
         super(HttpHeadersScanResult, self).__init__(server_info, scan_command)

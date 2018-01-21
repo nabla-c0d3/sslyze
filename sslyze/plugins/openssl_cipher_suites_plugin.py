@@ -7,6 +7,7 @@ from abc import ABCMeta
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
+from nassl import _nassl
 from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
@@ -306,6 +307,8 @@ class OpenSslCipherSuitesPlugin(Plugin):
                         accepted_cipher_set.remove(CipherSuite('DHE-RSA-DES-CBC3-SHA', ssl_version))
                     else:
                         raise e
+                except _nassl.OpenSSLError as e:
+                    break
                 else:
                     preferred_cipher_list.append(next_accepted_cipher)
 

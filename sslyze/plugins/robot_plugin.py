@@ -20,7 +20,7 @@ from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from tls_parser.alert_protocol import TlsAlertRecord
-from tls_parser.record_protocol import TlsRecordTlsVersionBytes, TlsRecord, TlsRecordHeader
+from tls_parser.record_protocol import TlsRecordTlsVersionBytes
 from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte, TlsRsaClientKeyExchangeRecord
 from tls_parser.parser import TlsRecordParser
@@ -63,7 +63,7 @@ class RobotTlsRecordPayloads(object):
     # each payload
     _CKE_PAYLOADS_HEX = {
         RobotPmsPaddingPayloadEnum.VALID:                   "0002{pms_padding}00{tls_version}{pms}",
-        RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES:   "5117{pms_padding}00{tls_version}{pms}",
+        RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES:   "4117{pms_padding}00{tls_version}{pms}",
         RobotPmsPaddingPayloadEnum.WRONG_POSITION_00:       "0002{pms_padding}11{pms}0011",
         RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE:     "0002{pms_padding}111111{pms}",
         RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER:    "0002{pms_padding}000202{pms}",

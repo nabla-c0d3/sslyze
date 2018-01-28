@@ -322,6 +322,9 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         else:
             txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an HPKP header", ""))
 
+        # Dislpay computed HPKP pins
+        txt_result.extend(computed_hpkp_pins_text)
+
         txt_result.extend(['', self._format_subtitle('HTTP Expect-CT')])
         if self.expect_ct_header:
           txt_result.append(self._format_field('Max Age:', str(self.expect_ct_header.max_age)))
@@ -329,9 +332,6 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
           txt_result.append(self._format_field('Enforce:', str(self.expect_ct_header.enforce)))
         else:
           txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an Expect-CT header", ""))
-
-        # Dislpay computed HPKP pins last
-        txt_result.extend(computed_hpkp_pins_text)
 
         return txt_result
 

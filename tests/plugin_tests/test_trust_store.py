@@ -3,14 +3,14 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
-import unittest
+from tests import SslyzeTestCase
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509.base import load_pem_x509_certificate
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 
 
-class TrustStoreTestCase(unittest.TestCase):
+class TrustStoreTestCase(SslyzeTestCase):
 
     def test(self):
         intermediate_path = os.path.join(os.path.dirname(__file__), '..', 'utils',

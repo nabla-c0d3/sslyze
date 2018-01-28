@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import unittest
+from tests import SslyzeTestCase
 
 import pickle
 
@@ -10,7 +10,7 @@ from sslyze.plugins.compression_plugin import CompressionPlugin, CompressionScan
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class CompressionPluginTestCase(unittest.TestCase):
+class CompressionPluginTestCase(SslyzeTestCase):
 
     def test_compression_disabled(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')

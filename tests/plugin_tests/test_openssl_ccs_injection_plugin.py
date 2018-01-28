@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import unittest
+from tests import SslyzeTestCase
 import logging
 
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin, OpenSslCcsInjectionScanCommand
@@ -10,7 +10,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from tests.plugin_tests.openssl_server import VulnerableOpenSslServer, NotOnLinux64Error
 
 
-class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
+class OpenSslCcsInjectionPluginTestCase(SslyzeTestCase):
 
     def test_ccs_injection_good(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')

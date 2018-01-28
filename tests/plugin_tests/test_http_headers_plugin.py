@@ -2,13 +2,13 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import unittest
+from tests import SslyzeTestCase
 import pickle
 from sslyze.plugins.http_headers_plugin import HttpHeadersPlugin, HttpHeadersScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-class HttpHeadersPluginTestCase(unittest.TestCase):
+class HttpHeadersPluginTestCase(SslyzeTestCase):
 
     def test_hsts_enabled(self):
         server_info = ServerConnectivityInfo(hostname='hsts.badssl.com')

@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import unittest
+from tests import SslyzeTestCase
 
 from sslyze.concurrent_scanner import ConcurrentScanner
 from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
@@ -12,7 +12,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.synchronous_scanner import SynchronousScanner
 
 
-class ScannerTestCase(unittest.TestCase):
+class ScannerTestCase(SslyzeTestCase):
 
     def test_synchronous_scanner(self):
         server_info = ServerConnectivityInfo(hostname='www.google.com')

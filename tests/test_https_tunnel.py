@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import unicode_literals
-import unittest
+from tests import SslyzeTestCase
 
 import time
 
@@ -13,15 +13,15 @@ from tests.tiny_proxy import ThreadingHTTPServer
 import multiprocessing
 
 
-def proxy_worker(port):
+def proxy_worker(hostname, port):
     """Worker method for running an HTTP CONNECT proxy on port 8000.
     """
-    server_address = ('', port)
+    server_address = (hostname, port)
     httpd = ThreadingHTTPServer(server_address, ProxyHandler)
     httpd.serve_forever()
 
 
-class HttpsTunnelTestCase(unittest.TestCase):
+class HttpsTunnelTestCase(SslyzeTestCase):
 
 
     def test_https_tunneling_bad_arguments(self):
@@ -33,8 +33,9 @@ class HttpsTunnelTestCase(unittest.TestCase):
 
     def test_https_tunneling(self):
         # Start a local proxy
+        proxy_host = 'localhost'
         proxy_port = 8000
-        p = multiprocessing.Process(target=proxy_worker, args=(proxy_port, ))
+        p = multiprocessing.Process(target=proxy_worker, args=(proxy_host, proxy_port))
         p.start()
 
         # On Travis CI, the server sometimes is still not ready to accept connections when we get here
@@ -43,7 +44,7 @@ class HttpsTunnelTestCase(unittest.TestCase):
 
         try:
             # Run a scan through the proxy
-            tunnel_settings = HttpConnectTunnelingSettings('localhost', proxy_port, basic_auth_user='test',
+            tunnel_settings = HttpConnectTunnelingSettings(proxy_host, proxy_port, basic_auth_user='test',
                                                            basic_auth_password='test123!')
             server_info = ServerConnectivityInfo(hostname='www.google.com', http_tunneling_settings=tunnel_settings)
 

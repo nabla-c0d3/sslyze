@@ -5,10 +5,12 @@ python:
   - "3.6"
 # Command to install dependencies
 install:
-  - pip install -U pip setuptools
+  - pip install -U pip setuptools mypy
   - pip install -r requirements.txt
 # Command to run tests
-script: "python run_tests.py"
+script:
+  - python -m mypy sslyze --ignore-missing-import --strict-optional
+  - python run_tests.py
 deploy:
   provider: pypi
   user: "nabla"

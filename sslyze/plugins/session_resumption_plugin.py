@@ -10,7 +10,7 @@ from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
-from typing import List
+from typing import List, Union
 from typing import Optional
 from typing import Text
 from typing import Tuple
@@ -65,7 +65,7 @@ class SessionResumptionPlugin(plugin_base.Plugin):
 
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> PluginScanResult
-        if scan_command.__class__ == SessionResumptionSupportScanCommand:
+        if isinstance(scan_command, SessionResumptionSupportScanCommand):
             # Test Session ID support
             successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(server_info, 5)
 
@@ -88,10 +88,10 @@ class SessionResumptionPlugin(plugin_base.Plugin):
                                                         errored_resumptions_list, ticket_supported, ticket_reason,
                                                         ticket_exception)
 
-        elif scan_command.__class__ == SessionResumptionRateScanCommand:
+        elif isinstance(scan_command, SessionResumptionRateScanCommand):
             successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(server_info, 100)
-            result = SessionResumptionRateScanResult(server_info, scan_command, 100, successful_resumptions_nb,
-                                                     errored_resumptions_list)
+            result = SessionResumptionRateScanResult(server_info, scan_command, 100,  # type: ignore
+                                                     successful_resumptions_nb, errored_resumptions_list)
         else:
             raise ValueError('PluginSessionResumption: Unknown command.')
 
@@ -105,7 +105,7 @@ class SessionResumptionPlugin(plugin_base.Plugin):
         thread_pool = ThreadPool()
 
         for _ in range(resumption_attempts_nb):
-            thread_pool.add_job((self._resume_with_session_id, (server_info, )))
+            thread_pool.add_job((self._resume_with_session_id, [server_info]))
         thread_pool.start(nb_threads=min(resumption_attempts_nb, self.MAX_THREADS_NB))
 
         # Count successful/failed resumptions
@@ -250,6 +250,7 @@ class SessionResumptionRateScanResult(PluginScanResult):
             successful_resum_nb,        # type: int
             errored_resumptions_list    # type: List[Text]
     ):
+        # type: (...) -> None
         super(SessionResumptionRateScanResult, self).__init__(server_info, scan_command)
         self.attempted_resumptions_nb = attempted_resum_nb
         self.successful_resumptions_nb = successful_resum_nb
@@ -331,7 +332,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
     def __init__(
             self,
             server_info,                            # type: ServerConnectivityInfo
-            scan_command,                           # type: SessionResumptionRateScanCommand
+            scan_command,                           # type: SessionResumptionSupportScanCommand
             attempted_resum_nb,                     # type: int
             successful_resum_nb,                    # type: int
             errored_resumptions_list,               # type: List[Text]
@@ -339,6 +340,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
             ticket_resumption_failed_reason=None,   # type: Optional[Text]
             ticket_resumption_exception=None        # type: Optional[Exception]
     ):
+        # type: (...) -> None
         super(SessionResumptionSupportScanResult, self).__init__(server_info, scan_command)
         self.attempted_resumptions_nb = attempted_resum_nb
         self.successful_resumptions_nb = successful_resum_nb
@@ -355,8 +357,9 @@ class SessionResumptionSupportScanResult(PluginScanResult):
                                                              str(ticket_resumption_exception))
 
         # We use a SessionResumptionRateScanResult to re-use code in as_text() and as_xml()
-        self._rate_result = SessionResumptionRateScanResult(server_info, scan_command, attempted_resum_nb,
-                                                            successful_resum_nb, errored_resumptions_list)
+        self._rate_result = SessionResumptionRateScanResult(server_info, scan_command,  # type: ignore
+                                                            attempted_resum_nb, successful_resum_nb,
+                                                            errored_resumptions_list)
 
     RESUMPTION_LINE_FORMAT = '      {resumption_type:<35}{result}'
 

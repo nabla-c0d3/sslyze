@@ -20,8 +20,8 @@ try:
 except ImportError:
     # Python 2
     # noinspection PyCompatibility
-    from urlparse import urlparse
-    from urllib import quote
+    from urlparse import urlparse  # type: ignore
+    from urllib import quote  # type: ignore
 
 from nassl.ssl_client import SslClient, OpenSslFileTypeEnum
 
@@ -96,7 +96,6 @@ class HttpConnectTunnelingSettings(object):
         self.basic_auth_user = basic_auth_user
         self.basic_auth_password = basic_auth_password
 
-
     @classmethod
     def from_url(cls, proxy_url):
         # type: (Text) -> HttpConnectTunnelingSettings
@@ -114,13 +113,3 @@ class HttpConnectTunnelingSettings(object):
 
         port = parsed_url.port if parsed_url.port else default_port
         return cls(parsed_url.hostname, port, parsed_url.username, parsed_url.password)
-
-
-    def get_basic_auth_header(self):
-        # type: () -> Text
-        """Generate the right HTTP header for Basic Authentication.
-        """
-        header = ''
-        if self.basic_auth_user is not None:
-            header = b64encode('{0}:{1}'.format(quote(self.basic_auth_user), quote(self.basic_auth_password)))
-        return header

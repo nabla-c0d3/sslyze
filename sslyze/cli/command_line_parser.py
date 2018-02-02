@@ -7,7 +7,7 @@ from optparse import OptionParser, OptionGroup
 import socket
 
 from nassl.ssl_client import OpenSslFileTypeEnum
-from typing import Text
+from typing import Text, Optional
 from typing import Tuple
 
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
@@ -43,8 +43,9 @@ class CommandLineServerStringParser(object):
 
     @classmethod
     def parse_server_string(cls, server_str):
-        # type: (Text) -> Tuple[Text, Text, int]
+        # type: (Text) -> Tuple[Text, Optional[Text], int]
         # Extract ip from target
+        ip = None
         if '{' in server_str and '}' in server_str:
             raw_target = server_str.split('{')
             raw_ip = raw_target[1]
@@ -53,8 +54,6 @@ class CommandLineServerStringParser(object):
 
             # Clean the target
             server_str = raw_target[0]
-        else:
-            ip = None
 
         # Look for ipv6 hint in target
         if '[' in server_str:

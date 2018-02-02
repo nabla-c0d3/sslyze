@@ -15,7 +15,7 @@ from sslyze.plugins.robot_plugin import RobotPlugin
 
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin
-from typing import List
+from typing import List, Dict, Set
 from typing import Type
 
 
@@ -29,7 +29,7 @@ class PluginsRepository(object):
 
     def __init__(self, plugin_classes=_PLUGIN_CLASSES):
         # type: (List[Type[Plugin]]) -> None
-        scan_command_classes_to_plugin_classes = {}
+        scan_command_classes_to_plugin_classes = {}  # type: Dict[Type[PluginScanCommand], Type[Plugin]]
 
         # Create a dict of scan_commands -> plugin_classes
         for plugin_class in plugin_classes:
@@ -50,13 +50,13 @@ class PluginsRepository(object):
         return self._scan_command_classes_to_plugin_classes[scan_command.__class__]
 
     def get_available_commands(self):
-        # type: () -> List[Type[PluginScanCommand]]
+        # type: () -> Set[Type[PluginScanCommand]]
         """Get the list of all available scan comands across all plugins.
         """
-        return self._scan_command_classes_to_plugin_classes.keys()
+        return set(self._scan_command_classes_to_plugin_classes.keys())
 
     def get_available_plugins(self):
-        # type: () -> List[Type[Plugin]]
+        # type: () -> Set[Type[Plugin]]
         """Get the list of all available plugin.
         """
-        return list(set(self._scan_command_classes_to_plugin_classes.values()))
+        return set(self._scan_command_classes_to_plugin_classes.values())

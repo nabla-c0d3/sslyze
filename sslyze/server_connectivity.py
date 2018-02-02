@@ -72,12 +72,14 @@ class ServerConnectivityInfo(object):
     CONNECTIVITY_ERROR_REJECTED = 'Connection rejected'
     CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
 
+    # TODO(AD): Split some of the functionality as this class is huge - move the result of the connectivity testing
+    # to a separate object?
     def __init__(
             self,
             hostname,                                               # type: Text
             port=None,                                              # type: Optional[int]
             ip_address=None,                                        # type: Optional[Text]
-            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS,  # type: Optional[TlsWrappedProtocolEnum]
+            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS,  # type: TlsWrappedProtocolEnum
             tls_server_name_indication=None,                        # type: Optional[Text]
             xmpp_to_hostname=None,                                  # type: Optional[Text]
             client_auth_credentials=None,                           # type: Optional[ClientAuthenticationCredentials]
@@ -122,10 +124,7 @@ class ServerConnectivityInfo(object):
         # Store the hostname in ACE format in the case the domain name is unicode
         self.hostname = hostname.encode('idna').decode('utf-8')
         self.tls_wrapped_protocol = tls_wrapped_protocol
-
-        self.port = port
-        if not self.port:
-            self.port = self.TLS_DEFAULT_PORTS[tls_wrapped_protocol]
+        self.port = port if port else self.TLS_DEFAULT_PORTS[tls_wrapped_protocol]
 
         if ip_address and http_tunneling_settings:
             raise ValueError('Cannot specify both ip_address and http_tunneling_settings.')
@@ -165,9 +164,9 @@ class ServerConnectivityInfo(object):
         self.http_tunneling_settings = http_tunneling_settings
 
         # Set after actually testing the connectivity
-        self.highest_ssl_version_supported = None
-        self.ssl_cipher_supported = None
-        self.client_auth_requirement = None
+        self.highest_ssl_version_supported = None  # type: Optional[OpenSslVersionEnum]
+        self.ssl_cipher_supported = None  # type: Optional[Text]
+        self.client_auth_requirement = None  # type: Optional[ClientAuthenticationServerConfigurationEnum]
 
     def test_connectivity_to_server(self, network_timeout=None):
         # type: (Optional[int]) -> None
@@ -199,11 +198,11 @@ class ServerConnectivityInfo(object):
 
         # StartTLS errors
         except StartTLSError as e:
-            raise ServerConnectivityError(e[0])
+            raise ServerConnectivityError(e.args[0])
 
         # Proxy errors
         except ProxyError as e:
-            raise ServerConnectivityError(e[0])
+            raise ServerConnectivityError(e.args[0])
 
         # Other errors
         except Exception as e:
@@ -269,16 +268,16 @@ class ServerConnectivityInfo(object):
 
     def get_preconfigured_ssl_connection(
             self,
-            override_ssl_version=None,      # type: Optional[OpenSslVersionEnum]
-            ssl_verify_locations=None,      # type: Optional[bool]
-            should_ignore_client_auth=None, # type: Optional[bool]
-            should_use_legacy_openssl=None, # type: Optional[bool]
+            override_ssl_version=None,          # type: Optional[OpenSslVersionEnum]
+            ssl_verify_locations=None,          # type: Optional[Text]
+            should_ignore_client_auth=None,     # type: Optional[bool]
+            should_use_legacy_openssl=None,     # type: Optional[bool]
     ):
+        # type: (...) -> SSLConnection
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
 
         Used by all plugins to connect to the server and run scans.
         """
-        # type: (...) -> SSLConnection
         if self.highest_ssl_version_supported is None and override_ssl_version is None:
             raise ValueError('Cannot return an SSLConnection without testing connectivity; '
                              'call test_connectivity_to_server() first')
@@ -287,19 +286,22 @@ class ServerConnectivityInfo(object):
             # Ignore client auth requests if the server allows optional TLS client authentication
             # If the server requires client authentication, do not ignore the request so that the right exceptions get
             # thrown within the plugins, providing a better output
-            should_ignore_client_auth = False \
+            final_should_ignore_client_auth = False \
                 if self.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED \
                 else True
+        else:
+            final_should_ignore_client_auth = should_ignore_client_auth
 
         # Create the right SSLConnection object
         ssl_version = override_ssl_version if override_ssl_version is not None else self.highest_ssl_version_supported
 
-        final_should_use_legacy_openssl = should_use_legacy_openssl
         if should_use_legacy_openssl is None:
             # For older versions of TLS/SSL, we have to use a legacy OpenSSL
             final_should_use_legacy_openssl = False if ssl_version in [OpenSslVersionEnum.TLSV1_2,
                                                                        OpenSslVersionEnum.TLSV1_3] \
                 else True
+        else:
+            final_should_use_legacy_openssl = should_use_legacy_openssl
 
         ssl_connection = self.TLS_CONNECTION_CLASSES[self.tls_wrapped_protocol](
             self.hostname,
@@ -308,13 +310,12 @@ class ServerConnectivityInfo(object):
             ssl_version,
             ssl_verify_locations=ssl_verify_locations,
             client_auth_creds=self.client_auth_credentials,
-            should_ignore_client_auth=should_ignore_client_auth,
+            should_ignore_client_auth=final_should_ignore_client_auth,
             should_use_legacy_openssl=final_should_use_legacy_openssl,
         )
 
         # Add XMPP configuration
-        if self.tls_wrapped_protocol in [TlsWrappedProtocolEnum.STARTTLS_XMPP,
-                                         TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER] and self.xmpp_to_hostname:
+        if isinstance(ssl_connection, XMPPConnection) and self.xmpp_to_hostname:
             ssl_connection.set_xmpp_to(self.xmpp_to_hostname)
 
         # Add HTTP tunneling configuration
@@ -348,7 +349,7 @@ class ServersConnectivityTester(object):
         self._server_info_list = tentative_server_info_list
 
     def start_connectivity_testing(self, max_threads=_DEFAULT_MAX_THREADS, network_timeout=None):
-        # type: (Optional[int], Optional[int]) -> None
+        # type: (int, Optional[int]) -> None
         for tentative_server_info in self._server_info_list:
             self._thread_pool.add_job((tentative_server_info.test_connectivity_to_server, [network_timeout]))
         nb_threads = min(len(self._server_info_list), max_threads)
@@ -358,12 +359,14 @@ class ServersConnectivityTester(object):
         # type: () -> Iterable[ServerConnectivityInfo]
         for (job, _) in self._thread_pool.get_result():
             test_connectivity_to_server_method, _ = job
-            server_info = test_connectivity_to_server_method.__self__
+            # TODO(AD): Using __self__ here is really ugly
+            server_info = test_connectivity_to_server_method.__self__  # type: ignore
             yield server_info
 
     def get_invalid_servers(self):
         # type: () -> Iterable[Tuple[ServerConnectivityInfo, Exception]]
         for (job, exception) in self._thread_pool.get_error():
             test_connectivity_to_server_method, _ = job
-            server_info = test_connectivity_to_server_method.__self__
+            # TODO(AD): Using __self__ here is really ugly
+            server_info = test_connectivity_to_server_method.__self__  # type: ignore
             yield (server_info, exception)

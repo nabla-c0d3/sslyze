@@ -5,6 +5,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import threading
+from collections import Callable
+from typing import Tuple, Any, List, NewType, Iterable
 
 try:
     # Python 3
@@ -13,30 +15,36 @@ try:
 except ImportError:
     # Python 2
     # noinspection PyCompatibility
-    from Queue import Queue
+    from Queue import Queue  # type: ignore
 
 
 class _ThreadPoolSentinel(object):
     pass
 
 
+JobType = Tuple[Callable, List]  # A function and its arguments
+
+
 class ThreadPool(object):
     """Generic Thread Pool used in some of the plugins.
-    Any unhandled exception happening in the work function goes to the error
-    queue that can be read using get_error().
+
+    Any unhandled exception happening in the work function goes to the error queue that can be read using get_error().
     Anything else goes to the result queue that can be read using get_result().
     """
     def __init__(self):
+        # type: () -> None
         self._active_threads = 0
         self._job_q = Queue()
         self._result_q = Queue()
         self._error_q = Queue()
-        self._thread_list = []
+        self._thread_list = []  # type: List[threading.Thread]
 
     def add_job(self, job):
+        # type: (JobType) -> None
         self._job_q.put(job)
 
     def get_error(self):
+        # type: () -> Iterable[Tuple[JobType, Exception]]
         active_threads = self._active_threads
         while active_threads or (not self._error_q.empty()):
             error = self._error_q.get()
@@ -51,8 +59,8 @@ class ThreadPool(object):
                 self._error_q.task_done()
                 yield error
 
-
     def get_result(self):
+        # type: () -> Iterable[Tuple[JobType, Any]]
         active_threads = self._active_threads
         while active_threads or (not self._result_q.empty()):
             result = self._result_q.get()
@@ -67,10 +75,9 @@ class ThreadPool(object):
                 self._result_q.task_done()
                 yield result
 
-
     def start(self, nb_threads):
-        """
-        Should only be called once all the jobs have been added using add_job().
+        # type: (int) -> None
+        """Should only be called once all the jobs have been added using add_job().
         """
         if self._active_threads:
             raise Exception('Threads already started.')
@@ -87,18 +94,24 @@ class ThreadPool(object):
         # Put sentinels to let the threads know when there's no more jobs
         [self._job_q.put(_ThreadPoolSentinel()) for _ in self._thread_list]
 
-
     def join(self):
+        # type: () -> None
         # Clean exit
         self._job_q.join()
-        [worker.join() for worker in self._thread_list]
+
+        for worker in self._thread_list:
+            worker.join()
+        self._thread_list = []
+
         self._active_threads = 0
         self._result_q.join()
         self._error_q.join()
 
 
 def _work_function(job_q, result_q, error_q):
-    """Work function expected to run within threads."""
+    # type: (Queue, Queue, Queue) -> None
+    """Work function expected to run within threads.
+    """
     while True:
         job = job_q.get()
 

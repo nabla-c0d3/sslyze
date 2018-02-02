@@ -11,12 +11,11 @@ import binascii
 
 import pickle
 
-import cryptography
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
+from cryptography.x509 import Certificate, load_pem_x509_certificate
 from nassl.ocsp_response import OcspResponse, OcspResponseStatusEnum
 from nassl.ocsp_response import OcspResponseNotTrustedError
 from nassl.ssl_client import ClientCertificateRequested
@@ -41,7 +40,7 @@ class CertificateInfoScanCommand(PluginScanCommand):
     """
 
     def __init__(self, ca_file=None):
-        # type: (Optional[Text], Optional[bool]) -> None
+        # type: (Optional[Text]) -> None
         """
 
         Args:
@@ -116,7 +115,10 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, CertificateInfoScanCommand) -> CertificateInfoScanResult
+        # type: (ServerConnectivityInfo, PluginScanCommand) -> CertificateInfoScanResult
+        if not isinstance(scan_command, CertificateInfoScanCommand):
+            raise ValueError('Unexpected scan command')
+
         final_trust_store_list = TrustStoresRepository.get_default().get_all_stores()
         if scan_command.custom_ca_file:
             if not os.path.isfile(scan_command.custom_ca_file):
@@ -129,13 +131,13 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         thread_pool = ThreadPool()
         for trust_store in final_trust_store_list:
             # Try to connect with each trust store
-            thread_pool.add_job((self._get_and_verify_certificate_chain, (server_info, trust_store)))
+            thread_pool.add_job((self._get_and_verify_certificate_chain, [server_info, trust_store]))
 
         # Start processing the jobs; one thread per trust
         thread_pool.start(len(final_trust_store_list))
 
         # Store the results as they come
-        certificate_chain = []
+        certificate_chain = []  # type: List[Certificate]
         path_validation_result_list = []
         path_validation_error_list = []
         ocsp_response = None
@@ -157,7 +159,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
         if len(path_validation_error_list) == len(final_trust_store_list):
             # All connections failed unexpectedly; raise an exception instead of returning a result
-            raise last_exception
+            raise last_exception  # type: ignore
 
         # All done
         return CertificateInfoScanResult(server_info, scan_command, certificate_chain, path_validation_result_list,
@@ -166,7 +168,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
     @staticmethod
     def _get_and_verify_certificate_chain(server_info, trust_store):
-        # type: (ServerConnectivityInfo, TrustStore) -> Tuple[List[cryptography.x509.Certificate], Text, Optional[OcspResponse]]
+        # type: (ServerConnectivityInfo, TrustStore) -> Tuple[List[Certificate], Text, Optional[OcspResponse]]
         """Connects to the target server and uses the supplied trust store to validate the server's certificate.
         Returns the server's certificate and OCSP response.
         """
@@ -192,8 +194,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
             ssl_connection.close()
 
         # Parse the certificates using the cryptography module
-        parsed_x509_chain = [cryptography.x509.load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'),
-                                                                         backend=default_backend())
+        parsed_x509_chain = [load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'), backend=default_backend())
                              for x509_cert in x509_cert_chain]
         return parsed_x509_chain, verify_str, ocsp_response
 
@@ -203,7 +204,7 @@ class CertificateInfoScanResult(PluginScanResult):
     """The result of running a CertificateInfoScanCommand on a specific server.
 
     Attributes:
-        certificate_chain (List[cryptography.x509.Certificate]): The certificate chain sent by the server; index 0 is 
+        certificate_chain (List[cryptography.x509.Certificate]): The certificate chain sent by the server; index 0 is
             the leaf certificate. Each certificate is parsed using the cryptography module; documentation is available 
             at https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object. 
         path_validation_result_list (List[PathValidationResult]): The list of attempts at validating the server's
@@ -244,7 +245,7 @@ class CertificateInfoScanResult(PluginScanResult):
             self,
             server_info,                    # type: ServerConnectivityInfo
             scan_command,                   # type: CertificateInfoScanCommand
-            certificate_chain,              # type: List[cryptography.x509.Certificate]
+            certificate_chain,              # type: List[Certificate]
             path_validation_result_list,    # type: List[PathValidationResult]
             path_validation_error_list,     # type: List[PathValidationError]
             ocsp_response                   # type: OcspResponse
@@ -294,7 +295,7 @@ class CertificateInfoScanResult(PluginScanResult):
         self.certificate_included_scts_count = CertificateUtils.count_scts_in_sct_extension(self.certificate_chain[0])
 
         # Try to build the verified chain
-        self.verified_certificate_chain = []
+        self.verified_certificate_chain = []  # type: List[Certificate]
         self.is_certificate_chain_order_valid = True
         if self.successful_trust_store:
             try:
@@ -348,11 +349,11 @@ class CertificateInfoScanResult(PluginScanResult):
         self.__dict__['successful_trust_store'] = pickle.loads(self.__dict__['successful_trust_store'])
         self.__dict__['path_validation_result_list'] = pickle.loads(self.__dict__['path_validation_result_list'])
 
-        certificate_chain = [cryptography.x509.load_pem_x509_certificate(cert_pem, default_backend())
+        certificate_chain = [load_pem_x509_certificate(cert_pem, default_backend())
                              for cert_pem in self.__dict__['certificate_chain']]
         self.__dict__['certificate_chain'] = certificate_chain
 
-        verified_chain = [cryptography.x509.load_pem_x509_certificate(cert_pem, default_backend())
+        verified_chain = [load_pem_x509_certificate(cert_pem, default_backend())
                           for cert_pem in self.__dict__['verified_certificate_chain']]
         self.__dict__['verified_certificate_chain'] = verified_chain
 
@@ -489,7 +490,7 @@ class CertificateInfoScanResult(PluginScanResult):
 
     @staticmethod
     def _certificate_chain_to_xml(certificate_chain):
-        # type: (List[cryptography.x509.Certificate]) -> List[Element]
+        # type: (List[Certificate]) -> List[Element]
         cert_xml_list = []
         for certificate in certificate_chain:
             cert_xml = Element('certificate', attrib={

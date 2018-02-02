@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
+from typing import TextIO
 
 from sslyze.cli import CompletedServerScan
 from sslyze.cli import FailedServerScan
@@ -17,11 +18,11 @@ class OutputGenerator(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, file_to):
-        # type: (file) -> None
+        # type: (TextIO) -> None
         self._file_to = file_to
 
     def close(self):
-        # type: (None) -> None
+        # type: () -> None
         self._file_to.close()
 
     @abstractmethod
@@ -43,7 +44,7 @@ class OutputGenerator(object):
 
     @abstractmethod
     def scans_started(self):
-        # type: (None) -> None
+        # type: () -> None
         """The CLI has finished testing connectivity with the supplied servers and will now start the scans.
         """
 

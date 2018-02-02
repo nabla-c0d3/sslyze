@@ -33,12 +33,16 @@ class FallbackScsvPlugin(plugin_base.Plugin):
         return [FallbackScsvScanCommand]
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, FallbackScsvScanCommand) -> FallbackScsvScanResult
-        if server_info.highest_ssl_version_supported.value <= OpenSslVersionEnum.SSLV3.value:
+        # type: (ServerConnectivityInfo, PluginScanCommand) -> FallbackScsvScanResult
+        if not isinstance(scan_command, FallbackScsvScanCommand):
+            raise ValueError('Unexpected scan command')
+
+        # TODO(AD): Remove the type ignore
+        if server_info.highest_ssl_version_supported.value <= OpenSslVersionEnum.SSLV3.value:  # type: ignore
             raise ValueError('Server only supports SSLv3; no downgrade attacks are possible')
 
         # Try to connect using a lower TLS version with the fallback cipher suite enabled
-        ssl_version_downgrade = OpenSslVersionEnum(server_info.highest_ssl_version_supported.value - 1)
+        ssl_version_downgrade = OpenSslVersionEnum(server_info.highest_ssl_version_supported.value - 1)  # type: ignore
         ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version_downgrade)
         ssl_connection.ssl_client.enable_fallback_scsv()
 

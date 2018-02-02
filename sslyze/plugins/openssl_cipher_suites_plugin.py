@@ -16,7 +16,7 @@ from sslyze.utils.python_compatibility import IS_PYTHON_2
 from sslyze.utils.ssl_connection import SSLConnection
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
-from typing import Dict
+from typing import Dict, Type
 from typing import List
 from typing import Optional
 from typing import Text
@@ -103,13 +103,13 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
     MAX_THREADS = 15
     SSL_VERSIONS_MAPPING = {
-        Sslv20ScanCommand: OpenSslVersionEnum.SSLV2,
-        Sslv30ScanCommand: OpenSslVersionEnum.SSLV3,
-        Tlsv10ScanCommand: OpenSslVersionEnum.TLSV1,
-        Tlsv11ScanCommand: OpenSslVersionEnum.TLSV1_1,
-        Tlsv12ScanCommand: OpenSslVersionEnum.TLSV1_2,
-        Tlsv13ScanCommand: OpenSslVersionEnum.TLSV1_3,
-    }
+            Sslv20ScanCommand: OpenSslVersionEnum.SSLV2,
+            Sslv30ScanCommand: OpenSslVersionEnum.SSLV3,
+            Tlsv10ScanCommand: OpenSslVersionEnum.TLSV1,
+            Tlsv11ScanCommand: OpenSslVersionEnum.TLSV1_1,
+            Tlsv12ScanCommand: OpenSslVersionEnum.TLSV1_2,
+            Tlsv13ScanCommand: OpenSslVersionEnum.TLSV1_3,
+        }  # type: Dict[Type[CipherSuiteScanCommand], OpenSslVersionEnum]
 
     @classmethod
     def get_available_commands(cls):
@@ -141,13 +141,15 @@ class OpenSslCipherSuitesPlugin(Plugin):
         return options
 
     def process_task(self, server_connectivity_info, scan_command):
-        # type: (ServerConnectivityInfo, CipherSuiteScanCommand) -> CipherSuiteScanResult
-        ssl_version = self.SSL_VERSIONS_MAPPING[scan_command.__class__]
+        # type: (ServerConnectivityInfo, PluginScanCommand) -> CipherSuiteScanResult
+        if not isinstance(scan_command, CipherSuiteScanCommand):
+            raise ValueError('Unexpected scan command')
 
+        ssl_version = self.SSL_VERSIONS_MAPPING[scan_command.__class__]
         # Get the list of available cipher suites for the given ssl version
+        cipher_list = []  # type: List[Text]
         if ssl_version == OpenSslVersionEnum.TLSV1_2:
             # For TLS 1.2, we have to use both the legacy and modern OpenSSL to cover all cipher suites
-            cipher_list = []
             ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
                                                                                        should_use_legacy_openssl=True)
             ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
@@ -162,7 +164,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
             cipher_list = [cipher for cipher in ssl_connection.ssl_client.get_cipher_list() if 'TLS13' not in cipher]
 
             # And remove duplicates (ie. supported by both legacy and modern OpenSSL)
-            cipher_list = set(cipher_list)
+            cipher_list = list(set(cipher_list))
         elif ssl_version == OpenSslVersionEnum.TLSV1_3:
             # For TLS 1.3 we need to manually pick the cipher suites as there is no OpenSSL cipher string to select them
             ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
@@ -177,7 +179,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
         # Scan for every available cipher suite
         thread_pool = ThreadPool()
         for cipher in cipher_list:
-            thread_pool.add_job((self._test_cipher_suite, (server_connectivity_info, ssl_version, cipher)))
+            thread_pool.add_job((self._test_cipher_suite, [server_connectivity_info, ssl_version, cipher]))
 
         # Start processing the jobs; One thread per cipher
         thread_pool.start(nb_threads=min(len(cipher_list), self.MAX_THREADS))
@@ -234,7 +236,9 @@ class OpenSslCipherSuitesPlugin(Plugin):
         try:
             # Perform the SSL handshake
             ssl_connection.connect()
-            cipher_result = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
+            cipher_result = AcceptedCipherSuite.from_ongoing_ssl_connection(
+                ssl_connection, ssl_version
+            )  # type: CipherSuite
 
         except SSLHandshakeRejected as e:
             cipher_result = RejectedCipherSuite(openssl_cipher_name, ssl_version, str(e))
@@ -353,7 +357,7 @@ class AcceptedCipherSuite(CipherSuite):
         self.dh_info = dh_info
         self.post_handshake_response = post_handshake_response
         if IS_PYTHON_2:
-            self.post_handshake_response = post_handshake_response.decode('utf-8')
+            self.post_handshake_response = post_handshake_response.decode('utf-8')  # type: ignore
 
     @classmethod
     def from_ongoing_ssl_connection(cls, ssl_connection, ssl_version):
@@ -385,7 +389,7 @@ class RejectedCipherSuite(CipherSuite):
         handshake_error_message (Text): The SSL/TLS error returned by the server to close the handshake.
     """
     def __init__(self, openssl_name, ssl_version, handshake_error_message):
-        # type: (Text, OpenSslVersionEnum, bytes) -> None
+        # type: (Text, OpenSslVersionEnum, Text) -> None
         super(RejectedCipherSuite, self).__init__(openssl_name, ssl_version)
         self.handshake_error_message = handshake_error_message
 
@@ -417,16 +421,16 @@ class CipherSuiteScanResult(PluginScanResult):
             rejected by the server.
         errored_cipher_list (List[ErroredCipherSuite]): The list of cipher suites supported by SSLyze that triggered an
             unexpected error during the TLS handshake with the server.
-        preferred_cipher (AcceptedCipherSuite): The server's preferred cipher suite among all the cipher suites
-            supported by SSLyze. None if the server follows the client's preference or if none of SSLyze's cipher suites
-            are supported by the server.
+        preferred_cipher (Optional[AcceptedCipherSuite]): The server's preferred cipher suite among all the cipher
+            suites supported by SSLyze. None if the server follows the client's preference or if none of SSLyze's cipher
+            suites are supported by the server.
     """
 
     def __init__(
             self,
             server_info,           # type: ServerConnectivityInfo
             scan_command,          # type: CipherSuiteScanCommand
-            preferred_cipher,      # type: AcceptedCipherSuite
+            preferred_cipher,      # type: Optional[AcceptedCipherSuite]
             accepted_cipher_list,  # type: List[AcceptedCipherSuite]
             rejected_cipher_list,  # type: List[RejectedCipherSuite]
             errored_cipher_list    # type: List[ErroredCipherSuite]

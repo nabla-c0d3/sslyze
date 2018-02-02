@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from multiprocessing import Process
-from multiprocessing import JoinableQueue
+from multiprocessing import JoinableQueue  # type: ignore
 
 from sslyze.synchronous_scanner import SynchronousScanner
 

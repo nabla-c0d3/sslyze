@@ -12,7 +12,7 @@ try:
     from urllib.request import urlretrieve
 except ImportError:
     # Python 2
-    from urllib import urlretrieve
+    from urllib import urlretrieve  # type: ignore
 
 
 from os.path import join
@@ -71,7 +71,7 @@ class TrustStoresRepository(object):
     _MOZILLA_STORE_NAME = 'MOZILLA_NSS'
 
     def __init__(self, repository_path):
-        # type: () -> None
+        # type: (Text) -> None
         available_stores = {}
         for store_name, store_version, store_pem_path in self._parse_trust_stores_in_folder(repository_path):
             store_pretty_name = self._STORE_PRETTY_NAMES.get(store_name, store_name)

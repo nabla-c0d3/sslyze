@@ -35,7 +35,10 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, SessionRenegotiationScanCommand) -> SessionRenegotiationScanResult
+        # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> SessionRenegotiationScanResult
+        if not isinstance(scan_command, SessionRenegotiationScanCommand):
+            raise ValueError('Unexpected scan command')
+
         accepts_client_renegotiation = self._test_client_renegotiation(server_info)
         supports_secure_renegotiation = self._test_secure_renegotiation(server_info)
         return SessionRenegotiationScanResult(server_info, scan_command, accepts_client_renegotiation,

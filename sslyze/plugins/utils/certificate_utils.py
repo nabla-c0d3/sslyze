@@ -30,7 +30,7 @@ class CertificateUtils(object):
         # type: (cryptography.x509.Certificate) -> List[Text]
         """Retrieve all the DNS entries of the Subject Alternative Name extension.
         """
-        subj_alt_names = []
+        subj_alt_names = []  # type: List[Text]
         try:
             san_ext = certificate.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
             subj_alt_names = san_ext.value.get_values_for_type(DNSName)
@@ -52,7 +52,7 @@ class CertificateUtils(object):
             'subjectAltName': tuple([('DNS', name) for name in cls.get_dns_subject_alternative_names(certificate)]),
         }
         # CertificateError is raised on failure
-        ssl.match_hostname(certificate_names, hostname)
+        ssl.match_hostname(certificate_names, hostname)  # type: ignore
 
     @classmethod
     def get_name_as_short_text(cls, name_field):
@@ -117,9 +117,9 @@ class CertificateUtils(object):
 
     @staticmethod
     def count_scts_in_sct_extension(certificate):
+        # type: (cryptography.x509.Certificate) -> int
         """Return the number of Signed Certificate Timestamps (SCTs) embedded in the certificate.
         """
-        # type: (cryptography.x509.Certificate) -> int
         scts_count = 0
         try:
             # Look for the x509 extension

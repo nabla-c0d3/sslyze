@@ -32,7 +32,10 @@ class CompressionPlugin(plugin_base.Plugin):
         return [CompressionScanCommand]
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, CompressionScanCommand) -> CompressionScanResult
+        # type: (ServerConnectivityInfo, PluginScanCommand) -> CompressionScanResult
+        if not isinstance(scan_command, CompressionScanCommand):
+            raise ValueError('Unexpected scan command')
+
         ssl_connection = server_info.get_preconfigured_ssl_connection(should_use_legacy_openssl=True)
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives

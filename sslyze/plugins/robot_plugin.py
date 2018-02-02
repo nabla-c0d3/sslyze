@@ -73,9 +73,9 @@ class RobotTlsRecordPayloads(object):
 
     @classmethod
     def get_client_key_exchange_record(cls, robot_payload_enum, tls_version, modulus, exponent):
+        # type: (RobotPmsPaddingPayloadEnum, TlsVersionEnum, int, int) -> TlsRsaClientKeyExchangeRecord
         """A client key exchange record with a hardcoded pre_master_secret, and a valid or invalid padding.
         """
-        # type: (RobotPmsPaddingPayloadEnum, TlsVersionEnum, int, int) -> TlsRsaClientKeyExchangeRecord
         pms_padding = cls._compute_pms_padding(modulus)
         tls_version_hex = binascii.b2a_hex(TlsRecordTlsVersionBytes[tls_version.name].value).decode('ascii')
 
@@ -106,9 +106,9 @@ class RobotTlsRecordPayloads(object):
 
     @classmethod
     def get_finished_record_bytes(cls, tls_version):
+        # type: (TlsVersionEnum) -> bytes
         """The Finished TLS record corresponding to the hardcoded PMS used in the Client Key Exchange record.
         """
-        # type: TlsVersionEnum -> bytes
         # TODO(AD): The ROBOT poc script uses the same Finished record for all possible client hello (default, GCM,
         # etc.); as the Finished record contains a hashes of all previous records, it will be wrong and will cause
         # servers to send a TLS Alert 20
@@ -174,9 +174,11 @@ class RobotPlugin(plugin_base.Plugin):
         return [RobotScanCommand]
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, RobotScanCommand) -> RobotScanResult
-        rsa_params = None
+        # type: (ServerConnectivityInfo, PluginScanCommand) -> RobotScanResult
+        if not isinstance(scan_command, RobotScanCommand):
+            raise ValueError('Unexpected scan command')
 
+        rsa_params = None
         # With TLS 1.2 some servers are only vulnerable when using the GCM cipher suites - try them first
         if server_info.highest_ssl_version_supported == OpenSslVersionEnum.TLSV1_2:
             cipher_string = 'AES128-GCM-SHA256:AES256-GCM-SHA384'
@@ -214,10 +216,10 @@ class RobotPlugin(plugin_base.Plugin):
 
         for payload_enum in RobotPmsPaddingPayloadEnum:
             # Run each payload twice to ensure the results are consistent
-            thread_pool.add_job((cls._send_robot_payload, (server_info, cipher_string, payload_enum,
-                                                           should_complete_handshake, rsa_modulus, rsa_exponent)))
-            thread_pool.add_job((cls._send_robot_payload, (server_info, cipher_string, payload_enum,
-                                                           should_complete_handshake, rsa_modulus, rsa_exponent)))
+            thread_pool.add_job((cls._send_robot_payload, [server_info, cipher_string, payload_enum,
+                                                           should_complete_handshake, rsa_modulus, rsa_exponent]))
+            thread_pool.add_job((cls._send_robot_payload, [server_info, cipher_string, payload_enum,
+                                                           should_complete_handshake, rsa_modulus, rsa_exponent]))
 
         # Use one thread per check
         thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum)*2)
@@ -229,7 +231,8 @@ class RobotPlugin(plugin_base.Plugin):
             RobotPmsPaddingPayloadEnum.WRONG_POSITION_00: [],
             RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE: [],
             RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER: [],
-        }
+        }  # type: Dict[RobotPmsPaddingPayloadEnum, List[Text]]
+
         for completed_job in thread_pool.get_result():
             (job, (payload_enum, server_response)) = completed_job
             payload_responses[payload_enum].append(server_response)

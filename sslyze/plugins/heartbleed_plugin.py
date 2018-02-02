@@ -41,7 +41,10 @@ class HeartbleedPlugin(plugin_base.Plugin):
         return [HeartbleedScanCommand]
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, HeartbleedScanCommand) -> HeartbleedScanResult
+        # type: (ServerConnectivityInfo, PluginScanCommand) -> HeartbleedScanResult
+        if not isinstance(scan_command, HeartbleedScanCommand):
+            raise ValueError('Unexpected scan command')
+
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         # Replace nassl.sslClient.do_handshake() with a heartbleed checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work

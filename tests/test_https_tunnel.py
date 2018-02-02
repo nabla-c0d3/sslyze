@@ -23,7 +23,6 @@ def proxy_worker(port):
 
 class HttpsTunnelTestCase(unittest.TestCase):
 
-
     def test_https_tunneling_bad_arguments(self):
         # Ensure that an IP address cannot be specified when using an HTTP proxy for scans
         tunnel_settings = HttpConnectTunnelingSettings('fakedomain', 443)

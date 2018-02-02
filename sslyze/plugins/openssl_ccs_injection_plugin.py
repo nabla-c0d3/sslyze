@@ -41,7 +41,10 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         return [OpenSslCcsInjectionScanCommand]
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, OpenSslCcsInjectionScanCommand) -> OpenSslCcsInjectionScanResult
+        # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> OpenSslCcsInjectionScanResult
+        if not isinstance(scan_command, OpenSslCcsInjectionScanCommand):
+            raise ValueError('Unexpected scan command')
+
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         # Replace nassl.sslClient.do_handshake() with a CCS checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work

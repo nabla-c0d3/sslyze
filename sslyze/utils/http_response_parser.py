@@ -6,6 +6,11 @@ from __future__ import unicode_literals
 
 from io import BytesIO
 from socket import socket
+from typing import Callable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sslyze.utils.ssl_connection import SSLConnection
 
 try:
     # Python 3
@@ -14,7 +19,7 @@ try:
 except ImportError:
     # Python 2
     # noinspection PyCompatibility
-    from httplib import HTTPResponse
+    from httplib import HTTPResponse  # type: ignore
 
 
 class FakeSocket(BytesIO):
@@ -24,24 +29,27 @@ class FakeSocket(BytesIO):
 
 class HttpResponseParser(object):
 
-    @staticmethod
-    def parse(sock):
+    @classmethod
+    def parse_from_socket(cls, sock):
         # type: (socket) -> HTTPResponse
-        try:
-            # H4ck to standardize the API between sockets and SSLConnection objects
-            response = sock.read(4096)
-        except AttributeError:
-            response = sock.recv(4096)
+        return cls._parse(sock.recv)
 
+    @classmethod
+    def parse_from_ssl_connection(cls, ssl_conn):
+        # type: (SSLConnection) -> HTTPResponse
+        return cls._parse(ssl_conn.read)
+
+    @staticmethod
+    def _parse(read_method):
+        # type: (Callable) -> HTTPResponse
+        """Trick to standardize the API between sockets and SSLConnection objects.
+        """
+        response = read_method(4096)
         while b'HTTP/' not in response or b'\r\n\r\n' not in response:
             # Parse until the end of the headers
-            try:
-                response += sock.read(4096)
-            except AttributeError:
-                response += sock.recv(4096)
+            response += read_method(4096)
 
         fake_sock = FakeSocket(response)
         response = HTTPResponse(fake_sock)
         response.begin()
         return response
-

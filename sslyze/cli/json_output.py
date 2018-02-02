@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import json
+from typing import Dict, Text, Any, TextIO
 
 from cryptography.hazmat.backends.openssl import x509
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
@@ -19,9 +20,12 @@ from sslyze.utils.python_compatibility import IS_PYTHON_2
 class JsonOutputGenerator(OutputGenerator):
 
     def __init__(self, file_to):
+        # type: (TextIO) -> None
         super(JsonOutputGenerator, self).__init__(file_to)
-        self._json_dict = {'sslyze_version': __version__,
-                           'sslyze_url': PROJECT_URL}
+        self._json_dict = {
+            'sslyze_version': __version__,
+            'sslyze_url': PROJECT_URL
+        }  # type: Dict[Text, Any]
 
     def command_line_parsed(self, available_plugins, args_command_list):
         self._json_dict.update({'network_timeout': args_command_list.timeout,
@@ -45,7 +49,7 @@ class JsonOutputGenerator(OutputGenerator):
         for key, value in server_scan_dict['server_info'].items():
             server_scan_dict['server_info'][key] = _object_to_json_dict(value)
 
-        dict_command_result = {}
+        dict_command_result = {}  # type: Dict[Text, Dict[Text, Any]]
         for plugin_result in server_scan_result.plugin_result_list:
             dict_result = plugin_result.__dict__.copy()
             # Remove the server_info node
@@ -67,11 +71,11 @@ class JsonOutputGenerator(OutputGenerator):
 
     def scans_completed(self, total_scan_time):
         # type: (float) -> None
-        self._json_dict['total_scan_time'] = total_scan_time
+        self._json_dict['total_scan_time'] = str(total_scan_time)
         json_out = json.dumps(self._json_dict, default=_object_to_json_dict, sort_keys=True, indent=4,
                               ensure_ascii=True)
         if IS_PYTHON_2:
-            json_out = unicode(json_out)
+            json_out = unicode(json_out)  # type: ignore
         self._file_to.write(json_out)
 
 

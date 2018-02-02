@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import re
+from typing import Dict, Text, TextIO
 from xml.dom import minidom
 
 from sslyze import PROJECT_URL, __version__
@@ -27,9 +28,10 @@ class XmlOutputGenerator(OutputGenerator):
         TlsWrappedProtocolEnum.STARTTLS_LDAP: 'startTlsLdap',
         TlsWrappedProtocolEnum.STARTTLS_RDP: 'startTlsRdp',
         TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 'startTlsPostGres',
-    }
+    }  # type: Dict[TlsWrappedProtocolEnum, Text]
 
     def __init__(self, file_to):
+        # type: (TextIO) -> None
         super(XmlOutputGenerator, self).__init__(file_to)
         self._xml_root_node = Element('document', title="SSLyze Scan Results", SSLyzeVersion=__version__,
                                       SSLyzeWeb=PROJECT_URL)

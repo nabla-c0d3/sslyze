@@ -1,3 +1,5 @@
+.mypy_cache/
+
 *.py[cod]
 
 # C extensions

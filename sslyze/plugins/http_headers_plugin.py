@@ -4,9 +4,9 @@ from __future__ import unicode_literals
 
 from xml.etree.ElementTree import Element
 
-import cryptography
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.x509 import Certificate, load_pem_x509_certificate
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
@@ -44,7 +44,9 @@ class HttpHeadersPlugin(plugin_base.Plugin):
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, HttpHeadersScanCommand) -> HttpHeadersScanResult
+        # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> HttpHeadersScanResult
+        if not isinstance(scan_command, HttpHeadersScanCommand):
+            raise ValueError('Unexpected scan command')
 
         if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
             raise ValueError('Cannot test for HTTP headers on a StartTLS connection.')
@@ -61,12 +63,12 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         ssl_connection.connect()
         certificate_chain = [
-            cryptography.x509.load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'), backend=default_backend())
+            load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'), backend=default_backend())
             for x509_cert in ssl_connection.ssl_client.get_peer_cert_chain()
         ]
         # Send an HTTP GET request to the server
         ssl_connection.write(HttpRequestGenerator.get_request(host=server_info.hostname))
-        http_resp = HttpResponseParser.parse(ssl_connection)
+        http_resp = HttpResponseParser.parse_from_ssl_connection(ssl_connection)
         ssl_connection.close()
 
         if http_resp.version == 9:
@@ -225,17 +227,17 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
             server_info,          # type: ServerConnectivityInfo
             scan_command,         # type: HttpHeadersScanCommand
             raw_hsts_header,      # type: Text
-            raw_hpkp_header,      # type: Text,
+            raw_hpkp_header,      # type: Text
             raw_expect_ct_header, # type: Text
             hpkp_report_only,     # type: bool
-            cert_chain,           # type: List[cryptography.x509.Certificate]
+            cert_chain,           # type: List[Certificate]
     ):
         # type: (...) -> None
         super(HttpHeadersScanResult, self).__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
         self.expect_ct_header = ParsedExpectCTHeader(raw_expect_ct_header) if raw_expect_ct_header else None
-        self.verified_certificate_chain = []  # type: List[cryptography.x509.Certificate]
+        self.verified_certificate_chain = []  # type: List[Certificate]
         try:
             main_trust_store = TrustStoresRepository.get_default().get_main_store()
             self.verified_certificate_chain = main_trust_store.build_verified_certificate_chain(cert_chain)
@@ -268,7 +270,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
     def __setstate__(self, state):
         self.__dict__.update(state)
         # Manually restore non-pickable entries
-        verified_chain = [cryptography.x509.load_pem_x509_certificate(cert_pem, default_backend())
+        verified_chain = [load_pem_x509_certificate(cert_pem, default_backend())
                           for cert_pem in self.__dict__['verified_certificate_chain']]
         self.__dict__['verified_certificate_chain'] = verified_chain
 

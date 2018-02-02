@@ -32,27 +32,30 @@ class TrustStore(object):
         self.path = path
         self.name = name
         self.version = version
-        self.__ev_oids_arg = ev_oids
-        self.ev_oids = []
+
+        # Used for pickling
+        self.__ev_oids_as_str = ev_oids
+        self.ev_oids = []  # type: List[ObjectIdentifier]
         self.__parse_ev_oids()
 
-        self._subject_to_certificate_dict = None
+        self._subject_to_certificate_dict = self._compute_subject_certificate_dict(self.path)
 
     def __eq__(self, other):
-        # type: (TrustStore) -> bool
-        if self.path == other.path and self.ev_oids == other._ev_oids:
+        # type: (object) -> bool
+        if isinstance(other, TrustStore) and self.path == other.path and self.ev_oids == other.ev_oids:
             return True
         return False
 
     def __parse_ev_oids(self):
-        if self.__ev_oids_arg:
-            self.ev_oids = [ObjectIdentifier(oid) for oid in self.__ev_oids_arg]
+        # type: () -> None
+        if self.__ev_oids_as_str:
+            self.ev_oids = [ObjectIdentifier(oid) for oid in self.__ev_oids_as_str]
 
     def __getstate__(self):
         pickable_dict = self.__dict__.copy()
         # Remove non-pickable entries
         pickable_dict['_subject_to_certificate_dict'] = None
-        pickable_dict['_ev_oids'] = []
+        pickable_dict['ev_oids'] = []
         return pickable_dict
 
     def __setstate__(self, state):
@@ -106,9 +109,7 @@ class TrustStore(object):
         return cert_dict
 
     def _get_certificate_with_subject(self, certificate_subject):
-        # type: (Name) -> Certificate
-        if self._subject_to_certificate_dict is None:
-            self._subject_to_certificate_dict = self._compute_subject_certificate_dict(self.path)
+        # type: (Name) -> Optional[Certificate]
         return self._subject_to_certificate_dict.get(certificate_subject, None)
 
     @staticmethod

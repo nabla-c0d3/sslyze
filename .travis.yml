@@ -9,7 +9,8 @@ install:
   - pip install -r requirements.txt
 # Command to run tests
 script:
-  - python -m mypy sslyze --ignore-missing-import --strict-optional
+  # Run mypy for type checking if we are on Python 3
+  - if [[ $TRAVIS_PYTHON_VERSION != 2.7 ]]; then python -m mypy sslyze --ignore-missing-import --strict-optional; fi
   - python run_tests.py
 deploy:
   provider: pypi

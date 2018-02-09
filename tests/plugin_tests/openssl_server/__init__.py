@@ -13,9 +13,7 @@ import logging
 import time
 
 
-class NotOnLinux64Error(EnvironmentError):
-    """The embedded OpenSSL server is only available on Linux 64.
-    """
+NOT_ON_LINUX_64BIT = platform not in ['linux', 'linux2'] or architecture()[0] != '64bit'
 
 
 class VulnerableOpenSslServer(object):
@@ -32,11 +30,8 @@ class VulnerableOpenSslServer(object):
 
     def __init__(self):
         # type: (int) -> None
-        if platform not in ['linux', 'linux2']:
-            raise NotOnLinux64Error()
-
-        if architecture()[0] != '64bit':
-            raise NotOnLinux64Error()
+        if NOT_ON_LINUX_64BIT:
+            EnvironmentError('The embedded OpenSSL server is only available on Linux 64.')
 
         self.hostname = 'localhost'
         self.ip_address = '127.0.0.1'

@@ -7,7 +7,8 @@ import logging
 
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin, OpenSslCcsInjectionScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
-from tests.plugin_tests.openssl_server import VulnerableOpenSslServer, NotOnLinux64Error
+from tests import SslyzeTestCase
+from tests.plugin_tests.openssl_server import VulnerableOpenSslServer, NOT_ON_LINUX_64BIT
 
 
 class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
@@ -24,19 +25,16 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+    @unittest.skipIf(NOT_ON_LINUX_64BIT,
+                     'test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits')
     def test_ccs_injection_bad(self):
-        try:
-            with VulnerableOpenSslServer() as server:
-                server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,
-                                                     port=server.port)
-                server_info.test_connectivity_to_server()
+        with VulnerableOpenSslServer() as server:
+            server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,
+                                                 port=server.port)
+            server_info.test_connectivity_to_server()
 
-                plugin = OpenSslCcsInjectionPlugin()
-                plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
-        except NotOnLinux64Error:
-            # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
-            logging.warning('WARNING: Not on Linux - skipping test_ccs_injection_bad() test')
-            return
+            plugin = OpenSslCcsInjectionPlugin()
+            plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
 
         self.assertTrue(plugin_result.is_vulnerable_to_ccs_injection)
         self.assertTrue(plugin_result.as_text())

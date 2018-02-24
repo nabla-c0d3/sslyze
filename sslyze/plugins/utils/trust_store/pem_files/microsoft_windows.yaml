@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
-version: November 28, 2017
-url: https://gallery.technet.microsoft.com/Trusted-Root-Certificate-38d12b11/file/182782/1/Trusted%20Root%20Program%20Participants%20As%20of%20November%2028%202017.xlsx
-date_fetched: 2017-12-28
-trusted_certificates_count: 296
+version: January 30, 2018
+url: https://gallery.technet.microsoft.com/Trusted-Root-Certificate-70150b50/file/188008/1/Trusted%20Root%20Program%20Participants%20As%20of%20January%2030%202018.xlsx
+date_fetched: 2018-02-09
+trusted_certificates_count: 294
 trusted_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -86,6 +86,8 @@ trusted_certificates:
   fingerprint: cbd8ed38d4a2d677d453d70dd8890af4f6374cba6299943f1ab3a6936c6fd795
 - subject_name: Autoridade Certificadora Raiz Brasileira v2
   fingerprint: fb47d92a9909fd4fa9bec02737543e1f3514ced747407a8d9cfa397b0915067c
+- subject_name: BYTE Root Certification Authority 001
+  fingerprint: 39ae2e6f304a6236bdf9066718ddc69e51af5ed05a63f2ee8d80ca1d1cc8fe4f
 - subject_name: Baltimore CyberTrust Root
   fingerprint: 16af57a9f676b0ab126095aa5ebadef22ab31119d644ac95cd4b93dbf3f26aeb
 - subject_name: Buypass Class 2 Root CA
@@ -333,8 +335,6 @@ trusted_certificates:
   fingerprint: 6ea1db6719d6041a06fc0898e5b3cf349a8fa8ecee85edb005965628f617f7c8
 - subject_name: Microsec e-Szigno Root CA 2009
   fingerprint: 3c5f81fea5fab82c64bfa2eaecafcde8e077fc8620a7cae537163df36edbf378
-- subject_name: Microsoft Root Authority
-  fingerprint: f38406e540d7a9d90cb4a9479299640ffb6df9e224ecc7a01c0d9558d8dad77d
 - subject_name: Microsoft Root Certificate Authority 2010
   fingerprint: df545bf919a2439c36983b54cdfc903dfa4f37d3996d8d84b4c31eec6f3c163e
 - subject_name: Microsoft Root Certificate Authority 2011
@@ -439,8 +439,6 @@ trusted_certificates:
   fingerprint: f1c1b50ae5a20dd8030ec9f6bc24823dd367b5255759b4e71b61fce9f7375d73
 - subject_name: Security Communication ECC RootCA1
   fingerprint: e74fbda55bd564c473a36b441aa799c8a68e077440e8288b9fa1e50e4bbaca11
-- subject_name: Security Communication EV RootCA1
-  fingerprint: a22dba681e97376e2d397d728aae3a9b6296b9fdba60bc2e11f647f2c675fb37
 - subject_name: Security Communication RootCA1
   fingerprint: e75e72ed9f560eec6eb4800073a43fc3ad19195a392282017895974a99026b6c
 - subject_name: Security Communication RootCA2
@@ -465,8 +463,6 @@ trusted_certificates:
   fingerprint: b5bd2cb79cbd1907298d6bdf4842e516d8c78fa6fc96d25f71af814e16cc245e
 - subject_name: Starfield Services Root Certificate Authority - G2
   fingerprint: 568d6905a2c88708a4b3025190edcfedb1974a606a13c6e5290fcb2ae63edab5
-- subject_name: Swedish Government Root Authority v1
-  fingerprint: f657a633eeb9bc5d15a461751749ea4b316727dcf1a9f986b5458445f6485dde
 - subject_name: Swedish Government Root Authority v3
   fingerprint: 8f9adb6d895dab5adf5c3d3fab83927be0fb64ef82485c62280d584e8bd55d22
 - subject_name: Swiss Government Root CA I
@@ -582,12 +578,12 @@ trusted_certificates:
   fingerprint: c57a3acbe8c06ba1988a83485bf326f2448775379849de01ca43571af357e74b
 - subject_name: Visa eCommerce Root
   fingerprint: 69fac9bd55fb0ac78d53bbee5cf1d597989fd0aaab20a25151bdf1733ee7d122
-- subject_name: WellsSecure Public Root Certification Authority 01 G2
-  fingerprint: ad7539e5cdc985fa95244055a9202d63460ec921467d034cfdbe87ec6d00fedc
 - subject_name: XRamp Global Certification Authority
   fingerprint: cecddc905099d8dadfc5b1d209b737cbe2c18cfb2c10c0ff0bcf0d3286fc1aa2
 - subject_name: certSIGN ROOT CA
   fingerprint: eaa962c4fa4a6bafebe415196d351ccd888d4f53f3fa8ae6d7c466a94e6042bb
+- subject_name: certSIGN ROOT CA G2
+  fingerprint: 657cfe2fa73faa38462571f332a2363a46fce7020951710702cdfbb6eeda3305
 - subject_name: ePKI Root Certification Authority
   fingerprint: c0a6f4dc63a24bfdcf54ef2a6a082a0a72de35803e2ff5ff527ae5d87206dfd5
 - subject_name: ePKI Root Certification Authority - G2
@@ -600,7 +596,7 @@ trusted_certificates:
   fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
 - subject_name: thawte Primary Root CA - G3
   fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 64
+blocked_certificates_count: 65
 blocked_certificates:
 - subject_name: ' NOT IN REPO: Autoridad Certificadora Raiz de la Secretaria de Economia'
   fingerprint: b41d516a5351d42deea191fa6edf2a67dee2f36dc969012c76669e616b900ddf
@@ -680,6 +676,8 @@ blocked_certificates:
   fingerprint: ecc3e9c3407503bee091aa952f41348ff88baa863b2264befac807901574e939
 - subject_name: Microsec e-Szigno Root CA
   fingerprint: 327a3d761abadea034eb998406275cb1a4776efdae2fdf6d0168ea1c4f5567d0
+- subject_name: Microsoft Root Authority
+  fingerprint: f38406e540d7a9d90cb4a9479299640ffb6df9e224ecc7a01c0d9558d8dad77d
 - subject_name: Microsoft Root Certificate Authority
   fingerprint: 885de64c340e3ea70658f01e1145f957fcda27aabeea1ab9faa9fdb0102d4077
 - subject_name: Root CA Generalitat Valenciana
@@ -698,6 +696,8 @@ blocked_certificates:
   fingerprint: af6d08eef3cac4e1584abc63c8a9472ac529af99f3f791319a43776063f58dca
 - subject_name: SecureSign RootCA3
   fingerprint: ae92e90000541a9ebc101b70b6c33a62f5a53a55ba815e81d31abddf03507f5d
+- subject_name: Security Communication EV RootCA1
+  fingerprint: a22dba681e97376e2d397d728aae3a9b6296b9fdba60bc2e11f647f2c675fb37
 - subject_name: Sonera Class1 CA
   fingerprint: cd808284cf746ff2fd6eb58aa1d59c4ad4b3ca56fdc6274a8926a7835f32313d
 - subject_name: Staat der Nederlanden Root CA
@@ -725,8 +725,6 @@ blocked_certificates:
   fingerprint: ac1fae74b4e97106092131f2e7f746b6734386742bdfd8423731aed14a4ce446
 - subject_name: VeriSign, Inc.
   fingerprint: 5b789987f3c4055b8700941b33783a5f16e0cff937ea32011fe04779f7635308
-- subject_name: WellsSecure Public Root Certificate Authority
-  fingerprint: a71272aeaaa3cfe8727f7fb39f0fb3d1e5426e9060b06ee6f13e9a3c5833cd43
 - subject_name: sigen-ca
   fingerprint: 12d480c1a3c664781b99d9df0e9faf3f1cacee1b3c30c3123a337a4a454ffed2
 - subject_name: sigov-ca

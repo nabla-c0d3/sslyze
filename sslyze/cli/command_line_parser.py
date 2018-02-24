@@ -252,12 +252,6 @@ class CommandLineParser(object):
                     # Protocol was given in the command line
                     tls_wrapped_protocol = self.STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
 
-
-        # Number of connection retries
-        if args_command_list.nb_retries < 1:
-            raise CommandLineParsingError('Cannot have a number smaller than 1 for --nb_retries.')
-
-
         # Create the server connectivity info for each specifed servers
         # A limitation when using the command line is that only one client_auth_credentials and http_tunneling_settings
         # can be specified, for all the servers to scan
@@ -389,24 +383,14 @@ class CommandLineParser(object):
 
         # Connectivity option group
         connect_group = OptionGroup(self._parser, 'Connectivity options', '')
-        # Timeout
+        # Connection speed
         connect_group.add_option(
-            '--timeout',
-            help='Set the timeout value in seconds used for every socket connection made to the target server(s). '
-                 'Default is {}s.'.format(str(SSLConnection.NETWORK_TIMEOUT)),
-            type='int',
-            dest='timeout',
-            default=SSLConnection.NETWORK_TIMEOUT
-        )
-        # Control connection retry attempts
-        connect_group.add_option(
-            '--nb_retries',
-            help='Set the number retry attempts for all network connections initiated throughout the scan. Increase '
-                 'this value if you are getting a lot of timeout/connection errors when scanning a specific server. '
-                 'Decrease this value to increase the speed of the scans; results may however return connection '
-                 'errors. Default is {} connection attempts.'.format(str(SSLConnection.NETWORK_MAX_RETRIES)),
-            type='int',
-            dest='nb_retries',
+            '--slow_connection',
+            help='Greatly reduce the number of concurrent connections initiated by SSLyze. This will make the scans '
+                 'slower but more reliable if the connection between your host and the server is slow. Enable '
+                 'this option if you are getting a lot of timeouts or errors.',
+            action='store_true',
+            dest=None,
             default=SSLConnection.NETWORK_MAX_RETRIES
         )
         # HTTP CONNECT Proxy

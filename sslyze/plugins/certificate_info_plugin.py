@@ -113,7 +113,6 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         )
         return options
 
-
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, PluginScanCommand) -> CertificateInfoScanResult
         if not isinstance(scan_command, CertificateInfoScanCommand):

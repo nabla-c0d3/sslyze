@@ -68,9 +68,6 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
 
         # Ensure the console output displayed the total scan time
         self.assertIn('totalScanTime="{}"'.format(scan_time), received_output)
-        self.assertIn('networkTimeout="{}"'.format(MockCommandLineValues().timeout), received_output)
-        self.assertIn('networkMaxRetries="{}"'.format(MockCommandLineValues().nb_retries), received_output)
-
 
     def test_with_http_tunneling(self):
         output_file = StringIO()

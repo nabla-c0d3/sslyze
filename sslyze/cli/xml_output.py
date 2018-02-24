@@ -42,15 +42,11 @@ class XmlOutputGenerator(OutputGenerator):
         self._xml_root_node.append(self._xml_results_node)
         self._xml_root_node.append(self._xml_failed_scans_node)
 
-
     def command_line_parsed(self, available_plugins, args_command_list):
-        self._xml_results_node.attrib.update({'networkTimeout': str(args_command_list.timeout),
-                                              'networkMaxRetries': str(args_command_list.nb_retries)})
-
+        pass
 
     def server_connectivity_test_succeeded(self, server_connectivity_info):
         pass
-
 
     def server_connectivity_test_failed(self, failed_scan):
         # type: (FailedServerScan) -> None
@@ -58,10 +54,8 @@ class XmlOutputGenerator(OutputGenerator):
         failed_scan_node.text = failed_scan.server_string
         self._xml_failed_scans_node.append(failed_scan_node)
 
-
     def scans_started(self):
         pass
-
 
     def server_scan_completed(self, server_scan_result):
         # type: (CompletedServerScan) -> None
@@ -87,7 +81,6 @@ class XmlOutputGenerator(OutputGenerator):
             server_scan_node.append(plugin_result.as_xml())
 
         self._xml_results_node.append(server_scan_node)
-
 
     def scans_completed(self, total_scan_time):
         self._xml_results_node.attrib['totalScanTime'] = str(total_scan_time)

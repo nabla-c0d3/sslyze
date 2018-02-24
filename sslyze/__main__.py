@@ -58,16 +58,16 @@ def main():
 
 
     # Initialize the pool of processes that will run each plugin
-    if args_command_list.https_tunnel:
-        # Maximum one process to not kill the proxy
-        global_scanner  = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout, max_processes_nb=1)
+    if args_command_list.https_tunnel or args_command_list.slow_connnection:
+        # Maximum one process to not kill the proxy or the connection
+        global_scanner  = ConcurrentScanner(max_processes_nb=1)
     else:
-        global_scanner = ConcurrentScanner(args_command_list.nb_retries, args_command_list.timeout)
+        global_scanner = ConcurrentScanner()
 
 
     # Figure out which hosts are up and fill the task queue with work to do
     connectivity_tester = ServersConnectivityTester(good_server_list)
-    connectivity_tester.start_connectivity_testing(network_timeout=args_command_list.timeout)
+    connectivity_tester.start_connectivity_testing()
 
     # Store and print server whose command line string was bad
     for failed_scan in bad_server_list:

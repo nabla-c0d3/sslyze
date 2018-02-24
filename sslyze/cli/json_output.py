@@ -28,10 +28,7 @@ class JsonOutputGenerator(OutputGenerator):
         }  # type: Dict[Text, Any]
 
     def command_line_parsed(self, available_plugins, args_command_list):
-        self._json_dict.update({'network_timeout': args_command_list.timeout,
-                                'network_max_retries': args_command_list.nb_retries,
-                                'invalid_targets': [],
-                                'accepted_targets': []})
+        self._json_dict.update({'invalid_targets': [], 'accepted_targets': []})
 
     def server_connectivity_test_failed(self, failed_scan):
         # type: (FailedServerScan) -> None

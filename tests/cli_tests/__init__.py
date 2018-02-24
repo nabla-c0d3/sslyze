@@ -56,5 +56,5 @@ class MockPluginScanResult(PluginScanResult):
 
 class MockCommandLineValues(object):
     def __init__(self):
-        self.timeout = 2
-        self.nb_retries = 5
+        # Tests don't really use right now
+        pass

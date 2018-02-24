@@ -515,6 +515,28 @@ class CipherSuiteScanResult(PluginScanResult):
     def as_text(self):
         result_txt = [self._format_title(self.scan_command.get_title())]
 
+        # Add some general comments about the cipher suite configuration
+        supports_forward_secrecy = False
+        for cipher in self.accepted_cipher_list:
+            if '_DHE_' in cipher.name or '_ECDHE_' in cipher.name:
+                supports_forward_secrecy = True
+                break
+        result_txt.append(self._format_field(
+            'Forward Secrecy',
+            'OK - Supported' if supports_forward_secrecy else 'INSECURE - Not Supported',
+        ))
+
+        supports_rc4 = False
+        for cipher in self.accepted_cipher_list:
+            if '_RC4_' in cipher.name:
+                supports_rc4 = True
+                break
+        result_txt.append(self._format_field(
+            'RC4',
+            'INSECURE - Supported' if supports_rc4 else 'OK - Not Supported',
+        ))
+        result_txt.append('')
+
         # Output all the accepted ciphers if any
         if len(self.accepted_cipher_list) > 0:
             # Start with the preferred cipher

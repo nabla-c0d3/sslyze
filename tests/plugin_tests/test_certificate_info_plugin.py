@@ -65,7 +65,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.is_leaf_certificate_ev)
 
-        self.assertEqual(len(plugin_result.certificate_chain), 3)
+        self.assertEqual(len(plugin_result.certificate_chain), 4)
         self.assertEqual(len(plugin_result.verified_certificate_chain), 3)
         self.assertFalse(plugin_result.has_anchor_in_certificate_chain)
 

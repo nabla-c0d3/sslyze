@@ -7,12 +7,12 @@ import logging
 
 import pickle
 
-from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, Sslv30ScanCommand, \
-    Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand, Tlsv13ScanCommand
+from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, \
+    Sslv30ScanCommand, Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand, Tlsv13ScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
-from tests.plugin_tests.openssl_server import NotOnLinux64Error
-from tests.plugin_tests.openssl_server import VulnerableOpenSslServer
+from tests.openssl_server import NotOnLinux64Error
+from tests.openssl_server import VulnerableOpenSslServer
 
 
 class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):

@@ -10,8 +10,8 @@ import pickle
 
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin, FallbackScsvScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
-from tests.plugin_tests.openssl_server import NotOnLinux64Error
-from tests.plugin_tests.openssl_server import VulnerableOpenSslServer
+from tests.openssl_server import NotOnLinux64Error
+from tests.openssl_server import VulnerableOpenSslServer
 
 
 class FallbackScsvPluginTestCase(unittest.TestCase):

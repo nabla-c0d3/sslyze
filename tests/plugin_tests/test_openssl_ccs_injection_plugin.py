@@ -7,7 +7,7 @@ import logging
 
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin, OpenSslCcsInjectionScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
-from tests.plugin_tests.openssl_server import VulnerableOpenSslServer, NotOnLinux64Error
+from tests.openssl_server import VulnerableOpenSslServer, NotOnLinux64Error
 
 
 class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):

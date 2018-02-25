@@ -63,7 +63,7 @@ def main():
     output_hub.command_line_parsed(available_plugins, args_command_list)
 
     # Initialize the pool of processes that will run each plugin
-    if args_command_list.https_tunnel or args_command_list.slow_connnection:
+    if args_command_list.https_tunnel or args_command_list.slow_connection:
         # Maximum one process to not kill the proxy or the connection
         global_scanner  = ConcurrentScanner(max_processes_nb=1)
     else:

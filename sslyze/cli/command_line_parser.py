@@ -388,8 +388,7 @@ class CommandLineParser(object):
                  'slower but more reliable if the connection between your host and the server is slow. Enable '
                  'this option if you are getting a lot of timeouts or errors.',
             action='store_true',
-            dest=None,
-            default=SSLConnection.NETWORK_MAX_RETRIES
+            dest='slow_connection',
         )
         # HTTP CONNECT Proxy
         connect_group.add_option(

@@ -110,7 +110,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
     """Scan the server(s) for supported OpenSSL cipher suites.
     """
 
-    MAX_THREADS = 15
+    MAX_THREADS = 10
     SSL_VERSIONS_MAPPING = {
             Sslv20ScanCommand: OpenSslVersionEnum.SSLV2,
             Sslv30ScanCommand: OpenSslVersionEnum.SSLV3,

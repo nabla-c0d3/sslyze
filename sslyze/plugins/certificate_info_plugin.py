@@ -28,7 +28,7 @@ from sslyze.plugins.utils.trust_store.trust_store import AnchorCertificateNotInT
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
-from typing import List
+from typing import List, Dict, Any, Type
 from typing import Optional
 from typing import Text
 from typing import Tuple
@@ -52,10 +52,12 @@ class CertificateInfoScanCommand(PluginScanCommand):
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
         return 'Certificate Information'
 
     @classmethod
     def get_cli_argument(cls):
+        # type: () -> Text
         return 'certinfo'
 
 
@@ -95,10 +97,12 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
+        # type: () -> List[Type[PluginScanCommand]]
         return [CertificateInfoScanCommand]
 
     @classmethod
     def get_cli_option_group(cls):
+        # type: () -> List[optparse.Option]
         options = super(CertificateInfoPlugin, cls).get_cli_option_group()
 
         # Add the special optional argument for this plugin's commands
@@ -329,6 +333,7 @@ class CertificateInfoScanResult(PluginScanResult):
                     break
 
     def __getstate__(self):
+        # type: () -> Dict[Text, Any]
         # This object needs to be pick-able as it gets sent through multiprocessing.Queues
         pickable_dict = self.__dict__.copy()
         # Manually handle non-pickable entries
@@ -343,6 +348,7 @@ class CertificateInfoScanResult(PluginScanResult):
         return pickable_dict
 
     def __setstate__(self, state):
+        # type: (Dict[Text, Any]) -> None
         self.__dict__.update(state)
         # Manually restore non-pickable entries
         self.__dict__['successful_trust_store'] = pickle.loads(self.__dict__['successful_trust_store'])
@@ -360,6 +366,7 @@ class CertificateInfoScanResult(PluginScanResult):
     NO_VERIFIED_CHAIN_ERROR_TXT = 'ERROR - Could not build verified chain (certificate untrusted?)'
 
     def as_text(self):
+        # type: () -> List[Text]
         text_output = [self._format_title(self.scan_command.get_title()), self._format_subtitle('Content')]
         text_output.extend(self._get_basic_certificate_text())
 
@@ -462,7 +469,7 @@ class CertificateInfoScanResult(PluginScanResult):
         else:
             if self.ocsp_response_status != OcspResponseStatusEnum.SUCCESSFUL:
                 ocsp_resp_txt = [self._format_field('', 'ERROR - OCSP response status is not successful: {}'.format(
-                    self.ocsp_response_status.name
+                    self.ocsp_response_status.name  # type: ignore
                 ))]
             else:
                 ocsp_trust_txt = 'OK - Response is trusted' \
@@ -552,6 +559,7 @@ class CertificateInfoScanResult(PluginScanResult):
         return cert_xml_list
 
     def as_xml(self):
+        # type: () -> Element
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         # Certificate chain
@@ -607,7 +615,7 @@ class CertificateInfoScanResult(PluginScanResult):
                 {
                     'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain),
                     'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
-                    'successfulTrustStore': self.successful_trust_store.name,
+                    'successfulTrustStore': self.successful_trust_store.name,  # type: ignore
                     'hasMustStapleExtension': str(self.certificate_has_must_staple_extension),
                     'includedSctsCount': str(self.certificate_included_scts_count),
                 }
@@ -622,14 +630,18 @@ class CertificateInfoScanResult(PluginScanResult):
         # OCSP Stapling
         ocsp_xml = Element('ocspStapling', attrib={'isSupported': 'False' if self.ocsp_response is None else 'True'})
 
-        if self.ocsp_response:
+        if self.ocsp_response is not None:
             if self.ocsp_response_status != OcspResponseStatusEnum.SUCCESSFUL:
                 ocsp_resp_xmp = Element('ocspResponse',
-                                        attrib={'status': self.ocsp_response_status.name})
+                                        attrib={
+                                            'status': self.ocsp_response_status.name  # type: ignore
+                                        })
             else:
                 ocsp_resp_xmp = Element('ocspResponse',
-                                        attrib={'isTrustedByMozillaCAStore': str(self.is_ocsp_response_trusted),
-                                                'status': self.ocsp_response_status.name})
+                                        attrib={
+                                            'isTrustedByMozillaCAStore': str(self.is_ocsp_response_trusted),
+                                            'status': self.ocsp_response_status.name  # type: ignore
+                                        })
 
                 responder_xml = Element('responderID')
                 responder_xml.text = self.ocsp_response['responderID']
@@ -646,6 +658,7 @@ class CertificateInfoScanResult(PluginScanResult):
         return xml_output
 
     def _get_basic_certificate_text(self):
+        # type: () -> List[Text]
         certificate = self.certificate_chain[0]
         public_key = self.certificate_chain[0].public_key()
         text_output = [

@@ -6,6 +6,10 @@ from __future__ import print_function
 
 import os
 import sys
+from typing import Any, Text, Dict, List
+
+from sslyze.plugins.plugin_base import PluginScanResult
+
 if not hasattr(sys, "frozen"):
     sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
 
@@ -25,6 +29,7 @@ global_scanner = None
 
 
 def sigint_handler(signum, frame):
+    # type: (int, Any) -> None
     print('Scan interrupted... shutting down.')
     if global_scanner:
         global_scanner.emergency_shutdown()
@@ -32,6 +37,7 @@ def sigint_handler(signum, frame):
 
 
 def main():
+    # type: () -> None
     global global_scanner
 
     # For py2exe builds
@@ -56,14 +62,12 @@ def main():
     output_hub = OutputHub()
     output_hub.command_line_parsed(available_plugins, args_command_list)
 
-
     # Initialize the pool of processes that will run each plugin
     if args_command_list.https_tunnel or args_command_list.slow_connnection:
         # Maximum one process to not kill the proxy or the connection
         global_scanner  = ConcurrentScanner(max_processes_nb=1)
     else:
         global_scanner = ConcurrentScanner()
-
 
     # Figure out which hosts are up and fill the task queue with work to do
     connectivity_tester = ServersConnectivityTester(good_server_list)
@@ -88,16 +92,14 @@ def main():
                     # Was this option set ?
                     if getattr(args_command_list, optional_arg_name):
                         optional_args[optional_arg_name] = getattr(args_command_list, optional_arg_name)
-                scan_command = scan_command_class(**optional_args)
+                scan_command = scan_command_class(**optional_args)  # type: ignore
 
                 global_scanner.queue_scan_command(server_connectivity_info, scan_command)
 
-
     # Store and print servers we were NOT able to connect to
     for tentative_server_info, exception in connectivity_tester.get_invalid_servers():
-        failed_scan = FailedServerScan(tentative_server_info.server_string, exception)
+        failed_scan = FailedServerScan(tentative_server_info.server_string, exception)  # type: ignore
         output_hub.server_connectivity_test_failed(failed_scan)
-
 
     # Keep track of how many tasks have to be performed for each target
     task_num = 0
@@ -106,9 +108,8 @@ def main():
         if getattr(args_command_list, scan_command_class.get_cli_argument()):
             task_num += 1
 
-
     # Each host has a list of results
-    result_dict = {}
+    result_dict = {}  # type: Dict[Text, List[PluginScanResult]]
     # We cannot use the server_info object directly as its address will change due to multiprocessing
     RESULT_KEY_FORMAT = '{hostname}:{ip_address}:{port}'
     for server_info in online_servers_list:

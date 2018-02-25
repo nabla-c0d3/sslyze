@@ -3,12 +3,13 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import socket
+from typing import Text, Type, List
 from xml.etree.ElementTree import Element
 
 from nassl._nassl import OpenSSLError
 
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginScanResult
+from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -18,10 +19,12 @@ class SessionRenegotiationScanCommand(plugin_base.PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
+        # type: () -> Text
         return 'reneg'
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
         return 'Session Renegotiation'
 
 
@@ -31,6 +34,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
+        # type: () -> List[Type[PluginScanCommand]]
         return [SessionRenegotiationScanCommand]
 
 
@@ -47,6 +51,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
 
     @staticmethod
     def _test_secure_renegotiation(server_info):
+        # type: (ServerConnectivityInfo) -> bool
         """Check whether the server supports secure renegotiation.
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection(should_use_legacy_openssl=True)
@@ -64,6 +69,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
 
     @staticmethod
     def _test_client_renegotiation(server_info):
+        # type: (ServerConnectivityInfo) -> bool
         """Check whether the server honors session renegotiation requests.
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection(should_use_legacy_openssl=True)
@@ -130,8 +136,8 @@ class SessionRenegotiationScanResult(PluginScanResult):
         self.accepts_client_renegotiation = accepts_client_renegotiation
         self.supports_secure_renegotiation = supports_secure_renegotiation
 
-
     def as_text(self):
+        # type: () -> List[Text]
         result_txt = [self._format_title(self.scan_command.get_title())]
 
         # Client-initiated reneg
@@ -148,8 +154,8 @@ class SessionRenegotiationScanResult(PluginScanResult):
 
         return result_txt
 
-
     def as_xml(self):
+        # type: () -> Element
         result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         result_xml.append(Element('sessionRenegotiation',
                                   attrib={'canBeClientInitiated': str(self.accepts_client_renegotiation),

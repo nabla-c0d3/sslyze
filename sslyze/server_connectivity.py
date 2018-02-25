@@ -364,9 +364,9 @@ class ServersConnectivityTester(object):
             yield server_info
 
     def get_invalid_servers(self):
-        # type: () -> Iterable[Tuple[ServerConnectivityInfo, Exception]]
+        # type: () -> Iterable[Tuple[ServerConnectivityInfo, ServerConnectivityError]]
         for (job, exception) in self._thread_pool.get_error():
             test_connectivity_to_server_method, _ = job
             # TODO(AD): Using __self__ here is really ugly
             server_info = test_connectivity_to_server_method.__self__  # type: ignore
-            yield (server_info, exception)
+            yield (server_info, exception)  # type: ignore

@@ -4,11 +4,12 @@ from __future__ import unicode_literals
 
 import socket
 import types
+from typing import Text, Type, List
 from xml.etree.ElementTree import Element
 
 from nassl._nassl import WantReadError
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginScanResult
+from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.application_data_protocol import TlsApplicationDataRecord
@@ -25,10 +26,12 @@ class OpenSslCcsInjectionScanCommand(plugin_base.PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
+        # type: () -> Text
         return 'openssl_ccs'
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
         return 'OpenSSL CCS Injection'
 
 
@@ -38,6 +41,7 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
+        # type: () -> List[Type[PluginScanCommand]]
         return [OpenSslCcsInjectionScanCommand]
 
     def process_task(self, server_info, scan_command):
@@ -77,7 +81,7 @@ class NotVulnerableToCcsInjection(Exception):
     """
 
 
-def do_handshake_with_ccs_injection(self):
+def do_handshake_with_ccs_injection(self):  # type: ignore
     """Modified do_handshake() to send a CCS injection payload and return the result.
     """
     try:
@@ -183,12 +187,14 @@ class OpenSslCcsInjectionScanResult(PluginScanResult):
         self.is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection
 
     def as_xml(self):
+        # type: () -> Element
         result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         result_xml.append(Element('openSslCcsInjection',
                                   attrib={'isVulnerable': str(self.is_vulnerable_to_ccs_injection)}))
         return result_xml
 
     def as_text(self):
+        # type: () -> List[Text]
         result_txt = [self._format_title(self.scan_command.get_title())]
 
         ccs_text = 'VULNERABLE - Server is vulnerable to OpenSSL CCS injection' \

@@ -20,16 +20,17 @@ import inspect
 import sys
 from os.path import abspath, realpath, dirname
 from sslyze.plugins.utils.trust_store.trust_store import TrustStore
-from typing import List, Dict, Text, Tuple
+from typing import List, Text, Tuple
 
 
 def _get_script_dir(follow_symlinks=True):
+    # type: (bool) -> Text
     # Getting the path to the trust stores is tricky due to subtle differences on OS X, Linux and Windows
     if getattr(sys, 'frozen', False):
         # py2exe, PyInstaller, cx_Freeze
         path = abspath(sys.executable)
     else:
-        path = inspect.getabsfile(_get_script_dir)
+        path = inspect.getabsfile(_get_script_dir)  # type: ignore
     if follow_symlinks:
         path = realpath(path)
     return dirname(path)

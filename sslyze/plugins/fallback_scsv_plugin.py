@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+from typing import Text, Type, List
 from xml.etree.ElementTree import Element
 from nassl import _nassl
 from nassl.ssl_client import OpenSslVersionEnum
@@ -17,10 +18,12 @@ class FallbackScsvScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
+        # type: () -> Text
         return 'fallback'
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
         return 'Downgrade Attacks'
 
 
@@ -30,6 +33,7 @@ class FallbackScsvPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
+        # type: () -> List[Type[PluginScanCommand]]
         return [FallbackScsvScanCommand]
 
     def process_task(self, server_info, scan_command):
@@ -84,6 +88,7 @@ class FallbackScsvScanResult(PluginScanResult):
         self.supports_fallback_scsv = supports_fallback_scsv
 
     def as_text(self):
+        # type: () -> List[Text]
         result_txt = [self._format_title(self.scan_command.get_title())]
         downgrade_txt = 'OK - Supported' \
             if self.supports_fallback_scsv \
@@ -92,6 +97,7 @@ class FallbackScsvScanResult(PluginScanResult):
         return result_txt
 
     def as_xml(self):
+        # type: () -> Element
         result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         result_xml.append(Element('tlsFallbackScsv', attrib={'isSupported': str(self.supports_fallback_scsv)}))
         return result_xml

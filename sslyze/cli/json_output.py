@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import json
-from typing import Dict, Text, Any, TextIO
+from typing import Dict, Text, Any, TextIO, Type, Set, Union
 
 from cryptography.hazmat.backends.openssl import x509
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
@@ -13,7 +13,9 @@ from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
 from sslyze.cli import FailedServerScan
 from sslyze.cli.output_generator import OutputGenerator
+from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.python_compatibility import IS_PYTHON_2
 
 
@@ -28,6 +30,7 @@ class JsonOutputGenerator(OutputGenerator):
         }  # type: Dict[Text, Any]
 
     def command_line_parsed(self, available_plugins, args_command_list):
+        # type: (Set[Type[Plugin]], Any) -> None
         self._json_dict.update({'invalid_targets': [], 'accepted_targets': []})
 
     def server_connectivity_test_failed(self, failed_scan):
@@ -35,9 +38,11 @@ class JsonOutputGenerator(OutputGenerator):
         self._json_dict['invalid_targets'].append({failed_scan.server_string: failed_scan.error_message})
 
     def server_connectivity_test_succeeded(self, server_connectivity_info):
+        # type: (ServerConnectivityInfo) -> None
         pass
 
     def scans_started(self):
+        # type: () -> None
         pass
 
     def server_scan_completed(self, server_scan_result):
@@ -77,15 +82,17 @@ class JsonOutputGenerator(OutputGenerator):
 
 
 def _object_to_json_dict(obj):
+    # type: (Any) -> Union[bool, int, float, Text, Dict[Text, Any]]
     """Convert an object to a dictionary suitable for the JSON output.
     """
     if isinstance(obj, Enum):
         # Properly serialize Enums (such as OpenSslVersionEnum)
         result = obj.name
+
     elif isinstance(obj, x509._Certificate):
         # Properly serialize certificates
         certificate = obj
-        result = {
+        result = {  # type: ignore
             # Add general info
             'as_pem': obj.public_bytes(Encoding.PEM).decode('ascii'),
             'hpkp_pin': CertificateUtils.get_hpkp_pin(obj),
@@ -104,18 +111,19 @@ def _object_to_json_dict(obj):
 
         dns_alt_names = CertificateUtils.get_dns_subject_alternative_names(certificate)
         if dns_alt_names:
-            result['subjectAlternativeName'] = {'DNS': dns_alt_names}
+            result['subjectAlternativeName'] = {'DNS': dns_alt_names}  # type: ignore
 
         # Add some info about the public key
         public_key = certificate.public_key()
         if isinstance(public_key, EllipticCurvePublicKey):
-            result['publicKey']['size'] = str(public_key.curve.key_size)
-            result['publicKey']['curve'] = public_key.curve.name
+            result['publicKey']['size'] = str(public_key.curve.key_size)  # type: ignore
+            result['publicKey']['curve'] = public_key.curve.name  # type: ignore
         else:
             result['publicKey']['size'] = str(public_key.key_size)
             result['publicKey']['exponent'] = str(public_key.public_numbers().e)
 
     elif isinstance(obj, object):
+        # Some objects (like str) don't have a __dict__
         if hasattr(obj, '__dict__'):
             result = {}
             for key, value in obj.__dict__.items():
@@ -125,7 +133,7 @@ def _object_to_json_dict(obj):
 
                 result[key] = _object_to_json_dict(value)
         else:
-            # Simple object like a string
+            # Simple object like a bool
             result = obj
 
     else:

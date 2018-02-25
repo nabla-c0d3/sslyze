@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 import socket
 import types
+from typing import Text, Type, List
 from xml.etree.ElementTree import Element
 
 from nassl._nassl import WantReadError
@@ -25,10 +26,12 @@ class HeartbleedScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
+        # type: () -> Text
         return 'heartbleed'
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
        return 'OpenSSL Heartbleed'
 
 
@@ -38,6 +41,7 @@ class HeartbleedPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
+        # type: () -> List[Type[PluginScanCommand]]
         return [HeartbleedScanCommand]
 
     def process_task(self, server_info, scan_command):
@@ -80,6 +84,7 @@ class HeartbleedScanResult(PluginScanResult):
         self.is_vulnerable_to_heartbleed = is_vulnerable_to_heartbleed
 
     def as_text(self):
+        # type: () -> List[Text]
         heartbleed_txt = 'VULNERABLE - Server is vulnerable to Heartbleed' \
             if self.is_vulnerable_to_heartbleed \
             else 'OK - Not vulnerable to Heartbleed'
@@ -87,6 +92,7 @@ class HeartbleedScanResult(PluginScanResult):
         return [self._format_title(self.scan_command.get_title()), self._format_field('', heartbleed_txt)]
 
     def as_xml(self):
+        # type: () -> Element
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         xml_output.append(Element('openSslHeartbleed', isVulnerable=str(self.is_vulnerable_to_heartbleed)))
         return xml_output
@@ -102,7 +108,7 @@ class NotVulnerableToHeartbleed(Exception):
     """
 
 
-def do_handshake_with_heartbleed(self):
+def do_handshake_with_heartbleed(self):  # type: ignore
     """Modified do_handshake() to send a heartbleed payload and return the result.
     """
     try:

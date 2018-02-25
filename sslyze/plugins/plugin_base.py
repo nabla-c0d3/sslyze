@@ -10,7 +10,7 @@ import optparse
 from xml.etree.ElementTree import Element
 
 from sslyze.server_connectivity import ServerConnectivityInfo
-from typing import List
+from typing import List, Type
 from typing import Text
 
 
@@ -21,6 +21,7 @@ class PluginScanCommand(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
+        # type: () -> None
         """Optional arguments for a command can be passed as keyword arguments here.
         """
         pass
@@ -34,8 +35,11 @@ class PluginScanCommand(object):
 
     @classmethod
     def get_description(cls):
+        # type: () -> Text
         """The description is expected to be the command class' docstring.
         """
+        if cls.__doc__ is None:
+            raise ValueError('No docstring found for {}'.format(cls.__name__))
         return cls.__doc__.strip()
 
     @classmethod
@@ -71,18 +75,24 @@ class Plugin(object):
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
         return cls.__name__
 
     @classmethod
     def get_description(cls):
+        # type: () -> Text
+        if cls.__doc__ is None:
+            raise ValueError('No docstring found for {}'.format(cls.__name__))
         return cls.__doc__.strip()
 
     @classmethod
     def get_available_commands(cls):
+        # type: () -> List[Type[PluginScanCommand]]
         raise NotImplementedError()
 
     @classmethod
     def get_cli_option_group(cls):
+        # type: () -> List[optparse.Option]
         # TODO(ad): Refactor this to do more, after switching away from optparse
         options = []
         for scan_command_class in cls.get_available_commands():

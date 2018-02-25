@@ -7,10 +7,10 @@ import nassl
 from enum import Enum
 
 from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginScanResult
+from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
-from typing import List, Union
+from typing import List, Type
 from typing import Optional
 from typing import Text
 from typing import Tuple
@@ -22,10 +22,12 @@ class SessionResumptionSupportScanCommand(plugin_base.PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
+        # type: () -> Text
         return 'resum'
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
         return 'Resumption Support'
 
 
@@ -35,14 +37,17 @@ class SessionResumptionRateScanCommand(plugin_base.PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
+        # type: () -> Text
         return 'resum_rate'
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
         return 'Resumption Rate'
 
     @classmethod
     def is_aggressive(cls):
+        # type: () -> bool
         return True
 
 
@@ -60,6 +65,7 @@ class SessionResumptionPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
+        # type: () -> List[Type[PluginScanCommand]]
         return [SessionResumptionSupportScanCommand, SessionResumptionRateScanCommand]
 
 
@@ -263,6 +269,7 @@ class SessionResumptionRateScanResult(PluginScanResult):
     RESUMPTION_ERROR_FORMAT = '        ERROR #{error_nb}: {error_msg}'
 
     def as_text(self):
+        # type: () -> List[Text]
         result_txt = [self._format_title(self.scan_command.get_title())]
 
         # Create the line which summarizes the session resumption rate
@@ -293,6 +300,7 @@ class SessionResumptionRateScanResult(PluginScanResult):
 
 
     def as_xml(self):
+        # type: () -> Element
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         resumption_rate_xml = Element(
@@ -364,6 +372,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
     RESUMPTION_LINE_FORMAT = '      {resumption_type:<35}{result}'
 
     def as_text(self):
+        # type: () -> List[Text]
         # Same output as --resum_rate but add a line about TLS ticket resumption at the end
         result_txt = self._rate_result.as_text()
 
@@ -380,6 +389,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
 
 
     def as_xml(self):
+        # type: () -> Element
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         # We keep the session resumption XML node
@@ -393,7 +403,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
             xml_resum_ticket_attr['error'] = self.ticket_resumption_error
         else:
             xml_resum_ticket_attr['isSupported'] = str(self.is_ticket_resumption_supported)
-            if not self.is_ticket_resumption_supported:
+            if not self.is_ticket_resumption_supported and self.ticket_resumption_failed_reason is not None:
                 xml_resum_ticket_attr['reason'] = self.ticket_resumption_failed_reason
 
         xml_resum_ticket = Element('sessionResumptionWithTLSTickets', attrib=xml_resum_ticket_attr)

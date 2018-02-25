@@ -105,6 +105,7 @@ class SSLConnection(object):
 
     @classmethod
     def set_global_network_settings(cls, network_max_retries, network_timeout):
+        # type: (int, int) -> None
         # Not thread-safe
         cls.NETWORK_MAX_RETRIES = network_max_retries
         cls.NETWORK_TIMEOUT = network_timeout

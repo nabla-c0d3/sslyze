@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import socket
 import types
 from enum import Enum
-from typing import Optional, Tuple, Text, List, Dict
+from typing import Optional, Tuple, Text, List, Dict, Type
 from xml.etree.ElementTree import Element
 
 import binascii
@@ -35,14 +35,17 @@ class RobotScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
+        # type: () -> Text
         return 'robot'
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
        return 'ROBOT Attack'
 
     @classmethod
     def is_aggressive(cls):
+        # type: () -> bool
         # Each scan spawns 10 threads
         return True
 
@@ -171,6 +174,7 @@ class RobotPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
+        # type: () -> List[Type[PluginScanCommand]]
         return [RobotScanCommand]
 
     def process_task(self, server_info, scan_command):
@@ -320,7 +324,7 @@ class ServerResponseToRobot(Exception):
         self.server_response = server_response
 
 
-def do_handshake_with_robot(self):
+def do_handshake_with_robot(self):  # type: ignore
     """Modified do_handshake() to send a ROBOT payload and return the result.
     """
     try:
@@ -425,6 +429,7 @@ class RobotScanResult(PluginScanResult):
         self.robot_result_enum = robot_result_enum
 
     def as_text(self):
+        # type: () -> List[Text]
         if self.robot_result_enum == RobotScanResultEnum.VULNERABLE_STRONG_ORACLE:
             robot_txt = 'VULNERABLE - Strong oracle, a real attack is possible'
         elif self.robot_result_enum == RobotScanResultEnum.VULNERABLE_WEAK_ORACLE:
@@ -441,6 +446,7 @@ class RobotScanResult(PluginScanResult):
         return [self._format_title(self.scan_command.get_title()), self._format_field('', robot_txt)]
 
     def as_xml(self):
+        # type: () -> Element
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         xml_output.append(Element('robotAttack', resultEnum=self.robot_result_enum.name))
         return xml_output

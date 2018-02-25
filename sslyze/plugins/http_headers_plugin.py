@@ -8,7 +8,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import Certificate, load_pem_x509_certificate
 
-from sslyze.plugins import plugin_base
+from sslyze.plugins.plugin_base import PluginScanCommand, Plugin, PluginScanResult
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.plugins.utils.trust_store.trust_store import CouldNotBuildVerifiedChainError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
@@ -16,35 +16,38 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.http_response_parser import HttpResponseParser
-from typing import List
+from typing import List, Type, Tuple, Optional, Dict, Any
 from typing import Text
 
 
-class HttpHeadersScanCommand(plugin_base.PluginScanCommand):
+class HttpHeadersScanCommand(PluginScanCommand):
     """Check for the HTTP Strict Transport Security (HSTS) and HTTP Public Key Pinning (HPKP) HTTP headers within the
     response sent back by the server(s). Also compute the HPKP pins for the server(s)' current certificate chain.
     """
 
     @classmethod
     def get_cli_argument(cls):
+        # type: () -> Text
         return 'http_headers'
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
         return 'HTTP Security Headers'
 
 
-class HttpHeadersPlugin(plugin_base.Plugin):
+class HttpHeadersPlugin(Plugin):
     """Test the server(s) for the presence of security-related HTTP headers.
     """
 
     @classmethod
     def get_available_commands(cls):
+        # type: () -> List[Type[PluginScanCommand]]
         return [HttpHeadersScanCommand]
 
 
     def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> HttpHeadersScanResult
+        # type: (ServerConnectivityInfo, PluginScanCommand) -> HttpHeadersScanResult
         if not isinstance(scan_command, HttpHeadersScanCommand):
             raise ValueError('Unexpected scan command')
 
@@ -52,11 +55,12 @@ class HttpHeadersPlugin(plugin_base.Plugin):
             raise ValueError('Cannot test for HTTP headers on a StartTLS connection.')
 
         hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain = self._get_security_headers(server_info)
-        return HttpHeadersScanResult(server_info, scan_command, hsts_header, hpkp_header, expect_ct_header, hpkp_report_only,
-                                     certificate_chain)
+        return HttpHeadersScanResult(server_info, scan_command, hsts_header, hpkp_header, expect_ct_header,
+                                     hpkp_report_only, certificate_chain)
 
     @classmethod
     def _get_security_headers(cls, server_info):
+        # type: (ServerConnectivityInfo) -> Tuple[Optional[Text], Optional[Text], Optional[Text], bool, List[Certificate]]
         hpkp_report_only = False
 
         # Perform the SSL handshake
@@ -86,7 +90,6 @@ class HttpHeadersPlugin(plugin_base.Plugin):
         # https://hstspreload.appspot.com/:
         # "If you are serving an additional redirect from your HTTPS site, that redirect must still have the HSTS
         # header (rather than the page it redirects to)."
-
         return hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain
 
 
@@ -200,25 +203,27 @@ class ParsedExpectCTHeader(object):
       else:
         raise ValueError('Unexpected value in Expect-CT header: {}'.format(repr(expect_ct_directive)))
 
-class HttpHeadersScanResult(plugin_base.PluginScanResult):
+
+class HttpHeadersScanResult(PluginScanResult):
     """The result of running a HttpHeadersScanCommand on a specific server.
 
     Attributes:
-        hsts_header (ParsedHstsHeader): The content of the HSTS header returned by the server; None if no HSTS header
-            was returned.
-        hpkp_header (ParsedHpkpHeader): The content of the HPKP header returned by the server; None if no HPKP header
-            was returned.
-        expect_ct_header (ParsedExpectCTHeader): The content of the Expect-CT header returned by the server; None if
-            no Expect-CT header was returned.
-        is_valid_pin_configured (bool): True if at least one of the configured pins was found in the server's
+        hsts_header (Optional[ParsedHstsHeader]): The content of the HSTS header returned by the server; None if no HSTS
+            header was returned.
+        hpkp_header (Optional[ParsedHpkpHeader]): The content of the HPKP header returned by the server; None if no HPKP
+            header was returned.
+        expect_ct_header (Optional[ParsedExpectCTHeader]): The content of the Expect-CT header returned by the server;
+            None if no Expect-CT header was returned.
+        is_valid_pin_configured (Optional[bool]): True if at least one of the configured pins was found in the server's
             verified certificate chain. None if the verified chain could not be built or no HPKP header was returned.
-        is_backup_pin_configured (bool): True if if at least one of the configured pins was NOT found in the server's
-            verified certificate chain. None if the verified chain could not be built or no HPKP header was returned.
-        verified_certificate_chain (List[Certificate]): The verified certificate chain; index 0 is the leaf
-            certificate and the last element is the anchor/CA certificate from the Mozilla trust store. Will be empty if
-            validation failed or the verified chain could not be built. The HPKP pin for each certificate is available
-            in the certificate's hpkp_pin attribute. None if the verified chain could not be built. Each certificate is 
-            parsed using the cryptography module; documentation is available at 
+        is_backup_pin_configured (Optional[bool]): True if if at least one of the configured pins was NOT found in the
+            server's verified certificate chain. None if the verified chain could not be built or no HPKP header was
+            returned.
+        verified_certificate_chain (List[cryptography.x509.Certificate]): The verified certificate chain; index 0 is the
+            leaf certificate and the last element is the anchor/CA certificate from the Mozilla trust store. Will be
+            empty if validation failed or the verified chain could not be built. The HPKP pin for each certificate is
+            available in the certificate's hpkp_pin attribute. None if the verified chain could not be built. Each
+            certificate is parsed using the cryptography module; documentation is available at
             https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
     """
 
@@ -226,9 +231,9 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
             self,
             server_info,          # type: ServerConnectivityInfo
             scan_command,         # type: HttpHeadersScanCommand
-            raw_hsts_header,      # type: Text
-            raw_hpkp_header,      # type: Text
-            raw_expect_ct_header, # type: Text
+            raw_hsts_header,      # type: Optional[Text]
+            raw_hpkp_header,      # type: Optional[Text]
+            raw_expect_ct_header, # type: Optional[Text]
             hpkp_report_only,     # type: bool
             cert_chain,           # type: List[Certificate]
     ):
@@ -260,6 +265,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
             self.is_backup_pin_configured = set(self.hpkp_header.pin_sha256_list) != set(server_pin_list)
 
     def __getstate__(self):
+        # type: () -> Dict[Text, Any]
         # This object needs to be pick-able as it gets sent through multiprocessing.Queues
         pickable_dict = self.__dict__.copy()
         # Manually handle non-pickable entries
@@ -268,6 +274,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         return pickable_dict
 
     def __setstate__(self, state):
+        # type: (Dict[Text, Any]) -> None
         self.__dict__.update(state)
         # Manually restore non-pickable entries
         verified_chain = [load_pem_x509_certificate(cert_pem, default_backend())
@@ -277,6 +284,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
     PIN_TXT_FORMAT = '      {0:<50}{1}'.format
 
     def as_text(self):
+        # type: () -> List[Text]
         txt_result = [self._format_title(self.scan_command.get_title())]
 
         if self.hsts_header:
@@ -306,7 +314,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         if self.hpkp_header:
             txt_result.append(self._format_field("Max Age:", str(self.hpkp_header.max_age)))
             txt_result.append(self._format_field("Include Subdomains:", str(self.hpkp_header.include_subdomains)))
-            txt_result.append(self._format_field("Report URI:", self.hpkp_header.report_uri))
+            txt_result.append(self._format_field("Report URI:", str(self.hpkp_header.report_uri)))
             txt_result.append(self._format_field("Report Only:", str(self.hpkp_header.report_only)))
             txt_result.append(self._format_field("SHA-256 Pin List:", ', '.join(self.hpkp_header.pin_sha256_list)))
 
@@ -330,7 +338,7 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         txt_result.extend(['', self._format_subtitle('HTTP Expect-CT')])
         if self.expect_ct_header:
           txt_result.append(self._format_field('Max Age:', str(self.expect_ct_header.max_age)))
-          txt_result.append(self._format_field('Report- URI:', self.expect_ct_header.report_uri))
+          txt_result.append(self._format_field('Report- URI:', str(self.expect_ct_header.report_uri)))
           txt_result.append(self._format_field('Enforce:', str(self.expect_ct_header.enforce)))
         else:
           txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an Expect-CT header", ""))
@@ -338,28 +346,39 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         return txt_result
 
     def as_xml(self):
+        # type: () -> Element
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         # HSTS header
-        is_hsts_supported = True if self.hsts_header else False
-        xml_hsts_attr = {'isSupported': str(is_hsts_supported)}
-        if is_hsts_supported:
-            xml_hsts_attr['maxAge'] = str(self.hsts_header.max_age)
-            xml_hsts_attr['includeSubDomains'] = str(self.hsts_header.include_subdomains)
-            xml_hsts_attr['preload'] = str(self.hsts_header.preload)
+        if self.hsts_header is None:
+            xml_hsts_attr = {
+                'isSupported': str(False)
+            }
+        else:
+            xml_hsts_attr = {
+                'isSupported': str(True),
+                'maxAge': str(self.hsts_header.max_age),
+                'includeSubDomains': str(self.hsts_header.include_subdomains),
+                'preload': str(self.hsts_header.preload)
+            }
 
         xml_hsts = Element('httpStrictTransportSecurity', attrib=xml_hsts_attr)
         xml_result.append(xml_hsts)
 
         # HPKP header
-        is_hpkp_support = True if self.hpkp_header else False
-        xml_hpkp_attr = {'isSupported': str(is_hpkp_support)}
         xml_pin_list = []
-        if is_hpkp_support:
-            xml_hpkp_attr['maxAge'] = str(self.hpkp_header.max_age)
-            xml_hpkp_attr['includeSubDomains'] = str(self.hpkp_header.include_subdomains)
-            xml_hpkp_attr['reportOnly'] = str(self.hpkp_header.report_only)
-            xml_hpkp_attr['reportUri'] = str(self.hpkp_header.report_uri)
+        if self.hpkp_header is None:
+            xml_hpkp_attr = {
+                'isSupported': str(False)
+            }
+        else:
+            xml_hpkp_attr = {
+                'isSupported': str(True),
+                'maxAge': str(self.hpkp_header.max_age),
+                'includeSubDomains': str(self.hpkp_header.include_subdomains),
+                'reportOnly': str(self.hpkp_header.report_only),
+                'reportUri': str(self.hpkp_header.report_uri)
+            }
 
             if self.verified_certificate_chain:
                 xml_hpkp_attr['isValidPinConfigured'] = str(self.is_valid_pin_configured)
@@ -376,12 +395,17 @@ class HttpHeadersScanResult(plugin_base.PluginScanResult):
         xml_result.append(xml_hpkp)
 
         # Expect-CT header
-        is_expect_ct_supported = True if self.expect_ct_header else False
-        xml_expect_ct_attr = {'isSupported': str(is_expect_ct_supported)}
-        if is_expect_ct_supported:
-          xml_expect_ct_attr['maxAge'] = str(self.expect_ct_header.max_age)
-          xml_expect_ct_attr['reportUri'] = str(self.expect_ct_header.report_uri)
-          xml_expect_ct_attr['enforce'] = str(self.expect_ct_header.enforce)
+        if self.expect_ct_header is not None:
+            xml_expect_ct_attr = {
+                'isSupported': str(True),
+                'maxAge': str(self.expect_ct_header.max_age),
+                'reportUri': str(self.expect_ct_header.report_uri),
+                'enforce': str(self.expect_ct_header.enforce)
+            }
+        else:
+            xml_expect_ct_attr = {
+                'isSupported': str(False)
+            }
 
         xml_expect_ct = Element('httpExpectCT', attrib=xml_expect_ct_attr)
         xml_result.append(xml_expect_ct)

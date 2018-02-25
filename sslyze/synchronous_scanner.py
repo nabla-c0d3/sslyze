@@ -18,10 +18,8 @@ class SynchronousScanner(object):
     DEFAULT_NETWORK_RETRIES = 3
     DEFAULT_NETWORK_TIMEOUT = 5  # in seconds
 
-    def __init__(self,
-                 network_retries=DEFAULT_NETWORK_RETRIES,
-                 network_timeout=DEFAULT_NETWORK_TIMEOUT):
-        # type: (Optional[int], Optional[int]) -> None
+    def __init__(self, network_retries=DEFAULT_NETWORK_RETRIES, network_timeout=DEFAULT_NETWORK_TIMEOUT):
+        # type: (int, int) -> None
         """Create a scanner for running scanning commands synchronously.
 
         Args:

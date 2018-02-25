@@ -3,10 +3,11 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
-from typing import TextIO
+from typing import TextIO, Set, Type, Any
 
 from sslyze.cli import CompletedServerScan
 from sslyze.cli import FailedServerScan
+from sslyze.plugins.plugin_base import Plugin
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -27,6 +28,7 @@ class OutputGenerator(object):
 
     @abstractmethod
     def command_line_parsed(self, available_plugins, args_command_list):
+        # type: (Set[Type[Plugin]], Any) -> None
         """The CLI was just started and successfully parsed the command line.
         """
 

@@ -3,13 +3,15 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import re
-from typing import Dict, Text, TextIO
+from typing import Dict, Text, TextIO, Any, Type, Set
 from xml.dom import minidom
 
 from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
 from sslyze.cli import FailedServerScan
 from sslyze.cli.output_generator import OutputGenerator
+from sslyze.plugins.plugin_base import Plugin
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from xml.etree.ElementTree import Element, tostring
 
@@ -43,9 +45,11 @@ class XmlOutputGenerator(OutputGenerator):
         self._xml_root_node.append(self._xml_failed_scans_node)
 
     def command_line_parsed(self, available_plugins, args_command_list):
+        # type: (Set[Type[Plugin]], Any) -> None
         pass
 
     def server_connectivity_test_succeeded(self, server_connectivity_info):
+        # type: (ServerConnectivityInfo) -> None
         pass
 
     def server_connectivity_test_failed(self, failed_scan):
@@ -55,6 +59,7 @@ class XmlOutputGenerator(OutputGenerator):
         self._xml_failed_scans_node.append(failed_scan_node)
 
     def scans_started(self):
+        # type: () -> None
         pass
 
     def server_scan_completed(self, server_scan_result):
@@ -83,6 +88,7 @@ class XmlOutputGenerator(OutputGenerator):
         self._xml_results_node.append(server_scan_node)
 
     def scans_completed(self, total_scan_time):
+        # type: (float) -> None
         self._xml_results_node.attrib['totalScanTime'] = str(total_scan_time)
 
         # Generate the final output

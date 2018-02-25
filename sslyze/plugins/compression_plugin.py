@@ -7,7 +7,7 @@ from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity import ServerConnectivityInfo
-from typing import Text
+from typing import Text, Type, List
 
 
 class CompressionScanCommand(PluginScanCommand):
@@ -16,10 +16,12 @@ class CompressionScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls):
+        # type: () -> Text
         return 'compression'
 
     @classmethod
     def get_title(cls):
+        # type: () -> Text
         return 'Deflate Compression'
 
 
@@ -29,6 +31,7 @@ class CompressionPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_available_commands(cls):
+        # type: () -> List[Type[PluginScanCommand]]
         return [CompressionScanCommand]
 
     def process_task(self, server_info, scan_command):
@@ -70,6 +73,7 @@ class CompressionScanResult(PluginScanResult):
         self.compression_name = compression_name
 
     def as_text(self):
+        # type: () -> List[Text]
         txt_result = [self._format_title(self.scan_command.get_title())]
         if self.compression_name:
             txt_result.append(self._format_field('', 'VULNERABLE - Server supports Deflate compression'))
@@ -78,6 +82,7 @@ class CompressionScanResult(PluginScanResult):
         return txt_result
 
     def as_xml(self):
+        # type: () -> Element
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         if self.compression_name:
             xml_result.append(Element('compressionMethod', type="DEFLATE", isSupported="True"))

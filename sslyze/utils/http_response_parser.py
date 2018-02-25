@@ -23,7 +23,7 @@ except ImportError:
 
 
 class FakeSocket(BytesIO):
-    def makefile(self, *args, **kw):
+    def makefile(self, *args, **kw):  # type: ignore
         return self
 
 

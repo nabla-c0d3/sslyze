@@ -10,7 +10,7 @@ from cryptography.x509.name import Name
 from cryptography.x509.extensions import ExtensionNotFound
 from cryptography.x509.oid import ObjectIdentifier
 from cryptography.x509.oid import ExtensionOID
-from typing import Dict
+from typing import Dict, Any
 from typing import List
 from typing import Optional
 from typing import Text
@@ -52,6 +52,7 @@ class TrustStore(object):
             self.ev_oids = [ObjectIdentifier(oid) for oid in self.__ev_oids_as_str]
 
     def __getstate__(self):
+        # type: () -> Dict[Text, Any]
         pickable_dict = self.__dict__.copy()
         # Remove non-pickable entries
         pickable_dict['_subject_to_certificate_dict'] = None
@@ -59,6 +60,7 @@ class TrustStore(object):
         return pickable_dict
 
     def __setstate__(self, state):
+        # type: (Dict[Text, Any]) -> None
         self.__dict__.update(state)
         # Manually restore non-pickable entries
         self.__parse_ev_oids()

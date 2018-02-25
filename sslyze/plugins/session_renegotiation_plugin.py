@@ -105,6 +105,9 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
                 elif 'tlsv1 unrecognized name' in str(e.args):
                     # Yahoo's very own way of rejecting a renegotiation
                     accepts_client_renegotiation = False
+                elif 'tlsv1 alert internal error' in str(e.args):
+                    # Jetty server: https://github.com/nabla-c0d3/sslyze/issues/290
+                    accepts_client_renegotiation = False
                 else:
                     raise
 

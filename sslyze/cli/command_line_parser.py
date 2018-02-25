@@ -385,8 +385,9 @@ class CommandLineParser(object):
         connect_group.add_option(
             '--slow_connection',
             help='Greatly reduce the number of concurrent connections initiated by SSLyze. This will make the scans '
-                 'slower but more reliable if the connection between your host and the server is slow. Enable '
-                 'this option if you are getting a lot of timeouts or errors.',
+                 'slower but more reliable if the connection between your host and the server is slow, or if the '
+                 'server cannot handle many concurrent connections. Enable this option if you are getting a lot of '
+                 'timeouts or errors.',
             action='store_true',
             dest='slow_connection',
         )

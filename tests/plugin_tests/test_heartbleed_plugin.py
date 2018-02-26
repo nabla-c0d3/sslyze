@@ -42,8 +42,7 @@ class HeartbleedPluginTestCase(unittest.TestCase):
                 plugin = HeartbleedPlugin()
                 plugin_result = plugin.process_task(server_info, HeartbleedScanCommand())
         except NotOnLinux64Error:
-            # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
-            logging.warning('WARNING: Not on Linux - skipping test_heartbleed_bad() test')
+            logging.warning('WARNING: Not on Linux - skipping test')
             return
 
         self.assertTrue(plugin_result.is_vulnerable_to_heartbleed)

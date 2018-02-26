@@ -17,7 +17,7 @@ from typing import Text
 from typing import Tuple
 from sslyze.utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SMTPConnection, XMPPConnection, \
     XMPPServerConnection, POP3Connection, IMAPConnection, FTPConnection, LDAPConnection, RDPConnection, \
-    PostgresConnection, HTTPSConnection
+    PostgresConnection, HTTPSConnection, SSLHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
 
 
@@ -229,12 +229,13 @@ class ServerConnectivityInfo(object):
                     ssl_connection.connect(network_timeout=network_timeout, network_max_retries=0)
                     ssl_version_supported = ssl_version
                     ssl_cipher_supported = ssl_connection.ssl_client.get_current_cipher_name()
-                    break
                 except ClientCertificateRequested:
                     # Connection successful but the servers wants a client certificate which wasn't supplied to sslyze
                     # Store the SSL version and cipher list that is supported
                     ssl_version_supported = ssl_version
                     ssl_cipher_supported = cipher_list
+                    # Close the current connection and try again but ignore client authentication
+                    ssl_connection.close()
 
                     # Try a new connection to see if client authentication is optional
                     ssl_connection_auth = self.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
@@ -244,7 +245,12 @@ class ServerConnectivityInfo(object):
                         ssl_connection_auth.connect(network_timeout=network_timeout, network_max_retries=0)
                         ssl_cipher_supported = ssl_connection_auth.ssl_client.get_current_cipher_name()
                         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.OPTIONAL
-                    except:
+
+                    # If client authentication is required, we either get a ClientCertificateRequested
+                    except ClientCertificateRequested:
+                        client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
+                    # Or a SSLHandshakeRejected
+                    except SSLHandshakeRejected:
                         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
                     finally:
                         ssl_connection_auth.close()
@@ -283,12 +289,16 @@ class ServerConnectivityInfo(object):
                              'call test_connectivity_to_server() first')
 
         if should_ignore_client_auth is None:
-            # Ignore client auth requests if the server allows optional TLS client authentication
-            # If the server requires client authentication, do not ignore the request so that the right exceptions get
-            # thrown within the plugins, providing a better output
-            final_should_ignore_client_auth = False \
-                if self.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED \
-                else True
+            if self.client_auth_credentials is not None:
+                # If we have creds for client authentication, go ahead and use them
+                final_should_ignore_client_auth = False
+            else:
+                # Ignore client auth requests if the server allows optional TLS client authentication
+                # If the server requires client authentication, do not ignore the request so that the right exceptions
+                # get thrown within the plugins, providing a better output
+                final_should_ignore_client_auth = False \
+                    if self.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED \
+                    else True
         else:
             final_should_ignore_client_auth = should_ignore_client_auth
 

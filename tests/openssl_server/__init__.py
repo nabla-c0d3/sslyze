@@ -92,7 +92,7 @@ class VulnerableOpenSslServer(object):
             )
 
     def __enter__(self):
-        logging.warning('Running s_server: {}'.format(self._command_line))
+        logging.warning('Running s_server: "{}"'.format(self._command_line))
         args = shlex.split(self._command_line)
         self._process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 

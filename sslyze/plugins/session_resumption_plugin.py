@@ -61,13 +61,12 @@ class SessionResumptionPlugin(plugin_base.Plugin):
     """Analyze the server(s) SSL session resumption capabilities.
     """
 
-    MAX_THREADS_NB = 20
+    MAX_THREADS_NB = 10
 
     @classmethod
     def get_available_commands(cls):
         # type: () -> List[Type[PluginScanCommand]]
         return [SessionResumptionSupportScanCommand, SessionResumptionRateScanCommand]
-
 
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> PluginScanResult
@@ -103,7 +102,6 @@ class SessionResumptionPlugin(plugin_base.Plugin):
 
         return result
 
-
     def _test_session_resumption_rate(self, server_info, resumption_attempts_nb):
         # type: (ServerConnectivityInfo, int) -> Tuple[int, List[Text]]
         """Attempt several session ID resumption with the server.
@@ -130,7 +128,6 @@ class SessionResumptionPlugin(plugin_base.Plugin):
 
         thread_pool.join()
         return successful_resumptions_nb, errored_resumptions_list
-
 
     def _resume_with_session_id(self, server_info):
         # type: (ServerConnectivityInfo) -> bool
@@ -190,7 +187,6 @@ class SessionResumptionPlugin(plugin_base.Plugin):
 
         return TslSessionTicketSupportEnum.SUCCEEDED
 
-
     @staticmethod
     def _extract_session_id(ssl_session):
         # type: (nassl._nassl.SSL_SESSION) -> Text
@@ -200,7 +196,6 @@ class SessionResumptionPlugin(plugin_base.Plugin):
         session_id = (session_string.split('Session-ID-ctx:'))[0].strip()
         return session_id
 
-
     @staticmethod
     def _extract_tls_session_ticket(ssl_session):
         # type: (nassl._nassl.SSL_SESSION) -> Text
@@ -209,7 +204,6 @@ class SessionResumptionPlugin(plugin_base.Plugin):
         session_string = ((ssl_session.as_text()).split('TLS session ticket:'))[1]
         session_tls_ticket = (session_string.split('Compression:'))[0]
         return session_tls_ticket
-
 
     @staticmethod
     def _resume_ssl_session(server_info, ssl_session=None, should_enable_tls_ticket=False):

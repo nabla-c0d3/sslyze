@@ -70,15 +70,17 @@ class HttpHeadersPlugin(Plugin):
 
         # Perform the SSL handshake
         ssl_connection = server_info.get_preconfigured_ssl_connection()
-        ssl_connection.connect()
-        certificate_chain = [
-            load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'), backend=default_backend())
-            for x509_cert in ssl_connection.ssl_client.get_peer_cert_chain()
-        ]
-        # Send an HTTP GET request to the server
-        ssl_connection.write(HttpRequestGenerator.get_request(host=server_info.hostname))
-        http_resp = HttpResponseParser.parse_from_ssl_connection(ssl_connection)
-        ssl_connection.close()
+        try:
+            ssl_connection.connect()
+            certificate_chain = [
+                load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'), backend=default_backend())
+                for x509_cert in ssl_connection.ssl_client.get_peer_cert_chain()
+            ]
+            # Send an HTTP GET request to the server
+            ssl_connection.write(HttpRequestGenerator.get_request(host=server_info.hostname))
+            http_resp = HttpResponseParser.parse_from_ssl_connection(ssl_connection)
+        finally:
+            ssl_connection.close()
 
         if http_resp.version == 9:
             # HTTP 0.9 => Probably not an HTTP response

@@ -9,9 +9,9 @@ from typing import Optional, Tuple, Text, List, Dict, Type
 from xml.etree.ElementTree import Element
 
 import binascii
-import cryptography
 import math
 from cryptography.hazmat.backends import default_backend
+from cryptography.x509 import load_pem_x509_certificate
 from nassl._nassl import WantReadError
 from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
 from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
@@ -259,15 +259,13 @@ class RobotPlugin(plugin_base.Plugin):
             # Perform the SSL handshake
             ssl_connection.connect()
             certificate = ssl_connection.ssl_client.get_peer_certificate()
-            parsed_cert = cryptography.x509.load_pem_x509_certificate(certificate.as_pem().encode('ascii'),
-                                                                      backend=default_backend())
+            parsed_cert = load_pem_x509_certificate(certificate.as_pem().encode('ascii'), backend=default_backend())
         except SSLHandshakeRejected:
             # Server does not support RSA cipher suites?
             pass
         except ClientCertificateRequested:  # The server asked for a client cert
             certificate = ssl_connection.ssl_client.get_peer_certificate()
-            parsed_cert = cryptography.x509.load_pem_x509_certificate(certificate.as_pem().encode('ascii'),
-                                                                      backend=default_backend())
+            parsed_cert = load_pem_x509_certificate(certificate.as_pem().encode('ascii'), backend=default_backend())
         finally:
             ssl_connection.close()
 

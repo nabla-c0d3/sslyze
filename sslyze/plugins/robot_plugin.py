@@ -263,9 +263,12 @@ class RobotPlugin(plugin_base.Plugin):
         except SSLHandshakeRejected:
             # Server does not support RSA cipher suites?
             pass
-        except ClientCertificateRequested:  # The server asked for a client cert
-            certificate = ssl_connection.ssl_client.get_peer_certificate()
-            parsed_cert = load_pem_x509_certificate(certificate.as_pem().encode('ascii'), backend=default_backend())
+        except ClientCertificateRequested:
+            # AD: The server asked for a client cert. We could still retrieve the server certificate, but it is unclear
+            # to me if the ROBOT check is supposed to work even if we do not provide a client cert. My guess is that
+            # it should not work since it requires completing a full handshake, which we can't without a client cert.
+            # Hence, propagate the error to make the check fail.
+            raise
         finally:
             ssl_connection.close()
 

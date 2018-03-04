@@ -54,38 +54,3 @@ class ClientAuthenticationTestCase(unittest.TestCase):
 
         # SSLyze correctly detects that client auth is required
         self.assertEqual(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.REQUIRED)
-
-
-    def test_session_resumption_plugin_works_when_client_auth_succeeded(self):
-        # Given a server that requires client authentication
-        try:
-            with VulnerableOpenSslServer(
-                    client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
-            ) as server:
-                # And the client provides a client certificate
-                client_creds = ClientAuthenticationCredentials(
-                    client_certificate_chain_path=server.get_client_certificate_path(),
-                    client_key_path=server.get_client_key_path(),
-                )
-
-                server_test = ServerConnectivityTester(
-                    hostname=server.hostname,
-                    ip_address=server.ip_address,
-                    port=server.port,
-                    client_auth_credentials=client_creds,
-                )
-                server_info = server_test.perform()
-
-                # SessionResumptionPlugin works fine
-                plugin = SessionResumptionPlugin()
-                plugin_result = plugin.process_task(server_info, SessionResumptionSupportScanCommand())
-
-        except NotOnLinux64Error:
-            logging.warning('WARNING: Not on Linux - skipping test')
-            return
-
-        for line in plugin_result.as_text():
-            print(line)
-        self.assertEqual(len(plugin_result.errored_resumptions_list), 5)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())

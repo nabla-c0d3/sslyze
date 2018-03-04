@@ -54,13 +54,18 @@ class HttpHeadersPlugin(Plugin):
         if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
             raise ValueError('Cannot test for HTTP headers on a StartTLS connection.')
 
-        hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain = self._get_security_headers(server_info)
+        hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain = self._get_security_headers(
+            server_info
+        )
         return HttpHeadersScanResult(server_info, scan_command, hsts_header, hpkp_header, expect_ct_header,
                                      hpkp_report_only, certificate_chain)
 
     @classmethod
-    def _get_security_headers(cls, server_info):
-        # type: (ServerConnectivityInfo) -> Tuple[Optional[Text], Optional[Text], Optional[Text], bool, List[Certificate]]
+    def _get_security_headers(
+            cls,
+            server_info  # type: ServerConnectivityInfo
+    ):
+        # type: (...) -> Tuple[Optional[Text], Optional[Text], Optional[Text], bool, List[Certificate]]
         hpkp_report_only = False
 
         # Perform the SSL handshake

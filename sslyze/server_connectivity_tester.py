@@ -15,7 +15,12 @@ from sslyze.utils.thread_pool import ThreadPool
 
 
 class ServerConnectivityError(Exception):
-    """SSLyze was unable to complete a TLS handshake with the server while doing connectivity testing.
+    """SSLyze was unable to complete at least one TLS handshake with the server while doing connectivity testing.
+
+    Attributes:
+        server_info (ServerConnectivityTester): The connectivity tester that failed, containing all the server's
+            information (hostname, port, etc.) that was used to test connectivity.
+        error_message (Text): The error that was returned.
     """
 
     def __init__(self, server_info, error_message):
@@ -32,6 +37,7 @@ class ServerConnectivityError(Exception):
             port=self.server_info.port,
             error_message=self.error_message,
         )
+
 
 class ServerNotReachableError(ServerConnectivityError):
     """The server was offline, or timed out, or rejected the connection while doing connectivity testing.

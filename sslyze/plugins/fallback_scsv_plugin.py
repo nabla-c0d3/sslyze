@@ -41,8 +41,7 @@ class FallbackScsvPlugin(plugin_base.Plugin):
         if not isinstance(scan_command, FallbackScsvScanCommand):
             raise ValueError('Unexpected scan command')
 
-        # TODO(AD): Remove the type ignore
-        if server_info.highest_ssl_version_supported.value <= OpenSslVersionEnum.SSLV3.value:  # type: ignore
+        if server_info.highest_ssl_version_supported.value <= OpenSslVersionEnum.SSLV3.value:
             raise ValueError('Server only supports SSLv3; no downgrade attacks are possible')
 
         # Try to connect using a lower TLS version with the fallback cipher suite enabled

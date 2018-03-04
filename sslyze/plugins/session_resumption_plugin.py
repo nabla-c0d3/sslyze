@@ -6,17 +6,16 @@ from xml.etree.ElementTree import Element
 import nassl
 from enum import Enum
 
-from sslyze.plugins import plugin_base
-from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
+from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand, Plugin
 from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
-from typing import List, Type
+from typing import List, Type, Union
 from typing import Optional
 from typing import Text
 from typing import Tuple
 
 
-class SessionResumptionSupportScanCommand(plugin_base.PluginScanCommand):
+class SessionResumptionSupportScanCommand(PluginScanCommand):
     """Test the server(s) for session resumption support using session IDs and TLS session tickets (RFC 5077).
     """
 
@@ -31,7 +30,7 @@ class SessionResumptionSupportScanCommand(plugin_base.PluginScanCommand):
         return 'Resumption Support'
 
 
-class SessionResumptionRateScanCommand(plugin_base.PluginScanCommand):
+class SessionResumptionRateScanCommand(PluginScanCommand):
     """Perform 100 session ID resumptions with the server(s), in order to estimate the rate for successful resumptions.
     """
 
@@ -57,7 +56,7 @@ class TslSessionTicketSupportEnum(Enum):
     FAILED_TICKED_IGNORED = 3
 
 
-class SessionResumptionPlugin(plugin_base.Plugin):
+class SessionResumptionPlugin(Plugin):
     """Analyze the server(s) SSL session resumption capabilities.
     """
 
@@ -68,8 +67,12 @@ class SessionResumptionPlugin(plugin_base.Plugin):
         # type: () -> List[Type[PluginScanCommand]]
         return [SessionResumptionSupportScanCommand, SessionResumptionRateScanCommand]
 
-    def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> PluginScanResult
+    def process_task(
+            self,
+            server_info,    # type: ServerConnectivityInfo
+            scan_command    # type: Union[SessionResumptionRateScanCommand, SessionResumptionSupportScanCommand]
+    ):
+        # type: (...) -> Union[SessionResumptionRateScanResult, SessionResumptionSupportScanResult]
         if isinstance(scan_command, SessionResumptionSupportScanCommand):
             # Test Session ID support
             successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(server_info, 5)

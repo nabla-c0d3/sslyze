@@ -79,7 +79,8 @@ class ServerConnectivityTester(object):
         Most arguments are optional but can be supplied in order to be more specific about the server's configuration.
 
         After initializing a ServerConnectivityTester, the `perform()` method must be called next to ensure that the
-        server is actually reachable.
+        server is actually reachable. The `ServerConnectivityInfo` returned by `perform()` can then be passed to a
+        `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands on the server.
 
         Args:
             hostname (Text): The server's hostname.
@@ -146,15 +147,17 @@ class ServerConnectivityTester(object):
 
     def perform(self, network_timeout=None):
         # type: (Optional[int]) -> ServerConnectivityInfo
-        """Attempts to perform a full SSL/TLS handshake with the server.
+        """Attempt to perform a full SSL/TLS handshake with the server.
 
         This method will ensure that the server can be reached, and will also identify one SSL/TLS version and one
-        cipher suite supported by the server. If the connectivity test is successful, the `ServerConnectivityInfo`
-        object is then ready to be passed to a `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands
-        on the server.
+        cipher suite that is supported by the server.
 
         Args:
             network_timeout (Optional[int]): Network timeout value in seconds passed to the underlying socket.
+
+        Returns:
+            ServerConnectivityInfo: An object encapsulating all the information needed to connect to the server, to be
+                passed to a `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands on the server.
 
         Raises:
             ServerConnectivityError: If the server was not reachable or an SSL/TLS handshake could not be completed.

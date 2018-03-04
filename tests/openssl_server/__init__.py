@@ -33,7 +33,7 @@ class VulnerableOpenSslServer(object):
     _AVAILABLE_LOCAL_PORTS = set(range(8110, 8150))
 
     _S_SERVER_CMD = '{openssl} s_server -cert {server_cert} -key {server_key} -accept {port} ' \
-                    '-cipher "ALL:COMPLEMENTOFALL"'
+                    '-cipher "ALL:COMPLEMENTOFALL" -HTTP'
     _S_SERVER_WITH_OPTIONAL_CLIENT_AUTH_CMD = _S_SERVER_CMD + ' -verify {client_ca}'
     _S_SERVER_WITH_REQUIRED_CLIENT_AUTH_CMD = _S_SERVER_CMD + ' -Verify {client_ca}'
 

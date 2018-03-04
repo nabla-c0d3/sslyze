@@ -114,5 +114,13 @@ class ServerConnectivityInfo(object):
             should_use_legacy_openssl=should_use_legacy_openssl,
             should_ignore_client_auth=should_ignore_client_auth,
         )
-
         return ssl_connection
+
+    def __str__(self):
+        # type: () -> Text
+        return '<{class_name}: server=({hostname}, {ip_addr}, {port})>'.format(
+            class_name=self.__class__.__name__,
+            hostname=self.hostname,
+            ip_addr=self.ip_address,
+            port=self.port,
+        )

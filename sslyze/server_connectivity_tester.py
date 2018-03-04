@@ -23,6 +23,15 @@ class ServerConnectivityError(Exception):
         self.server_info = server_info
         self.error_message = error_message
 
+    def __str__(self):
+        # type: () -> Text
+        return '<{class_name}: server=({hostname}, {ip_addr}, {port}), error="{error_message}">'.format(
+            class_name=self.__class__.__name__,
+            hostname=self.server_info.hostname,
+            ip_addr=self.server_info.ip_address,
+            port=self.server_info.port,
+            error_message=self.error_message,
+        )
 
 class ServerNotReachableError(ServerConnectivityError):
     """The server was offline, or timed out, or rejected the connection while doing connectivity testing.
@@ -61,6 +70,15 @@ class ServerConnectivityTester(object):
     CONNECTIVITY_ERROR_TIMEOUT = 'Could not connect (timeout)'
     CONNECTIVITY_ERROR_REJECTED = 'Connection rejected'
     CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
+
+    def __str__(self):
+        # type: () -> Text
+        return '<{class_name}: server=({hostname}, {ip_addr}, {port})>'.format(
+            class_name=self.__class__.__name__,
+            hostname=self.hostname,
+            ip_addr=self.ip_address,
+            port=self.port,
+        )
 
     def __init__(
             self,

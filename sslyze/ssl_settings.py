@@ -85,6 +85,14 @@ class ClientAuthenticationCredentials(object):
         SslClient(client_certchain_file=self.client_certificate_chain_path, client_key_file=self.client_key_path,
                   client_key_type=self.client_key_type, client_key_password=self.client_key_password)
 
+    def __str__(self):
+        # type: () -> Text
+        return '<{class_name}: cert_path="{cert_path}", key_path="{key_path}">'.format(
+            class_name=self.__class__.__name__,
+            cert_path=self.client_certificate_chain_path,
+            key_path=self.client_key_path,
+        )
+
 
 class HttpConnectTunnelingSettings(object):
     """Container for specifying the settings to tunnel all traffic through an HTTP Connect Proxy.
@@ -103,6 +111,15 @@ class HttpConnectTunnelingSettings(object):
         self.port = port
         self.basic_auth_user = basic_auth_user
         self.basic_auth_password = basic_auth_password
+
+    def __str__(self):
+        # type: () -> Text
+        return '<{class_name}: proxy_server=({hostname}, {port}), username="{user}">'.format(
+            class_name=self.__class__.__name__,
+            hostname=self.hostname,
+            port=self.port,
+            user=self.basic_auth_user,
+        )
 
     @classmethod
     def from_url(cls, proxy_url):

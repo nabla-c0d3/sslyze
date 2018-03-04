@@ -8,21 +8,24 @@ from sslyze.concurrent_scanner import ConcurrentScanner, PluginRaisedExceptionSc
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
+
+from sslyze.server_connectivity_tester import ServerConnectivityTester, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.synchronous_scanner import SynchronousScanner
 from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv10ScanCommand, Tlsv12ScanCommand
 
 if __name__ == '__main__':
     # Setup the server to scan and ensure it is online/reachable
-    hostname = 'smtp.gmail.com'
     try:
-        server_info = ServerConnectivityInfo(hostname=hostname, port=587,
-                                             tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
-        server_info.test_connectivity_to_server()
+        server_tester = ServerConnectivityTester(
+            hostname='smtp.gmail.com',
+            port=587,
+            tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP
+        )
+        server_info = server_tester.perform()
     except ServerConnectivityError as e:
         # Could not establish an SSL connection to the server
-        raise RuntimeError('Error when connecting to {}: {}'.format(hostname, e.error_msg))
+        raise RuntimeError('Error when connecting to {}: {}'.format(e.server_info.hostname, e.error_message))
 
 
     # Example 1: Run one scan command synchronously to list the server's TLS 1.0 cipher suites

@@ -45,6 +45,10 @@ class SslConnectionConfigurator(object):
             should_use_legacy_openssl=None,     # type: Optional[bool]
     ):
         # type: (...) -> SSLConnection
+        if server_info.ip_address is None:
+            # We received a ServerConnectivityTester whose perform() method has not been called; should never happen
+            raise ValueError('Received ServerConnectivityTester with a None ip_address')
+
         # This method leverages the fact that ServerConnectivityInfo and ServerConnectivityTester have attributes with
         # the same names
         if should_use_legacy_openssl is None:

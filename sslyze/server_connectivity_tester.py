@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import socket
-from typing import Text, Optional, List, Iterable
+from typing import Text, Optional, List, Iterable, cast
 
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
@@ -304,4 +304,4 @@ class ConcurrentServerConnectivityTester(object):
     def get_invalid_servers(self):
         # type: () -> Iterable[ServerConnectivityError]
         for (_, exception) in self._thread_pool.get_error():
-            yield exception
+            yield cast(ServerConnectivityError, exception)

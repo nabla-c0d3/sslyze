@@ -75,8 +75,8 @@ class ConcurrentScanner(object):
         self._hostname_queues_dict = {}  # type: Dict[Text, JoinableQueue]
         self._processes_dict = {}  # type: Dict[Text, List[WorkerProcess]]
 
-        self._task_queue = JoinableQueue()  # Processes get tasks from task_queue and
-        self._result_queue = JoinableQueue()  # put the result of each task in result_queue
+        self._task_queue = JoinableQueue()  # type: JoinableQueue  # Processes get tasks from task_queue and
+        self._result_queue = JoinableQueue()  # type: JoinableQueue # put the result of each task in result_queue
         self._queued_tasks_nb = 0
 
 
@@ -110,7 +110,7 @@ class ConcurrentScanner(object):
             # We haven't this hostname before
             if self._get_current_processes_nb() < self._max_processes_nb:
                 # Create a new process and new queue for this hostname
-                hostname_queue = JoinableQueue()
+                hostname_queue = JoinableQueue()  # type: JoinableQueue
                 self._hostname_queues_dict[hostname] = hostname_queue
 
                 process = WorkerProcess(hostname_queue, self._task_queue, self._result_queue, self._network_retries,

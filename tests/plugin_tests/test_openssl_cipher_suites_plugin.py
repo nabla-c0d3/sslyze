@@ -9,8 +9,9 @@ import pickle
 
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, \
     Sslv30ScanCommand, Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand, Tlsv13ScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthenticationServerConfigurationEnum
-from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationServerConfigurationEnum
 from tests.openssl_server import NotOnLinux64Error
 from tests.openssl_server import VulnerableOpenSslServer
 
@@ -20,9 +21,12 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
     def test_sslv2_enabled(self):
         try:
             with VulnerableOpenSslServer() as server:
-                server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,
-                                                     port=server.port)
-                server_info.test_connectivity_to_server()
+                server_test = ServerConnectivityTester(
+                    hostname=server.hostname,
+                    ip_address=server.ip_address,
+                    port=server.port
+                )
+                server_info = server_test.perform()
 
                 plugin = OpenSslCipherSuitesPlugin()
                 plugin_result = plugin.process_task(server_info, Sslv20ScanCommand())
@@ -52,8 +56,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_sslv2_disabled(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Sslv20ScanCommand())
@@ -72,9 +76,11 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
     def test_sslv3_enabled(self):
         try:
             with VulnerableOpenSslServer() as server:
-                server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,
-                                                     port=server.port)
-                server_info.test_connectivity_to_server()
+                server_test = ServerConnectivityTester(
+                    hostname=server.hostname,
+                    ip_address=server.ip_address,
+                    port=server.port)
+                server_info = server_test.perform()
 
                 plugin = OpenSslCipherSuitesPlugin()
                 plugin_result = plugin.process_task(server_info, Sslv30ScanCommand())
@@ -118,8 +124,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_sslv3_disabled(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Sslv30ScanCommand())
@@ -136,8 +142,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_tlsv1_0_enabled(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv10ScanCommand())
@@ -165,8 +171,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
 
     def test_tlsv1_1_enabled(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv11ScanCommand())
@@ -189,8 +195,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_tlsv1_2_enabled(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         # Also do full HTTP connections
@@ -218,8 +224,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_null_cipher_suites(self):
-        server_info = ServerConnectivityInfo(hostname='null.badssl.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='null.badssl.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
@@ -241,8 +247,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_rc4_cipher_suites(self):
-        server_info = ServerConnectivityInfo(hostname='rc4.badssl.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='rc4.badssl.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
@@ -258,8 +264,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_rc4_md5_cipher_suites(self):
-        server_info = ServerConnectivityInfo(hostname='rc4-md5.badssl.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='rc4-md5.badssl.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
@@ -276,8 +282,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
     def test_follows_client_cipher_suite_preference(self):
         # Google.com does not follow client cipher suite preference
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
@@ -286,8 +292,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.accepted_cipher_list)
         
         # Sogou.com follows client cipher suite preference
-        server_info = ServerConnectivityInfo(hostname='www.sogou.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.sogou.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
@@ -299,9 +305,12 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_smtp_post_handshake_response(self):
-        server_info = ServerConnectivityInfo(hostname='smtp.gmail.com', port=587,
-                                             tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(
+            hostname='smtp.gmail.com',
+            port=587,
+            tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP
+        )
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
@@ -310,8 +319,8 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_tls_1_3_cipher_suites(self):
-        server_info = ServerConnectivityInfo(hostname='www.cloudflare.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.cloudflare.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv13ScanCommand())
@@ -330,12 +339,12 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
                     client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
             ) as server:
                 # And the client does NOT provide a client certificate
-                server_info = ServerConnectivityInfo(
+                server_test = ServerConnectivityTester(
                     hostname=server.hostname,
                     ip_address=server.ip_address,
                     port=server.port
                 )
-                server_info.test_connectivity_to_server()
+                server_info = server_test.perform()
 
                 # OpenSslCipherSuitesPlugin works even when a client cert was not supplied
                 plugin = OpenSslCipherSuitesPlugin()

@@ -18,7 +18,7 @@ from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.record_protocol import TlsRecordTlsVersionBytes
 from tls_parser.exceptions import NotEnoughData

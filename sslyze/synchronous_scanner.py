@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.plugins.plugin_base import PluginScanCommand
 from sslyze.plugins.plugins_repository import PluginsRepository
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLConnection
 from typing import Optional
 

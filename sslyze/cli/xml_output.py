@@ -3,15 +3,16 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import re
-from typing import Dict, Text, TextIO, Any, Type, Set
+from typing import Dict, Text, TextIO, Any, Type, Set, List
 from xml.dom import minidom
 
 from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
-from sslyze.cli import FailedServerScan
+from sslyze.cli.command_line_parser import ServerStringParsingError
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.plugins.plugin_base import Plugin
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from xml.etree.ElementTree import Element, tostring
 
@@ -44,18 +45,22 @@ class XmlOutputGenerator(OutputGenerator):
         self._xml_root_node.append(self._xml_results_node)
         self._xml_root_node.append(self._xml_failed_scans_node)
 
-    def command_line_parsed(self, available_plugins, args_command_list):
-        # type: (Set[Type[Plugin]], Any) -> None
-        pass
+    def command_line_parsed(self, available_plugins, args_command_list, malformed_servers):
+        # type: (Set[Type[Plugin]], Any, List[ServerStringParsingError]) -> None
+        for bad_server_str in malformed_servers:
+            failed_scan_node = Element('invalidTarget', error=bad_server_str.error_message)
+            failed_scan_node.text = bad_server_str.server_string
+            self._xml_failed_scans_node.append(failed_scan_node)
 
     def server_connectivity_test_succeeded(self, server_connectivity_info):
         # type: (ServerConnectivityInfo) -> None
         pass
 
-    def server_connectivity_test_failed(self, failed_scan):
-        # type: (FailedServerScan) -> None
-        failed_scan_node = Element('invalidTarget', error=failed_scan.error_message)
-        failed_scan_node.text = failed_scan.server_string
+    def server_connectivity_test_failed(self, connectivity_error):
+        # type: (ServerConnectivityError) -> None
+        failed_scan_node = Element('invalidTarget', error=connectivity_error.error_message)
+        server_info = connectivity_error.server_info
+        failed_scan_node.text = '{}:{}'.format(server_info.hostname, server_info.port)
         self._xml_failed_scans_node.append(failed_scan_node)
 
     def scans_started(self):

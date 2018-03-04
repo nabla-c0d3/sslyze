@@ -12,7 +12,7 @@ from sslyze.plugins.plugin_base import PluginScanCommand, Plugin, PluginScanResu
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.plugins.utils.trust_store.trust_store import CouldNotBuildVerifiedChainError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.http_response_parser import HttpResponseParser

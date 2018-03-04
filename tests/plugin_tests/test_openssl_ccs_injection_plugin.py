@@ -6,15 +6,17 @@ import unittest
 import logging
 
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin, OpenSslCcsInjectionScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthenticationServerConfigurationEnum
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
 from tests.openssl_server import VulnerableOpenSslServer, NotOnLinux64Error
 
 
 class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
 
     def test_ccs_injection_good(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_info = server_test.perform()
 
         plugin = OpenSslCcsInjectionPlugin()
         plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
@@ -27,9 +29,12 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
     def test_ccs_injection_bad(self):
         try:
             with VulnerableOpenSslServer() as server:
-                server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,
-                                                     port=server.port)
-                server_info.test_connectivity_to_server()
+                server_test = ServerConnectivityTester(
+                    hostname=server.hostname,
+                    ip_address=server.ip_address,
+                    port=server.port
+                )
+                server_info = server_test.perform()
 
                 plugin = OpenSslCcsInjectionPlugin()
                 plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
@@ -48,12 +53,12 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
                     client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
             ) as server:
                 # And the client does NOT provide a client certificate
-                server_info = ServerConnectivityInfo(
+                server_test = ServerConnectivityTester(
                     hostname=server.hostname,
                     ip_address=server.ip_address,
                     port=server.port
                 )
-                server_info.test_connectivity_to_server()
+                server_info = server_test.perform()
 
                 # OpenSslCcsInjectionPlugin works even when a client cert was not supplied
                 plugin = OpenSslCcsInjectionPlugin()

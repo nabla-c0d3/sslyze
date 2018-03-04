@@ -8,7 +8,7 @@ from nassl import _nassl
 from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
 
 

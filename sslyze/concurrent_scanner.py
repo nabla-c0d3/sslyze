@@ -8,7 +8,7 @@ from multiprocessing import JoinableQueue  # type: ignore
 
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.plugins.plugin_base import PluginScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.synchronous_scanner import SynchronousScanner
 from sslyze.utils.worker_process import WorkerProcess
 from typing import Iterable, Dict

@@ -8,7 +8,7 @@ from enum import Enum
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
 from typing import List, Type
 from typing import Optional

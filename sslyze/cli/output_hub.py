@@ -6,13 +6,15 @@ import sys
 from io import open
 from typing import Type, Any, Set, List
 
-from sslyze.cli import FailedServerScan, CompletedServerScan
+from sslyze.cli import CompletedServerScan
+from sslyze.cli.command_line_parser import ServerStringParsingError
 from sslyze.cli.console_output import ConsoleOutputGenerator
 from sslyze.cli.json_output import JsonOutputGenerator
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.cli.xml_output import XmlOutputGenerator
 from sslyze.plugins.plugin_base import Plugin
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityError
 
 
 class OutputHub(object):
@@ -22,8 +24,8 @@ class OutputHub(object):
         # type: () -> None
         self._output_generator_list = []  # type: List[OutputGenerator]
 
-    def command_line_parsed(self, available_plugins, args_command_list):
-        # type: (Set[Type[Plugin]], Any) -> None
+    def command_line_parsed(self, available_plugins, args_command_list, malformed_servers):
+        # type: (Set[Type[Plugin]], Any, List[ServerStringParsingError]) -> None
         # Configure the console output
         should_print_text_results = not args_command_list.quiet and args_command_list.xml_file != '-' \
                                     and args_command_list.json_file != '-'
@@ -42,12 +44,12 @@ class OutputHub(object):
 
         # Forward the notification
         for out_generator in self._output_generator_list:
-            out_generator.command_line_parsed(available_plugins, args_command_list)
+            out_generator.command_line_parsed(available_plugins, args_command_list, malformed_servers)
 
-    def server_connectivity_test_failed(self, failed_scan):
-        # type: (FailedServerScan) -> None
+    def server_connectivity_test_failed(self, connectivity_error):
+        # type: (ServerConnectivityError) -> None
         for out_generator in self._output_generator_list:
-            out_generator.server_connectivity_test_failed(failed_scan)
+            out_generator.server_connectivity_test_failed(connectivity_error)
 
     def server_connectivity_test_succeeded(self, server_connectivity_info):
         # type: (ServerConnectivityInfo) -> None

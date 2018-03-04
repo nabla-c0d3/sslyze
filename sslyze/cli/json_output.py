@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import json
-from typing import Dict, Text, Any, TextIO, Type, Set, Union
+from typing import Dict, Text, Any, TextIO, Type, Set, Union, List
 
 from cryptography.hazmat.backends.openssl import x509
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
@@ -11,11 +11,12 @@ from cryptography.hazmat.primitives.serialization import Encoding
 from enum import Enum
 from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
-from sslyze.cli import FailedServerScan
+from sslyze.cli.command_line_parser import ServerStringParsingError
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityError
 from sslyze.utils.python_compatibility import IS_PYTHON_2
 
 
@@ -29,13 +30,19 @@ class JsonOutputGenerator(OutputGenerator):
             'sslyze_url': PROJECT_URL
         }  # type: Dict[Text, Any]
 
-    def command_line_parsed(self, available_plugins, args_command_list):
-        # type: (Set[Type[Plugin]], Any) -> None
+    def command_line_parsed(self, available_plugins, args_command_list, malformed_servers):
+        # type: (Set[Type[Plugin]], Any, List[ServerStringParsingError]) -> None
         self._json_dict.update({'invalid_targets': [], 'accepted_targets': []})
 
-    def server_connectivity_test_failed(self, failed_scan):
-        # type: (FailedServerScan) -> None
-        self._json_dict['invalid_targets'].append({failed_scan.server_string: failed_scan.error_message})
+        for bad_server_str in malformed_servers:
+            self._json_dict['invalid_targets'].append({bad_server_str.server_string: bad_server_str.error_message})
+
+    def server_connectivity_test_failed(self, connectivity_error):
+        # type: (ServerConnectivityError) -> None
+        server_info = connectivity_error.server_info
+        self._json_dict['invalid_targets'].append({
+            '{}:{}'.format(server_info.hostname, server_info.port): connectivity_error.error_message
+        })
 
     def server_connectivity_test_succeeded(self, server_connectivity_info):
         # type: (ServerConnectivityInfo) -> None

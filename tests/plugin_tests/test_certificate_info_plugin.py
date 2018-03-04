@@ -11,23 +11,25 @@ import pickle
 from nassl.ocsp_response import OcspResponseStatusEnum
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthenticationServerConfigurationEnum
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
 from tests.openssl_server import VulnerableOpenSslServer, NotOnLinux64Error
 
 
 class CertificateInfoPluginTestCase(unittest.TestCase):
 
     def test_ca_file_bad_file(self):
-        server_info = ServerConnectivityInfo(hostname='www.hotmail.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.hotmail.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         with self.assertRaises(ValueError):
             plugin.process_task(server_info, CertificateInfoScanCommand(ca_file='doesntexist'))
 
     def test_ca_file(self):
-        server_info = ServerConnectivityInfo(hostname='www.hotmail.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.hotmail.com')
+        server_info = server_test.perform()
 
         ca_file_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'wildcard-self-signed.pem')
         plugin = CertificateInfoPlugin()
@@ -41,8 +43,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
                 self.assertTrue(path_validation_result.is_certificate_trusted)
 
     def test_valid_chain_with_ocsp_stapling_and_must_staple(self):
-        server_info = ServerConnectivityInfo(hostname='www.scotthelme.co.uk')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.scotthelme.co.uk')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -59,8 +61,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_valid_chain_with_ev_cert(self):
-        server_info = ServerConnectivityInfo(hostname='www.comodo.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.comodo.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -86,8 +88,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_invalid_chain(self):
-        server_info = ServerConnectivityInfo(hostname='self-signed.badssl.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='self-signed.badssl.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -116,15 +118,15 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
     def test_1000_sans_chain(self):
         # Ensure SSLyze can process a leaf cert with 1000 SANs
-        server_info = ServerConnectivityInfo(hostname='1000-sans.badssl.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='1000-sans.badssl.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin.process_task(server_info, CertificateInfoScanCommand())
 
     def test_sha1_chain(self):
-        server_info = ServerConnectivityInfo(hostname='sha1-intermediate.badssl.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='sha1-intermediate.badssl.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -135,8 +137,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_xml())
 
     def test_sha256_chain(self):
-        server_info = ServerConnectivityInfo(hostname='sha256.badssl.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='sha256.badssl.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -150,8 +152,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_unicode_certificate(self):
-        server_info = ServerConnectivityInfo(hostname='เพย์สบาย.th')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='เพย์สบาย.th')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -165,8 +167,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_ecdsa_certificate(self):
-        server_info = ServerConnectivityInfo(hostname='www.cloudflare.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.cloudflare.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -180,8 +182,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_chain_with_anchor(self):
-        server_info = ServerConnectivityInfo(hostname='www.verizon.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.verizon.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -195,8 +197,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
-        server_info = ServerConnectivityInfo(hostname='webmail.russia.nasa.gov')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='webmail.russia.nasa.gov')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -210,8 +212,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_only_trusted_by_custom_ca_file(self):
-        server_info = ServerConnectivityInfo(hostname='self-signed.badssl.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='self-signed.badssl.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         ca_file_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'self-signed.badssl.com.pem')
@@ -227,8 +229,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_certificate_with_no_cn(self):
-        server_info = ServerConnectivityInfo(hostname='no-common-name.badssl.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='no-common-name.badssl.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -242,8 +244,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_certificate_with_no_subject(self):
-        server_info = ServerConnectivityInfo(hostname='no-subject.badssl.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='no-subject.badssl.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -257,8 +259,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_certificate_with_scts(self):
-        server_info = ServerConnectivityInfo(hostname='www.apple.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.apple.com')
+        server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
@@ -278,12 +280,12 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
                     client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
             ) as server:
                 # And the client does NOT provide a client certificate
-                server_info = ServerConnectivityInfo(
+                server_test = ServerConnectivityTester(
                     hostname=server.hostname,
                     ip_address=server.ip_address,
                     port=server.port
                 )
-                server_info.test_connectivity_to_server()
+                server_info = server_test.perform()
 
                 # CertificateInfoPlugin works even when a client cert was not supplied
                 plugin = CertificateInfoPlugin()

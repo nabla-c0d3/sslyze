@@ -13,10 +13,8 @@ from typing import Tuple
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 
-from sslyze.cli import FailedServerScan
-from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
+from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings
-from sslyze.utils.ssl_connection import SSLConnection
 
 
 class CommandLineParsingError(ValueError):
@@ -34,6 +32,16 @@ class TrustStoresUpdateCompleted(CommandLineParsingError):
     def get_error_msg(self):
         # type: () -> Text
         return 'Trust stores successfully updated.'
+
+
+class ServerStringParsingError(ValueError):
+    """Exception raised when SSLyze was unable to parse a hostname:port string supplied via the command line.
+    """
+
+    def __init__(self, supplied_server_string, error_message):
+        # type: (Text, Text) -> None
+        self.server_string = supplied_server_string
+        self.error_message = error_message
 
 
 class CommandLineServerStringParser(object):
@@ -81,7 +89,7 @@ class CommandLineServerStringParser(object):
             try:
                 port = int((server_str.split(':'))[1])
             except:  # Port is not an int
-                raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
+                raise ServerStringParsingError(server_str, cls.SERVER_STRING_ERROR_BAD_PORT)
 
         return host, port
 
@@ -89,7 +97,7 @@ class CommandLineServerStringParser(object):
     def _parse_ipv6_server_string(cls, server_str):
         # type: (Text) -> Tuple[Text, Optional[int]]
         if not socket.has_ipv6:
-            raise ServerConnectivityError(cls.SERVER_STRING_ERROR_NO_IPV6)
+            raise ServerStringParsingError(server_str, cls.SERVER_STRING_ERROR_NO_IPV6)
 
         port = None
         target_split = (server_str.split(']'))
@@ -98,7 +106,7 @@ class CommandLineServerStringParser(object):
             try:
                 port = int(target_split[1].rsplit(':')[1])
             except:  # Port is not an int
-                raise ServerConnectivityError(cls.SERVER_STRING_ERROR_BAD_PORT)
+                raise ServerStringParsingError(server_str, cls.SERVER_STRING_ERROR_BAD_PORT)
         return ipv6_addr, port
 
 
@@ -158,7 +166,7 @@ class CommandLineParser(object):
         self._parser.add_option('--regular', action='store_true', dest=None, help=regular_help)
 
     def parse_command_line(self):
-        # type: () -> Tuple[List[ServerConnectivityInfo], List[FailedServerScan], Any]
+        # type: () -> Tuple[List[ServerConnectivityTester], List[ServerStringParsingError], Any]
         """Parses the command line used to launch SSLyze.
         """
         (args_command_list, args_target_list) = self._parser.parse_args()
@@ -250,7 +258,7 @@ class CommandLineParser(object):
                     # Protocol was given in the command line
                     tls_wrapped_protocol = self.STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
 
-        # Create the server connectivity info for each specifed servers
+        # Create the server connectivity tester for each specified servers
         # A limitation when using the command line is that only one client_auth_credentials and http_tunneling_settings
         # can be specified, for all the servers to scan
         good_server_list = []
@@ -258,9 +266,15 @@ class CommandLineParser(object):
         for server_string in args_target_list:
             try:
                 hostname, ip_address, port = CommandLineServerStringParser.parse_server_string(server_string)
+            except ServerStringParsingError as e:
+                # Will happen if the server string is malformed
+                bad_server_list.append(e)
+                continue
+
+            try:
                 # TODO(AD): Unicode hostnames may fail on Python2
                 #hostname = hostname.decode('utf-8')
-                server_info = ServerConnectivityInfo(
+                server_info = ServerConnectivityTester(
                     hostname=hostname,
                     port=port,
                     ip_address=ip_address,
@@ -270,13 +284,8 @@ class CommandLineParser(object):
                     client_auth_credentials=client_auth_creds,
                     http_tunneling_settings=http_tunneling_settings
                 )
-                # Keep the original server string to display it in the CLI output if there was a connection error
-                server_info.server_string = server_string  # type: ignore
                 
                 good_server_list.append(server_info)
-            except ServerConnectivityError as e:
-                # Will happen for example if the DNS lookup failed or the server string is malformed
-                bad_server_list.append(FailedServerScan(server_string, e))
             except ValueError as e:
                 # Will happen for example if xmpp_to is specified for a non-XMPP connection
                 raise CommandLineParsingError(e.args[0])

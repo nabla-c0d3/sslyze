@@ -1,0 +1,307 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import socket
+from typing import Text, Optional, List, Iterable
+
+from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
+
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.utils.ssl_connection_configurator import SslConnectionConfigurator
+from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
+    ClientAuthenticationServerConfigurationEnum
+from sslyze.utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SSLHandshakeRejected
+from sslyze.utils.thread_pool import ThreadPool
+
+
+class ServerConnectivityError(Exception):
+    """SSLyze was unable to complete a TLS handshake with the server while doing connectivity testing.
+    """
+
+    def __init__(self, server_info, error_message):
+        # type: (ServerConnectivityTester, Text) -> None
+        self.server_info = server_info
+        self.error_message = error_message
+
+
+class ServerNotReachableError(ServerConnectivityError):
+    """The server was offline, or timed out, or rejected the connection while doing connectivity testing.
+    """
+
+
+class ServerTlsConfigurationNotSuportedError(ServerConnectivityError):
+    """The server was online but SSLyze was unable to find one TLS version and cipher suite supported by the server.
+
+    This should never happen unless the server has a very exotic TLS configuration (such as supporting a very small
+    set of niche cipher suites).
+    """
+
+
+class ProxyConnectivityError(ServerConnectivityError):
+    """The proxy was offline, or timed out, or rejected the connection while doing connectivity testing.
+    """
+
+
+class ServerConnectivityTester(object):
+
+    TLS_DEFAULT_PORTS = {
+        TlsWrappedProtocolEnum.PLAIN_TLS: 443,
+        TlsWrappedProtocolEnum.STARTTLS_SMTP: 25,
+        TlsWrappedProtocolEnum.STARTTLS_XMPP: 5222,
+        TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER: 5269,
+        TlsWrappedProtocolEnum.STARTTLS_FTP: 21,
+        TlsWrappedProtocolEnum.STARTTLS_POP3: 110,
+        TlsWrappedProtocolEnum.STARTTLS_LDAP: 389,
+        TlsWrappedProtocolEnum.STARTTLS_IMAP: 143,
+        TlsWrappedProtocolEnum.STARTTLS_RDP: 3389,
+        TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 5432
+    }
+
+    CONNECTIVITY_ERROR_NAME_NOT_RESOLVED = 'Could not resolve hostname'
+    CONNECTIVITY_ERROR_TIMEOUT = 'Could not connect (timeout)'
+    CONNECTIVITY_ERROR_REJECTED = 'Connection rejected'
+    CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
+
+    def __init__(
+            self,
+            hostname,                                               # type: Text
+            port=None,                                              # type: Optional[int]
+            ip_address=None,                                        # type: Optional[Text]
+            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS,  # type: TlsWrappedProtocolEnum
+            tls_server_name_indication=None,                        # type: Optional[Text]
+            xmpp_to_hostname=None,                                  # type: Optional[Text]
+            client_auth_credentials=None,                           # type: Optional[ClientAuthenticationCredentials]
+            http_tunneling_settings=None                            # type: Optional[HttpConnectTunnelingSettings]
+            ):
+        # type: (...) -> None
+        """Constructor to specify how to connect to a server to be scanned.
+
+        Most arguments are optional but can be supplied in order to be more specific about the server's configuration.
+
+        After initializing a ServerConnectivityTester, the `perform()` method must be called next to ensure that the
+        server is actually reachable.
+
+        Args:
+            hostname (Text): The server's hostname.
+            port (Optional[int]): The server's TLS port number. If not supplied, the default port number for the
+                specified `tls_wrapped_protocol` will be used.
+            ip_address (Optional[Text]): The server's IP address. If not supplied, a DNS lookup for the specified
+                `hostname` will be performed. If `http_tunneling_settings` is specified, `ip_address` cannot be supplied
+                as the HTTP proxy will be responsible for looking up and connecting to the server to be scanned.
+            tls_wrapped_protocol (Optional[TlsWrappedProtocolEnum]): The protocol wrapped in TLS that the server
+                expects. It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what
+                kind of "hello" message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If
+                not supplied, standard TLS will be used.
+            tls_server_name_indication (Optional[Text]): The hostname to set within the Server Name Indication TLS
+                extension. If not supplied, the specified `hostname` will be used.
+            xmpp_to_hostname (Optional[Text]): The hostname to set within the `to` attribute of the XMPP stream. If not
+                supplied, the specified `hostname` will be used. Should only be set if the supplied
+                `tls_wrapped_protocol` is an XMPP protocol.
+            client_auth_credentials (Optional[ClientAuthenticationCredentials]): The client certificate and private key
+                needed to perform mutual authentication with the server. If not supplied, sslyze will attempt to connect
+                to the server without performing mutual authentication.
+            http_tunneling_settings (Optional[HttpConnectTunnelingSettings]): The HTTP proxy configuration to use in
+                order to tunnel the scans through a proxy. If not supplied, sslyze will run the scans by directly
+                connecting to the server.
+
+        Raises:
+            ValueError: If `xmpp_to_hostname` was specified for a non-XMPP protocol.
+            ValueError: If both `ip_address` and `http_tunneling_settings` were supplied.
+        """
+        # Store the hostname in ACE format in the case the domain name is unicode
+        self.hostname = hostname.encode('idna').decode('utf-8')
+        self.tls_wrapped_protocol = tls_wrapped_protocol
+        self.port = port if port else self.TLS_DEFAULT_PORTS[tls_wrapped_protocol]
+
+        if ip_address and http_tunneling_settings:
+            raise ValueError('Cannot specify both ip_address and http_tunneling_settings.')
+        self.ip_address = ip_address
+
+        # Use the hostname as the default SNI
+        self.tls_server_name_indication = tls_server_name_indication if tls_server_name_indication else self.hostname
+
+        self.xmpp_to_hostname = xmpp_to_hostname
+        if self.xmpp_to_hostname and self.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.STARTTLS_XMPP,
+                                                                       TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER]:
+            raise ValueError('Can only specify xmpp_to for the XMPP StartTLS protocol.')
+
+        self.client_auth_credentials = client_auth_credentials
+        self.http_tunneling_settings = http_tunneling_settings
+
+    @classmethod
+    def _do_dns_lookup(cls, hostname, port):
+        # type: (Text, int) -> Text
+        addr_infos = socket.getaddrinfo(hostname, port, socket.AF_UNSPEC, socket.IPPROTO_IP)
+        family, socktype, proto, canonname, sockaddr = addr_infos[0]
+
+        # By default use the first DNS entry, IPv4 or IPv6
+        tentative_ip_addr = sockaddr[0]
+
+        # But try to use IPv4 if we have both IPv4 and IPv6 addresses, to work around buggy networks
+        for family, socktype, proto, canonname, sockaddr in addr_infos:
+            if family == socket.AF_INET:
+                tentative_ip_addr = sockaddr[0]
+
+        return tentative_ip_addr
+
+    def perform(self, network_timeout=None):
+        # type: (Optional[int]) -> ServerConnectivityInfo
+        """Attempts to perform a full SSL/TLS handshake with the server.
+
+        This method will ensure that the server can be reached, and will also identify one SSL/TLS version and one
+        cipher suite supported by the server. If the connectivity test is successful, the `ServerConnectivityInfo`
+        object is then ready to be passed to a `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands
+        on the server.
+
+        Args:
+            network_timeout (Optional[int]): Network timeout value in seconds passed to the underlying socket.
+
+        Raises:
+            ServerConnectivityError: If the server was not reachable or an SSL/TLS handshake could not be completed.
+        """
+        # First do a DNS lookup if needed
+        if self.ip_address is None:
+            try:
+                self.ip_address = self._do_dns_lookup(self.hostname, self.port)
+            except (socket.gaierror, IndexError):
+                raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED)
+
+        # Then try to connect
+        client_auth_requirement = ClientAuthenticationServerConfigurationEnum.DISABLED
+        ssl_connection = SslConnectionConfigurator.get_connection(
+            ssl_version=OpenSslVersionEnum.SSLV23,
+            server_info=self,
+            should_ignore_client_auth=True,
+        )
+
+        # First only try a socket connection
+        try:
+            ssl_connection.do_pre_handshake(network_timeout=network_timeout)
+
+        # Socket errors
+        except socket.timeout:  # Host is down
+            raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_TIMEOUT)
+        except socket.error:  # Connection Refused
+            raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_REJECTED)
+
+        # StartTLS errors
+        except StartTLSError as e:
+            raise ServerTlsConfigurationNotSuportedError(self, e.args[0])
+
+        # Proxy errors
+        except ProxyError as e:
+            raise ProxyConnectivityError(self, e.args[0])
+
+        # Other errors
+        except Exception as e:
+            raise ServerConnectivityError(self, '{0}: {1}'.format(str(type(e).__name__), e.args[0]))
+
+        finally:
+            ssl_connection.close()
+
+        # Then try to complete an SSL handshake to figure out the SSL version and cipher supported by the server
+        ssl_version_supported = None
+        ssl_cipher_supported = None
+
+        # TODO(AD): Switch to using the protocol discovery logic available in OpenSSL 1.1.0 with TLS_client_method()
+        # TODO(AD): Once TLS 1.3 is widely used, put it at the beginning of the list
+        for ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_1, OpenSslVersionEnum.TLSV1,
+                            OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.TLSV1_3, OpenSslVersionEnum.SSLV23]:
+            # First try the default cipher list, and then all ciphers
+            for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL:-PSK:-SRP']:
+                ssl_connection = SslConnectionConfigurator.get_connection(
+                    ssl_version=ssl_version,
+                    server_info=self,
+                    openssl_cipher_string=cipher_list,
+                    should_ignore_client_auth=False,
+                )
+                try:
+                    # Only do one attempt when testing connectivity
+                    ssl_connection.connect(network_timeout=network_timeout, network_max_retries=0)
+                    ssl_version_supported = ssl_version
+                    ssl_cipher_supported = ssl_connection.ssl_client.get_current_cipher_name()
+                except ClientCertificateRequested:
+                    # Connection successful but the servers wants a client certificate which wasn't supplied to sslyze
+                    # Store the SSL version and cipher list that is supported
+                    ssl_version_supported = ssl_version
+                    ssl_cipher_supported = cipher_list
+                    # Close the current connection and try again but ignore client authentication
+                    ssl_connection.close()
+
+                    # Try a new connection to see if client authentication is optional
+                    ssl_connection_auth = SslConnectionConfigurator.get_connection(
+                        ssl_version=ssl_version,
+                        server_info=self,
+                        openssl_cipher_string=cipher_list,
+                        should_ignore_client_auth=True,
+                    )
+                    try:
+                        ssl_connection_auth.connect(network_timeout=network_timeout, network_max_retries=0)
+                        ssl_cipher_supported = ssl_connection_auth.ssl_client.get_current_cipher_name()
+                        client_auth_requirement = ClientAuthenticationServerConfigurationEnum.OPTIONAL
+
+                    # If client authentication is required, we either get a ClientCertificateRequested
+                    except ClientCertificateRequested:
+                        client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
+                    # Or a SSLHandshakeRejected
+                    except SSLHandshakeRejected:
+                        client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
+                    finally:
+                        ssl_connection_auth.close()
+
+                except:
+                    # Could not complete a handshake with this server
+                    pass
+                finally:
+                    ssl_connection.close()
+
+            if ssl_cipher_supported:
+                # A handshake was successful
+                break
+
+        if ssl_version_supported is None or ssl_cipher_supported is None:
+            raise ServerTlsConfigurationNotSuportedError(self, self.CONNECTIVITY_ERROR_HANDSHAKE_ERROR)
+
+        return ServerConnectivityInfo(
+            hostname=self.hostname,
+            port=self.port,
+            ip_address=self.ip_address,
+            tls_wrapped_protocol=self.tls_wrapped_protocol,
+            tls_server_name_indication=self.tls_server_name_indication,
+            highest_ssl_version_supported=ssl_version_supported,
+            openssl_cipher_string_supported=ssl_cipher_supported,
+            client_auth_requirement=client_auth_requirement,
+            xmpp_to_hostname=self.xmpp_to_hostname,
+            client_auth_credentials=self.client_auth_credentials,
+            http_tunneling_settings=self.http_tunneling_settings
+        )
+
+
+class ConcurrentServerConnectivityTester(object):
+    """Utility class to run servers connectivity testing using a thread pool.
+    """
+
+    _DEFAULT_MAX_THREADS = 20
+
+    def __init__(self, server_connectivity_testers):
+        # type: (List[ServerConnectivityTester]) -> None
+        # Use a thread pool to connect to each server
+        self._thread_pool = ThreadPool()
+        self._server_connectivity_testers = server_connectivity_testers
+
+    def start_connectivity_testing(self, max_threads=_DEFAULT_MAX_THREADS, network_timeout=None):
+        # type: (int, Optional[int]) -> None
+        for server_tester in self._server_connectivity_testers:
+            self._thread_pool.add_job((server_tester.perform, [network_timeout]))
+        nb_threads = min(len(self._server_connectivity_testers), max_threads)
+        self._thread_pool.start(nb_threads)
+
+    def get_reachable_servers(self):
+        # type: () -> Iterable[ServerConnectivityInfo]
+        for (_, server_info) in self._thread_pool.get_result():
+            yield server_info
+
+    def get_invalid_servers(self):
+        # type: () -> Iterable[ServerConnectivityError]
+        for (_, exception) in self._thread_pool.get_error():
+            yield exception

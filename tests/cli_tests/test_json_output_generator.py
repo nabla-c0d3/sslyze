@@ -6,11 +6,12 @@ import json
 import unittest
 from io import StringIO
 
-from sslyze.cli import FailedServerScan, CompletedServerScan
+from sslyze.cli import CompletedServerScan
+from sslyze.cli.command_line_parser import ServerStringParsingError
 from sslyze.cli.json_output import JsonOutputGenerator
-from sslyze.server_connectivity import ServerConnectivityError
+from sslyze.server_connectivity_tester import ServerConnectivityError
 from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, MockCommandLineValues, \
-    MockPluginScanCommandOne, MockPluginScanCommandTwo
+    MockPluginScanCommandOne, MockPluginScanCommandTwo, MockServerConnectivityTester
 
 
 class JsonOutputGeneratorTestCase(unittest.TestCase):
@@ -22,10 +23,16 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
         output_file = StringIO()
         generator = JsonOutputGenerator(output_file)
 
-        generator.command_line_parsed(None, MockCommandLineValues())
+        failed_parsing = ServerStringParsingError(
+            supplied_server_string='www.badpãrsing.com',
+            error_message='Pãrsing error'
+        )
+        generator.command_line_parsed(set(), MockCommandLineValues(), [failed_parsing])
 
-        failed_scan = FailedServerScan(server_string='unibadeéè.com',
-                                       connection_exception=ServerConnectivityError(error_msg='Some érrôr'))
+        failed_scan = ServerConnectivityError(
+            server_info=MockServerConnectivityTester(hostname='unibadeéè.com'),
+            error_message='Some érrôr'
+        )
         generator.server_connectivity_test_failed(failed_scan)
 
         server_info = MockServerConnectivityInfo()
@@ -33,11 +40,8 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
 
         generator.scans_started()
 
-        # noinspection PyTypeChecker
         plugin_result_1 = MockPluginScanResult(server_info, MockPluginScanCommandOne(), 'Plugin ûnicôdé output', None)
-        # noinspection PyTypeChecker
         plugin_result_2 = MockPluginScanResult(server_info, MockPluginScanCommandTwo(), 'other plugin Output', None)
-        # noinspection PyTypeChecker
         server_scan = CompletedServerScan(server_info, [plugin_result_1, plugin_result_2])
         generator.server_scan_completed(server_scan)
 
@@ -47,9 +51,13 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
         received_output = output_file.getvalue()
         output_file.close()
 
+        # Ensure the output properly listed the parsing error with unicode escaped as \u sequences
+        self.assertIn('www.badp\\u00e3rsing.com', received_output)
+        self.assertIn('P\\u00e3rsing error', received_output)
+
         # Ensure the output properly listed the connectivity error with unicode escaped as \u sequences
-        self.assertIn(json.dumps('unibadeéè.com', ensure_ascii=True), received_output)
-        self.assertIn(json.dumps('Some érrôr', ensure_ascii=True), received_output)
+        self.assertIn('unibade\\u00e9\\u00e8.com:443', received_output)
+        self.assertIn('Some \\u00e9rr\\u00f4r', received_output)
 
         # Ensure the output properly listed the online domain
         self.assertIn(json.dumps(server_info.hostname, ensure_ascii=True), received_output)

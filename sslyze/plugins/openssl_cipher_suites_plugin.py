@@ -11,7 +11,7 @@ from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.utils.python_compatibility import IS_PYTHON_2
 from sslyze.utils.ssl_connection import SSLConnection
 from sslyze.utils.ssl_connection import SSLHandshakeRejected

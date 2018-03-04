@@ -26,7 +26,7 @@ from sslyze.plugins.utils.trust_store.trust_store import TrustStore
 from sslyze.plugins.utils.trust_store.trust_store import InvalidCertificateChainOrderError
 from sslyze.plugins.utils.trust_store.trust_store import AnchorCertificateNotInTrustStoreError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
 from typing import List, Dict, Any, Type
 from typing import Optional

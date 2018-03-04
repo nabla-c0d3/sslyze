@@ -13,7 +13,7 @@ import logging
 import time
 from typing import Text
 
-from sslyze.server_connectivity import ClientAuthenticationServerConfigurationEnum
+from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
 
 
 class NotOnLinux64Error(EnvironmentError):
@@ -110,7 +110,7 @@ class VulnerableOpenSslServer(object):
 
         # On Travis CI, the server sometimes is still not ready to accept connections when we get here
         # Wait a bit more to make the test suite less flaky
-        time.sleep(0.5)
+        time.sleep(1)
 
         return self
 

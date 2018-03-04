@@ -10,7 +10,7 @@ from nassl._nassl import OpenSSLError
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 
 
 class SessionRenegotiationScanCommand(plugin_base.PluginScanCommand):

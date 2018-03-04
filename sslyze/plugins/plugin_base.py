@@ -9,7 +9,7 @@ import inspect
 import optparse
 from xml.etree.ElementTree import Element
 
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from typing import List, Type
 from typing import Text
 

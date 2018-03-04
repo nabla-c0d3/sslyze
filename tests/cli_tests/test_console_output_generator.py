@@ -5,12 +5,12 @@ from __future__ import unicode_literals
 import unittest
 from io import StringIO
 
-from sslyze.cli import FailedServerScan, CompletedServerScan
+from sslyze.cli import CompletedServerScan
 from sslyze.cli.console_output import ConsoleOutputGenerator
-from sslyze.server_connectivity import ServerConnectivityError, ClientAuthenticationServerConfigurationEnum
-from sslyze.ssl_settings import HttpConnectTunnelingSettings
+from sslyze.server_connectivity_tester import ServerConnectivityError
+from sslyze.ssl_settings import HttpConnectTunnelingSettings, ClientAuthenticationServerConfigurationEnum
 from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, MockPluginScanCommandOne, \
-    MockPluginScanCommandTwo
+    MockPluginScanCommandTwo, MockServerConnectivityTester
 
 
 class ConsoleOutputGeneratorTestCase(unittest.TestCase):
@@ -25,7 +25,7 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         class FakePlugin2(object):
             pass
 
-        generator.command_line_parsed([FakePlugin1, FakePlugin2], None)
+        generator.command_line_parsed({FakePlugin1, FakePlugin2}, None, [])
 
         received_output = output_file.getvalue()
         output_file.close()
@@ -39,8 +39,7 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file = StringIO()
         generator = ConsoleOutputGenerator(output_file)
 
-        failed_scan = FailedServerScan(server_string='unicödeéè.com',
-                                       connection_exception=ServerConnectivityError(error_msg='Some érrôr'))
+        failed_scan = ServerConnectivityError(server_info=MockServerConnectivityTester(), error_message='Some érrôr')
         generator.server_connectivity_test_failed(failed_scan)
 
         received_output = output_file.getvalue()

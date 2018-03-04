@@ -11,7 +11,7 @@ from nassl._nassl import WantReadError
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte

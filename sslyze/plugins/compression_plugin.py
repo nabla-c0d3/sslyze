@@ -6,7 +6,7 @@ from xml.etree.ElementTree import Element
 from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
 from typing import Text, Type, List
 
 

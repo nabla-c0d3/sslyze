@@ -3,12 +3,13 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
-from typing import TextIO, Set, Type, Any
+from typing import TextIO, Set, Type, Any, List
 
 from sslyze.cli import CompletedServerScan
-from sslyze.cli import FailedServerScan
+from sslyze.cli.command_line_parser import ServerStringParsingError
 from sslyze.plugins.plugin_base import Plugin
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityError
 
 
 class OutputGenerator(object):
@@ -27,14 +28,14 @@ class OutputGenerator(object):
         self._file_to.close()
 
     @abstractmethod
-    def command_line_parsed(self, available_plugins, args_command_list):
-        # type: (Set[Type[Plugin]], Any) -> None
+    def command_line_parsed(self, available_plugins, args_command_list, malformed_servers):
+        # type: (Set[Type[Plugin]], Any, List[ServerStringParsingError]) -> None
         """The CLI was just started and successfully parsed the command line.
         """
 
     @abstractmethod
-    def server_connectivity_test_failed(self, failed_scan):
-        # type: (FailedServerScan) -> None
+    def server_connectivity_test_failed(self, connectivity_error):
+        # type: (ServerConnectivityError) -> None
         """The CLI found a server that it could not connect to; no scans will be performed against this server.
         """
 

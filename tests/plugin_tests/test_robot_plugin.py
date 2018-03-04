@@ -8,7 +8,8 @@ from tls_parser.tls_version import TlsVersionEnum
 
 from sslyze.plugins.robot_plugin import RobotPlugin, RobotScanCommand, RobotScanResultEnum, RobotPmsPaddingPayloadEnum, \
     RobotTlsRecordPayloads
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityTester
 from tests.travis_utils import IS_RUNNING_ON_TRAVIS
 
 
@@ -16,8 +17,8 @@ class RobotPluginPluginTestCase(unittest.TestCase):
 
     def test_robot_attack_good(self):
         # Validate the bug fix for https://github.com/nabla-c0d3/sslyze/issues/282
-        server_info = ServerConnectivityInfo(hostname='guide.duo.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='guide.duo.com')
+        server_info = server_test.perform()
 
         plugin = RobotPlugin()
         plugin_result = plugin.process_task(server_info, RobotScanCommand())

@@ -9,7 +9,8 @@ import logging
 import pickle
 
 from sslyze.plugins.heartbleed_plugin import HeartbleedPlugin, HeartbleedScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityTester
 
 from tests.openssl_server import NotOnLinux64Error
 from tests.openssl_server import VulnerableOpenSslServer
@@ -18,8 +19,8 @@ from tests.openssl_server import VulnerableOpenSslServer
 class HeartbleedPluginTestCase(unittest.TestCase):
 
     def test_heartbleed_good(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_info = server_test.perform()
 
         plugin = HeartbleedPlugin()
         plugin_result = plugin.process_task(server_info, HeartbleedScanCommand())
@@ -35,9 +36,9 @@ class HeartbleedPluginTestCase(unittest.TestCase):
     def test_heartbleed_bad(self):
         try:
             with VulnerableOpenSslServer() as server:
-                server_info = ServerConnectivityInfo(hostname=server.hostname, ip_address=server.ip_address,
+                server_test = ServerConnectivityTester(hostname=server.hostname, ip_address=server.ip_address,
                                                      port=server.port)
-                server_info.test_connectivity_to_server()
+                server_info = server_test.perform()
 
                 plugin = HeartbleedPlugin()
                 plugin_result = plugin.process_task(server_info, HeartbleedScanCommand())

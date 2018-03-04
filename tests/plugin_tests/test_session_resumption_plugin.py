@@ -9,15 +9,16 @@ import pickle
 
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin, SessionResumptionSupportScanCommand, \
     SessionResumptionRateScanCommand
-from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthenticationServerConfigurationEnum
+from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
 from tests.openssl_server import VulnerableOpenSslServer, NotOnLinux64Error
 
 
 class SessionResumptionPluginTestCase(unittest.TestCase):
 
     def test_resumption_support(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_info = server_test.perform()
 
         plugin = SessionResumptionPlugin()
         plugin_result = plugin.process_task(server_info, SessionResumptionSupportScanCommand())
@@ -34,8 +35,8 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_resumption_rate(self):
-        server_info = ServerConnectivityInfo(hostname='www.google.com')
-        server_info.test_connectivity_to_server()
+        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_info = server_test.perform()
 
         plugin = SessionResumptionPlugin()
         plugin_result = plugin.process_task(server_info, SessionResumptionRateScanCommand())
@@ -50,19 +51,19 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-    def test_fails_when_client_auth_failed(self):
+    def test_fails_when_client_auth_failed_session(self):
         # Given a server that requires client authentication
         try:
             with VulnerableOpenSslServer(
                     client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
             ) as server:
                 # And the client does NOT provide a client certificate
-                server_info = ServerConnectivityInfo(
+                server_test = ServerConnectivityTester(
                     hostname=server.hostname,
                     ip_address=server.ip_address,
                     port=server.port
                 )
-                server_info.test_connectivity_to_server()
+                server_info = server_test.perform()
 
                 # SessionResumptionPlugin fails even when a client cert was not supplied
                 plugin = SessionResumptionPlugin()

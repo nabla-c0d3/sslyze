@@ -7,7 +7,8 @@ from xml.etree.ElementTree import Element
 
 from sslyze.plugins.plugin_base import PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 
 
@@ -23,6 +24,14 @@ class MockServerConnectivityInfo(ServerConnectivityInfo):
         if http_tunneling_settings:
             # When scanning through a proxy, we do not know the final server's IP address
             self.ip_address = None
+
+
+class MockServerConnectivityTester(ServerConnectivityTester):
+    def __init__(self, hostname='unicödeéè.com'):
+        self.hostname = hostname
+        self.port = 443
+        self.ip_address = '2001:0:9d38:6abd:1c85:1b5b:3fb2:4231'
+        self.tls_wrapped_protocol = TlsWrappedProtocolEnum.HTTPS
 
 
 class MockPluginScanCommandOne(PluginScanCommand):

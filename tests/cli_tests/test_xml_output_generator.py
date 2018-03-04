@@ -6,12 +6,13 @@ import unittest
 from io import StringIO
 from xml.etree.ElementTree import Element
 
-from sslyze.cli import FailedServerScan, CompletedServerScan
+from sslyze.cli import CompletedServerScan
+from sslyze.cli.command_line_parser import ServerStringParsingError
 from sslyze.cli.xml_output import XmlOutputGenerator
-from sslyze.server_connectivity import ServerConnectivityError
+from sslyze.server_connectivity_tester import ServerConnectivityError
 from sslyze.ssl_settings import HttpConnectTunnelingSettings
 from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, MockCommandLineValues, \
-    MockPluginScanCommandOne, MockPluginScanCommandTwo
+    MockPluginScanCommandOne, MockPluginScanCommandTwo, MockServerConnectivityTester
 
 
 class XmlOutputGeneratorTestCase(unittest.TestCase):
@@ -23,10 +24,16 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         output_file = StringIO()
         generator = XmlOutputGenerator(output_file)
 
-        generator.command_line_parsed(None, MockCommandLineValues())
+        failed_parsing = ServerStringParsingError(
+            supplied_server_string='www.badpãrsing.com',
+            error_message='Pãrsing error'
+        )
+        generator.command_line_parsed(set(), MockCommandLineValues(), [failed_parsing])
 
-        failed_scan = FailedServerScan(server_string='unibadeéè.com',
-                                       connection_exception=ServerConnectivityError(error_msg='Some érrôr'))
+        failed_scan = ServerConnectivityError(
+            server_info=MockServerConnectivityTester(hostname='unibadeéè.com'),
+            error_message='Some érrôr'
+        )
         generator.server_connectivity_test_failed(failed_scan)
 
         server_info = MockServerConnectivityInfo()
@@ -41,7 +48,6 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         plugin_xml_out_2.text = 'other plugin Output'
         plugin_result_2 = MockPluginScanResult(server_info, MockPluginScanCommandTwo(), '', plugin_xml_out_2)
 
-        # noinspection PyTypeChecker
         server_scan = CompletedServerScan(server_info, [plugin_result_1, plugin_result_2])
         generator.server_scan_completed(server_scan)
 
@@ -51,7 +57,11 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         received_output = output_file.getvalue()
         output_file.close()
 
-        # Ensure the output properly listed the connectivity error with unicode escaped as \u sequences
+        # Ensure the output properly listed the parsing error
+        self.assertIn('www.badpãrsing.com', received_output)
+        self.assertIn('Pãrsing error', received_output)
+
+        # Ensure the output properly listed the connectivity error
         self.assertIn('unibadeéè.com', received_output)
         self.assertIn('Some érrôr', received_output)
 

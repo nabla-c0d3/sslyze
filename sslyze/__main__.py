@@ -4,26 +4,21 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import print_function
 
-import os
 import sys
 from typing import Any, Text, Dict, List
 
 from sslyze.plugins.plugin_base import PluginScanResult
 
-if not hasattr(sys, "frozen"):
-    sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
-
 from sslyze.concurrent_scanner import ConcurrentScanner
 from sslyze.plugins.plugins_repository import PluginsRepository
 from sslyze.cli.output_hub import OutputHub
-from sslyze.cli import FailedServerScan, CompletedServerScan
+from sslyze.cli import CompletedServerScan
 from sslyze import __version__
 from sslyze.cli.command_line_parser import CommandLineParsingError, CommandLineParser
 import signal
 from multiprocessing import freeze_support
 from time import time
-from sslyze.server_connectivity import ServersConnectivityTester
-
+from sslyze.server_connectivity_tester import ConcurrentServerConnectivityTester
 
 global_scanner = None
 
@@ -54,13 +49,13 @@ def main():
     # Create the command line parser and the list of available options
     sslyze_parser = CommandLineParser(available_plugins, __version__)
     try:
-        good_server_list, bad_server_list, args_command_list = sslyze_parser.parse_command_line()
+        good_server_list, malformed_server_list, args_command_list = sslyze_parser.parse_command_line()
     except CommandLineParsingError as e:
         print(e.get_error_msg())
         return
 
     output_hub = OutputHub()
-    output_hub.command_line_parsed(available_plugins, args_command_list)
+    output_hub.command_line_parsed(available_plugins, args_command_list, malformed_server_list)
 
     # Initialize the pool of processes that will run each plugin
     if args_command_list.https_tunnel or args_command_list.slow_connection:
@@ -70,12 +65,8 @@ def main():
         global_scanner = ConcurrentScanner()
 
     # Figure out which hosts are up and fill the task queue with work to do
-    connectivity_tester = ServersConnectivityTester(good_server_list)
+    connectivity_tester = ConcurrentServerConnectivityTester(good_server_list)
     connectivity_tester.start_connectivity_testing()
-
-    # Store and print server whose command line string was bad
-    for failed_scan in bad_server_list:
-        output_hub.server_connectivity_test_failed(failed_scan)
 
     # Store and print servers we were able to connect to
     online_servers_list = []
@@ -97,9 +88,8 @@ def main():
                 global_scanner.queue_scan_command(server_connectivity_info, scan_command)
 
     # Store and print servers we were NOT able to connect to
-    for tentative_server_info, exception in connectivity_tester.get_invalid_servers():
-        failed_scan = FailedServerScan(tentative_server_info.server_string, exception)  # type: ignore
-        output_hub.server_connectivity_test_failed(failed_scan)
+    for connectivity_exception in connectivity_tester.get_invalid_servers():
+        output_hub.server_connectivity_test_failed(connectivity_exception)
 
     # Keep track of how many tasks have to be performed for each target
     task_num = 0

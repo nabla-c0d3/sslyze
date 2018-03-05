@@ -326,11 +326,10 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, Tlsv13ScanCommand())
 
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
-
-        # TODO(AD): Update to TLS 1.3 draft 23 and re-enable this test
-        return
-        self.assertEqual({'TLS_CHACHA20_POLY1305_SHA256', 'TLS_AES_256_GCM_SHA384', 'TLS_AES_128_GCM_SHA256'},
-                         set(accepted_cipher_name_list))
+        self.assertEqual(
+            {'TLS_CHACHA20_POLY1305_SHA256', 'TLS_AES_256_GCM_SHA384', 'TLS_AES_128_GCM_SHA256'},
+            set(accepted_cipher_name_list)
+        )
 
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication

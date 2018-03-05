@@ -70,7 +70,7 @@ class SessionResumptionPlugin(Plugin):
     def process_task(
             self,
             server_info,    # type: ServerConnectivityInfo
-            scan_command    # type: Union[SessionResumptionRateScanCommand, SessionResumptionSupportScanCommand]
+            scan_command    # type: PluginScanCommand
     ):
         # type: (...) -> Union[SessionResumptionRateScanResult, SessionResumptionSupportScanResult]
         if isinstance(scan_command, SessionResumptionSupportScanCommand):

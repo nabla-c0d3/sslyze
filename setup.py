@@ -14,7 +14,7 @@ SSLYZE_SETUP = {
     'packages': ['sslyze', 'sslyze.cli', 'sslyze.utils', 'sslyze.plugins', 'sslyze.plugins.utils',
                  'sslyze.plugins.utils.trust_store'],
     'package_data': {'sslyze.plugins.utils.trust_store': ['pem_files/*.pem', 'pem_files/*.yaml']},
-    'install_requires': ['nassl>=1.0.0,<1.1.0',
+    'install_requires': ['nassl>=1.1.0,<1.2.0',
                          'cryptography>=2.1.4',
                          'tls-parser>=1.2.0,<1.3.0'],
     'extras_require': {':python_version < "3.4"': ['enum34'],

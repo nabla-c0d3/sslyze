@@ -1,4 +1,4 @@
-nassl>=1.0.0,<1.1.0
+nassl>=1.1.0,<1.2.0
 typing; python_version < '3.5'
 enum34; python_version < '3.4'
 cryptography>=2.1.4

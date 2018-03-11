@@ -12,10 +12,3 @@ script:
   # Run mypy for type checking if we are on Python 3
   - python -m mypy sslyze
   - python run_tests.py
-deploy:
-  provider: pypi
-  user: "nabla"
-  password:
-    secure: "L/pKWyeRCz9Obzl9ihBj9BFJs32A/EsitHKfm2mMDkXy8LI9vDja96TVZpLqDLGLTDx/AwFOhu2Ntc9UGiWokK/ayETv9/e1pM0lFyaOsQ2eznTLuCbpI0WxfpTQ3dbXizjfp+/RdanIbilryEN/nhoCf1x6MgeE3ALH+LmP7J+mNuMLdMI9NR/55V4JT3AC48S5kAI/d3moa38O67UixeW3zizKfpKj63oUSxp2uNSCf27Bwb34QqckizU3gJctzDXJZM2ptG1gECPIU5YOJyI9c8GLNNnWeKsaWf+TPraR9Sw8Los4JQRGO4Mad05JGWfHftdoveBSTpwweLxtRrf5+jDXUtZtkIqkty4KCK4w6s7CC3T8IA3q/uxN2BfuOyKx7pZXAe1kt50EbYa/mqPg9yXOd/vaIMUFQoYLU0mGEc1somvy8WP89oCNU+nVCKN2LcRUtx4IZksTWTbhekKWGg7eHvHx9UeFSsVtgbaG13bdStUT4qaVZLhWyNm9uyakAzQmFIIPTOSJRnW1pVf8kgiwvaRw7K/s+JxN95Xil5nrPuj9C1UClGGN6jjGuJmIPzDazOfwzr1jrBQYBSaEP8tcfXdBWmpmnnx245mXHQw3y5Wtknv1dKlecLnL5+BHt40KSI8whkjvHh40V6ALYAyPc7wPR1OpNXPbZdw="
-  on:
-    tags: true

@@ -71,8 +71,8 @@ corresponding server can be scanned. Then, SSLyze can run <cite>ScanCommands</ci
 <h3>Basic example<a class="headerlink" href="#basic-example" title="Permalink to this headline">¶</a></h3>
 <p>The SynchronousScanner class can be used to run <cite>ScanCommands</cite> against a server:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Run one scan command to list the server&#39;s TLS 1.0 cipher suites</span>
-<span class="n">server_info</span> <span class="o">=</span> <span class="n">ServerConnectivityInfo</span><span class="p">(</span><span class="n">hostname</span><span class="o">=</span><span class="sa">u</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">)</span>
-<span class="n">server_info</span><span class="o">.</span><span class="n">test_connectivity_to_server</span><span class="p">()</span>
+<span class="n">server_tester</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">(</span><span class="n">hostname</span><span class="o">=</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">)</span>
+<span class="n">server_info</span> <span class="o">=</span> <span class="n">server_tester</span><span class="o">.</span><span class="n">perform</span><span class="p">()</span>
 <span class="n">command</span> <span class="o">=</span> <span class="n">Tlsv10ScanCommand</span><span class="p">()</span>
 
 <span class="n">synchronous_scanner</span> <span class="o">=</span> <span class="n">SynchronousScanner</span><span class="p">()</span>
@@ -115,7 +115,7 @@ corresponding server can be scanned. Then, SSLyze can run <cite>ScanCommands</ci
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) – The server’s connectivity information. The
+<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo" title="sslyze.server_connectivity_info.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) – The server’s connectivity information. The
 test_connectivity_to_server() method must have been called first to ensure that the server is online
 and accessible.</li>
 <li><strong>scan_command</strong> (<a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><em>PluginScanCommand</em></a>) – The scan command to run against this server.</li>
@@ -150,8 +150,8 @@ large number of servers, and it has a dispatching mechanism to avoid DOS-ing a s
 <cite>ScanCommand</cite> are run at the same time.</p>
 <p>The commands can be queued using the <cite>queue_scan_command()</cite> method, and the results can later be retrieved using the
 <cite>get_results()</cite> method:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">server_info</span> <span class="o">=</span> <span class="n">ServerConnectivityInfo</span><span class="p">(</span><span class="n">hostname</span><span class="o">=</span><span class="sa">u</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">)</span>
-<span class="n">server_info</span><span class="o">.</span><span class="n">test_connectivity_to_server</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">server_tester</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">(</span><span class="n">hostname</span><span class="o">=</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">)</span>
+<span class="n">server_info</span> <span class="o">=</span> <span class="n">server_tester</span><span class="o">.</span><span class="n">perform</span><span class="p">()</span>
 
 <span class="n">concurrent_scanner</span> <span class="o">=</span> <span class="n">ConcurrentScanner</span><span class="p">()</span>
 
@@ -228,7 +228,7 @@ scans concurrently against a single server. A lower value will reduce the chance
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo" title="sslyze.server_connectivity.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) – The server’s connectivity information. The
+<li><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo" title="sslyze.server_connectivity_info.ServerConnectivityInfo"><em>ServerConnectivityInfo</em></a>) – The server’s connectivity information. The
 test_connectivity_to_server() method must have been called first to ensure that the server is online
 and accessible.</li>
 <li><strong>scan_command</strong> (<a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><em>PluginScanCommand</em></a>) – The scan command to run against this server.</li>

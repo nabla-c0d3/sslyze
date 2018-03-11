@@ -51,44 +51,42 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="module-sslyze.server_connectivity">
-<span id="step-1-testing-connectivity-to-a-server"></span><h1>Step 1: Testing Connectivity to a Server<a class="headerlink" href="#module-sslyze.server_connectivity" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-sslyze.server_connectivity_tester">
+<span id="step-1-testing-connectivity-to-a-server"></span><h1>Step 1: Testing Connectivity to a Server<a class="headerlink" href="#module-sslyze.server_connectivity_tester" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="basic-example">
 <h2>Basic Example<a class="headerlink" href="#basic-example" title="Permalink to this headline">¶</a></h2>
 <p>Before a server can be scanned, SSLyze must ensure that it is able to reach the server. This is achieved using the
-<cite>ServerConnectivityInfo</cite> class:</p>
+<cite>ServerConnectivityTester</cite> class:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
-    <span class="n">server_info</span> <span class="o">=</span> <span class="n">ServerConnectivityInfo</span><span class="p">(</span><span class="n">hostname</span><span class="o">=</span><span class="sa">u</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">)</span>
-    <span class="n">server_info</span><span class="o">.</span><span class="n">test_connectivity_to_server</span><span class="p">()</span>
+    <span class="n">server_tester</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">(</span><span class="n">hostname</span><span class="o">=</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">)</span>
+    <span class="n">server_info</span> <span class="o">=</span> <span class="n">server_tester</span><span class="o">.</span><span class="n">perform</span><span class="p">()</span>
 <span class="k">except</span> <span class="n">ServerConnectivityError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="c1"># Could not establish an SSL connection to the server</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;Error when connecting to </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">error_msg</span><span class="p">))</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Error when trying to connect to </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">error_message</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>If the call to <cite>test_connectivity_to_server()</cite> returns successfully, the <cite>server_info</cite> is then ready to be used for
-scanning the server. This is described in <a class="reference internal" href="running-scan-commands.html"><span class="doc">Step 2: Running Scan Commands Against a Server</span></a>.</p>
+<p>If the call to <cite>ServerConnectivityTester.perform()</cite> is successful, it returns a <cite>ServerConnectivityInfo</cite> object that
+can then be used for scanning the server. This is described in <a class="reference internal" href="running-scan-commands.html"><span class="doc">Step 2: Running Scan Commands Against a Server</span></a>.</p>
 </div>
 <div class="section" id="advanced-usage">
 <h2>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Permalink to this headline">¶</a></h2>
-<p>The ServerConnectivityInfo classs provides fine-grained controls regarding how SSLyze should connect to a server. If
+<p>The <cite>ServerConnectivityTester</cite> classs provides fine-grained controls regarding how SSLyze should connect to a server. If
 only a hostname is supplied (like in the example above), default values will be used and SSLyze will assume that the
 server is an HTTPS server listening on port 443.</p>
 <p>Several additional settings can be supplied in order to be more specific about the protocol the SSL/TLS server uses
 (such as StartTLS) and how to connect to it (for example by supplying an IP address or a client certificate).</p>
-<div class="section" id="the-serverconnectivityinfo-class">
-<h3>The ServerConnectivityInfo class<a class="headerlink" href="#the-serverconnectivityinfo-class" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="the-serverconnectivitytester-class">
+<h3>The ServerConnectivityTester class<a class="headerlink" href="#the-serverconnectivitytester-class" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="sslyze.server_connectivity.ServerConnectivityInfo">
-<em class="property">class </em><code class="descclassname">sslyze.server_connectivity.</code><code class="descname">ServerConnectivityInfo</code><a class="headerlink" href="#sslyze.server_connectivity.ServerConnectivityInfo" title="Permalink to this definition">¶</a></dt>
-<dd><p>An object encapsulating all the settings (hostname, port, SSL version, etc.) needed to successfully connect to a
-specific SSL/TLS server.</p>
-<dl class="method">
-<dt id="sslyze.server_connectivity.ServerConnectivityInfo.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>hostname</em>, <em>port=None</em>, <em>ip_address=None</em>, <em>tls_wrapped_protocol=&lt;TlsWrappedProtocolEnum.PLAIN_TLS: 1&gt;</em>, <em>tls_server_name_indication=None</em>, <em>xmpp_to_hostname=None</em>, <em>client_auth_credentials=None</em>, <em>http_tunneling_settings=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity.ServerConnectivityInfo.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructor to specify how to connect to a server to be scanned.</p>
+<dt id="sslyze.server_connectivity_tester.ServerConnectivityTester">
+<em class="property">class </em><code class="descclassname">sslyze.server_connectivity_tester.</code><code class="descname">ServerConnectivityTester</code><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityTester" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sslyze.server_connectivity_tester.ServerConnectivityTester.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>hostname</em>, <em>port=None</em>, <em>ip_address=None</em>, <em>tls_wrapped_protocol=&lt;TlsWrappedProtocolEnum.PLAIN_TLS: 1&gt;</em>, <em>tls_server_name_indication=None</em>, <em>xmpp_to_hostname=None</em>, <em>client_auth_credentials=None</em>, <em>http_tunneling_settings=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityTester.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor to specify how to connect to a given SSL/TLS server to be scanned.</p>
 <p>Most arguments are optional but can be supplied in order to be more specific about the server’s configuration.</p>
-<p>After initializing a ServerConnectivityInfo, the <cite>test_connectivity_to_server()</cite> method must be called next to
-ensure that the server is actually reachable.</p>
+<p>After initializing a ServerConnectivityTester, the <cite>perform()</cite> method must be called next to ensure that the
+server is actually reachable. The <cite>ServerConnectivityInfo</cite> returned by <cite>perform()</cite> can then be passed to a
+<cite>SynchronousScanner</cite> or <cite>ConcurrentScanner</cite> in order to run scan commands on the server.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -119,7 +117,6 @@ connecting to the server.</li>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
-<li><code class="xref py py-exc docutils literal"><span class="pre">ServerConnectivityError</span></code> – If a DNS lookup was attempted and failed.</li>
 <li><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> – If <cite>xmpp_to_hostname</cite> was specified for a non-XMPP protocol.</li>
 <li><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> – If both <cite>ip_address</cite> and <cite>http_tunneling_settings</cite> were supplied.</li>
 </ul>
@@ -130,18 +127,24 @@ connecting to the server.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="sslyze.server_connectivity.ServerConnectivityInfo.test_connectivity_to_server">
-<code class="descname">test_connectivity_to_server</code><span class="sig-paren">(</span><em>network_timeout=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity.ServerConnectivityInfo.test_connectivity_to_server" title="Permalink to this definition">¶</a></dt>
-<dd><p>Attempts to perform a full SSL/TLS handshake with the server.</p>
+<dt id="sslyze.server_connectivity_tester.ServerConnectivityTester.perform">
+<code class="descname">perform</code><span class="sig-paren">(</span><em>network_timeout=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityTester.perform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempt to perform a full SSL/TLS handshake with the server.</p>
 <p>This method will ensure that the server can be reached, and will also identify one SSL/TLS version and one
-cipher suite supported by the server. If the connectivity test is successful, the <cite>ServerConnectivityInfo</cite>
-object is then ready to be passed to a <cite>SynchronousScanner</cite> or <cite>ConcurrentScanner</cite> in order to run scan commands
-on the server.</p>
+cipher suite that is supported by the server.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>network_timeout</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Network timeout value in seconds passed to the underlying socket.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>An object encapsulating all the information needed to connect to the server, to be</dt>
+<dd>passed to a <cite>SynchronousScanner</cite> or <cite>ConcurrentScanner</cite> in order to run scan commands on the server.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#sslyze.server_connectivity_info.ServerConnectivityInfo" title="sslyze.server_connectivity_info.ServerConnectivityInfo">ServerConnectivityInfo</a></td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ServerConnectivityError</span></code> – If the server was not reachable or an SSL/TLS handshake could not be completed.</td>
 </tr>
@@ -290,6 +293,99 @@ to send after the handshake was completed.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-sslyze.server_connectivity_info">
+<span id="the-serverconnectivityinfo-class"></span><h3>The ServerConnectivityInfo class<a class="headerlink" href="#module-sslyze.server_connectivity_info" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo">
+<em class="property">class </em><code class="descclassname">sslyze.server_connectivity_info.</code><code class="descname">ServerConnectivityInfo</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the settings (hostname, port, SSL version, etc.) needed to successfully connect to a given SSL/TLS server.</p>
+<p>Such objects are returned by <cite>ServerConnectivityTester.perform()</cite> if connectivity testing was successful, and should
+never be instantiated directly.</p>
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.hostname">
+<code class="descname">hostname</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.hostname" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Text</em> – The server’s hostname.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.port">
+<code class="descname">port</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.port" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – The server’s TLS port number.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address">
+<code class="descname">ip_address</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Text</em> – The server’s IP address.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.tls_wrapped_protocol">
+<code class="descname">tls_wrapped_protocol</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.tls_wrapped_protocol" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TlsWrappedProtocolEnum</em> – The protocol wrapped in TLS (HTTP, XMPP, etc.) that the server
+expects.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.tls_server_name_indication">
+<code class="descname">tls_server_name_indication</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.tls_server_name_indication" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Text</em> – The hostname to set within the Server Name Indication TLS extension.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.xmpp_to_hostname">
+<code class="descname">xmpp_to_hostname</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.xmpp_to_hostname" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[Text]</em> – The hostname to set within the <cite>to</cite> attribute of the XMPP stream; only used
+if the <cite>tls_wrapped_protocol</cite> is an XMPP protocol.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_credentials">
+<code class="descname">client_auth_credentials</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_credentials" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[ClientAuthenticationCredentials]</em> – The client certificate and private key
+needed to perform mutual authentication with the server. If not supplied, SSLyze will attempt to connect
+to the server without performing mutual authentication.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.http_tunneling_settings">
+<code class="descname">http_tunneling_settings</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.http_tunneling_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[HttpConnectTunnelingSettings]</em> – The HTTP proxy configuration to use in
+order to tunnel the scans through a proxy. If not supplied, SSLyze will run the scans by directly
+connecting to the server.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.highest_ssl_version_supported">
+<code class="descname">highest_ssl_version_supported</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.highest_ssl_version_supported" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OpenSslVersionEnum</em> – The highest version of SSL/TLS supported by the server, as
+detected when doing connectivity testing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.openssl_cipher_string_supported">
+<code class="descname">openssl_cipher_string_supported</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.openssl_cipher_string_supported" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Text</em> – An OpenSSL cipher string that contains at least one cipher suite
+supported by the server, as detected when doing connectivity testing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_requirement">
+<code class="descname">client_auth_requirement</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_requirement" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ClientAuthenticationServerConfigurationEnum</em> – Whether the support requires client
+authentication.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.get_preconfigured_ssl_connection">
+<code class="descname">get_preconfigured_ssl_connection</code><span class="sig-paren">(</span><em>override_ssl_version=None</em>, <em>ssl_verify_locations=None</em>, <em>should_use_legacy_openssl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.get_preconfigured_ssl_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.</p>
+<p>Used by all plugins to connect to the server and run scans.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 </div>
 
@@ -304,10 +400,11 @@ to send after the handshake was completed.</p>
 <li><a class="reference internal" href="#">Step 1: Testing Connectivity to a Server</a><ul>
 <li><a class="reference internal" href="#basic-example">Basic Example</a></li>
 <li><a class="reference internal" href="#advanced-usage">Advanced Usage</a><ul>
-<li><a class="reference internal" href="#the-serverconnectivityinfo-class">The ServerConnectivityInfo class</a></li>
+<li><a class="reference internal" href="#the-serverconnectivitytester-class">The ServerConnectivityTester class</a></li>
 <li><a class="reference internal" href="#module-sslyze.ssl_settings">Enabling StartTLS and other supported protocols</a></li>
 <li><a class="reference internal" href="#running-scan-commands-through-a-proxy">Running scan commands through a proxy</a></li>
 <li><a class="reference internal" href="#enabling-client-authentication">Enabling client authentication</a></li>
+<li><a class="reference internal" href="#module-sslyze.server_connectivity_info">The ServerConnectivityInfo class</a></li>
 </ul>
 </li>
 </ul>

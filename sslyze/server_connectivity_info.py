@@ -14,8 +14,8 @@ from sslyze.utils.ssl_connection_configurator import SslConnectionConfigurator
 class ServerConnectivityInfo(object):
     """All the settings (hostname, port, SSL version, etc.) needed to successfully connect to a given SSL/TLS server.
 
-    Such objects are returned by ServerConnectivityTester.perform() if connectivity testing was successful, and should
-    never be directly instantiated.
+    Such objects are returned by `ServerConnectivityTester.perform()` if connectivity testing was successful, and should
+    never be instantiated directly.
 
     Attributes:
         hostname (Text): The server's hostname.

@@ -31,8 +31,8 @@ Basic example
 The SynchronousScanner class can be used to run `ScanCommands` against a server::
 
     # Run one scan command to list the server's TLS 1.0 cipher suites
-    server_info = ServerConnectivityInfo(hostname=u'www.google.com')
-    server_info.test_connectivity_to_server()
+    server_tester = ServerConnectivityTester(hostname='www.google.com')
+    server_info = server_tester.perform()
     command = Tlsv10ScanCommand()
 
     synchronous_scanner = SynchronousScanner()
@@ -63,8 +63,8 @@ large number of servers, and it has a dispatching mechanism to avoid DOS-ing a s
 The commands can be queued using the `queue_scan_command()` method, and the results can later be retrieved using the
 `get_results()` method::
 
-    server_info = ServerConnectivityInfo(hostname=u'www.google.com')
-    server_info.test_connectivity_to_server()
+    server_tester = ServerConnectivityTester(hostname='www.google.com')
+    server_info = server_tester.perform()
 
     concurrent_scanner = ConcurrentScanner()
 

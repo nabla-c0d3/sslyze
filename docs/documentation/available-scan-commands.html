@@ -409,9 +409,9 @@ unexpected error during the TLS handshake with the server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher">
 <code class="descname">preferred_cipher</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>AcceptedCipherSuite</em> – The server’s preferred cipher suite among all the cipher suites
-supported by SSLyze. None if the server follows the client’s preference or if none of SSLyze’s cipher suites
-are supported by the server.</p>
+<dd><p><em>Optional[AcceptedCipherSuite]</em> – The server’s preferred cipher suite among all the cipher
+suites supported by SSLyze. None if the server follows the client’s preference or if none of SSLyze’s cipher
+suites are supported by the server.</p>
 </dd></dl>
 
 </dd></dl>
@@ -463,9 +463,10 @@ None if the cipher suite is not DH or ECDH.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.post_handshake_response">
 <code class="descname">post_handshake_response</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.post_handshake_response" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The server’s response after completing the SSL/TLS handshake and sending a
-request, based on the TlsWrappedProtocolEnum set for this server. For example, this will contain an HTTP
-response when scanning an HTTPS server with TlsWrappedProtocolEnum.HTTPS as the tls_wrapped_protocol.</p>
+<dd><p><em>Optional[Text]</em> – The server’s response after completing the SSL/TLS handshake and
+sending a request, based on the TlsWrappedProtocolEnum set for this server. For example, this will contain
+an HTTP response when scanning an HTTPS server with TlsWrappedProtocolEnum.HTTPS as the
+tls_wrapped_protocol.</p>
 </dd></dl>
 
 </dd></dl>
@@ -640,46 +641,47 @@ response sent back by the server(s). Also compute the HPKP pins for the server(s
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hsts_header">
 <code class="descname">hsts_header</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hsts_header" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ParsedHstsHeader</em> – The content of the HSTS header returned by the server; None if no HSTS header
-was returned.</p>
+<dd><p><em>Optional[ParsedHstsHeader]</em> – The content of the HSTS header returned by the server; None if no HSTS
+header was returned.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hpkp_header">
 <code class="descname">hpkp_header</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hpkp_header" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ParsedHpkpHeader</em> – The content of the HPKP header returned by the server; None if no HPKP header
-was returned.</p>
+<dd><p><em>Optional[ParsedHpkpHeader]</em> – The content of the HPKP header returned by the server; None if no HPKP
+header was returned.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.expect_ct_header">
 <code class="descname">expect_ct_header</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.expect_ct_header" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ParsedExpectCTHeader</em> – The content of the Expect-CT header returned by the server; None if
-no Expect-CT header was returned.</p>
+<dd><p><em>Optional[ParsedExpectCTHeader]</em> – The content of the Expect-CT header returned by the server;
+None if no Expect-CT header was returned.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.is_valid_pin_configured">
 <code class="descname">is_valid_pin_configured</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.is_valid_pin_configured" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if at least one of the configured pins was found in the server’s
+<dd><p><em>Optional[bool]</em> – True if at least one of the configured pins was found in the server’s
 verified certificate chain. None if the verified chain could not be built or no HPKP header was returned.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.is_backup_pin_configured">
 <code class="descname">is_backup_pin_configured</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.is_backup_pin_configured" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if if at least one of the configured pins was NOT found in the server’s
-verified certificate chain. None if the verified chain could not be built or no HPKP header was returned.</p>
+<dd><p><em>Optional[bool]</em> – True if if at least one of the configured pins was NOT found in the
+server’s verified certificate chain. None if the verified chain could not be built or no HPKP header was
+returned.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.verified_certificate_chain">
 <code class="descname">verified_certificate_chain</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.verified_certificate_chain" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[Certificate]</em> – The verified certificate chain; index 0 is the leaf
-certificate and the last element is the anchor/CA certificate from the Mozilla trust store. Will be empty if
-validation failed or the verified chain could not be built. The HPKP pin for each certificate is available
-in the certificate’s hpkp_pin attribute. None if the verified chain could not be built. Each certificate is
-parsed using the cryptography module; documentation is available at
+<dd><p><em>List[cryptography.x509.Certificate]</em> – The verified certificate chain; index 0 is the
+leaf certificate and the last element is the anchor/CA certificate from the Mozilla trust store. Will be
+empty if validation failed or the verified chain could not be built. The HPKP pin for each certificate is
+available in the certificate’s hpkp_pin attribute. None if the verified chain could not be built. Each
+certificate is parsed using the cryptography module; documentation is available at
 <a class="reference external" href="https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object">https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object</a>.</p>
 </dd></dl>
 

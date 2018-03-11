@@ -68,6 +68,7 @@
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
+ | <a href="#X"><strong>X</strong></a>
  
 </div>
 <h2 id="_">_</h2>
@@ -80,7 +81,7 @@
 </li>
         <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand.__init__">(sslyze.plugins.plugin_base.PluginScanCommand method)</a>
 </li>
-        <li><a href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo.__init__">(sslyze.server_connectivity.ServerConnectivityInfo method)</a>
+        <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerConnectivityTester.__init__">(sslyze.server_connectivity_tester.ServerConnectivityTester method)</a>
 </li>
         <li><a href="testing-connectivity.html#sslyze.ssl_settings.ClientAuthenticationCredentials.__init__">(sslyze.ssl_settings.ClientAuthenticationCredentials method)</a>
 </li>
@@ -129,9 +130,13 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult">CertificateInfoScanResult (class in sslyze.plugins.certificate_info_plugin)</a>
 </li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult">CipherSuiteScanResult (class in sslyze.plugins.openssl_cipher_suites_plugin)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult">CipherSuiteScanResult (class in sslyze.plugins.openssl_cipher_suites_plugin)</a>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_credentials">client_auth_credentials (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_requirement">client_auth_requirement (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.ssl_settings.ClientAuthenticationCredentials">ClientAuthenticationCredentials (class in sslyze.ssl_settings)</a>
 </li>
@@ -207,6 +212,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.get_preconfigured_ssl_connection">get_preconfigured_ssl_connection() (sslyze.server_connectivity_info.ServerConnectivityInfo method)</a>
+</li>
       <li><a href="running-scan-commands.html#sslyze.concurrent_scanner.ConcurrentScanner.get_results">get_results() (sslyze.concurrent_scanner.ConcurrentScanner method)</a>
 </li>
   </ul></td>
@@ -225,11 +232,17 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.heartbleed_plugin.HeartbleedScanResult">HeartbleedScanResult (class in sslyze.plugins.heartbleed_plugin)</a>
 </li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.highest_ssl_version_supported">highest_ssl_version_supported (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.hostname">hostname (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hpkp_header">hpkp_header (sslyze.plugins.http_headers_plugin.HttpHeadersScanResult attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hsts_header">hsts_header (sslyze.plugins.http_headers_plugin.HttpHeadersScanResult attribute)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.http_tunneling_settings">http_tunneling_settings (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.ssl_settings.HttpConnectTunnelingSettings">HttpConnectTunnelingSettings (class in sslyze.ssl_settings)</a>
 </li>
@@ -252,6 +265,8 @@
 </li>
       </ul></li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR">INTERNAL_ERROR (sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum attribute)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address">ip_address (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
       <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand.is_aggressive">is_aggressive() (sslyze.plugins.plugin_base.PluginScanCommand class method)</a>
 </li>
@@ -341,6 +356,8 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum">OcspResponseStatusEnum (class in sslyze.plugins.certificate_info_plugin)</a>
 </li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.openssl_cipher_string_supported">openssl_cipher_string_supported (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
+</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.openssl_name">openssl_name (sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite attribute)</a>
 
       <ul>
@@ -379,6 +396,8 @@
 </li>
       <li><a href="testing-connectivity.html#nassl.ssl_client.OpenSslFileTypeEnum.PEM">PEM (nassl.ssl_client.OpenSslFileTypeEnum attribute)</a>
 </li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerConnectivityTester.perform">perform() (sslyze.server_connectivity_tester.ServerConnectivityTester method)</a>
+</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.pin_sha256_list">pin_sha256_list (sslyze.plugins.http_headers_plugin.ParsedHpkpHeader attribute)</a>
 </li>
   </ul></td>
@@ -392,6 +411,8 @@
       <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand">PluginScanCommand (class in sslyze.plugins.plugin_base)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult">PluginScanResult (class in sslyze.plugins.plugin_base)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.port">port (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.post_handshake_response">post_handshake_response (sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite attribute)</a>
 </li>
@@ -445,7 +466,9 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult.server_info">server_info (sslyze.plugins.plugin_base.PluginScanResult attribute)</a>, <a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanResult.server_info">[1]</a>
 </li>
-      <li><a href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo">ServerConnectivityInfo (class in sslyze.server_connectivity)</a>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo">ServerConnectivityInfo (class in sslyze.server_connectivity_info)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerConnectivityTester">ServerConnectivityTester (class in sslyze.server_connectivity_tester)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanCommand">SessionRenegotiationScanCommand (class in sslyze.plugins.session_renegotiation_plugin)</a>
 </li>
@@ -503,7 +526,9 @@
 </li>
       <li><a href="available-scan-commands.html#module-sslyze.plugins.utils.trust_store.trust_store_repository">sslyze.plugins.utils.trust_store.trust_store_repository (module)</a>
 </li>
-      <li><a href="testing-connectivity.html#module-sslyze.server_connectivity">sslyze.server_connectivity (module)</a>
+      <li><a href="testing-connectivity.html#module-sslyze.server_connectivity_info">sslyze.server_connectivity_info (module)</a>
+</li>
+      <li><a href="testing-connectivity.html#module-sslyze.server_connectivity_tester">sslyze.server_connectivity_tester (module)</a>
 </li>
       <li><a href="testing-connectivity.html#module-sslyze.ssl_settings">sslyze.ssl_settings (module)</a>
 </li>
@@ -549,11 +574,13 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="testing-connectivity.html#sslyze.server_connectivity.ServerConnectivityInfo.test_connectivity_to_server">test_connectivity_to_server() (sslyze.server_connectivity.ServerConnectivityInfo method)</a>
-</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.ticket_resumption_exception">ticket_resumption_exception (sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.ticket_resumption_failed_reason">ticket_resumption_failed_reason (sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult attribute)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.tls_server_name_indication">tls_server_name_indication (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.tls_wrapped_protocol">tls_wrapped_protocol (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.Tlsv10ScanCommand">Tlsv10ScanCommand (class in sslyze.plugins.openssl_cipher_suites_plugin)</a>
 </li>
@@ -614,6 +641,14 @@
       <li><a href="available-scan-commands.html#sslyze.plugins.robot_plugin.RobotScanResultEnum.VULNERABLE_STRONG_ORACLE">VULNERABLE_STRONG_ORACLE (sslyze.plugins.robot_plugin.RobotScanResultEnum attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.robot_plugin.RobotScanResultEnum.VULNERABLE_WEAK_ORACLE">VULNERABLE_WEAK_ORACLE (sslyze.plugins.robot_plugin.RobotScanResultEnum attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="X">X</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.xmpp_to_hostname">xmpp_to_hostname (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
   </ul></td>
 </tr></table>

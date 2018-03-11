@@ -98,7 +98,7 @@ class ServerConnectivityTester(object):
             http_tunneling_settings=None                            # type: Optional[HttpConnectTunnelingSettings]
             ):
         # type: (...) -> None
-        """Constructor to specify how to connect to a server to be scanned.
+        """Constructor to specify how to connect to a given SSL/TLS server to be scanned.
 
         Most arguments are optional but can be supplied in order to be more specific about the server's configuration.
 

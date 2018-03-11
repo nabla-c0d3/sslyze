@@ -32,19 +32,8 @@ Getting started
 SSLyze can be installed directly via pip:
 
     pip install --upgrade setuptools
-    pip install sslyze
-    sslyze --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
-
-It is also easy to directly clone the repository and the fetch the requirements:
-
-    git clone https://github.com/nabla-c0d3/sslyze.git
-    cd sslyze
-    pip install -r requirements.txt --upgrade
+    pip install --upgrade sslyze
     python -m sslyze --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
-
-On Linux, the `python-dev` package needs to be installed first so that the nassl C extension can be compiled:
-
-    sudo apt-get install python-dev
 
 SSLyze has been tested on the following platforms: Windows 7 (32 and 64 bits), Debian 7 (32 and 64 bits), macOS Sierra
 
@@ -60,12 +49,15 @@ A simple example follows:
 # Setup the server to scan and ensure it is online/reachable
 hostname = u'smtp.gmail.com'
 try:
-    server_info = ServerConnectivityInfo(hostname=hostname, port=587,
-                                         tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP)
-    server_info.test_connectivity_to_server()
+    server_tester = ServerConnectivityTester(
+        hostname=hostname, 
+        port=587,
+        tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP
+    )
+    server_info = server_tester.perform()
 except ServerConnectivityError as e:
     # Could not establish an SSL connection to the server
-    raise RuntimeError(u'Error when connecting to {}: {}'.format(hostname, e.error_msg))
+    raise RuntimeError('Error when connecting to {}: {}'.format(e.server_info.hostname, e.error_message))
 
 # Run one scan command synchronously to list the server's TLS 1.0 cipher suites
 print(u'\nRunning one scan command synchronously...')
@@ -101,7 +93,8 @@ allowing SSLyze to access the low-level OpenSSL APIs needed to perform deep SSL 
 Where do the trust stores come from?
 ------------------------------------
 
-The trust stores (Mozilla, Microsoft, etc.) used by SSLyze for certificate validation are downloaded from the [Trust Stores Observatory](https://github.com/nabla-c0d3/trust_stores_observatory). 
+The trust stores (Mozilla, Microsoft, etc.) used by SSLyze for certificate validation are downloaded from the 
+[Trust Stores Observatory](https://github.com/nabla-c0d3/trust_stores_observatory). 
 
 The trust stores can be updated to the latest version, using either the CLI:
 

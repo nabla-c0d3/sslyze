@@ -8,7 +8,6 @@ SSLYZE_SETUP = {
     'description': PROJECT_DESC,
     'author': __author__,
     'author_email': __email__,
-    'license': __license__,
     'url': PROJECT_URL,
     'entry_points': {'console_scripts': ['sslyze = sslyze.__main__:main']},
     'packages': ['sslyze', 'sslyze.cli', 'sslyze.utils', 'sslyze.plugins', 'sslyze.plugins.utils',

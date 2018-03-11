@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from sslyze import PROJECT_URL, PROJECT_DESC, __author__, __email__, __version__, __license__
+from sslyze import PROJECT_URL, PROJECT_DESC, __author__, __email__, __version__
 
 
 SSLYZE_SETUP = {

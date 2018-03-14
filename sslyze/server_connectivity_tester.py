@@ -208,7 +208,11 @@ class ServerConnectivityTester(object):
         # Socket errors
         except socket.timeout:  # Host is down
             raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_TIMEOUT)
+        # Python 2 only error
         except socket.error:  # Connection Refused
+            raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_REJECTED)
+        # Python 3 error
+        except ConnectionError:
             raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_REJECTED)
 
         # StartTLS errors

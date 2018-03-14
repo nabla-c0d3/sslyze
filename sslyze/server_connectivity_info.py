@@ -20,7 +20,7 @@ class ServerConnectivityInfo(object):
     Attributes:
         hostname (Text): The server's hostname.
         port (int): The server's TLS port number.
-        ip_address (Text): The server's IP address.
+        ip_address (Text): The server's IP address. None if we are connecting through a proxy.
         tls_wrapped_protocol (TlsWrappedProtocolEnum): The protocol wrapped in TLS (HTTP, XMPP, etc.) that the server
             expects.
         tls_server_name_indication (Text): The hostname to set within the Server Name Indication TLS extension.
@@ -44,7 +44,7 @@ class ServerConnectivityInfo(object):
             self,
             hostname,                                               # type: Text
             port,                                                   # type: int
-            ip_address,                                             # type: Text
+            ip_address,                                             # type: Optional[Text]
             tls_wrapped_protocol,                                   # type: TlsWrappedProtocolEnum
             tls_server_name_indication,                             # type: Text
             xmpp_to_hostname,                                       # type: Optional[Text]

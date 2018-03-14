@@ -112,7 +112,7 @@ class SSLConnection(object):
 
     def __init__(self,
                  hostname,                              # type: Text
-                 ip_address,                            # type: Text
+                 ip_address,                            # type: Optional[Text]
                  port,                                  # type: int
                  ssl_version,                           # type: OpenSslVersionEnum
                  ssl_verify_locations=None,             # type: Optional[Text]
@@ -143,7 +143,7 @@ class SSLConnection(object):
         self.ssl_client.set_cipher_list(self.DEFAULT_SSL_CIPHER_LIST)
 
         self._hostname = hostname
-        self._ip_address = ip_address
+        self._ip_address = ip_address  # None if we are connecting through a proxy
         self._port = port
 
         # Can be set later
@@ -198,9 +198,11 @@ class SSLConnection(object):
             # Check if the proxy was able to connect to the host
             if http_response.status != 200:
                 raise ProxyError(self.ERR_CONNECT_REJECTED)
-        else:
+        elif self._ip_address:
             # No proxy; connect directly to the server
             sock = socket.create_connection(address=(self._ip_address, self._port), timeout=final_timeout)
+        else:
+            raise RuntimeError('Should never happen')
 
         # Pass the connected socket to the SSL client
         self.ssl_client.set_underlying_socket(sock)

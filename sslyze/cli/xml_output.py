@@ -79,9 +79,11 @@ class XmlOutputGenerator(OutputGenerator):
         if server_info.http_tunneling_settings:
             target_attrib['httpsTunnelHostname'] = server_info.http_tunneling_settings.hostname
             target_attrib['httpsTunnelPort'] = str(server_info.http_tunneling_settings.port)
-        else:
+        elif server_info.ip_address:
             # We only know the IP if we're not scanning through a proxy
             target_attrib['ip'] = server_info.ip_address
+        else:
+            raise RuntimeError('Should never happen')
 
         server_scan_node = Element('target', attrib=target_attrib)
         server_scan_result.plugin_result_list.sort(key=lambda result: result.scan_command.get_cli_argument())

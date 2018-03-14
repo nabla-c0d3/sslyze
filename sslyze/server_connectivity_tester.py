@@ -186,11 +186,11 @@ class ServerConnectivityTester(object):
         Raises:
             ServerConnectivityError: If the server was not reachable or an SSL/TLS handshake could not be completed.
         """
-        # First do a DNS lookup if needed
-        if self.ip_address is None:
+        # First do a DNS lookup if we don't already have an IP address and we are not using a proxy
+        if not self.ip_address and not self.http_tunneling_settings:
             try:
                 self.ip_address = self._do_dns_lookup(self.hostname, self.port)
-            except (socket.gaierror, IndexError):
+            except (socket.gaierror, IndexError, ConnectionError):
                 raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED)
 
         # Then try to connect

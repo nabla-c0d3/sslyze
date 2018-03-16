@@ -62,7 +62,6 @@ class SSLConnection(object):
     }
 
     HANDSHAKE_REJECTED_SSL_ERRORS = {
-        'sslv3 alert handshake failure': 'Alert handshake failure',
         'excessive message size': 'Excessive message size',
         'bad mac decode': 'Bad mac decode',
         'wrong version number': 'Wrong version number',
@@ -72,9 +71,11 @@ class SSLConnection(object):
         'no cipher list': 'No ciphers list',
         'insufficient security': 'Insufficient security',
         'block type is not 01': 'block type is not 01',  # Actually an RSA error
-        'tlsv1 alert protocol version': 'Alert: protocol version ',
         'wrong ssl version' : 'Wrong SSL version',
-        'tlsv1 alert decrypt error': 'Decrypt error',
+        'sslv3 alert handshake failure': 'Alert: handshake failure',
+        'tlsv1 alert protocol version': 'Alert: protocol version ',
+        'tlsv1 alert decrypt error': 'Alert: Decrypt error',
+        'tlsv1 alert decode error': 'Alert: Decode error',
 
         # The following issues have nothing to do with the server or the connection
         # They are client-side (SSLyze) issues

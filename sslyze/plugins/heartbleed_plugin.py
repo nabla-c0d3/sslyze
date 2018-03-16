@@ -32,7 +32,7 @@ class HeartbleedScanCommand(PluginScanCommand):
     @classmethod
     def get_title(cls):
         # type: () -> Text
-       return 'OpenSSL Heartbleed'
+        return 'OpenSSL Heartbleed'
 
 
 class HeartbleedPlugin(plugin_base.Plugin):

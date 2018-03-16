@@ -88,7 +88,7 @@ class CommandLineServerStringParser(object):
             host = (server_str.split(':'))[0]  # hostname or ipv4 address
             try:
                 port = int((server_str.split(':'))[1])
-            except:  # Port is not an int
+            except ValueError:  # Port is not an int
                 raise ServerStringParsingError(server_str, cls.SERVER_STRING_ERROR_BAD_PORT)
 
         return host, port
@@ -105,7 +105,7 @@ class CommandLineServerStringParser(object):
         if ':' in target_split[1]:  # port was specified
             try:
                 port = int(target_split[1].rsplit(':')[1])
-            except:  # Port is not an int
+            except ValueError:  # Port is not an int
                 raise ServerStringParsingError(server_str, cls.SERVER_STRING_ERROR_BAD_PORT)
         return ipv6_addr, port
 
@@ -215,7 +215,6 @@ class CommandLineParser(object):
                 and args_command_list.xml_file and args_command_list.xml_file == '-':
                 raise CommandLineParsingError('Cannot use --xml_out - with --json_out -.')
 
-
         # Sanity checks on the client cert options
         client_auth_creds = None
         if bool(args_command_list.cert) ^ bool(args_command_list.key):
@@ -273,7 +272,7 @@ class CommandLineParser(object):
 
             try:
                 # TODO(AD): Unicode hostnames may fail on Python2
-                #hostname = hostname.decode('utf-8')
+                # hostname = hostname.decode('utf-8')
                 server_info = ServerConnectivityTester(
                     hostname=hostname,
                     port=port,
@@ -284,7 +283,6 @@ class CommandLineParser(object):
                     client_auth_credentials=client_auth_creds,
                     http_tunneling_settings=http_tunneling_settings
                 )
-                
                 good_server_list.append(server_info)
             except ValueError as e:
                 # Will happen for example if xmpp_to is specified for a non-XMPP connection

@@ -112,13 +112,13 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
     MAX_THREADS = 10
     SSL_VERSIONS_MAPPING = {
-            Sslv20ScanCommand: OpenSslVersionEnum.SSLV2,
-            Sslv30ScanCommand: OpenSslVersionEnum.SSLV3,
-            Tlsv10ScanCommand: OpenSslVersionEnum.TLSV1,
-            Tlsv11ScanCommand: OpenSslVersionEnum.TLSV1_1,
-            Tlsv12ScanCommand: OpenSslVersionEnum.TLSV1_2,
-            Tlsv13ScanCommand: OpenSslVersionEnum.TLSV1_3,
-        }  # type: Dict[Type[CipherSuiteScanCommand], OpenSslVersionEnum]
+        Sslv20ScanCommand: OpenSslVersionEnum.SSLV2,
+        Sslv30ScanCommand: OpenSslVersionEnum.SSLV3,
+        Tlsv10ScanCommand: OpenSslVersionEnum.TLSV1,
+        Tlsv11ScanCommand: OpenSslVersionEnum.TLSV1_1,
+        Tlsv12ScanCommand: OpenSslVersionEnum.TLSV1_2,
+        Tlsv13ScanCommand: OpenSslVersionEnum.TLSV1_3,
+    }  # type: Dict[Type[CipherSuiteScanCommand], OpenSslVersionEnum]
 
     @classmethod
     def get_available_commands(cls):
@@ -259,7 +259,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
         except Exception as e:
             cipher_result = ErroredCipherSuite(openssl_cipher_name, ssl_version, e)
-            
+
         finally:
             ssl_connection.close()
 
@@ -443,7 +443,7 @@ class CipherSuiteScanResult(PluginScanResult):
             accepted_cipher_list,  # type: List[AcceptedCipherSuite]
             rejected_cipher_list,  # type: List[RejectedCipherSuite]
             errored_cipher_list    # type: List[ErroredCipherSuite]
-            ):
+    ):
         # type: (...) -> None
         super(CipherSuiteScanResult, self).__init__(server_info, scan_command)
 
@@ -570,8 +570,7 @@ class CipherSuiteScanResult(PluginScanResult):
 
         # Output all errors if any
         if len(self.errored_cipher_list) > 0:
-            result_txt.append(self._format_subtitle('Undefined - An unexpected error happened:')
-            )
+            result_txt.append(self._format_subtitle('Undefined - An unexpected error happened:'))
             for err_cipher in self.errored_cipher_list:
                 cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT.format(cipher_name=err_cipher.name,
                                                                           error_message=err_cipher.error_message)

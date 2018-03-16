@@ -64,8 +64,10 @@ class ConsoleOutputGenerator(OutputGenerator):
         network_route = server_connectivity_info.ip_address
         if server_connectivity_info.http_tunneling_settings:
             # We do not know the server's IP address if going through a proxy
-            network_route = 'Proxy at {}:{}'.format(server_connectivity_info.http_tunneling_settings.hostname,
-                                                     server_connectivity_info.http_tunneling_settings.port)
+            network_route = 'Proxy at {}:{}'.format(
+                server_connectivity_info.http_tunneling_settings.hostname,
+                server_connectivity_info.http_tunneling_settings.port
+            )
 
         self._file_to.write(self.SERVER_OK_FORMAT.format(host=server_connectivity_info.hostname,
                                                          port=server_connectivity_info.port,
@@ -88,8 +90,10 @@ class ConsoleOutputGenerator(OutputGenerator):
         network_route = server_scan.server_info.ip_address
         if server_scan.server_info.http_tunneling_settings:
             # We do not know the server's IP address if going through a proxy
-            network_route = 'Proxy at {}:{}'.format(server_scan.server_info.http_tunneling_settings.hostname,
-                                                     server_scan.server_info.http_tunneling_settings.port)
+            network_route = 'Proxy at {}:{}'.format(
+                server_scan.server_info.http_tunneling_settings.hostname,
+                server_scan.server_info.http_tunneling_settings.port
+            )
 
         scan_txt = self.SCAN_FORMAT.format(server_scan.server_info.hostname, str(server_scan.server_info.port),
                                            network_route)

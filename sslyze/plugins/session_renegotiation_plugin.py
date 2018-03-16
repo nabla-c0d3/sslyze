@@ -37,7 +37,6 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
         # type: () -> List[Type[PluginScanCommand]]
         return [SessionRenegotiationScanCommand]
 
-
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> SessionRenegotiationScanResult
         if not isinstance(scan_command, SessionRenegotiationScanCommand):
@@ -47,7 +46,6 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
         supports_secure_renegotiation = self._test_secure_renegotiation(server_info)
         return SessionRenegotiationScanResult(server_info, scan_command, accepts_client_renegotiation,
                                               supports_secure_renegotiation)
-
 
     @staticmethod
     def _test_secure_renegotiation(server_info):
@@ -65,7 +63,6 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
             ssl_connection.close()
 
         return supports_secure_renegotiation
-
 
     @staticmethod
     def _test_client_renegotiation(server_info):

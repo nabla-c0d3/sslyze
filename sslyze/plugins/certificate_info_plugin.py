@@ -168,7 +168,6 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         return CertificateInfoScanResult(server_info, scan_command, certificate_chain, path_validation_result_list,
                                          path_validation_error_list, ocsp_response)
 
-
     @staticmethod
     def _get_and_verify_certificate_chain(server_info, trust_store):
         # type: (ServerConnectivityInfo, TrustStore) -> Tuple[List[Certificate], Text, Optional[OcspResponse]]
@@ -208,8 +207,8 @@ class CertificateInfoScanResult(PluginScanResult):
 
     Attributes:
         certificate_chain (List[cryptography.x509.Certificate]): The certificate chain sent by the server; index 0 is
-            the leaf certificate. Each certificate is parsed using the cryptography module; documentation is available 
-            at https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object. 
+            the leaf certificate. Each certificate is parsed using the cryptography module; documentation is available
+            at https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
         path_validation_result_list (List[PathValidationResult]): The list of attempts at validating the server's
             certificate chain path using the trust stores packaged with SSLyze (Mozilla, Apple, etc.).
         path_validation_error_list (List[PathValidationError]):  The list of attempts at validating the server's
@@ -223,8 +222,8 @@ class CertificateInfoScanResult(PluginScanResult):
         verified_certificate_chain (List[cryptography.x509.Certificate]): The verified certificate chain built using the
             successful_trust_store; index 0 is the leaf certificate and the last element is the anchor/CA certificate
             from the trust store. Will be empty if the validation failed with all available trust store, or the
-            verified chain could not be built. Each certificate is parsed using the cryptography module; documentation 
-            is available at https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object. 
+            verified chain could not be built. Each certificate is parsed using the cryptography module; documentation
+            is available at https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
         certificate_matches_hostname (bool): True if hostname validation was successful ie. the leaf certificate was
             issued for the server's hostname.
         is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
@@ -252,7 +251,7 @@ class CertificateInfoScanResult(PluginScanResult):
             path_validation_result_list,    # type: List[PathValidationResult]
             path_validation_error_list,     # type: List[PathValidationError]
             ocsp_response                   # type: OcspResponse
-            ):
+    ):
         # type: (...) -> None
         super(CertificateInfoScanResult, self).__init__(server_info, scan_command)
         # Find the first trust store that successfully validated the certificate chain
@@ -538,7 +537,7 @@ class CertificateInfoScanResult(PluginScanResult):
             public_key = certificate.public_key()
             if isinstance(public_key, EllipticCurvePublicKey):
                 key_attrs['size'] = str(public_key.curve.key_size)
-                key_attrs['curve'] =  public_key.curve.name
+                key_attrs['curve'] = public_key.curve.name
             else:
                 key_attrs['size'] = str(public_key.key_size)
                 key_attrs['exponent'] = str(public_key.public_numbers().e)
@@ -625,7 +624,6 @@ class CertificateInfoScanResult(PluginScanResult):
             trust_validation_xml.append(verified_cert_chain_xml)
 
         xml_output.append(trust_validation_xml)
-
 
         # OCSP Stapling
         ocsp_xml = Element('ocspStapling', attrib={'isSupported': 'False' if self.ocsp_response is None else 'True'})

@@ -96,7 +96,7 @@ class ServerConnectivityTester(object):
             xmpp_to_hostname=None,                                  # type: Optional[Text]
             client_auth_credentials=None,                           # type: Optional[ClientAuthenticationCredentials]
             http_tunneling_settings=None                            # type: Optional[HttpConnectTunnelingSettings]
-            ):
+    ):
         # type: (...) -> None
         """Constructor to specify how to connect to a given SSL/TLS server to be scanned.
 
@@ -280,7 +280,7 @@ class ServerConnectivityTester(object):
                     finally:
                         ssl_connection_auth.close()
 
-                except:
+                except Exception:
                     # Could not complete a handshake with this server
                     pass
                 finally:

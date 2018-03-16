@@ -53,7 +53,7 @@ class ServerConnectivityInfo(object):
             highest_ssl_version_supported,                          # type: OpenSslVersionEnum
             openssl_cipher_string_supported,                        # type: Text
             client_auth_requirement,                                # type: ClientAuthenticationServerConfigurationEnum
-            ):
+    ):
         # type: (...) -> None
         self.hostname = hostname
         self.port = port

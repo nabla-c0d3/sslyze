@@ -60,7 +60,7 @@ def main():
     # Initialize the pool of processes that will run each plugin
     if args_command_list.https_tunnel or args_command_list.slow_connection:
         # Maximum one process to not kill the proxy or the connection
-        global_scanner  = ConcurrentScanner(max_processes_nb=1)
+        global_scanner = ConcurrentScanner(max_processes_nb=1)
     else:
         global_scanner = ConcurrentScanner()
 
@@ -121,7 +121,7 @@ def main():
             output_hub.server_scan_completed(CompletedServerScan(server_info, plugin_result_list))
 
     # All done
-    exec_time = time()-start_time
+    exec_time = time() - start_time
     output_hub.scans_completed(exec_time)
 
 

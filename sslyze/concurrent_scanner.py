@@ -40,7 +40,9 @@ class PluginRaisedExceptionScanResult(PluginScanResult):
 
     def as_xml(self):
         # type: () -> Element
-        return Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title(), exception=self.as_text()[1])
+        return Element(
+            self.scan_command.get_cli_argument(), title=self.scan_command.get_title(), exception=self.as_text()[1]
+        )
 
 
 class ConcurrentScanner(object):
@@ -79,7 +81,6 @@ class ConcurrentScanner(object):
         self._result_queue = JoinableQueue()  # type: JoinableQueue # put the result of each task in result_queue
         self._queued_tasks_nb = 0
 
-
     def queue_scan_command(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, PluginScanCommand) -> None
         """Queue a scan command targeting a specific server.
@@ -102,7 +103,6 @@ class ConcurrentScanner(object):
         else:
             # Normal commands get put in the standard/shared queue
             self._task_queue.put((server_info, scan_command))
-
 
     def _check_and_create_process(self, hostname):
         # type: (Text) -> None
@@ -133,11 +133,9 @@ class ConcurrentScanner(object):
                 process.start()
                 self._processes_dict[hostname].append(process)
 
-
     def _get_current_processes_nb(self):
         # type: () -> int
         return sum([len(process_list) for hostname, process_list in self._processes_dict.items()])
-
 
     def get_results(self):
         # type: () -> Iterable[PluginScanResult]

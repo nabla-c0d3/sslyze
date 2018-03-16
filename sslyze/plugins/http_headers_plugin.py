@@ -45,7 +45,6 @@ class HttpHeadersPlugin(Plugin):
         # type: () -> List[Type[PluginScanCommand]]
         return [HttpHeadersScanCommand]
 
-
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, PluginScanCommand) -> HttpHeadersScanResult
         if not isinstance(scan_command, HttpHeadersScanCommand):
@@ -180,35 +179,34 @@ class ParsedHpkpHeader(object):
 
 
 class ParsedExpectCTHeader(object):
-  """Expect-CT header returned by the server.
+    """Expect-CT header returned by the server.
 
     Attributes:
-      max-age (int): The content of the max-age field.
-      report-uri (Text): The content of report-uri field.
-      enforce (bool): True if enforce directive is set.
-  """
+        max-age (int): The content of the max-age field.
+        report-uri (Text): The content of report-uri field.
+        enforce (bool): True if enforce directive is set.
+    """
 
-  def __init__(self, raw_expect_ct_header):
-    # type: (Text) -> None
+    def __init__(self, raw_expect_ct_header):
+        # type: (Text) -> None
+        self.max_age = None
+        self.report_uri = None
+        self.enforce = False
 
-    self.max_age = None
-    self.report_uri = None
-    self.enforce = False
+        for expect_ct_directive in raw_expect_ct_header.split(','):
+            expect_ct_directive = expect_ct_directive.strip()
 
-    for expect_ct_directive in raw_expect_ct_header.split(','):
-      expect_ct_directive = expect_ct_directive.strip()
+            if not expect_ct_directive:
+                continue
 
-      if not expect_ct_directive:
-        continue
-
-      if 'max-age' in expect_ct_directive:
-        self.max_age = int(expect_ct_directive.split('max-age=')[1].strip())
-      elif 'report-uri' in expect_ct_directive:
-        self.report_uri = expect_ct_directive.split('report-uri=')[1].strip(' "')
-      elif 'enforce' in expect_ct_directive:
-        self.enforce = True
-      else:
-        raise ValueError('Unexpected value in Expect-CT header: {}'.format(repr(expect_ct_directive)))
+            if 'max-age' in expect_ct_directive:
+                self.max_age = int(expect_ct_directive.split('max-age=')[1].strip())
+            elif 'report-uri' in expect_ct_directive:
+                self.report_uri = expect_ct_directive.split('report-uri=')[1].strip(' "')
+            elif 'enforce' in expect_ct_directive:
+                self.enforce = True
+            else:
+                raise ValueError('Unexpected value in Expect-CT header: {}'.format(repr(expect_ct_directive)))
 
 
 class HttpHeadersScanResult(PluginScanResult):
@@ -236,13 +234,13 @@ class HttpHeadersScanResult(PluginScanResult):
 
     def __init__(
             self,
-            server_info,          # type: ServerConnectivityInfo
-            scan_command,         # type: HttpHeadersScanCommand
-            raw_hsts_header,      # type: Optional[Text]
-            raw_hpkp_header,      # type: Optional[Text]
-            raw_expect_ct_header, # type: Optional[Text]
-            hpkp_report_only,     # type: bool
-            cert_chain,           # type: List[Certificate]
+            server_info,            # type: ServerConnectivityInfo
+            scan_command,           # type: HttpHeadersScanCommand
+            raw_hsts_header,        # type: Optional[Text]
+            raw_hpkp_header,        # type: Optional[Text]
+            raw_expect_ct_header,   # type: Optional[Text]
+            hpkp_report_only,       # type: bool
+            cert_chain,             # type: List[Certificate]
     ):
         # type: (...) -> None
         super(HttpHeadersScanResult, self).__init__(server_info, scan_command)
@@ -344,11 +342,11 @@ class HttpHeadersScanResult(PluginScanResult):
 
         txt_result.extend(['', self._format_subtitle('HTTP Expect-CT')])
         if self.expect_ct_header:
-          txt_result.append(self._format_field('Max Age:', str(self.expect_ct_header.max_age)))
-          txt_result.append(self._format_field('Report- URI:', str(self.expect_ct_header.report_uri)))
-          txt_result.append(self._format_field('Enforce:', str(self.expect_ct_header.enforce)))
+            txt_result.append(self._format_field('Max Age:', str(self.expect_ct_header.max_age)))
+            txt_result.append(self._format_field('Report- URI:', str(self.expect_ct_header.report_uri)))
+            txt_result.append(self._format_field('Enforce:', str(self.expect_ct_header.enforce)))
         else:
-          txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an Expect-CT header", ""))
+            txt_result.append(self._format_field("NOT SUPPORTED - Server did not send an Expect-CT header", ""))
 
         return txt_result
 

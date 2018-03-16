@@ -71,7 +71,7 @@ class SSLConnection(object):
         'no cipher list': 'No ciphers list',
         'insufficient security': 'Insufficient security',
         'block type is not 01': 'block type is not 01',  # Actually an RSA error
-        'wrong ssl version' : 'Wrong SSL version',
+        'wrong ssl version': 'Wrong SSL version',
         'sslv3 alert handshake failure': 'Alert: handshake failure',
         'tlsv1 alert protocol version': 'Alert: protocol version ',
         'tlsv1 alert decrypt error': 'Alert: Decrypt error',

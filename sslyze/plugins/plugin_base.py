@@ -100,7 +100,6 @@ class Plugin(object):
                                                 help=scan_command_class.get_description()))
         return options
 
-
     @abc.abstractmethod
     def process_task(self, server_info, scan_command):
         # type: (ServerConnectivityInfo, PluginScanCommand) -> PluginScanResult

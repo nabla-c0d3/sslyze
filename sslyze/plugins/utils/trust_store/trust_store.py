@@ -172,4 +172,3 @@ class AnchorCertificateNotInTrustStoreError(CouldNotBuildVerifiedChainError):
 
 class InvalidCertificateChainOrderError(CouldNotBuildVerifiedChainError):
     pass
-

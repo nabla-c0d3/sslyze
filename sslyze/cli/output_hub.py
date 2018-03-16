@@ -28,7 +28,7 @@ class OutputHub(object):
         # type: (Set[Type[Plugin]], Any, List[ServerStringParsingError]) -> None
         # Configure the console output
         should_print_text_results = not args_command_list.quiet and args_command_list.xml_file != '-' \
-                                    and args_command_list.json_file != '-'
+            and args_command_list.json_file != '-'
         if should_print_text_results:
             self._output_generator_list.append(ConsoleOutputGenerator(sys.stdout))
 
@@ -72,4 +72,3 @@ class OutputHub(object):
         for out_generator in self._output_generator_list:
             out_generator.scans_completed(total_scan_time)
             out_generator.close()
-

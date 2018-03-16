@@ -22,7 +22,6 @@ class WorkerProcess(Process):
         # The object that will actually run the scan commands
         self._synchronous_scanner = SynchronousScanner(network_retries, network_timeout)
 
-
     def run(self):
         # type: () -> None
         """The process will first complete tasks it gets from self.queue_in.

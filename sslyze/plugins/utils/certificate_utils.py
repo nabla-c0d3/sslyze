@@ -43,7 +43,7 @@ class CertificateUtils(object):
         # type: (cryptography.x509.Certificate, Text) -> None
         """Verify that the certificate was issued for the given hostname.
 
-        Raises: 
+        Raises:
             CertificateError: If the certificate was not issued for the supplied hostname.
         """
         # Extract the names from the certificate to create the properly-formatted dictionary

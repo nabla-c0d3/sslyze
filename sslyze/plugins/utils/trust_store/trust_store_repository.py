@@ -156,5 +156,5 @@ class TrustStoresRepository(object):
             shutil.rmtree(temp_path)
 
         # Re-generate the default repo - not thread-safe
-        cls._DEFAULT_REPOSITORY =  cls(cls._DEFAULT_TRUST_STORES_PATH)
+        cls._DEFAULT_REPOSITORY = cls(cls._DEFAULT_TRUST_STORES_PATH)
         return cls._DEFAULT_REPOSITORY

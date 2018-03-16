@@ -41,7 +41,7 @@ class RobotScanCommand(PluginScanCommand):
     @classmethod
     def get_title(cls):
         # type: () -> Text
-       return 'ROBOT Attack'
+        return 'ROBOT Attack'
 
     @classmethod
     def is_aggressive(cls):
@@ -65,11 +65,11 @@ class RobotTlsRecordPayloads(object):
     # hoping that the server is going to give a different response (a TLS alert, a connection reset, no data, etc.) for
     # each payload
     _CKE_PAYLOADS_HEX = {
-        RobotPmsPaddingPayloadEnum.VALID:                   "0002{pms_padding}00{tls_version}{pms}",
-        RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES:   "4117{pms_padding}00{tls_version}{pms}",
-        RobotPmsPaddingPayloadEnum.WRONG_POSITION_00:       "0002{pms_padding}11{pms}0011",
-        RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE:     "0002{pms_padding}111111{pms}",
-        RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER:    "0002{pms_padding}000202{pms}",
+        RobotPmsPaddingPayloadEnum.VALID:                   "0002{pms_padding}00{tls_version}{pms}",  # noqa: E241
+        RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES:   "4117{pms_padding}00{tls_version}{pms}",  # noqa: E241
+        RobotPmsPaddingPayloadEnum.WRONG_POSITION_00:       "0002{pms_padding}11{pms}0011",  # noqa: E241
+        RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE:     "0002{pms_padding}111111{pms}",  # noqa: E241
+        RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER:    "0002{pms_padding}000202{pms}",  # noqa: E241
     }
 
     _PMS_HEX = "aa112233445566778899112233445566778899112233445566778899112233445566778899112233445566778899"
@@ -117,6 +117,7 @@ class RobotTlsRecordPayloads(object):
         # servers to send a TLS Alert 20
         # Here just like in the poc script, the Finished message does not match the Client Hello we sent
         return b'\x16' + TlsRecordTlsVersionBytes[tls_version.name].value + cls._FINISHED_RECORD
+
 
 class RobotScanResultEnum(Enum):
     """An enum to provide the result of running a RobotScanCommand.
@@ -226,7 +227,7 @@ class RobotPlugin(plugin_base.Plugin):
                                                            should_complete_handshake, rsa_modulus, rsa_exponent]))
 
         # Use one thread per check
-        thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum)*2)
+        thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum) * 2)
 
         # Store the results - two attempts per ROBOT payload
         payload_responses = {
@@ -298,7 +299,7 @@ class RobotPlugin(plugin_base.Plugin):
 
         # Compute the  payload
         cke_payload = RobotTlsRecordPayloads.get_client_key_exchange_record(
-            robot_payload_enum, server_info.highest_ssl_version_supported ,rsa_modulus, rsa_exponent
+            robot_payload_enum, server_info.highest_ssl_version_supported, rsa_modulus, rsa_exponent
         )
 
         # H4ck: we need to pass some arguments to the handshake but there is no simple way to do it; we use an attribute

@@ -111,6 +111,10 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
                 else:
                     raise
 
+            except ConnectionError:
+                # Python 3 only
+                accepts_client_renegotiation = False
+
             # Should be last as socket errors are also IOError
             except IOError as e:
                 # Python 2 only I think?

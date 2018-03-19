@@ -4,20 +4,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Step 1: Testing Connectivity to a Server &#8212; SSLyze  documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -25,8 +17,7 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Step 2: Running Scan Commands Against a Server" href="running-scan-commands.html" />
     <link rel="prev" title="SSLyze Documentation" href="index.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -57,7 +48,7 @@
 <h2>Basic Example<a class="headerlink" href="#basic-example" title="Permalink to this headline">¶</a></h2>
 <p>Before a server can be scanned, SSLyze must ensure that it is able to reach the server. This is achieved using the
 <cite>ServerConnectivityTester</cite> class:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
     <span class="n">server_tester</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">(</span><span class="n">hostname</span><span class="o">=</span><span class="s1">&#39;www.google.com&#39;</span><span class="p">)</span>
     <span class="n">server_info</span> <span class="o">=</span> <span class="n">server_tester</span><span class="o">.</span><span class="n">perform</span><span class="p">()</span>
 <span class="k">except</span> <span class="n">ServerConnectivityError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -117,8 +108,8 @@ connecting to the server.</li>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
-<li><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> – If <cite>xmpp_to_hostname</cite> was specified for a non-XMPP protocol.</li>
-<li><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> – If both <cite>ip_address</cite> and <cite>http_tunneling_settings</cite> were supplied.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – If <cite>xmpp_to_hostname</cite> was specified for a non-XMPP protocol.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – If both <cite>ip_address</cite> and <cite>http_tunneling_settings</cite> were supplied.</li>
 </ul>
 </td>
 </tr>
@@ -146,7 +137,7 @@ cipher suite that is supported by the server.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#sslyze.server_connectivity_info.ServerConnectivityInfo" title="sslyze.server_connectivity_info.ServerConnectivityInfo">ServerConnectivityInfo</a></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ServerConnectivityError</span></code> – If the server was not reachable or an SSL/TLS handshake could not be completed.</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ServerConnectivityError</span></code> – If the server was not reachable or an SSL/TLS handshake could not be completed.</td>
 </tr>
 </tbody>
 </table>
@@ -316,7 +307,7 @@ never be instantiated directly.</p>
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address">
 <code class="descname">ip_address</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The server’s IP address.</p>
+<dd><p><em>Text</em> – The server’s IP address. None if we are connecting through a proxy.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -426,12 +417,14 @@ authentication.</p>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -458,7 +451,7 @@ authentication.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, SSLyze.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
     </div>
   </body>
 </html>

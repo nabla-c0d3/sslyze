@@ -135,6 +135,7 @@
             <xs:attribute name="successfulTrustStore" use="required"/>
             <xs:attribute name="hasMustStapleExtension" use="required"/>
             <xs:attribute name="includedSctsCount" use="required"/>
+            <xs:attribute name="isAffectedBySymantecDeprecation" use="required"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="certificateValidation">

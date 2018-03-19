@@ -74,16 +74,21 @@ class CertificateUtils(object):
         return ', '.join(['{}={}'.format(attr.oid._name, attr.value) for attr in name_field])
 
     @staticmethod
-    def get_hpkp_pin(certificate):
-        # type: (cryptography.x509.Certificate) -> Text
-        """Generate the HTTP Public Key Pinning hash (RFC 7469) for the given certificate.
-        """
+    def get_public_key_sha256(certificate):
+        # type: (cryptography.x509.Certificate) -> bytes
         pub_bytes = certificate.public_key().public_bytes(
             encoding=Encoding.DER,
             format=PublicFormat.SubjectPublicKeyInfo
         )
         digest = sha256(pub_bytes).digest()
-        return b64encode(digest).decode('utf-8')
+        return digest
+
+    @classmethod
+    def get_hpkp_pin(cls, certificate):
+        # type: (cryptography.x509.Certificate) -> Text
+        """Generate the HTTP Public Key Pinning hash (RFC 7469) for the given certificate.
+        """
+        return b64encode(cls.get_public_key_sha256(certificate)).decode('utf-8')
 
     @staticmethod
     def get_public_key_type(certificate):

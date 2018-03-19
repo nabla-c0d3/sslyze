@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 import optparse
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 from ssl import CertificateError
 from xml.etree.ElementTree import Element

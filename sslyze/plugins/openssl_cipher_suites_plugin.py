@@ -292,10 +292,14 @@ class OpenSslCipherSuitesPlugin(Plugin):
         # Swap the first two ciphers in the list to see if the server always picks the client's first cipher
         second_cipher_str = ', '.join([accepted_cipher_names[1], accepted_cipher_names[0]] + accepted_cipher_names[2:])
 
-        first_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, first_cipher_str,
-                                                       should_use_legacy_openssl)
-        second_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, second_cipher_str,
-                                                        should_use_legacy_openssl)
+        try:
+            first_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, first_cipher_str,
+                                                           should_use_legacy_openssl)
+            second_cipher = self._get_selected_cipher_suite(server_connectivity_info, ssl_version, second_cipher_str,
+                                                            should_use_legacy_openssl)
+        except (SSLHandshakeRejected, ConnectionError):
+            # Could not complete a handshake
+            return None
 
         if first_cipher.name == second_cipher.name:
             # The server has its own preference for picking a cipher suite
@@ -306,7 +310,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
     @staticmethod
     def _get_selected_cipher_suite(server_connectivity, ssl_version, openssl_cipher_str, should_use_legacy_openssl):
-        # type: (ServerConnectivityInfo, OpenSslVersionEnum, Text, Optional[bool]) -> AcceptedCipherSuite
+        # type: (ServerConnectivityInfo, OpenSslVersionEnum, Text, Optional[bool]) -> Optional[AcceptedCipherSuite]
         """Given an OpenSSL cipher string (which may specify multiple cipher suites), return the cipher suite that was
         selected by the server during the SSL handshake.
         """

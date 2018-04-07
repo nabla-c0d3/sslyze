@@ -216,10 +216,9 @@ class SSLConnection(object):
         retry_attempts = 0
         delay = 0
         while True:
+            # Sleep if it's a retry attempt
+            time.sleep(delay)
             try:
-                # Sleep if it's a retry attempt
-                time.sleep(delay)
-
                 # StartTLS negotiation or proxy setup if needed
                 self.do_pre_handshake(final_timeout)
 
@@ -253,14 +252,6 @@ class SSLConnection(object):
                             raise SSLHandshakeRejected('TLS / ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
                     raise  # Unknown SSL error if we get there
 
-            # Pass on exceptions for rejected handshakes
-            except SSLHandshakeRejected:
-                raise
-            except ClientCertificateRequested:
-                raise
-            except _nassl.OpenSSLError:
-                # Raise unknown OpenSSL errors
-                raise
             except socket.timeout:
                 # Attempt to retry connection if a network error occurred during connection or the handshake
                 retry_attempts += 1

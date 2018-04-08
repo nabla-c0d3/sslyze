@@ -310,7 +310,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
     @staticmethod
     def _get_selected_cipher_suite(server_connectivity, ssl_version, openssl_cipher_str, should_use_legacy_openssl):
-        # type: (ServerConnectivityInfo, OpenSslVersionEnum, Text, Optional[bool]) -> Optional[AcceptedCipherSuite]
+        # type: (ServerConnectivityInfo, OpenSslVersionEnum, Text, Optional[bool]) -> AcceptedCipherSuite
         """Given an OpenSSL cipher string (which may specify multiple cipher suites), return the cipher suite that was
         selected by the server during the SSL handshake.
         """

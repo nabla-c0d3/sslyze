@@ -1,3 +1,0 @@
-[flake8]
-ignore = F401, F821  # Until we drop support for Python 2
-max-line-length = 120

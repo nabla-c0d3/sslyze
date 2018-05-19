@@ -52,12 +52,17 @@ class VulnerableOpenSslServer(object):
         # type: () -> Text
         return cls._CLIENT_KEY_PATH
 
+    @staticmethod
+    def is_platform_supported():
+        if platform not in ['linux', 'linux2']:
+            return False
+        if architecture()[0] != '64bit':
+            return False
+        return True
+
     def __init__(self, client_auth_config=ClientAuthenticationServerConfigurationEnum.DISABLED):
         # type: (ClientAuthenticationServerConfigurationEnum) -> None
-        if platform not in ['linux', 'linux2']:
-            raise NotOnLinux64Error()
-
-        if architecture()[0] != '64bit':
+        if not self.is_platform_supported():
             raise NotOnLinux64Error()
 
         self.hostname = 'localhost'

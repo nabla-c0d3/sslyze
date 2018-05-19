@@ -12,9 +12,9 @@ class TrustStoresRepositoryTestCase(unittest.TestCase):
     def test_get_default(self):
         repo = TrustStoresRepository.get_default()
         self.assertTrue(repo.get_main_store())
-        self.assertEqual(len(repo.get_all_stores()), 5)
+        self.assertGreater(len(repo.get_all_stores()), 5)
 
     def test_update_default(self):
         repo = TrustStoresRepository.update_default()
         self.assertTrue(repo.get_main_store())
-        self.assertEqual(len(repo.get_all_stores()), 5)
+        self.assertGreater(len(repo.get_all_stores()), 5)

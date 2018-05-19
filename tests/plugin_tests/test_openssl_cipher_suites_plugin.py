@@ -3,37 +3,30 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import unittest
-import logging
 
 import pickle
 
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, \
     Sslv30ScanCommand, Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand, Tlsv13ScanCommand
-from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationServerConfigurationEnum
-from tests.openssl_server import NotOnLinux64Error
 from tests.openssl_server import VulnerableOpenSslServer
 
 
 class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
+    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_sslv2_enabled(self):
-        try:
-            with VulnerableOpenSslServer() as server:
-                server_test = ServerConnectivityTester(
-                    hostname=server.hostname,
-                    ip_address=server.ip_address,
-                    port=server.port
-                )
-                server_info = server_test.perform()
+        with VulnerableOpenSslServer() as server:
+            server_test = ServerConnectivityTester(
+                hostname=server.hostname,
+                ip_address=server.ip_address,
+                port=server.port
+            )
+            server_info = server_test.perform()
 
-                plugin = OpenSslCipherSuitesPlugin()
-                plugin_result = plugin.process_task(server_info, Sslv20ScanCommand())
-        except NotOnLinux64Error:
-            # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
-            logging.warning('WARNING: Not on Linux - skipping test')
-            return
+            plugin = OpenSslCipherSuitesPlugin()
+            plugin_result = plugin.process_task(server_info, Sslv20ScanCommand())
 
         # The embedded server does not have a preference
         self.assertFalse(plugin_result.preferred_cipher)
@@ -73,21 +66,17 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
+    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_sslv3_enabled(self):
-        try:
-            with VulnerableOpenSslServer() as server:
-                server_test = ServerConnectivityTester(
-                    hostname=server.hostname,
-                    ip_address=server.ip_address,
-                    port=server.port)
-                server_info = server_test.perform()
+        with VulnerableOpenSslServer() as server:
+            server_test = ServerConnectivityTester(
+                hostname=server.hostname,
+                ip_address=server.ip_address,
+                port=server.port)
+            server_info = server_test.perform()
 
-                plugin = OpenSslCipherSuitesPlugin()
-                plugin_result = plugin.process_task(server_info, Sslv30ScanCommand())
-        except NotOnLinux64Error:
-            # The test suite only has the vulnerable OpenSSL version compiled for Linux 64 bits
-            logging.warning('WARNING: Not on Linux - skipping test')
-            return
+            plugin = OpenSslCipherSuitesPlugin()
+            plugin_result = plugin.process_task(server_info, Sslv30ScanCommand())
 
         # The embedded server does not have a preference
         self.assertFalse(plugin_result.preferred_cipher)
@@ -166,9 +155,22 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     def test_tlsv1_0_disabled(self):
-        # TBD
-        pass
+        server_test = ServerConnectivityTester(hostname='success.trendmicro.com')
+        server_info = server_test.perform()
 
+        plugin = OpenSslCipherSuitesPlugin()
+        plugin_result = plugin.process_task(server_info, Tlsv10ScanCommand())
+
+        self.assertIsNone(plugin_result.preferred_cipher)
+        self.assertFalse(plugin_result.accepted_cipher_list)
+        self.assertTrue(plugin_result.rejected_cipher_list)
+        self.assertFalse(plugin_result.errored_cipher_list)
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
 
     def test_tlsv1_1_enabled(self):
         server_test = ServerConnectivityTester(hostname='www.google.com')
@@ -331,27 +333,23 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
             set(accepted_cipher_name_list)
         )
 
+    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
-        try:
-            with VulnerableOpenSslServer(
-                    client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
-            ) as server:
-                # And the client does NOT provide a client certificate
-                server_test = ServerConnectivityTester(
-                    hostname=server.hostname,
-                    ip_address=server.ip_address,
-                    port=server.port
-                )
-                server_info = server_test.perform()
+        with VulnerableOpenSslServer(
+                client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
+        ) as server:
+            # And the client does NOT provide a client certificate
+            server_test = ServerConnectivityTester(
+                hostname=server.hostname,
+                ip_address=server.ip_address,
+                port=server.port
+            )
+            server_info = server_test.perform()
 
-                # OpenSslCipherSuitesPlugin works even when a client cert was not supplied
-                plugin = OpenSslCipherSuitesPlugin()
-                plugin_result = plugin.process_task(server_info, Sslv30ScanCommand())
-
-        except NotOnLinux64Error:
-            logging.warning('WARNING: Not on Linux - skipping test')
-            return
+            # OpenSslCipherSuitesPlugin works even when a client cert was not supplied
+            plugin = OpenSslCipherSuitesPlugin()
+            plugin_result = plugin.process_task(server_info, Sslv30ScanCommand())
 
         self.assertTrue(plugin_result.accepted_cipher_list)
         self.assertTrue(plugin_result.as_text())

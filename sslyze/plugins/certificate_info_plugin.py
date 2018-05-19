@@ -15,6 +15,7 @@ import pickle
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.x509 import Certificate, load_pem_x509_certificate
@@ -691,9 +692,12 @@ class CertificateInfoScanResult(PluginScanResult):
         if isinstance(public_key, EllipticCurvePublicKey):
             text_output.append(self._format_field('Key Size:', public_key.curve.key_size))
             text_output.append(self._format_field('Curve:', public_key.curve.name))
-        else:
+        elif isinstance(public_key, RSAPublicKey):
             text_output.append(self._format_field('Key Size:', public_key.key_size))
             text_output.append(self._format_field('Exponent:', '{0} (0x{0:x})'.format(public_key.public_numbers().e)))
+        else:
+            # DSA Key? https://github.com/nabla-c0d3/sslyze/issues/314
+            pass
 
         try:
             # Print the SAN extension if there's one

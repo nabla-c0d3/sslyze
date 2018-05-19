@@ -67,6 +67,7 @@ class TrustStoresRepository(object):
         'GOOGLE_AOSP': 'Android',
         'MICROSOFT_WINDOWS': 'Windows',
         'MOZILLA_NSS': 'Mozilla',
+        'ORACLE_JAVA': 'Java',
     }
 
     _MOZILLA_STORE_NAME = 'MOZILLA_NSS'

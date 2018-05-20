@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a93653ea4a811725a88513543e9dec551d44f5c88d694f0f81e1dd445f033ebb"
+            "sha256": "4144ef0c6e033faf6d5f46a0bfdcb8152e8922fb81d0d4fd8b2304ca289441dd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -262,6 +262,13 @@
             ],
             "version": "==17.1"
         },
+        "pkginfo": {
+            "hashes": [
+                "sha256:5878d542a4b3f237e359926384f1dde4e099c9f5525d236b1840cf704fa8d474",
+                "sha256:a39076cb3eb34c333a0dd390b568e9e1e881c7bf2cc0aee12120636816f55aee"
+            ],
+            "version": "==1.4.2"
+        },
         "pluggy": {
             "hashes": [
                 "sha256:7f8ae7f5bdf75671a718d2daf0a64b7885f74510bcd98b1a0bb420eb9a9d0cff",
@@ -332,6 +339,13 @@
             ],
             "version": "==2.18.4"
         },
+        "requests-toolbelt": {
+            "hashes": [
+                "sha256:42c9c170abc2cacb78b8ab23ac957945c7716249206f90874651971a4acff237",
+                "sha256:f6a531936c6fa4c6cfce1b9c10d5c4f498d16528d2a54a22ca00011205a187b5"
+            ],
+            "version": "==0.8.0"
+        },
         "six": {
             "hashes": [
                 "sha256:70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9",
@@ -368,6 +382,21 @@
                 "sha256:f4932e95869599b89bf4f80fc3989132d83c9faa5bf633e7b5e0c25dffb75da2"
             ],
             "version": "==1.0.1"
+        },
+        "tqdm": {
+            "hashes": [
+                "sha256:9fc19da10d7c962613cbcb9cdced41230deb31d9e20332da84c96917ff534281",
+                "sha256:ce205451a27b6050faed0bb2bcbea96c6a550f8c27cd2b5441d72e948113ad18"
+            ],
+            "version": "==4.23.3"
+        },
+        "twine": {
+            "hashes": [
+                "sha256:08eb132bbaec40c6d25b358f546ec1dc96ebd2638a86eea68769d9e67fe2b129",
+                "sha256:2fd9a4d9ff0bcacf41fdc40c8cb0cfaef1f1859457c9653fd1b92237cc4e9f25"
+            ],
+            "index": "pypi",
+            "version": "==1.11.0"
         },
         "typed-ast": {
             "hashes": [

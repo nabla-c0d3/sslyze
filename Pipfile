@@ -13,6 +13,7 @@ mypy = "*"
 "flake8" = "*"
 invoke = "*"
 cx-freeze = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.6"

@@ -7,4 +7,4 @@ install:
 script:
   - flake8 sslyze
   - mypy sslyze
-  - python run_tests.py
+  - pytest

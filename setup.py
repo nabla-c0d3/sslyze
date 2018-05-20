@@ -1,7 +1,7 @@
 from os import path, listdir
 
 from setuptools import setup, find_packages
-from sslyze import __author__, __email__, __version__
+from sslyze import __author__, __email__, __version__, PROJECT_URL
 from cx_Freeze import setup, Executable
 
 # Setup file based on https://github.com/pypa/sampleproject/blob/master/setup.py
@@ -38,7 +38,7 @@ setup(
     # Pypi metadata
     long_description=get_long_description(),
     long_description_content_type='text/markdown',
-    url='https://github.com/nabla-c0d3/sslyze',
+    url=PROJECT_URL,
     author=__author__,
     author_email=__email__,
     classifiers=[

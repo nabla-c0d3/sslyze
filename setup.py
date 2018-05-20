@@ -1,11 +1,18 @@
+import sys
 from os import path, listdir
 
-from setuptools import setup, find_packages
+from setuptools import find_packages
 from sslyze import __author__, __email__, __version__, PROJECT_URL
-from cx_Freeze import setup, Executable
+from cx_Freeze import Executable
 
 # Setup file based on https://github.com/pypa/sampleproject/blob/master/setup.py
 root_path = path.abspath(path.dirname(__file__))
+
+# For cx_freeze builds, we need a special setup() function
+if len(sys.argv) > 1 and sys.argv[1] == 'build_exe':
+    from cx_Freeze import setup
+else:
+    from setuptools import setup
 
 
 def get_long_description():

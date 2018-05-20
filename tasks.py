@@ -41,6 +41,9 @@ def release(ctx):
     ctx.run(f"git tag -a {__version__} -m '{__version__}'")
     ctx.run('git push --tags')
 
+    # Generate the doc
+    gen_doc(ctx)
+
     # Upload to Pypi
     sdist_path = root_path / 'dist' / f'sslyze-{__version__}.tar.gz'
     ctx.run(f'twine upload {sdist_path}')

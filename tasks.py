@@ -16,12 +16,12 @@ def test(ctx):
     ctx.run('flake8 sslyze')
     ctx.run('mypy sslyze')
 
-    # Ensure the API sample works
-    ctx.run('python api_sample.py')
-
 
 @task
 def gen_doc(ctx):
+    # Ensure the API sample works
+    ctx.run('python api_sample.py')
+
     docs_folder_path = root_path / 'docs'
     dst_path = docs_folder_path / 'documentation'
     ctx.run(f'python -m sphinx -v -b html {docs_folder_path} {dst_path}')

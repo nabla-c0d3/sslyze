@@ -12,13 +12,10 @@ Basic Example
 =============
 
 Before a server can be scanned, SSLyze must ensure that it is able to reach the server. This is achieved using the
-`ServerConnectivityTester` class::
+`ServerConnectivityTester` class:
 
-    try:
-        server_tester = ServerConnectivityTester(hostname='www.google.com')
-        server_info = server_tester.perform()
-    except ServerConnectivityError as e:
-        raise RuntimeError('Error when trying to connect to {}: {}'.format(e.server_info.hostname, e.error_message))
+.. literalinclude:: ../api_sample.py
+   :pyobject: demo_server_connectivity_tester
 
 If the call to `ServerConnectivityTester.perform()` is successful, it returns a `ServerConnectivityInfo` object that
 can then be used for scanning the server. This is described in :doc:`running-scan-commands`.

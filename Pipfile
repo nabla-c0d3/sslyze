@@ -17,6 +17,7 @@ pytest = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
 twine = "*"
+sphinx-autodoc-typehints = "*"
 
 [requires]
 python_version = "3.6"

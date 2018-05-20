@@ -5,6 +5,4 @@ install:
   - pip install pipenv
   - pipenv install --dev
 script:
-  - flake8 sslyze
-  - mypy sslyze
-  - pytest
+  - invoke test

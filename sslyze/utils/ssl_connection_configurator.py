@@ -9,8 +9,8 @@ from sslyze.utils.ssl_connection import SSLConnection, HTTPSConnection, SMTPConn
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from sslyze.server_connectivity_info import ServerConnectivityInfo
-    from sslyze.server_connectivity_tester import ServerConnectivityTester
+    from sslyze.server_connectivity_info import ServerConnectivityInfo  # noqa: F401
+    from sslyze.server_connectivity_tester import ServerConnectivityTester  # noqa: F401
 
 
 class SslConnectionConfigurator:

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from http.client import HTTPResponse
 
 if TYPE_CHECKING:
-    from sslyze.utils.ssl_connection import SSLConnection
+    from sslyze.utils.ssl_connection import SSLConnection  # noqa: F401
 
 
 class _FakeSocket(BytesIO):

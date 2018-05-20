@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 from optparse import OptionParser, OptionGroup
 
 import socket
 
 from nassl.ssl_client import OpenSslFileTypeEnum
-from typing import Text, Optional, Set, Type, List, Any
+from typing import Optional, Set, Type, List, Any
 from typing import Tuple
 
 from sslyze.plugins.plugin_base import Plugin
@@ -21,16 +17,14 @@ class CommandLineParsingError(ValueError):
 
     PARSING_ERROR_FORMAT = '  Command line error: {0}\n  Use -h for help.'
 
-    def get_error_msg(self):
-        # type: () -> Text
+    def get_error_msg(self) -> str:
         return self.PARSING_ERROR_FORMAT.format(self)
 
 
 # TODO(AD): Somewhat hacky as this is not actually an error - need to refactor the command line parsing
 class TrustStoresUpdateCompleted(CommandLineParsingError):
 
-    def get_error_msg(self):
-        # type: () -> Text
+    def get_error_msg(self) -> str:
         return 'Trust stores successfully updated.'
 
 
@@ -38,13 +32,12 @@ class ServerStringParsingError(ValueError):
     """Exception raised when SSLyze was unable to parse a hostname:port string supplied via the command line.
     """
 
-    def __init__(self, supplied_server_string, error_message):
-        # type: (Text, Text) -> None
+    def __init__(self, supplied_server_string: str, error_message: str) -> None:
         self.server_string = supplied_server_string
         self.error_message = error_message
 
 
-class CommandLineServerStringParser(object):
+class CommandLineServerStringParser:
     """Utility class to parse a 'host:port{ip}' string taken from the command line into a valid (host,ip, port) tuple.
     Supports IPV6 addresses.
     """
@@ -53,8 +46,7 @@ class CommandLineServerStringParser(object):
     SERVER_STRING_ERROR_NO_IPV6 = 'IPv6 is not supported on this platform'
 
     @classmethod
-    def parse_server_string(cls, server_str):
-        # type: (Text) -> Tuple[Text, Optional[Text], Optional[int]]
+    def parse_server_string(cls, server_str: str) -> Tuple[str, Optional[str], Optional[int]]:
         # Extract ip from target
         ip = None
         if '{' in server_str and '}' in server_str:
@@ -80,8 +72,7 @@ class CommandLineServerStringParser(object):
         return host, ip, port
 
     @classmethod
-    def _parse_ipv4_server_string(cls, server_str):
-        # type: (Text) -> Tuple[Text, Optional[int]]
+    def _parse_ipv4_server_string(cls, server_str: str) -> Tuple[str, Optional[int]]:
         host = server_str
         port = None
         if ':' in server_str:
@@ -94,8 +85,7 @@ class CommandLineServerStringParser(object):
         return host, port
 
     @classmethod
-    def _parse_ipv6_server_string(cls, server_str):
-        # type: (Text) -> Tuple[Text, Optional[int]]
+    def _parse_ipv6_server_string(cls, server_str: str) -> Tuple[str, Optional[int]]:
         if not socket.has_ipv6:
             raise ServerStringParsingError(server_str, cls.SERVER_STRING_ERROR_NO_IPV6)
 
@@ -110,47 +100,51 @@ class CommandLineServerStringParser(object):
         return ipv6_addr, port
 
 
-class CommandLineParser(object):
+class CommandLineParser:
 
     # Defines what --regular means
-    REGULAR_CMD = ['sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'tlsv1_3', 'reneg', 'resum', 'certinfo',
-                   'http_get', 'hide_rejected_ciphers', 'compression', 'heartbleed', 'openssl_ccs', 'fallback',
-                   'robot']
+    REGULAR_CMD = [
+        'sslv2', 'sslv3', 'tlsv1', 'tlsv1_1', 'tlsv1_2', 'tlsv1_3', 'reneg', 'resum', 'certinfo', 'http_get',
+        'hide_rejected_ciphers', 'compression', 'heartbleed', 'openssl_ccs', 'fallback', 'robot'
+    ]
     SSLYZE_USAGE = 'usage: %prog [options] target1.com target2.com:443 target3.com:443{ip} etc...'
 
     # StartTLS options
-    START_TLS_PROTOCOLS = ['smtp', 'xmpp', 'xmpp_server', 'pop3', 'ftp', 'imap', 'ldap', 'rdp', 'postgres',
-                           'auto']
+    START_TLS_PROTOCOLS = [
+        'smtp', 'xmpp', 'xmpp_server', 'pop3', 'ftp', 'imap', 'ldap', 'rdp', 'postgres', 'auto'
+    ]
+
     START_TLS_USAGE = 'StartTLS should be one of: {}. The \'auto\' option will cause SSLyze to deduce the protocol ' \
                       '(ftp, imap, etc.) from the supplied port number, ' \
                       'for each target servers.'.format(' , '.join(START_TLS_PROTOCOLS))
 
     # Mapping of StartTls protocols and ports; useful for starttls=auto
-    STARTTLS_PROTOCOL_DICT = {'smtp': TlsWrappedProtocolEnum.STARTTLS_SMTP,
-                              587: TlsWrappedProtocolEnum.STARTTLS_SMTP,
-                              25: TlsWrappedProtocolEnum.STARTTLS_SMTP,
-                              'xmpp': TlsWrappedProtocolEnum.STARTTLS_XMPP,
-                              5222: TlsWrappedProtocolEnum.STARTTLS_XMPP,
-                              'xmpp_server': TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
-                              5269: TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
-                              'pop3': TlsWrappedProtocolEnum.STARTTLS_POP3,
-                              109: TlsWrappedProtocolEnum.STARTTLS_POP3,
-                              110: TlsWrappedProtocolEnum.STARTTLS_POP3,
-                              'imap': TlsWrappedProtocolEnum.STARTTLS_IMAP,
-                              143: TlsWrappedProtocolEnum.STARTTLS_IMAP,
-                              220: TlsWrappedProtocolEnum.STARTTLS_IMAP,
-                              'ftp': TlsWrappedProtocolEnum.STARTTLS_FTP,
-                              21: TlsWrappedProtocolEnum.STARTTLS_FTP,
-                              'ldap': TlsWrappedProtocolEnum.STARTTLS_LDAP,
-                              3268: TlsWrappedProtocolEnum.STARTTLS_LDAP,
-                              389: TlsWrappedProtocolEnum.STARTTLS_LDAP,
-                              'rdp': TlsWrappedProtocolEnum.STARTTLS_RDP,
-                              3389: TlsWrappedProtocolEnum.STARTTLS_RDP,
-                              'postgres': TlsWrappedProtocolEnum.STARTTLS_POSTGRES,
-                              5432: TlsWrappedProtocolEnum.STARTTLS_POSTGRES}
+    STARTTLS_PROTOCOL_DICT = {
+        'smtp': TlsWrappedProtocolEnum.STARTTLS_SMTP,
+        587: TlsWrappedProtocolEnum.STARTTLS_SMTP,
+        25: TlsWrappedProtocolEnum.STARTTLS_SMTP,
+        'xmpp': TlsWrappedProtocolEnum.STARTTLS_XMPP,
+        5222: TlsWrappedProtocolEnum.STARTTLS_XMPP,
+        'xmpp_server': TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
+        5269: TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
+        'pop3': TlsWrappedProtocolEnum.STARTTLS_POP3,
+        109: TlsWrappedProtocolEnum.STARTTLS_POP3,
+        110: TlsWrappedProtocolEnum.STARTTLS_POP3,
+        'imap': TlsWrappedProtocolEnum.STARTTLS_IMAP,
+        143: TlsWrappedProtocolEnum.STARTTLS_IMAP,
+        220: TlsWrappedProtocolEnum.STARTTLS_IMAP,
+        'ftp': TlsWrappedProtocolEnum.STARTTLS_FTP,
+        21: TlsWrappedProtocolEnum.STARTTLS_FTP,
+        'ldap': TlsWrappedProtocolEnum.STARTTLS_LDAP,
+        3268: TlsWrappedProtocolEnum.STARTTLS_LDAP,
+        389: TlsWrappedProtocolEnum.STARTTLS_LDAP,
+        'rdp': TlsWrappedProtocolEnum.STARTTLS_RDP,
+        3389: TlsWrappedProtocolEnum.STARTTLS_RDP,
+        'postgres': TlsWrappedProtocolEnum.STARTTLS_POSTGRES,
+        5432: TlsWrappedProtocolEnum.STARTTLS_POSTGRES
+    }
 
-    def __init__(self, available_plugins, sslyze_version):
-        # type: (Set[Type[Plugin]], Text) -> None
+    def __init__(self, available_plugins: Set[Type[Plugin]], sslyze_version: str) -> None:
         """Generate SSLyze's command line parser.
         """
         self._parser = OptionParser(version=sslyze_version, usage=self.SSLYZE_USAGE)
@@ -165,8 +159,7 @@ class CommandLineParser(object):
         regular_help = 'Regular HTTPS scan; shortcut for --{}'.format(' --'.join(self.REGULAR_CMD))
         self._parser.add_option('--regular', action='store_true', dest=None, help=regular_help)
 
-    def parse_command_line(self):
-        # type: () -> Tuple[List[ServerConnectivityTester], List[ServerStringParsingError], Any]
+    def parse_command_line(self) -> Tuple[List[ServerConnectivityTester], List[ServerStringParsingError], Any]:
         """Parses the command line used to launch SSLyze.
         """
         (args_command_list, args_target_list) = self._parser.parse_args()
@@ -305,8 +298,7 @@ class CommandLineParser(object):
 
         return good_server_list, bad_server_list, args_command_list
 
-    def _add_default_options(self):
-        # type: () -> None
+    def _add_default_options(self) -> None:
         """Add default command line options to the parser.
         """
         # Updating the trust stores
@@ -433,8 +425,7 @@ class CommandLineParser(object):
         )
         self._parser.add_option_group(connect_group)
 
-    def _add_plugin_options(self, available_plugins):
-        # type: (Set[Type[Plugin]]) -> None
+    def _add_plugin_options(self, available_plugins: Set[Type[Plugin]]) -> None:
         """Recovers the list of command line options implemented by the available plugins and adds them to the command
         line parser.
         """

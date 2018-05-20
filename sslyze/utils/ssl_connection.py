@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
 """Main classes for performing all the SSL connections within the plugins.
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
 
 import random
 import socket
-from typing import Text
 from typing import Optional
 import struct
 import time
@@ -43,7 +39,7 @@ class ProxyError(IOError):
     pass
 
 
-class SSLConnection(object):
+class SSLConnection:
     """Base SSL connection class which leverages an nassl.SslClient for performing the SSL handshake.
     """
 
@@ -98,23 +94,22 @@ class SSLConnection(object):
     NETWORK_TIMEOUT = 5
 
     @classmethod
-    def set_global_network_settings(cls, network_max_retries, network_timeout):
-        # type: (int, int) -> None
+    def set_global_network_settings(cls, network_max_retries: int, network_timeout: int) -> None:
         # Not thread-safe
         cls.NETWORK_MAX_RETRIES = network_max_retries
         cls.NETWORK_TIMEOUT = network_timeout
 
-    def __init__(self,
-                 hostname,                              # type: Text
-                 ip_address,                            # type: Optional[Text]
-                 port,                                  # type: int
-                 ssl_version,                           # type: OpenSslVersionEnum
-                 ssl_verify_locations=None,             # type: Optional[Text]
-                 client_auth_creds=None,                # type: Optional[ClientAuthenticationCredentials]
-                 should_ignore_client_auth=False,       # type: bool
-                 should_use_legacy_openssl=False        # type: bool
-                 ):
-        # type: (...) -> None
+    def __init__(
+            self,
+            hostname: str,
+            ip_address: Optional[str],
+            port: int,
+            ssl_version: OpenSslVersionEnum,
+            ssl_verify_locations: Optional[str] = None,
+            client_auth_creds: Optional[ClientAuthenticationCredentials] = None,
+            should_ignore_client_auth: bool = False,
+            should_use_legacy_openssl: bool = False
+    ) -> None:
         ssl_client_cls = LegacySslClient if should_use_legacy_openssl else SslClient
 
         if client_auth_creds:
@@ -141,32 +136,34 @@ class SSLConnection(object):
         self._port = port
 
         # Can be set later
-        self._tunnel_host = None  # type: Optional[Text]
-        self._tunnel_port = None  # type: Optional[int]
-        self._tunnel_basic_auth_token = None  # type: Optional[bytes]
+        self._tunnel_host: Optional[str] = None
+        self._tunnel_port: Optional[int] = None
+        self._tunnel_basic_auth_token: Optional[bytes] = None
 
-    def enable_http_connect_tunneling(self, tunnel_host, tunnel_port, tunnel_user=None, tunnel_password=None):
-        # type: (Text, int, Optional[Text], Optional[Text]) -> None
+    def enable_http_connect_tunneling(
+            self,
+            tunnel_host: str,
+            tunnel_port: int,
+            tunnel_user: Optional[str] = None,
+            tunnel_password: Optional[str] = None
+    ) -> None:
         """Proxy the traffic through an HTTP Connect proxy.
         """
         self._tunnel_host = tunnel_host
         self._tunnel_port = tunnel_port
         self._tunnel_basic_auth_token = None
-        if tunnel_user is not None:
+        if tunnel_user is not None and tunnel_password is not None:
             self._tunnel_basic_auth_token = b64encode(
-                '{0}:{1}'.format(quote(tunnel_user), quote(tunnel_password)).encode('utf-8')
+                f'{quote(tunnel_user)}:{quote(tunnel_password)}'.encode('utf-8')
             )
 
-    def write(self, data):
-        # type: (bytes) -> int
+    def write(self, data: bytes) -> int:
         return self.ssl_client.write(data)
 
-    def read(self, size):
-        # type: (int) -> bytes
+    def read(self, size: int) -> bytes:
         return self.ssl_client.read(size)
 
-    def do_pre_handshake(self, network_timeout):
-        # type: (Optional[int]) -> socket.socket
+    def do_pre_handshake(self, network_timeout: Optional[int]) -> socket.socket:
         """Open a socket to the server; setup HTTP tunneling if a proxy was configured.
         """
         final_timeout = self.NETWORK_TIMEOUT if network_timeout is None else network_timeout
@@ -202,8 +199,7 @@ class SSLConnection(object):
         self.ssl_client.set_underlying_socket(sock)
         return sock
 
-    def connect(self, network_timeout=None, network_max_retries=None):
-        # type: (Optional[int], Optional[int]) -> None
+    def connect(self, network_timeout: Optional[int] = None, network_max_retries: Optional[int] = None) -> None:
         final_timeout = self.NETWORK_TIMEOUT if network_timeout is None else network_timeout
         final_max_retries = self.NETWORK_MAX_RETRIES if network_max_retries is None else network_max_retries
         retry_attempts = 0
@@ -261,15 +257,13 @@ class SSLConnection(object):
                 # No network error occurred
                 break
 
-    def close(self):
-        # type: () -> None
+    def close(self) -> None:
         self.ssl_client.shutdown()
         sock = self.ssl_client.get_underlying_socket()
         if sock:
             sock.close()
 
-    def post_handshake_check(self):
-        # type: () -> Text
+    def post_handshake_check(self) -> str:
         return ''
 
 
@@ -283,8 +277,7 @@ class HTTPSConnection(SSLConnection):
     ERR_NOT_HTTP = 'Server response was not HTTP'
     ERR_GENERIC = 'Error sending HTTP GET'
 
-    def post_handshake_check(self):
-        # type: () -> Text
+    def post_handshake_check(self) -> str:
         try:
             # Send an HTTP GET to the server and store the HTTP Status Code
             self.write(HttpRequestGenerator.get_request(self._hostname))
@@ -297,9 +290,10 @@ class HTTPSConnection(SSLConnection):
             else:
                 redirect = ''
                 if 300 <= http_response.status < 400:
-                    if http_response.getheader('Location', None):
+                    redirect_location = http_response.getheader('Location')
+                    if redirect_location:
                         # Add redirection URL to the result
-                        redirect = ' - ' + http_response.getheader('Location', None)
+                        redirect = f' - {redirect_location}'
 
                 result = self.GET_RESULT_FORMAT.format(http_response.status, http_response.reason, redirect)
         except socket.timeout:
@@ -318,8 +312,7 @@ class SMTPConnection(SSLConnection):
     ERR_SMTP_REJECTED = 'SMTP EHLO was rejected'
     ERR_NO_SMTP_STARTTLS = 'SMTP STARTTLS not supported'
 
-    def do_pre_handshake(self, network_timeout):
-        # type: (Optional[int]) -> socket.socket
+    def do_pre_handshake(self, network_timeout: Optional[int]) -> socket.socket:
         sock = super(SMTPConnection, self).do_pre_handshake(network_timeout)
 
         # Get the SMTP banner
@@ -336,8 +329,7 @@ class SMTPConnection(SSLConnection):
             raise StartTLSError(self.ERR_NO_SMTP_STARTTLS)
         return sock
 
-    def post_handshake_check(self):
-        # type: () -> Text
+    def post_handshake_check(self) -> str:
         try:
             self.write(b'NOOP\r\n')
             result = self.ssl_client.read(2048).strip().decode('utf-8')
@@ -359,20 +351,17 @@ class XMPPConnection(SSLConnection):
     XMPP_STARTTLS = b"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
     @property
-    def xmpp_to(self):
-        # type: () -> Optional[Text]
+    def xmpp_to(self) -> Optional[str]:
         if not hasattr(self, '_xmpp_to'):
             self._xmpp_to = self._hostname
         return self._xmpp_to
 
-    def set_xmpp_to(self, xmpp_to):
-        # type: (Text) -> None
+    def set_xmpp_to(self, xmpp_to: str) -> None:
         """XMPP host specified with the XMPP handshake.
         """
         self._xmpp_to = xmpp_to
 
-    def do_pre_handshake(self, network_timeout):
-        # type: (Optional[int]) -> socket.socket
+    def do_pre_handshake(self, network_timeout: Optional[int]) -> socket.socket:
         """Connect to a host on a given (SSL) port, send a STARTTLS command, and perform the SSL handshake.
         """
         # Setup the network socket
@@ -419,8 +408,7 @@ class LDAPConnection(SSLConnection):
     START_TLS_OK_APACHEDS = b'\x30\x26\x02\x01\x01\x78\x21\x0a\x01\x00\x04\x00\x04\x00\x8a\x16\x31\x2e\x33\x2e\x36' \
                             b'\x2e\x31\x2e\x34\x2e\x31\x2e\x31\x34\x36\x36\x2e\x32\x30\x30\x33\x37\x8b\x00'
 
-    def do_pre_handshake(self, network_timeout):
-        # type: (Optional[int]) -> socket.socket
+    def do_pre_handshake(self, network_timeout: Optional[int]) -> socket.socket:
         """Connect to a host on a given (SSL) port, send a STARTTLS command, and perform the SSL handshake.
         """
         sock = super(LDAPConnection, self).do_pre_handshake(network_timeout)
@@ -443,8 +431,7 @@ class RDPConnection(SSLConnection):
     START_TLS_CMD = b'\x03\x00\x00\x13\x0E\xE0\x00\x00\x00\x00\x00\x01\x00\x08\x00\x03\x00\x00\x00'
     START_TLS_OK = b'Start TLS request accepted.'
 
-    def do_pre_handshake(self, network_timeout):
-        # type: (Optional[int]) -> socket.socket
+    def do_pre_handshake(self, network_timeout: Optional[int]) -> socket.socket:
         """Connect to a host on a given (SSL) port, send a STARTTLS command, and perform the SSL handshake.
         """
         sock = super(RDPConnection, self).do_pre_handshake(network_timeout)
@@ -472,8 +459,7 @@ class GenericStartTLSConnection(SSLConnection):
     START_TLS_OK = b''
     SHOULD_WAIT_FOR_SERVER_BANNER = True
 
-    def do_pre_handshake(self, network_timeout):
-        # type: (Optional[int]) -> socket.socket
+    def do_pre_handshake(self, network_timeout: Optional[int]) -> socket.socket:
         """Connect to a host on a given (SSL) port, send a STARTTLS command, and perform the SSL handshake.
         """
         sock = super(GenericStartTLSConnection, self).do_pre_handshake(network_timeout)

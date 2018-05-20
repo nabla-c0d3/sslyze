@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
 """Settings to be used for configuring a server's ServerConnectivityInfo.
 """
-
-from __future__ import absolute_import
-from __future__ import unicode_literals
 
 import os
 
 from enum import Enum
 from typing import Optional
-from typing import Text
 
 from urllib.parse import urlparse
 
@@ -43,19 +38,23 @@ class ClientAuthenticationServerConfigurationEnum(Enum):
     REQUIRED = 3
 
 
-class ClientAuthenticationCredentials(object):
+class ClientAuthenticationCredentials:
     """Container for specifying the settings to perform SSL/TLS client authentication with the server.
     """
 
-    def __init__(self, client_certificate_chain_path, client_key_path, client_key_type=OpenSslFileTypeEnum.PEM,
-                 client_key_password=''):
-        # type: (Text, Text, OpenSslFileTypeEnum, Optional[Text]) -> None
+    def __init__(
+            self,
+            client_certificate_chain_path: str,
+            client_key_path: str,
+            client_key_type: OpenSslFileTypeEnum = OpenSslFileTypeEnum.PEM,
+            client_key_password: str = ''
+    ) -> None:
         """
         Args:
-            client_certificate_chain_path (Text): Path to the file containing the client's certificate.
-            client_key_path (Text): Path to the file containing the client's private key.
-            client_key_type (OpenSslFileTypeEnum): The format of the key file.
-            client_key_password (Optional[Text]): The password to decrypt the private key.
+            client_certificate_chain_path: Path to the file containing the client's certificate.
+            client_key_path: Path to the file containing the client's private key.
+            client_key_type: The format of the key file.
+            client_key_password: The password to decrypt the private key.
         """
         self.client_certificate_chain_path = client_certificate_chain_path
         if not os.path.isfile(self.client_certificate_chain_path):
@@ -72,11 +71,14 @@ class ClientAuthenticationCredentials(object):
             raise ValueError('Invalid certificate format specified')
 
         # Try to load the cert and key in OpenSSL; will raise an exception if something is wrong
-        SslClient(client_certchain_file=self.client_certificate_chain_path, client_key_file=self.client_key_path,
-                  client_key_type=self.client_key_type, client_key_password=self.client_key_password)
+        SslClient(
+            client_certchain_file=self.client_certificate_chain_path,
+            client_key_file=self.client_key_path,
+            client_key_type=self.client_key_type,
+            client_key_password=self.client_key_password
+        )
 
-    def __str__(self):
-        # type: () -> Text
+    def __str__(self) -> str:
         return '<{class_name}: cert_path="{cert_path}", key_path="{key_path}">'.format(
             class_name=self.__class__.__name__,
             cert_path=self.client_certificate_chain_path,
@@ -84,26 +86,30 @@ class ClientAuthenticationCredentials(object):
         )
 
 
-class HttpConnectTunnelingSettings(object):
+class HttpConnectTunnelingSettings:
     """Container for specifying the settings to tunnel all traffic through an HTTP Connect Proxy.
     """
 
-    def __init__(self, hostname, port, basic_auth_user=None, basic_auth_password=None):
-        # type: (Text, int, Optional[Text], Optional[Text]) -> None
+    def __init__(
+            self,
+            hostname: str,
+            port: int,
+            basic_auth_user: Optional[str] = None,
+            basic_auth_password: Optional[str] = None
+    ) -> None:
         """
         Args:
-            hostname (Text): The proxy's hostname.
-            port (int): The proxy's port.
-            basic_auth_user (Optional[Text]): The username to use if the proxy requires Basic Authentication.
-            basic_auth_password (Optional[Text]): The password to use if the proxy requires Basic Authentication.
+            hostname: The proxy's hostname.
+            port: The proxy's port.
+            basic_auth_user: The username to use if the proxy requires Basic Authentication.
+            basic_auth_password: The password to use if the proxy requires Basic Authentication.
         """
         self.hostname = hostname
         self.port = port
         self.basic_auth_user = basic_auth_user
         self.basic_auth_password = basic_auth_password
 
-    def __str__(self):
-        # type: () -> Text
+    def __str__(self) -> str:
         return '<{class_name}: proxy_server=({hostname}, {port}), username="{user}">'.format(
             class_name=self.__class__.__name__,
             hostname=self.hostname,
@@ -112,8 +118,7 @@ class HttpConnectTunnelingSettings(object):
         )
 
     @classmethod
-    def from_url(cls, proxy_url):
-        # type: (Text) -> HttpConnectTunnelingSettings
+    def from_url(cls, proxy_url: str) -> 'HttpConnectTunnelingSettings':
         parsed_url = urlparse(proxy_url)
 
         if not parsed_url.netloc or not parsed_url.hostname:

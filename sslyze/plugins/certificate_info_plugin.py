@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import optparse
 import os
 from datetime import datetime
@@ -33,7 +29,6 @@ from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
 from typing import List, Dict, Any, Type
 from typing import Optional
-from typing import Text
 from typing import Tuple
 
 
@@ -42,29 +37,26 @@ class CertificateInfoScanCommand(PluginScanCommand):
     check for OCSP stapling support.
     """
 
-    def __init__(self, ca_file=None):
-        # type: (Optional[Text]) -> None
+    def __init__(self, ca_file: Optional[str] = None) -> None:
         """
 
         Args:
-            ca_file (Text): The path to a custom trust store file to use for certificate validation. The file should
-                contain PEM-formatted root certificates.
+            ca_file: The path to a custom trust store file to use for certificate validation. The file should contain
+                PEM-formatted root certificates.
         """
         super(CertificateInfoScanCommand, self).__init__()
         self.custom_ca_file = ca_file
 
     @classmethod
-    def get_title(cls):
-        # type: () -> Text
+    def get_title(cls) -> str:
         return 'Certificate Information'
 
     @classmethod
-    def get_cli_argument(cls):
-        # type: () -> Text
+    def get_cli_argument(cls) -> str:
         return 'certinfo'
 
 
-class PathValidationResult(object):
+class PathValidationResult:
     """The result of trying to validate a server's certificate chain using a specific trust store.
 
     Attributes:
@@ -72,14 +64,13 @@ class PathValidationResult(object):
         verify_string (Text): The string returned by OpenSSL's validation function.
         is_certificate_trusted (bool): Whether the certificate chain is trusted when using supplied the trust_store.
     """
-    def __init__(self, trust_store, verify_string):
-        # type: (TrustStore, Text) -> None
+    def __init__(self, trust_store: TrustStore, verify_string: str) -> None:
         self.trust_store = trust_store
         self.verify_string = verify_string
         self.is_certificate_trusted = True if verify_string == 'ok' else False
 
 
-class PathValidationError(object):
+class PathValidationError:
     """An exception was raised while trying to validate a server's certificate using a specific trust store; should
     never happen.
 
@@ -87,8 +78,7 @@ class PathValidationError(object):
         trust_store (TrustStore): The trust store used for validation.
         error_message (Text): The exception that was raised formatted as a string.
     """
-    def __init__(self, trust_store, exception):
-        # type: (TrustStore, Exception) -> None
+    def __init__(self, trust_store: TrustStore, exception: Exception) -> None:
         self.trust_store = trust_store
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
@@ -99,13 +89,11 @@ class CertificateInfoPlugin(plugin_base.Plugin):
     """
 
     @classmethod
-    def get_available_commands(cls):
-        # type: () -> List[Type[PluginScanCommand]]
+    def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
         return [CertificateInfoScanCommand]
 
     @classmethod
-    def get_cli_option_group(cls):
-        # type: () -> List[optparse.Option]
+    def get_cli_option_group(cls) -> List[optparse.Option]:
         options = super(CertificateInfoPlugin, cls).get_cli_option_group()
 
         # Add the special optional argument for this plugin's commands
@@ -120,8 +108,11 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         )
         return options
 
-    def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, PluginScanCommand) -> CertificateInfoScanResult
+    def process_task(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: PluginScanCommand
+    ) -> 'CertificateInfoScanResult':
         if not isinstance(scan_command, CertificateInfoScanCommand):
             raise ValueError('Unexpected scan command')
 
@@ -143,7 +134,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         thread_pool.start(len(final_trust_store_list))
 
         # Store the results as they come
-        certificate_chain = []  # type: List[Certificate]
+        certificate_chain: List[Certificate] = []
         path_validation_result_list = []
         path_validation_error_list = []
         ocsp_response = None
@@ -172,8 +163,10 @@ class CertificateInfoPlugin(plugin_base.Plugin):
                                          path_validation_error_list, ocsp_response)
 
     @staticmethod
-    def _get_and_verify_certificate_chain(server_info, trust_store):
-        # type: (ServerConnectivityInfo, TrustStore) -> Tuple[List[Certificate], Text, Optional[OcspResponse]]
+    def _get_and_verify_certificate_chain(
+            server_info: ServerConnectivityInfo,
+            trust_store: TrustStore
+    ) -> Tuple[List[Certificate], str, Optional[OcspResponse]]:
         """Connects to the target server and uses the supplied trust store to validate the server's certificate.
         Returns the server's certificate and OCSP response.
         """
@@ -252,22 +245,20 @@ class CertificateInfoScanResult(PluginScanResult):
 
     def __init__(
             self,
-            server_info,                    # type: ServerConnectivityInfo
-            scan_command,                   # type: CertificateInfoScanCommand
-            certificate_chain,              # type: List[Certificate]
-            path_validation_result_list,    # type: List[PathValidationResult]
-            path_validation_error_list,     # type: List[PathValidationError]
-            ocsp_response                   # type: OcspResponse
-    ):
-        # type: (...) -> None
+            server_info: ServerConnectivityInfo,
+            scan_command: CertificateInfoScanCommand,
+            certificate_chain: List[Certificate],
+            path_validation_result_list: List[PathValidationResult],
+            path_validation_error_list: List[PathValidationError],
+            ocsp_response: OcspResponse
+    ) -> None:
         super(CertificateInfoScanResult, self).__init__(server_info, scan_command)
         # Find the first trust store that successfully validated the certificate chain
         self.successful_trust_store = None
 
         # Sort the path_validation_result_list so the same successful_trust_store always get picked for a given server
         # because threading timings change the order of path_validation_result_list
-        def sort_function(path_validation):
-            # type: (PathValidationResult) -> Text
+        def sort_function(path_validation: PathValidationResult) -> str:
             return path_validation.trust_store.name.lower()
 
         path_validation_result_list.sort(key=sort_function)
@@ -304,7 +295,7 @@ class CertificateInfoScanResult(PluginScanResult):
         self.certificate_included_scts_count = CertificateUtils.count_scts_in_sct_extension(self.certificate_chain[0])
 
         # Try to build the verified chain
-        self.verified_certificate_chain = []  # type: List[Certificate]
+        self.verified_certificate_chain: List[Certificate] = []
         self.is_certificate_chain_order_valid = True
         if self.successful_trust_store:
             try:
@@ -341,8 +332,7 @@ class CertificateInfoScanResult(PluginScanResult):
         # Check if this is a distrusted Symantec-issued chain
         self.symantec_distrust_timeline = _SymantecDistructTester.get_distrust_timeline(self.verified_certificate_chain)
 
-    def __getstate__(self):
-        # type: () -> Dict[Text, Any]
+    def __getstate__(self) -> Dict[str, Any]:
         # This object needs to be pick-able as it gets sent through multiprocessing.Queues
         pickable_dict = self.__dict__.copy()
         # Manually handle non-pickable entries
@@ -356,8 +346,7 @@ class CertificateInfoScanResult(PluginScanResult):
         pickable_dict['verified_certificate_chain'] = pem_verified_chain
         return pickable_dict
 
-    def __setstate__(self, state):
-        # type: (Dict[Text, Any]) -> None
+    def __setstate__(self, state: Dict[str, Any]) -> None:
         self.__dict__.update(state)
         # Manually restore non-pickable entries
         self.__dict__['successful_trust_store'] = pickle.loads(self.__dict__['successful_trust_store'])
@@ -374,8 +363,7 @@ class CertificateInfoScanResult(PluginScanResult):
     TRUST_FORMAT = '{store_name} CA Store ({store_version}):'
     NO_VERIFIED_CHAIN_ERROR_TXT = 'ERROR - Could not build verified chain (certificate untrusted?)'
 
-    def as_text(self):
-        # type: () -> List[Text]
+    def as_text(self) -> List[str]:
         text_output = [self._format_title(self.scan_command.get_title()), self._format_subtitle('Content')]
         text_output.extend(self._get_basic_certificate_text())
 
@@ -512,8 +500,7 @@ class CertificateInfoScanResult(PluginScanResult):
         return text_output
 
     @staticmethod
-    def _certificate_chain_to_xml(certificate_chain):
-        # type: (List[Certificate]) -> List[Element]
+    def _certificate_chain_to_xml(certificate_chain: List[Certificate]) -> List[Element]:
         cert_xml_list = []
         for certificate in certificate_chain:
             cert_xml = Element('certificate', attrib={
@@ -575,8 +562,7 @@ class CertificateInfoScanResult(PluginScanResult):
             cert_xml_list.append(cert_xml)
         return cert_xml_list
 
-    def as_xml(self):
-        # type: () -> Element
+    def as_xml(self) -> Element:
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         # Certificate chain
@@ -674,8 +660,7 @@ class CertificateInfoScanResult(PluginScanResult):
         # All done
         return xml_output
 
-    def _get_basic_certificate_text(self):
-        # type: () -> List[Text]
+    def _get_basic_certificate_text(self) -> List[str]:
         certificate = self.certificate_chain[0]
         public_key = self.certificate_chain[0].public_key()
         text_output = [
@@ -714,7 +699,7 @@ class SymantecDistrustTimelineEnum(Enum):
     SEPTEMBER_2018 = 2
 
 
-class _SymantecDistructTester(object):
+class _SymantecDistructTester:
     """Logic to detect Synmantec certificates, to be distrusted by Google and Mozilla.
 
     https://security.googleblog.com/2017/09/chromes-plan-to-distrust-symantec.html
@@ -801,8 +786,10 @@ class _SymantecDistructTester(object):
     ]
 
     @classmethod
-    def get_distrust_timeline(cls, verified_certificate_chain):
-        # type: (List[Certificate]) -> Optional[SymantecDistrustTimelineEnum]
+    def get_distrust_timeline(
+            cls,
+            verified_certificate_chain: List[Certificate]
+    ) -> Optional[SymantecDistrustTimelineEnum]:
         has_whitelisted_cert = False
         has_blacklisted_cert = False
 

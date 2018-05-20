@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from typing import Union, Optional, Text
+from typing import Union, Optional
 
 from nassl.ssl_client import OpenSslVersionEnum
 
@@ -16,7 +13,7 @@ if TYPE_CHECKING:
     from sslyze.server_connectivity_tester import ServerConnectivityTester
 
 
-class SslConnectionConfigurator(object):
+class SslConnectionConfigurator:
     """Utility class to create the right SSL Connection object for a given server.
     """
 
@@ -37,14 +34,13 @@ class SslConnectionConfigurator(object):
     @classmethod
     def get_connection(
             cls,
-            ssl_version,                        # type: OpenSslVersionEnum
-            server_info,                        # type: Union[ServerConnectivityInfo, ServerConnectivityTester]
-            should_ignore_client_auth,          # type: bool
-            openssl_cipher_string=None,         # type: Optional[Text]
-            ssl_verify_locations=None,          # type: Optional[Text]
-            should_use_legacy_openssl=None,     # type: Optional[bool]
-    ):
-        # type: (...) -> SSLConnection
+            ssl_version: OpenSslVersionEnum,
+            server_info: Union[ServerConnectivityInfo, ServerConnectivityTester],
+            should_ignore_client_auth: bool,
+            openssl_cipher_string: Optional[str] = None,
+            ssl_verify_locations: Optional[str] = None,
+            should_use_legacy_openssl: Optional[bool] = None,
+    ) -> SSLConnection:
         if not server_info.ip_address and not server_info.http_tunneling_settings:
             # We received a ServerConnectivityTester whose perform() method has not been called; should never happen
             raise ValueError('Received ServerConnectivityTester with a None ip_address')

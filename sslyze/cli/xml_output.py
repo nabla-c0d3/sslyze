@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import re
-from typing import Dict, Text, TextIO, Any, Type, Set, List
+from typing import Dict, TextIO, Any, Type, Set, List
 from xml.dom import minidom
 
 from sslyze import PROJECT_URL, __version__
@@ -19,7 +15,7 @@ from xml.etree.ElementTree import Element, tostring
 
 class XmlOutputGenerator(OutputGenerator):
 
-    TLS_PROTOCOL_XML_TEXT = {
+    TLS_PROTOCOL_XML_TEXT: Dict[TlsWrappedProtocolEnum, str] = {
         TlsWrappedProtocolEnum.PLAIN_TLS: 'plainTls',
         TlsWrappedProtocolEnum.HTTPS: 'https',
         TlsWrappedProtocolEnum.STARTTLS_SMTP: 'startTlsSmtp',
@@ -31,10 +27,9 @@ class XmlOutputGenerator(OutputGenerator):
         TlsWrappedProtocolEnum.STARTTLS_LDAP: 'startTlsLdap',
         TlsWrappedProtocolEnum.STARTTLS_RDP: 'startTlsRdp',
         TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 'startTlsPostGres',
-    }  # type: Dict[TlsWrappedProtocolEnum, Text]
+    }
 
-    def __init__(self, file_to):
-        # type: (TextIO) -> None
+    def __init__(self, file_to: TextIO) -> None:
         super(XmlOutputGenerator, self).__init__(file_to)
         self._xml_root_node = Element('document', title="SSLyze Scan Results", SSLyzeVersion=__version__,
                                       SSLyzeWeb=PROJECT_URL)
@@ -45,30 +40,30 @@ class XmlOutputGenerator(OutputGenerator):
         self._xml_root_node.append(self._xml_results_node)
         self._xml_root_node.append(self._xml_failed_scans_node)
 
-    def command_line_parsed(self, available_plugins, args_command_list, malformed_servers):
-        # type: (Set[Type[Plugin]], Any, List[ServerStringParsingError]) -> None
+    def command_line_parsed(
+            self,
+            available_plugins: Set[Type[Plugin]],
+            args_command_list: Any,
+            malformed_servers: List[ServerStringParsingError]
+    ) -> None:
         for bad_server_str in malformed_servers:
             failed_scan_node = Element('invalidTarget', error=bad_server_str.error_message)
             failed_scan_node.text = bad_server_str.server_string
             self._xml_failed_scans_node.append(failed_scan_node)
 
-    def server_connectivity_test_succeeded(self, server_connectivity_info):
-        # type: (ServerConnectivityInfo) -> None
+    def server_connectivity_test_succeeded(self, server_connectivity_info: ServerConnectivityInfo) -> None:
         pass
 
-    def server_connectivity_test_failed(self, connectivity_error):
-        # type: (ServerConnectivityError) -> None
+    def server_connectivity_test_failed(self, connectivity_error: ServerConnectivityError) -> None:
         failed_scan_node = Element('invalidTarget', error=connectivity_error.error_message)
         server_info = connectivity_error.server_info
         failed_scan_node.text = '{}:{}'.format(server_info.hostname, server_info.port)
         self._xml_failed_scans_node.append(failed_scan_node)
 
-    def scans_started(self):
-        # type: () -> None
+    def scans_started(self) -> None:
         pass
 
-    def server_scan_completed(self, server_scan_result):
-        # type: (CompletedServerScan) -> None
+    def server_scan_completed(self, server_scan_result: CompletedServerScan) -> None:
         # Add server info
         server_info = server_scan_result.server_info
         target_attrib = {'host': server_info.hostname,
@@ -94,8 +89,7 @@ class XmlOutputGenerator(OutputGenerator):
 
         self._xml_results_node.append(server_scan_node)
 
-    def scans_completed(self, total_scan_time):
-        # type: (float) -> None
+    def scans_completed(self, total_scan_time: float) -> None:
         self._xml_results_node.attrib['totalScanTime'] = str(total_scan_time)
 
         # Generate the final output

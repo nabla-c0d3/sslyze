@@ -1,8 +1,5 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import socket
-from typing import Text, Optional, List, Iterable, cast
+from typing import Optional, List, Iterable, cast
 
 from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
@@ -19,18 +16,16 @@ class ServerConnectivityError(Exception):
     """SSLyze was unable to complete at least one TLS handshake with the server while doing connectivity testing.
 
     Attributes:
-        server_info (ServerConnectivityTester): The connectivity tester that failed, containing all the server's
-            information (hostname, port, etc.) that was used to test connectivity.
-        error_message (Text): The error that was returned.
+        server_info: The connectivity tester that failed, containing all the server's  information
+            (hostname, port, etc.) that was used to test connectivity.
+        error_message: The error that was returned.
     """
 
-    def __init__(self, server_info, error_message):
-        # type: (ServerConnectivityTester, Text) -> None
+    def __init__(self, server_info: 'ServerConnectivityTester', error_message: str) -> None:
         self.server_info = server_info
         self.error_message = error_message
 
-    def __str__(self):
-        # type: () -> Text
+    def __str__(self) -> str:
         return '<{class_name}: server=({hostname}, {ip_addr}, {port}), error="{error_message}">'.format(
             class_name=self.__class__.__name__,
             hostname=self.server_info.hostname,
@@ -58,7 +53,7 @@ class ProxyConnectivityError(ServerConnectivityError):
     """
 
 
-class ServerConnectivityTester(object):
+class ServerConnectivityTester:
 
     TLS_DEFAULT_PORTS = {
         TlsWrappedProtocolEnum.PLAIN_TLS: 443,
@@ -78,8 +73,7 @@ class ServerConnectivityTester(object):
     CONNECTIVITY_ERROR_REJECTED = 'Connection rejected'
     CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
 
-    def __str__(self):
-        # type: () -> Text
+    def __str__(self) -> str:
         return '<{class_name}: server=({hostname}, {ip_addr}, {port})>'.format(
             class_name=self.__class__.__name__,
             hostname=self.hostname,
@@ -89,16 +83,15 @@ class ServerConnectivityTester(object):
 
     def __init__(
             self,
-            hostname,                                               # type: Text
-            port=None,                                              # type: Optional[int]
-            ip_address=None,                                        # type: Optional[Text]
-            tls_wrapped_protocol=TlsWrappedProtocolEnum.PLAIN_TLS,  # type: TlsWrappedProtocolEnum
-            tls_server_name_indication=None,                        # type: Optional[Text]
-            xmpp_to_hostname=None,                                  # type: Optional[Text]
-            client_auth_credentials=None,                           # type: Optional[ClientAuthenticationCredentials]
-            http_tunneling_settings=None                            # type: Optional[HttpConnectTunnelingSettings]
-    ):
-        # type: (...) -> None
+            hostname: str,
+            port: Optional[int] = None,
+            ip_address: Optional[str] = None,
+            tls_wrapped_protocol: TlsWrappedProtocolEnum = TlsWrappedProtocolEnum.PLAIN_TLS,
+            tls_server_name_indication: Optional[str] = None,
+            xmpp_to_hostname: Optional[str] = None,
+            client_auth_credentials: Optional[ClientAuthenticationCredentials] = None,
+            http_tunneling_settings: Optional[HttpConnectTunnelingSettings] = None,
+    ) -> None:
         """Constructor to specify how to connect to a given SSL/TLS server to be scanned.
 
         Most arguments are optional but can be supplied in order to be more specific about the server's configuration.
@@ -108,27 +101,26 @@ class ServerConnectivityTester(object):
         `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands on the server.
 
         Args:
-            hostname (Text): The server's hostname.
-            port (Optional[int]): The server's TLS port number. If not supplied, the default port number for the
-                specified `tls_wrapped_protocol` will be used.
-            ip_address (Optional[Text]): The server's IP address. If not supplied, a DNS lookup for the specified
-                `hostname` will be performed. If `http_tunneling_settings` is specified, `ip_address` cannot be supplied
-                as the HTTP proxy will be responsible for looking up and connecting to the server to be scanned.
-            tls_wrapped_protocol (Optional[TlsWrappedProtocolEnum]): The protocol wrapped in TLS that the server
-                expects. It allows sslyze to figure out how to establish a (Start)TLS connection to the server and what
-                kind of "hello" message (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If
-                not supplied, standard TLS will be used.
-            tls_server_name_indication (Optional[Text]): The hostname to set within the Server Name Indication TLS
-                extension. If not supplied, the specified `hostname` will be used.
-            xmpp_to_hostname (Optional[Text]): The hostname to set within the `to` attribute of the XMPP stream. If not
-                supplied, the specified `hostname` will be used. Should only be set if the supplied
-                `tls_wrapped_protocol` is an XMPP protocol.
-            client_auth_credentials (Optional[ClientAuthenticationCredentials]): The client certificate and private key
-                needed to perform mutual authentication with the server. If not supplied, sslyze will attempt to connect
-                to the server without performing mutual authentication.
-            http_tunneling_settings (Optional[HttpConnectTunnelingSettings]): The HTTP proxy configuration to use in
-                order to tunnel the scans through a proxy. If not supplied, sslyze will run the scans by directly
-                connecting to the server.
+            hostname: The server's hostname.
+            port: The server's TLS port number. If not supplied, the default port number for the specified
+                `tls_wrapped_protocol` will be used.
+            ip_address: The server's IP address. If not supplied, a DNS lookup for the specified `hostname` will be
+                performed. If `http_tunneling_settings` is specified, `ip_address` cannot be supplied as the HTTP proxy
+                will be responsible for looking up and connecting to the server to be scanned.
+            tls_wrapped_protocol: The protocol wrapped in TLS that the server expects. It allows sslyze to figure out
+                how to establish a (Start)TLS connection to the server and what kind of "hello" message
+                (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not supplied, standard
+                TLS will be used.
+            tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension. If not
+                supplied, the specified `hostname` will be used.
+            xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream. If not supplied, the
+                specified `hostname` will be used. Should only be set if the supplied `tls_wrapped_protocol` is an
+                XMPP protocol.
+            client_auth_credentials: The client certificate and private key needed to perform mutual authentication
+                with the server. If not supplied, sslyze will attempt to connect to the server without performing
+                mutual authentication.
+            http_tunneling_settings: The HTTP proxy configuration to use in order to tunnel the scans through a proxy.
+                If not supplied, sslyze will run the scans by directly connecting to the server.
 
         Raises:
             ValueError: If `xmpp_to_hostname` was specified for a non-XMPP protocol.
@@ -155,8 +147,7 @@ class ServerConnectivityTester(object):
         self.http_tunneling_settings = http_tunneling_settings
 
     @classmethod
-    def _do_dns_lookup(cls, hostname, port):
-        # type: (Text, int) -> Text
+    def _do_dns_lookup(cls, hostname: str, port: int) -> str:
         addr_infos = socket.getaddrinfo(hostname, port, socket.AF_UNSPEC, socket.IPPROTO_IP)
         family, socktype, proto, canonname, sockaddr = addr_infos[0]
 
@@ -170,18 +161,17 @@ class ServerConnectivityTester(object):
 
         return tentative_ip_addr
 
-    def perform(self, network_timeout=None):
-        # type: (Optional[int]) -> ServerConnectivityInfo
+    def perform(self, network_timeout: Optional[int] = None) -> ServerConnectivityInfo:
         """Attempt to perform a full SSL/TLS handshake with the server.
 
         This method will ensure that the server can be reached, and will also identify one SSL/TLS version and one
         cipher suite that is supported by the server.
 
         Args:
-            network_timeout (Optional[int]): Network timeout value in seconds passed to the underlying socket.
+            network_timeout: Network timeout value in seconds passed to the underlying socket.
 
         Returns:
-            ServerConnectivityInfo: An object encapsulating all the information needed to connect to the server, to be
+            An object encapsulating all the information needed to connect to the server, to be
                 passed to a `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands on the server.
 
         Raises:
@@ -312,31 +302,31 @@ class ServerConnectivityTester(object):
         )
 
 
-class ConcurrentServerConnectivityTester(object):
+class ConcurrentServerConnectivityTester:
     """Utility class to run servers connectivity testing using a thread pool.
     """
 
     _DEFAULT_MAX_THREADS = 20
 
-    def __init__(self, server_connectivity_testers):
-        # type: (List[ServerConnectivityTester]) -> None
+    def __init__(self, server_connectivity_testers: List[ServerConnectivityTester]) -> None:
         # Use a thread pool to connect to each server
         self._thread_pool = ThreadPool()
         self._server_connectivity_testers = server_connectivity_testers
 
-    def start_connectivity_testing(self, max_threads=_DEFAULT_MAX_THREADS, network_timeout=None):
-        # type: (int, Optional[int]) -> None
+    def start_connectivity_testing(
+            self,
+            max_threads: int = _DEFAULT_MAX_THREADS,
+            network_timeout: Optional[int] = None
+    ) -> None:
         for server_tester in self._server_connectivity_testers:
             self._thread_pool.add_job((server_tester.perform, [network_timeout]))
         nb_threads = min(len(self._server_connectivity_testers), max_threads)
         self._thread_pool.start(nb_threads)
 
-    def get_reachable_servers(self):
-        # type: () -> Iterable[ServerConnectivityInfo]
+    def get_reachable_servers(self) -> Iterable[ServerConnectivityInfo]:
         for (_, server_info) in self._thread_pool.get_result():
             yield server_info
 
-    def get_invalid_servers(self):
-        # type: () -> Iterable[ServerConnectivityError]
+    def get_invalid_servers(self) -> Iterable[ServerConnectivityError]:
         for (_, exception) in self._thread_pool.get_error():
             yield cast(ServerConnectivityError, exception)

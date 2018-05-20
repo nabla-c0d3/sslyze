@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import socket
 import types
 from enum import Enum
-from typing import Optional, Tuple, Text, List, Dict, Type
+from typing import Optional, Tuple, List, Dict, Type
 from xml.etree.ElementTree import Element
 
 import binascii
@@ -34,18 +30,15 @@ class RobotScanCommand(PluginScanCommand):
     """
 
     @classmethod
-    def get_cli_argument(cls):
-        # type: () -> Text
+    def get_cli_argument(cls) -> str:
         return 'robot'
 
     @classmethod
-    def get_title(cls):
-        # type: () -> Text
+    def get_title(cls) -> str:
         return 'ROBOT Attack'
 
     @classmethod
-    def is_aggressive(cls):
-        # type: () -> bool
+    def is_aggressive(cls) -> bool:
         # Each scan spawns 10 threads
         return True
 
@@ -58,7 +51,7 @@ class RobotPmsPaddingPayloadEnum(Enum):
     WRONG_VERSION_NUMBER = 4
 
 
-class RobotTlsRecordPayloads(object):
+class RobotTlsRecordPayloads:
 
     # From https://github.com/robotattackorg/robot-detect and testssl.sh
     # The high level idea of an oracle attack is to send several payloads that are slightly wrong, in different ways,
@@ -75,8 +68,13 @@ class RobotTlsRecordPayloads(object):
     _PMS_HEX = "aa112233445566778899112233445566778899112233445566778899112233445566778899112233445566778899"
 
     @classmethod
-    def get_client_key_exchange_record(cls, robot_payload_enum, tls_version, modulus, exponent):
-        # type: (RobotPmsPaddingPayloadEnum, TlsVersionEnum, int, int) -> TlsRsaClientKeyExchangeRecord
+    def get_client_key_exchange_record(
+            cls,
+            robot_payload_enum: RobotPmsPaddingPayloadEnum,
+            tls_version: TlsVersionEnum,
+            modulus: int,
+            exponent: int
+    ) -> TlsRsaClientKeyExchangeRecord:
         """A client key exchange record with a hardcoded pre_master_secret, and a valid or invalid padding.
         """
         pms_padding = cls._compute_pms_padding(modulus)
@@ -91,8 +89,7 @@ class RobotTlsRecordPayloads(object):
         return cke_robot_record
 
     @staticmethod
-    def _compute_pms_padding(modulus):
-        # type: (int) -> Text
+    def _compute_pms_padding(modulus: int) -> str:
         # Generate the padding for the pre_master_scecret
         modulus_bit_size = int(math.ceil(math.log(modulus, 2)))
         modulus_byte_size = (modulus_bit_size + 7) // 8
@@ -108,8 +105,7 @@ class RobotTlsRecordPayloads(object):
     )
 
     @classmethod
-    def get_finished_record_bytes(cls, tls_version):
-        # type: (TlsVersionEnum) -> bytes
+    def get_finished_record_bytes(cls, tls_version: TlsVersionEnum) -> bytes:
         """The Finished TLS record corresponding to the hardcoded PMS used in the Client Key Exchange record.
         """
         # TODO(AD): The ROBOT poc script uses the same Finished record for all possible client hello (default, GCM,
@@ -129,15 +125,13 @@ class RobotScanResultEnum(Enum):
     UNKNOWN_INCONSISTENT_RESULTS = 5  #: Could not determine whether the server is vulnerable or not
 
 
-class RobotServerResponsesAnalyzer(object):
+class RobotServerResponsesAnalyzer:
 
-        def __init__(self, payload_responses):
-            # type: (Dict[RobotPmsPaddingPayloadEnum, List[Text]]) -> None
+        def __init__(self, payload_responses: Dict[RobotPmsPaddingPayloadEnum, List[str]]) -> None:
             # A mapping of a ROBOT payload enum -> a list of two server responses as text
             self._payload_responses = payload_responses
 
-        def compute_result_enum(self):
-            # type: () -> RobotScanResultEnum
+        def compute_result_enum(self) -> RobotScanResultEnum:
             """Look at the server's response to each ROBOT payload and return the conclusion of the analysis.
             """
             # Ensure the results were consistent
@@ -174,12 +168,10 @@ class RobotPlugin(plugin_base.Plugin):
     """
 
     @classmethod
-    def get_available_commands(cls):
-        # type: () -> List[Type[PluginScanCommand]]
+    def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
         return [RobotScanCommand]
 
-    def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, PluginScanCommand) -> RobotScanResult
+    def process_task(self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand) -> 'RobotScanResult':
         if not isinstance(scan_command, RobotScanCommand):
             raise ValueError('Unexpected scan command')
 
@@ -214,8 +206,14 @@ class RobotPlugin(plugin_base.Plugin):
         return RobotScanResult(server_info, scan_command, robot_result_enum)
 
     @classmethod
-    def _run_oracle_over_threads(cls, server_info, cipher_string, rsa_modulus, rsa_exponent, should_complete_handshake):
-        # type: (ServerConnectivityInfo, Text, int, int, bool) -> RobotScanResultEnum
+    def _run_oracle_over_threads(
+            cls,
+            server_info: ServerConnectivityInfo,
+            cipher_string: str,
+            rsa_modulus: int,
+            rsa_exponent: int,
+            should_complete_handshake: bool
+    ) -> RobotScanResultEnum:
         # Use threads to speed things up
         thread_pool = ThreadPool()
 
@@ -230,13 +228,13 @@ class RobotPlugin(plugin_base.Plugin):
         thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum) * 2)
 
         # Store the results - two attempts per ROBOT payload
-        payload_responses = {
+        payload_responses: Dict[RobotPmsPaddingPayloadEnum, List[str]] = {
             RobotPmsPaddingPayloadEnum.VALID: [],
             RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES: [],
             RobotPmsPaddingPayloadEnum.WRONG_POSITION_00: [],
             RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE: [],
             RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER: [],
-        }  # type: Dict[RobotPmsPaddingPayloadEnum, List[Text]]
+        }
 
         for completed_job in thread_pool.get_result():
             (job, (payload_enum, server_response)) = completed_job
@@ -251,8 +249,10 @@ class RobotPlugin(plugin_base.Plugin):
         return RobotServerResponsesAnalyzer(payload_responses).compute_result_enum()
 
     @staticmethod
-    def _get_rsa_parameters(server_info, openssl_cipher_string):
-        # type: (ServerConnectivityInfo, Text) -> Optional[Tuple[int, int]]
+    def _get_rsa_parameters(
+            server_info: ServerConnectivityInfo,
+            openssl_cipher_string: str
+    ) -> Optional[Tuple[int, int]]:
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
         parsed_cert = None
@@ -280,14 +280,13 @@ class RobotPlugin(plugin_base.Plugin):
 
     @staticmethod
     def _send_robot_payload(
-            server_info,                    # type: ServerConnectivityInfo
-            rsa_cipher_string,              # type: Text
-            robot_payload_enum,             # type: RobotPmsPaddingPayloadEnum
-            robot_should_finish_handshake,  # type: bool
-            rsa_modulus,                    # type: int
-            rsa_exponent                    # type: int
-    ):
-        # type: (...) -> Tuple[RobotPmsPaddingPayloadEnum, Text]
+            server_info: ServerConnectivityInfo,
+            rsa_cipher_string: str,
+            robot_payload_enum: RobotPmsPaddingPayloadEnum,
+            robot_should_finish_handshake: bool,
+            rsa_modulus: int,
+            rsa_exponent: int,
+    ) -> Tuple[RobotPmsPaddingPayloadEnum, str]:
         # Do a handshake which each record and keep track of what the server returned
         ssl_connection = server_info.get_preconfigured_ssl_connection()
 
@@ -320,8 +319,7 @@ class RobotPlugin(plugin_base.Plugin):
 
 
 class ServerResponseToRobot(Exception):
-    def __init__(self, server_response):
-        # type: (Text) -> None
+    def __init__(self, server_response: str) -> None:
         # Could be a TLS alert or some data, always as text so we can easily detect different responses
         self.server_response = server_response
 
@@ -422,16 +420,19 @@ class RobotScanResult(PluginScanResult):
     """The result of running a RobotScanCommand on a specific server.
 
     Attributes:
-        robot_result_enum (RobotScanResultEnum): An Enum providing the result of the Robot scan.
+        robot_result_enum: An Enum providing the result of the Robot scan.
     """
 
-    def __init__(self, server_info, scan_command, robot_result_enum):
-        # type: (ServerConnectivityInfo, RobotScanCommand, RobotScanResultEnum) -> None
+    def __init__(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: RobotScanCommand,
+            robot_result_enum: RobotScanResultEnum
+    ) -> None:
         super(RobotScanResult, self).__init__(server_info, scan_command)
         self.robot_result_enum = robot_result_enum
 
-    def as_text(self):
-        # type: () -> List[Text]
+    def as_text(self) -> List[str]:
         if self.robot_result_enum == RobotScanResultEnum.VULNERABLE_STRONG_ORACLE:
             robot_txt = 'VULNERABLE - Strong oracle, a real attack is possible'
         elif self.robot_result_enum == RobotScanResultEnum.VULNERABLE_WEAK_ORACLE:
@@ -447,8 +448,7 @@ class RobotScanResult(PluginScanResult):
 
         return [self._format_title(self.scan_command.get_title()), self._format_field('', robot_txt)]
 
-    def as_xml(self):
-        # type: () -> Element
+    def as_xml(self) -> Element:
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         xml_output.append(Element('robotAttack', resultEnum=self.robot_result_enum.name))
         return xml_output

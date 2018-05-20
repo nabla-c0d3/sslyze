@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from typing import Text, Optional
+from typing import Optional
 
 from nassl.ssl_client import OpenSslVersionEnum
 
@@ -11,50 +8,46 @@ from sslyze.utils.ssl_connection import SSLConnection
 from sslyze.utils.ssl_connection_configurator import SslConnectionConfigurator
 
 
-class ServerConnectivityInfo(object):
+class ServerConnectivityInfo:
     """All the settings (hostname, port, SSL version, etc.) needed to successfully connect to a given SSL/TLS server.
 
     Such objects are returned by `ServerConnectivityTester.perform()` if connectivity testing was successful, and should
     never be instantiated directly.
 
     Attributes:
-        hostname (Text): The server's hostname.
-        port (int): The server's TLS port number.
-        ip_address (Text): The server's IP address. None if we are connecting through a proxy.
-        tls_wrapped_protocol (TlsWrappedProtocolEnum): The protocol wrapped in TLS (HTTP, XMPP, etc.) that the server
-            expects.
-        tls_server_name_indication (Text): The hostname to set within the Server Name Indication TLS extension.
-        xmpp_to_hostname (Optional[Text]): The hostname to set within the `to` attribute of the XMPP stream; only used
-            if the `tls_wrapped_protocol` is an XMPP protocol.
-        client_auth_credentials (Optional[ClientAuthenticationCredentials]): The client certificate and private key
-            needed to perform mutual authentication with the server. If not supplied, SSLyze will attempt to connect
-            to the server without performing mutual authentication.
-        http_tunneling_settings (Optional[HttpConnectTunnelingSettings]): The HTTP proxy configuration to use in
-            order to tunnel the scans through a proxy. If not supplied, SSLyze will run the scans by directly
-            connecting to the server.
-        highest_ssl_version_supported (OpenSslVersionEnum): The highest version of SSL/TLS supported by the server, as
-            detected when doing connectivity testing.
-        openssl_cipher_string_supported (Text): An OpenSSL cipher string that contains at least one cipher suite
-            supported by the server, as detected when doing connectivity testing.
-        client_auth_requirement (ClientAuthenticationServerConfigurationEnum): Whether the support requires client
+        hostname: The server's hostname.
+        port: The server's TLS port number.
+        ip_address: The server's IP address. None if we are connecting through a proxy.
+        tls_wrapped_protocol: The protocol wrapped in TLS (HTTP, XMPP, etc.) that the server expects.
+        tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension.
+        xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream; only used if the
+            `tls_wrapped_protocol` is an XMPP protocol.
+        client_auth_credentials: The client certificate and private key needed to perform mutual authentication with
+            the server. If not supplied, SSLyze will attempt to connect to the server without performing mutual
             authentication.
+        http_tunneling_settings: The HTTP proxy configuration to use in order to tunnel the scans through a proxy.
+            If not supplied, SSLyze will run the scans by directly connecting to the server.
+        highest_ssl_version_supported: The highest version of SSL/TLS supported by the server, as detected when doing
+            connectivity testing.
+        openssl_cipher_string_supported: An OpenSSL cipher string that contains at least one cipher suite supported by
+            the server, as detected when doing connectivity testing.
+        client_auth_requirement: Whether the support requires client authentication.
     """
 
     def __init__(
             self,
-            hostname,                                               # type: Text
-            port,                                                   # type: int
-            ip_address,                                             # type: Optional[Text]
-            tls_wrapped_protocol,                                   # type: TlsWrappedProtocolEnum
-            tls_server_name_indication,                             # type: Text
-            xmpp_to_hostname,                                       # type: Optional[Text]
-            client_auth_credentials,                                # type: Optional[ClientAuthenticationCredentials]
-            http_tunneling_settings,                                # type: Optional[HttpConnectTunnelingSettings]
-            highest_ssl_version_supported,                          # type: OpenSslVersionEnum
-            openssl_cipher_string_supported,                        # type: Text
-            client_auth_requirement,                                # type: ClientAuthenticationServerConfigurationEnum
-    ):
-        # type: (...) -> None
+            hostname: str,
+            port: int,
+            ip_address: Optional[str],
+            tls_wrapped_protocol: TlsWrappedProtocolEnum,
+            tls_server_name_indication: str,
+            xmpp_to_hostname: Optional[str],
+            client_auth_credentials: Optional[ClientAuthenticationCredentials],
+            http_tunneling_settings: Optional[HttpConnectTunnelingSettings],
+            highest_ssl_version_supported: OpenSslVersionEnum,
+            openssl_cipher_string_supported: str,
+            client_auth_requirement: ClientAuthenticationServerConfigurationEnum,
+    ) -> None:
         self.hostname = hostname
         self.port = port
         self.ip_address = ip_address
@@ -71,11 +64,10 @@ class ServerConnectivityInfo(object):
 
     def get_preconfigured_ssl_connection(
             self,
-            override_ssl_version=None,          # type: Optional[OpenSslVersionEnum]
-            ssl_verify_locations=None,          # type: Optional[Text]
-            should_use_legacy_openssl=None,     # type: Optional[bool]
-    ):
-        # type: (...) -> SSLConnection
+            override_ssl_version: Optional[OpenSslVersionEnum] = None,
+            ssl_verify_locations: Optional[str] = None,
+            should_use_legacy_openssl: Optional[bool] = None,
+    ) -> SSLConnection:
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
 
         Used by all plugins to connect to the server and run scans.
@@ -116,8 +108,7 @@ class ServerConnectivityInfo(object):
         )
         return ssl_connection
 
-    def __str__(self):
-        # type: () -> Text
+    def __str__(self) -> str:
         return '<{class_name}: server=({hostname}, {ip_addr}, {port})>'.format(
             class_name=self.__class__.__name__,
             hostname=self.hostname,

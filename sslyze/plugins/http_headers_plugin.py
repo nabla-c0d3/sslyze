@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 from xml.etree.ElementTree import Element
 
 from cryptography.hazmat.backends import default_backend
@@ -17,7 +13,6 @@ from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.http_response_parser import HttpResponseParser
 from typing import List, Type, Tuple, Optional, Dict, Any
-from typing import Text
 
 
 class HttpHeadersScanCommand(PluginScanCommand):
@@ -26,13 +21,11 @@ class HttpHeadersScanCommand(PluginScanCommand):
     """
 
     @classmethod
-    def get_cli_argument(cls):
-        # type: () -> Text
+    def get_cli_argument(cls) -> str:
         return 'http_headers'
 
     @classmethod
-    def get_title(cls):
-        # type: () -> Text
+    def get_title(cls) -> str:
         return 'HTTP Security Headers'
 
 
@@ -41,12 +34,14 @@ class HttpHeadersPlugin(Plugin):
     """
 
     @classmethod
-    def get_available_commands(cls):
-        # type: () -> List[Type[PluginScanCommand]]
+    def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
         return [HttpHeadersScanCommand]
 
-    def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, PluginScanCommand) -> HttpHeadersScanResult
+    def process_task(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: PluginScanCommand
+    ) -> 'HttpHeadersScanResult':
         if not isinstance(scan_command, HttpHeadersScanCommand):
             raise ValueError('Unexpected scan command')
 
@@ -62,9 +57,8 @@ class HttpHeadersPlugin(Plugin):
     @classmethod
     def _get_security_headers(
             cls,
-            server_info  # type: ServerConnectivityInfo
-    ):
-        # type: (...) -> Tuple[Optional[Text], Optional[Text], Optional[Text], bool, List[Certificate]]
+            server_info: ServerConnectivityInfo
+    ) -> Tuple[Optional[str], Optional[str], Optional[str], bool, List[Certificate]]:
         hpkp_report_only = False
 
         # Perform the SSL handshake
@@ -99,7 +93,7 @@ class HttpHeadersPlugin(Plugin):
         return hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain
 
 
-class ParsedHstsHeader(object):
+class ParsedHstsHeader:
     """The HTTP Strict Transport Security header returned by the server.
 
     Attributes:
@@ -107,8 +101,7 @@ class ParsedHstsHeader(object):
         include_subdomains (bool): True if the includesubdomains directive is set.
         max_age (int): The content of the max-age field.
     """
-    def __init__(self, raw_hsts_header):
-        # type: (Text) -> None
+    def __init__(self, raw_hsts_header: str) -> None:
         # Handle headers defined multiple times by picking the first value
         if ',' in raw_hsts_header:
             raw_hsts_header = raw_hsts_header.split(',')[0]
@@ -133,7 +126,7 @@ class ParsedHstsHeader(object):
                 raise ValueError('Unexpected value in HSTS header: {}'.format(repr(hsts_directive)))
 
 
-class ParsedHpkpHeader(object):
+class ParsedHpkpHeader:
     """The HTTP Public Key Pinning header returned by the server.
 
     Attributes:
@@ -145,8 +138,7 @@ class ParsedHpkpHeader(object):
         pin_sha256_list (List[Text]): The list of pin-sha256 values set in the header.
     """
 
-    def __init__(self, raw_hpkp_header, report_only=False):
-        # type: (Text, bool) -> None
+    def __init__(self, raw_hpkp_header: str, report_only: bool = False) -> None:
         # Handle headers defined multiple times by picking the first value
         if ',' in raw_hpkp_header:
             raw_hpkp_header = raw_hpkp_header.split(',')[0]
@@ -178,7 +170,7 @@ class ParsedHpkpHeader(object):
         self.pin_sha256_list = pin_sha256_list
 
 
-class ParsedExpectCTHeader(object):
+class ParsedExpectCTHeader:
     """Expect-CT header returned by the server.
 
     Attributes:
@@ -187,8 +179,7 @@ class ParsedExpectCTHeader(object):
         enforce (bool): True if enforce directive is set.
     """
 
-    def __init__(self, raw_expect_ct_header):
-        # type: (Text) -> None
+    def __init__(self, raw_expect_ct_header: str) -> None:
         self.max_age = None
         self.report_uri = None
         self.enforce = False
@@ -234,20 +225,19 @@ class HttpHeadersScanResult(PluginScanResult):
 
     def __init__(
             self,
-            server_info,            # type: ServerConnectivityInfo
-            scan_command,           # type: HttpHeadersScanCommand
-            raw_hsts_header,        # type: Optional[Text]
-            raw_hpkp_header,        # type: Optional[Text]
-            raw_expect_ct_header,   # type: Optional[Text]
-            hpkp_report_only,       # type: bool
-            cert_chain,             # type: List[Certificate]
-    ):
-        # type: (...) -> None
+            server_info: ServerConnectivityInfo,
+            scan_command: HttpHeadersScanCommand,
+            raw_hsts_header: Optional[str],
+            raw_hpkp_header: Optional[str],
+            raw_expect_ct_header: Optional[str],
+            hpkp_report_only: bool,
+            cert_chain: List[Certificate],
+    ) -> None:
         super(HttpHeadersScanResult, self).__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
         self.expect_ct_header = ParsedExpectCTHeader(raw_expect_ct_header) if raw_expect_ct_header else None
-        self.verified_certificate_chain = []  # type: List[Certificate]
+        self.verified_certificate_chain: List[Certificate] = []
         try:
             main_trust_store = TrustStoresRepository.get_default().get_main_store()
             self.verified_certificate_chain = main_trust_store.build_verified_certificate_chain(cert_chain)
@@ -269,8 +259,7 @@ class HttpHeadersScanResult(PluginScanResult):
             # Is a backup pin configured?
             self.is_backup_pin_configured = set(self.hpkp_header.pin_sha256_list) != set(server_pin_list)
 
-    def __getstate__(self):
-        # type: () -> Dict[Text, Any]
+    def __getstate__(self) -> Dict[str, Any]:
         # This object needs to be pick-able as it gets sent through multiprocessing.Queues
         pickable_dict = self.__dict__.copy()
         # Manually handle non-pickable entries
@@ -278,8 +267,7 @@ class HttpHeadersScanResult(PluginScanResult):
         pickable_dict['verified_certificate_chain'] = pem_verified_chain
         return pickable_dict
 
-    def __setstate__(self, state):
-        # type: (Dict[Text, Any]) -> None
+    def __setstate__(self, state: Dict[str, Any]) -> None:
         self.__dict__.update(state)
         # Manually restore non-pickable entries
         verified_chain = [load_pem_x509_certificate(cert_pem, default_backend())
@@ -288,8 +276,7 @@ class HttpHeadersScanResult(PluginScanResult):
 
     PIN_TXT_FORMAT = '      {0:<50}{1}'.format
 
-    def as_text(self):
-        # type: () -> List[Text]
+    def as_text(self) -> List[str]:
         txt_result = [self._format_title(self.scan_command.get_title())]
 
         if self.hsts_header:
@@ -350,8 +337,7 @@ class HttpHeadersScanResult(PluginScanResult):
 
         return txt_result
 
-    def as_xml(self):
-        # type: () -> Element
+    def as_xml(self) -> Element:
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         # HSTS header

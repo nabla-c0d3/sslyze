@@ -1,11 +1,7 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import sslyze
-from typing import Text
 
 
-class HttpRequestGenerator(object):
+class HttpRequestGenerator:
 
     HTTP_GET_FORMAT = 'GET / HTTP/1.1\r\n' \
                       'Host: {host}\r\n' \
@@ -17,8 +13,7 @@ class HttpRequestGenerator(object):
                          'Chrome/52.0.2743.116 Safari/537.36 SSLyze/{0}'.format(sslyze.__version__)
 
     @classmethod
-    def get_request(cls, host, user_agent=None):
-        # type: (Text, Text) -> bytes
+    def get_request(cls, host: str, user_agent: str = None) -> bytes:
         final_user_agent = user_agent
         if final_user_agent is None:
             final_user_agent = cls.DEFAULT_USER_AGENT

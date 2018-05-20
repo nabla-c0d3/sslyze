@@ -1,19 +1,11 @@
 language: python
 python:
-  - "2.7"
-  - "3.5"
   - "3.6"
-# Command to install dependencies
 install:
-  - pip install -U pip setuptools
-  # Install mypy for type checking if we are on Python 3
-  # v0.570 has a bug https://github.com/python/mypy/issues/4674 ; use 0.560 for now
-  - if [[ $TRAVIS_PYTHON_VERSION != 2.7 ]]; then pip install -U mypy==0.560; fi
-  - pip install -U flake8
-  - pip install -r requirements.txt
-# Command to run tests
+  - pip install pipenv
+  - pipenv install --dev
+  - pipenv shell
 script:
-  - python -m flake8 sslyze
-  # Run mypy for type checking if we are on Python 3 
-  - if [[ $TRAVIS_PYTHON_VERSION != 2.7 ]]; then python -m mypy sslyze; fi
+  - flake8 sslyze
+  - mypy sslyze
   - python run_tests.py

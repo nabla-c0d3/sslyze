@@ -1,6 +1,9 @@
 .mypy_cache/
 .pytest_cache/
 
+# Pipenv
+requirements.txt
+
 *.py[cod]
 
 # C extensions

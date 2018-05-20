@@ -35,7 +35,7 @@ class SslConnectionConfigurator:
     def get_connection(
             cls,
             ssl_version: OpenSslVersionEnum,
-            server_info: Union[ServerConnectivityInfo, ServerConnectivityTester],
+            server_info: Union['ServerConnectivityInfo', 'ServerConnectivityTester'],
             should_ignore_client_auth: bool,
             openssl_cipher_string: Optional[str] = None,
             ssl_verify_locations: Optional[str] = None,

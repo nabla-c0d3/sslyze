@@ -22,7 +22,7 @@ class HttpResponseParser:
         return cls._parse(sock.recv)
 
     @classmethod
-    def parse_from_ssl_connection(cls, ssl_conn: SSLConnection) -> HTTPResponse:
+    def parse_from_ssl_connection(cls, ssl_conn: 'SSLConnection') -> HTTPResponse:
         return cls._parse(ssl_conn.read)
 
     @staticmethod

@@ -355,7 +355,8 @@ class CommandLineParser(object):
         output_group.add_option(
             '--xml_out',
             help='Write the scan results as an XML document to the file XML_FILE. If XML_FILE is set to "-", the XML '
-                 'output will instead be printed to stdout.',
+                 'output will instead be printed to stdout. The corresponding XML Schema Definition is available at '
+                 './docs/xml_out.xsd',
             dest='xml_file',
             default=None
         )

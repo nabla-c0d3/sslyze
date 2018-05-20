@@ -19,9 +19,6 @@ def test(ctx):
 
 @task
 def gen_doc(ctx):
-    # Ensure the API sample works
-    ctx.run('python api_sample.py')
-
     docs_folder_path = root_path / 'docs'
     dst_path = docs_folder_path / 'documentation'
     ctx.run(f'python -m sphinx -v -b html {docs_folder_path} {dst_path}')
@@ -34,7 +31,11 @@ def release(ctx):
         print('Cancelled')
         return
 
+    # Ensure the tests pass
     test(ctx)
+
+    # Ensure the API samples work
+    ctx.run('python api_sample.py')
 
     # Add the git tag
     ctx.run(f"git tag -a {__version__} -m '{__version__}'")

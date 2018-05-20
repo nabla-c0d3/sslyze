@@ -8,11 +8,7 @@ import os
 import shutil
 from tempfile import mkdtemp
 
-try:
-    from urllib.request import urlretrieve
-except ImportError:
-    # Python 2
-    from urllib import urlretrieve  # type: ignore
+from urllib.request import urlretrieve
 
 
 from os.path import join

@@ -14,14 +14,7 @@ from base64 import b64encode
 
 from sslyze.ssl_settings import ClientAuthenticationCredentials
 
-try:
-    # Python 3
-    # noinspection PyCompatibility
-    from urllib.parse import quote
-except ImportError:
-    # Python 2
-    # noinspection PyCompatibility
-    from urllib import quote  # type: ignore
+from urllib.parse import quote
 
 from nassl import _nassl
 from nassl.ssl_client import SslClient

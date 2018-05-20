@@ -6,22 +6,12 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import os
-from base64 import b64encode
 
 from enum import Enum
 from typing import Optional
 from typing import Text
 
-try:
-    # Python 3
-    # noinspection PyCompatibility
-    from urllib.parse import urlparse
-    from urllib.parse import quote
-except ImportError:
-    # Python 2
-    # noinspection PyCompatibility
-    from urlparse import urlparse  # type: ignore
-    from urllib import quote  # type: ignore
+from urllib.parse import urlparse
 
 from nassl.ssl_client import SslClient, OpenSslFileTypeEnum
 

@@ -6,16 +6,9 @@ from __future__ import unicode_literals
 
 import threading
 from collections import Callable
-from typing import Tuple, Any, List, NewType, Iterable
+from typing import Tuple, Any, List, Iterable
 
-try:
-    # Python 3
-    # noinspection PyCompatibility
-    from queue import Queue
-except ImportError:
-    # Python 2
-    # noinspection PyCompatibility
-    from Queue import Queue  # type: ignore
+from queue import Queue
 
 
 class _ThreadPoolSentinel(object):

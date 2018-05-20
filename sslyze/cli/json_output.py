@@ -17,7 +17,6 @@ from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.server_connectivity_tester import ServerConnectivityError
-from sslyze.utils.python_compatibility import IS_PYTHON_2
 
 
 class JsonOutputGenerator(OutputGenerator):
@@ -83,8 +82,6 @@ class JsonOutputGenerator(OutputGenerator):
         self._json_dict['total_scan_time'] = str(total_scan_time)
         json_out = json.dumps(self._json_dict, default=_object_to_json_dict, sort_keys=True, indent=4,
                               ensure_ascii=True)
-        if IS_PYTHON_2:
-            json_out = unicode(json_out)  # type: ignore
         self._file_to.write(json_out)
 
 

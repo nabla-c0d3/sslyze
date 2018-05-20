@@ -12,14 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from sslyze.utils.ssl_connection import SSLConnection
 
-try:
-    # Python 3
-    # noinspection PyCompatibility
-    from http.client import HTTPResponse
-except ImportError:
-    # Python 2
-    # noinspection PyCompatibility
-    from httplib import HTTPResponse  # type: ignore
+from http.client import HTTPResponse
 
 
 class FakeSocket(BytesIO):

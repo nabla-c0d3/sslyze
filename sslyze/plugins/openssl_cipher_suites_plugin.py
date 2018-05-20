@@ -12,7 +12,6 @@ from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.utils.python_compatibility import IS_PYTHON_2
 from sslyze.utils.ssl_connection import SSLConnection
 from sslyze.utils.ssl_connection import SSLHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
@@ -369,8 +368,6 @@ class AcceptedCipherSuite(CipherSuite):
         self.key_size = key_size
         self.dh_info = dh_info
         self.post_handshake_response = post_handshake_response
-        if IS_PYTHON_2:
-            self.post_handshake_response = post_handshake_response.decode('utf-8')  # type: ignore
 
     @classmethod
     def from_ongoing_ssl_connection(cls, ssl_connection, ssl_version):

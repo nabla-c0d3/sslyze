@@ -89,8 +89,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
                     accepts_client_renegotiation = False
                 elif 'reset by peer' in str(e.args):
                     accepts_client_renegotiation = False
-                if 'Nassl SSL handshake failed' in str(e.args):
-                    # This is raised as an IOError on Python 2
+                elif 'Nassl SSL handshake failed' in str(e.args):
                     accepts_client_renegotiation = False
                 else:
                     raise
@@ -109,16 +108,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
                     raise
 
             except ConnectionError:
-                # Python 3 only
                 accepts_client_renegotiation = False
-
-            # Should be last as socket errors are also IOError
-            except IOError as e:
-                # Python 2 only I think?
-                if 'Nassl SSL handshake failed' in str(e.args):
-                    accepts_client_renegotiation = False
-                else:
-                    raise
 
         finally:
             ssl_connection.close()

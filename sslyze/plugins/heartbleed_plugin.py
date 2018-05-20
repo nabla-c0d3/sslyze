@@ -71,7 +71,7 @@ class HeartbleedScanResult(PluginScanResult):
     """The result of running a HeartbleedScanCommand on a specific server.
 
     Attributes:
-        is_vulnerable_to_heartbleed: True if the server is vulnerable to the Heartbleed attack.
+        is_vulnerable_to_heartbleed (bool): True if the server is vulnerable to the Heartbleed attack.
     """
 
     def __init__(

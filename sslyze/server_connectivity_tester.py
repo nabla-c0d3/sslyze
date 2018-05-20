@@ -96,7 +96,7 @@ class ServerConnectivityTester:
 
         Most arguments are optional but can be supplied in order to be more specific about the server's configuration.
 
-        After initializing a ServerConnectivityTester, the `perform()` method must be called next to ensure that the
+        After initialization, the `perform()` method must be called next to ensure that the
         server is actually reachable. The `ServerConnectivityInfo` returned by `perform()` can then be passed to a
         `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands on the server.
 
@@ -172,7 +172,7 @@ class ServerConnectivityTester:
 
         Returns:
             An object encapsulating all the information needed to connect to the server, to be
-                passed to a `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands on the server.
+            passed to a `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands on the server.
 
         Raises:
             ServerConnectivityError: If the server was not reachable or an SSL/TLS handshake could not be completed.

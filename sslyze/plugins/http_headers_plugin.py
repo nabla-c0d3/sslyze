@@ -132,10 +132,10 @@ class ParsedHpkpHeader:
     Attributes:
         report_only (bool): True if the HPKP header used is "Public-Key-Pins-Report-Only" (instead of
             "Public-Key-Pins").
-        report_uri (Text): The content of the report-uri field.
+        report_uri (str): The content of the report-uri field.
         include_subdomains (bool): True if the includesubdomains directive is set.
         max_age (int): The content of the max-age field.
-        pin_sha256_list (List[Text]): The list of pin-sha256 values set in the header.
+        pin_sha256_list (List[str]): The list of pin-sha256 values set in the header.
     """
 
     def __init__(self, raw_hpkp_header: str, report_only: bool = False) -> None:
@@ -175,7 +175,7 @@ class ParsedExpectCTHeader:
 
     Attributes:
         max-age (int): The content of the max-age field.
-        report-uri (Text): The content of report-uri field.
+        report-uri (str): The content of report-uri field.
         enforce (bool): True if enforce directive is set.
     """
 

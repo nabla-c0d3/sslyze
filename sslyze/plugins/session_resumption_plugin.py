@@ -231,7 +231,7 @@ class SessionResumptionRateScanResult(PluginScanResult):
         attempted_resumptions_nb (int): The total number of session ID resumptions that were attempted, which is 100.
         successful_resumptions_nb (int): The number of session ID resumptions that were successful.
         failed_resumptions_nb (int): The number of session ID resumptions that failed.
-        errored_resumptions_list (Optional[List[(Text)]): A list of unexpected errors triggered while trying to perform
+        errored_resumptions_list (Optional[List[(str)]): A list of unexpected errors triggered while trying to perform
             session ID resumption with the server (should always be empty).
     """
 
@@ -314,8 +314,8 @@ class SessionResumptionSupportScanResult(PluginScanResult):
         errored_resumptions_list (Optional[List[(Text)]): A list of unexpected errors triggered while trying to perform
             session ID resumption with the server (should always be empty).
         is_ticket_resumption_supported (bool): True if the server honors client-initiated renegotiation attempts.
-        ticket_resumption_failed_reason (Text): A message explaining why TLS ticket resumption failed.
-        ticket_resumption_exception (Optional[Text]): An unexpected error that was raised while trying to perform ticket
+        ticket_resumption_failed_reason (str): A message explaining why TLS ticket resumption failed.
+        ticket_resumption_exception (Optional[str]): An unexpected error that was raised while trying to perform ticket
             resumption (should never happen).
     """
 

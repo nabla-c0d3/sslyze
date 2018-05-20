@@ -17,9 +17,9 @@ class TrustStore:
     By default, SSLyze packages the following trust stores: Mozilla, Microsoft, Apple, Android and Java.
 
     Attributes:
-        path: The path to the PEM-formatted file containing the root certificates.
-        name: The human-readable name of the trust store (such as "Mozilla").
-        version: The human-readable version or date of the trust store (such as "09/2016").
+        path (str): The path to the PEM-formatted file containing the root certificates.
+        name (str): The human-readable name of the trust store (such as "Mozilla").
+        version (str): The human-readable version or date of the trust store (such as "09/2016").
     """
 
     def __init__(self, path: str, name: str, version: str, ev_oids: Optional[List[str]] = None) -> None:

@@ -59,7 +59,7 @@ class CompressionScanResult(PluginScanResult):
     """The result of running a CompressionScanCommand on a specific server.
 
     Attributes:
-        compression_name: The name of the compression algorithm supported by the server; None if
+        compression_name (str): The name of the compression algorithm supported by the server. `None` if
             compression is not supported by the server.
     """
 

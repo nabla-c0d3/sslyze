@@ -114,8 +114,8 @@ class SessionRenegotiationScanResult(PluginScanResult):
     """The result of running a SessionRenegotiationScanCommand on a specific server.
 
     Attributes:
-        accepts_client_renegotiation: True if the server honors client-initiated renegotiation attempts.
-        supports_secure_renegotiation: True if the server supports secure renegotiation.
+        accepts_client_renegotiation (bool): True if the server honors client-initiated renegotiation attempts.
+        supports_secure_renegotiation (bool): True if the server supports secure renegotiation.
     """
 
     def __init__(

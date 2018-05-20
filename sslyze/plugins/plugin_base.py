@@ -104,8 +104,8 @@ class PluginScanResult:
     """Abstract class to represent the result of running a specific PluginScanCommand against a server .
 
     Attributes:
-        server_info:  The server against which the command was run.
-        scan_command: The scan command that was run against the server.
+        server_info (ServerConnectivityInfo):  The server against which the command was run.
+        scan_command (PluginScanCommand): The scan command that was run against the server.
     """
     __metaclass__ = abc.ABCMeta
 

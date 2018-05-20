@@ -73,7 +73,8 @@ class FallbackScsvScanResult(PluginScanResult):
     """The result of running a FallbackScsvScanCommand on a specific server.
 
     Attributes:
-        supports_fallback_scsv: True if the server supports the TLS_FALLBACK_SCSV mechanism to block downgrade attacks.
+        supports_fallback_scsv (bool): True if the server supports the TLS_FALLBACK_SCSV mechanism to block downgrade
+            attacks.
     """
 
     def __init__(

@@ -15,23 +15,28 @@ class ServerConnectivityInfo:
     never be instantiated directly.
 
     Attributes:
-        hostname: The server's hostname.
-        port: The server's TLS port number.
-        ip_address: The server's IP address. None if we are connecting through a proxy.
-        tls_wrapped_protocol: The protocol wrapped in TLS (HTTP, XMPP, etc.) that the server expects.
-        tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension.
-        xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream; only used if the
-            `tls_wrapped_protocol` is an XMPP protocol.
-        client_auth_credentials: The client certificate and private key needed to perform mutual authentication with
+        hostname (str): The server's hostname.
+        port (int): The server's TLS port number.
+        ip_address (Optional[str]): The server's IP address. None if we are connecting through a proxy.
+        tls_wrapped_protocol (TlsWrappedProtocolEnum): The protocol wrapped in TLS (HTTP, XMPP, etc.) that the server
+            expects.
+        tls_server_name_indication (str): The hostname to set within the Server Name Indication TLS extension.
+        xmpp_to_hostname (Optional[str]): The hostname to set within the `to` attribute of the XMPP stream; only used
+            if the `tls_wrapped_protocol` is an XMPP protocol.
+        client_auth_credentials (Optional[ClientAuthenticationCredentials]): The client certificate and private key
+            needed to perform mutual authentication with
             the server. If not supplied, SSLyze will attempt to connect to the server without performing mutual
             authentication.
-        http_tunneling_settings: The HTTP proxy configuration to use in order to tunnel the scans through a proxy.
+        http_tunneling_settings (Optional[HttpConnectTunnelingSettings]): The HTTP proxy configuration to use in order
+            to tunnel the scans through a proxy.
             If not supplied, SSLyze will run the scans by directly connecting to the server.
-        highest_ssl_version_supported: The highest version of SSL/TLS supported by the server, as detected when doing
-            connectivity testing.
-        openssl_cipher_string_supported: An OpenSSL cipher string that contains at least one cipher suite supported by
+        highest_ssl_version_supported (OpenSslVersionEnum): The highest version of SSL/TLS supported by the server,
+            as detected when doing connectivity testing.
+        openssl_cipher_string_supported (str): An OpenSSL cipher string that contains at least one
+            cipher suite supported by
             the server, as detected when doing connectivity testing.
-        client_auth_requirement: Whether the support requires client authentication.
+        client_auth_requirement (ClientAuthenticationServerConfigurationEnum): Whether the support requires client
+            authentication.
     """
 
     def __init__(

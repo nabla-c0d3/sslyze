@@ -42,8 +42,8 @@ class SynchronousScanner:
             scan_command: The scan command to run against this server.
 
         Returns:
-            PluginScanResult: The result of the scan command, which will be an instance of the scan command's
-                corresponding PluginScanResult subclass.
+            The result of the scan command, which will be an instance of the scan command's
+            corresponding PluginScanResult subclass.
         """
         plugin_class = self._plugins_repository.get_plugin_class_for_command(scan_command)
         plugin = plugin_class()

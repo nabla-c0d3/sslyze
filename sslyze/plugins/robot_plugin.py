@@ -420,7 +420,7 @@ class RobotScanResult(PluginScanResult):
     """The result of running a RobotScanCommand on a specific server.
 
     Attributes:
-        robot_result_enum: An Enum providing the result of the Robot scan.
+        robot_result_enum (RobotScanResultEnum): An Enum providing the result of the Robot scan.
     """
 
     def __init__(

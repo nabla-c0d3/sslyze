@@ -15,7 +15,7 @@ class PluginRaisedExceptionScanResult(PluginScanResult):
     """The result returned when a scan command threw an exception while being run by a ConcurrentScanner.
 
     Attributes:
-        error_message: Text-formatted details about the exception that occurred.
+        error_message (str): Text-formatted details about the exception that occurred.
     """
 
     def __init__(
@@ -135,10 +135,10 @@ class ConcurrentScanner:
     def get_results(self) -> Iterable[PluginScanResult]:
         """Return the result of previously queued scan commands; new commands cannot be queued once this is called.
 
-        Yields:
-            PluginScanResult: The result of the scan command, which will be an instance of the scan command's
-            corresponding PluginScanResult subclass. If there was an unexpected error while running the scan command,
-            this will be a PluginRaisedExceptionScanResult instance instead.
+        Returns:
+            The results of all the scan commands previously queued. Each result will be an instance of the scan
+            corresponding command's PluginScanResult subclass. If there was an unexpected error while running the scan
+            command, it will be a 'PluginRaisedExceptionScanResult' instance instead.
         """
         # Put a 'None' sentinel in the queue to let the each process know when every task has been completed
         for _ in range(self._get_current_processes_nb()):

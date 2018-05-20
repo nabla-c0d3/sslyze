@@ -399,11 +399,11 @@ class RejectedCipherSuite(CipherSuite):
     """An SSL cipher suite the server explicitly rejected.
 
     Attributes:
-        name (Text): The cipher suite's RFC name.
-        openssl_name (Text): The cipher suite's OpenSSL name.
+        name (str): The cipher suite's RFC name.
+        openssl_name (str): The cipher suite's OpenSSL name.
         ssl_version (OpenSslVersionEnum): The cipher suite's corresponding SSL/TLS version.
         is_anonymous (bool): True if the cipher suite is an anonymous cipher suite (ie. no server authentication).
-        handshake_error_message (Text): The SSL/TLS error returned by the server to close the handshake.
+        handshake_error_message (str): The SSL/TLS error returned by the server to close the handshake.
     """
     def __init__(self, openssl_name: str, ssl_version: OpenSslVersionEnum, handshake_error_message: str) -> None:
         super(RejectedCipherSuite, self).__init__(openssl_name, ssl_version)
@@ -415,10 +415,10 @@ class ErroredCipherSuite(CipherSuite):
 
     Attributes:
         name (Text): The cipher suite's RFC name.
-        openssl_name (Text): The cipher suite's OpenSSL name.
+        openssl_name (str): The cipher suite's OpenSSL name.
         ssl_version (OpenSslVersionEnum): The cipher suite's corresponding SSL/TLS version.
         is_anonymous (bool): True if the cipher suite is an anonymous cipher suite (ie. no server authentication).
-        error_message (Text): The text-formatted exception that was raised during the handshake.
+        error_message (str): The text-formatted exception that was raised during the handshake.
     """
     def __init__(self, openssl_name: str, ssl_version: OpenSslVersionEnum, exception: Exception) -> None:
         super(ErroredCipherSuite, self).__init__(openssl_name, ssl_version)
@@ -430,13 +430,15 @@ class CipherSuiteScanResult(PluginScanResult):
     """The result of running a CipherSuiteScanCommand on a specific server.
 
     Attributes:
-        accepted_cipher_list: The list of cipher suites supported supported by both SSLyze and the server.
-        rejected_cipher_list: The list of cipher suites supported by SSLyze that were rejected by the server.
-        errored_cipher_list: The list of cipher suites supported by SSLyze that triggered an unexpected error during
-            the TLS handshake with the server.
-        preferred_cipher: The server's preferred cipher suite among all the cipher suites supported by SSLyze.
-            None if the server follows the client's preference or if none of SSLyze's cipher suites are supported by
-            the server.
+        accepted_cipher_list (List[AcceptedCipherSuite]): The list of cipher suites supported supported by both SSLyze
+            and the server.
+        rejected_cipher_list (List[RejectedCipherSuite]): The list of cipher suites supported by SSLyze that were
+            rejected by the server.
+        errored_cipher_list (List[ErroredCipherSuite]): The list of cipher suites supported by SSLyze that triggered an
+            unexpected error during the TLS handshake with the server.
+        preferred_cipher (Optional[AcceptedCipherSuite]): The server's preferred cipher suite among all the cipher
+            suites supported by SSLyze. `None` if the server follows the client's preference or if none of SSLyze's
+            cipher suites are supported by the server.
     """
 
     def __init__(

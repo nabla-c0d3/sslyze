@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import os
 import shlex
 
@@ -11,7 +7,6 @@ from sys import platform
 
 import logging
 import time
-from typing import Text
 
 from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
 
@@ -21,7 +16,7 @@ class NotOnLinux64Error(EnvironmentError):
     """
 
 
-class VulnerableOpenSslServer(object):
+class VulnerableOpenSslServer:
     """An OpenSSL server running the 1.0.1e version of OpenSSL, vilnerable to CCS Injection and Heartbleed.
     """
 
@@ -43,25 +38,25 @@ class VulnerableOpenSslServer(object):
     _CLIENT_KEY_PATH = os.path.join(os.path.dirname(__file__), 'client-key.pem')
 
     @classmethod
-    def get_client_certificate_path(cls):
-        # type: () -> Text
+    def get_client_certificate_path(cls) -> str:
         return cls._CLIENT_CERT_PATH
 
     @classmethod
-    def get_client_key_path(cls):
-        # type: () -> Text
+    def get_client_key_path(cls) -> str:
         return cls._CLIENT_KEY_PATH
 
     @staticmethod
-    def is_platform_supported():
+    def is_platform_supported() -> bool:
         if platform not in ['linux', 'linux2']:
             return False
         if architecture()[0] != '64bit':
             return False
         return True
 
-    def __init__(self, client_auth_config=ClientAuthenticationServerConfigurationEnum.DISABLED):
-        # type: (ClientAuthenticationServerConfigurationEnum) -> None
+    def __init__(
+            self,
+            client_auth_config: ClientAuthenticationServerConfigurationEnum = ClientAuthenticationServerConfigurationEnum.DISABLED
+    ) -> None:
         if not self.is_platform_supported():
             raise NotOnLinux64Error()
 

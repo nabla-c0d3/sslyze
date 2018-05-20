@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import socket
 import unittest
 
@@ -12,7 +8,7 @@ from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationServerConfigurationEnum
 
 
-def _is_ipv6_available():
+def _is_ipv6_available() -> bool:
     has_ipv6 = False
     s = socket.socket(socket.AF_INET6)
     try:

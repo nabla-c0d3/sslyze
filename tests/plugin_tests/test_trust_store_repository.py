@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import unittest
 
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository

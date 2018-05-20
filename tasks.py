@@ -9,9 +9,15 @@ root_path = Path(__file__).parent
 
 @task
 def test(ctx):
+    # Run the test suite
     ctx.run('pytest')
+
+    # Run linters
     ctx.run('flake8 sslyze')
     ctx.run('mypy sslyze')
+
+    # Ensure the API sample works
+    ctx.run('python api_sample.py')
 
 
 @task
@@ -37,6 +43,7 @@ def release(ctx):
     # Upload to Pypi
     sdist_path = root_path / 'dist' / f'sslyze-{__version__}.tar.gz'
     ctx.run(f'twine upload {sdist_path}')
+
 
 @task
 def build_exe(ctx):

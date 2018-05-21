@@ -44,7 +44,9 @@ def release(ctx):
     # Generate the doc
     gen_doc(ctx)
 
+
     # Upload to Pypi
+    ctx.run('python setup.py sdist')
     sdist_path = root_path / 'dist' / f'sslyze-{__version__}.tar.gz'
     ctx.run(f'twine upload {sdist_path}')
 

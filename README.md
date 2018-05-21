@@ -61,7 +61,8 @@ You can then run the test suite:
 Windows executable
 ------------------
 
-A pre-compiled Windows executable is available in the [Releases](https://github.com/nabla-c0d3/sslyze/releases) tab.
+A Windows executable that does not require installing Python is available in the
+[Releases page](https://github.com/nabla-c0d3/sslyze/releases) tab.
 
 
 How does it work ?

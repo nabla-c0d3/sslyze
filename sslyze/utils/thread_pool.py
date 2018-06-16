@@ -103,10 +103,10 @@ def _work_function(job_q: Queue, result_q: Queue, error_q: Queue) -> None:
             job_q.task_done()
             break
 
-        function = job[0]
+        work_function = job[0]
         args = job[1]
         try:
-            result = function(*args)
+            result = work_function(*args)
         except Exception as e:
             error_q.put((job, e))
         else:

@@ -194,8 +194,9 @@ class RobotPlugin(plugin_base.Plugin):
 
         # On the first attempt, finish the TLS handshake after sending the Robot payload
         robot_should_complete_handshake = True
-        robot_result_enum = self._run_oracle_over_threads(server_info, cipher_string, rsa_modulus, rsa_exponent,
-                                                          robot_should_complete_handshake)
+        robot_result_enum = self._run_oracle_over_threads(
+            server_info, cipher_string, rsa_modulus, rsa_exponent, robot_should_complete_handshake
+        )
 
         if robot_result_enum == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE:
             # Try again but this time do not finish the TLS handshake - for some servers it will reveal an oracle

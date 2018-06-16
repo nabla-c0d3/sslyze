@@ -4,7 +4,7 @@ from sys import platform
 from invoke import task
 from sslyze import __version__
 
-root_path = Path(__file__).parent
+root_path = Path(__file__).parent.absolute()
 
 
 @task

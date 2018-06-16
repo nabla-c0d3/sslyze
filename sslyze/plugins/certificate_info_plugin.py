@@ -401,8 +401,10 @@ class CertificateInfoScanResult(PluginScanResult):
         for path_error in self.path_validation_error_list:
             error_txt = 'ERROR: {}'.format(path_error.error_message)
             text_output.append(self._format_field(
-                self.TRUST_FORMAT.format(store_name=path_result.trust_store.name,
-                                         store_version=path_result.trust_store.version),
+                self.TRUST_FORMAT.format(
+                    store_name=path_error.trust_store.name,
+                    store_version=path_error.trust_store.version
+                ),
                 error_txt))
 
         if self.symantec_distrust_timeline is not None:

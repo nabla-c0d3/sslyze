@@ -1,20 +1,18 @@
 """Main abstract plugin classes from which all the plugins should inherit.
 """
 
-import abc
 import inspect
 import optparse
+from abc import ABC, abstractmethod
 from xml.etree.ElementTree import Element
 
 from sslyze.server_connectivity_info import ServerConnectivityInfo
 from typing import List, Type
 
 
-class PluginScanCommand:
+class PluginScanCommand(ABC):
     """Abstract class to represent one specific thing a Plugin can scan for.
     """
-
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self) -> None:
         """Optional arguments for a command can be passed as keyword arguments here.
@@ -22,6 +20,7 @@ class PluginScanCommand:
         pass
 
     @classmethod
+    @abstractmethod
     def get_title(cls) -> str:
         """The title of the scan command, to be displayed along with the results.
         """
@@ -36,6 +35,7 @@ class PluginScanCommand:
         return cls.__doc__.strip()
 
     @classmethod
+    @abstractmethod
     def get_cli_argument(cls) -> str:
         """Should return the command line option to be used to run the scan command via the CLI.
         """
@@ -54,14 +54,12 @@ class PluginScanCommand:
     def get_optional_arguments(cls) -> List[str]:
         """Some commands support optional arguments which are automatically passed to the command's constructor.
         """
-        return inspect.getargspec(cls.__init__).args[1::]
+        return inspect.getfullargspec(cls.__init__).args[1::]
 
 
-class Plugin:
+class Plugin(ABC):
     """Abstract class to represent one plugin which can implement one multiple PluginScanCommand and PluginScanResult.
     """
-
-    __metaclass__ = abc.ABCMeta
 
     @classmethod
     def get_title(cls) -> str:
@@ -74,6 +72,7 @@ class Plugin:
         return cls.__doc__.strip()
 
     @classmethod
+    @abstractmethod
     def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
         raise NotImplementedError()
 
@@ -86,7 +85,7 @@ class Plugin:
                                                 help=scan_command_class.get_description()))
         return options
 
-    @abc.abstractmethod
+    @abstractmethod
     def process_task(self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand) -> 'PluginScanResult':
         """Should run the supplied scan command on the server and return the result.
 
@@ -100,26 +99,25 @@ class Plugin:
         raise NotImplementedError()
 
 
-class PluginScanResult:
+class PluginScanResult(ABC):
     """Abstract class to represent the result of running a specific PluginScanCommand against a server .
 
     Attributes:
         server_info (ServerConnectivityInfo):  The server against which the command was run.
         scan_command (PluginScanCommand): The scan command that was run against the server.
     """
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand) -> None:
         self.server_info = server_info
         self.scan_command = scan_command
 
-    @abc.abstractmethod
+    @abstractmethod
     def as_xml(self) -> Element:
         """Should return the XML output to be returned by the CLI tool when --xml_out is used.
         """
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    @abstractmethod
     def as_text(self) -> List[str]:
         """Should return the text output to be displayed in the console by the CLI tool.
         """

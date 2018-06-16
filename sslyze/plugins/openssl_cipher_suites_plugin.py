@@ -1,5 +1,5 @@
 import optparse
-from abc import ABCMeta
+from abc import ABC
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
@@ -18,9 +18,7 @@ from typing import Optional
 from sslyze.utils.tls12_workaround import WorkaroundForTls12ForCipherSuites
 
 
-class CipherSuiteScanCommand(PluginScanCommand):
-
-    __metaclass__ = ABCMeta
+class CipherSuiteScanCommand(PluginScanCommand, ABC):
 
     def __init__(self, http_get: bool = False, hide_rejected_ciphers: bool = False) -> None:
         super(CipherSuiteScanCommand, self).__init__()
@@ -329,8 +327,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
         return selected_cipher
 
 
-class CipherSuite:
-    __metaclass__ = ABCMeta
+class CipherSuite(ABC):
 
     def __init__(self, openssl_name: str, ssl_version: OpenSslVersionEnum) -> None:
         self.openssl_name = openssl_name

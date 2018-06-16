@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from typing import TextIO, Set, Type, Any, List
 
 from sslyze.cli import CompletedServerScan
@@ -8,12 +8,11 @@ from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.server_connectivity_tester import ServerConnectivityError
 
 
-class OutputGenerator:
+class OutputGenerator(ABC):
     """The abstract class output generator classes should inherit from.
 
     Each method must be implemented and will be called in the order below, as the SSLyze CLI runs scans.
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, file_to: TextIO) -> None:
         self._file_to = file_to

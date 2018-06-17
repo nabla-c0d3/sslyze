@@ -350,8 +350,6 @@ class AcceptedCipherSuite(CipherSuite):
         ssl_version (OpenSslVersionEnum): The cipher suite's corresponding SSL/TLS version.
         is_anonymous (bool): True if the cipher suite is an anonymous cipher suite (ie. no server authentication).
         key_size (int): The key size of the cipher suite's algorithm in bits.
-        dh_info (Optional[Dict]): Additional details about the Diffie Helmann parameters for DH and ECDH cipher suites.
-            None if the cipher suite is not DH or ECDH.
         post_handshake_response (Optional[str]): The server's response after completing the SSL/TLS handshake and
             sending a request, based on the TlsWrappedProtocolEnum set for this server. For example, this will contain
             an HTTP response when scanning an HTTPS server with TlsWrappedProtocolEnum.HTTPS as the
@@ -362,12 +360,10 @@ class AcceptedCipherSuite(CipherSuite):
             openssl_name: str,
             ssl_version: OpenSslVersionEnum,
             key_size: int,
-            dh_info: Optional[Dict] = None,
             post_handshake_response: Optional[str] = None,
     ) -> None:
         super(AcceptedCipherSuite, self).__init__(openssl_name, ssl_version)
         self.key_size = key_size
-        self.dh_info = dh_info
         self.post_handshake_response = post_handshake_response
 
     @classmethod
@@ -378,18 +374,8 @@ class AcceptedCipherSuite(CipherSuite):
     ) -> 'AcceptedCipherSuite':
         keysize = ssl_connection.ssl_client.get_current_cipher_bits()
         picked_cipher_name = ssl_connection.ssl_client.get_current_cipher_name()
-
-        # Only the legacy client has the APIs to extract DH info
-        # TODO(AD): Add the APIs to the modern client
-        dh_infos = None
-        if isinstance(ssl_connection.ssl_client, LegacySslClient):
-            if 'ECDH' in picked_cipher_name:
-                dh_infos = ssl_connection.ssl_client.get_ecdh_param()
-            elif 'DH' in picked_cipher_name:
-                dh_infos = ssl_connection.ssl_client.get_dh_param()
-
         status_msg = ssl_connection.post_handshake_check()
-        return AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, dh_infos, status_msg)
+        return AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, status_msg)
 
 
 class RejectedCipherSuite(CipherSuite):
@@ -514,10 +500,6 @@ class CipherSuiteScanResult(PluginScanResult):
             cipher_attributes['connectionStatus'] = cipher.post_handshake_response
 
         cipher_xml = Element('cipherSuite', attrib=cipher_attributes)
-
-        if cipher.dh_info:
-            cipher_xml.append(Element('keyExchange', attrib=cipher.dh_info))
-
         return cipher_xml
 
     ACCEPTED_CIPHER_LINE_FORMAT = '        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {status:<60}'
@@ -593,10 +575,9 @@ class CipherSuiteScanResult(PluginScanResult):
             # Always display ANON as the key size for anonymous ciphers to make it visible
             keysize_str = 'ANONYMOUS'
 
-        dh_txt = "{}-{} bits".format(cipher.dh_info["Type"], cipher.dh_info["GroupSize"]) if cipher.dh_info else '-'
-        cipher_line_txt = self.ACCEPTED_CIPHER_LINE_FORMAT.format(cipher_name=cipher.name, dh_size=dh_txt,
-                                                                  key_size=keysize_str,
-                                                                  status=cipher.post_handshake_response)
+        cipher_line_txt = self.ACCEPTED_CIPHER_LINE_FORMAT.format(
+            cipher_name=cipher.name, dh_size='', key_size=keysize_str, status=cipher.post_handshake_response
+        )
         return cipher_line_txt
 
 

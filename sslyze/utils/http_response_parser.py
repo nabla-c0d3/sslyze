@@ -1,11 +1,8 @@
 from io import BytesIO
 from socket import socket
 from typing import Callable
-from typing import TYPE_CHECKING
 from http.client import HTTPResponse
-
-if TYPE_CHECKING:
-    from sslyze.utils.ssl_connection import SSLConnection  # noqa: F401
+from nassl.ssl_client import SslClient
 
 
 class _FakeSocket(BytesIO):
@@ -22,7 +19,7 @@ class HttpResponseParser:
         return cls._parse(sock.recv)
 
     @classmethod
-    def parse_from_ssl_connection(cls, ssl_conn: 'SSLConnection') -> HTTPResponse:
+    def parse_from_ssl_connection(cls, ssl_conn: SslClient) -> HTTPResponse:
         return cls._parse(ssl_conn.read)
 
     @staticmethod

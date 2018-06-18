@@ -5,11 +5,13 @@ from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
 from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.utils.connection_helpers import ProxyError
 from sslyze.utils.ssl_connection_configurator import SslConnectionConfigurator
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
     ClientAuthenticationServerConfigurationEnum
-from sslyze.utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SSLHandshakeRejected
+from sslyze.utils.ssl_connection import SSLConnection, SSLHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
+from sslyze.utils.tls_wrapped_protocol_helpers import StartTlsError
 
 
 class ServerConnectivityError(Exception):
@@ -203,7 +205,7 @@ class ServerConnectivityTester:
             raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_REJECTED)
 
         # StartTLS errors
-        except StartTLSError as e:
+        except StartTlsError as e:
             raise ServerTlsConfigurationNotSuportedError(self, e.args[0])
 
         # Proxy errors
@@ -226,7 +228,7 @@ class ServerConnectivityTester:
         for ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_1, OpenSslVersionEnum.TLSV1,
                             OpenSslVersionEnum.SSLV3, OpenSslVersionEnum.TLSV1_3, OpenSslVersionEnum.SSLV23]:
             # First try the default cipher list, and then all ciphers
-            for cipher_list in [SSLConnection.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL:-PSK:-SRP']:
+            for cipher_list in [SslConnectionConfigurator.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL:-PSK:-SRP']:
                 ssl_connection = SslConnectionConfigurator.get_connection(
                     ssl_version=ssl_version,
                     server_info=self,

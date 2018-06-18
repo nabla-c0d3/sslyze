@@ -70,8 +70,8 @@ class HttpHeadersPlugin(Plugin):
                 for x509_cert in ssl_connection.ssl_client.get_peer_cert_chain()
             ]
             # Send an HTTP GET request to the server
-            ssl_connection.write(HttpRequestGenerator.get_request(host=server_info.hostname))
-            http_resp = HttpResponseParser.parse_from_ssl_connection(ssl_connection)
+            ssl_connection.ssl_client.write(HttpRequestGenerator.get_request(host=server_info.hostname))
+            http_resp = HttpResponseParser.parse_from_ssl_connection(ssl_connection.ssl_client)
         finally:
             ssl_connection.close()
 

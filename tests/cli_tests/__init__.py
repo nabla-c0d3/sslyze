@@ -32,11 +32,19 @@ class MockServerConnectivityTester(ServerConnectivityTester):
 class MockPluginScanCommandOne(PluginScanCommand):
 
     @classmethod
+    def get_title(cls) -> str:
+        return 'Plugin 1'
+
+    @classmethod
     def get_cli_argument(cls):
         return 'plugin1'
 
 
 class MockPluginScanCommandTwo(PluginScanCommand):
+
+    @classmethod
+    def get_title(cls) -> str:
+        return 'Plugin 2'
 
     @classmethod
     def get_cli_argument(cls):

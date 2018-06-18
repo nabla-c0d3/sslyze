@@ -5,6 +5,7 @@ from typing import Optional
 import time
 
 from nassl import _nassl
+from nassl._nassl import WantReadError
 from nassl.ssl_client import SslClient
 from nassl.ssl_client import ClientCertificateRequested
 
@@ -57,7 +58,6 @@ class SSLConnection:
         'dh key too small': 'DH Key too small',
     }
 
-
     # Default socket settings global to all SSLyze connections; can be overridden
     NETWORK_MAX_RETRIES = 3
     NETWORK_TIMEOUT = 5
@@ -71,7 +71,7 @@ class SSLConnection:
     def __init__(
             self,
             socket_helper: ConnectionHelper,
-            start_tls_helper: Optional[TlsWrappedProtocolHelper],
+            start_tls_helper: TlsWrappedProtocolHelper,
             ssl_client: SslClient,
     ) -> None:
         self._socket_helper = socket_helper
@@ -83,11 +83,9 @@ class SSLConnection:
         sock = socket.socket()
         final_timeout = self.NETWORK_TIMEOUT if network_timeout is None else network_timeout
         sock.settimeout(final_timeout)
-        self._socket_helper.connect_socket(sock)
 
-        # Do the StartTls dance as needed
-        if self._start_tls_helper:
-            self._start_tls_helper.prepare_socket_for_tls_handshake(sock)
+        self._socket_helper.connect_socket(sock)
+        self._start_tls_helper.prepare_socket_for_tls_handshake(sock)
 
         # Pass the connected socket to the SSL client
         self.ssl_client.set_underlying_socket(sock)
@@ -148,7 +146,11 @@ class SSLConnection:
             raise  # Unknown SSL error if we get there
 
     def close(self) -> None:
-        self.ssl_client.shutdown()
+        try:
+            self.ssl_client.shutdown()
+        except WantReadError:
+            # The handshake failed half way
+            pass
         # TODO(AD): Remove this after updating nassl
         sock = self.ssl_client.get_underlying_socket()
         if sock:
@@ -156,7 +158,4 @@ class SSLConnection:
 
     # TODO(AD): Rename this method to match send_request() ?
     def post_handshake_check(self) -> str:
-        if self._start_tls_helper:
-            return self._start_tls_helper.send_request(self.ssl_client)
-        else:
-            return ''
+        return self._start_tls_helper.send_request(self.ssl_client)

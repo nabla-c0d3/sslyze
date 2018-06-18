@@ -3,7 +3,6 @@ from abc import ABC
 from operator import attrgetter
 from xml.etree.ElementTree import Element
 
-from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult

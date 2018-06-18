@@ -27,7 +27,7 @@ class DirectConnectionHelper(ConnectionHelper):
     """Open a socket to a server by directly connecting to it.
     """
 
-    def __init__(self, server_ip_addr: str, server_port: int):
+    def __init__(self, server_ip_addr: str, server_port: int) -> None:
         self._server_ip_addr = server_ip_addr
         self._server_port = server_port
 
@@ -45,7 +45,7 @@ class ProxyTunnelingConnectionHelper(ConnectionHelper):
     ERR_CONNECT_REJECTED = 'The proxy rejected the CONNECT request for this host'
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
 
-    def __init__(self, server_host: str, server_port: int, tunnel_settings: HttpConnectTunnelingSettings):
+    def __init__(self, server_host: str, server_port: int, tunnel_settings: HttpConnectTunnelingSettings) -> None:
         # The server we want to connect to via the proxy
         self._server_host = server_host
         self._server_port = server_port

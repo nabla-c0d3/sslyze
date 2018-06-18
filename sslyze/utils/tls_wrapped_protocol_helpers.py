@@ -17,7 +17,7 @@ class StartTlsError(IOError):
 class TlsWrappedProtocolHelper(ABC):
 
     @abstractmethod
-    def __init__(self, server_hostname: str):
+    def __init__(self, server_hostname: str) -> None:
         pass
 
     @abstractmethod
@@ -34,9 +34,10 @@ class TlsWrappedProtocolHelper(ABC):
 
 
 class TlsHelper(TlsWrappedProtocolHelper):
+    """Do not do anything.
+    """
 
-
-    def __init__(self, server_hostname: str):
+    def __init__(self, server_hostname: str) -> None:
         pass
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
@@ -54,7 +55,7 @@ class HttpsHelper(TlsWrappedProtocolHelper):
     ERR_NOT_HTTP = 'Server response was not HTTP'
     ERR_GENERIC = 'Error sending HTTP GET'
 
-    def __init__(self, server_hostname: str):
+    def __init__(self, server_hostname: str) -> None:
         self._hostname = server_hostname
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
@@ -96,7 +97,7 @@ class SmtpHelper(TlsWrappedProtocolHelper):
     ERR_SMTP_REJECTED = 'SMTP EHLO was rejected'
     ERR_NO_SMTP_STARTTLS = 'SMTP STARTTLS not supported'
 
-    def __init__(self, server_hostname: str):
+    def __init__(self, server_hostname: str) -> None:
         pass
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
@@ -134,10 +135,10 @@ class XmppHelper(TlsWrappedProtocolHelper):
                        "xmlns:tls='http://www.ietf.org/rfc/rfc2595.txt' to='{xmpp_to}' xml:lang='en' version='1.0'>"
     XMPP_STARTTLS = b"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
-    def __init__(self, server_hostname: str):
+    def __init__(self, server_hostname: str) -> None:
         self._xmpp_to = server_hostname
 
-    def override_xmpp_to(self, xmpp_to: str):
+    def override_xmpp_to(self, xmpp_to: str) -> None:
         self._xmpp_to = xmpp_to
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
@@ -184,7 +185,7 @@ class LdapHelper(TlsWrappedProtocolHelper):
     START_TLS_OK_APACHEDS = b'\x30\x26\x02\x01\x01\x78\x21\x0a\x01\x00\x04\x00\x04\x00\x8a\x16\x31\x2e\x33\x2e\x36' \
                             b'\x2e\x31\x2e\x34\x2e\x31\x2e\x31\x34\x36\x36\x2e\x32\x30\x30\x33\x37\x8b\x00'
 
-    def __init__(self, server_hostname: str):
+    def __init__(self, server_hostname: str) -> None:
         pass
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
@@ -207,7 +208,7 @@ class RdpHelper(TlsWrappedProtocolHelper):
     START_TLS_CMD = b'\x03\x00\x00\x13\x0E\xE0\x00\x00\x00\x00\x00\x01\x00\x08\x00\x03\x00\x00\x00'
     START_TLS_OK = b'Start TLS request accepted.'
 
-    def __init__(self, server_hostname: str):
+    def __init__(self, server_hostname: str) -> None:
         pass
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
@@ -236,7 +237,7 @@ class GenericStartTlsHelper(TlsWrappedProtocolHelper, ABC):
     START_TLS_OK = b''
     SHOULD_WAIT_FOR_SERVER_BANNER = True
 
-    def __init__(self, server_hostname: str):
+    def __init__(self, server_hostname: str) -> None:
         pass
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:

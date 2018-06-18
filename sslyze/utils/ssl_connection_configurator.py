@@ -4,13 +4,13 @@ from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import OpenSslVersionEnum, SslClient, OpenSslVerifyEnum
 
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
-from sslyze.utils.connection_helpers import ProxyTunnelingConnectionHelper, DirectConnectionHelper
+from sslyze.utils.connection_helpers import ProxyTunnelingConnectionHelper, DirectConnectionHelper, ConnectionHelper
 from sslyze.utils.ssl_connection import SslConnection
 
 from typing import TYPE_CHECKING
 
-from sslyze.utils.tls_wrapped_protocol_helpers import SmtpHelper, HttpsHelper, XmppHelper, XmppServerHelper, Pop3Helper, \
-    ImapHelper, FtpHelper, LdapHelper, RdpHelper, PostgresHelper, TlsHelper
+from sslyze.utils.tls_wrapped_protocol_helpers import SmtpHelper, HttpsHelper, XmppHelper, XmppServerHelper,\
+    Pop3Helper, ImapHelper, FtpHelper, LdapHelper, RdpHelper, PostgresHelper, TlsHelper
 
 if TYPE_CHECKING:
     from sslyze.server_connectivity_info import ServerConnectivityInfo  # noqa: F401
@@ -53,26 +53,27 @@ class SslConnectionConfigurator:
             ssl_verify_locations: Optional[str] = None,
             should_use_legacy_openssl: Optional[bool] = None,
     ) -> SslConnection:
-        if not server_info.ip_address and not server_info.http_tunneling_settings:
-            # We received a ServerConnectivityTester whose perform() method has not been called; should never happen
-            raise ValueError('Received ServerConnectivityTester with a None ip_address')
-
         # We need three things to create an SSL connection
 
         # 1. Create the connection helper
+        connection_helper: ConnectionHelper
         if server_info.http_tunneling_settings:
             connection_helper = ProxyTunnelingConnectionHelper(
                 server_info.hostname, server_info.port, server_info.http_tunneling_settings
             )
         else:
+            if server_info.ip_address is None:
+                # We received a ServerConnectivityTester whose perform() method has not been called; should never happen
+                raise ValueError('Received ServerConnectivityTester with a None ip_address')
             connection_helper = DirectConnectionHelper(server_info.ip_address, server_info.port)
 
         # 2. Create the StartTLS helper
-        start_tls_helper = cls.START_TLS_HELPER_CLASSES[server_info.tls_wrapped_protocol](server_info.hostname)
+        start_tls_helper = cls.START_TLS_HELPER_CLASSES[server_info.tls_wrapped_protocol](  # type: ignore
+            server_info.hostname
+        )
 
         if isinstance(start_tls_helper, XmppHelper) and server_info.xmpp_to_hostname:
             start_tls_helper.override_xmpp_to(server_info.xmpp_to_hostname)
-
 
         # 3. Create the SSL client
         if should_use_legacy_openssl is None:

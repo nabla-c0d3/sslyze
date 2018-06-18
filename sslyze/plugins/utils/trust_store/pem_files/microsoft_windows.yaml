@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
-version: April 25, 2018
-url: https://gallery.technet.microsoft.com/Trusted-Root-Certificate-7e584dc2/file/198801/1/Trusted%20Root%20Program%20Participants%20As%20of%20April%2025%202018.xlsx
-date_fetched: 2018-04-26
-trusted_certificates_count: 283
+version: May 29, 2018
+url: https://gallery.technet.microsoft.com/Trusted-Root-Certificate-6b557df0/file/200685/1/Trusted%20Root%20Program%20Participants%20As%20of%20May%2029%202018.xlsx
+date_fetched: 2018-06-02
+trusted_certificates_count: 285
 trusted_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -176,6 +176,8 @@ trusted_certificates:
   fingerprint: cd201256fe5ced0bfff8df595fff36b1416d5313a999f532ef4a9915df96dee0
 - subject_name: Correo Uruguayo - Root CA
   fingerprint: 46273285615d96e52da9fc2ed8c036f10af3d9f6280f8d288706c52b2011b4da
+- subject_name: Cybertrust Global Root
+  fingerprint: 960adf0063e96356750c2965dd0a0867da0b9cbd6e77714aeafb2349ab393da3
 - subject_name: D-TRUST Root CA 3 2013
   fingerprint: a1a86d04121eb87f027c66f53303c28e5739f943fc84b38ad6af009035dd9457
 - subject_name: D-TRUST Root Class 3 CA 2 2009
@@ -233,6 +235,8 @@ trusted_certificates:
   fingerprint: c1d80ce474a51128b77e794a98aa2d62a0225da3f419e5c7ed73dfbf660e7109
 - subject_name: GLOBALTRUST
   fingerprint: 5e3571f33f45a7df1537a68b5ffb9e036af9d2f5bc4c9717130dc43d7175aac7
+- subject_name: GLOBALTRUST 2015
+  fingerprint: 416b1f9e84e74c1d19b23d8d7191c6ad81246e641601f599132729f507beb3cc
 - subject_name: GPKIRootCA1
   fingerprint: 407c276bead2e4af0661ef6697341dec0a1f9434e4eafb2d3d32a90549d9de4a
 - subject_name: GTS Root R1
@@ -572,7 +576,7 @@ trusted_certificates:
   fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
 - subject_name: thawte Primary Root CA - G3
   fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 85
+blocked_certificates_count: 84
 blocked_certificates:
 - subject_name: AC RAIZ FNMT-RCM
   fingerprint: 4d9ebb28825c9643ab15d54e5f9614f13cb3e95de3cf4eac971301f320f9226e
@@ -640,8 +644,6 @@ blocked_certificates:
   fingerprint: 3ccc3ccfe45496d07b620dbf1328e8a1490018f48633c8a28a995ca60408b0be
 - subject_name: Common Policy
   fingerprint: 04acfb3b24793f300f67ef87e44dd72cb9b28b204f389a7cd5ae28785c7d42cd
-- subject_name: Cybertrust Global Root
-  fingerprint: 960adf0063e96356750c2965dd0a0867da0b9cbd6e77714aeafb2349ab393da3
 - subject_name: D-TRUST Root Class 2 CA 2007
   fingerprint: 8da75f1327217c88060fd2529eff2816e50b0c74541ea4ea3dfcee66a71efe09
 - subject_name: D-TRUST Root Class 3 CA 2007

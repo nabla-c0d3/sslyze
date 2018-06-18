@@ -233,9 +233,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
         try:
             # Perform the SSL handshake
             ssl_connection.connect()
-            cipher_result: CipherSuite = AcceptedCipherSuite.from_ongoing_ssl_connection(
-                ssl_connection, ssl_version
-            )
+            cipher_result: CipherSuite = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
 
         except SSLHandshakeRejected as e:
             cipher_result = RejectedCipherSuite(openssl_cipher_name, ssl_version, str(e))

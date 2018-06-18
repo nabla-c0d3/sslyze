@@ -123,15 +123,12 @@ class SSLConnection:
             self.ssl_client.do_handshake()
 
         except ClientCertificateRequested:
-            self.close()
             # Server expected a client certificate and we didn't provide one
             raise
         except socket.timeout:
-            self.close()
             # Network timeout, propagate the error
             raise
         except socket.error as e:
-            self.close()
             for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                 if error_msg in str(e.args):
                     raise SSLHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
@@ -139,18 +136,14 @@ class SSLConnection:
             # Unknown socket error
             raise
         except _nassl.OpenSSLError as e:
-            self.close()
             for error_msg in self.HANDSHAKE_REJECTED_SSL_ERRORS.keys():
                 if error_msg in str(e.args):
                     raise SSLHandshakeRejected('TLS / ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
             raise  # Unknown SSL error if we get there
 
     def close(self) -> None:
-        try:
-            self.ssl_client.shutdown()
-        except WantReadError:
-            # The handshake failed half way
-            pass
+        self.ssl_client.shutdown()
+
         # TODO(AD): Remove this after updating nassl
         sock = self.ssl_client.get_underlying_socket()
         if sock:

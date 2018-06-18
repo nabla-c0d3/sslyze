@@ -4,7 +4,7 @@ from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
     ClientAuthenticationServerConfigurationEnum
-from sslyze.utils.ssl_connection import SSLConnection
+from sslyze.utils.ssl_connection import SslConnection
 from sslyze.utils.ssl_connection_configurator import SslConnectionConfigurator
 
 
@@ -72,7 +72,7 @@ class ServerConnectivityInfo:
             override_ssl_version: Optional[OpenSslVersionEnum] = None,
             ssl_verify_locations: Optional[str] = None,
             should_use_legacy_openssl: Optional[bool] = None,
-    ) -> SSLConnection:
+    ) -> SslConnection:
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
 
         Used by all plugins to connect to the server and run scans.

@@ -2,7 +2,7 @@ from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.plugins.plugin_base import PluginScanCommand
 from sslyze.plugins.plugins_repository import PluginsRepository
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.utils.ssl_connection import SSLConnection
+from sslyze.utils.ssl_connection import SslConnection
 
 
 class SynchronousScanner:
@@ -27,7 +27,7 @@ class SynchronousScanner:
         self._plugins_repository = PluginsRepository()
 
         # Set global network settings
-        SSLConnection.set_global_network_settings(network_retries, network_timeout)
+        SslConnection.set_global_network_settings(network_retries, network_timeout)
 
     def run_scan_command(
             self,

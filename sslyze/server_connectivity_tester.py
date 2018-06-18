@@ -9,7 +9,7 @@ from sslyze.utils.connection_helpers import ProxyError
 from sslyze.utils.ssl_connection_configurator import SslConnectionConfigurator
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
     ClientAuthenticationServerConfigurationEnum
-from sslyze.utils.ssl_connection import SSLConnection, SSLHandshakeRejected
+from sslyze.utils.ssl_connection import SslHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
 from sslyze.utils.tls_wrapped_protocol_helpers import StartTlsError
 
@@ -264,7 +264,7 @@ class ServerConnectivityTester:
                     except ClientCertificateRequested:
                         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
                     # Or a SSLHandshakeRejected
-                    except SSLHandshakeRejected:
+                    except SslHandshakeRejected:
                         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
                     # Or a bad certificate alert (https://github.com/nabla-c0d3/sslyze/issues/313 )
                     except OpenSSLError as e:

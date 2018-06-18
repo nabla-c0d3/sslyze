@@ -21,7 +21,7 @@ from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte, TlsRsaClientKeyExchangeRecord
 from tls_parser.parser import TlsRecordParser
 from tls_parser.tls_version import TlsVersionEnum
-from sslyze.utils.ssl_connection import SSLHandshakeRejected
+from sslyze.utils.ssl_connection import SslHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
 
 
@@ -262,7 +262,7 @@ class RobotPlugin(plugin_base.Plugin):
             ssl_connection.connect()
             certificate = ssl_connection.ssl_client.get_peer_certificate()
             parsed_cert = load_pem_x509_certificate(certificate.as_pem().encode('ascii'), backend=default_backend())
-        except SSLHandshakeRejected:
+        except SslHandshakeRejected:
             # Server does not support RSA cipher suites?
             pass
         except ClientCertificateRequested:

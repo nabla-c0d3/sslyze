@@ -5,7 +5,6 @@ from typing import Optional
 import time
 
 from nassl import _nassl
-from nassl._nassl import WantReadError
 from nassl.ssl_client import SslClient
 from nassl.ssl_client import ClientCertificateRequested
 
@@ -13,14 +12,16 @@ from sslyze.utils.connection_helpers import ConnectionHelper
 from sslyze.utils.tls_wrapped_protocol_helpers import TlsWrappedProtocolHelper
 
 
-class SSLHandshakeRejected(IOError):
+class SslHandshakeRejected(IOError):
     """The server explicitly rejected the SSL handshake.
     """
     pass
 
 
-class SSLConnection:
-    """Base SSL connection class that leverages an nassl.SslClient for performing the SSL handshake.
+class SslConnection:
+    """SSL connection that handles error processing, including retries when receiving timeouts.
+
+    This it the base class to use to connect to a server in order to scan it.
     """
 
     # The following errors mean that the server explicitly rejected the handshake. The goal to differentiate rejected
@@ -131,14 +132,14 @@ class SSLConnection:
         except socket.error as e:
             for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                 if error_msg in str(e.args):
-                    raise SSLHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
+                    raise SslHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
 
             # Unknown socket error
             raise
         except _nassl.OpenSSLError as e:
             for error_msg in self.HANDSHAKE_REJECTED_SSL_ERRORS.keys():
                 if error_msg in str(e.args):
-                    raise SSLHandshakeRejected('TLS / ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
+                    raise SslHandshakeRejected('TLS / ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
             raise  # Unknown SSL error if we get there
 
     def close(self) -> None:

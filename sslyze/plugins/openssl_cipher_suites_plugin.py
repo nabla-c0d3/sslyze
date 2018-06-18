@@ -8,8 +8,8 @@ from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.utils.ssl_connection import SSLConnection
-from sslyze.utils.ssl_connection import SSLHandshakeRejected
+from sslyze.utils.ssl_connection import SslConnection
+from sslyze.utils.ssl_connection import SslHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
 from typing import Dict, Type
 from typing import List
@@ -235,7 +235,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
             ssl_connection.connect()
             cipher_result: CipherSuite = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
 
-        except SSLHandshakeRejected as e:
+        except SslHandshakeRejected as e:
             cipher_result = RejectedCipherSuite(openssl_cipher_name, ssl_version, str(e))
 
         except ClientCertificateRequested:
@@ -288,7 +288,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
             second_cipher = cls._get_selected_cipher_suite(
                 server_connectivity_info, ssl_version, second_cipher_str, should_use_legacy_openssl
             )
-        except (SSLHandshakeRejected, ConnectionError):
+        except (SslHandshakeRejected, ConnectionError):
             # Could not complete a handshake
             return None
 
@@ -367,7 +367,7 @@ class AcceptedCipherSuite(CipherSuite):
     @classmethod
     def from_ongoing_ssl_connection(
             cls,
-            ssl_connection: SSLConnection,
+            ssl_connection: SslConnection,
             ssl_version: OpenSslVersionEnum
     ) -> 'AcceptedCipherSuite':
         keysize = ssl_connection.ssl_client.get_current_cipher_bits()

@@ -5,7 +5,7 @@ from nassl.ssl_client import OpenSslVersionEnum, SslClient, OpenSslVerifyEnum
 
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.connection_helpers import ProxyTunnelingConnectionHelper, DirectConnectionHelper
-from sslyze.utils.ssl_connection import SSLConnection
+from sslyze.utils.ssl_connection import SslConnection
 
 from typing import TYPE_CHECKING
 
@@ -52,7 +52,7 @@ class SslConnectionConfigurator:
             openssl_cipher_string: Optional[str] = None,
             ssl_verify_locations: Optional[str] = None,
             should_use_legacy_openssl: Optional[bool] = None,
-    ) -> SSLConnection:
+    ) -> SslConnection:
         if not server_info.ip_address and not server_info.http_tunneling_settings:
             # We received a ServerConnectivityTester whose perform() method has not been called; should never happen
             raise ValueError('Received ServerConnectivityTester with a None ip_address')
@@ -112,5 +112,5 @@ class SslConnectionConfigurator:
         ssl_client.set_cipher_list(openssl_cipher_string if openssl_cipher_string else cls.DEFAULT_SSL_CIPHER_LIST)
 
         # All done
-        ssl_connection = SSLConnection(connection_helper, start_tls_helper, ssl_client)
+        ssl_connection = SslConnection(connection_helper, start_tls_helper, ssl_client)
         return ssl_connection

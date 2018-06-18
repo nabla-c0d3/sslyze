@@ -5,7 +5,7 @@ from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.utils.ssl_connection import SSLHandshakeRejected
+from sslyze.utils.ssl_connection import SslHandshakeRejected
 
 
 class FallbackScsvScanCommand(PluginScanCommand):
@@ -57,7 +57,7 @@ class FallbackScsvPlugin(plugin_base.Plugin):
             else:
                 raise
 
-        except SSLHandshakeRejected:
+        except SslHandshakeRejected:
             # If the handshake is rejected, we assume downgrade attacks are prevented (this is how F5 balancers do it)
             # although it could also be because the server does not support this version of TLS
             # https://github.com/nabla-c0d3/sslyze/issues/119

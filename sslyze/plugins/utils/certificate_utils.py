@@ -1,14 +1,15 @@
 import ssl
+from typing import List, Optional
+
+import cryptography
+from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
+from cryptography.hazmat.primitives.serialization import Encoding, \
+    PublicFormat
+from cryptography.x509 import DNSName, ExtensionNotFound, ExtensionOID, \
+    NameOID
+
 from base64 import b64encode
 from hashlib import sha256
-import cryptography
-from cryptography.hazmat.primitives.asymmetric import rsa, dsa, ec
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
-from cryptography.x509 import DNSName
-from cryptography.x509 import ExtensionNotFound
-from cryptography.x509 import ExtensionOID
-from cryptography.x509 import NameOID
-from typing import List
 
 
 class CertificateUtils:
@@ -107,7 +108,7 @@ class CertificateUtils:
         return has_ocsp_must_staple
 
     @staticmethod
-    def count_scts_in_sct_extension(certificate: cryptography.x509.Certificate) -> int:
+    def count_scts_in_sct_extension(certificate: cryptography.x509.Certificate) -> Optional[int]:
         """Return the number of Signed Certificate Timestamps (SCTs) embedded in the certificate.
         """
         scts_count = 0
@@ -116,6 +117,10 @@ class CertificateUtils:
             sct_ext = certificate.extensions.get_extension_for_oid(
                 ExtensionOID.PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS
             )
+
+            if isinstance(sct_ext, cryptography.x509.UnrecognizedExtension):
+                # The version of OpenSSL on the system is too old and can't parse the SCT extension
+                return None
 
             # Count the number of entries in the extension
             scts_count = len(sct_ext.value)

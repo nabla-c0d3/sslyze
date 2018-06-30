@@ -225,8 +225,9 @@ class CertificateInfoScanResult(PluginScanResult):
         is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
         certificate_has_must_staple_extension (bool): True if the leaf certificate has the OCSP Must-Staple
             extension as defined in RFC 6066.
-        certificate_included_scts_count (int): The number of Signed Certificate Timestamps (SCTs) for Certificate
-            Transparency embedded in the leaf certificate.
+        certificate_included_scts_count (Optional[int]): The number of Signed Certificate Timestamps (SCTs) for
+            Certificate Transparency embedded in the leaf certificate. None if the version of OpenSSL installed on the
+            system is too old to be able to parse the SCT extension.
         ocsp_response (Optional[Dict[Text, Any]]): The OCSP response returned by the server. None if no response was
             sent by the server.
         ocsp_response_status (Optional[OcspResponseStatusEnum]): The status of the OCSP response returned by the server.
@@ -459,7 +460,9 @@ class CertificateInfoScanResult(PluginScanResult):
 
         # Look for SCT extension
         scts_count = self.certificate_included_scts_count
-        if scts_count == 0:
+        if scts_count is None:
+            sct_txt = 'OK - Extension present'
+        elif scts_count == 0:
             sct_txt = 'NOT SUPPORTED - Extension not found'
         elif scts_count < 3:
             sct_txt = 'WARNING - Only {} SCTs included but Google recommends 3 or more'.format(str(scts_count))

@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
-version: May 29, 2018
-url: https://gallery.technet.microsoft.com/Trusted-Root-Certificate-6b557df0/file/200685/1/Trusted%20Root%20Program%20Participants%20As%20of%20May%2029%202018.xlsx
-date_fetched: 2018-06-02
-trusted_certificates_count: 285
+version: June 26, 2018
+url: https://gallery.technet.microsoft.com/Trusted-Root-Certificate-dee8ae24/file/202066/1/Trusted%20Root%20Program%20Participants%20As%20of%20June%2026%202018.xlsx
+date_fetched: 2018-06-30
+trusted_certificates_count: 284
 trusted_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -78,8 +78,6 @@ trusted_certificates:
   fingerprint: 5533a0401f612c688ebce5bf53f2ec14a734eb178bfae00e50e85dae6723078a
 - subject_name: Autoridad de Certificacion Firmaprofesional CIF A62634068
   fingerprint: 04048028bf1f2864d48f9ad4d83294366a828856553f3b14303f90147f5d40ef
-- subject_name: Autoridad de Certificacion de la Abogacia
-  fingerprint: 5607e260163f49c8ea4175a1c0a53b13195cb7d07845611e943a2ff507036834
 - subject_name: Autoridade Certificadora Raiz Brasileira v1
   fingerprint: cbd8ed38d4a2d677d453d70dd8890af4f6374cba6299943f1ab3a6936c6fd795
 - subject_name: Autoridade Certificadora Raiz Brasileira v2
@@ -325,6 +323,8 @@ trusted_certificates:
   fingerprint: 6ea1db6719d6041a06fc0898e5b3cf349a8fa8ecee85edb005965628f617f7c8
 - subject_name: Microsec e-Szigno Root CA 2009
   fingerprint: 3c5f81fea5fab82c64bfa2eaecafcde8e077fc8620a7cae537163df36edbf378
+- subject_name: Microsoft ECC Product Root Certificate Authority 2018
+  fingerprint: caca93b9d23d2b6fa76e8b8471931e0df3ec6f63af3cdbb936c41954a1872326
 - subject_name: Microsoft Root Certificate Authority 2010
   fingerprint: df545bf919a2439c36983b54cdfc903dfa4f37d3996d8d84b4c31eec6f3c163e
 - subject_name: Microsoft Root Certificate Authority 2011
@@ -445,8 +445,6 @@ trusted_certificates:
   fingerprint: 1465fa205397b876faa6f0a9958e5590e40fcc7faa4fb7c2c8677521fb5fb658
 - subject_name: Starfield Root Certificate Authority - G2
   fingerprint: 2ce1cb0bf9d2f9e102993fbe215152c3b2dd0cabde1c68e5319b839154dbb7f5
-- subject_name: Starfield Services Root Certificate Authority
-  fingerprint: b5bd2cb79cbd1907298d6bdf4842e516d8c78fa6fc96d25f71af814e16cc245e
 - subject_name: Starfield Services Root Certificate Authority - G2
   fingerprint: 568d6905a2c88708a4b3025190edcfedb1974a606a13c6e5290fcb2ae63edab5
 - subject_name: Swedish Government Root Authority v3
@@ -576,7 +574,7 @@ trusted_certificates:
   fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
 - subject_name: thawte Primary Root CA - G3
   fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 84
+blocked_certificates_count: 86
 blocked_certificates:
 - subject_name: AC RAIZ FNMT-RCM
   fingerprint: 4d9ebb28825c9643ab15d54e5f9614f13cb3e95de3cf4eac971301f320f9226e
@@ -606,6 +604,8 @@ blocked_certificates:
   fingerprint: 0e88eb6ea256e19ef8d3abd61a24d38dbad632816dd957294427e4724d81a386
 - subject_name: Autoridad de Certificacion Raiz del Estado Venezolano
   fingerprint: ca7a5e68c53d2c51f72f6b465d3ed753f5903ec7901c8d0f55d868337c81975a
+- subject_name: Autoridad de Certificacion de la Abogacia
+  fingerprint: 5607e260163f49c8ea4175a1c0a53b13195cb7d07845611e943a2ff507036834
 - subject_name: CA DATEV BT 01
   fingerprint: 1e910b40c08184c0ca20468e824502ff2485163f77b03bb73296823f03885621
 - subject_name: CA DATEV INT 01
@@ -710,6 +710,8 @@ blocked_certificates:
   fingerprint: a22dba681e97376e2d397d728aae3a9b6296b9fdba60bc2e11f647f2c675fb37
 - subject_name: Staat der Nederlanden Root CA
   fingerprint: d41d829e8c1659822af93fce62bffcde264fc84e8b950c5ff275d052354695a3
+- subject_name: Starfield Services Root Certificate Authority
+  fingerprint: b5bd2cb79cbd1907298d6bdf4842e516d8c78fa6fc96d25f71af814e16cc245e
 - subject_name: StartCom Certification Authority
   fingerprint: c766a9bef2d4071c863a31aa4920e813b2d198608cb7b7cfe21143b836df09ea
 - subject_name: StartCom Certification Authority G2

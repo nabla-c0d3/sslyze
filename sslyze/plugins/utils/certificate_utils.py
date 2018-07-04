@@ -118,7 +118,7 @@ class CertificateUtils:
                 ExtensionOID.PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS
             )
 
-            if isinstance(sct_ext, cryptography.x509.UnrecognizedExtension):
+            if isinstance(sct_ext.value, cryptography.x509.UnrecognizedExtension):
                 # The version of OpenSSL on the system is too old and can't parse the SCT extension
                 return None
 

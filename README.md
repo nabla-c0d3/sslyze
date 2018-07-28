@@ -110,4 +110,11 @@ from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresR
 TrustStoresRepository.update_default()
 ```
 
+License
+-------
+
+Copyright (c) 2018 Alban Diquet
+
+SSLyze is made available under the terms of the GNU Affero General Public License (AGPL). See LICENSE.txt for details and exceptions.
+
 [documentation]: https://nabla-c0d3.github.io/sslyze/documentation

@@ -243,7 +243,7 @@ class SessionResumptionRateScanResult(PluginScanResult):
             successful_resum_nb: int,
             errored_resumptions_list: List[str]
     ) -> None:
-        super(SessionResumptionRateScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.attempted_resumptions_nb = attempted_resum_nb
         self.successful_resumptions_nb = successful_resum_nb
         self.errored_resumptions_list = errored_resumptions_list
@@ -330,7 +330,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
             ticket_resumption_failed_reason: Optional[str] = None,
             ticket_resumption_exception: Optional[Exception] = None
     ) -> None:
-        super(SessionResumptionSupportScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.attempted_resumptions_nb = attempted_resum_nb
         self.successful_resumptions_nb = successful_resum_nb
         self.errored_resumptions_list = errored_resumptions_list

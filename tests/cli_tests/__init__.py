@@ -53,7 +53,7 @@ class MockPluginScanCommandTwo(PluginScanCommand):
 
 class MockPluginScanResult(PluginScanResult):
     def __init__(self, server_info, scan_command, text_output, xml_output):
-        super(MockPluginScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.text_output = text_output
         self.xml_output = xml_output
         self.scan_command = scan_command

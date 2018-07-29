@@ -125,7 +125,7 @@ class SessionRenegotiationScanResult(PluginScanResult):
             accepts_client_renegotiation: bool,
             supports_secure_renegotiation: bool
     ) -> None:
-        super(SessionRenegotiationScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.accepts_client_renegotiation = accepts_client_renegotiation
         self.supports_secure_renegotiation = supports_secure_renegotiation
 

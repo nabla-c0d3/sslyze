@@ -44,7 +44,7 @@ class CertificateInfoScanCommand(PluginScanCommand):
             ca_file: The path to a custom trust store file to use for certificate validation. The file should contain
                 PEM-formatted root certificates.
         """
-        super(CertificateInfoScanCommand, self).__init__()
+        super().__init__()
         self.custom_ca_file = ca_file
 
     @classmethod
@@ -94,7 +94,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
     @classmethod
     def get_cli_option_group(cls) -> List[optparse.Option]:
-        options = super(CertificateInfoPlugin, cls).get_cli_option_group()
+        options = super().get_cli_option_group()
 
         # Add the special optional argument for this plugin's commands
         # They must match the names in the commands' contructor
@@ -253,7 +253,7 @@ class CertificateInfoScanResult(PluginScanResult):
             path_validation_error_list: List[PathValidationError],
             ocsp_response: OcspResponse
     ) -> None:
-        super(CertificateInfoScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         # Find the first trust store that successfully validated the certificate chain
         self.successful_trust_store = None
 

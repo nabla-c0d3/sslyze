@@ -183,7 +183,7 @@ class OpenSslCcsInjectionScanResult(PluginScanResult):
             scan_command: OpenSslCcsInjectionScanCommand,
             is_vulnerable_to_ccs_injection: bool
     ) -> None:
-        super(OpenSslCcsInjectionScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection
 
     def as_xml(self) -> Element:

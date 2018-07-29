@@ -18,7 +18,7 @@ from sslyze.server_connectivity_tester import ServerConnectivityError
 class JsonOutputGenerator(OutputGenerator):
 
     def __init__(self, file_to: TextIO) -> None:
-        super(JsonOutputGenerator, self).__init__(file_to)
+        super().__init__(file_to)
         self._json_dict: Dict[str, Any] = {
             'sslyze_version': __version__,
             'sslyze_url': PROJECT_URL

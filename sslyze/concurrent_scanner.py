@@ -24,7 +24,7 @@ class PluginRaisedExceptionScanResult(PluginScanResult):
             scan_command: PluginScanCommand,
             exception: Exception
     ) -> None:
-        super(PluginRaisedExceptionScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 

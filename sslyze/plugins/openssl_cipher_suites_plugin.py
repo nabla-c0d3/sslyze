@@ -20,7 +20,7 @@ from sslyze.utils.tls12_workaround import WorkaroundForTls12ForCipherSuites
 class CipherSuiteScanCommand(PluginScanCommand, ABC):
 
     def __init__(self, http_get: bool = False, hide_rejected_ciphers: bool = False) -> None:
-        super(CipherSuiteScanCommand, self).__init__()
+        super().__init__()
         # TODO(ad): Move these options to the CLI parser ?
         self.http_get = http_get
         self.hide_rejected_ciphers = hide_rejected_ciphers
@@ -107,7 +107,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
     @classmethod
     def get_cli_option_group(cls) -> List[optparse.Option]:
-        options = super(OpenSslCipherSuitesPlugin, cls).get_cli_option_group()
+        options = super().get_cli_option_group()
 
         # Add the special optional argument for this plugin's commands
         # They must match the names in the commands' contructor
@@ -359,7 +359,7 @@ class AcceptedCipherSuite(CipherSuite):
             key_size: int,
             post_handshake_response: Optional[str] = None,
     ) -> None:
-        super(AcceptedCipherSuite, self).__init__(openssl_name, ssl_version)
+        super().__init__(openssl_name, ssl_version)
         self.key_size = key_size
         self.post_handshake_response = post_handshake_response
 
@@ -386,7 +386,7 @@ class RejectedCipherSuite(CipherSuite):
         handshake_error_message (str): The SSL/TLS error returned by the server to close the handshake.
     """
     def __init__(self, openssl_name: str, ssl_version: OpenSslVersionEnum, handshake_error_message: str) -> None:
-        super(RejectedCipherSuite, self).__init__(openssl_name, ssl_version)
+        super().__init__(openssl_name, ssl_version)
         self.handshake_error_message = handshake_error_message
 
 
@@ -401,7 +401,7 @@ class ErroredCipherSuite(CipherSuite):
         error_message (str): The text-formatted exception that was raised during the handshake.
     """
     def __init__(self, openssl_name: str, ssl_version: OpenSslVersionEnum, exception: Exception) -> None:
-        super(ErroredCipherSuite, self).__init__(openssl_name, ssl_version)
+        super().__init__(openssl_name, ssl_version)
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
         self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
 
@@ -430,7 +430,7 @@ class CipherSuiteScanResult(PluginScanResult):
             rejected_cipher_list: List[RejectedCipherSuite],
             errored_cipher_list: List[ErroredCipherSuite]
     ) -> None:
-        super(CipherSuiteScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
 
         self.preferred_cipher = preferred_cipher
 

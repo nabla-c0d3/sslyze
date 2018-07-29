@@ -430,7 +430,7 @@ class RobotScanResult(PluginScanResult):
             scan_command: RobotScanCommand,
             robot_result_enum: RobotScanResultEnum
     ) -> None:
-        super(RobotScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.robot_result_enum = robot_result_enum
 
     def as_text(self) -> List[str]:

@@ -30,7 +30,7 @@ class XmlOutputGenerator(OutputGenerator):
     }
 
     def __init__(self, file_to: TextIO) -> None:
-        super(XmlOutputGenerator, self).__init__(file_to)
+        super().__init__(file_to)
         self._xml_root_node = Element('document', title="SSLyze Scan Results", SSLyzeVersion=__version__,
                                       SSLyzeWeb=PROJECT_URL)
         # The root node has two children nodes

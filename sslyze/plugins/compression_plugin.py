@@ -69,7 +69,7 @@ class CompressionScanResult(PluginScanResult):
             scan_command: CompressionScanCommand,
             compression_name: str
     ) -> None:
-        super(CompressionScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.compression_name = compression_name
 
     def as_text(self) -> List[str]:

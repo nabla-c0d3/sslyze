@@ -233,7 +233,7 @@ class HttpHeadersScanResult(PluginScanResult):
             hpkp_report_only: bool,
             cert_chain: List[Certificate],
     ) -> None:
-        super(HttpHeadersScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
         self.expect_ct_header = ParsedExpectCTHeader(raw_expect_ct_header) if raw_expect_ct_header else None

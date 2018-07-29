@@ -80,7 +80,7 @@ class HeartbleedScanResult(PluginScanResult):
             scan_command: HeartbleedScanCommand,
             is_vulnerable_to_heartbleed: bool
     ) -> None:
-        super(HeartbleedScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.is_vulnerable_to_heartbleed = is_vulnerable_to_heartbleed
 
     def as_text(self) -> List[str]:

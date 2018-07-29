@@ -83,7 +83,7 @@ class FallbackScsvScanResult(PluginScanResult):
             scan_command: FallbackScsvScanCommand,
             supports_fallback_scsv: bool
     ) -> None:
-        super(FallbackScsvScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.supports_fallback_scsv = supports_fallback_scsv
 
     def as_text(self) -> List[str]:

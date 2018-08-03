@@ -23,6 +23,10 @@ from typing import Text
 
 from sslyze.utils.tls12_workaround import WorkaroundForTls12ForCipherSuites
 
+if IS_PYTHON_2:
+    # Make ConnectionError do nothing on Python 2
+    ConnectionError = NotImplementedError
+
 
 class CipherSuiteScanCommand(PluginScanCommand):
 

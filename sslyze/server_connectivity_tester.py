@@ -8,11 +8,16 @@ from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
 from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.utils.python_compatibility import IS_PYTHON_2
 from sslyze.utils.ssl_connection_configurator import SslConnectionConfigurator
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
     ClientAuthenticationServerConfigurationEnum
 from sslyze.utils.ssl_connection import StartTLSError, ProxyError, SSLConnection, SSLHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
+
+if IS_PYTHON_2:
+    # Make ConnectionError do nothing on Python 2
+    ConnectionError = NotImplementedError
 
 
 class ServerConnectivityError(Exception):

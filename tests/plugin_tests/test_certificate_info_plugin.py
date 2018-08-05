@@ -150,9 +150,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
+    @unittest.skip('Find a server with a unicode certificate')
     def test_unicode_certificate(self):
-        # TOODO(AD): Fix me
-        return
         server_test = ServerConnectivityTester(hostname='เพย์สบาย.th')
         server_info = server_test.perform()
 

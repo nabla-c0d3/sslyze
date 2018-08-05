@@ -7,11 +7,6 @@ from nassl._nassl import OpenSSLError
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.utils.python_compatibility import IS_PYTHON_2
-
-if IS_PYTHON_2:
-    # Make ConnectionError do nothing on Python 2
-    ConnectionError = NotImplementedError
 
 
 class SessionRenegotiationScanCommand(PluginScanCommand):

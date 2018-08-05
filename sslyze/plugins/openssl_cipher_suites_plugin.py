@@ -227,7 +227,8 @@ class OpenSslCipherSuitesPlugin(Plugin):
         )
         ssl_connection.ssl_client.set_cipher_list(openssl_cipher_name)
         if len(ssl_connection.ssl_client.get_cipher_list()) != 1:
-            raise ValueError('Passed an OpenSSL string for multiple cipher suites: "{}"'.format(openssl_cipher_name))
+            raise ValueError(f'Passed an OpenSSL string for multiple cipher suites: "{openssl_cipher_name}": '
+                             f'{str(ssl_connection.ssl_client.get_cipher_list())}')
 
         try:
             # Perform the SSL handshake

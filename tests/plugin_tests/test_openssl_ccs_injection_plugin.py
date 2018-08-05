@@ -2,8 +2,7 @@ import unittest
 
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin, OpenSslCcsInjectionScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
-from tests.openssl_server import VulnerableOpenSslServer
+from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
 
 class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
@@ -20,9 +19,9 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
-    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_ccs_injection_bad(self):
-        with VulnerableOpenSslServer() as server:
+        with LegacyOpenSslServer() as server:
             server_test = ServerConnectivityTester(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
@@ -37,11 +36,11 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
-    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
-        with VulnerableOpenSslServer(
-                client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
+        with LegacyOpenSslServer(
+                client_auth_config=ClientAuthConfigEnum.REQUIRED
         ) as server:
             # And the client does NOT provide a client certificate
             server_test = ServerConnectivityTester(

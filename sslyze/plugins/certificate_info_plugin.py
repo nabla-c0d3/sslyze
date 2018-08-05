@@ -141,7 +141,12 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
         for (job, result) in thread_pool.get_result():
             (_, (_, trust_store)) = job
-            certificate_chain, validation_result, ocsp_response = result
+            certificate_chain, validation_result, _ocsp_response = result
+
+            # Keep the OCSP response if the validation was succesful and a response was returned
+            if _ocsp_response:
+                ocsp_response = _ocsp_response
+
             # Store the returned verify string for each trust store
             path_validation_result_list.append(PathValidationResult(trust_store, validation_result))
 

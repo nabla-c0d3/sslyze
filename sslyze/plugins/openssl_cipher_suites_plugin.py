@@ -154,6 +154,9 @@ class OpenSslCipherSuitesPlugin(Plugin):
             cipher_list.extend(ssl_connection.ssl_client.get_cipher_list())
 
             # Lastly we have to remove TLS 1.3 cipher suites
+            # TODO(AD): This no longer works in OpenSSL 1.1.1-pre9; we need to use SSL_CTX_set_ciphersuites()
+            # https://github.com/openssl/openssl/pull/5392
+            # https://github.com/drwetter/testssl.sh/issues/1013
             cipher_list = [cipher for cipher in ssl_connection.ssl_client.get_cipher_list() if 'TLS13' not in cipher]
 
             # And remove duplicates (ie. supported by both legacy and modern OpenSSL)

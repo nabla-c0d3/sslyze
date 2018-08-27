@@ -111,7 +111,7 @@ class EarlyDataScanResult(PluginScanResult):
         if self.is_early_data_supported:
             txt_result.append(self._format_field('', 'Suppported - Server accepted early data'))
         else:
-            txt_result.append(self._format_field('', 'Not Supported - Server rejected early data'))
+            txt_result.append(self._format_field('', 'Not Supported'))
         return txt_result
 
     def as_xml(self) -> Element:

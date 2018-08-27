@@ -80,7 +80,7 @@ class Tlsv12ScanCommand(CipherSuiteScanCommand):
 
 
 class Tlsv13ScanCommand(CipherSuiteScanCommand):
-    """List the TLS 1.3 (draft 18) OpenSSL cipher suites supported by the server(s).
+    """List the TLS 1.3 OpenSSL cipher suites supported by the server(s).
     """
     @classmethod
     def get_cli_argument(cls) -> str:
@@ -540,10 +540,16 @@ class CipherSuiteScanResult(PluginScanResult):
         # If we were able to connect, add some general comments about the cipher suite configuration
         if self.accepted_cipher_list:
             supports_forward_secrecy = False
-            for accepted_cipher in self.accepted_cipher_list:
-                if '_DHE_' in accepted_cipher.name or '_ECDHE_' in accepted_cipher.name:
+
+            # All TLS 1.3 cipher suites support forward secrecy
+            if isinstance(self.scan_command, Tlsv13ScanCommand):
                     supports_forward_secrecy = True
-                    break
+            else:
+                for accepted_cipher in self.accepted_cipher_list:
+                    if '_DHE_' in accepted_cipher.name or '_ECDHE_' in accepted_cipher.name:
+                        supports_forward_secrecy = True
+                        break
+
             result_txt.append(self._format_field(
                 'Forward Secrecy',
                 'OK - Supported' if supports_forward_secrecy else 'INSECURE - Not Supported',

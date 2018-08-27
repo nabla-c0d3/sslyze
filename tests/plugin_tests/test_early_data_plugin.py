@@ -29,6 +29,21 @@ class EarlyDataPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
+    def test_early_data_enabled_online(self):
+        server_test = ServerConnectivityTester(hostname='www.cloudflare.com')
+        server_info = server_test.perform()
+
+        plugin = EarlyDataPlugin()
+        plugin_result = plugin.process_task(server_info, EarlyDataScanCommand())
+
+        self.assertTrue(plugin_result.is_early_data_supported)
+
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())
+
+        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
+        self.assertTrue(pickle.dumps(plugin_result))
+
     def test_early_data_disabled_no_tls_1_3(self):
         with LegacyOpenSslServer() as server:
             server_test = ServerConnectivityTester(

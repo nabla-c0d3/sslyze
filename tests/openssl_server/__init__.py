@@ -224,9 +224,8 @@ class ModernOpenSslServer(_OpenSslServer):
             client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
             max_early_data: Optional[int] = None
     ) -> None:
-        # Enable TLS 1.3 early data on the server
-        extra_args = '-early_data'
+        extra_args = ''
         if max_early_data is not None:
-            extra_args += f' -max_early_data {max_early_data}'
-
+            # Enable TLS 1.3 early data on the server
+            extra_args = f'-early_data -max_early_data {max_early_data}'
         super().__init__(client_auth_config, extra_args)

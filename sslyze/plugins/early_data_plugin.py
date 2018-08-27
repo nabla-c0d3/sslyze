@@ -1,6 +1,7 @@
 from typing import List, Type
 from xml.etree.ElementTree import Element
 
+from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum, OpenSslEarlyDataStatusEnum
 
 from sslyze.plugins import plugin_base
@@ -51,7 +52,7 @@ class EarlyDataPlugin(plugin_base.Plugin):
             ssl_connection.ssl_client.write(HttpRequestGenerator.get_request(host=server_info.hostname))
             ssl_connection.ssl_client.read(2048)
             session = ssl_connection.ssl_client.get_session()
-        except SslHandshakeRejected as e:
+        except SslHandshakeRejected:
             # TLS 1.3 not supported
             is_early_data_supported = False
         finally:
@@ -68,11 +69,21 @@ class EarlyDataPlugin(plugin_base.Plugin):
                 # Open a socket to the server but don't do the handshake
                 ssl_connection2.do_pre_handshake(None)
 
-                # Test for early data
-                ssl_connection2.ssl_client.write_early_data(b'EARLY DATA')
+                # Send one byte of early data
+                ssl_connection2.ssl_client.write_early_data(b'E')
                 ssl_connection2.ssl_client.do_handshake()
                 if ssl_connection2.ssl_client.get_early_data_status() == OpenSslEarlyDataStatusEnum.ACCEPTED:
                     is_early_data_supported = True
+                else:
+                    is_early_data_supported = False
+
+            except OpenSSLError as e:
+                if 'function you should not call' in e.args[0]:
+                    # This is what OpenSSL returns when the server did not enable early data
+                    is_early_data_supported = False
+                else:
+                    raise
+
             finally:
                 ssl_connection2.close()
 

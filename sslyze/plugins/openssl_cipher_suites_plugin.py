@@ -269,7 +269,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
             # cipher_result = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
             # The ClientCertificateRequested exception already proves that the cipher suite was accepted
             # Workaround here:
-            cipher_result: CipherSuite = AcceptedCipherSuite(openssl_cipher_name, ssl_version, None, None)
+            cipher_result = AcceptedCipherSuite(openssl_cipher_name, ssl_version, None, None)
 
         except Exception as e:
             cipher_result = ErroredCipherSuite(openssl_cipher_name, ssl_version, e)
@@ -836,7 +836,7 @@ TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
 }
 
 
-OPENSSL_TO_RFC_NAMES_MAPPING = {
+OPENSSL_TO_RFC_NAMES_MAPPING: Dict[OpenSslVersionEnum, Dict[str, str]] = {
     OpenSslVersionEnum.SSLV2: SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING,
     OpenSslVersionEnum.SSLV3: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
     OpenSslVersionEnum.TLSV1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,

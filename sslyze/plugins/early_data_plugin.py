@@ -43,7 +43,7 @@ class EarlyDataPlugin(plugin_base.Plugin):
             raise ValueError('Unexpected scan command')
 
         session = None
-        is_early_data_supported = None
+        is_early_data_supported = False
         ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=OpenSslVersionEnum.TLSV1_3)
         try:
             # Perform an SSL handshake and keep the session

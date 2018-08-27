@@ -6,3 +6,4 @@ install:
   - pipenv install --dev
 script:
   - invoke test
+  - python setup.py sdist

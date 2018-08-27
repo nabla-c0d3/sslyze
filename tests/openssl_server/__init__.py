@@ -50,6 +50,11 @@ class _OpenSslServerIOManager:
                         # When receiving the special message, we want s_server to reply
                         self.s_server_stdin.write(b'Hey there')
                         self.s_server_stdin.flush()
+
+                    if b'Connection: close\r\n' in s_server_out:
+                        # We "Connection: close" to detect an HTTP request being sent and we return an HTTP response
+                        self.s_server_stdin.write(b'HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n')
+                        self.s_server_stdin.flush()
                 else:
                     break
 

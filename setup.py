@@ -74,8 +74,8 @@ setup(
 
     # Dependencies
     install_requires=[
-        'nassl>=1.1.0,<1.2.0',
-        'cryptography==2.2.2',
+        'nassl>=2.1.0,<2.2.0',
+        'cryptography==2.3',
         'tls-parser>=1.2.0,<1.3.0'
     ],
 

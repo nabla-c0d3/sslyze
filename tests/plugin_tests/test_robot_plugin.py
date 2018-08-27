@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import unittest
 
 from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.plugins.robot_plugin import RobotPlugin, RobotScanCommand, RobotScanResultEnum
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
-from tests.openssl_server import VulnerableOpenSslServer
+from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
 from tests.travis_utils import IS_RUNNING_ON_TRAVIS
 
 
@@ -38,12 +33,10 @@ class RobotPluginPluginTestCase(unittest.TestCase):
         # TODO(AD): Find a vulnerable server?
         pass
 
-    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_fails_when_client_auth_failed(self):
         # Given a server that requires client authentication
-        with VulnerableOpenSslServer(
-                client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
-        ) as server:
+        with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
             server_test = ServerConnectivityTester(
                 hostname=server.hostname,

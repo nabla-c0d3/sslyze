@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
 import unittest
 
 import time
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
-from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.server_connectivity_tester import ServerConnectivityError, ServerConnectivityTester
 from sslyze.ssl_settings import HttpConnectTunnelingSettings
 from tests.tiny_proxy import ProxyHandler

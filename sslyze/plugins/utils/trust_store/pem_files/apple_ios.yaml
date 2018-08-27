@@ -1,8 +1,8 @@
 platform: APPLE_IOS
 version: '11'
 url: https://support.apple.com/kb/HT208125
-date_fetched: 2017-12-31
-trusted_certificates_count: 173
+date_fetched: 2018-07-28
+trusted_certificates_count: 168
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -98,16 +98,12 @@ trusted_certificates:
   fingerprint: 2605875afcc176b2d66dd66a995d7f8d5ebb86ce120d0e7e9e7c6ef294a27d4c
 - subject_name: ComSign Secured CA
   fingerprint: 507941c74460a0b47086220d4e9932572ab5d1b5bbcb8980ab1cb17651a844d2
-- subject_name: Common Policy
-  fingerprint: 04acfb3b24793f300f67ef87e44dd72cb9b28b204f389a7cd5ae28785c7d42cd
 - subject_name: D-TRUST Root CA 3 2013
   fingerprint: a1a86d04121eb87f027c66f53303c28e5739f943fc84b38ad6af009035dd9457
 - subject_name: D-TRUST Root Class 3 CA 2 2009
   fingerprint: 49e7a442acf0ea6287050054b52564b650e4f49e42e348d6aa38e039e957b1c1
 - subject_name: D-TRUST Root Class 3 CA 2 EV 2009
   fingerprint: eec5496b988ce98625b934092eec2908bed0b0f316c2d4730c84eaf1f3d34881
-- subject_name: DST ACES CA X6
-  fingerprint: 767c955a76412c89af688e90a1c70f556cfd6b6025dbea10416d7eb6831f8c40
 - subject_name: DST Root CA X3
   fingerprint: 0687260331a72403d909f105e69bcf0d32e1bd2493ffc6d9206d11bcd6770739
 - subject_name: DST Root CA X4
@@ -192,8 +188,6 @@ trusted_certificates:
   fingerprint: 23804203ca45d8cde716b8c13bf3b448457fa06cc10250997fa01458317c41e5
 - subject_name: Izenpe.com
   fingerprint: 2530cc8e98321502bad96f9b1fba1b099e2d299e0f4548bb914f363bc0d4531f
-- subject_name: Izenpe.com
-  fingerprint: b0877aee2d39274df831f66fdeeb7717557c258fc9eb55231a9f8a647a75433f
 - subject_name: KISA RootCA 1
   fingerprint: 6fdb3f76c8b801a75338d8a50a7c02879f6198b57e594d318d3832900fedcd79
 - subject_name: Microsec e-Szigno Root CA 2009
@@ -300,12 +294,6 @@ trusted_certificates:
   fingerprint: dd6936fe21f8f077c123a1a521c12224f72255b73e03a7260693e8a24b0fa389
 - subject_name: Trustis FPS Root CA
   fingerprint: c1b48299aba5208fe9630ace55ca68a03eda5a519c8802a0d3a673be8f8e557d
-- subject_name: "T\xDCB\u0130TAK UEKAE K\xF6k Sertifika Hizmet Sa\u011Flay\u0131c\u0131\
-    s\u0131 - S\xFCr\xFCm 3"
-  fingerprint: e4c73430d7a5b50925df43370a0d216e9a79b9d6db8373a0c69eb1cc31c7c52a
-- subject_name: "T\xDCRKTRUST Elektronik Sertifika Hizmet Sa\u011Flay\u0131c\u0131\
-    s\u0131"
-  fingerprint: 978cd966f2faa07ba7aa9500d9c02e9d77f2cdada6ad6ba74af4b91c66593c50
 - subject_name: UCA Global Root
   fingerprint: a1f05ccb80c2d710ec7d479abdcbb879e58d7edb7149fe78a87884e3d0bad0f9
 - subject_name: UCA Root

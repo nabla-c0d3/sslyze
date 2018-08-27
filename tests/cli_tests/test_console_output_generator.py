@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import unittest
 from io import StringIO
 
@@ -19,10 +15,10 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file = StringIO()
         generator = ConsoleOutputGenerator(output_file)
 
-        class FakePlugin1(object):
+        class FakePlugin1:
             pass
 
-        class FakePlugin2(object):
+        class FakePlugin2:
             pass
 
         generator.command_line_parsed({FakePlugin1, FakePlugin2}, None, [])

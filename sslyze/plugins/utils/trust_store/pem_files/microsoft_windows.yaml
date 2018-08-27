@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
-version: April 25, 2018
-url: https://gallery.technet.microsoft.com/Trusted-Root-Certificate-7e584dc2/file/198801/1/Trusted%20Root%20Program%20Participants%20As%20of%20April%2025%202018.xlsx
-date_fetched: 2018-04-26
-trusted_certificates_count: 283
+version: June 26, 2018
+url: https://gallery.technet.microsoft.com/Trusted-Root-Program-d17011b8/file/205887/1/Trusted%20Root%20Program%20Participants%20As%20of%20July%2031%202018.xlsx
+date_fetched: 2018-08-04
+trusted_certificates_count: 277
 trusted_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -78,8 +78,6 @@ trusted_certificates:
   fingerprint: 5533a0401f612c688ebce5bf53f2ec14a734eb178bfae00e50e85dae6723078a
 - subject_name: Autoridad de Certificacion Firmaprofesional CIF A62634068
   fingerprint: 04048028bf1f2864d48f9ad4d83294366a828856553f3b14303f90147f5d40ef
-- subject_name: Autoridad de Certificacion de la Abogacia
-  fingerprint: 5607e260163f49c8ea4175a1c0a53b13195cb7d07845611e943a2ff507036834
 - subject_name: Autoridade Certificadora Raiz Brasileira v1
   fingerprint: cbd8ed38d4a2d677d453d70dd8890af4f6374cba6299943f1ab3a6936c6fd795
 - subject_name: Autoridade Certificadora Raiz Brasileira v2
@@ -134,8 +132,6 @@ trusted_certificates:
   fingerprint: e3b6a2db2ed7ce48842f7ac53241c7b71d54144bfb40c11f3f1d0b42f5eea12d
 - subject_name: Certigna Root CA
   fingerprint: d48d3d23eedb50a459e55197601c27774b9d7b18c94d5a059511a10250b93168
-- subject_name: "Certinomis - Autorit\xE9 Racine"
-  fingerprint: fcbfe2886206f72b27593c8b070297e12d769ed10ed7930705a8098effc14d17
 - subject_name: Certinomis - Root CA
   fingerprint: 2a99f5bc1174b73cbb1d620884e01c34e51ccb3978da125f0e33268883bf4158
 - subject_name: Certplus Root CA G1
@@ -160,22 +156,12 @@ trusted_certificates:
   fingerprint: 8327bc8c9d69947b3de3c27511537267f59c21b9fa7b613fafbccd53b7024000
 - subject_name: Class 2 Primary CA
   fingerprint: 0f993c8aef97baaf5687140ed59ad1821bb4afacf0aa9a58b5d57a338a3afbcb
-- subject_name: Class 3 Primary CA
-  fingerprint: c1b12f480020336e5b04f520bc19c2e2e10ab42c9d9235f05cbec33ffa4d4dea
-- subject_name: Class 3P Primary CA
-  fingerprint: ccc89489371bad111c90619bea240a2e6dadd99f9f6e1d4d41e58ed6de3d0285
-- subject_name: Class 3TS Primary CA
-  fingerprint: ce7dd096c8fde2bf5c438edb574bd6454385334ee8ff106c0f93d5051be6bac3
-- subject_name: ComSign CA
-  fingerprint: ae4457b40d9eda96677b0d3c92d57b5177abd7ac1037958356d1e094518be5f2
 - subject_name: ComSign Global Root CA
   fingerprint: 2605875afcc176b2d66dd66a995d7f8d5ebb86ce120d0e7e9e7c6ef294a27d4c
-- subject_name: ComSign Secured CA
-  fingerprint: 507941c74460a0b47086220d4e9932572ab5d1b5bbcb8980ab1cb17651a844d2
 - subject_name: Configuration
   fingerprint: cd201256fe5ced0bfff8df595fff36b1416d5313a999f532ef4a9915df96dee0
-- subject_name: Correo Uruguayo - Root CA
-  fingerprint: 46273285615d96e52da9fc2ed8c036f10af3d9f6280f8d288706c52b2011b4da
+- subject_name: Cybertrust Global Root
+  fingerprint: 960adf0063e96356750c2965dd0a0867da0b9cbd6e77714aeafb2349ab393da3
 - subject_name: D-TRUST Root CA 3 2013
   fingerprint: a1a86d04121eb87f027c66f53303c28e5739f943fc84b38ad6af009035dd9457
 - subject_name: D-TRUST Root Class 3 CA 2 2009
@@ -233,6 +219,8 @@ trusted_certificates:
   fingerprint: c1d80ce474a51128b77e794a98aa2d62a0225da3f419e5c7ed73dfbf660e7109
 - subject_name: GLOBALTRUST
   fingerprint: 5e3571f33f45a7df1537a68b5ffb9e036af9d2f5bc4c9717130dc43d7175aac7
+- subject_name: GLOBALTRUST 2015
+  fingerprint: 416b1f9e84e74c1d19b23d8d7191c6ad81246e641601f599132729f507beb3cc
 - subject_name: GPKIRootCA1
   fingerprint: 407c276bead2e4af0661ef6697341dec0a1f9434e4eafb2d3d32a90549d9de4a
 - subject_name: GTS Root R1
@@ -321,6 +309,8 @@ trusted_certificates:
   fingerprint: 6ea1db6719d6041a06fc0898e5b3cf349a8fa8ecee85edb005965628f617f7c8
 - subject_name: Microsec e-Szigno Root CA 2009
   fingerprint: 3c5f81fea5fab82c64bfa2eaecafcde8e077fc8620a7cae537163df36edbf378
+- subject_name: Microsoft ECC Product Root Certificate Authority 2018
+  fingerprint: caca93b9d23d2b6fa76e8b8471931e0df3ec6f63af3cdbb936c41954a1872326
 - subject_name: Microsoft Root Certificate Authority 2010
   fingerprint: df545bf919a2439c36983b54cdfc903dfa4f37d3996d8d84b4c31eec6f3c163e
 - subject_name: Microsoft Root Certificate Authority 2011
@@ -441,8 +431,6 @@ trusted_certificates:
   fingerprint: 1465fa205397b876faa6f0a9958e5590e40fcc7faa4fb7c2c8677521fb5fb658
 - subject_name: Starfield Root Certificate Authority - G2
   fingerprint: 2ce1cb0bf9d2f9e102993fbe215152c3b2dd0cabde1c68e5319b839154dbb7f5
-- subject_name: Starfield Services Root Certificate Authority
-  fingerprint: b5bd2cb79cbd1907298d6bdf4842e516d8c78fa6fc96d25f71af814e16cc245e
 - subject_name: Starfield Services Root Certificate Authority - G2
   fingerprint: 568d6905a2c88708a4b3025190edcfedb1974a606a13c6e5290fcb2ae63edab5
 - subject_name: Swedish Government Root Authority v3
@@ -572,7 +560,7 @@ trusted_certificates:
   fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
 - subject_name: thawte Primary Root CA - G3
   fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 85
+blocked_certificates_count: 93
 blocked_certificates:
 - subject_name: AC RAIZ FNMT-RCM
   fingerprint: 4d9ebb28825c9643ab15d54e5f9614f13cb3e95de3cf4eac971301f320f9226e
@@ -602,6 +590,8 @@ blocked_certificates:
   fingerprint: 0e88eb6ea256e19ef8d3abd61a24d38dbad632816dd957294427e4724d81a386
 - subject_name: Autoridad de Certificacion Raiz del Estado Venezolano
   fingerprint: ca7a5e68c53d2c51f72f6b465d3ed753f5903ec7901c8d0f55d868337c81975a
+- subject_name: Autoridad de Certificacion de la Abogacia
+  fingerprint: 5607e260163f49c8ea4175a1c0a53b13195cb7d07845611e943a2ff507036834
 - subject_name: CA DATEV BT 01
   fingerprint: 1e910b40c08184c0ca20468e824502ff2485163f77b03bb73296823f03885621
 - subject_name: CA DATEV INT 01
@@ -624,6 +614,8 @@ blocked_certificates:
   fingerprint: 4b22d5a6aec99f3cdb79aa5ec06838479cd5ecba7164f7f22dc1d65f63d85708
 - subject_name: Certification Authority of WoSign G2
   fingerprint: d487a56f83b07482e85e963394c1ecc2c9e51d0903ee946b02c301581ed99e16
+- subject_name: "Certinomis - Autorit\xE9 Racine"
+  fingerprint: fcbfe2886206f72b27593c8b070297e12d769ed10ed7930705a8098effc14d17
 - subject_name: Certipost E-Trust Primary Normalised CA
   fingerprint: f00355eef101c7df4e46cce6417dffce3db82dbb1369c3b439c4e33bee445c42
 - subject_name: Certipost E-Trust Primary Qualified CA
@@ -632,16 +624,26 @@ blocked_certificates:
   fingerprint: ddff53ecd7743b60bb7b2795ff5732fa785f9a14df1120fb40a38cf84ca2a566
 - subject_name: Class 1 Primary CA
   fingerprint: 7d8ce822222b90c0b14342c7a8145d1f24351f4d1a1fe0edfd312ee73fb00149
+- subject_name: Class 3 Primary CA
+  fingerprint: c1b12f480020336e5b04f520bc19c2e2e10ab42c9d9235f05cbec33ffa4d4dea
 - subject_name: Class 3 Public Primary Certification Authority
   fingerprint: e7685634efacf69ace939a6b255b7b4fabef42935b50a265acb5cb6027e44e70
 - subject_name: Class 3 Public Primary Certification Authority - G2
   fingerprint: 83ce3c1229688a593d485f81973c0f9195431eda37cc5e36430e79c7a888638b
+- subject_name: Class 3P Primary CA
+  fingerprint: ccc89489371bad111c90619bea240a2e6dadd99f9f6e1d4d41e58ed6de3d0285
+- subject_name: Class 3TS Primary CA
+  fingerprint: ce7dd096c8fde2bf5c438edb574bd6454385334ee8ff106c0f93d5051be6bac3
 - subject_name: ComSign Advanced Security CA
   fingerprint: 3ccc3ccfe45496d07b620dbf1328e8a1490018f48633c8a28a995ca60408b0be
+- subject_name: ComSign CA
+  fingerprint: ae4457b40d9eda96677b0d3c92d57b5177abd7ac1037958356d1e094518be5f2
+- subject_name: ComSign Secured CA
+  fingerprint: 507941c74460a0b47086220d4e9932572ab5d1b5bbcb8980ab1cb17651a844d2
 - subject_name: Common Policy
   fingerprint: 04acfb3b24793f300f67ef87e44dd72cb9b28b204f389a7cd5ae28785c7d42cd
-- subject_name: Cybertrust Global Root
-  fingerprint: 960adf0063e96356750c2965dd0a0867da0b9cbd6e77714aeafb2349ab393da3
+- subject_name: Correo Uruguayo - Root CA
+  fingerprint: 46273285615d96e52da9fc2ed8c036f10af3d9f6280f8d288706c52b2011b4da
 - subject_name: D-TRUST Root Class 2 CA 2007
   fingerprint: 8da75f1327217c88060fd2529eff2816e50b0c74541ea4ea3dfcee66a71efe09
 - subject_name: D-TRUST Root Class 3 CA 2007
@@ -708,6 +710,8 @@ blocked_certificates:
   fingerprint: a22dba681e97376e2d397d728aae3a9b6296b9fdba60bc2e11f647f2c675fb37
 - subject_name: Staat der Nederlanden Root CA
   fingerprint: d41d829e8c1659822af93fce62bffcde264fc84e8b950c5ff275d052354695a3
+- subject_name: Starfield Services Root Certificate Authority
+  fingerprint: b5bd2cb79cbd1907298d6bdf4842e516d8c78fa6fc96d25f71af814e16cc245e
 - subject_name: StartCom Certification Authority
   fingerprint: c766a9bef2d4071c863a31aa4920e813b2d198608cb7b7cfe21143b836df09ea
 - subject_name: StartCom Certification Authority G2

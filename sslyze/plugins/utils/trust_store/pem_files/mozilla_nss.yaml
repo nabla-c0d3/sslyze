@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2018-04-12
-trusted_certificates_count: 132
+date_fetched: 2018-08-23
+trusted_certificates_count: 129
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -54,10 +54,6 @@ trusted_certificates:
   fingerprint: e3b6a2db2ed7ce48842f7ac53241c7b71d54144bfb40c11f3f1d0b42f5eea12d
 - subject_name: Certinomis - Root CA
   fingerprint: 2a99f5bc1174b73cbb1d620884e01c34e51ccb3978da125f0e33268883bf4158
-- subject_name: Certplus Root CA G1
-  fingerprint: 152a402bfcdf2cd548054d2275b39c7fca3ec0978078b0f0ea76e561a6c7433e
-- subject_name: Certplus Root CA G2
-  fingerprint: 6cc05041e6445e74696c4cfbc9f80f543b7eabbb44b4ce6f787c6a9971c42f17
 - subject_name: Certum Trusted Network CA
   fingerprint: 5c58468d55f58e497e743982d2b50010b6d165374acf83a7d4a32db768c4408e
 - subject_name: Certum Trusted Network CA 2
@@ -125,6 +121,8 @@ trusted_certificates:
 - subject_name: GlobalSign
   fingerprint: 179fbc148a3dd00fd24ea13458cc43bfa7f59c8182d783a513f6ebec100c8924
 - subject_name: GlobalSign
+  fingerprint: 2cabeafe37d06ca22aba7391c0033d25982952c453647349763a3ab5ad6ccf69
+- subject_name: GlobalSign
   fingerprint: bec94911c2955676db6c0a550986d76e3ba005667c442c9762b4fbb773de228c
 - subject_name: GlobalSign
   fingerprint: ca42dd41745fd0b81eb902362cf9d8bf719da1bd1b1efc946f5b4c99f42c1b9e
@@ -166,12 +164,8 @@ trusted_certificates:
   fingerprint: 41c923866ab4cad6b7ad578081582e020797a6cbdf4fff78ce8396b38937d7f5
 - subject_name: OISTE WISeKey Global Root GB CA
   fingerprint: 6b9c08e86eb0f767cfad65cd98b62149e5494a67f5845e7bd1ed019f27b86bd6
-- subject_name: OpenTrust Root CA G1
-  fingerprint: 56c77128d98c18d91b4cfdffbc25ee9103d4758ea2abad826a90f3457d460eb4
-- subject_name: OpenTrust Root CA G2
-  fingerprint: 27995829fe6a7515c1bfe848f9c4761db16c225929257bf40d0894f29ea8baf2
-- subject_name: OpenTrust Root CA G3
-  fingerprint: b7c36231706e81078c367cb896198f1e3208dd926949dd8f5709a410f75b6292
+- subject_name: OISTE WISeKey Global Root GC CA
+  fingerprint: 8560f91c3624daba9570b5fea0dbe36ff11a8323be9486854fb3f34a5571198d
 - subject_name: QuoVadis Root CA 1 G3
   fingerprint: 8a866fd1b276b57e578e921c65828a2bed58e9f2f288054134b7f1f4bfc9cc74
 - subject_name: QuoVadis Root CA 2

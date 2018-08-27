@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-import logging
 import unittest
 
 import pickle
@@ -11,8 +6,8 @@ from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin, SessionRenegotiationScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum, ClientAuthenticationCredentials
-from tests.openssl_server import VulnerableOpenSslServer, NotOnLinux64Error
+from sslyze.ssl_settings import ClientAuthenticationCredentials
+from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
 
 class SessionRenegotiationPluginTestCase(unittest.TestCase):
@@ -33,12 +28,10 @@ class SessionRenegotiationPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_fails_when_client_auth_failed_session(self):
         # Given a server that requires client authentication
-        with VulnerableOpenSslServer(
-                client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
-        ) as server:
+        with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
             server_test = ServerConnectivityTester(
                 hostname=server.hostname,
@@ -53,12 +46,10 @@ class SessionRenegotiationPluginTestCase(unittest.TestCase):
             with self.assertRaises(ClientCertificateRequested):
                 plugin.process_task(server_info, SessionRenegotiationScanCommand())
 
-    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_works_when_client_auth_succeeded(self):
         # Given a server that requires client authentication
-        with VulnerableOpenSslServer(
-                client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
-        ) as server:
+        with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client provides a client certificate
             client_creds = ClientAuthenticationCredentials(
                 client_certificate_chain_path=server.get_client_certificate_path(),

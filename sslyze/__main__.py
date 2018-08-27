@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-
 import sys
 from typing import Any, Text, Dict, List
 
@@ -23,16 +17,14 @@ from sslyze.server_connectivity_tester import ConcurrentServerConnectivityTester
 global_scanner = None
 
 
-def sigint_handler(signum, frame):
-    # type: (int, Any) -> None
+def sigint_handler(signum: int, frame: Any) -> None:
     print('Scan interrupted... shutting down.')
     if global_scanner:
         global_scanner.emergency_shutdown()
     sys.exit()
 
 
-def main():
-    # type: () -> None
+def main() -> None:
     global global_scanner
 
     # For py2exe builds
@@ -99,7 +91,7 @@ def main():
             task_num += 1
 
     # Each host has a list of results
-    result_dict = {}  # type: Dict[Text, List[PluginScanResult]]
+    result_dict: Dict[Text, List[PluginScanResult]] = {}
     # We cannot use the server_info object directly as its address will change due to multiprocessing
     RESULT_KEY_FORMAT = '{hostname}:{ip_address}:{port}'
     for server_info in online_servers_list:

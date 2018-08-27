@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import socket
-from typing import Text, Type, List
+from typing import Type, List
 from xml.etree.ElementTree import Element
 
 from nassl._nassl import OpenSSLError
@@ -11,25 +7,18 @@ from nassl._nassl import OpenSSLError
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.utils.python_compatibility import IS_PYTHON_2
-
-if IS_PYTHON_2:
-    # Make ConnectionError do nothing on Python 2
-    ConnectionError = NotImplementedError
 
 
-class SessionRenegotiationScanCommand(plugin_base.PluginScanCommand):
+class SessionRenegotiationScanCommand(PluginScanCommand):
     """Test the server(s) for client-initiated renegotiation and secure renegotiation support.
     """
 
     @classmethod
-    def get_cli_argument(cls):
-        # type: () -> Text
+    def get_cli_argument(cls) -> str:
         return 'reneg'
 
     @classmethod
-    def get_title(cls):
-        # type: () -> Text
+    def get_title(cls) -> str:
         return 'Session Renegotiation'
 
 
@@ -38,12 +27,14 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
     """
 
     @classmethod
-    def get_available_commands(cls):
-        # type: () -> List[Type[PluginScanCommand]]
+    def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
         return [SessionRenegotiationScanCommand]
 
-    def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> SessionRenegotiationScanResult
+    def process_task(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: PluginScanCommand
+    ) -> 'SessionRenegotiationScanResult':
         if not isinstance(scan_command, SessionRenegotiationScanCommand):
             raise ValueError('Unexpected scan command')
 
@@ -53,8 +44,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
                                               supports_secure_renegotiation)
 
     @staticmethod
-    def _test_secure_renegotiation(server_info):
-        # type: (ServerConnectivityInfo) -> bool
+    def _test_secure_renegotiation(server_info: ServerConnectivityInfo) -> bool:
         """Check whether the server supports secure renegotiation.
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection(should_use_legacy_openssl=True)
@@ -70,8 +60,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
         return supports_secure_renegotiation
 
     @staticmethod
-    def _test_client_renegotiation(server_info):
-        # type: (ServerConnectivityInfo) -> bool
+    def _test_client_renegotiation(server_info: ServerConnectivityInfo) -> bool:
         """Check whether the server honors session renegotiation requests.
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection(should_use_legacy_openssl=True)
@@ -94,8 +83,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
                     accepts_client_renegotiation = False
                 elif 'reset by peer' in str(e.args):
                     accepts_client_renegotiation = False
-                if 'Nassl SSL handshake failed' in str(e.args):
-                    # This is raised as an IOError on Python 2
+                elif 'Nassl SSL handshake failed' in str(e.args):
                     accepts_client_renegotiation = False
                 else:
                     raise
@@ -114,16 +102,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
                     raise
 
             except ConnectionError:
-                # Python 3 only
                 accepts_client_renegotiation = False
-
-            # Should be last as socket errors are also IOError
-            except IOError as e:
-                # Python 2 only I think?
-                if 'Nassl SSL handshake failed' in str(e.args):
-                    accepts_client_renegotiation = False
-                else:
-                    raise
 
         finally:
             ssl_connection.close()
@@ -139,14 +118,18 @@ class SessionRenegotiationScanResult(PluginScanResult):
         supports_secure_renegotiation (bool): True if the server supports secure renegotiation.
     """
 
-    def __init__(self, server_info, scan_command, accepts_client_renegotiation, supports_secure_renegotiation):
-        # type: (ServerConnectivityInfo, SessionRenegotiationScanCommand, bool, bool) -> None
-        super(SessionRenegotiationScanResult, self).__init__(server_info, scan_command)
+    def __init__(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: SessionRenegotiationScanCommand,
+            accepts_client_renegotiation: bool,
+            supports_secure_renegotiation: bool
+    ) -> None:
+        super().__init__(server_info, scan_command)
         self.accepts_client_renegotiation = accepts_client_renegotiation
         self.supports_secure_renegotiation = supports_secure_renegotiation
 
-    def as_text(self):
-        # type: () -> List[Text]
+    def as_text(self) -> List[str]:
         result_txt = [self._format_title(self.scan_command.get_title())]
 
         # Client-initiated reneg
@@ -163,8 +146,7 @@ class SessionRenegotiationScanResult(PluginScanResult):
 
         return result_txt
 
-    def as_xml(self):
-        # type: () -> Element
+    def as_xml(self) -> Element:
         result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         result_xml.append(Element('sessionRenegotiation',
                                   attrib={'canBeClientInitiated': str(self.accepts_client_renegotiation),

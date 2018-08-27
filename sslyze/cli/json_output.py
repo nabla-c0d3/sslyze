@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import json
-from typing import Dict, Text, Any, TextIO, Type, Set, Union, List
+from typing import Dict, Any, TextIO, Type, Set, Union, List
 
 from cryptography.hazmat.backends.openssl import x509
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
@@ -17,48 +13,46 @@ from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.server_connectivity_tester import ServerConnectivityError
-from sslyze.utils.python_compatibility import IS_PYTHON_2
 
 
 class JsonOutputGenerator(OutputGenerator):
 
-    def __init__(self, file_to):
-        # type: (TextIO) -> None
-        super(JsonOutputGenerator, self).__init__(file_to)
-        self._json_dict = {
+    def __init__(self, file_to: TextIO) -> None:
+        super().__init__(file_to)
+        self._json_dict: Dict[str, Any] = {
             'sslyze_version': __version__,
             'sslyze_url': PROJECT_URL
-        }  # type: Dict[Text, Any]
+        }
 
-    def command_line_parsed(self, available_plugins, args_command_list, malformed_servers):
-        # type: (Set[Type[Plugin]], Any, List[ServerStringParsingError]) -> None
+    def command_line_parsed(
+            self,
+            available_plugins: Set[Type[Plugin]],
+            args_command_list: Any,
+            malformed_servers: List[ServerStringParsingError]
+    ) -> None:
         self._json_dict.update({'invalid_targets': [], 'accepted_targets': []})
 
         for bad_server_str in malformed_servers:
             self._json_dict['invalid_targets'].append({bad_server_str.server_string: bad_server_str.error_message})
 
-    def server_connectivity_test_failed(self, connectivity_error):
-        # type: (ServerConnectivityError) -> None
+    def server_connectivity_test_failed(self, connectivity_error: ServerConnectivityError) -> None:
         server_info = connectivity_error.server_info
         self._json_dict['invalid_targets'].append({
             '{}:{}'.format(server_info.hostname, server_info.port): connectivity_error.error_message
         })
 
-    def server_connectivity_test_succeeded(self, server_connectivity_info):
-        # type: (ServerConnectivityInfo) -> None
+    def server_connectivity_test_succeeded(self, server_connectivity_info: ServerConnectivityInfo) -> None:
         pass
 
-    def scans_started(self):
-        # type: () -> None
+    def scans_started(self) -> None:
         pass
 
-    def server_scan_completed(self, server_scan_result):
-        # type: (CompletedServerScan) -> None
+    def server_scan_completed(self, server_scan_result: CompletedServerScan) -> None:
         server_scan_dict = {'server_info': server_scan_result.server_info.__dict__.copy()}
         for key, value in server_scan_dict['server_info'].items():
             server_scan_dict['server_info'][key] = _object_to_json_dict(value)
 
-        dict_command_result = {}  # type: Dict[Text, Dict[Text, Any]]
+        dict_command_result: Dict[str, Dict[str, Any]] = {}
         for plugin_result in server_scan_result.plugin_result_list:
             dict_result = plugin_result.__dict__.copy()
             # Remove the server_info node
@@ -78,18 +72,15 @@ class JsonOutputGenerator(OutputGenerator):
         server_scan_dict['commands_results'] = dict_command_result
         self._json_dict['accepted_targets'].append(server_scan_dict)
 
-    def scans_completed(self, total_scan_time):
-        # type: (float) -> None
+    def scans_completed(self, total_scan_time: float) -> None:
         self._json_dict['total_scan_time'] = str(total_scan_time)
-        json_out = json.dumps(self._json_dict, default=_object_to_json_dict, sort_keys=True, indent=4,
-                              ensure_ascii=True)
-        if IS_PYTHON_2:
-            json_out = unicode(json_out)  # type: ignore
+        json_out = json.dumps(
+            self._json_dict, default=_object_to_json_dict, sort_keys=True, indent=4, ensure_ascii=True
+        )
         self._file_to.write(json_out)
 
 
-def _object_to_json_dict(obj):
-    # type: (Any) -> Union[bool, int, float, Text, Dict[Text, Any]]
+def _object_to_json_dict(obj: Any) -> Union[bool, int, float, str, Dict[str, Any]]:
     """Convert an object to a dictionary suitable for the JSON output.
     """
     if isinstance(obj, Enum):

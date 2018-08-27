@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.plugins.compression_plugin import CompressionPlugin
+from sslyze.plugins.early_data_plugin import EarlyDataPlugin
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin
 from sslyze.plugins.heartbleed_plugin import HeartbleedPlugin
 from sslyze.plugins.http_headers_plugin import HttpHeadersPlugin
@@ -19,17 +16,18 @@ from typing import List, Dict, Set
 from typing import Type
 
 
-class PluginsRepository(object):
+class PluginsRepository:
     """An object encapsulating the list of available SSLyze plugins.
     """
 
-    _PLUGIN_CLASSES = [OpenSslCipherSuitesPlugin, CertificateInfoPlugin, CompressionPlugin, FallbackScsvPlugin,
-                       HeartbleedPlugin, HttpHeadersPlugin, OpenSslCcsInjectionPlugin, SessionRenegotiationPlugin,
-                       SessionResumptionPlugin, RobotPlugin]
+    _PLUGIN_CLASSES = [
+        OpenSslCipherSuitesPlugin, CertificateInfoPlugin, CompressionPlugin, FallbackScsvPlugin,
+        HeartbleedPlugin, HttpHeadersPlugin, OpenSslCcsInjectionPlugin, SessionRenegotiationPlugin,
+        SessionResumptionPlugin, RobotPlugin, EarlyDataPlugin
+    ]
 
-    def __init__(self, plugin_classes=_PLUGIN_CLASSES):
-        # type: (List[Type[Plugin]]) -> None
-        scan_command_classes_to_plugin_classes = {}  # type: Dict[Type[PluginScanCommand], Type[Plugin]]
+    def __init__(self, plugin_classes: List[Type[Plugin]] = _PLUGIN_CLASSES) -> None:
+        scan_command_classes_to_plugin_classes: Dict[Type[PluginScanCommand], Type[Plugin]] = {}
 
         # Create a dict of scan_commands -> plugin_classes
         for plugin_class in plugin_classes:
@@ -43,20 +41,17 @@ class PluginsRepository(object):
 
         self._scan_command_classes_to_plugin_classes = scan_command_classes_to_plugin_classes
 
-    def get_plugin_class_for_command(self, scan_command):
-        # type: (PluginScanCommand) -> Type[Plugin]
+    def get_plugin_class_for_command(self, scan_command: PluginScanCommand) -> Type[Plugin]:
         """Get the class of the plugin implementing the supplied scan command.
         """
         return self._scan_command_classes_to_plugin_classes[scan_command.__class__]
 
-    def get_available_commands(self):
-        # type: () -> Set[Type[PluginScanCommand]]
+    def get_available_commands(self) -> Set[Type[PluginScanCommand]]:
         """Get the list of all available scan comands across all plugins.
         """
         return set(self._scan_command_classes_to_plugin_classes.keys())
 
-    def get_available_plugins(self):
-        # type: () -> Set[Type[Plugin]]
+    def get_available_plugins(self) -> Set[Type[Plugin]]:
         """Get the list of all available plugin.
         """
         return set(self._scan_command_classes_to_plugin_classes.values())

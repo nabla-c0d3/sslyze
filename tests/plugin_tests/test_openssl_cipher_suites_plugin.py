@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import unittest
 
 import pickle
@@ -9,15 +5,15 @@ import pickle
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, \
     Sslv30ScanCommand, Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand, Tlsv13ScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationServerConfigurationEnum
-from tests.openssl_server import VulnerableOpenSslServer
+from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from tests.openssl_server import LegacyOpenSslServer, ModernOpenSslServer, ClientAuthConfigEnum
 
 
 class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
-    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_sslv2_enabled(self):
-        with VulnerableOpenSslServer() as server:
+        with LegacyOpenSslServer() as server:
             server_test = ServerConnectivityTester(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
@@ -66,9 +62,9 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_sslv3_enabled(self):
-        with VulnerableOpenSslServer() as server:
+        with LegacyOpenSslServer() as server:
             server_test = ServerConnectivityTester(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
@@ -333,12 +329,10 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
             set(accepted_cipher_name_list)
         )
 
-    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
-        with VulnerableOpenSslServer(
-                client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
-        ) as server:
+        with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
             server_test = ServerConnectivityTester(
                 hostname=server.hostname,
@@ -349,7 +343,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
             # OpenSslCipherSuitesPlugin works even when a client cert was not supplied
             plugin = OpenSslCipherSuitesPlugin()
-            plugin_result = plugin.process_task(server_info, Sslv30ScanCommand())
+            plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
         self.assertTrue(plugin_result.accepted_cipher_list)
         self.assertTrue(plugin_result.as_text())

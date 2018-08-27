@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 from sslyze.cli import CompletedServerScan
 from sslyze.cli.command_line_parser import ServerStringParsingError
 from sslyze.cli.output_generator import OutputGenerator
@@ -9,7 +5,7 @@ from sslyze.plugins.plugin_base import Plugin
 from sslyze.server_connectivity_tester import ServerConnectivityError
 from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from typing import Text, Type, Set, Any, List
+from typing import Type, Set, Any, List
 
 
 class ConsoleOutputGenerator(OutputGenerator):
@@ -27,12 +23,15 @@ class ConsoleOutputGenerator(OutputGenerator):
     SCAN_FORMAT = 'Scan Results For {0}:{1} - {2}'
 
     @classmethod
-    def _format_title(cls, title):
-        # type: (Text) -> Text
+    def _format_title(cls, title: str) -> str:
         return cls.TITLE_FORMAT.format(title=title.upper(), underline='-' * len(title))
 
-    def command_line_parsed(self, available_plugins, args_command_list, malformed_servers):
-        # type: (Set[Type[Plugin]], Any, List[ServerStringParsingError]) -> None
+    def command_line_parsed(
+            self,
+            available_plugins: Set[Type[Plugin]],
+            args_command_list: Any,
+            malformed_servers: List[ServerStringParsingError]
+    ) -> None:
         self._file_to.write('\n\n\n' + self._format_title('Available plugins'))
         self._file_to.write('\n')
         for plugin in available_plugins:
@@ -46,14 +45,12 @@ class ConsoleOutputGenerator(OutputGenerator):
             self._file_to.write(self.SERVER_STR_INVALID_FORMAT.format(server_string=bad_server_str.server_string,
                                                                       error_msg=bad_server_str.error_message))
 
-    def server_connectivity_test_failed(self, connectivity_error):
-        # type: (ServerConnectivityError) -> None
+    def server_connectivity_test_failed(self, connectivity_error: ServerConnectivityError) -> None:
         self._file_to.write(self.SERVER_ERROR_FORMAT.format(host=connectivity_error.server_info.hostname,
                                                             port=connectivity_error.server_info.port,
                                                             error_msg=connectivity_error.error_message))
 
-    def server_connectivity_test_succeeded(self, server_connectivity_info):
-        # type: (ServerConnectivityInfo) -> None
+    def server_connectivity_test_succeeded(self, server_connectivity_info: ServerConnectivityInfo) -> None:
         client_auth_msg = ''
         client_auth_requirement = server_connectivity_info.client_auth_requirement
         if client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED:
@@ -74,12 +71,10 @@ class ConsoleOutputGenerator(OutputGenerator):
                                                          network_route=network_route,
                                                          client_auth_msg=client_auth_msg))
 
-    def scans_started(self):
-        # type: () -> None
+    def scans_started(self) -> None:
         self._file_to.write('\n\n\n\n')
 
-    def server_scan_completed(self, server_scan):
-        # type: (CompletedServerScan) -> None
+    def server_scan_completed(self, server_scan: CompletedServerScan) -> None:
         target_result_str = ''
         for plugin_result in server_scan.plugin_result_list:
             # Print the result of each separate command
@@ -99,6 +94,5 @@ class ConsoleOutputGenerator(OutputGenerator):
                                            network_route)
         self._file_to.write(self._format_title(scan_txt) + target_result_str + '\n\n')
 
-    def scans_completed(self, total_scan_time):
-        # type: (float) -> None
+    def scans_completed(self, total_scan_time: float) -> None:
         self._file_to.write(self._format_title('Scan Completed in {0:.2f} s'.format(total_scan_time)))

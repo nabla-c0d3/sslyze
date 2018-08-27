@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 from xml.etree.ElementTree import Element
 from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from typing import Text, Type, List
+from typing import Type, List
 
 
 class CompressionScanCommand(PluginScanCommand):
@@ -15,13 +11,11 @@ class CompressionScanCommand(PluginScanCommand):
     """
 
     @classmethod
-    def get_cli_argument(cls):
-        # type: () -> Text
+    def get_cli_argument(cls) -> str:
         return 'compression'
 
     @classmethod
-    def get_title(cls):
-        # type: () -> Text
+    def get_title(cls) -> str:
         return 'Deflate Compression'
 
 
@@ -30,12 +24,14 @@ class CompressionPlugin(plugin_base.Plugin):
     """
 
     @classmethod
-    def get_available_commands(cls):
-        # type: () -> List[Type[PluginScanCommand]]
+    def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
         return [CompressionScanCommand]
 
-    def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, PluginScanCommand) -> CompressionScanResult
+    def process_task(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: PluginScanCommand
+    ) -> 'CompressionScanResult':
         if not isinstance(scan_command, CompressionScanCommand):
             raise ValueError('Unexpected scan command')
 
@@ -63,17 +59,20 @@ class CompressionScanResult(PluginScanResult):
     """The result of running a CompressionScanCommand on a specific server.
 
     Attributes:
-        compression_name (Optional[Text]): The name of the compression algorithm supported by the server; None if
+        compression_name (str): The name of the compression algorithm supported by the server. `None` if
             compression is not supported by the server.
     """
 
-    def __init__(self, server_info, scan_command, compression_name):
-        # type: (ServerConnectivityInfo, CompressionScanCommand, Text) -> None
-        super(CompressionScanResult, self).__init__(server_info, scan_command)
+    def __init__(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: CompressionScanCommand,
+            compression_name: str
+    ) -> None:
+        super().__init__(server_info, scan_command)
         self.compression_name = compression_name
 
-    def as_text(self):
-        # type: () -> List[Text]
+    def as_text(self) -> List[str]:
         txt_result = [self._format_title(self.scan_command.get_title())]
         if self.compression_name:
             txt_result.append(self._format_field('', 'VULNERABLE - Server supports Deflate compression'))
@@ -81,8 +80,7 @@ class CompressionScanResult(PluginScanResult):
             txt_result.append(self._format_field('', 'OK - Compression disabled'))
         return txt_result
 
-    def as_xml(self):
-        # type: () -> Element
+    def as_xml(self) -> Element:
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         if self.compression_name:
             xml_result.append(Element('compressionMethod', type="DEFLATE", isSupported="True"))

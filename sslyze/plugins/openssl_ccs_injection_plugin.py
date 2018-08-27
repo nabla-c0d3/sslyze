@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import socket
 import types
-from typing import Text, Type, List
+from typing import Type, List
 from xml.etree.ElementTree import Element
 
 from nassl._nassl import WantReadError
@@ -25,13 +21,11 @@ class OpenSslCcsInjectionScanCommand(plugin_base.PluginScanCommand):
     """
 
     @classmethod
-    def get_cli_argument(cls):
-        # type: () -> Text
+    def get_cli_argument(cls) -> str:
         return 'openssl_ccs'
 
     @classmethod
-    def get_title(cls):
-        # type: () -> Text
+    def get_title(cls) -> str:
         return 'OpenSSL CCS Injection'
 
 
@@ -40,12 +34,14 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
     """
 
     @classmethod
-    def get_available_commands(cls):
-        # type: () -> List[Type[PluginScanCommand]]
+    def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
         return [OpenSslCcsInjectionScanCommand]
 
-    def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, plugin_base.PluginScanCommand) -> OpenSslCcsInjectionScanResult
+    def process_task(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: plugin_base.PluginScanCommand
+    ) -> 'OpenSslCcsInjectionScanResult':
         if not isinstance(scan_command, OpenSslCcsInjectionScanCommand):
             raise ValueError('Unexpected scan command')
 
@@ -181,20 +177,22 @@ class OpenSslCcsInjectionScanResult(PluginScanResult):
         is_vulnerable_to_ccs_injection (bool): True if the server is vulnerable to OpenSSL's CCS injection issue.
     """
 
-    def __init__(self, server_info, scan_command, is_vulnerable_to_ccs_injection):
-        # type: (ServerConnectivityInfo, OpenSslCcsInjectionScanCommand, bool) -> None
-        super(OpenSslCcsInjectionScanResult, self).__init__(server_info, scan_command)
+    def __init__(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: OpenSslCcsInjectionScanCommand,
+            is_vulnerable_to_ccs_injection: bool
+    ) -> None:
+        super().__init__(server_info, scan_command)
         self.is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection
 
-    def as_xml(self):
-        # type: () -> Element
+    def as_xml(self) -> Element:
         result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         result_xml.append(Element('openSslCcsInjection',
                                   attrib={'isVulnerable': str(self.is_vulnerable_to_ccs_injection)}))
         return result_xml
 
-    def as_text(self):
-        # type: () -> List[Text]
+    def as_text(self) -> List[str]:
         result_txt = [self._format_title(self.scan_command.get_title())]
 
         ccs_text = 'VULNERABLE - Server is vulnerable to OpenSSL CCS injection' \

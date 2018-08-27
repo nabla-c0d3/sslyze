@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from typing import Text
 from xml.etree.ElementTree import Element
 
 from sslyze.plugins.plugin_base import PluginScanCommand
@@ -37,11 +32,19 @@ class MockServerConnectivityTester(ServerConnectivityTester):
 class MockPluginScanCommandOne(PluginScanCommand):
 
     @classmethod
+    def get_title(cls) -> str:
+        return 'Plugin 1'
+
+    @classmethod
     def get_cli_argument(cls):
         return 'plugin1'
 
 
 class MockPluginScanCommandTwo(PluginScanCommand):
+
+    @classmethod
+    def get_title(cls) -> str:
+        return 'Plugin 2'
 
     @classmethod
     def get_cli_argument(cls):
@@ -50,8 +53,7 @@ class MockPluginScanCommandTwo(PluginScanCommand):
 
 class MockPluginScanResult(PluginScanResult):
     def __init__(self, server_info, scan_command, text_output, xml_output):
-        # type: (ServerConnectivityInfo, PluginScanCommand, Text, Element) -> None
-        super(MockPluginScanResult, self).__init__(server_info, scan_command)
+        super().__init__(server_info, scan_command)
         self.text_output = text_output
         self.xml_output = xml_output
         self.scan_command = scan_command
@@ -63,7 +65,7 @@ class MockPluginScanResult(PluginScanResult):
         return [self.text_output]
 
 
-class MockCommandLineValues(object):
+class MockCommandLineValues:
     def __init__(self):
         # Tests don't really use right now
         pass

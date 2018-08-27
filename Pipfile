@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+nassl = "<2.2.0,>=2.1.0"
+cryptography = "==2.3"
+tls-parser = "<1.3.0,>=1.2.0"
+
+[dev-packages]
+mypy = "*"
+"flake8" = "*"
+invoke = "*"
+cx-freeze = "*"
+pytest = "*"
+sphinx = "*"
+sphinx-rtd-theme = "*"
+twine = "*"
+sphinx-autodoc-typehints = "*"
+
+[requires]
+python_version = "3.6"

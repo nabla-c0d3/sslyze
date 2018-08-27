@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import unittest
 
 import pickle
 
 from sslyze.plugins.compression_plugin import CompressionPlugin, CompressionScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
-from tests.openssl_server import VulnerableOpenSslServer
+from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
 
 class CompressionPluginTestCase(unittest.TestCase):
@@ -34,12 +29,10 @@ class CompressionPluginTestCase(unittest.TestCase):
         # TODO
         pass
 
-    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
-        with VulnerableOpenSslServer(
-                client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
-        ) as server:
+        with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
             server_test = ServerConnectivityTester(
                 hostname=server.hostname,

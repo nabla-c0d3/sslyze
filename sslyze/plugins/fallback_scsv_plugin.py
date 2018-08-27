@@ -1,15 +1,11 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from typing import Text, Type, List
+from typing import Type, List
 from xml.etree.ElementTree import Element
 from nassl import _nassl
 from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.utils.ssl_connection import SSLHandshakeRejected
+from sslyze.utils.ssl_connection import SslHandshakeRejected
 
 
 class FallbackScsvScanCommand(PluginScanCommand):
@@ -17,13 +13,11 @@ class FallbackScsvScanCommand(PluginScanCommand):
     """
 
     @classmethod
-    def get_cli_argument(cls):
-        # type: () -> Text
+    def get_cli_argument(cls) -> str:
         return 'fallback'
 
     @classmethod
-    def get_title(cls):
-        # type: () -> Text
+    def get_title(cls) -> str:
         return 'Downgrade Attacks'
 
 
@@ -32,12 +26,14 @@ class FallbackScsvPlugin(plugin_base.Plugin):
     """
 
     @classmethod
-    def get_available_commands(cls):
-        # type: () -> List[Type[PluginScanCommand]]
+    def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
         return [FallbackScsvScanCommand]
 
-    def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, PluginScanCommand) -> FallbackScsvScanResult
+    def process_task(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: PluginScanCommand
+    ) -> 'FallbackScsvScanResult':
         if not isinstance(scan_command, FallbackScsvScanCommand):
             raise ValueError('Unexpected scan command')
 
@@ -61,7 +57,7 @@ class FallbackScsvPlugin(plugin_base.Plugin):
             else:
                 raise
 
-        except SSLHandshakeRejected:
+        except SslHandshakeRejected:
             # If the handshake is rejected, we assume downgrade attacks are prevented (this is how F5 balancers do it)
             # although it could also be because the server does not support this version of TLS
             # https://github.com/nabla-c0d3/sslyze/issues/119
@@ -78,16 +74,19 @@ class FallbackScsvScanResult(PluginScanResult):
 
     Attributes:
         supports_fallback_scsv (bool): True if the server supports the TLS_FALLBACK_SCSV mechanism to block downgrade
-        attacks.
+            attacks.
     """
 
-    def __init__(self, server_info, scan_command, supports_fallback_scsv):
-        # type: (ServerConnectivityInfo, FallbackScsvScanCommand, bool) -> None
-        super(FallbackScsvScanResult, self).__init__(server_info, scan_command)
+    def __init__(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: FallbackScsvScanCommand,
+            supports_fallback_scsv: bool
+    ) -> None:
+        super().__init__(server_info, scan_command)
         self.supports_fallback_scsv = supports_fallback_scsv
 
-    def as_text(self):
-        # type: () -> List[Text]
+    def as_text(self) -> List[str]:
         result_txt = [self._format_title(self.scan_command.get_title())]
         downgrade_txt = 'OK - Supported' \
             if self.supports_fallback_scsv \
@@ -95,8 +94,7 @@ class FallbackScsvScanResult(PluginScanResult):
         result_txt.append(self._format_field('TLS_FALLBACK_SCSV:', downgrade_txt))
         return result_txt
 
-    def as_xml(self):
-        # type: () -> Element
+    def as_xml(self) -> Element:
         result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         result_xml.append(Element('tlsFallbackScsv', attrib={'isSupported': str(self.supports_fallback_scsv)}))
         return result_xml

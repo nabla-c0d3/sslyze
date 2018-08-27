@@ -1,4 +1,9 @@
 .mypy_cache/
+.pytest_cache/
+.vscode
+
+# Pipenv
+requirements.txt
 
 *.py[cod]
 

@@ -1,47 +1,29 @@
-# -*- coding: utf-8 -*-
-"""Utility to parse HTTP responses - http://pythonwise.blogspot.com/2010/02/parse-http-response.html.
-"""
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 from io import BytesIO
 from socket import socket
 from typing import Callable
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from sslyze.utils.ssl_connection import SSLConnection
-
-try:
-    # Python 3
-    # noinspection PyCompatibility
-    from http.client import HTTPResponse
-except ImportError:
-    # Python 2
-    # noinspection PyCompatibility
-    from httplib import HTTPResponse  # type: ignore
+from http.client import HTTPResponse
+from nassl.ssl_client import SslClient
 
 
-class FakeSocket(BytesIO):
+class _FakeSocket(BytesIO):
     def makefile(self, *args, **kw):  # type: ignore
         return self
 
 
-class HttpResponseParser(object):
+class HttpResponseParser:
+    """Utility to parse HTTP responses - http://pythonwise.blogspot.com/2010/02/parse-http-response.html.
+    """
 
     @classmethod
-    def parse_from_socket(cls, sock):
-        # type: (socket) -> HTTPResponse
+    def parse_from_socket(cls, sock: socket) -> HTTPResponse:
         return cls._parse(sock.recv)
 
     @classmethod
-    def parse_from_ssl_connection(cls, ssl_conn):
-        # type: (SSLConnection) -> HTTPResponse
+    def parse_from_ssl_connection(cls, ssl_conn: SslClient) -> HTTPResponse:
         return cls._parse(ssl_conn.read)
 
     @staticmethod
-    def _parse(read_method):
-        # type: (Callable) -> HTTPResponse
+    def _parse(read_method: Callable) -> HTTPResponse:
         """Trick to standardize the API between sockets and SSLConnection objects.
         """
         response = read_method(4096)
@@ -49,7 +31,7 @@ class HttpResponseParser(object):
             # Parse until the end of the headers
             response += read_method(4096)
 
-        fake_sock = FakeSocket(response)
-        response = HTTPResponse(fake_sock)
+        fake_sock = _FakeSocket(response)
+        response = HTTPResponse(fake_sock)  # type: ignore
         response.begin()
         return response

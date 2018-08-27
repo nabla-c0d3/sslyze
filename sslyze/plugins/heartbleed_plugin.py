@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import socket
 import types
-from typing import Text, Type, List
+from typing import Type, List
 from xml.etree.ElementTree import Element
 
 from nassl._nassl import WantReadError
@@ -25,13 +21,11 @@ class HeartbleedScanCommand(PluginScanCommand):
     """
 
     @classmethod
-    def get_cli_argument(cls):
-        # type: () -> Text
+    def get_cli_argument(cls) -> str:
         return 'heartbleed'
 
     @classmethod
-    def get_title(cls):
-        # type: () -> Text
+    def get_title(cls) -> str:
         return 'OpenSSL Heartbleed'
 
 
@@ -40,12 +34,14 @@ class HeartbleedPlugin(plugin_base.Plugin):
     """
 
     @classmethod
-    def get_available_commands(cls):
-        # type: () -> List[Type[PluginScanCommand]]
+    def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
         return [HeartbleedScanCommand]
 
-    def process_task(self, server_info, scan_command):
-        # type: (ServerConnectivityInfo, PluginScanCommand) -> HeartbleedScanResult
+    def process_task(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: PluginScanCommand
+    ) -> 'HeartbleedScanResult':
         if not isinstance(scan_command, HeartbleedScanCommand):
             raise ValueError('Unexpected scan command')
 
@@ -78,21 +74,23 @@ class HeartbleedScanResult(PluginScanResult):
         is_vulnerable_to_heartbleed (bool): True if the server is vulnerable to the Heartbleed attack.
     """
 
-    def __init__(self, server_info, scan_command, is_vulnerable_to_heartbleed):
-        # type: (ServerConnectivityInfo, HeartbleedScanCommand, bool) -> None
-        super(HeartbleedScanResult, self).__init__(server_info, scan_command)
+    def __init__(
+            self,
+            server_info: ServerConnectivityInfo,
+            scan_command: HeartbleedScanCommand,
+            is_vulnerable_to_heartbleed: bool
+    ) -> None:
+        super().__init__(server_info, scan_command)
         self.is_vulnerable_to_heartbleed = is_vulnerable_to_heartbleed
 
-    def as_text(self):
-        # type: () -> List[Text]
+    def as_text(self) -> List[str]:
         heartbleed_txt = 'VULNERABLE - Server is vulnerable to Heartbleed' \
             if self.is_vulnerable_to_heartbleed \
             else 'OK - Not vulnerable to Heartbleed'
 
         return [self._format_title(self.scan_command.get_title()), self._format_field('', heartbleed_txt)]
 
-    def as_xml(self):
-        # type: () -> Element
+    def as_xml(self) -> Element:
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         xml_output.append(Element('openSslHeartbleed', isVulnerable=str(self.is_vulnerable_to_heartbleed)))
         return xml_output

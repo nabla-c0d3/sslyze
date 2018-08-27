@@ -1,18 +1,10 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import tarfile
 import io
 import os
 import shutil
 from tempfile import mkdtemp
 
-try:
-    from urllib.request import urlretrieve
-except ImportError:
-    # Python 2
-    from urllib import urlretrieve  # type: ignore
+from urllib.request import urlretrieve
 
 
 from os.path import join
@@ -20,17 +12,16 @@ import inspect
 import sys
 from os.path import abspath, realpath, dirname
 from sslyze.plugins.utils.trust_store.trust_store import TrustStore
-from typing import List, Text, Tuple
+from typing import List, Tuple
 
 
-def _get_script_dir(follow_symlinks=True):
-    # type: (bool) -> Text
+def _get_script_dir(follow_symlinks: bool = True) -> str:
     # Getting the path to the trust stores is tricky due to subtle differences on OS X, Linux and Windows
     if getattr(sys, 'frozen', False):
         # py2exe, PyInstaller, cx_Freeze
         path = abspath(sys.executable)
     else:
-        path = inspect.getabsfile(_get_script_dir)  # type: ignore
+        path = inspect.getabsfile(_get_script_dir)
     if follow_symlinks:
         path = realpath(path)
     return dirname(path)
@@ -53,7 +44,7 @@ _MOZILLA_EV_OIDS = ['1.2.276.0.44.1.1.1.4', '1.2.392.200091.100.721.1', '1.2.40.
                     '2.16.840.1.114413.1.7.23.3', '2.16.840.1.114414.1.7.23.3', '2.16.840.1.114414.1.7.24.3']
 
 
-class TrustStoresRepository(object):
+class TrustStoresRepository:
     """The list of default trust stores used by SSLyze for certificate validation.
     """
 
@@ -72,8 +63,7 @@ class TrustStoresRepository(object):
 
     _MOZILLA_STORE_NAME = 'MOZILLA_NSS'
 
-    def __init__(self, repository_path):
-        # type: (Text) -> None
+    def __init__(self, repository_path: str) -> None:
         available_stores = {}
         for store_name, store_version, store_pem_path in self._parse_trust_stores_in_folder(repository_path):
             store_pretty_name = self._STORE_PRETTY_NAMES.get(store_name, store_name)
@@ -88,8 +78,7 @@ class TrustStoresRepository(object):
         self._available_stores = available_stores
 
     @staticmethod
-    def _parse_trust_stores_in_folder(path):
-        # type: () -> List[Tuple[Text, Text, Text]]
+    def _parse_trust_stores_in_folder(path: str) -> List[Tuple[str, str, str]]:
         available_store_names = set()
         for filename in os.listdir(path):
             # Only keep the name without the file extension
@@ -115,17 +104,14 @@ class TrustStoresRepository(object):
 
         return available_stores
 
-    def get_all_stores(self):
-        # type: () -> List[TrustStore]
+    def get_all_stores(self) -> List[TrustStore]:
         return list(self._available_stores.values())
 
-    def get_main_store(self):
-        # type: () -> TrustStore
+    def get_main_store(self) -> TrustStore:
         return self._available_stores[self._MOZILLA_STORE_NAME]
 
     @classmethod
-    def get_default(cls):
-        # type: () -> TrustStoresRepository
+    def get_default(cls) -> 'TrustStoresRepository':
         # Not thread-safe
         if cls._DEFAULT_REPOSITORY is None:
             cls._DEFAULT_REPOSITORY = cls(cls._DEFAULT_TRUST_STORES_PATH)
@@ -134,8 +120,7 @@ class TrustStoresRepository(object):
     _UPDATE_URL = 'https://nabla-c0d3.github.io/trust_stores_observatory/trust_stores_as_pem.tar.gz'
 
     @classmethod
-    def update_default(cls):
-        # type: () -> TrustStoresRepository
+    def update_default(cls) -> 'TrustStoresRepository':
         """Update the default trust stores used by SSLyze.
 
         The latest stores will be downloaded from https://github.com/nabla-c0d3/trust_stores_observatory.

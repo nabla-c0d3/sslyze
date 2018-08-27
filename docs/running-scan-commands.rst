@@ -1,7 +1,3 @@
-.. sslyze documentation master file, created by
-   sphinx-quickstart on Sun Jan 15 12:41:02 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
 Step 2: Running Scan Commands Against a Server
 **********************************************
@@ -28,17 +24,10 @@ Running Commands Sequentially
 Basic example
 -------------
 
-The SynchronousScanner class can be used to run `ScanCommands` against a server::
+The SynchronousScanner class can be used to run `ScanCommands` against a server:
 
-    # Run one scan command to list the server's TLS 1.0 cipher suites
-    server_tester = ServerConnectivityTester(hostname='www.google.com')
-    server_info = server_tester.perform()
-    command = Tlsv10ScanCommand()
-
-    synchronous_scanner = SynchronousScanner()
-    scan_result = synchronous_scanner.run_scan_command(server_info, command)
-    for cipher in scan_result.accepted_cipher_list:
-        print(u'    {}'.format(cipher.name))
+.. literalinclude:: ../api_sample.py
+   :pyobject: demo_synchronous_scanner
 
 
 
@@ -61,47 +50,11 @@ large number of servers, and it has a dispatching mechanism to avoid DOS-ing a s
 `ScanCommand` are run at the same time.
 
 The commands can be queued using the `queue_scan_command()` method, and the results can later be retrieved using the
-`get_results()` method::
+`get_results()` method:
 
-    server_tester = ServerConnectivityTester(hostname='www.google.com')
-    server_info = server_tester.perform()
 
-    concurrent_scanner = ConcurrentScanner()
-
-    # Process the results
-    concurrent_scanner.queue_scan_command(server_info, Sslv30ScanCommand())
-    concurrent_scanner.queue_scan_command(server_info, SessionRenegotiationScanCommand())
-    concurrent_scanner.queue_scan_command(server_info, CertificateInfoScanCommand())
-
-    # Process the results
-    reneg_result = None
-    print(u'\nProcessing results...')
-    for scan_result in concurrent_scanner.get_results():
-        # All scan results have the corresponding scan_command and server_info as an attribute
-        print(u'\nReceived scan result for {} on host {}'.format(scan_result.scan_command.__class__.__name__,
-                                                                 scan_result.server_info.hostname))
-
-        # Sometimes a scan command can unexpectedly fail (as a bug); it is returned as a PluginRaisedExceptionResult
-        if isinstance(scan_result, PluginRaisedExceptionScanResult):
-            raise RuntimeError(u'Scan command failed: {}'.format(scan_result.as_text()))
-
-        # Each scan result has attributes with the information you're looking for, specific to each scan command
-        # All these attributes are documented within each scan command's module
-        if isinstance(scan_result.scan_command, Sslv30ScanCommand):
-            # Do something with the result
-            print(u'SSLV3 cipher suites')
-            for cipher in scan_result.accepted_cipher_list:
-                print(u'    {}'.format(cipher.name))
-
-        elif isinstance(scan_result.scan_command, SessionRenegotiationScanCommand):
-            reneg_result = scan_result
-            print(u'Client renegotiation: {}'.format(scan_result.accepts_client_renegotiation))
-            print(u'Secure renegotiation: {}'.format(scan_result.supports_secure_renegotiation))
-
-        elif isinstance(scan_result.scan_command, CertificateInfoScanCommand):
-            print(u'Server Certificate CN: {}'.format(
-                scan_result.certificate_chain[0].as_dict[u'subject'][u'commonName']
-            ))
+.. literalinclude:: ../api_sample.py
+   :pyobject: demo_concurrent_scanner
 
 
 The ConcurrentScanner class

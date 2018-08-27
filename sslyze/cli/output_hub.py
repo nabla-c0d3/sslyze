@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import sys
 from io import open
 from typing import Type, Any, Set, List
@@ -17,15 +13,18 @@ from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.server_connectivity_tester import ServerConnectivityError
 
 
-class OutputHub(object):
+class OutputHub:
     """Configure the SSLyze CLI's output and forward notification of events to all enabled output generators.
     """
-    def __init__(self):
-        # type: () -> None
-        self._output_generator_list = []  # type: List[OutputGenerator]
+    def __init__(self) -> None:
+        self._output_generator_list: List[OutputGenerator] = []
 
-    def command_line_parsed(self, available_plugins, args_command_list, malformed_servers):
-        # type: (Set[Type[Plugin]], Any, List[ServerStringParsingError]) -> None
+    def command_line_parsed(
+            self,
+            available_plugins: Set[Type[Plugin]],
+            args_command_list: Any,
+            malformed_servers: List[ServerStringParsingError]
+    ) -> None:
         # Configure the console output
         should_print_text_results = not args_command_list.quiet and args_command_list.xml_file != '-' \
             and args_command_list.json_file != '-'
@@ -46,28 +45,23 @@ class OutputHub(object):
         for out_generator in self._output_generator_list:
             out_generator.command_line_parsed(available_plugins, args_command_list, malformed_servers)
 
-    def server_connectivity_test_failed(self, connectivity_error):
-        # type: (ServerConnectivityError) -> None
+    def server_connectivity_test_failed(self, connectivity_error: ServerConnectivityError) -> None:
         for out_generator in self._output_generator_list:
             out_generator.server_connectivity_test_failed(connectivity_error)
 
-    def server_connectivity_test_succeeded(self, server_connectivity_info):
-        # type: (ServerConnectivityInfo) -> None
+    def server_connectivity_test_succeeded(self, server_connectivity_info: ServerConnectivityInfo) -> None:
         for out_generator in self._output_generator_list:
             out_generator.server_connectivity_test_succeeded(server_connectivity_info)
 
-    def scans_started(self):
-        # type: () -> None
+    def scans_started(self) -> None:
         for out_generator in self._output_generator_list:
             out_generator.scans_started()
 
-    def server_scan_completed(self, server_scan_result):
-        # type: (CompletedServerScan) -> None
+    def server_scan_completed(self, server_scan_result: CompletedServerScan) -> None:
         for out_generator in self._output_generator_list:
             out_generator.server_scan_completed(server_scan_result)
 
-    def scans_completed(self, total_scan_time):
-        # type: (float) -> None
+    def scans_completed(self, total_scan_time: float) -> None:
         # Forward the notification and close all the file descriptors
         for out_generator in self._output_generator_list:
             out_generator.scans_completed(total_scan_time)

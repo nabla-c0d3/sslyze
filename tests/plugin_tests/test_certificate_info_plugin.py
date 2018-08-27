@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import logging
 import os
 import unittest
@@ -15,8 +11,7 @@ from nassl.ocsp_response import OcspResponseStatusEnum
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand, \
     SymantecDistrustTimelineEnum, _SymantecDistructTester
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
-from tests.openssl_server import VulnerableOpenSslServer
+from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
 
 
 class CertificateInfoPluginTestCase(unittest.TestCase):
@@ -72,7 +67,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.is_leaf_certificate_ev)
 
-        self.assertEqual(len(plugin_result.certificate_chain), 4)
+        self.assertEqual(len(plugin_result.certificate_chain), 3)
         self.assertEqual(len(plugin_result.verified_certificate_chain), 3)
         self.assertFalse(plugin_result.has_anchor_in_certificate_chain)
 
@@ -154,9 +149,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
+    @unittest.skip('Find a server with a unicode certificate')
     def test_unicode_certificate(self):
-        # TOODO(AD): Fix me
-        return
         server_test = ServerConnectivityTester(hostname='เพย์สบาย.th')
         server_info = server_test.perform()
 
@@ -278,12 +272,10 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-    @unittest.skipIf(not VulnerableOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
-        with VulnerableOpenSslServer(
-                client_auth_config=ClientAuthenticationServerConfigurationEnum.REQUIRED
-        ) as server:
+        with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
             server_test = ServerConnectivityTester(
                 hostname=server.hostname,

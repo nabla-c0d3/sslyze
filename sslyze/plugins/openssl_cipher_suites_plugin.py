@@ -143,28 +143,32 @@ class OpenSslCipherSuitesPlugin(Plugin):
         cipher_list: List[str] = []
         if ssl_version == OpenSslVersionEnum.TLSV1_2:
             # For TLS 1.2, we have to use both the legacy and modern OpenSSL to cover all cipher suites
-            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
-                                                                                       should_use_legacy_openssl=True)
-            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
-            cipher_list.extend(ssl_connection.ssl_client.get_cipher_list())
+            ssl_connection_legacy = server_connectivity_info.get_preconfigured_ssl_connection(
+                override_ssl_version=ssl_version, should_use_legacy_openssl=True
+            )
+            ssl_connection_legacy.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
+            cipher_list.extend(ssl_connection_legacy.ssl_client.get_cipher_list())
 
-            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version,
-                                                                                       should_use_legacy_openssl=False)
-            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
-            cipher_list.extend(ssl_connection.ssl_client.get_cipher_list())
-
-            # Lastly we have to remove TLS 1.3 cipher suites
-            # TODO(AD): This no longer works in OpenSSL 1.1.1-pre9; we need to use SSL_CTX_set_ciphersuites()
-            # https://github.com/openssl/openssl/pull/5392
-            # https://github.com/drwetter/testssl.sh/issues/1013
-            cipher_list = [cipher for cipher in ssl_connection.ssl_client.get_cipher_list() if 'TLS13' not in cipher]
+            ssl_connection_modern = server_connectivity_info.get_preconfigured_ssl_connection(
+                override_ssl_version=ssl_version, should_use_legacy_openssl=False
+            )
+            # Disable the TLS 1.3 cipher suites with the new OpenSSL API
+            ssl_connection_modern.ssl_client.set_ciphersuites('')
+            # Enable all other cipher suites
+            ssl_connection_modern.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
+            cipher_list.extend(ssl_connection_modern.ssl_client.get_cipher_list())
 
             # And remove duplicates (ie. supported by both legacy and modern OpenSSL)
             cipher_list = list(set(cipher_list))
         elif ssl_version == OpenSslVersionEnum.TLSV1_3:
-            # For TLS 1.3 we need to manually pick the cipher suites as there is no OpenSSL cipher string to select them
-            ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
-            cipher_list = [cipher for cipher in ssl_connection.ssl_client.get_cipher_list() if 'TLS13' in cipher]
+            # TLS 1.3 only has 5 cipher suites so we can hardcode them
+            cipher_list = [
+                'TLS_AES_256_GCM_SHA384',
+                'TLS_CHACHA20_POLY1305_SHA256',
+                'TLS_AES_128_GCM_SHA256',
+                'TLS_AES_128_CCM_8_SHA256',
+                'TLS_AES_128_CCM_SHA256',
+            ]
         else:
             ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
             # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
@@ -219,16 +223,32 @@ class OpenSslCipherSuitesPlugin(Plugin):
     ) -> 'CipherSuite':
         """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
         """
-        requires_legacy_openssl = None
+        requires_legacy_openssl = True
         if ssl_version == OpenSslVersionEnum.TLSV1_2:
             # For TLS 1.2, we need to pick the right version of OpenSSL depending on which cipher suite
             requires_legacy_openssl = WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(openssl_cipher_name)
+        elif ssl_version == OpenSslVersionEnum.TLSV1_3:
+            requires_legacy_openssl = False
 
         ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(
             override_ssl_version=ssl_version,
             should_use_legacy_openssl=requires_legacy_openssl
         )
-        ssl_connection.ssl_client.set_cipher_list(openssl_cipher_name)
+
+        # Only enable the cipher suite to test; not trivial anymore since OpenSSL 1.1.1 and TLS 1.3
+        if ssl_version == OpenSslVersionEnum.TLSV1_3:
+            # The function to control cipher suites is different for TLS 1.3
+            # Disable the default, non-TLS 1.3 cipher suites
+            ssl_connection.ssl_client.set_cipher_list('')
+            # Enable the one TLS 1.3 cipher suite we want to test
+            ssl_connection.ssl_client.set_ciphersuites(openssl_cipher_name)
+        else:
+            if not requires_legacy_openssl:
+                # Disable the TLS 1.3 cipher suites if we are using the modern client
+                ssl_connection.ssl_client.set_ciphersuites('')
+
+            ssl_connection.ssl_client.set_cipher_list(openssl_cipher_name)
+
         if len(ssl_connection.ssl_client.get_cipher_list()) != 1:
             raise ValueError(f'Passed an OpenSSL string for multiple cipher suites: "{openssl_cipher_name}": '
                              f'{str(ssl_connection.ssl_client.get_cipher_list())}')
@@ -242,7 +262,14 @@ class OpenSslCipherSuitesPlugin(Plugin):
             cipher_result = RejectedCipherSuite(openssl_cipher_name, ssl_version, str(e))
 
         except ClientCertificateRequested:
-            cipher_result = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
+            # TODO(AD): Sometimes get_current_cipher_name() called in from_ongoing_ssl_connection() will return None
+            # When the handshake failed due to ClientCertificateRequested
+            # We need to rewrite this logic to not use OpenSSL for looking up key size and RFC names as it is
+            # too complicated
+            # cipher_result = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
+            # The ClientCertificateRequested exception already proves that the cipher suite was accepted
+            # Workaround here:
+            cipher_result: CipherSuite = AcceptedCipherSuite(openssl_cipher_name, ssl_version, None, None)
 
         except Exception as e:
             cipher_result = ErroredCipherSuite(openssl_cipher_name, ssl_version, e)
@@ -350,7 +377,8 @@ class AcceptedCipherSuite(CipherSuite):
         openssl_name (str): The cipher suite's OpenSSL name.
         ssl_version (OpenSslVersionEnum): The cipher suite's corresponding SSL/TLS version.
         is_anonymous (bool): True if the cipher suite is an anonymous cipher suite (ie. no server authentication).
-        key_size (int): The key size of the cipher suite's algorithm in bits.
+        key_size (Optional[int]): The key size of the cipher suite's algorithm in bits. None if the key size could not
+            be looked up for this cipher suite.
         post_handshake_response (Optional[str]): The server's response after completing the SSL/TLS handshake and
             sending a request, based on the TlsWrappedProtocolEnum set for this server. For example, this will contain
             an HTTP response when scanning an HTTPS server with TlsWrappedProtocolEnum.HTTPS as the
@@ -360,7 +388,7 @@ class AcceptedCipherSuite(CipherSuite):
             self,
             openssl_name: str,
             ssl_version: OpenSslVersionEnum,
-            key_size: int,
+            key_size: Optional[int],  # TODO(AD): Make it non-optional again by fixing client certificate handling
             post_handshake_response: Optional[str] = None,
     ) -> None:
         super().__init__(openssl_name, ssl_version)
@@ -440,7 +468,7 @@ class CipherSuiteScanResult(PluginScanResult):
 
         # Sort all the lists
         self.accepted_cipher_list = accepted_cipher_list
-        self.accepted_cipher_list.sort(key=attrgetter('key_size'), reverse=True)
+        self.accepted_cipher_list.sort(key=attrgetter('name'), reverse=True)
 
         self.rejected_cipher_list = rejected_cipher_list
         self.rejected_cipher_list.sort(key=attrgetter('name'), reverse=True)
@@ -571,13 +599,15 @@ class CipherSuiteScanResult(PluginScanResult):
         return result_txt
 
     def _format_accepted_cipher_txt(self, cipher: AcceptedCipherSuite) -> str:
-        keysize_str = '{} bits'.format(cipher.key_size)
+        keysize_str = '{} bits'.format(cipher.key_size) if cipher.key_size is not None else ''
         if cipher.is_anonymous:
             # Always display ANON as the key size for anonymous ciphers to make it visible
             keysize_str = 'ANONYMOUS'
 
         cipher_line_txt = self.ACCEPTED_CIPHER_LINE_FORMAT.format(
-            cipher_name=cipher.name, dh_size='', key_size=keysize_str, status=cipher.post_handshake_response
+            cipher_name=cipher.name,
+            dh_size='', key_size=keysize_str,
+            status=cipher.post_handshake_response if cipher.post_handshake_response is not None else '',
         )
         return cipher_line_txt
 
@@ -803,16 +833,6 @@ TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
 
     "ECDHE-ECDSA-AES128-CCM8": "ECDHE_ECDSA_WITH_AES_128_CCM_8",
     "ECDHE-ECDSA-AES256-CCM8": "ECDHE_ECDSA_WITH_AES_256_CCM_8",
-
-
-}
-
-TLS_1_3_OPENSSL_TO_RFC_NAMES_MAPPING = {
-    "TLS13-AES-128-GCM-SHA256": "TLS_AES_128_GCM_SHA256",
-    "TLS13-AES-256-GCM-SHA384": "TLS_AES_256_GCM_SHA384",
-    "TLS13-CHACHA20-POLY1305-SHA256": "TLS_CHACHA20_POLY1305_SHA256",
-    "TLS13-AES-128-CCM-SHA256": "TLS_AES_128_CCM_SHA256",
-    "TLS13-AES-128-CCM-8-SHA256": "TLS_AES_128_CCM_8_SHA256",
 }
 
 
@@ -822,5 +842,5 @@ OPENSSL_TO_RFC_NAMES_MAPPING = {
     OpenSslVersionEnum.TLSV1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
     OpenSslVersionEnum.TLSV1_1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
     OpenSslVersionEnum.TLSV1_2: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    OpenSslVersionEnum.TLSV1_3: TLS_1_3_OPENSSL_TO_RFC_NAMES_MAPPING,
+    OpenSslVersionEnum.TLSV1_3: {},  # For TLS 1.3, OpenSSL directly uses the RFC names
 }

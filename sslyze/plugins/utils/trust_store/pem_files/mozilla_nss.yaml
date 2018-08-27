@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2018-08-04
-trusted_certificates_count: 128
+date_fetched: 2018-08-23
+trusted_certificates_count: 129
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -164,6 +164,8 @@ trusted_certificates:
   fingerprint: 41c923866ab4cad6b7ad578081582e020797a6cbdf4fff78ce8396b38937d7f5
 - subject_name: OISTE WISeKey Global Root GB CA
   fingerprint: 6b9c08e86eb0f767cfad65cd98b62149e5494a67f5845e7bd1ed019f27b86bd6
+- subject_name: OISTE WISeKey Global Root GC CA
+  fingerprint: 8560f91c3624daba9570b5fea0dbe36ff11a8323be9486854fb3f34a5571198d
 - subject_name: QuoVadis Root CA 1 G3
   fingerprint: 8a866fd1b276b57e578e921c65828a2bed58e9f2f288054134b7f1f4bfc9cc74
 - subject_name: QuoVadis Root CA 2

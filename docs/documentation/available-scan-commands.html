@@ -1,46 +1,183 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Appendix: Available Scan Commands &#8212; SSLyze  documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Appendix: Available Scan Commands &mdash; SSLyze 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Appendix: Writing Your Own Plugins" href="writing-a-plugin.html" />
     <link rel="prev" title="Step 2: Running Scan Commands Against a Server" href="running-scan-commands.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="writing-a-plugin.html" title="Appendix: Writing Your Own Plugins"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="running-scan-commands.html" title="Step 2: Running Scan Commands Against a Server"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">SSLyze  documentation</a> &#187;</li> 
-      </ul>
-    </div>  
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> SSLyze
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="testing-connectivity.html">Step 1: Testing Connectivity to a Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running-scan-commands.html">Step 2: Running Scan Commands Against a Server</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Appendix: Available Scan Commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#shared-attributes">Shared Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.certificate_info_plugin">CertificateInfoPlugin</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#additional-helper-classes">Additional helper classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-sslyze.plugins.utils.trust_store.trust_store_repository">Updating the trust stores</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.openssl_cipher_suites_plugin">OpenSslCipherSuitesPlugin</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Additional helper classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.compression_plugin">CompressionPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.fallback_scsv_plugin">FallbackScsvPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.heartbleed_plugin">HeartbleedPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.http_headers_plugin">HttpHeadersScanPlugin</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Additional helper classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.openssl_ccs_injection_plugin">OpenSslCcsInjectionPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.session_renegotiation_plugin">SessionRenegotiationPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.session_resumption_plugin">SessionResumptionPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.robot_plugin">RobotPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze.plugins.early_data_plugin">EarlyDataPlugin</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="writing-a-plugin.html">Appendix: Writing Your Own Plugins</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SSLyze</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Appendix: Available Scan Commands</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/available-scan-commands.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="appendix-available-scan-commands">
 <h1>Appendix: Available Scan Commands<a class="headerlink" href="#appendix-available-scan-commands" title="Permalink to this headline">¶</a></h1>
@@ -54,7 +191,7 @@ represented by a <cite>ScanCommand</cite>, which is implemented using a plugin s
 <cite>ScanCommand</cite>, but also share two attributes.</p>
 <span class="target" id="module-sslyze.plugins.plugin_base"></span><dl class="class">
 <dt id="sslyze.plugins.plugin_base.PluginScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.plugin_base.</code><code class="descname">PluginScanResult</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.plugin_base.</code><code class="descname">PluginScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class to represent the result of running a specific PluginScanCommand against a server .</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.plugin_base.PluginScanResult.server_info">
@@ -73,11 +210,9 @@ represented by a <cite>ScanCommand</cite>, which is implemented using a plugin s
 </div>
 <div class="section" id="module-sslyze.plugins.certificate_info_plugin">
 <span id="certificateinfoplugin"></span><h2>CertificateInfoPlugin<a class="headerlink" href="#module-sslyze.plugins.certificate_info_plugin" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="certificateinfoscancommand">
-<h3>CertificateInfoScanCommand<a class="headerlink" href="#certificateinfoscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">CertificateInfoScanCommand</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">CertificateInfoScanCommand</code><span class="sig-paren">(</span><em>ca_file=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Verify the validity of the server(s) certificate(s) against various trust stores (Mozilla, Apple, etc.), and
 check for OCSP stapling support.</p>
 <dl class="method">
@@ -87,8 +222,10 @@ check for OCSP stapling support.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ca_file</strong> (<em>Text</em>) – The path to a custom trust store file to use for certificate validation. The file should
-contain PEM-formatted root certificates.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ca_file</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The path to a custom trust store file to use for certificate validation. The file should contain
+PEM-formatted root certificates.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
 </tr>
 </tbody>
 </table>
@@ -98,7 +235,7 @@ contain PEM-formatted root certificates.</td>
 
 <dl class="class">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">CertificateInfoScanResult</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">CertificateInfoScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>certificate_chain</em>, <em>path_validation_result_list</em>, <em>path_validation_error_list</em>, <em>ocsp_response</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running a CertificateInfoScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_chain">
@@ -166,8 +303,9 @@ extension as defined in RFC 6066.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_included_scts_count">
 <code class="descname">certificate_included_scts_count</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_included_scts_count" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The number of Signed Certificate Timestamps (SCTs) for Certificate
-Transparency embedded in the leaf certificate.</p>
+<dd><p><em>Optional[int]</em> – The number of Signed Certificate Timestamps (SCTs) for
+Certificate Transparency embedded in the leaf certificate. None if the version of OpenSSL installed on the
+system is too old to be able to parse the SCT extension.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -216,12 +354,11 @@ None if the certificate chain was not issued by one of the Symantec CAs.</p>
 
 </dd></dl>
 
-</div>
 <div class="section" id="additional-helper-classes">
 <h3>Additional helper classes<a class="headerlink" href="#additional-helper-classes" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.certificate_info_plugin.PathValidationResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">PathValidationResult</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.PathValidationResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">PathValidationResult</code><span class="sig-paren">(</span><em>trust_store</em>, <em>verify_string</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.PathValidationResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of trying to validate a server’s certificate chain using a specific trust store.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.PathValidationResult.trust_store">
@@ -245,7 +382,7 @@ None if the certificate chain was not issued by one of the Symantec CAs.</p>
 
 <dl class="class">
 <dt id="sslyze.plugins.certificate_info_plugin.PathValidationError">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">PathValidationError</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.PathValidationError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">PathValidationError</code><span class="sig-paren">(</span><em>trust_store</em>, <em>exception</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.PathValidationError" title="Permalink to this definition">¶</a></dt>
 <dd><p>An exception was raised while trying to validate a server’s certificate using a specific trust store; should
 never happen.</p>
 <dl class="attribute">
@@ -267,8 +404,8 @@ never happen.</p>
 <em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">OcspResponseStatusEnum</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
 <dl class="attribute">
-<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL">
-<code class="descname">SUCCESSFUL</code><em class="property"> = 0</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL" title="Permalink to this definition">¶</a></dt>
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR">
+<code class="descname">INTERNAL_ERROR</code><em class="property"> = 2</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -277,18 +414,18 @@ never happen.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR">
-<code class="descname">INTERNAL_ERROR</code><em class="property"> = 2</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR" title="Permalink to this definition">¶</a></dt>
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SIG_REQUIRED">
+<code class="descname">SIG_REQUIRED</code><em class="property"> = 5</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SIG_REQUIRED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL">
+<code class="descname">SUCCESSFUL</code><em class="property"> = 0</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.TRY_LATER">
 <code class="descname">TRY_LATER</code><em class="property"> = 3</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.TRY_LATER" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SIG_REQUIRED">
-<code class="descname">SIG_REQUIRED</code><em class="property"> = 5</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SIG_REQUIRED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -300,25 +437,25 @@ never happen.</p>
 
 <span class="target" id="module-sslyze.plugins.utils.trust_store.trust_store"></span><dl class="class">
 <dt id="sslyze.plugins.utils.trust_store.trust_store.TrustStore">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.utils.trust_store.trust_store.</code><code class="descname">TrustStore</code><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.utils.trust_store.trust_store.</code><code class="descname">TrustStore</code><span class="sig-paren">(</span><em>path</em>, <em>name</em>, <em>version</em>, <em>ev_oids=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore" title="Permalink to this definition">¶</a></dt>
 <dd><p>A set of root certificates to be used for certificate validation.</p>
 <p>By default, SSLyze packages the following trust stores: Mozilla, Microsoft, Apple, Android and Java.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.utils.trust_store.trust_store.TrustStore.path">
 <code class="descname">path</code><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore.path" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The path to the PEM-formatted file containing the root certificates.</p>
+<dd><p><em>str</em> – The path to the PEM-formatted file containing the root certificates.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.utils.trust_store.trust_store.TrustStore.name">
 <code class="descname">name</code><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The human-readable name of the trust store (such as “Mozilla”).</p>
+<dd><p><em>str</em> – The human-readable name of the trust store (such as “Mozilla”).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.utils.trust_store.trust_store.TrustStore.version">
 <code class="descname">version</code><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore.version" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The human-readable version or date of the trust store (such as “09/2016”).</p>
+<dd><p><em>str</em> – The human-readable version or date of the trust store (such as “09/2016”).</p>
 </dd></dl>
 
 </dd></dl>
@@ -328,13 +465,21 @@ never happen.</p>
 <span id="updating-the-trust-stores"></span><h3>Updating the trust stores<a class="headerlink" href="#module-sslyze.plugins.utils.trust_store.trust_store_repository" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.utils.trust_store.trust_store_repository.</code><code class="descname">TrustStoresRepository</code><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.utils.trust_store.trust_store_repository.</code><code class="descname">TrustStoresRepository</code><span class="sig-paren">(</span><em>repository_path</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository" title="Permalink to this definition">¶</a></dt>
 <dd><p>The list of default trust stores used by SSLyze for certificate validation.</p>
 <dl class="classmethod">
 <dt id="sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository.update_default">
 <em class="property">classmethod </em><code class="descname">update_default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository.update_default" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the default trust stores used by SSLyze.</p>
 <p>The latest stores will be downloaded from <a class="reference external" href="https://github.com/nabla-c0d3/trust_stores_observatory">https://github.com/nabla-c0d3/trust_stores_observatory</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository" title="sslyze.plugins.utils.trust_store.trust_store_repository.TrustStoresRepository"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrustStoresRepository</span></code></a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -343,47 +488,45 @@ never happen.</p>
 </div>
 <div class="section" id="module-sslyze.plugins.openssl_cipher_suites_plugin">
 <span id="opensslciphersuitesplugin"></span><h2>OpenSslCipherSuitesPlugin<a class="headerlink" href="#module-sslyze.plugins.openssl_cipher_suites_plugin" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="ciphersuitescancommands">
-<h3>CipherSuiteScanCommands<a class="headerlink" href="#ciphersuitescancommands" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.Sslv20ScanCommand">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Sslv20ScanCommand</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Sslv20ScanCommand" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Sslv20ScanCommand</code><span class="sig-paren">(</span><em>http_get=False</em>, <em>hide_rejected_ciphers=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Sslv20ScanCommand" title="Permalink to this definition">¶</a></dt>
 <dd><p>List the SSL 2.0 OpenSSL cipher suites supported by the server(s).</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.Sslv30ScanCommand">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Sslv30ScanCommand</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Sslv30ScanCommand" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Sslv30ScanCommand</code><span class="sig-paren">(</span><em>http_get=False</em>, <em>hide_rejected_ciphers=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Sslv30ScanCommand" title="Permalink to this definition">¶</a></dt>
 <dd><p>List the SSL 3.0 OpenSSL cipher suites supported by the server(s).</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.Tlsv10ScanCommand">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Tlsv10ScanCommand</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Tlsv10ScanCommand" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Tlsv10ScanCommand</code><span class="sig-paren">(</span><em>http_get=False</em>, <em>hide_rejected_ciphers=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Tlsv10ScanCommand" title="Permalink to this definition">¶</a></dt>
 <dd><p>List the TLS 1.0 OpenSSL cipher suites supported by the server(s).</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.Tlsv11ScanCommand">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Tlsv11ScanCommand</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Tlsv11ScanCommand" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Tlsv11ScanCommand</code><span class="sig-paren">(</span><em>http_get=False</em>, <em>hide_rejected_ciphers=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Tlsv11ScanCommand" title="Permalink to this definition">¶</a></dt>
 <dd><p>List the TLS 1.1 OpenSSL cipher suites supported by the server(s).</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.Tlsv12ScanCommand">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Tlsv12ScanCommand</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Tlsv12ScanCommand" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Tlsv12ScanCommand</code><span class="sig-paren">(</span><em>http_get=False</em>, <em>hide_rejected_ciphers=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Tlsv12ScanCommand" title="Permalink to this definition">¶</a></dt>
 <dd><p>List the TLS 1.2 OpenSSL cipher suites supported by the server(s).</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.Tlsv13ScanCommand">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Tlsv13ScanCommand</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Tlsv13ScanCommand" title="Permalink to this definition">¶</a></dt>
-<dd><p>List the TLS 1.3 (draft 18) OpenSSL cipher suites supported by the server(s).</p>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">Tlsv13ScanCommand</code><span class="sig-paren">(</span><em>http_get=False</em>, <em>hide_rejected_ciphers=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.Tlsv13ScanCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>List the TLS 1.3 OpenSSL cipher suites supported by the server(s).</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">CipherSuiteScanResult</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">CipherSuiteScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>preferred_cipher</em>, <em>accepted_cipher_list</em>, <em>rejected_cipher_list</em>, <em>errored_cipher_list</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running a CipherSuiteScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.accepted_cipher_list">
@@ -410,29 +553,28 @@ unexpected error during the TLS handshake with the server.</p>
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher">
 <code class="descname">preferred_cipher</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[AcceptedCipherSuite]</em> – The server’s preferred cipher suite among all the cipher
-suites supported by SSLyze. None if the server follows the client’s preference or if none of SSLyze’s cipher
-suites are supported by the server.</p>
+suites supported by SSLyze. <cite>None</cite> if the server follows the client’s preference or if none of SSLyze’s
+cipher suites are supported by the server.</p>
 </dd></dl>
 
 </dd></dl>
 
-</div>
 <div class="section" id="id1">
 <h3>Additional helper classes<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">AcceptedCipherSuite</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">AcceptedCipherSuite</code><span class="sig-paren">(</span><em>openssl_name</em>, <em>ssl_version</em>, <em>key_size</em>, <em>post_handshake_response=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite" title="Permalink to this definition">¶</a></dt>
 <dd><p>An SSL cipher suite the server accepted.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.name">
 <code class="descname">name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The cipher suite’s RFC name.</p>
+<dd><p><em>str</em> – The cipher suite’s RFC name.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.openssl_name">
 <code class="descname">openssl_name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.openssl_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The cipher suite’s OpenSSL name.</p>
+<dd><p><em>str</em> – The cipher suite’s OpenSSL name.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -450,20 +592,14 @@ suites are supported by the server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.key_size">
 <code class="descname">key_size</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.key_size" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The key size of the cipher suite’s algorithm in bits.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.dh_info">
-<code class="descname">dh_info</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.dh_info" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[Dict]</em> – Additional details about the Diffie Helmann parameters for DH and ECDH cipher suites.
-None if the cipher suite is not DH or ECDH.</p>
+<dd><p><em>Optional[int]</em> – The key size of the cipher suite’s algorithm in bits. None if the key size could not
+be looked up for this cipher suite.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.post_handshake_response">
 <code class="descname">post_handshake_response</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.post_handshake_response" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[Text]</em> – The server’s response after completing the SSL/TLS handshake and
+<dd><p><em>Optional[str]</em> – The server’s response after completing the SSL/TLS handshake and
 sending a request, based on the TlsWrappedProtocolEnum set for this server. For example, this will contain
 an HTTP response when scanning an HTTPS server with TlsWrappedProtocolEnum.HTTPS as the
 tls_wrapped_protocol.</p>
@@ -473,18 +609,18 @@ tls_wrapped_protocol.</p>
 
 <dl class="class">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">RejectedCipherSuite</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">RejectedCipherSuite</code><span class="sig-paren">(</span><em>openssl_name</em>, <em>ssl_version</em>, <em>handshake_error_message</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite" title="Permalink to this definition">¶</a></dt>
 <dd><p>An SSL cipher suite the server explicitly rejected.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.name">
 <code class="descname">name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The cipher suite’s RFC name.</p>
+<dd><p><em>str</em> – The cipher suite’s RFC name.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.openssl_name">
 <code class="descname">openssl_name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.openssl_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The cipher suite’s OpenSSL name.</p>
+<dd><p><em>str</em> – The cipher suite’s OpenSSL name.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -502,14 +638,14 @@ tls_wrapped_protocol.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.handshake_error_message">
 <code class="descname">handshake_error_message</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.handshake_error_message" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The SSL/TLS error returned by the server to close the handshake.</p>
+<dd><p><em>str</em> – The SSL/TLS error returned by the server to close the handshake.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">ErroredCipherSuite</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_cipher_suites_plugin.</code><code class="descname">ErroredCipherSuite</code><span class="sig-paren">(</span><em>openssl_name</em>, <em>ssl_version</em>, <em>exception</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite" title="Permalink to this definition">¶</a></dt>
 <dd><p>An SSL cipher suite that triggered an unexpected error during the SSL handshake with the server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.name">
@@ -520,7 +656,7 @@ tls_wrapped_protocol.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.openssl_name">
 <code class="descname">openssl_name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.openssl_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The cipher suite’s OpenSSL name.</p>
+<dd><p><em>str</em> – The cipher suite’s OpenSSL name.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -538,7 +674,7 @@ tls_wrapped_protocol.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.error_message">
 <code class="descname">error_message</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.error_message" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The text-formatted exception that was raised during the handshake.</p>
+<dd><p><em>str</em> – The text-formatted exception that was raised during the handshake.</p>
 </dd></dl>
 
 </dd></dl>
@@ -547,8 +683,6 @@ tls_wrapped_protocol.</p>
 </div>
 <div class="section" id="module-sslyze.plugins.compression_plugin">
 <span id="compressionplugin"></span><h2>CompressionPlugin<a class="headerlink" href="#module-sslyze.plugins.compression_plugin" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="compressionscancommand">
-<h3>CompressionScanCommand<a class="headerlink" href="#compressionscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.compression_plugin.CompressionScanCommand">
 <em class="property">class </em><code class="descclassname">sslyze.plugins.compression_plugin.</code><code class="descname">CompressionScanCommand</code><a class="headerlink" href="#sslyze.plugins.compression_plugin.CompressionScanCommand" title="Permalink to this definition">¶</a></dt>
@@ -557,23 +691,20 @@ tls_wrapped_protocol.</p>
 
 <dl class="class">
 <dt id="sslyze.plugins.compression_plugin.CompressionScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.compression_plugin.</code><code class="descname">CompressionScanResult</code><a class="headerlink" href="#sslyze.plugins.compression_plugin.CompressionScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.compression_plugin.</code><code class="descname">CompressionScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>compression_name</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.compression_plugin.CompressionScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running a CompressionScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.compression_plugin.CompressionScanResult.compression_name">
 <code class="descname">compression_name</code><a class="headerlink" href="#sslyze.plugins.compression_plugin.CompressionScanResult.compression_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[Text]</em> – The name of the compression algorithm supported by the server; None if
+<dd><p><em>str</em> – The name of the compression algorithm supported by the server. <cite>None</cite> if
 compression is not supported by the server.</p>
 </dd></dl>
 
 </dd></dl>
 
 </div>
-</div>
 <div class="section" id="module-sslyze.plugins.fallback_scsv_plugin">
 <span id="fallbackscsvplugin"></span><h2>FallbackScsvPlugin<a class="headerlink" href="#module-sslyze.plugins.fallback_scsv_plugin" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="fallbackscsvscancommand">
-<h3>FallbackScsvScanCommand<a class="headerlink" href="#fallbackscsvscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanCommand">
 <em class="property">class </em><code class="descclassname">sslyze.plugins.fallback_scsv_plugin.</code><code class="descname">FallbackScsvScanCommand</code><a class="headerlink" href="#sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanCommand" title="Permalink to this definition">¶</a></dt>
@@ -582,27 +713,20 @@ compression is not supported by the server.</p>
 
 <dl class="class">
 <dt id="sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.fallback_scsv_plugin.</code><code class="descname">FallbackScsvScanResult</code><a class="headerlink" href="#sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.fallback_scsv_plugin.</code><code class="descname">FallbackScsvScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>supports_fallback_scsv</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running a FallbackScsvScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanResult.supports_fallback_scsv">
 <code class="descname">supports_fallback_scsv</code><a class="headerlink" href="#sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanResult.supports_fallback_scsv" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the server supports the TLS_FALLBACK_SCSV mechanism to block downgrade</p>
+<dd><p><em>bool</em> – True if the server supports the TLS_FALLBACK_SCSV mechanism to block downgrade
+attacks.</p>
 </dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">attacks.</code></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
-</div>
 </div>
 <div class="section" id="module-sslyze.plugins.heartbleed_plugin">
 <span id="heartbleedplugin"></span><h2>HeartbleedPlugin<a class="headerlink" href="#module-sslyze.plugins.heartbleed_plugin" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="heartbleedscancommand">
-<h3>HeartbleedScanCommand<a class="headerlink" href="#heartbleedscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.heartbleed_plugin.HeartbleedScanCommand">
 <em class="property">class </em><code class="descclassname">sslyze.plugins.heartbleed_plugin.</code><code class="descname">HeartbleedScanCommand</code><a class="headerlink" href="#sslyze.plugins.heartbleed_plugin.HeartbleedScanCommand" title="Permalink to this definition">¶</a></dt>
@@ -611,7 +735,7 @@ compression is not supported by the server.</p>
 
 <dl class="class">
 <dt id="sslyze.plugins.heartbleed_plugin.HeartbleedScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.heartbleed_plugin.</code><code class="descname">HeartbleedScanResult</code><a class="headerlink" href="#sslyze.plugins.heartbleed_plugin.HeartbleedScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.heartbleed_plugin.</code><code class="descname">HeartbleedScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>is_vulnerable_to_heartbleed</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.heartbleed_plugin.HeartbleedScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running a HeartbleedScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.heartbleed_plugin.HeartbleedScanResult.is_vulnerable_to_heartbleed">
@@ -622,11 +746,8 @@ compression is not supported by the server.</p>
 </dd></dl>
 
 </div>
-</div>
 <div class="section" id="module-sslyze.plugins.http_headers_plugin">
 <span id="httpheadersscanplugin"></span><h2>HttpHeadersScanPlugin<a class="headerlink" href="#module-sslyze.plugins.http_headers_plugin" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="httpheadersscancommand">
-<h3>HttpHeadersScanCommand<a class="headerlink" href="#httpheadersscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanCommand">
 <em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">HttpHeadersScanCommand</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanCommand" title="Permalink to this definition">¶</a></dt>
@@ -636,7 +757,7 @@ response sent back by the server(s). Also compute the HPKP pins for the server(s
 
 <dl class="class">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">HttpHeadersScanResult</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">HttpHeadersScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>raw_hsts_header</em>, <em>raw_hpkp_header</em>, <em>raw_expect_ct_header</em>, <em>hpkp_report_only</em>, <em>cert_chain</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running a HttpHeadersScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hsts_header">
@@ -687,12 +808,11 @@ certificate is parsed using the cryptography module; documentation is available 
 
 </dd></dl>
 
-</div>
 <div class="section" id="id2">
 <h3>Additional helper classes<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHstsHeader">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">ParsedHstsHeader</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHstsHeader" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">ParsedHstsHeader</code><span class="sig-paren">(</span><em>raw_hsts_header</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHstsHeader" title="Permalink to this definition">¶</a></dt>
 <dd><p>The HTTP Strict Transport Security header returned by the server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHstsHeader.preload">
@@ -716,7 +836,7 @@ certificate is parsed using the cryptography module; documentation is available 
 
 <dl class="class">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">ParsedHpkpHeader</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">ParsedHpkpHeader</code><span class="sig-paren">(</span><em>raw_hpkp_header</em>, <em>report_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader" title="Permalink to this definition">¶</a></dt>
 <dd><p>The HTTP Public Key Pinning header returned by the server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_only">
@@ -728,7 +848,7 @@ certificate is parsed using the cryptography module; documentation is available 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_uri">
 <code class="descname">report_uri</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_uri" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The content of the report-uri field.</p>
+<dd><p><em>str</em> – The content of the report-uri field.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -746,7 +866,7 @@ certificate is parsed using the cryptography module; documentation is available 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.pin_sha256_list">
 <code class="descname">pin_sha256_list</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.pin_sha256_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[Text]</em> – The list of pin-sha256 values set in the header.</p>
+<dd><p><em>List[str]</em> – The list of pin-sha256 values set in the header.</p>
 </dd></dl>
 
 </dd></dl>
@@ -755,8 +875,6 @@ certificate is parsed using the cryptography module; documentation is available 
 </div>
 <div class="section" id="module-sslyze.plugins.openssl_ccs_injection_plugin">
 <span id="opensslccsinjectionplugin"></span><h2>OpenSslCcsInjectionPlugin<a class="headerlink" href="#module-sslyze.plugins.openssl_ccs_injection_plugin" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="opensslccsinjectionscancommand">
-<h3>OpenSslCcsInjectionScanCommand<a class="headerlink" href="#opensslccsinjectionscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanCommand">
 <em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_ccs_injection_plugin.</code><code class="descname">OpenSslCcsInjectionScanCommand</code><a class="headerlink" href="#sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanCommand" title="Permalink to this definition">¶</a></dt>
@@ -765,7 +883,7 @@ certificate is parsed using the cryptography module; documentation is available 
 
 <dl class="class">
 <dt id="sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_ccs_injection_plugin.</code><code class="descname">OpenSslCcsInjectionScanResult</code><a class="headerlink" href="#sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.openssl_ccs_injection_plugin.</code><code class="descname">OpenSslCcsInjectionScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>is_vulnerable_to_ccs_injection</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running an OpenSslCcsInjectionScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanResult.is_vulnerable_to_ccs_injection">
@@ -776,11 +894,8 @@ certificate is parsed using the cryptography module; documentation is available 
 </dd></dl>
 
 </div>
-</div>
 <div class="section" id="module-sslyze.plugins.session_renegotiation_plugin">
 <span id="sessionrenegotiationplugin"></span><h2>SessionRenegotiationPlugin<a class="headerlink" href="#module-sslyze.plugins.session_renegotiation_plugin" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="sessionrenegotiationscancommand">
-<h3>SessionRenegotiationScanCommand<a class="headerlink" href="#sessionrenegotiationscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanCommand">
 <em class="property">class </em><code class="descclassname">sslyze.plugins.session_renegotiation_plugin.</code><code class="descname">SessionRenegotiationScanCommand</code><a class="headerlink" href="#sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanCommand" title="Permalink to this definition">¶</a></dt>
@@ -789,7 +904,7 @@ certificate is parsed using the cryptography module; documentation is available 
 
 <dl class="class">
 <dt id="sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.session_renegotiation_plugin.</code><code class="descname">SessionRenegotiationScanResult</code><a class="headerlink" href="#sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.session_renegotiation_plugin.</code><code class="descname">SessionRenegotiationScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>accepts_client_renegotiation</em>, <em>supports_secure_renegotiation</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running a SessionRenegotiationScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult.accepts_client_renegotiation">
@@ -806,11 +921,8 @@ certificate is parsed using the cryptography module; documentation is available 
 </dd></dl>
 
 </div>
-</div>
 <div class="section" id="module-sslyze.plugins.session_resumption_plugin">
 <span id="sessionresumptionplugin"></span><h2>SessionResumptionPlugin<a class="headerlink" href="#module-sslyze.plugins.session_resumption_plugin" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="sessionresumptionsupportscancommand">
-<h3>SessionResumptionSupportScanCommand<a class="headerlink" href="#sessionresumptionsupportscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanCommand">
 <em class="property">class </em><code class="descclassname">sslyze.plugins.session_resumption_plugin.</code><code class="descname">SessionResumptionSupportScanCommand</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanCommand" title="Permalink to this definition">¶</a></dt>
@@ -819,7 +931,7 @@ certificate is parsed using the cryptography module; documentation is available 
 
 <dl class="class">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.session_resumption_plugin.</code><code class="descname">SessionResumptionSupportScanResult</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.session_resumption_plugin.</code><code class="descname">SessionResumptionSupportScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>attempted_resum_nb</em>, <em>successful_resum_nb</em>, <em>errored_resumptions_list</em>, <em>is_ticket_resumption_supported</em>, <em>ticket_resumption_failed_reason=None</em>, <em>ticket_resumption_exception=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running SessionResumptionRateScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.attempted_resumptions_nb">
@@ -855,21 +967,18 @@ session ID resumption with the server (should always be empty).</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.ticket_resumption_failed_reason">
 <code class="descname">ticket_resumption_failed_reason</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.ticket_resumption_failed_reason" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – A message explaining why TLS ticket resumption failed.</p>
+<dd><p><em>str</em> – A message explaining why TLS ticket resumption failed.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.ticket_resumption_exception">
 <code class="descname">ticket_resumption_exception</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.ticket_resumption_exception" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[Text]</em> – An unexpected error that was raised while trying to perform ticket
+<dd><p><em>Optional[str]</em> – An unexpected error that was raised while trying to perform ticket
 resumption (should never happen).</p>
 </dd></dl>
 
 </dd></dl>
 
-</div>
-<div class="section" id="sessionresumptionratescancommand">
-<h3>SessionResumptionRateScanCommand<a class="headerlink" href="#sessionresumptionratescancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanCommand">
 <em class="property">class </em><code class="descclassname">sslyze.plugins.session_resumption_plugin.</code><code class="descname">SessionResumptionRateScanCommand</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanCommand" title="Permalink to this definition">¶</a></dt>
@@ -878,7 +987,7 @@ resumption (should never happen).</p>
 
 <dl class="class">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.session_resumption_plugin.</code><code class="descname">SessionResumptionRateScanResult</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.session_resumption_plugin.</code><code class="descname">SessionResumptionRateScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>attempted_resum_nb</em>, <em>successful_resum_nb</em>, <em>errored_resumptions_list</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running SessionResumptionRateScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.attempted_resumptions_nb">
@@ -901,18 +1010,15 @@ resumption (should never happen).</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.errored_resumptions_list">
 <code class="descname">errored_resumptions_list</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.errored_resumptions_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[List[(Text)]</em> – A list of unexpected errors triggered while trying to perform
+<dd><p><em>Optional[List[(str)]</em> – A list of unexpected errors triggered while trying to perform
 session ID resumption with the server (should always be empty).</p>
 </dd></dl>
 
 </dd></dl>
 
 </div>
-</div>
 <div class="section" id="module-sslyze.plugins.robot_plugin">
 <span id="robotplugin"></span><h2>RobotPlugin<a class="headerlink" href="#module-sslyze.plugins.robot_plugin" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="robotscancommand">
-<h3>RobotScanCommand<a class="headerlink" href="#robotscancommand" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.plugins.robot_plugin.RobotScanCommand">
 <em class="property">class </em><code class="descclassname">sslyze.plugins.robot_plugin.</code><code class="descname">RobotScanCommand</code><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanCommand" title="Permalink to this definition">¶</a></dt>
@@ -957,7 +1063,7 @@ session ID resumption with the server (should always be empty).</p>
 
 <dl class="class">
 <dt id="sslyze.plugins.robot_plugin.RobotScanResult">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.robot_plugin.</code><code class="descname">RobotScanResult</code><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">sslyze.plugins.robot_plugin.</code><code class="descname">RobotScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>robot_result_enum</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of running a RobotScanCommand on a specific server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.robot_plugin.RobotScanResult.robot_result_enum">
@@ -968,118 +1074,92 @@ session ID resumption with the server (should always be empty).</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-sslyze.plugins.early_data_plugin">
+<span id="earlydataplugin"></span><h2>EarlyDataPlugin<a class="headerlink" href="#module-sslyze.plugins.early_data_plugin" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sslyze.plugins.early_data_plugin.EarlyDataScanCommand">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.early_data_plugin.</code><code class="descname">EarlyDataScanCommand</code><a class="headerlink" href="#sslyze.plugins.early_data_plugin.EarlyDataScanCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the server(s) for TLS 1.3 early data support.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sslyze.plugins.early_data_plugin.EarlyDataScanResult">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.early_data_plugin.</code><code class="descname">EarlyDataScanResult</code><span class="sig-paren">(</span><em>server_info</em>, <em>scan_command</em>, <em>is_early_data_supported</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.early_data_plugin.EarlyDataScanResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>The result of running an EarlyDataScanCommand on a specific server.</p>
+<dl class="attribute">
+<dt id="sslyze.plugins.early_data_plugin.EarlyDataScanResult.is_early_data_supported">
+<code class="descname">is_early_data_supported</code><a class="headerlink" href="#sslyze.plugins.early_data_plugin.EarlyDataScanResult.is_early_data_supported" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – True if the server accepted early data.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 
 
+           </div>
+           
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Appendix: Available Scan Commands</a><ul>
-<li><a class="reference internal" href="#shared-attributes">Shared Attributes</a></li>
-<li><a class="reference internal" href="#module-sslyze.plugins.certificate_info_plugin">CertificateInfoPlugin</a><ul>
-<li><a class="reference internal" href="#certificateinfoscancommand">CertificateInfoScanCommand</a></li>
-<li><a class="reference internal" href="#additional-helper-classes">Additional helper classes</a></li>
-<li><a class="reference internal" href="#module-sslyze.plugins.utils.trust_store.trust_store_repository">Updating the trust stores</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-sslyze.plugins.openssl_cipher_suites_plugin">OpenSslCipherSuitesPlugin</a><ul>
-<li><a class="reference internal" href="#ciphersuitescancommands">CipherSuiteScanCommands</a></li>
-<li><a class="reference internal" href="#id1">Additional helper classes</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-sslyze.plugins.compression_plugin">CompressionPlugin</a><ul>
-<li><a class="reference internal" href="#compressionscancommand">CompressionScanCommand</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-sslyze.plugins.fallback_scsv_plugin">FallbackScsvPlugin</a><ul>
-<li><a class="reference internal" href="#fallbackscsvscancommand">FallbackScsvScanCommand</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-sslyze.plugins.heartbleed_plugin">HeartbleedPlugin</a><ul>
-<li><a class="reference internal" href="#heartbleedscancommand">HeartbleedScanCommand</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-sslyze.plugins.http_headers_plugin">HttpHeadersScanPlugin</a><ul>
-<li><a class="reference internal" href="#httpheadersscancommand">HttpHeadersScanCommand</a></li>
-<li><a class="reference internal" href="#id2">Additional helper classes</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-sslyze.plugins.openssl_ccs_injection_plugin">OpenSslCcsInjectionPlugin</a><ul>
-<li><a class="reference internal" href="#opensslccsinjectionscancommand">OpenSslCcsInjectionScanCommand</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-sslyze.plugins.session_renegotiation_plugin">SessionRenegotiationPlugin</a><ul>
-<li><a class="reference internal" href="#sessionrenegotiationscancommand">SessionRenegotiationScanCommand</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-sslyze.plugins.session_resumption_plugin">SessionResumptionPlugin</a><ul>
-<li><a class="reference internal" href="#sessionresumptionsupportscancommand">SessionResumptionSupportScanCommand</a></li>
-<li><a class="reference internal" href="#sessionresumptionratescancommand">SessionResumptionRateScanCommand</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-sslyze.plugins.robot_plugin">RobotPlugin</a><ul>
-<li><a class="reference internal" href="#robotscancommand">RobotScanCommand</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="writing-a-plugin.html" class="btn btn-neutral float-right" title="Appendix: Writing Your Own Plugins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="running-scan-commands.html" class="btn btn-neutral" title="Step 2: Running Scan Commands Against a Server" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="running-scan-commands.html"
-                        title="previous chapter">Step 2: Running Scan Commands Against a Server</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="writing-a-plugin.html"
-                        title="next chapter">Appendix: Writing Your Own Plugins</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/available-scan-commands.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, SSLyze.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="writing-a-plugin.html" title="Appendix: Writing Your Own Plugins"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="running-scan-commands.html" title="Step 2: Running Scan Commands Against a Server"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">SSLyze  documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2017, SSLyze.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>

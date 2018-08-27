@@ -1,51 +1,197 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>SSLyze Documentation &#8212; SSLyze  documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>SSLyze Python API &mdash; SSLyze 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Step 1: Testing Connectivity to a Server" href="testing-connectivity.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="testing-connectivity.html" title="Step 1: Testing Connectivity to a Server"
-             accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">SSLyze  documentation</a> &#187;</li> 
-      </ul>
-    </div>  
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> SSLyze
+          
+
+          
+          </a>
+
+          
             
-  <div class="section" id="sslyze-documentation">
-<h1>SSLyze Documentation<a class="headerlink" href="#sslyze-documentation" title="Permalink to this headline">¶</a></h1>
-<p>This is the documentation for using SSLyze as a Python module. The Python API has changed multiple times in the past,
-but should be now considered stable (as of version 1.0.0).</p>
-<p>This module gives full access to SSLyze’s SSL/TLS scanning engine, which can analyze the SSL configuration of a server
-by connecting to it and detect various issues (bad certificates, dangerous cipher suites, lack of session resumption,
-etc.). Using SSLyze as a Python module makes it easy to implement SSL/TLS scanning as part of continuous security
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="testing-connectivity.html">Step 1: Testing Connectivity to a Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running-scan-commands.html">Step 2: Running Scan Commands Against a Server</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Available Scan Commands</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="writing-a-plugin.html">Appendix: Writing Your Own Plugins</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">SSLyze</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>SSLyze Python API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="sslyze-python-api">
+<h1>SSLyze Python API<a class="headerlink" href="#sslyze-python-api" title="Permalink to this headline">¶</a></h1>
+<p>Release 2.0.0</p>
+<p>This is the documentation for using SSLyze as a Python module.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The Python API gives full access to SSLyze’s SSL/TLS scanning engine, which can analyze the SSL configuration of a
+server by connecting to it, and detect various issues (bad certificates, dangerous cipher suites, lack of session
+resumption, etc.).</p>
+<p>A simple example on how to run a scan follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">demo_synchronous_scanner</span><span class="p">():</span>
+    <span class="c1"># Run one scan command to list the server&#39;s TLS 1.0 cipher suites</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">server_tester</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">(</span>
+            <span class="n">hostname</span><span class="o">=</span><span class="s1">&#39;smtp.gmail.com&#39;</span><span class="p">,</span>
+            <span class="n">port</span><span class="o">=</span><span class="mi">587</span><span class="p">,</span>
+            <span class="n">tls_wrapped_protocol</span><span class="o">=</span><span class="n">TlsWrappedProtocolEnum</span><span class="o">.</span><span class="n">STARTTLS_SMTP</span>
+        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Testing connectivity with </span><span class="si">{server_tester.hostname}</span><span class="s1">:</span><span class="si">{server_tester.port}</span><span class="s1">...&#39;</span><span class="p">)</span>
+        <span class="n">server_info</span> <span class="o">=</span> <span class="n">server_tester</span><span class="o">.</span><span class="n">perform</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">ServerConnectivityError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Could not establish an SSL connection to the server</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Could not connect to </span><span class="si">{e.server_info.hostname}</span><span class="s1">: </span><span class="si">{e.error_message}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">command</span> <span class="o">=</span> <span class="n">Tlsv10ScanCommand</span><span class="p">()</span>
+
+    <span class="n">synchronous_scanner</span> <span class="o">=</span> <span class="n">SynchronousScanner</span><span class="p">()</span>
+
+    <span class="n">scan_result</span> <span class="o">=</span> <span class="n">synchronous_scanner</span><span class="o">.</span><span class="n">run_scan_command</span><span class="p">(</span><span class="n">server_info</span><span class="p">,</span> <span class="n">command</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">cipher</span> <span class="ow">in</span> <span class="n">scan_result</span><span class="o">.</span><span class="n">accepted_cipher_list</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;    </span><span class="si">{cipher.name}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using SSLyze as a Python module makes it easy to implement SSL/TLS scanning as part of continuous security
 testing platform, and detect any misconfiguration across a range of public and/or internal endpoints.</p>
+</div>
+<div class="section" id="users-guide">
+<h2>User’s Guide<a class="headerlink" href="#users-guide" title="Permalink to this headline">¶</a></h2>
 <p>At high-level, running SSL/TLS scans against a server is a two-step process, described in the following sections:</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -74,55 +220,47 @@ testing platform, and detect any misconfiguration across a range of public and/o
 </li>
 </ul>
 </li>
+</ul>
+</div>
+</div>
+<div class="section" id="available-scan-commands">
+<h2>Available Scan Commands<a class="headerlink" href="#available-scan-commands" title="Permalink to this headline">¶</a></h2>
+<p>The list of all the scan comands SSLyze can run against a server is available in the following section:</p>
+<div class="toctree-wrapper compound">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Available Scan Commands</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#shared-attributes">Shared Attributes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.certificate_info_plugin">CertificateInfoPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#certificateinfoscancommand">CertificateInfoScanCommand</a></li>
 <li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#additional-helper-classes">Additional helper classes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.utils.trust_store.trust_store_repository">Updating the trust stores</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.openssl_cipher_suites_plugin">OpenSslCipherSuitesPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#ciphersuitescancommands">CipherSuiteScanCommands</a></li>
 <li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#id1">Additional helper classes</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.compression_plugin">CompressionPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#compressionscancommand">CompressionScanCommand</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.fallback_scsv_plugin">FallbackScsvPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#fallbackscsvscancommand">FallbackScsvScanCommand</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.heartbleed_plugin">HeartbleedPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#heartbleedscancommand">HeartbleedScanCommand</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.compression_plugin">CompressionPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.fallback_scsv_plugin">FallbackScsvPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.heartbleed_plugin">HeartbleedPlugin</a></li>
 <li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.http_headers_plugin">HttpHeadersScanPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#httpheadersscancommand">HttpHeadersScanCommand</a></li>
 <li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#id2">Additional helper classes</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.openssl_ccs_injection_plugin">OpenSslCcsInjectionPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#opensslccsinjectionscancommand">OpenSslCcsInjectionScanCommand</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.session_renegotiation_plugin">SessionRenegotiationPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#sessionrenegotiationscancommand">SessionRenegotiationScanCommand</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.session_resumption_plugin">SessionResumptionPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#sessionresumptionsupportscancommand">SessionResumptionSupportScanCommand</a></li>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#sessionresumptionratescancommand">SessionResumptionRateScanCommand</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.robot_plugin">RobotPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#robotscancommand">RobotScanCommand</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.openssl_ccs_injection_plugin">OpenSslCcsInjectionPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.session_renegotiation_plugin">SessionRenegotiationPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.session_resumption_plugin">SessionResumptionPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.robot_plugin">RobotPlugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.early_data_plugin">EarlyDataPlugin</a></li>
 </ul>
 </li>
 </ul>
-</li>
+</div>
+</div>
+<div class="section" id="extending-sslyze">
+<h2>Extending SSLyze<a class="headerlink" href="#extending-sslyze" title="Permalink to this headline">¶</a></h2>
+<p>SSLyze is built using a plugin system, which makes it easy to add new capabilities to the tool:</p>
+<div class="toctree-wrapper compound">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="writing-a-plugin.html">Appendix: Writing Your Own Plugins</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="writing-a-plugin.html#high-level-overview">High Level Overview</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="writing-a-plugin.html#module-sslyze.plugins.plugin_base">Core parent classes</a></li>
@@ -131,6 +269,7 @@ testing platform, and detect any misconfiguration across a range of public and/o
 </ul>
 </li>
 </ul>
+</div>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
@@ -143,61 +282,66 @@ testing platform, and detect any misconfiguration across a range of public and/o
 </div>
 
 
+           </div>
+           
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">SSLyze Documentation</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="testing-connectivity.html" class="btn btn-neutral float-right" title="Step 1: Testing Connectivity to a Server" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
 
-  <h4>Next topic</h4>
-  <p class="topless"><a href="testing-connectivity.html"
-                        title="next chapter">Step 1: Testing Connectivity to a Server</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/index.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, SSLyze.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="testing-connectivity.html" title="Step 1: Testing Connectivity to a Server"
-             >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">SSLyze  documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2017, SSLyze.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>

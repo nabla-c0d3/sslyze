@@ -150,3 +150,12 @@ RobotPlugin
    :members:
    :undoc-members:
 .. autoclass:: RobotScanResult()
+
+
+EarlyDataPlugin
+===============
+
+.. automodule:: sslyze.plugins.early_data_plugin
+
+.. autoclass:: EarlyDataScanCommand()
+.. autoclass:: EarlyDataScanResult()

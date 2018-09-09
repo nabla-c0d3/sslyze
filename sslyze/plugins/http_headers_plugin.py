@@ -170,6 +170,7 @@ class ParsedHpkpHeader:
         self.pin_sha256_list = pin_sha256_list
 
 
+# TODO(AD): Rename this to ParsedExpectCtHeader
 class ParsedExpectCTHeader:
     """Expect-CT header returned by the server.
 

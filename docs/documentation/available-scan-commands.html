@@ -404,8 +404,8 @@ never happen.</p>
 <em class="property">class </em><code class="descclassname">sslyze.plugins.certificate_info_plugin.</code><code class="descname">OcspResponseStatusEnum</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
 <dl class="attribute">
-<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR">
-<code class="descname">INTERNAL_ERROR</code><em class="property"> = 2</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR" title="Permalink to this definition">¶</a></dt>
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL">
+<code class="descname">SUCCESSFUL</code><em class="property"> = 0</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -414,18 +414,18 @@ never happen.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SIG_REQUIRED">
-<code class="descname">SIG_REQUIRED</code><em class="property"> = 5</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SIG_REQUIRED" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL">
-<code class="descname">SUCCESSFUL</code><em class="property"> = 0</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL" title="Permalink to this definition">¶</a></dt>
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR">
+<code class="descname">INTERNAL_ERROR</code><em class="property"> = 2</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.TRY_LATER">
 <code class="descname">TRY_LATER</code><em class="property"> = 3</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.TRY_LATER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SIG_REQUIRED">
+<code class="descname">SIG_REQUIRED</code><em class="property"> = 5</em><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SIG_REQUIRED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -867,6 +867,30 @@ certificate is parsed using the cryptography module; documentation is available 
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.pin_sha256_list">
 <code class="descname">pin_sha256_list</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.pin_sha256_list" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[str]</em> – The list of pin-sha256 values set in the header.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">ParsedExpectCTHeader</code><span class="sig-paren">(</span><em>raw_expect_ct_header</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expect-CT header returned by the server.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">max-age</code></dt>
+<dd><p><em>int</em> – The content of the max-age field.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">report-uri</code></dt>
+<dd><p><em>str</em> – The content of report-uri field.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader.enforce">
+<code class="descname">enforce</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader.enforce" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> – True if enforce directive is set.</p>
 </dd></dl>
 
 </dd></dl>

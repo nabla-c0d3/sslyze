@@ -313,7 +313,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
         failed_resumptions_nb (int): The number of session ID resumptions that failed.
         errored_resumptions_list (Optional[List[(Text)]): A list of unexpected errors triggered while trying to perform
             session ID resumption with the server (should always be empty).
-        is_ticket_resumption_supported (bool): True if the server honors client-initiated renegotiation attempts.
+        is_ticket_resumption_supported (bool): True if the server support TLS ticket resumption.
         ticket_resumption_failed_reason (str): A message explaining why TLS ticket resumption failed.
         ticket_resumption_exception (Optional[str]): An unexpected error that was raised while trying to perform ticket
             resumption (should never happen).

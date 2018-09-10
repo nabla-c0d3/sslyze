@@ -37,6 +37,9 @@ Additional helper classes
 .. autoclass:: OcspResponseStatusEnum()
    :members:
    :undoc-members:
+.. autoclass:: SymantecDistrustTimelineEnum()
+   :members:
+   :undoc-members:
 
 .. automodule:: sslyze.plugins.utils.trust_store.trust_store
 .. autoclass:: TrustStore()

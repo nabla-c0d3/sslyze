@@ -101,7 +101,7 @@ source ~/.bashrc
 ```
 
  You can now execute the image like so:
- 
+
  ```bash
 $ sslyze
 Usage: sslyze [options] target1.com target2.com:443 target3.com:443{ip} etc...

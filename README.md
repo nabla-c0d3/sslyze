@@ -71,7 +71,7 @@ Docker
  By default the image runs the `-h` flag:
 
  ```bash
-docker run --rm -it nabla-c0d3/sslyze
+docker run --rm -it nablac0d3/sslyze
 
 Usage: sslyze [options] target1.com target2.com:443 target3.com:443{ip} etc...
  Options:
@@ -82,7 +82,7 @@ Usage: sslyze [options] target1.com target2.com:443 target3.com:443{ip} etc...
  This image was intended to be ran as an executable like so:
 
  ```bash
-docker run --rm -it nabla-c0d3/sslyze --regular www.github.com:443
+docker run --rm -it nablac0d3/sslyze --regular www.github.com:443
 ```
 
 Create utility from the image

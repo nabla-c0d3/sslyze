@@ -65,6 +65,51 @@ A Windows executable that does not require installing Python is available in the
 [Releases page](https://github.com/nabla-c0d3/sslyze/releases) tab.
 
 
+Docker
+------
+
+ By default the image runs the `-h` flag:
+
+ ```bash
+docker run --rm -it nabla-c0d3/sslyze
+
+Usage: sslyze [options] target1.com target2.com:443 target3.com:443{ip} etc...
+ Options:
+  --version             show program's version number and exit
+  -h, --help            show this help message and exit
+```
+
+ This image was intended to be ran as an executable like so:
+
+ ```bash
+docker run --rm -it nabla-c0d3/sslyze --regular www.github.com:443
+```
+
+Create utility from the image
+-----------------------------
+
+ Add the following line to your shell's rc file (e.g. ~/.bashrc):
+
+ ```bash
+alias 'sslyze'='docker run --rm -it nabla-c0d3/sslyze'
+```
+
+ Now reload your shell defaults by running:
+
+ ```bash
+source ~/.bashrc
+```
+
+ You can now execute the image like so:
+
+ ```bash
+$ sslyze
+Usage: sslyze [options] target1.com target2.com:443 target3.com:443{ip} etc...
+ Options:
+  --version             show program's version number and exit
+  -h, --help            show this help message and exit
+```
+
 How does it work ?
 ------------------
 

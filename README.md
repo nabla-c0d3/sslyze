@@ -68,9 +68,9 @@ A Windows executable that does not require installing Python is available in the
 Docker
 ------
 
- By default the image runs the `-h` flag:
+By default the image runs the `-h` flag:
 
- ```bash
+```bash
 docker run --rm -it nablac0d3/sslyze
 
 Usage: sslyze [options] target1.com target2.com:443 target3.com:443{ip} etc...
@@ -79,28 +79,27 @@ Usage: sslyze [options] target1.com target2.com:443 target3.com:443{ip} etc...
   -h, --help            show this help message and exit
 ```
 
- This image was intended to be ran as an executable like so:
+This image was intended to be ran as an executable like so:
 
- ```bash
+```bash
 docker run --rm -it nablac0d3/sslyze --regular www.github.com:443
 ```
 
-Create utility from the image
------------------------------
+### Create utility from the image
 
- Add the following line to your shell's rc file (e.g. ~/.bashrc):
+Add the following line to your shell's rc file (e.g. ~/.bashrc):
 
- ```bash
-alias 'sslyze'='docker run --rm -it nabla-c0d3/sslyze'
+```bash
+alias 'sslyze'='docker run --rm -it nablac0d3/sslyze'
 ```
 
- Now reload your shell defaults by running:
+Now reload your shell defaults by running:
 
- ```bash
+```bash
 source ~/.bashrc
 ```
 
- You can now execute the image like so:
+You can now execute the image like so:
 
  ```bash
 $ sslyze

@@ -36,7 +36,7 @@ SSLyze can be installed directly via pip:
     $ pip install --upgrade sslyze
     $ python -m sslyze --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
 
-SSLyze has been tested on the following platforms: Windows 10 (32 and 64 bits), Debian 7 (32 and 64 bits), macOS Sierra.
+SSLyze has been tested on the following platforms: Debian 7 (32 and 64 bits), macOS High Sierra. Support for Windows will be brought back in the next release.
 
 Usage as a library
 ------------------

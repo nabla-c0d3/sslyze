@@ -203,12 +203,12 @@ class LegacyOpenSslServer(_OpenSslServer):
 
 
 class ModernOpenSslServer(_OpenSslServer):
-    """A wrapper around the OpenSSL 1.1.1-pre5 s_server binary.
+    """A wrapper around the OpenSSL 1.1.1 s_server binary.
     """
 
     @classmethod
     def get_openssl_path(cls) -> Path:
-        return Path(__file__).parent.absolute() / 'openssl-1-1-1-pre9-linux64'
+        return Path(__file__).parent.absolute() / 'openssl-1-1-1-linux64'
 
     def get_verify_argument(cls, client_auth_config: ClientAuthConfigEnum) -> str:
         # The verify argument has subtly changed in OpenSSL 1.1.1

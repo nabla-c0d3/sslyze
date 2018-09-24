@@ -1,3 +1,5 @@
+from typing import List
+
 from nassl.ssl_client import OpenSslVerifyEnum
 from nassl.ssl_client import OpenSslVersionEnum
 from nassl.legacy_ssl_client import LegacySslClient
@@ -12,12 +14,16 @@ class WorkaroundForTls12ForCipherSuites:
 
     @classmethod
     def requires_legacy_openssl(cls, openssl_cipher_name: str) -> bool:
-        # Get the list of all ciphers supported by the legacy OpenSSL
-        legacy_client = LegacySslClient(ssl_version=OpenSslVersionEnum.TLSV1_2, ssl_verify=OpenSslVerifyEnum.NONE)
-        legacy_client.set_cipher_list('ALL:COMPLEMENTOFALL')
-        legacy_ciphers = legacy_client.get_cipher_list()
+        legacy_ciphers = cls.get_legacy_ciphers()
 
         # Always use the legacy client if it supports the cipher suite, as the modern OpenSSL (1.1.x) does not support
         # weak ciphers, even with the right compilation options; the handshake fails with a "no ciphers available" error
         # but it actually means that OpenSSL does not support the cipher
         return openssl_cipher_name in legacy_ciphers
+
+    @classmethod
+    def get_legacy_ciphers(cls) -> List[str]:
+        """Get the list of all ciphers supported by the legacy OpenSSL"""
+        legacy_client = LegacySslClient(ssl_version=OpenSslVersionEnum.TLSV1_2, ssl_verify=OpenSslVerifyEnum.NONE)
+        legacy_client.set_cipher_list('ALL:COMPLEMENTOFALL')
+        return legacy_client.get_cipher_list()

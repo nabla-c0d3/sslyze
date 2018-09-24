@@ -17,6 +17,10 @@ from typing import Optional
 from sslyze.utils.tls12_workaround import WorkaroundForTls12ForCipherSuites
 
 
+class CouldNotDetermineCipherSuite(Exception):
+    """No selected cipher suite could be determined from an ongoing TLS connection."""
+
+
 class CipherSuiteScanCommand(PluginScanCommand, ABC):
 
     def __init__(self, http_get: bool = False, hide_rejected_ciphers: bool = False) -> None:
@@ -208,7 +212,12 @@ class OpenSslCipherSuitesPlugin(Plugin):
         thread_pool.join()
 
         # Test for the cipher suite preference
-        preferred_cipher = self._get_preferred_cipher_suite(server_connectivity_info, ssl_version, accepted_cipher_list)
+        preferred_cipher = None
+        server_ordered_ciphers = self._get_preferred_cipher_suite_order(
+                server_connectivity_info, ssl_version, accepted_cipher_list)
+        if server_ordered_ciphers:
+            accepted_cipher_list = server_ordered_ciphers
+            preferred_cipher = accepted_cipher_list[0]
 
         # Generate the results
         plugin_result = CipherSuiteScanResult(server_connectivity_info, scan_command, preferred_cipher,
@@ -280,54 +289,112 @@ class OpenSslCipherSuitesPlugin(Plugin):
         return cipher_result
 
     @classmethod
-    def _get_preferred_cipher_suite(
+    def _get_preferred_cipher_suite_order(
             cls,
             server_connectivity_info: ServerConnectivityInfo,
             ssl_version: OpenSslVersionEnum,
             accepted_cipher_list: List['AcceptedCipherSuite']
-    ) -> Optional['AcceptedCipherSuite']:
-        """Try to detect the server's preferred cipher suite among all cipher suites supported by SSLyze.
+    ) -> Optional[List['AcceptedCipherSuite']]:
+        """Try to detect the server's preferred cipher suite order among all cipher suites supported by SSLyze.
+
+        The algorithm for determining the server's full preferred cipher suite
+        order is as follows:
+
+        1. Send the unordered list to the server.
+        2. Move the accepted cipher to the ordered list.
+        3. If the accepted cipher was the first one in the list, add it to
+           the end of the cipher string and send again to verify server
+           ordering is enabled.
+        4. If the server did not give us the same cipher it chose last time:
+               the server has no preference; stop and return `None`
+           Else:
+               remove the previously accepted cipher from the unordered list and continue
+        5. Send the unordered list again, moving the accepted cipher from the
+           unordered list to the ordered one. Repeat until the unordered list is empty.
         """
         if len(accepted_cipher_list) < 2:
             return None
 
-        accepted_cipher_names = [cipher.openssl_name for cipher in accepted_cipher_list]
+        unordered_cipher_names = [cipher.openssl_name for cipher in accepted_cipher_list]
+        server_ordered_cipher_list = []
         should_use_legacy_openssl = None
 
         # For TLS 1.2, we need to figure whether the modern or legacy OpenSSL should be used to connect
         if ssl_version == OpenSslVersionEnum.TLSV1_2:
             should_use_legacy_openssl = True
-            # If there are more than two modern-supported cipher suites, use the modern OpenSSL
-            for cipher_name in accepted_cipher_names:
-                modern_supported_cipher_count = 0
-                if not WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_name):
-                    modern_supported_cipher_count += 1
+            # If there is at least one modern-supported cipher suite, use the modern OpenSSL client
+            set_of_legacy_cipher_names = set(WorkaroundForTls12ForCipherSuites.get_legacy_ciphers())
+            if set(unordered_cipher_names) - set_of_legacy_cipher_names:
+                should_use_legacy_openssl = False
 
-                if modern_supported_cipher_count > 1:
-                    should_use_legacy_openssl = False
-                    break
-
-        first_cipher_str = ', '.join(accepted_cipher_names)
-        # Swap the first two ciphers in the list to see if the server always picks the client's first cipher
-        second_cipher_str = ', '.join([accepted_cipher_names[1], accepted_cipher_names[0]] + accepted_cipher_names[2:])
-
+        cipher_str = ', '.join(unordered_cipher_names)
         try:
-            first_cipher = cls._get_selected_cipher_suite(
-                server_connectivity_info, ssl_version, first_cipher_str, should_use_legacy_openssl
+            # 1. Send the unordered list to the server.
+            selected_cipher = cls._get_selected_cipher_suite(
+                server_connectivity_info, ssl_version, cipher_str, should_use_legacy_openssl
             )
-            second_cipher = cls._get_selected_cipher_suite(
-                server_connectivity_info, ssl_version, second_cipher_str, should_use_legacy_openssl
-            )
+
+            # 2. Move the accepted cipher to the ordered list.
+            server_ordered_cipher_list.append(selected_cipher)
+
+            # 3. If the accepted cipher was the first one in the list, add it to
+            #    the end of the cipher string and send again to verify server
+            #    ordering is enabled.
+            if selected_cipher.openssl_name == unordered_cipher_names[0]:
+                unordered_cipher_names.append(unordered_cipher_names.pop(0))
+                cipher_str = ', '.join(unordered_cipher_names)
+                next_selected_cipher = cls._get_selected_cipher_suite(
+                    server_connectivity_info, ssl_version, cipher_str, should_use_legacy_openssl
+                )
+
+                if next_selected_cipher.openssl_name != selected_cipher.openssl_name:
+                    # The server has no preferred cipher suite order as it follows the
+                    # client's preference for picking a cipher suite
+                    return None
+
+                # 4. The server does have its own preference for picking a cipher
+                #    suite. Remove the previously accepted cipher from the unordered list and continue
+                unordered_cipher_names.pop()
+            else:
+                # The server selected a cipher other than the first one offered
+                # by the client. Remove the selected cipher from the unordered
+                # list and continue.
+                unordered_cipher_names.remove(selected_cipher.openssl_name)
+
         except (SslHandshakeRejected, ConnectionError):
             # Could not complete a handshake
             return None
 
-        if first_cipher.name == second_cipher.name:
-            # The server has its own preference for picking a cipher suite
-            return first_cipher
-        else:
-            # The server has no preferred cipher suite as it follows the client's preference for picking a cipher suite
+        except CouldNotDetermineCipherSuite:
+            # The handshake failed using the modern (OpenSSL 1.1.1+ based) SSL client
+            # due to attempting to handshake with a server that requires
+            # client-side certificates without providing one.
+            #
+            # In this case, we cannot reliably determine the server's
+            # preference had a certificate been provided, so this method will
+            # also return `None`, indicating no server cipher suite ordering
+            # preference.
             return None
+
+        # 5. Send the unordered list again, moving the accepted cipher from the
+        #    unordered list to the ordered one. Repeat until the unordered list is empty.
+        while unordered_cipher_names:
+            # Re-evaluate use of the legacy SSL client on each iteration
+            should_use_legacy_openssl = None
+            if ssl_version == OpenSslVersionEnum.TLSV1_2:
+                should_use_legacy_openssl = True
+                if set(unordered_cipher_names) - set_of_legacy_cipher_names:
+                    should_use_legacy_openssl = False
+            cipher_str = ', '.join(unordered_cipher_names)
+            try:
+                selected_cipher = cls._get_selected_cipher_suite(
+                    server_connectivity_info, ssl_version, cipher_str, should_use_legacy_openssl
+                )
+            except (SslHandshakeRejected, ConnectionError):
+                return None
+            server_ordered_cipher_list.append(selected_cipher)
+            unordered_cipher_names.remove(selected_cipher.openssl_name)
+        return server_ordered_cipher_list
 
     @staticmethod
     def _get_selected_cipher_suite(
@@ -338,11 +405,19 @@ class OpenSslCipherSuitesPlugin(Plugin):
     ) -> 'AcceptedCipherSuite':
         """Given an OpenSSL cipher string (which may specify multiple cipher suites), return the cipher suite that was
         selected by the server during the SSL handshake.
+
+        Raises:
+            CouldNotDetermineCipherSuite: if the selected cipher suite name could not be retrieved from the connection
         """
         ssl_connection = server_connectivity.get_preconfigured_ssl_connection(
             override_ssl_version=ssl_version, should_use_legacy_openssl=should_use_legacy_openssl
         )
-        ssl_connection.ssl_client.set_cipher_list(openssl_cipher_str)
+
+        if ssl_version == OpenSslVersionEnum.TLSV1_3 and not should_use_legacy_openssl:
+            ssl_connection.ssl_client.set_cipher_list('')
+            ssl_connection.ssl_client.set_ciphersuites(openssl_cipher_str.replace(', ', ':'))
+        else:
+            ssl_connection.ssl_client.set_cipher_list(openssl_cipher_str)
 
         # Perform the SSL handshake
         try:
@@ -358,6 +433,8 @@ class OpenSslCipherSuitesPlugin(Plugin):
 class CipherSuite(ABC):
 
     def __init__(self, openssl_name: str, ssl_version: OpenSslVersionEnum) -> None:
+        if openssl_name is None:
+            raise ValueError('Cannot create a CipherSuite without an openssl name!')
         self.openssl_name = openssl_name
         self.ssl_version = ssl_version
         self.is_anonymous = True if 'anon' in self.name else False
@@ -401,10 +478,20 @@ class AcceptedCipherSuite(CipherSuite):
             ssl_connection: SslConnection,
             ssl_version: OpenSslVersionEnum
     ) -> 'AcceptedCipherSuite':
+        """Determine the name of the currently selected cipher suite.
+
+        Raises:
+            CouldNotDetermineCipherSuite: if the name could not be retrieved from the connection
+        """
         keysize = ssl_connection.ssl_client.get_current_cipher_bits()
         picked_cipher_name = ssl_connection.ssl_client.get_current_cipher_name()
         status_msg = ssl_connection.post_handshake_check()
-        return AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, status_msg)
+        try:
+            suite = AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, status_msg)
+        except ValueError:
+            raise CouldNotDetermineCipherSuite(
+                f'Could not obtain cipher suite name from {ssl_version.name} connection!')
+        return suite
 
 
 class RejectedCipherSuite(CipherSuite):
@@ -443,7 +530,7 @@ class CipherSuiteScanResult(PluginScanResult):
 
     Attributes:
         accepted_cipher_list (List[AcceptedCipherSuite]): The list of cipher suites supported supported by both SSLyze
-            and the server.
+            and the server, in server preference order, if applicable.
         rejected_cipher_list (List[RejectedCipherSuite]): The list of cipher suites supported by SSLyze that were
             rejected by the server.
         errored_cipher_list (List[ErroredCipherSuite]): The list of cipher suites supported by SSLyze that triggered an
@@ -466,10 +553,13 @@ class CipherSuiteScanResult(PluginScanResult):
 
         self.preferred_cipher = preferred_cipher
 
-        # Sort all the lists
+        # Do not sort the accepted cipher list by name if it is already
+        # ordered in server preference; otherwise sort it like the others
         self.accepted_cipher_list = accepted_cipher_list
-        self.accepted_cipher_list.sort(key=attrgetter('name'), reverse=True)
+        if not preferred_cipher:
+            self.accepted_cipher_list.sort(key=attrgetter('name'), reverse=True)
 
+        # Sort the other lists
         self.rejected_cipher_list = rejected_cipher_list
         self.rejected_cipher_list.sort(key=attrgetter('name'), reverse=True)
 

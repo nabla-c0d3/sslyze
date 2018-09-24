@@ -236,7 +236,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
                           'TLS_DH_anon_WITH_AES_128_GCM_SHA256', 'TLS_DH_anon_WITH_SEED_CBC_SHA',
                           'TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA', 'TLS_ECDHE_RSA_WITH_NULL_SHA',
                           'TLS_ECDH_anon_WITH_NULL_SHA', 'TLS_RSA_WITH_NULL_SHA256', 'TLS_RSA_WITH_NULL_SHA'},
-                          set(accepted_cipher_name_list))
+                         set(accepted_cipher_name_list))
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -278,7 +278,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         self.assertTrue(pickle.dumps(plugin_result))
 
-    def test_follows_client_cipher_suite_preference(self):
+    def test_follows_server_cipher_suite_preference_if_applicable(self):
         # Google.com does not follow client cipher suite preference
         server_test = ServerConnectivityTester(hostname='www.google.com')
         server_info = server_test.perform()
@@ -288,7 +288,10 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.preferred_cipher)
         self.assertTrue(plugin_result.accepted_cipher_list)
-        
+
+        # Verify server order preference
+        self.assertEqual(plugin_result.preferred_cipher, plugin_result.accepted_cipher_list[0])
+
         # Sogou.com follows client cipher suite preference
         server_test = ServerConnectivityTester(hostname='www.sogou.com')
         server_info = server_test.perform()
@@ -348,4 +351,3 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.accepted_cipher_list)
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
-

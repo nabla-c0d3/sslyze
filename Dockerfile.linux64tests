@@ -1,0 +1,9 @@
+FROM python:3.6
+COPY Pipfile Pipfile.lock /sslyze/
+WORKDIR /sslyze/
+RUN pip install pipenv
+RUN pipenv install --dev
+
+# Only this layer needs to be rebuilt when the code changes
+COPY . /sslyze
+ENTRYPOINT ["pipenv", "run", "pytest"]

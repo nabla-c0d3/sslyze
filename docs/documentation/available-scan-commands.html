@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Appendix: Available Scan Commands &mdash; SSLyze 2.0.0 documentation</title>
+  <title>Appendix: Available Scan Commands &mdash; SSLyze 2.0.1 documentation</title>
   
 
   
@@ -58,7 +58,7 @@
             
             
               <div class="version">
-                2.0.0
+                2.0.1
               </div>
             
           
@@ -333,14 +333,14 @@ None if no OCSP response was sent by the server.</p>
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.has_sha1_in_certificate_chain">
 <code class="descname">has_sha1_in_certificate_chain</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.has_sha1_in_certificate_chain" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>bool</em> – True if any of the leaf or intermediate certificates are signed using the
-SHA-1 algorithm. None if the verified chain could not be built or no HPKP header was returned.</p>
+SHA-1 algorithm. None if the verified chain could not be built.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.has_anchor_in_certificate_chain">
 <code class="descname">has_anchor_in_certificate_chain</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.has_anchor_in_certificate_chain" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>bool</em> – True if the server included the anchor/root certificate in the chain it
-send back to clients. None if the verified chain could not be built or no HPKP header was returned.</p>
+send back to clients. None if the verified chain could not be built.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1179,7 +1179,7 @@ session ID resumption with the server (should always be empty).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2.0.0',
+            VERSION:'2.0.1',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

@@ -240,9 +240,9 @@ class CertificateInfoScanResult(PluginScanResult):
         is_ocsp_response_trusted (Optional[bool]): True if the OCSP response is trusted using the Mozilla trust store.
             None if no OCSP response was sent by the server.
         has_sha1_in_certificate_chain (bool): True if any of the leaf or intermediate certificates are signed using the
-            SHA-1 algorithm. None if the verified chain could not be built or no HPKP header was returned.
+            SHA-1 algorithm. None if the verified chain could not be built.
         has_anchor_in_certificate_chain (bool): True if the server included the anchor/root certificate in the chain it
-            send back to clients. None if the verified chain could not be built or no HPKP header was returned.
+            send back to clients. None if the verified chain could not be built.
         symantec_distrust_timeline (Optional[SymantecDistrustTimelineEnum]): When the certificate will be distrusted
             in Chrome and Firefox
             (https://blog.qualys.com/ssllabs/2017/09/26/google-and-mozilla-deprecating-existing-symantec-certificates).

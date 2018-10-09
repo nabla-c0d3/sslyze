@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
-version: June 26, 2018
-url: https://gallery.technet.microsoft.com/Trusted-Root-Program-d17011b8/file/205887/1/Trusted%20Root%20Program%20Participants%20As%20of%20July%2031%202018.xlsx
-date_fetched: 2018-08-04
-trusted_certificates_count: 277
+version: August 28, 2018
+url: https://gallery.technet.microsoft.com/Trusted-Root-Program-32d53c74/file/207725/1/Trusted%20Root%20Program%20Participants%20As%20of%20August%2028%202018.xlsx
+date_fetched: 2018-09-23
+trusted_certificates_count: 285
 trusted_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -206,6 +206,8 @@ trusted_certificates:
   fingerprint: 02ed0eb28c14da45165c566791700d6451d7fb56f0b2ab1d3b8eb070e56edff5
 - subject_name: Entrust Root Certification Authority - G2
   fingerprint: 43df5774b03e7fef5fe40d931a7bedf1bb2e6b42738c4e6d3841103d3aa7f339
+- subject_name: Entrust Root Certification Authority - G4
+  fingerprint: db3517d1f6732a2d5ab97c533ec70779ee3270a62fb4ac4238372460e6f01e88
 - subject_name: Entrust.net Certification Authority (2048)
   fingerprint: 6dc47172e01cbcb0bf62580d895fe2b8ac9ad4f873801e0c10b9c837d21eb177
 - subject_name: Federal Common Policy CA
@@ -287,6 +289,8 @@ trusted_certificates:
   fingerprint: b9bea7860a962ea3611dab97ab6da3e21c1068b97d55575ed0e11279c11c8932
 - subject_name: IGC/A AC racine Etat francais
   fingerprint: 1e1a6984b4e76bd709aee3e9c9cf3118eac096dab9cc20dc25faab67297e965a
+- subject_name: ISRG Root X1
+  fingerprint: 96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6
 - subject_name: IdenTrust Commercial Root CA 1
   fingerprint: 5d56499be4d2e08bcfcad08a3e38723d50503bde706948e42f55603019e528ae
 - subject_name: IdenTrust Public Sector Root CA 1
@@ -552,6 +556,18 @@ trusted_certificates:
   fingerprint: c0a6f4dc63a24bfdcf54ef2a6a082a0a72de35803e2ff5ff527ae5d87206dfd5
 - subject_name: ePKI Root Certification Authority - G2
   fingerprint: 1e51942b84fd467bf77d1c89da241c04254dc8f3ef4c22451fe7a89978bdcd4f
+- subject_name: emSign ECC Root CA - C3
+  fingerprint: bc4d809b15189d78db3e1d8cf4f9726a795da1643ca5f1358e1ddb0edc0d7eb3
+- subject_name: emSign ECC Root CA - G3
+  fingerprint: 86a1ecba089c4a8d3bbe2734c612ba341d813e043cf9e8a862cd5c57a36bbe6b
+- subject_name: emSign Root CA - C1
+  fingerprint: 125609aa301da0a249b97a8239cb6a34216f44dcac9f3954b14292f2e8c8608f
+- subject_name: emSign Root CA - C2
+  fingerprint: 46cd083b47e80402028df493960ea19c85fe851950d5165f1c7da4faa951e2f8
+- subject_name: emSign Root CA - G1
+  fingerprint: 40f6af0346a99aa1cd1d555a4e9cce62c7f9634603ee406615833dc8c8d00367
+- subject_name: emSign Root CA - G2
+  fingerprint: 1aa0c2709e831bd6e3b5129a00ba41f7eeef020872f1e6504bf0f6c3f24f3af3
 - subject_name: esignit.org
   fingerprint: c665175bd60ed70a5eea3344cbe5d1a6936f79bc27a8384e4c734200417c279f
 - subject_name: thawte Primary Root CA

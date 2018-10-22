@@ -50,11 +50,11 @@ Dev environment
 ---------------
 
 If you want to setup a local environment where you can work on SSLyze, you will first need to install
-[pipenv](https://docs.pipenv.org/). Then, the environment can initialized using:
+[pipenv](https://docs.pipenv.org/). You can then initialize the environment using:
 
     $ cd sslyze
     $ pipenv install --dev
-    $ pivenv shell
+    $ pipenv shell
 
 You can then run the test suite:
 

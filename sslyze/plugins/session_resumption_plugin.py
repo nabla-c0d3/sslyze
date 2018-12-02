@@ -2,8 +2,11 @@ from xml.etree.ElementTree import Element
 import nassl
 from enum import Enum
 
+from nassl.ssl_client import OpenSslVersionEnum
+
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand, Plugin
 from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.utils.ssl_connection import SslHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
 from typing import List, Type, Union
 from typing import Optional
@@ -20,7 +23,7 @@ class SessionResumptionSupportScanCommand(PluginScanCommand):
 
     @classmethod
     def get_title(cls) -> str:
-        return 'Resumption Support'
+        return 'TLS 1.2 Session Resumption Support'
 
 
 class SessionResumptionRateScanCommand(PluginScanCommand):
@@ -33,7 +36,7 @@ class SessionResumptionRateScanCommand(PluginScanCommand):
 
     @classmethod
     def get_title(cls) -> str:
-        return 'Resumption Rate'
+        return 'TLS 1.2 Session Resumption Rate'
 
     @classmethod
     def is_aggressive(cls) -> bool:
@@ -44,6 +47,7 @@ class TslSessionTicketSupportEnum(Enum):
     SUCCEEDED = 1
     FAILED_TICKET_NOT_ASSIGNED = 2
     FAILED_TICKED_IGNORED = 3
+    FAILED_ONLY_TLS_1_3_SUPPORTED = 4
 
 
 class SessionResumptionPlugin(Plugin):
@@ -61,18 +65,28 @@ class SessionResumptionPlugin(Plugin):
             server_info: ServerConnectivityInfo,
             scan_command: PluginScanCommand
     ) -> Union['SessionResumptionRateScanResult', 'SessionResumptionSupportScanResult']:
+        # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as session resumption is different with TLS 1.3
+        if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
+            ssl_version_to_use = OpenSslVersionEnum.TLSV1_2
+        else:
+            ssl_version_to_use = server_info.highest_ssl_version_supported
+
         if isinstance(scan_command, SessionResumptionSupportScanCommand):
             # Test Session ID support
-            successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(server_info, 5)
+            successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(
+                server_info, ssl_version_to_use, 5
+            )
 
             # Test TLS tickets support
             ticket_exception = None
             ticket_reason = None
             ticket_supported = False
             try:
-                ticket_result = self._resume_with_session_ticket(server_info)
+                ticket_result = self._resume_with_session_ticket(server_info, ssl_version_to_use)
                 if ticket_result == TslSessionTicketSupportEnum.SUCCEEDED:
                     ticket_supported = True
+                elif ticket_result == TslSessionTicketSupportEnum.FAILED_ONLY_TLS_1_3_SUPPORTED:
+                    ticket_reason = 'Only TLS 1.3 is supported; TLS tickets cannot be used'
                 else:
                     ticket_reason = 'TLS ticket not assigned' \
                         if ticket_result == TslSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED \
@@ -80,14 +94,24 @@ class SessionResumptionPlugin(Plugin):
             except Exception as e:
                 ticket_exception = e
 
-            result = SessionResumptionSupportScanResult(server_info, scan_command, 5, successful_resumptions_nb,
-                                                        errored_resumptions_list, ticket_supported, ticket_reason,
-                                                        ticket_exception)
+            result = SessionResumptionSupportScanResult(
+                server_info,
+                scan_command,
+                5,
+                successful_resumptions_nb,
+                errored_resumptions_list,
+                ticket_supported,
+                ticket_reason,
+                ticket_exception
+            )
 
         elif isinstance(scan_command, SessionResumptionRateScanCommand):
-            successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(server_info, 100)
-            result = SessionResumptionRateScanResult(server_info, scan_command, 100,  # type: ignore
-                                                     successful_resumptions_nb, errored_resumptions_list)
+            successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(
+                server_info, ssl_version_to_use, 100
+            )
+            result = SessionResumptionRateScanResult(
+                server_info, scan_command, 100, successful_resumptions_nb, errored_resumptions_list  # type: ignore
+            )
         else:
             raise ValueError('PluginSessionResumption: Unknown command.')
 
@@ -96,6 +120,7 @@ class SessionResumptionPlugin(Plugin):
     def _test_session_resumption_rate(
             self,
             server_info: ServerConnectivityInfo,
+            ssl_version_to_use: OpenSslVersionEnum,
             resumption_attempts_nb: int
     ) -> Tuple[int, List[str]]:
         """Attempt several session ID resumption with the server.
@@ -103,7 +128,7 @@ class SessionResumptionPlugin(Plugin):
         thread_pool = ThreadPool()
 
         for _ in range(resumption_attempts_nb):
-            thread_pool.add_job((self._resume_with_session_id, [server_info]))
+            thread_pool.add_job((self._resume_with_session_id, [server_info, ssl_version_to_use]))
         thread_pool.start(nb_threads=min(resumption_attempts_nb, self.MAX_THREADS_NB))
 
         # Count successful/failed resumptions
@@ -117,16 +142,20 @@ class SessionResumptionPlugin(Plugin):
         errored_resumptions_list = []
         for failed_job in thread_pool.get_error():
             (job, exception) = failed_job
-            error_msg = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
+            error_msg = f'{str(exception.__class__.__name__)} - {str(exception)}'
             errored_resumptions_list.append(error_msg)
 
         thread_pool.join()
         return successful_resumptions_nb, errored_resumptions_list
 
-    def _resume_with_session_id(self, server_info: ServerConnectivityInfo) -> bool:
+    def _resume_with_session_id(
+            self,
+            server_info: ServerConnectivityInfo,
+            ssl_version_to_use: OpenSslVersionEnum
+    ) -> bool:
         """Perform one session resumption using Session IDs.
         """
-        session1 = self._resume_ssl_session(server_info)
+        session1 = self._resume_ssl_session(server_info, ssl_version_to_use)
         try:
             # Recover the session ID
             session1_id = self._extract_session_id(session1)
@@ -139,7 +168,7 @@ class SessionResumptionPlugin(Plugin):
             return False
 
         # Try to resume that SSL session
-        session2 = self._resume_ssl_session(server_info, session1)
+        session2 = self._resume_ssl_session(server_info, ssl_version_to_use, session1)
         try:
             # Recover the session ID
             session2_id = self._extract_session_id(session2)
@@ -154,11 +183,22 @@ class SessionResumptionPlugin(Plugin):
 
         return True
 
-    def _resume_with_session_ticket(self, server_info: ServerConnectivityInfo) -> TslSessionTicketSupportEnum:
+    def _resume_with_session_ticket(
+            self,
+            server_info: ServerConnectivityInfo,
+            ssl_version_to_use: OpenSslVersionEnum,
+    ) -> TslSessionTicketSupportEnum:
         """Perform one session resumption using TLS Session Tickets.
         """
         # Connect to the server and keep the SSL session
-        session1 = self._resume_ssl_session(server_info, should_enable_tls_ticket=True)
+        try:
+            session1 = self._resume_ssl_session(server_info, ssl_version_to_use, should_enable_tls_ticket=True)
+        except SslHandshakeRejected:
+            if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
+                return TslSessionTicketSupportEnum.FAILED_ONLY_TLS_1_3_SUPPORTED
+            else:
+                raise
+
         try:
             # Recover the TLS ticket
             session1_tls_ticket = self._extract_tls_session_ticket(session1)
@@ -166,7 +206,7 @@ class SessionResumptionPlugin(Plugin):
             return TslSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED
 
         # Try to resume that session using the TLS ticket
-        session2 = self._resume_ssl_session(server_info, session1, should_enable_tls_ticket=True)
+        session2 = self._resume_ssl_session(server_info, ssl_version_to_use, session1, should_enable_tls_ticket=True)
         try:
             # Recover the TLS ticket
             session2_tls_ticket = self._extract_tls_session_ticket(session2)
@@ -198,13 +238,14 @@ class SessionResumptionPlugin(Plugin):
     @staticmethod
     def _resume_ssl_session(
             server_info: ServerConnectivityInfo,
+            ssl_version_to_use: OpenSslVersionEnum,
             ssl_session: Optional[nassl._nassl.SSL_SESSION] = None,
             should_enable_tls_ticket: bool = False
     ) -> nassl._nassl.SSL_SESSION:
         """Connect to the server and returns the session object that was assigned for that connection.
         If ssl_session is given, tries to resume that session.
         """
-        ssl_connection = server_info.get_preconfigured_ssl_connection()
+        ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version_to_use)
         if not should_enable_tls_ticket:
             # Need to disable TLS tickets to test session IDs, according to rfc5077:
             # If a ticket is presented by the client, the server MUST NOT attempt

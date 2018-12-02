@@ -51,8 +51,11 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
             supports_secure_renegotiation = self._test_secure_renegotiation(server_info, ssl_version_to_use)
         except SslHandshakeRejected:
             # Should only happen when the server only supports TLS 1.3, which does not support renegotiation
-            accepts_client_renegotiation = False
-            supports_secure_renegotiation = True
+            if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
+                accepts_client_renegotiation = False
+                supports_secure_renegotiation = True
+            else:
+                raise
 
         return SessionRenegotiationScanResult(
             server_info, scan_command, accepts_client_renegotiation, supports_secure_renegotiation

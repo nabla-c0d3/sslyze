@@ -38,8 +38,26 @@ class ServerConnectivityError(Exception):
 
 
 class ServerNotReachableError(ServerConnectivityError):
-    """The server was offline, or timed out, or rejected the connection while doing connectivity testing.
+    """Generic error when the connectivity tester was not able to connect to the server.
     """
+
+
+class ServerRejectedConnection(ServerNotReachableError):
+
+    def __init__(self, server_info: 'ServerConnectivityTester') -> None:
+        super().__init__(server_info, 'Connection rejected')
+
+
+class ConnectionToServerTimedOut(ServerNotReachableError):
+
+    def __init__(self, server_info: 'ServerConnectivityTester') -> None:
+        super().__init__(server_info, 'Could not connect (timeout)')
+
+
+class ServerHostnameCouldNotBeResolved(ServerNotReachableError):
+
+    def __init__(self, server_info: 'ServerConnectivityTester') -> None:
+        super().__init__(server_info, 'Could not resolve hostname')
 
 
 class ServerTlsConfigurationNotSuportedError(ServerConnectivityError):
@@ -69,11 +87,6 @@ class ServerConnectivityTester:
         TlsWrappedProtocolEnum.STARTTLS_RDP: 3389,
         TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 5432
     }
-
-    CONNECTIVITY_ERROR_NAME_NOT_RESOLVED = 'Could not resolve hostname'
-    CONNECTIVITY_ERROR_TIMEOUT = 'Could not connect (timeout)'
-    CONNECTIVITY_ERROR_REJECTED = 'Connection rejected'
-    CONNECTIVITY_ERROR_HANDSHAKE_ERROR = 'Could not complete an SSL handshake'
 
     def __str__(self) -> str:
         return '<{class_name}: server=({hostname}, {ip_addr}, {port})>'.format(
@@ -184,7 +197,7 @@ class ServerConnectivityTester:
             try:
                 self.ip_address = self._do_dns_lookup(self.hostname, self.port)
             except (socket.gaierror, IndexError, ConnectionError):
-                raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_NAME_NOT_RESOLVED)
+                raise ServerHostnameCouldNotBeResolved(self)
 
         # Then try to connect
         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.DISABLED
@@ -200,9 +213,9 @@ class ServerConnectivityTester:
 
         # Socket errors
         except socket.timeout:  # Host is down
-            raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_TIMEOUT)
+            raise ConnectionToServerTimedOut(self)
         except ConnectionError:
-            raise ServerNotReachableError(self, self.CONNECTIVITY_ERROR_REJECTED)
+            raise ServerRejectedConnection(self)
 
         # StartTLS errors
         except StartTlsError as e:
@@ -292,7 +305,9 @@ class ServerConnectivityTester:
                 break
 
         if ssl_version_supported is None or ssl_cipher_supported is None:
-            raise ServerTlsConfigurationNotSuportedError(self, self.CONNECTIVITY_ERROR_HANDSHAKE_ERROR)
+            raise ServerTlsConfigurationNotSuportedError(
+                self, 'Could not complete an SSL/TLS handshake with the server'
+            )
 
         return ServerConnectivityInfo(
             hostname=self.hostname,

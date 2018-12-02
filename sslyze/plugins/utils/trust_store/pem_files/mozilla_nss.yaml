@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2018-08-23
-trusted_certificates_count: 129
+date_fetched: 2018-11-22
+trusted_certificates_count: 135
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -52,6 +52,8 @@ trusted_certificates:
   fingerprint: 52f0e1c4e58ec629291b60317f074671b85d7ea80d5b07273463534b32b40234
 - subject_name: Certigna
   fingerprint: e3b6a2db2ed7ce48842f7ac53241c7b71d54144bfb40c11f3f1d0b42f5eea12d
+- subject_name: Certigna Root CA
+  fingerprint: d48d3d23eedb50a459e55197601c27774b9d7b18c94d5a059511a10250b93168
 - subject_name: Certinomis - Root CA
   fingerprint: 2a99f5bc1174b73cbb1d620884e01c34e51ccb3978da125f0e33268883bf4158
 - subject_name: Certum Trusted Network CA
@@ -104,6 +106,14 @@ trusted_certificates:
   fingerprint: 6dc47172e01cbcb0bf62580d895fe2b8ac9ad4f873801e0c10b9c837d21eb177
 - subject_name: GDCA TrustAUTH R5 ROOT
   fingerprint: bfff8fd04433487d6a8aa60c1a29767a9fc2bbb05e420f713a13b992891d3893
+- subject_name: GTS Root R1
+  fingerprint: 2a575471e31340bc21581cbd2cf13e158463203ece94bcf9d3cc196bf09a5472
+- subject_name: GTS Root R2
+  fingerprint: c45d7bb08e6d67e62e4235110b564e5f78fd92ef058c840aea4e6455d7585c60
+- subject_name: GTS Root R3
+  fingerprint: 15d5b8774619ea7d54ce1ca6d0b0c403e037a917f131e8a04e1e6b7a71babce5
+- subject_name: GTS Root R4
+  fingerprint: 71cca5391f9e794b04802530b363e121da8a3043bb26662fea4dca7fc951a4bd
 - subject_name: GeoTrust Global CA
   fingerprint: ff856a2d251dcd88d36656f450126798cfabaade40799c722de4d2b5db36a73a
 - subject_name: GeoTrust Primary Certification Authority
@@ -236,6 +246,10 @@ trusted_certificates:
   fingerprint: 0753e940378c1bd5e3836e395daea5cb839e5046f1bd0eae1951cf10fec7c965
 - subject_name: Trustis FPS Root CA
   fingerprint: c1b48299aba5208fe9630ace55ca68a03eda5a519c8802a0d3a673be8f8e557d
+- subject_name: UCA Extended Validation Root
+  fingerprint: d43af9b35473755c9684fc06d7d8cb70ee5c28e773fb294eb41ee71722924d24
+- subject_name: UCA Global G2 Root
+  fingerprint: 9bea11c976fe014764c1be56a6f914b5a560317abd9988393382e5161aa0493c
 - subject_name: USERTrust ECC Certification Authority
   fingerprint: 4ff460d54b9c86dabfbcfc5712e0400d2bed3fbc4d4fbdaa86e06adcd2a9ad7a
 - subject_name: USERTrust RSA Certification Authority
@@ -248,8 +262,6 @@ trusted_certificates:
   fingerprint: 9acfab7e43c8d880d06b262a94deeee4b4659989c3d0caf19baf6405e41ab7df
 - subject_name: VeriSign Universal Root Certification Authority
   fingerprint: 2399561127a57125de8cefea610ddf2fa078b5c8067f4e828290bfb860e84b3c
-- subject_name: Visa eCommerce Root
-  fingerprint: 69fac9bd55fb0ac78d53bbee5cf1d597989fd0aaab20a25151bdf1733ee7d122
 - subject_name: XRamp Global Certification Authority
   fingerprint: cecddc905099d8dadfc5b1d209b737cbe2c18cfb2c10c0ff0bcf0d3286fc1aa2
 - subject_name: certSIGN ROOT CA

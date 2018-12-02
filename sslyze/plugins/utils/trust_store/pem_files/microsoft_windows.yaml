@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
-version: June 26, 2018
-url: https://gallery.technet.microsoft.com/Trusted-Root-Program-d17011b8/file/205887/1/Trusted%20Root%20Program%20Participants%20As%20of%20July%2031%202018.xlsx
-date_fetched: 2018-08-04
-trusted_certificates_count: 277
+version: October 2, 2018
+url: https://gallery.technet.microsoft.com/Trusted-Root-Program-8895e873/file/216413/1/Trusted%20Root%20Program%20Participants%20As%20of%20October%2030%202018.xlsx
+date_fetched: 2018-11-04
+trusted_certificates_count: 286
 trusted_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -206,10 +206,14 @@ trusted_certificates:
   fingerprint: 02ed0eb28c14da45165c566791700d6451d7fb56f0b2ab1d3b8eb070e56edff5
 - subject_name: Entrust Root Certification Authority - G2
   fingerprint: 43df5774b03e7fef5fe40d931a7bedf1bb2e6b42738c4e6d3841103d3aa7f339
+- subject_name: Entrust Root Certification Authority - G4
+  fingerprint: db3517d1f6732a2d5ab97c533ec70779ee3270a62fb4ac4238372460e6f01e88
 - subject_name: Entrust.net Certification Authority (2048)
   fingerprint: 6dc47172e01cbcb0bf62580d895fe2b8ac9ad4f873801e0c10b9c837d21eb177
 - subject_name: Federal Common Policy CA
   fingerprint: 894ebc0b23da2a50c0186b7f8f25ef1f6b2935af32a94584ef80aaf877a3a06e
+- subject_name: Fina Root CA
+  fingerprint: 5ab4fcdb180b5b6af0d262a2375a2c77d25602015d96648756611e2e78c53ad3
 - subject_name: "F\u0151tan\xFAs\xEDtv\xE1nykiad\xF3 - Korm\xE1nyzati Hiteles\xED\
     t\xE9s Szolg\xE1ltat\xF3"
   fingerprint: c2157309d9aee17bf34f4df5e88dbaeba57e0361eb814cbc239f4d54d329a38d
@@ -279,6 +283,10 @@ trusted_certificates:
   fingerprint: a040929a02ce53b4acf4f2ffc6981ce4496f755e6d45fe0b2a692bcd52523f36
 - subject_name: Hongkong Post Root CA 1
   fingerprint: f9e67d336c51002ac054c632022d66dda2e7e3fff10ad061ed31d8bbb410cfb2
+- subject_name: Hongkong Post Root CA 2
+  fingerprint: 3945e08a8d4a0554b7605a7b355b10188e3ef842c76a805c54e3657c4d041aaa
+- subject_name: Hongkong Post Root CA 3
+  fingerprint: 5a2fc03f0c83b090bbfa40604b0988446c7636183df9846e17101a447fb8efd6
 - subject_name: Hotspot 2.0 Trust Root CA - 03
   fingerprint: a3cc68595dfe7e86d8ad1772a8b5284add54ace3b8a798df47bccafb1fdb84df
 - subject_name: I.CA Root CA/RSA
@@ -287,6 +295,8 @@ trusted_certificates:
   fingerprint: b9bea7860a962ea3611dab97ab6da3e21c1068b97d55575ed0e11279c11c8932
 - subject_name: IGC/A AC racine Etat francais
   fingerprint: 1e1a6984b4e76bd709aee3e9c9cf3118eac096dab9cc20dc25faab67297e965a
+- subject_name: ISRG Root X1
+  fingerprint: 96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6
 - subject_name: IdenTrust Commercial Root CA 1
   fingerprint: 5d56499be4d2e08bcfcad08a3e38723d50503bde706948e42f55603019e528ae
 - subject_name: IdenTrust Public Sector Root CA 1
@@ -311,6 +321,8 @@ trusted_certificates:
   fingerprint: 3c5f81fea5fab82c64bfa2eaecafcde8e077fc8620a7cae537163df36edbf378
 - subject_name: Microsoft ECC Product Root Certificate Authority 2018
   fingerprint: caca93b9d23d2b6fa76e8b8471931e0df3ec6f63af3cdbb936c41954a1872326
+- subject_name: Microsoft ECC TS Root Certificate Authority 2018
+  fingerprint: 3fd4be8baad2f26e1bde06c7584bb720dd1a972d111f5a4999bc44b08fb4960d
 - subject_name: Microsoft Root Certificate Authority 2010
   fingerprint: df545bf919a2439c36983b54cdfc903dfa4f37d3996d8d84b4c31eec6f3c163e
 - subject_name: Microsoft Root Certificate Authority 2011
@@ -371,8 +383,6 @@ trusted_certificates:
   fingerprint: a45ede3bbbf09c8ae15c72efc07268d693a21c996fd51e67ca079460fd6d8873
 - subject_name: "Registradores de Espa\xF1a - CA Ra\xEDz"
   fingerprint: 7d2bf3489ebc9ad3448b8b0827715a3cbfe3d523e3b56a9b5fc1d2a2da2f20fe
-- subject_name: S-TRUST Universal Root CA
-  fingerprint: d80fef910ae3f104723b045cec2d019f441ce6213adf156791e70c1790110a31
 - subject_name: SAPO Class 2 Root CA
   fingerprint: fd7cca48b745213470f503ec6e969c447fc12d4dd5aa2a7cc6c3d5abbd962b33
 - subject_name: SAPO Class 3 Root CA
@@ -473,8 +483,6 @@ trusted_certificates:
   fingerprint: 91e2f5788d5810eba7ba58737de1548a8ecacd014598bc0b143e041b17052552
 - subject_name: T-TeleSec GlobalRoot Class 3
   fingerprint: fd73dad31c644ff1b43bef0ccdda96710b9cd9875eca7e31707af3e96d522bbd
-- subject_name: TC TrustCenter Class 3 CA II
-  fingerprint: 8da084fcf99ce07722f89b3205939806fa5cb811e1c813f6a108c7d336b3408e
 - subject_name: TM Applied Business Root Certificate
   fingerprint: a9c77af1bcdfaa3739442b0b2734c68eaf2e9833f0d766fbcaa6f2aeb42dec02
 - subject_name: TRUST2408 OCES Primary CA
@@ -514,8 +522,6 @@ trusted_certificates:
   fingerprint: e793c9b02fd8aa13e21c31228accb08119643b749c898964b1746d46c3d4cbd2
 - subject_name: UTN-USERFirst-Client Authentication and Email
   fingerprint: 43f257412d440d627476974f877da8f1fc2444565a367ae60eddc27a412531ae
-- subject_name: UTN-USERFirst-Hardware
-  fingerprint: 6ea54741d004667eed1b4816634aa3a79e6e4b96950f8279dafc8d9bd8812137
 - subject_name: UTN-USERFirst-Object
   fingerprint: 6fff78e400a70c11011cd85977c459fb5af96a3df0540820d0f4b8607875e58f
 - subject_name: VI Registru Centras RCSC (RootCA)
@@ -552,6 +558,18 @@ trusted_certificates:
   fingerprint: c0a6f4dc63a24bfdcf54ef2a6a082a0a72de35803e2ff5ff527ae5d87206dfd5
 - subject_name: ePKI Root Certification Authority - G2
   fingerprint: 1e51942b84fd467bf77d1c89da241c04254dc8f3ef4c22451fe7a89978bdcd4f
+- subject_name: emSign ECC Root CA - C3
+  fingerprint: bc4d809b15189d78db3e1d8cf4f9726a795da1643ca5f1358e1ddb0edc0d7eb3
+- subject_name: emSign ECC Root CA - G3
+  fingerprint: 86a1ecba089c4a8d3bbe2734c612ba341d813e043cf9e8a862cd5c57a36bbe6b
+- subject_name: emSign Root CA - C1
+  fingerprint: 125609aa301da0a249b97a8239cb6a34216f44dcac9f3954b14292f2e8c8608f
+- subject_name: emSign Root CA - C2
+  fingerprint: 46cd083b47e80402028df493960ea19c85fe851950d5165f1c7da4faa951e2f8
+- subject_name: emSign Root CA - G1
+  fingerprint: 40f6af0346a99aa1cd1d555a4e9cce62c7f9634603ee406615833dc8c8d00367
+- subject_name: emSign Root CA - G2
+  fingerprint: 1aa0c2709e831bd6e3b5129a00ba41f7eeef020872f1e6504bf0f6c3f24f3af3
 - subject_name: esignit.org
   fingerprint: c665175bd60ed70a5eea3344cbe5d1a6936f79bc27a8384e4c734200417c279f
 - subject_name: thawte Primary Root CA
@@ -560,7 +578,7 @@ trusted_certificates:
   fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
 - subject_name: thawte Primary Root CA - G3
   fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 93
+blocked_certificates_count: 96
 blocked_certificates:
 - subject_name: AC RAIZ FNMT-RCM
   fingerprint: 4d9ebb28825c9643ab15d54e5f9614f13cb3e95de3cf4eac971301f320f9226e
@@ -690,6 +708,8 @@ blocked_certificates:
   fingerprint: 8c4edfd04348f322969e7e29a4cd4dca004655061c16e1b076422ef342ad630e
 - subject_name: S-TRUST Authentication and Encryption Root CA 2005:PN
   fingerprint: 37d8dc8af7867845da3344a6b1bade448d8a80e47b5579f96bf631768f9f30f6
+- subject_name: S-TRUST Universal Root CA
+  fingerprint: d80fef910ae3f104723b045cec2d019f441ce6213adf156791e70c1790110a31
 - subject_name: SITHS CA v3
   fingerprint: b2f3c4216af7aff72462466dc13cd2810db8eed853eabb9a063a608efc18fbe8
 - subject_name: SSC Root CA A
@@ -722,6 +742,8 @@ blocked_certificates:
   fingerprint: 21db20123660bb2ed418205da11ee7a85a65e2bc6e55b5af7e7899c8a266d92e
 - subject_name: Swisscom Root EV CA 2
   fingerprint: d95fea3ca4eedce74cd76e75fc6d1ff62c441f0fa8bc77f034b19e5db258015d
+- subject_name: TC TrustCenter Class 3 CA II
+  fingerprint: 8da084fcf99ce07722f89b3205939806fa5cb811e1c813f6a108c7d336b3408e
 - subject_name: TWCA Root Certification Authority
   fingerprint: 632d80bb096d209677d1734e5b35ea9d3019b9c44f8fcb2640c879039ac94ee8
 - subject_name: Thawte Premium Server CA
@@ -738,6 +760,8 @@ blocked_certificates:
   fingerprint: a1f05ccb80c2d710ec7d479abdcbb879e58d7edb7149fe78a87884e3d0bad0f9
 - subject_name: UCA Root
   fingerprint: 93e65ec762f055dc718a332582c41a04430d72e3cb87e8b897b67516f0d1aa39
+- subject_name: UTN-USERFirst-Hardware
+  fingerprint: 6ea54741d004667eed1b4816634aa3a79e6e4b96950f8279dafc8d9bd8812137
 - subject_name: VAS Latvijas Pasts SSI(RCA)
   fingerprint: aad9ceed5aa6b1cea28596a8e4e1abed9386d6ebc9d4aad9acde0fa36ba069d0
 - subject_name: VeriSign Commercial Software Publishers CA

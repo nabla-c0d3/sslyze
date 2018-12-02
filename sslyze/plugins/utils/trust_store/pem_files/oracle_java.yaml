@@ -1,8 +1,8 @@
 platform: ORACLE_JAVA
-version: jre-10.0.2
-url: http://download.oracle.com/otn-pub/java/jdk/10.0.2+13/19aef61b38124481863b1413dce1855f/jre-10.0.2_linux-x64_bin.tar.gz
-date_fetched: 2018-07-28
-trusted_certificates_count: 104
+version: jdk-11.0.1
+url: http://download.oracle.com/otn-pub/java/jdk/11.0.1+13/90cf5d8f270a4347a95050320eef3fb7/jdk-11.0.1_linux-x64_bin.tar.gz
+date_fetched: 2018-10-28
+trusted_certificates_count: 93
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -22,12 +22,6 @@ trusted_certificates:
   fingerprint: 70a73f7f376b60074248904534b11482d5bf0e698ecc498df52577ebf2e93b9a
 - subject_name: AffirmTrust Premium ECC
   fingerprint: bd71fdf6da97e4cf62d1647add2581b07d79adf8397eb4ecba9c5e8488821423
-- subject_name: America Online Root Certification Authority 1
-  fingerprint: 77407312c63a153d5bc00b4e51759cdfdac237dc2a33b67946e98e9bfa680ae3
-- subject_name: America Online Root Certification Authority 2
-  fingerprint: 7d3b465a6014e526c0affcee2127d2311727ad811c26842d006af37306cc80bd
-- subject_name: Baltimore CyberTrust Code Signing Root
-  fingerprint: a91545dbd2e19c4ccdf909aa71900d18c7351c89b315f0f13d05c13a8ffb4687
 - subject_name: Baltimore CyberTrust Root
   fingerprint: 16af57a9f676b0ab126095aa5ebadef22ab31119d644ac95cd4b93dbf3f26aeb
 - subject_name: Buypass Class 2 Root CA
@@ -46,10 +40,6 @@ trusted_certificates:
   fingerprint: 0c258a12a5674aef25f28ba7dcfaeceea348e541e6f5cc4ee63b71b361606ac3
 - subject_name: Chambers of Commerce Root - 2008
   fingerprint: 063e4afac491dfd332f3089b8542e94617d893d7fe944e10a7937ee29d9693c0
-- subject_name: Class 1 Public Primary Certification Authority
-  fingerprint: 51847c8cbd2e9a72c91e292d2ae247d7de1e3fd270547a20ef7d610f38b8842c
-- subject_name: Class 1 Public Primary Certification Authority - G2
-  fingerprint: 341de98b1392abf7f4ab90a960cf25d4bd6ec65b9a51ce6ed067d00ec7ce9b7f
 - subject_name: Class 2 Primary CA
   fingerprint: 0f993c8aef97baaf5687140ed59ad1821bb4afacf0aa9a58b5d57a338a3afbcb
 - subject_name: Class 2 Public Primary Certification Authority - G2
@@ -92,12 +82,6 @@ trusted_certificates:
   fingerprint: 43df5774b03e7fef5fe40d931a7bedf1bb2e6b42738c4e6d3841103d3aa7f339
 - subject_name: Entrust.net Certification Authority (2048)
   fingerprint: 6dc47172e01cbcb0bf62580d895fe2b8ac9ad4f873801e0c10b9c837d21eb177
-- subject_name: Equifax Secure Certificate Authority
-  fingerprint: 08297a4047dba23680c731db6e317653ca7848e1bebd3a0b0179a707f92cf178
-- subject_name: Equifax Secure Global eBusiness CA-1
-  fingerprint: 86ab5a6571d3329abcd2e4e637668ba89c731ec293b6cba60f716340a091ceae
-- subject_name: Equifax Secure eBusiness CA-1
-  fingerprint: 2e3a2bb5112505836ca8968be2cb3727ce9b56845c6ee98e9185104afb9af596
 - subject_name: GTE CyberTrust Global Root
   fingerprint: a53125188d2110aa964b02c7b7c6da3203170894e5fb71fffb6667d5e6810a36
 - subject_name: GeoTrust Global CA
@@ -150,8 +134,6 @@ trusted_certificates:
   fingerprint: a45ede3bbbf09c8ae15c72efc07268d693a21c996fd51e67ca079460fd6d8873
 - subject_name: SecureTrust CA
   fingerprint: f1c1b50ae5a20dd8030ec9f6bc24823dd367b5255759b4e71b61fce9f7375d73
-- subject_name: Security Communication EV RootCA1
-  fingerprint: a22dba681e97376e2d397d728aae3a9b6296b9fdba60bc2e11f647f2c675fb37
 - subject_name: Security Communication RootCA1
   fingerprint: e75e72ed9f560eec6eb4800073a43fc3ad19195a392282017895974a99026b6c
 - subject_name: Security Communication RootCA2
@@ -170,12 +152,12 @@ trusted_certificates:
   fingerprint: 3b222e566711e992300dc0b15ab9473dafdef8c84d0cef7d3317b4c1821d1436
 - subject_name: SwissSign Silver CA - G2
   fingerprint: be6c4da2bbb9ba59b6f3939768374246c3c005993fa98f020d1dedbed48a81d5
-- subject_name: Swisscom Root CA 2
-  fingerprint: f09b122c7114f4a09bd4ea4f4a99d558b46e4c25cd81140d29c05613914c3841
 - subject_name: T-TeleSec GlobalRoot Class 2
   fingerprint: 91e2f5788d5810eba7ba58737de1548a8ecacd014598bc0b143e041b17052552
 - subject_name: T-TeleSec GlobalRoot Class 3
   fingerprint: fd73dad31c644ff1b43bef0ccdda96710b9cd9875eca7e31707af3e96d522bbd
+- subject_name: TeliaSonera Root CA v1
+  fingerprint: dd6936fe21f8f077c123a1a521c12224f72255b73e03a7260693e8a24b0fa389
 - subject_name: Thawte Premium Server CA
   fingerprint: 3f9f27d583204b9e09c8a3d2066c4b57d3a2479c3693650880505698105dbce9
 - subject_name: Thawte Timestamping CA
@@ -190,10 +172,6 @@ trusted_certificates:
   fingerprint: 6ea54741d004667eed1b4816634aa3a79e6e4b96950f8279dafc8d9bd8812137
 - subject_name: UTN-USERFirst-Object
   fingerprint: 6fff78e400a70c11011cd85977c459fb5af96a3df0540820d0f4b8607875e58f
-- subject_name: VeriSign Class 1 Public Primary Certification Authority - G3
-  fingerprint: cbb5af185e942a2402f9eacbc0ed5bb876eea3c1223623d00447e4f3ba554b65
-- subject_name: VeriSign Class 2 Public Primary Certification Authority - G3
-  fingerprint: 92a9d9833fe1944db366e8bfae7a95b6480c2d6c6c2a1be65d4236b608fca1bb
 - subject_name: VeriSign Class 3 Public Primary Certification Authority - G3
   fingerprint: eb04cf5eb1f39afa762f2bb120f296cba520c1b97db1589565b81cb9a17b7244
 - subject_name: VeriSign Class 3 Public Primary Certification Authority - G4

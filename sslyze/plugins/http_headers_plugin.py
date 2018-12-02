@@ -1,3 +1,4 @@
+from abc import abstractmethod, ABC
 from xml.etree.ElementTree import Element
 
 from cryptography.hazmat.backends import default_backend
@@ -51,8 +52,9 @@ class HttpHeadersPlugin(Plugin):
         hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain = self._get_security_headers(
             server_info
         )
-        return HttpHeadersScanResult(server_info, scan_command, hsts_header, hpkp_header, expect_ct_header,
-                                     hpkp_report_only, certificate_chain)
+        return HttpHeadersScanResult(
+            server_info, scan_command, hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain
+        )
 
     @classmethod
     def _get_security_headers(
@@ -93,7 +95,28 @@ class HttpHeadersPlugin(Plugin):
         return hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain
 
 
-class ParsedHstsHeader:
+class HttpHeaderParsingError(ValueError):
+    pass
+
+
+class _ParsedHttpHeader(ABC):
+
+    def __init__(self, raw_header: str) -> None:
+        # Handle headers defined multiple times by picking the first value
+        if ',' in raw_header:
+            raw_header = raw_header.split(',')[0]
+
+        try:
+            self._parse_header(raw_header)
+        except ValueError:
+            raise HttpHeaderParsingError(f'Error when trying to parse "{raw_header}"; HTTP header is badly formatted?')
+
+    @abstractmethod
+    def _parse_header(self, raw_header):
+        pass
+
+
+class ParsedHstsHeader(_ParsedHttpHeader):
     """The HTTP Strict Transport Security header returned by the server.
 
     Attributes:
@@ -102,13 +125,12 @@ class ParsedHstsHeader:
         max_age (int): The content of the max-age field.
     """
     def __init__(self, raw_hsts_header: str) -> None:
-        # Handle headers defined multiple times by picking the first value
-        if ',' in raw_hsts_header:
-            raw_hsts_header = raw_hsts_header.split(',')[0]
-
         self.max_age = None
         self.include_subdomains = False
         self.preload = False
+        super().__init__(raw_hsts_header)
+
+    def _parse_header(self, raw_hsts_header):
         for hsts_directive in raw_hsts_header.split(';'):
             hsts_directive = hsts_directive.strip()
             if not hsts_directive:
@@ -126,7 +148,7 @@ class ParsedHstsHeader:
                 raise ValueError('Unexpected value in HSTS header: {}'.format(repr(hsts_directive)))
 
 
-class ParsedHpkpHeader:
+class ParsedHpkpHeader(_ParsedHttpHeader):
     """The HTTP Public Key Pinning header returned by the server.
 
     Attributes:
@@ -139,15 +161,13 @@ class ParsedHpkpHeader:
     """
 
     def __init__(self, raw_hpkp_header: str, report_only: bool = False) -> None:
-        # Handle headers defined multiple times by picking the first value
-        if ',' in raw_hpkp_header:
-            raw_hpkp_header = raw_hpkp_header.split(',')[0]
-
         self.report_only = report_only
         self.report_uri = None
         self.include_subdomains = False
         self.max_age = None
+        super().__init__(raw_hpkp_header)
 
+    def _parse_header(self, raw_hpkp_header):
         pin_sha256_list = []
         for hpkp_directive in raw_hpkp_header.split(';'):
             hpkp_directive = hpkp_directive.strip()
@@ -170,8 +190,7 @@ class ParsedHpkpHeader:
         self.pin_sha256_list = pin_sha256_list
 
 
-# TODO(AD): Rename this to ParsedExpectCtHeader
-class ParsedExpectCTHeader:
+class ParsedExpectCtHeader(_ParsedHttpHeader):
     """Expect-CT header returned by the server.
 
     Attributes:
@@ -184,7 +203,9 @@ class ParsedExpectCTHeader:
         self.max_age = None
         self.report_uri = None
         self.enforce = False
+        super().__init__(raw_expect_ct_header)
 
+    def _parse_header(self, raw_expect_ct_header):
         for expect_ct_directive in raw_expect_ct_header.split(','):
             expect_ct_directive = expect_ct_directive.strip()
 
@@ -237,7 +258,7 @@ class HttpHeadersScanResult(PluginScanResult):
         super().__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
-        self.expect_ct_header = ParsedExpectCTHeader(raw_expect_ct_header) if raw_expect_ct_header else None
+        self.expect_ct_header = ParsedExpectCtHeader(raw_expect_ct_header) if raw_expect_ct_header else None
         self.verified_certificate_chain: List[Certificate] = []
         try:
             main_trust_store = TrustStoresRepository.get_default().get_main_store()

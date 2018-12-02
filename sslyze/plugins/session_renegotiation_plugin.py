@@ -3,10 +3,12 @@ from typing import Type, List
 from xml.etree.ElementTree import Element
 
 from nassl._nassl import OpenSSLError
+from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.utils.ssl_connection import SslHandshakeRejected
 
 
 class SessionRenegotiationScanCommand(PluginScanCommand):
@@ -38,16 +40,31 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
         if not isinstance(scan_command, SessionRenegotiationScanCommand):
             raise ValueError('Unexpected scan command')
 
-        accepts_client_renegotiation = self._test_client_renegotiation(server_info)
-        supports_secure_renegotiation = self._test_secure_renegotiation(server_info)
-        return SessionRenegotiationScanResult(server_info, scan_command, accepts_client_renegotiation,
-                                              supports_secure_renegotiation)
+        # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
+        if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
+            ssl_version_to_use = OpenSslVersionEnum.TLSV1_2
+        else:
+            ssl_version_to_use = server_info.highest_ssl_version_supported
+
+        try:
+            accepts_client_renegotiation = self._test_client_renegotiation(server_info, ssl_version_to_use)
+            supports_secure_renegotiation = self._test_secure_renegotiation(server_info, ssl_version_to_use)
+        except SslHandshakeRejected:
+            # Should only happen when the server only supports TLS 1.3, which does not support renegotiation
+            accepts_client_renegotiation = False
+            supports_secure_renegotiation = True
+
+        return SessionRenegotiationScanResult(
+            server_info, scan_command, accepts_client_renegotiation, supports_secure_renegotiation
+        )
 
     @staticmethod
-    def _test_secure_renegotiation(server_info: ServerConnectivityInfo) -> bool:
+    def _test_secure_renegotiation(server_info: ServerConnectivityInfo, ssl_version_to_use: OpenSslVersionEnum) -> bool:
         """Check whether the server supports secure renegotiation.
         """
-        ssl_connection = server_info.get_preconfigured_ssl_connection(should_use_legacy_openssl=True)
+        ssl_connection = server_info.get_preconfigured_ssl_connection(
+            override_ssl_version=ssl_version_to_use, should_use_legacy_openssl=True
+        )
 
         try:
             # Perform the SSL handshake
@@ -60,10 +77,12 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
         return supports_secure_renegotiation
 
     @staticmethod
-    def _test_client_renegotiation(server_info: ServerConnectivityInfo) -> bool:
+    def _test_client_renegotiation(server_info: ServerConnectivityInfo, ssl_version_to_use: OpenSslVersionEnum) -> bool:
         """Check whether the server honors session renegotiation requests.
         """
-        ssl_connection = server_info.get_preconfigured_ssl_connection(should_use_legacy_openssl=True)
+        ssl_connection = server_info.get_preconfigured_ssl_connection(
+            override_ssl_version=ssl_version_to_use, should_use_legacy_openssl=True
+        )
 
         try:
             # Perform the SSL handshake

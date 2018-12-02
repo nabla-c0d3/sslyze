@@ -81,8 +81,9 @@ class RobotTlsRecordPayloads:
         tls_version_hex = binascii.b2a_hex(TlsRecordTlsVersionBytes[tls_version.name].value).decode('ascii')
 
         pms_with_padding_payload = cls._CKE_PAYLOADS_HEX[robot_payload_enum]
-        final_pms = pms_with_padding_payload.format(pms_padding=pms_padding, tls_version=tls_version_hex,
-                                                    pms=cls._PMS_HEX)
+        final_pms = pms_with_padding_payload.format(
+            pms_padding=pms_padding, tls_version=tls_version_hex, pms=cls._PMS_HEX
+        )
         cke_robot_record = TlsRsaClientKeyExchangeRecord.from_parameters(
             tls_version, exponent, modulus, int(final_pms, 16)
         )
@@ -175,9 +176,15 @@ class RobotPlugin(plugin_base.Plugin):
         if not isinstance(scan_command, RobotScanCommand):
             raise ValueError('Unexpected scan command')
 
+        # Try with TLS 1.2 even if the server supports TLS 1.3 or higher
+        if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
+            ssl_version_to_use = OpenSslVersionEnum.TLSV1_2
+        else:
+            ssl_version_to_use = server_info.highest_ssl_version_supported
+
         rsa_params = None
         # With TLS 1.2 some servers are only vulnerable when using the GCM cipher suites - try them first
-        if server_info.highest_ssl_version_supported == OpenSslVersionEnum.TLSV1_2:
+        if ssl_version_to_use == OpenSslVersionEnum.TLSV1_2:
             cipher_string = 'AES128-GCM-SHA256:AES256-GCM-SHA384'
             rsa_params = self._get_rsa_parameters(server_info, cipher_string)
 
@@ -195,14 +202,20 @@ class RobotPlugin(plugin_base.Plugin):
         # On the first attempt, finish the TLS handshake after sending the Robot payload
         robot_should_complete_handshake = True
         robot_result_enum = self._run_oracle_over_threads(
-            server_info, cipher_string, rsa_modulus, rsa_exponent, robot_should_complete_handshake
+            server_info, ssl_version_to_use, cipher_string, rsa_modulus, rsa_exponent, robot_should_complete_handshake
         )
 
         if robot_result_enum == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE:
             # Try again but this time do not finish the TLS handshake - for some servers it will reveal an oracle
             robot_should_complete_handshake = False
-            robot_result_enum = self._run_oracle_over_threads(server_info, cipher_string, rsa_modulus, rsa_exponent,
-                                                              robot_should_complete_handshake)
+            robot_result_enum = self._run_oracle_over_threads(
+                server_info,
+                ssl_version_to_use,
+                cipher_string,
+                rsa_modulus,
+                rsa_exponent,
+                robot_should_complete_handshake
+            )
 
         return RobotScanResult(server_info, scan_command, robot_result_enum)
 
@@ -210,6 +223,7 @@ class RobotPlugin(plugin_base.Plugin):
     def _run_oracle_over_threads(
             cls,
             server_info: ServerConnectivityInfo,
+            ssl_version_to_use: OpenSslVersionEnum,
             cipher_string: str,
             rsa_modulus: int,
             rsa_exponent: int,
@@ -220,10 +234,30 @@ class RobotPlugin(plugin_base.Plugin):
 
         for payload_enum in RobotPmsPaddingPayloadEnum:
             # Run each payload twice to ensure the results are consistent
-            thread_pool.add_job((cls._send_robot_payload, [server_info, cipher_string, payload_enum,
-                                                           should_complete_handshake, rsa_modulus, rsa_exponent]))
-            thread_pool.add_job((cls._send_robot_payload, [server_info, cipher_string, payload_enum,
-                                                           should_complete_handshake, rsa_modulus, rsa_exponent]))
+            thread_pool.add_job((
+                cls._send_robot_payload,
+                [
+                    server_info,
+                    ssl_version_to_use,
+                    cipher_string,
+                    payload_enum,
+                    should_complete_handshake,
+                    rsa_modulus,
+                    rsa_exponent
+                ]
+            ))
+            thread_pool.add_job((
+                cls._send_robot_payload,
+                [
+                    server_info,
+                    ssl_version_to_use,
+                    cipher_string,
+                    payload_enum,
+                    should_complete_handshake,
+                    rsa_modulus,
+                    rsa_exponent
+                ]
+            ))
 
         # Use one thread per check
         thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum) * 2)
@@ -282,6 +316,7 @@ class RobotPlugin(plugin_base.Plugin):
     @staticmethod
     def _send_robot_payload(
             server_info: ServerConnectivityInfo,
+            ssl_version_to_use: OpenSslVersionEnum,
             rsa_cipher_string: str,
             robot_payload_enum: RobotPmsPaddingPayloadEnum,
             robot_should_finish_handshake: bool,
@@ -289,17 +324,18 @@ class RobotPlugin(plugin_base.Plugin):
             rsa_exponent: int,
     ) -> Tuple[RobotPmsPaddingPayloadEnum, str]:
         # Do a handshake which each record and keep track of what the server returned
-        ssl_connection = server_info.get_preconfigured_ssl_connection()
+        ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version_to_use)
 
         # Replace nassl.sslClient.do_handshake() with a ROBOT checking SSL handshake so that all the SSLyze
         # options (startTLS, proxy, etc.) still work
-        ssl_connection.ssl_client.do_handshake = types.MethodType(do_handshake_with_robot,
-                                                                  ssl_connection.ssl_client)
+        ssl_connection.ssl_client.do_handshake = types.MethodType(
+            do_handshake_with_robot, ssl_connection.ssl_client
+        )
         ssl_connection.ssl_client.set_cipher_list(rsa_cipher_string)
 
         # Compute the  payload
         cke_payload = RobotTlsRecordPayloads.get_client_key_exchange_record(
-            robot_payload_enum, server_info.highest_ssl_version_supported, rsa_modulus, rsa_exponent
+            robot_payload_enum, TlsVersionEnum[ssl_version_to_use.name], rsa_modulus, rsa_exponent
         )
 
         # H4ck: we need to pass some arguments to the handshake but there is no simple way to do it; we use an attribute

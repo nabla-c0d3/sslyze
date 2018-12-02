@@ -4,6 +4,7 @@ from typing import Type, List
 from xml.etree.ElementTree import Element
 
 from nassl._nassl import WantReadError
+from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
@@ -45,11 +46,16 @@ class HeartbleedPlugin(plugin_base.Plugin):
         if not isinstance(scan_command, HeartbleedScanCommand):
             raise ValueError('Unexpected scan command')
 
+        if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
+            # The server uses a recent version of OpenSSL and it cannot be vulnerable to Heartbleed
+            return HeartbleedScanResult(server_info, scan_command, False)
+
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         # Replace nassl.sslClient.do_handshake() with a heartbleed checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work
-        ssl_connection.ssl_client.do_handshake = types.MethodType(do_handshake_with_heartbleed,
-                                                                  ssl_connection.ssl_client)
+        ssl_connection.ssl_client.do_handshake = types.MethodType(
+            do_handshake_with_heartbleed, ssl_connection.ssl_client
+        )
 
         is_vulnerable_to_heartbleed = False
         try:

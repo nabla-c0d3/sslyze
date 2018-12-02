@@ -40,8 +40,14 @@ class FallbackScsvPlugin(plugin_base.Plugin):
         if server_info.highest_ssl_version_supported.value <= OpenSslVersionEnum.SSLV3.value:
             raise ValueError('Server only supports SSLv3; no downgrade attacks are possible')
 
+        # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no downgrade possible with TLS 1.3
+        if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
+            ssl_version_to_use = OpenSslVersionEnum.TLSV1_2
+        else:
+            ssl_version_to_use = server_info.highest_ssl_version_supported
+
         # Try to connect using a lower TLS version with the fallback cipher suite enabled
-        ssl_version_downgrade = OpenSslVersionEnum(server_info.highest_ssl_version_supported.value - 1)  # type: ignore
+        ssl_version_downgrade = OpenSslVersionEnum(ssl_version_to_use.value - 1)  # type: ignore
         ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version_downgrade)
         ssl_connection.ssl_client.enable_fallback_scsv()
 

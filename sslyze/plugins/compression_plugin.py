@@ -1,9 +1,11 @@
 from xml.etree.ElementTree import Element
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.server_connectivity_info import ServerConnectivityInfo
 from typing import Type, List
+
+from sslyze.utils.ssl_connection import SslHandshakeRejected
 
 
 class CompressionScanCommand(PluginScanCommand):
@@ -35,12 +37,21 @@ class CompressionPlugin(plugin_base.Plugin):
         if not isinstance(scan_command, CompressionScanCommand):
             raise ValueError('Unexpected scan command')
 
-        ssl_connection = server_info.get_preconfigured_ssl_connection(should_use_legacy_openssl=True)
+        # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no compression with TLS 1.3
+        if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
+            ssl_version_to_use = OpenSslVersionEnum.TLSV1_2
+        else:
+            ssl_version_to_use = server_info.highest_ssl_version_supported
+
+        ssl_connection = server_info.get_preconfigured_ssl_connection(
+            override_ssl_version=ssl_version_to_use, should_use_legacy_openssl=True
+        )
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives
         if 'zlib compression' not in ssl_connection.ssl_client.get_available_compression_methods():
-            raise RuntimeError('OpenSSL was not built with support for zlib / compression. '
-                               'Did you build nassl yourself ?')
+            raise RuntimeError(
+                'OpenSSL was not built with support for zlib / compression. Did you build nassl yourself ?'
+            )
 
         try:
             # Perform the SSL handshake
@@ -49,6 +60,9 @@ class CompressionPlugin(plugin_base.Plugin):
         except ClientCertificateRequested:
             # The server asked for a client cert
             compression_name = ssl_connection.ssl_client.get_current_compression_method()
+        except SslHandshakeRejected:
+            # Should only happen when the server only supports TLS 1.3, which does not support compression
+            compression_name = ''
         finally:
             ssl_connection.close()
 

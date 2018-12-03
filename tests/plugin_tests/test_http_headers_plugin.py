@@ -6,7 +6,7 @@ from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins.http_headers_plugin import HttpHeadersPlugin, HttpHeadersScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import ClientAuthenticationCredentials
-from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
+from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, LegacyOpenSslServer
 
 
 class HttpHeadersPluginTestCase(unittest.TestCase):
@@ -82,8 +82,25 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         self.assertTrue(pickle.dumps(plugin_result))
 
     @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
-    def test_fails_when_client_auth_failed(self):
-        # Given a server that requires client authentication
+    def test_fails_when_client_auth_failed_tls_1_2(self):
+        # Given a server with TLS 1.2 that requires client authentication
+        with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
+            # And the client does NOT provide a client certificate
+            server_test = ServerConnectivityTester(
+                hostname=server.hostname,
+                ip_address=server.ip_address,
+                port=server.port
+            )
+            server_info = server_test.perform()
+
+            # The plugin fails when a client cert was not supplied
+            plugin = HttpHeadersPlugin()
+            with self.assertRaises(ClientCertificateRequested):
+                plugin.process_task(server_info, HttpHeadersScanCommand())
+
+    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    def test_fails_when_client_auth_failed_tls_1_3(self):
+        # Given a server with TLS 1.3 that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
             server_test = ServerConnectivityTester(

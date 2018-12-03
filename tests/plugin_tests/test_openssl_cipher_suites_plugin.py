@@ -330,9 +330,9 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         )
 
     @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
-    def test_succeeds_when_client_auth_failed(self):
-        # Given a server that requires client authentication
-        with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
+    def test_succeeds_when_client_auth_failed_tls_1_2(self):
+        # Given a TLS 1.2 server that requires client authentication
+        with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
             server_test = ServerConnectivityTester(
                 hostname=server.hostname,
@@ -349,3 +349,22 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 
+    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    def test_succeeds_when_client_auth_failed_tls_1_3(self):
+        # Given a TLS 1.3 server that requires client authentication
+        with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
+            # And the client does NOT provide a client certificate
+            server_test = ServerConnectivityTester(
+                hostname=server.hostname,
+                ip_address=server.ip_address,
+                port=server.port
+            )
+            server_info = server_test.perform()
+
+            # OpenSslCipherSuitesPlugin works even when a client cert was not supplied
+            plugin = OpenSslCipherSuitesPlugin()
+            plugin_result = plugin.process_task(server_info, Tlsv13ScanCommand())
+
+        self.assertTrue(plugin_result.accepted_cipher_list)
+        self.assertTrue(plugin_result.as_text())
+        self.assertTrue(plugin_result.as_xml())

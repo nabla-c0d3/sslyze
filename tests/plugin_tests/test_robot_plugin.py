@@ -4,7 +4,7 @@ from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.plugins.robot_plugin import RobotPlugin, RobotScanCommand, RobotScanResultEnum
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
+from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, LegacyOpenSslServer
 from tests.travis_utils import IS_RUNNING_ON_TRAVIS
 
 
@@ -35,8 +35,8 @@ class RobotPluginPluginTestCase(unittest.TestCase):
 
     @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_fails_when_client_auth_failed(self):
-        # Given a server that requires client authentication
-        with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
+        # Given a TLS 1.2 server that requires client authentication
+        with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
             server_test = ServerConnectivityTester(
                 hostname=server.hostname,

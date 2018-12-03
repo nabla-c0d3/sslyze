@@ -1,7 +1,6 @@
 import socket
 from typing import Optional, List, Iterable, cast
 
-from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
 from sslyze.server_connectivity_info import ServerConnectivityInfo
@@ -284,10 +283,6 @@ class ServerConnectivityTester:
                     # Or a SSLHandshakeRejected
                     except SslHandshakeRejected:
                         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
-                    # Or a bad certificate alert (https://github.com/nabla-c0d3/sslyze/issues/313 )
-                    except OpenSSLError as e:
-                        if 'alert bad certificate' in e.args[0]:
-                            client_auth_requirement = ClientAuthenticationServerConfigurationEnum.REQUIRED
                     except Exception:
                         # Could not complete a handshake with this server
                         pass

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Appendix: Available Scan Commands &mdash; SSLyze 2.0.1 documentation</title>
+  <title>Appendix: Available Scan Commands &mdash; SSLyze 2.0.2 documentation</title>
   
 
   
@@ -58,7 +58,7 @@
             
             
               <div class="version">
-                2.0.1
+                2.0.2
               </div>
             
           
@@ -864,7 +864,7 @@ certificate is parsed using the cryptography module; documentation is available 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_uri">
 <code class="descname">report_uri</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_uri" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The content of the report-uri field.</p>
+<dd><p><em>Optional[str]</em> – The content of the report-uri field.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -888,8 +888,8 @@ certificate is parsed using the cryptography module; documentation is available 
 </dd></dl>
 
 <dl class="class">
-<dt id="sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">ParsedExpectCTHeader</code><span class="sig-paren">(</span><em>raw_expect_ct_header</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader" title="Permalink to this definition">¶</a></dt>
+<dt id="sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">ParsedExpectCtHeader</code><span class="sig-paren">(</span><em>raw_expect_ct_header</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Expect-CT header returned by the server.</p>
 <dl class="attribute">
 <dt>
@@ -900,15 +900,21 @@ certificate is parsed using the cryptography module; documentation is available 
 <dl class="attribute">
 <dt>
 <code class="descname">report-uri</code></dt>
-<dd><p><em>str</em> – The content of report-uri field.</p>
+<dd><p><em>Optional[str]</em> – The content of report-uri field.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader.enforce">
-<code class="descname">enforce</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader.enforce" title="Permalink to this definition">¶</a></dt>
+<dt id="sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader.enforce">
+<code class="descname">enforce</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader.enforce" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>bool</em> – True if enforce directive is set.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="sslyze.plugins.http_headers_plugin.HttpHeaderParsingError">
+<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">HttpHeaderParsingError</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeaderParsingError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raised when an HTTP header is badly formatted and could not be parsed.</p>
 </dd></dl>
 
 </div>
@@ -1179,7 +1185,7 @@ session ID resumption with the server (should always be empty).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2.0.1',
+            VERSION:'2.0.2',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

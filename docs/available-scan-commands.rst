@@ -112,7 +112,8 @@ Additional helper classes
 
 .. autoclass:: ParsedHstsHeader()
 .. autoclass:: ParsedHpkpHeader()
-.. autoclass:: ParsedExpectCTHeader()
+.. autoclass:: ParsedExpectCtHeader()
+.. autoclass:: HttpHeaderParsingError()
 
 
 OpenSslCcsInjectionPlugin

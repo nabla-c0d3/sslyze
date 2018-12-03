@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; SSLyze 2.0.1 documentation</title>
+  <title>Index &mdash; SSLyze 2.0.2 documentation</title>
   
 
   
@@ -57,7 +57,7 @@
             
             
               <div class="version">
-                2.0.1
+                2.0.2
               </div>
             
           
@@ -255,6 +255,8 @@
 </li>
       <li><a href="running-scan-commands.html#sslyze.concurrent_scanner.ConcurrentScanner">ConcurrentScanner (class in sslyze.concurrent_scanner)</a>
 </li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ConnectionToServerTimedOut">ConnectionToServerTimedOut (class in sslyze.server_connectivity_tester)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -265,7 +267,7 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.early_data_plugin.EarlyDataScanResult">EarlyDataScanResult (class in sslyze.plugins.early_data_plugin)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader.enforce">enforce (sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader.enforce">enforce (sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader attribute)</a>
 </li>
       <li><a href="running-scan-commands.html#sslyze.concurrent_scanner.PluginRaisedExceptionScanResult.error_message">error_message (sslyze.concurrent_scanner.PluginRaisedExceptionScanResult attribute)</a>
 
@@ -273,6 +275,8 @@
         <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.PathValidationError.error_message">(sslyze.plugins.certificate_info_plugin.PathValidationError attribute)</a>
 </li>
         <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.error_message">(sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite attribute)</a>
+</li>
+        <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerConnectivityError.error_message">(sslyze.server_connectivity_tester.ServerConnectivityError attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -350,6 +354,8 @@
       <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.http_tunneling_settings">http_tunneling_settings (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.ssl_settings.HttpConnectTunnelingSettings">HttpConnectTunnelingSettings (class in sslyze.ssl_settings)</a>
+</li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeaderParsingError">HttpHeaderParsingError (class in sslyze.plugins.http_headers_plugin)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeadersScanCommand">HttpHeadersScanCommand (class in sslyze.plugins.http_headers_plugin)</a>
 </li>
@@ -489,7 +495,7 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedExpectCTHeader">ParsedExpectCTHeader (class in sslyze.plugins.http_headers_plugin)</a>
+      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader">ParsedExpectCtHeader (class in sslyze.plugins.http_headers_plugin)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader">ParsedHpkpHeader (class in sslyze.plugins.http_headers_plugin)</a>
 </li>
@@ -509,10 +515,10 @@
 </li>
       <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerConnectivityTester.perform">perform() (sslyze.server_connectivity_tester.ServerConnectivityTester method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.pin_sha256_list">pin_sha256_list (sslyze.plugins.http_headers_plugin.ParsedHpkpHeader attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="testing-connectivity.html#sslyze.ssl_settings.TlsWrappedProtocolEnum.PLAIN_TLS">PLAIN_TLS (sslyze.ssl_settings.TlsWrappedProtocolEnum attribute)</a>
 </li>
       <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.Plugin">Plugin (class in sslyze.plugins.plugin_base)</a>
@@ -532,6 +538,8 @@
       <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHstsHeader.preload">preload (sslyze.plugins.http_headers_plugin.ParsedHstsHeader attribute)</a>
 </li>
       <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.Plugin.process_task">process_task() (sslyze.plugins.plugin_base.Plugin method)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ProxyConnectivityError">ProxyConnectivityError (class in sslyze.server_connectivity_tester)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -578,10 +586,22 @@
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.SymantecDistrustTimelineEnum.SEPTEMBER_2018">SEPTEMBER_2018 (sslyze.plugins.certificate_info_plugin.SymantecDistrustTimelineEnum attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult.server_info">server_info (sslyze.plugins.plugin_base.PluginScanResult attribute)</a>, <a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanResult.server_info">[1]</a>
+
+      <ul>
+        <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerConnectivityError.server_info">(sslyze.server_connectivity_tester.ServerConnectivityError attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerConnectivityError">ServerConnectivityError (class in sslyze.server_connectivity_tester)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo">ServerConnectivityInfo (class in sslyze.server_connectivity_info)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerConnectivityTester">ServerConnectivityTester (class in sslyze.server_connectivity_tester)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerHostnameCouldNotBeResolved">ServerHostnameCouldNotBeResolved (class in sslyze.server_connectivity_tester)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerRejectedConnection">ServerRejectedConnection (class in sslyze.server_connectivity_tester)</a>
+</li>
+      <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerTlsConfigurationNotSuportedError">ServerTlsConfigurationNotSuportedError (class in sslyze.server_connectivity_tester)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanCommand">SessionRenegotiationScanCommand (class in sslyze.plugins.session_renegotiation_plugin)</a>
 </li>
@@ -623,14 +643,14 @@
 </li>
       <li><a href="available-scan-commands.html#module-sslyze.plugins.http_headers_plugin">sslyze.plugins.http_headers_plugin (module)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#module-sslyze.plugins.openssl_ccs_injection_plugin">sslyze.plugins.openssl_ccs_injection_plugin (module)</a>
 </li>
       <li><a href="available-scan-commands.html#module-sslyze.plugins.openssl_cipher_suites_plugin">sslyze.plugins.openssl_cipher_suites_plugin (module)</a>
 </li>
       <li><a href="available-scan-commands.html#module-sslyze.plugins.plugin_base">sslyze.plugins.plugin_base (module)</a>, <a href="writing-a-plugin.html#module-sslyze.plugins.plugin_base">[1]</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#module-sslyze.plugins.robot_plugin">sslyze.plugins.robot_plugin (module)</a>
 </li>
       <li><a href="available-scan-commands.html#module-sslyze.plugins.session_renegotiation_plugin">sslyze.plugins.session_renegotiation_plugin (module)</a>
@@ -806,7 +826,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2.0.1',
+            VERSION:'2.0.2',
             LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',

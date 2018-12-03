@@ -96,6 +96,8 @@ class HttpHeadersPlugin(Plugin):
 
 
 class HttpHeaderParsingError(ValueError):
+    """Raised when an HTTP header is badly formatted and could not be parsed.
+    """
     pass
 
 

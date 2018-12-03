@@ -14,10 +14,10 @@ from sslyze.utils.tls_wrapped_protocol_helpers import StartTlsError
 
 
 class ServerConnectivityError(Exception):
-    """SSLyze was unable to complete at least one TLS handshake with the server while doing connectivity testing.
+    """Generic error for when SSLyze was unable to successfully complete connectivity testing with the server.
 
     Attributes:
-        server_info: The connectivity tester that failed, containing all the server's  information
+        server_info: The connectivity tester that failed, containing all the server's information
             (hostname, port, etc.) that was used to test connectivity.
         error_message: The error that was returned.
     """
@@ -36,24 +36,19 @@ class ServerConnectivityError(Exception):
         )
 
 
-class ServerNotReachableError(ServerConnectivityError):
-    """Generic error when the connectivity tester was not able to connect to the server.
-    """
-
-
-class ServerRejectedConnection(ServerNotReachableError):
+class ServerRejectedConnection(ServerConnectivityError):
 
     def __init__(self, server_info: 'ServerConnectivityTester') -> None:
         super().__init__(server_info, 'Connection rejected')
 
 
-class ConnectionToServerTimedOut(ServerNotReachableError):
+class ConnectionToServerTimedOut(ServerConnectivityError):
 
     def __init__(self, server_info: 'ServerConnectivityTester') -> None:
         super().__init__(server_info, 'Could not connect (timeout)')
 
 
-class ServerHostnameCouldNotBeResolved(ServerNotReachableError):
+class ServerHostnameCouldNotBeResolved(ServerConnectivityError):
 
     def __init__(self, server_info: 'ServerConnectivityTester') -> None:
         super().__init__(server_info, 'Could not resolve hostname')

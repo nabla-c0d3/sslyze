@@ -31,6 +31,12 @@ The ServerConnectivityTester class
 
 .. autoclass:: ServerConnectivityTester()
    :members: __init__, perform
+.. autoclass:: ServerConnectivityError()
+.. autoclass:: ServerRejectedConnection()
+.. autoclass:: ConnectionToServerTimedOut()
+.. autoclass:: ServerHostnameCouldNotBeResolved()
+.. autoclass:: ServerTlsConfigurationNotSuportedError()
+.. autoclass:: ProxyConnectivityError()
 
 Enabling StartTLS and other supported protocols
 -----------------------------------------------

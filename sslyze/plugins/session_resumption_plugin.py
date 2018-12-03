@@ -109,8 +109,8 @@ class SessionResumptionPlugin(Plugin):
             successful_resumptions_nb, errored_resumptions_list = self._test_session_resumption_rate(
                 server_info, ssl_version_to_use, 100
             )
-            result = SessionResumptionRateScanResult(
-                server_info, scan_command, 100, successful_resumptions_nb, errored_resumptions_list  # type: ignore
+            result = SessionResumptionRateScanResult(  # type: ignore
+                server_info, scan_command, 100, successful_resumptions_nb, errored_resumptions_list
             )
         else:
             raise ValueError('PluginSessionResumption: Unknown command.')

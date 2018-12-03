@@ -112,7 +112,7 @@ class _ParsedHttpHeader(ABC):
             raise HttpHeaderParsingError(f'Error when trying to parse "{raw_header}"; HTTP header is badly formatted?')
 
     @abstractmethod
-    def _parse_header(self, raw_header):
+    def _parse_header(self, raw_header: str) -> None:
         pass
 
 
@@ -125,12 +125,12 @@ class ParsedHstsHeader(_ParsedHttpHeader):
         max_age (int): The content of the max-age field.
     """
     def __init__(self, raw_hsts_header: str) -> None:
-        self.max_age = None
+        self.max_age: int
         self.include_subdomains = False
         self.preload = False
         super().__init__(raw_hsts_header)
 
-    def _parse_header(self, raw_hsts_header):
+    def _parse_header(self, raw_hsts_header: str) -> None:
         for hsts_directive in raw_hsts_header.split(';'):
             hsts_directive = hsts_directive.strip()
             if not hsts_directive:
@@ -154,7 +154,7 @@ class ParsedHpkpHeader(_ParsedHttpHeader):
     Attributes:
         report_only (bool): True if the HPKP header used is "Public-Key-Pins-Report-Only" (instead of
             "Public-Key-Pins").
-        report_uri (str): The content of the report-uri field.
+        report_uri (Optional[str]): The content of the report-uri field.
         include_subdomains (bool): True if the includesubdomains directive is set.
         max_age (int): The content of the max-age field.
         pin_sha256_list (List[str]): The list of pin-sha256 values set in the header.
@@ -162,12 +162,12 @@ class ParsedHpkpHeader(_ParsedHttpHeader):
 
     def __init__(self, raw_hpkp_header: str, report_only: bool = False) -> None:
         self.report_only = report_only
-        self.report_uri = None
+        self.report_uri: Optional[str] = None
         self.include_subdomains = False
-        self.max_age = None
+        self.max_age: int
         super().__init__(raw_hpkp_header)
 
-    def _parse_header(self, raw_hpkp_header):
+    def _parse_header(self, raw_hpkp_header: str) -> None:
         pin_sha256_list = []
         for hpkp_directive in raw_hpkp_header.split(';'):
             hpkp_directive = hpkp_directive.strip()
@@ -195,17 +195,17 @@ class ParsedExpectCtHeader(_ParsedHttpHeader):
 
     Attributes:
         max-age (int): The content of the max-age field.
-        report-uri (str): The content of report-uri field.
+        report-uri (Optional[str]): The content of report-uri field.
         enforce (bool): True if enforce directive is set.
     """
 
     def __init__(self, raw_expect_ct_header: str) -> None:
-        self.max_age = None
-        self.report_uri = None
+        self.max_age: int
+        self.report_uri: Optional[str] = None
         self.enforce = False
         super().__init__(raw_expect_ct_header)
 
-    def _parse_header(self, raw_expect_ct_header):
+    def _parse_header(self, raw_expect_ct_header: str) -> None:
         for expect_ct_directive in raw_expect_ct_header.split(','):
             expect_ct_directive = expect_ct_directive.strip()
 

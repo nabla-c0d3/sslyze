@@ -171,7 +171,7 @@ class ParsedHpkpHeader:
 
 
 # TODO(AD): Rename this to ParsedExpectCtHeader
-class ParsedExpectCTHeader:
+class ParsedExpectCtHeader:
     """Expect-CT header returned by the server.
 
     Attributes:
@@ -237,7 +237,7 @@ class HttpHeadersScanResult(PluginScanResult):
         super().__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
-        self.expect_ct_header = ParsedExpectCTHeader(raw_expect_ct_header) if raw_expect_ct_header else None
+        self.expect_ct_header = ParsedExpectCtHeader(raw_expect_ct_header) if raw_expect_ct_header else None
         self.verified_certificate_chain: List[Certificate] = []
         try:
             main_trust_store = TrustStoresRepository.get_default().get_main_store()

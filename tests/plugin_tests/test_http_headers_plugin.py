@@ -75,6 +75,7 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.expect_ct_header)
         self.assertTrue(plugin_result.expect_ct_header.max_age >= 0)
+        self.assertTrue(plugin_result.expect_ct_header.report_uri)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())

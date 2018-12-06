@@ -1,4 +1,3 @@
-from abc import abstractmethod, ABC
 from xml.etree.ElementTree import Element
 
 from cryptography.hazmat.backends import default_backend
@@ -52,9 +51,8 @@ class HttpHeadersPlugin(Plugin):
         hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain = self._get_security_headers(
             server_info
         )
-        return HttpHeadersScanResult(
-            server_info, scan_command, hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain
-        )
+        return HttpHeadersScanResult(server_info, scan_command, hsts_header, hpkp_header, expect_ct_header,
+                                     hpkp_report_only, certificate_chain)
 
     @classmethod
     def _get_security_headers(
@@ -95,30 +93,7 @@ class HttpHeadersPlugin(Plugin):
         return hsts_header, hpkp_header, expect_ct_header, hpkp_report_only, certificate_chain
 
 
-class HttpHeaderParsingError(ValueError):
-    """Raised when an HTTP header is badly formatted and could not be parsed.
-    """
-    pass
-
-
-class _ParsedHttpHeader(ABC):
-
-    def __init__(self, raw_header: str) -> None:
-        # Handle headers defined multiple times by picking the first value
-        if ',' in raw_header:
-            raw_header = raw_header.split(',')[0]
-
-        try:
-            self._parse_header(raw_header)
-        except ValueError:
-            raise HttpHeaderParsingError(f'Error when trying to parse "{raw_header}"; HTTP header is badly formatted?')
-
-    @abstractmethod
-    def _parse_header(self, raw_header: str) -> None:
-        pass
-
-
-class ParsedHstsHeader(_ParsedHttpHeader):
+class ParsedHstsHeader:
     """The HTTP Strict Transport Security header returned by the server.
 
     Attributes:
@@ -127,12 +102,13 @@ class ParsedHstsHeader(_ParsedHttpHeader):
         max_age (int): The content of the max-age field.
     """
     def __init__(self, raw_hsts_header: str) -> None:
-        self.max_age: int
+        # Handle headers defined multiple times by picking the first value
+        if ',' in raw_hsts_header:
+            raw_hsts_header = raw_hsts_header.split(',')[0]
+
+        self.max_age = None
         self.include_subdomains = False
         self.preload = False
-        super().__init__(raw_hsts_header)
-
-    def _parse_header(self, raw_hsts_header: str) -> None:
         for hsts_directive in raw_hsts_header.split(';'):
             hsts_directive = hsts_directive.strip()
             if not hsts_directive:
@@ -150,26 +126,28 @@ class ParsedHstsHeader(_ParsedHttpHeader):
                 raise ValueError('Unexpected value in HSTS header: {}'.format(repr(hsts_directive)))
 
 
-class ParsedHpkpHeader(_ParsedHttpHeader):
+class ParsedHpkpHeader:
     """The HTTP Public Key Pinning header returned by the server.
 
     Attributes:
         report_only (bool): True if the HPKP header used is "Public-Key-Pins-Report-Only" (instead of
             "Public-Key-Pins").
-        report_uri (Optional[str]): The content of the report-uri field.
+        report_uri (str): The content of the report-uri field.
         include_subdomains (bool): True if the includesubdomains directive is set.
         max_age (int): The content of the max-age field.
         pin_sha256_list (List[str]): The list of pin-sha256 values set in the header.
     """
 
     def __init__(self, raw_hpkp_header: str, report_only: bool = False) -> None:
-        self.report_only = report_only
-        self.report_uri: Optional[str] = None
-        self.include_subdomains = False
-        self.max_age: int
-        super().__init__(raw_hpkp_header)
+        # Handle headers defined multiple times by picking the first value
+        if ',' in raw_hpkp_header:
+            raw_hpkp_header = raw_hpkp_header.split(',')[0]
 
-    def _parse_header(self, raw_hpkp_header: str) -> None:
+        self.report_only = report_only
+        self.report_uri = None
+        self.include_subdomains = False
+        self.max_age = None
+
         pin_sha256_list = []
         for hpkp_directive in raw_hpkp_header.split(';'):
             hpkp_directive = hpkp_directive.strip()
@@ -192,22 +170,21 @@ class ParsedHpkpHeader(_ParsedHttpHeader):
         self.pin_sha256_list = pin_sha256_list
 
 
-class ParsedExpectCtHeader(_ParsedHttpHeader):
+# TODO(AD): Rename this to ParsedExpectCtHeader
+class ParsedExpectCTHeader:
     """Expect-CT header returned by the server.
 
     Attributes:
         max-age (int): The content of the max-age field.
-        report-uri (Optional[str]): The content of report-uri field.
+        report-uri (str): The content of report-uri field.
         enforce (bool): True if enforce directive is set.
     """
 
     def __init__(self, raw_expect_ct_header: str) -> None:
-        self.max_age: int
-        self.report_uri: Optional[str] = None
+        self.max_age = None
+        self.report_uri = None
         self.enforce = False
-        super().__init__(raw_expect_ct_header)
 
-    def _parse_header(self, raw_expect_ct_header: str) -> None:
         for expect_ct_directive in raw_expect_ct_header.split(','):
             expect_ct_directive = expect_ct_directive.strip()
 
@@ -260,7 +237,7 @@ class HttpHeadersScanResult(PluginScanResult):
         super().__init__(server_info, scan_command)
         self.hsts_header = ParsedHstsHeader(raw_hsts_header) if raw_hsts_header else None
         self.hpkp_header = ParsedHpkpHeader(raw_hpkp_header, hpkp_report_only) if raw_hpkp_header else None
-        self.expect_ct_header = ParsedExpectCtHeader(raw_expect_ct_header) if raw_expect_ct_header else None
+        self.expect_ct_header = ParsedExpectCTHeader(raw_expect_ct_header) if raw_expect_ct_header else None
         self.verified_certificate_chain: List[Certificate] = []
         try:
             main_trust_store = TrustStoresRepository.get_default().get_main_store()

@@ -164,6 +164,10 @@ class ParsedHpkpHeader:
                 self.include_subdomains = True
             elif 'report-uri' in hpkp_directive:
                 self.report_uri = hpkp_directive.split('report-uri=')[1].strip(' "')
+            elif 'report-to' in hpkp_directive:
+                # Reporting API `report-to` group name
+                # https://w3c.github.io/reporting/#examples
+                self.report_to = hpkp_directive.split('report-to=')[1].strip(' "')
             else:
                 raise ValueError('Unexpected value in HPKP header: {}'.format(repr(hpkp_directive)))
 

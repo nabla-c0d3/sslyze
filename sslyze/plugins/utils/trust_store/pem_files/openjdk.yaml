@@ -1,7 +1,7 @@
 platform: OPENJDK
-version: jdk-11.0.1
-url: https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz
-date_fetched: 2018-10-29
+version: jdk-11.0.2
+url: https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz
+date_fetched: 2019-01-24
 trusted_certificates_count: 93
 trusted_certificates:
 - subject_name: AAA Certificate Services

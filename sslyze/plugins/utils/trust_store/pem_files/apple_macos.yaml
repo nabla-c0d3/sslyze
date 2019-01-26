@@ -1,11 +1,13 @@
 platform: APPLE_MACOS
-version: High Sierra
-url: https://support.apple.com/kb/HT208127
-date_fetched: 2018-07-28
-trusted_certificates_count: 168
+version: 12, macOS 10.14, watchOS 5, and tvOS 12
+url: https://support.apple.com/kb/HT209144
+date_fetched: 2018-12-20
+trusted_certificates_count: 174
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
+- subject_name: AC RAIZ FNMT-RCM
+  fingerprint: ebc5570c29018c4d67b1aa127baf12f703b4611ebc17b7dab5573894179b93fa
 - subject_name: ANF Global Root CA
   fingerprint: e3268f6106ba8b665a1a962ddea1459d2a46972f1f2440329b390b895749ad45
 - subject_name: Actalis Authentication Root CA
@@ -142,8 +144,6 @@ trusted_certificates:
   fingerprint: 6dc47172e01cbcb0bf62580d895fe2b8ac9ad4f873801e0c10b9c837d21eb177
 - subject_name: Entrust.net Certification Authority (2048)
   fingerprint: d1c339ea2784eb870f934fc5634e4aa9ad5505016401f26465d37a574663359f
-- subject_name: Federal Common Policy CA
-  fingerprint: 894ebc0b23da2a50c0186b7f8f25ef1f6b2935af32a94584ef80aaf877a3a06e
 - subject_name: GeoTrust Global CA
   fingerprint: ff856a2d251dcd88d36656f450126798cfabaade40799c722de4d2b5db36a73a
 - subject_name: GeoTrust Primary Certification Authority
@@ -172,8 +172,12 @@ trusted_certificates:
   fingerprint: 45140b3247eb9cc8c5b4f0d7b53091f73292089e6e5a63e2749dd3aca9198eda
 - subject_name: Government Root Certification Authority
   fingerprint: 70b922bfda0e3f4a342e4ee22d579ae598d071cc5ec9c30f123680340388aea5
+- subject_name: Hellenic Academic and Research Institutions ECC RootCA 2015
+  fingerprint: 44b545aa8a25e65a73ca15dc27fc36d24c1cb9953a066539b11582dc487b4833
 - subject_name: Hellenic Academic and Research Institutions RootCA 2011
   fingerprint: bc104f15a48be709dca542a7e1d4b9df6f054527e802eaa92d595444258afe71
+- subject_name: Hellenic Academic and Research Institutions RootCA 2015
+  fingerprint: a040929a02ce53b4acf4f2ffc6981ce4496f755e6d45fe0b2a692bcd52523f36
 - subject_name: Hongkong Post Root CA 1
   fingerprint: f9e67d336c51002ac054c632022d66dda2e7e3fff10ad061ed31d8bbb410cfb2
 - subject_name: I.CA - Qualified Certification Authority, 09/2009
@@ -218,6 +222,14 @@ trusted_certificates:
   fingerprint: 88ef81de202eb018452e43f864725cea5fbd1fc2d9d205730709c5d8b8690f46
 - subject_name: QuoVadis Root Certification Authority
   fingerprint: a45ede3bbbf09c8ae15c72efc07268d693a21c996fd51e67ca079460fd6d8873
+- subject_name: SSL.com EV Root Certification Authority ECC
+  fingerprint: 22a2c1f7bded704cc1e701b5f408c310880fe956b5de2a4a44f99c873a25a7c8
+- subject_name: SSL.com EV Root Certification Authority RSA R2
+  fingerprint: 2e7bf16cc22485a7bbe2aa8696750761b0ae39be3b2fe9d0cc6d4ef73491425c
+- subject_name: SSL.com Root Certification Authority ECC
+  fingerprint: 3417bb06cc6007da1b961c920b8ab4ce3fad820e4aa30b9acbc4a74ebdcebc65
+- subject_name: SSL.com Root Certification Authority RSA
+  fingerprint: 85666a562ee0be5ce925c1d8890a6f76a87ec16d4d7d5f29ea7419cf20123b69
 - subject_name: SZAFIR ROOT CA
   fingerprint: fabcf5197cdd7f458ac33832d3284021db2425fd6bea7a2e69b7486e8f51f9cc
 - subject_name: Secure Global CA

@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
 version: October 2, 2018
-url: https://gallery.technet.microsoft.com/Trusted-Root-Program-8895e873/file/216413/1/Trusted%20Root%20Program%20Participants%20As%20of%20October%2030%202018.xlsx
-date_fetched: 2018-11-04
-trusted_certificates_count: 286
+url: https://gallery.technet.microsoft.com/Trusted-Root-Program-831324c6/file/218032/1/Trusted%20Root%20Program%20Participants%20As%20of%20November%2027%202018.xlsx
+date_fetched: 2018-12-08
+trusted_certificates_count: 292
 trusted_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -321,8 +321,16 @@ trusted_certificates:
   fingerprint: 3c5f81fea5fab82c64bfa2eaecafcde8e077fc8620a7cae537163df36edbf378
 - subject_name: Microsoft ECC Product Root Certificate Authority 2018
   fingerprint: caca93b9d23d2b6fa76e8b8471931e0df3ec6f63af3cdbb936c41954a1872326
+- subject_name: Microsoft ECC Root Certificate Authority 2017
+  fingerprint: fea1884ab3aea6d0dbedbe4b9cd9fec8655116300a86a856488fc488bb4b44d2
 - subject_name: Microsoft ECC TS Root Certificate Authority 2018
   fingerprint: 3fd4be8baad2f26e1bde06c7584bb720dd1a972d111f5a4999bc44b08fb4960d
+- subject_name: Microsoft EV ECC Root Certificate Authority 2017
+  fingerprint: 6aea30bc02ca85afcfec2f65f60881893c926925fd0704bd8ada3f0f6eddb699
+- subject_name: Microsoft EV RSA Root Certificate Authority 2017
+  fingerprint: dfb3c314740596ad5fb97960ef62ad7c1fcceead16e74054652d1032e6f140ef
+- subject_name: Microsoft RSA Root Certificate Authority 2017
+  fingerprint: ecdd47b5acbfa328211e1bff54adeac95e6991e3c1d50e27b527e903208040a1
 - subject_name: Microsoft Root Certificate Authority 2010
   fingerprint: df545bf919a2439c36983b54cdfc903dfa4f37d3996d8d84b4c31eec6f3c163e
 - subject_name: Microsoft Root Certificate Authority 2011
@@ -369,6 +377,8 @@ trusted_certificates:
   fingerprint: 19abcdff3a74402fa8f0ca206bf7fab0dffff3ae2bbd719584d21090a4353207
 - subject_name: PostSignum Root QCA 2
   fingerprint: ad016f958050e0e7e46fae7dcc50197ed8e3ff0a4b262e5ddcdb3edddc7d6578
+- subject_name: PostSignum Root QCA 4
+  fingerprint: ac7f7862e685c7a7d9826a58ea32d183d4893fcc8f8fd6d900c9769a987e77f0
 - subject_name: QuoVadis Root CA 1 G3
   fingerprint: 8a866fd1b276b57e578e921c65828a2bed58e9f2f288054134b7f1f4bfc9cc74
 - subject_name: QuoVadis Root CA 2
@@ -548,6 +558,8 @@ trusted_certificates:
   fingerprint: 69fac9bd55fb0ac78d53bbee5cf1d597989fd0aaab20a25151bdf1733ee7d122
 - subject_name: XRamp Global Certification Authority
   fingerprint: cecddc905099d8dadfc5b1d209b737cbe2c18cfb2c10c0ff0bcf0d3286fc1aa2
+- subject_name: ZETES TSP ROOT CA 001
+  fingerprint: 016e1dcd5f78841bbebbae9ddea08c8d7ec54e698e95bb778ecdd1e10d8bf4f9
 - subject_name: certSIGN ROOT CA
   fingerprint: eaa962c4fa4a6bafebe415196d351ccd888d4f53f3fa8ae6d7c466a94e6042bb
 - subject_name: certSIGN ROOT CA G2

@@ -1,7 +1,7 @@
 platform: ORACLE_JAVA
-version: jdk-11.0.1
-url: http://download.oracle.com/otn-pub/java/jdk/11.0.1+13/90cf5d8f270a4347a95050320eef3fb7/jdk-11.0.1_linux-x64_bin.tar.gz
-date_fetched: 2018-10-28
+version: jdk-11.0.2
+url: http://download.oracle.com/otn-pub/java/jdk/11.0.2+9/f51449fcd52f4d52b93a989c5c56ed3c/jdk-11.0.2_linux-x64_bin.tar.gz
+date_fetched: 2019-01-24
 trusted_certificates_count: 93
 trusted_certificates:
 - subject_name: AAA Certificate Services

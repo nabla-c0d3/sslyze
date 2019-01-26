@@ -132,10 +132,11 @@ class ParsedHpkpHeader:
     Attributes:
         report_only (bool): True if the HPKP header used is "Public-Key-Pins-Report-Only" (instead of
             "Public-Key-Pins").
-        report_uri (str): The content of the report-uri field.
         include_subdomains (bool): True if the includesubdomains directive is set.
         max_age (int): The content of the max-age field.
         pin_sha256_list (List[str]): The list of pin-sha256 values set in the header.
+        report_uri (Optional[str]): The content of the report-uri field.
+        report_to (Optional[str]): The content of the report-to field.
     """
 
     def __init__(self, raw_hpkp_header: str, report_only: bool = False) -> None:
@@ -147,6 +148,7 @@ class ParsedHpkpHeader:
         self.report_uri = None
         self.include_subdomains = False
         self.max_age = None
+        self.report_to = None
 
         pin_sha256_list = []
         for hpkp_directive in raw_hpkp_header.split(';'):

@@ -309,7 +309,10 @@ class RobotPlugin(plugin_base.Plugin):
             ssl_connection.close()
 
         if parsed_cert:
-            return parsed_cert.public_key().public_numbers().n, parsed_cert.public_key().public_numbers().e
+            try:
+                return parsed_cert.public_key().public_numbers().n, parsed_cert.public_key().public_numbers().e
+            except AttributeError:
+                return None
         else:
             return None
 

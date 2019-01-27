@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Appendix: Available Scan Commands &mdash; SSLyze 2.0.2 documentation</title>
+  <title>Appendix: Available Scan Commands &mdash; SSLyze 2.0.4 documentation</title>
   
 
   
@@ -58,7 +58,7 @@
             
             
               <div class="version">
-                2.0.2
+                2.0.4
               </div>
             
           
@@ -196,13 +196,29 @@ represented by a <cite>ScanCommand</cite>, which is implemented using a plugin s
 <dl class="attribute">
 <dt id="sslyze.plugins.plugin_base.PluginScanResult.server_info">
 <code class="descname">server_info</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult.server_info" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ServerConnectivityInfo</em> – The server against which the command was run.</p>
+<dd><p>The server against which the command was run.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo" title="sslyze.server_connectivity_info.ServerConnectivityInfo">ServerConnectivityInfo</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.plugin_base.PluginScanResult.scan_command">
 <code class="descname">scan_command</code><a class="headerlink" href="#sslyze.plugins.plugin_base.PluginScanResult.scan_command" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PluginScanCommand</em> – The scan command that was run against the server.</p>
+<dd><p>The scan command that was run against the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand">PluginScanCommand</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -240,116 +256,236 @@ PEM-formatted root certificates.</td>
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_chain">
 <code class="descname">certificate_chain</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_chain" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[cryptography.x509.Certificate]</em> – The certificate chain sent by the server; index 0 is
+<dd><p>The certificate chain sent by the server; index 0 is
 the leaf certificate. Each certificate is parsed using the cryptography module; documentation is available
 at <a class="reference external" href="https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object">https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[cryptography.x509.Certificate]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.path_validation_result_list">
 <code class="descname">path_validation_result_list</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.path_validation_result_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[PathValidationResult]</em> – The list of attempts at validating the server’s
+<dd><p>The list of attempts at validating the server’s
 certificate chain path using the trust stores packaged with SSLyze (Mozilla, Apple, etc.).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[<a class="reference internal" href="#sslyze.plugins.certificate_info_plugin.PathValidationResult" title="sslyze.plugins.certificate_info_plugin.PathValidationResult">PathValidationResult</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.path_validation_error_list">
 <code class="descname">path_validation_error_list</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.path_validation_error_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[PathValidationError]</em> – The list of attempts at validating the server’s
+<dd><p>The list of attempts at validating the server’s
 certificate chain path that triggered an unexpected error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[<a class="reference internal" href="#sslyze.plugins.certificate_info_plugin.PathValidationError" title="sslyze.plugins.certificate_info_plugin.PathValidationError">PathValidationError</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.successful_trust_store">
 <code class="descname">successful_trust_store</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.successful_trust_store" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[TrustStore]</em> – The first trust store that successfully validated the server’s
+<dd><p>The first trust store that successfully validated the server’s
 certificate chain among all the trust stores packaged with SSLyze (Mozilla, Apple, Microsoft, etc.) as well
 as the custom store, if supplied using the ca_file option. This trust store is then used to build the
 server’s verified certificate chain and to validate the OCSP response (if one is returned by the server).
 Will be None if none of the available trust stores were able to successfully validate the server’s
 certificate chain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[<a class="reference internal" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore" title="sslyze.plugins.utils.trust_store.trust_store.TrustStore">TrustStore</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.verified_certificate_chain">
 <code class="descname">verified_certificate_chain</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.verified_certificate_chain" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[cryptography.x509.Certificate]</em> – The verified certificate chain built using the
+<dd><p>The verified certificate chain built using the
 successful_trust_store; index 0 is the leaf certificate and the last element is the anchor/CA certificate
 from the trust store. Will be empty if the validation failed with all available trust store, or the
 verified chain could not be built. Each certificate is parsed using the cryptography module; documentation
 is available at <a class="reference external" href="https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object">https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[cryptography.x509.Certificate]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_matches_hostname">
 <code class="descname">certificate_matches_hostname</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_matches_hostname" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if hostname validation was successful ie. the leaf certificate was
+<dd><p>True if hostname validation was successful ie. the leaf certificate was
 issued for the server’s hostname.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.is_leaf_certificate_ev">
 <code class="descname">is_leaf_certificate_ev</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.is_leaf_certificate_ev" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the leaf certificate is Extended Validation according to Mozilla.</p>
+<dd><p>True if the leaf certificate is Extended Validation according to Mozilla.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_has_must_staple_extension">
 <code class="descname">certificate_has_must_staple_extension</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_has_must_staple_extension" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the leaf certificate has the OCSP Must-Staple
+<dd><p>True if the leaf certificate has the OCSP Must-Staple
 extension as defined in RFC 6066.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_included_scts_count">
 <code class="descname">certificate_included_scts_count</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_included_scts_count" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[int]</em> – The number of Signed Certificate Timestamps (SCTs) for
+<dd><p>The number of Signed Certificate Timestamps (SCTs) for
 Certificate Transparency embedded in the leaf certificate. None if the version of OpenSSL installed on the
 system is too old to be able to parse the SCT extension.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[int]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.ocsp_response">
 <code class="descname">ocsp_response</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.ocsp_response" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[Dict[Text, Any]]</em> – The OCSP response returned by the server. None if no response was
+<dd><p>The OCSP response returned by the server. None if no response was
 sent by the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[Dict[Text, Any]]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.ocsp_response_status">
 <code class="descname">ocsp_response_status</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.ocsp_response_status" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[OcspResponseStatusEnum]</em> – The status of the OCSP response returned by the server.
+<dd><p>The status of the OCSP response returned by the server.
 None if no response was sent by the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[<a class="reference internal" href="#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum" title="sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum">OcspResponseStatusEnum</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.is_ocsp_response_trusted">
 <code class="descname">is_ocsp_response_trusted</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.is_ocsp_response_trusted" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[bool]</em> – True if the OCSP response is trusted using the Mozilla trust store.
+<dd><p>True if the OCSP response is trusted using the Mozilla trust store.
 None if no OCSP response was sent by the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[bool]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.has_sha1_in_certificate_chain">
 <code class="descname">has_sha1_in_certificate_chain</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.has_sha1_in_certificate_chain" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if any of the leaf or intermediate certificates are signed using the
+<dd><p>True if any of the leaf or intermediate certificates are signed using the
 SHA-1 algorithm. None if the verified chain could not be built.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.has_anchor_in_certificate_chain">
 <code class="descname">has_anchor_in_certificate_chain</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.has_anchor_in_certificate_chain" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the server included the anchor/root certificate in the chain it
+<dd><p>True if the server included the anchor/root certificate in the chain it
 send back to clients. None if the verified chain could not be built.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.symantec_distrust_timeline">
 <code class="descname">symantec_distrust_timeline</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.symantec_distrust_timeline" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[SymantecDistrustTimelineEnum]</em> – When the certificate will be distrusted
+<dd><p>When the certificate will be distrusted
 in Chrome and Firefox
 (<a class="reference external" href="https://blog.qualys.com/ssllabs/2017/09/26/google-and-mozilla-deprecating-existing-symantec-certificates">https://blog.qualys.com/ssllabs/2017/09/26/google-and-mozilla-deprecating-existing-symantec-certificates</a>).
 None if the certificate chain was not issued by one of the Symantec CAs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[<a class="reference internal" href="#sslyze.plugins.certificate_info_plugin.SymantecDistrustTimelineEnum" title="sslyze.plugins.certificate_info_plugin.SymantecDistrustTimelineEnum">SymantecDistrustTimelineEnum</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -363,19 +499,43 @@ None if the certificate chain was not issued by one of the Symantec CAs.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.PathValidationResult.trust_store">
 <code class="descname">trust_store</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.PathValidationResult.trust_store" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TrustStore</em> – The trust store used for validation.</p>
+<dd><p>The trust store used for validation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore" title="sslyze.plugins.utils.trust_store.trust_store.TrustStore">TrustStore</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.PathValidationResult.verify_string">
 <code class="descname">verify_string</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.PathValidationResult.verify_string" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The string returned by OpenSSL’s validation function.</p>
+<dd><p>The string returned by OpenSSL’s validation function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Text</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.PathValidationResult.is_certificate_trusted">
 <code class="descname">is_certificate_trusted</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.PathValidationResult.is_certificate_trusted" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – Whether the certificate chain is trusted when using supplied the trust_store.</p>
+<dd><p>Whether the certificate chain is trusted when using supplied the trust_store.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -388,13 +548,29 @@ never happen.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.PathValidationError.trust_store">
 <code class="descname">trust_store</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.PathValidationError.trust_store" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TrustStore</em> – The trust store used for validation.</p>
+<dd><p>The trust store used for validation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore" title="sslyze.plugins.utils.trust_store.trust_store.TrustStore">TrustStore</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.certificate_info_plugin.PathValidationError.error_message">
 <code class="descname">error_message</code><a class="headerlink" href="#sslyze.plugins.certificate_info_plugin.PathValidationError.error_message" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The exception that was raised formatted as a string.</p>
+<dd><p>The exception that was raised formatted as a string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Text</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -459,19 +635,43 @@ never happen.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.utils.trust_store.trust_store.TrustStore.path">
 <code class="descname">path</code><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore.path" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The path to the PEM-formatted file containing the root certificates.</p>
+<dd><p>The path to the PEM-formatted file containing the root certificates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.utils.trust_store.trust_store.TrustStore.name">
 <code class="descname">name</code><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The human-readable name of the trust store (such as “Mozilla”).</p>
+<dd><p>The human-readable name of the trust store (such as “Mozilla”).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.utils.trust_store.trust_store.TrustStore.version">
 <code class="descname">version</code><a class="headerlink" href="#sslyze.plugins.utils.trust_store.trust_store.TrustStore.version" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The human-readable version or date of the trust store (such as “09/2016”).</p>
+<dd><p>The human-readable version or date of the trust store (such as “09/2016”).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -547,30 +747,62 @@ never happen.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.accepted_cipher_list">
 <code class="descname">accepted_cipher_list</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.accepted_cipher_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[AcceptedCipherSuite]</em> – The list of cipher suites supported supported by both SSLyze
+<dd><p>The list of cipher suites supported supported by both SSLyze
 and the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[<a class="reference internal" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite" title="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite">AcceptedCipherSuite</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.rejected_cipher_list">
 <code class="descname">rejected_cipher_list</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.rejected_cipher_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[RejectedCipherSuite]</em> – The list of cipher suites supported by SSLyze that were
+<dd><p>The list of cipher suites supported by SSLyze that were
 rejected by the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[<a class="reference internal" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite" title="sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite">RejectedCipherSuite</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.errored_cipher_list">
 <code class="descname">errored_cipher_list</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.errored_cipher_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[ErroredCipherSuite]</em> – The list of cipher suites supported by SSLyze that triggered an
+<dd><p>The list of cipher suites supported by SSLyze that triggered an
 unexpected error during the TLS handshake with the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[<a class="reference internal" href="#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite" title="sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite">ErroredCipherSuite</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher">
 <code class="descname">preferred_cipher</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[AcceptedCipherSuite]</em> – The server’s preferred cipher suite among all the cipher
+<dd><p>The server’s preferred cipher suite among all the cipher
 suites supported by SSLyze. <cite>None</cite> if the server follows the client’s preference or if none of SSLyze’s
 cipher suites are supported by the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[<a class="reference internal" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite" title="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite">AcceptedCipherSuite</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -584,41 +816,89 @@ cipher suites are supported by the server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.name">
 <code class="descname">name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The cipher suite’s RFC name.</p>
+<dd><p>The cipher suite’s RFC name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.openssl_name">
 <code class="descname">openssl_name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.openssl_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The cipher suite’s OpenSSL name.</p>
+<dd><p>The cipher suite’s OpenSSL name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.ssl_version">
 <code class="descname">ssl_version</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.ssl_version" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OpenSslVersionEnum</em> – The cipher suite’s corresponding SSL/TLS version.</p>
+<dd><p>The cipher suite’s corresponding SSL/TLS version.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">OpenSslVersionEnum</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.is_anonymous">
 <code class="descname">is_anonymous</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.is_anonymous" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the cipher suite is an anonymous cipher suite (ie. no server authentication).</p>
+<dd><p>True if the cipher suite is an anonymous cipher suite (ie. no server authentication).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.key_size">
 <code class="descname">key_size</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.key_size" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[int]</em> – The key size of the cipher suite’s algorithm in bits. None if the key size could not
+<dd><p>The key size of the cipher suite’s algorithm in bits. None if the key size could not
 be looked up for this cipher suite.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[int]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.post_handshake_response">
 <code class="descname">post_handshake_response</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.post_handshake_response" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[str]</em> – The server’s response after completing the SSL/TLS handshake and
+<dd><p>The server’s response after completing the SSL/TLS handshake and
 sending a request, based on the TlsWrappedProtocolEnum set for this server. For example, this will contain
 an HTTP response when scanning an HTTPS server with TlsWrappedProtocolEnum.HTTPS as the
 tls_wrapped_protocol.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[str]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -630,31 +910,71 @@ tls_wrapped_protocol.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.name">
 <code class="descname">name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The cipher suite’s RFC name.</p>
+<dd><p>The cipher suite’s RFC name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.openssl_name">
 <code class="descname">openssl_name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.openssl_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The cipher suite’s OpenSSL name.</p>
+<dd><p>The cipher suite’s OpenSSL name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.ssl_version">
 <code class="descname">ssl_version</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.ssl_version" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OpenSslVersionEnum</em> – The cipher suite’s corresponding SSL/TLS version.</p>
+<dd><p>The cipher suite’s corresponding SSL/TLS version.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">OpenSslVersionEnum</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.is_anonymous">
 <code class="descname">is_anonymous</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.is_anonymous" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the cipher suite is an anonymous cipher suite (ie. no server authentication).</p>
+<dd><p>True if the cipher suite is an anonymous cipher suite (ie. no server authentication).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.handshake_error_message">
 <code class="descname">handshake_error_message</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.handshake_error_message" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The SSL/TLS error returned by the server to close the handshake.</p>
+<dd><p>The SSL/TLS error returned by the server to close the handshake.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -666,31 +986,71 @@ tls_wrapped_protocol.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.name">
 <code class="descname">name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Text</em> – The cipher suite’s RFC name.</p>
+<dd><p>The cipher suite’s RFC name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Text</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.openssl_name">
 <code class="descname">openssl_name</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.openssl_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The cipher suite’s OpenSSL name.</p>
+<dd><p>The cipher suite’s OpenSSL name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.ssl_version">
 <code class="descname">ssl_version</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.ssl_version" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OpenSslVersionEnum</em> – The cipher suite’s corresponding SSL/TLS version.</p>
+<dd><p>The cipher suite’s corresponding SSL/TLS version.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">OpenSslVersionEnum</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.is_anonymous">
 <code class="descname">is_anonymous</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.is_anonymous" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the cipher suite is an anonymous cipher suite (ie. no server authentication).</p>
+<dd><p>True if the cipher suite is an anonymous cipher suite (ie. no server authentication).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.error_message">
 <code class="descname">error_message</code><a class="headerlink" href="#sslyze.plugins.openssl_cipher_suites_plugin.ErroredCipherSuite.error_message" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The text-formatted exception that was raised during the handshake.</p>
+<dd><p>The text-formatted exception that was raised during the handshake.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -712,8 +1072,16 @@ tls_wrapped_protocol.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.compression_plugin.CompressionScanResult.compression_name">
 <code class="descname">compression_name</code><a class="headerlink" href="#sslyze.plugins.compression_plugin.CompressionScanResult.compression_name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The name of the compression algorithm supported by the server. <cite>None</cite> if
+<dd><p>The name of the compression algorithm supported by the server. <cite>None</cite> if
 compression is not supported by the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -734,8 +1102,16 @@ compression is not supported by the server.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanResult.supports_fallback_scsv">
 <code class="descname">supports_fallback_scsv</code><a class="headerlink" href="#sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanResult.supports_fallback_scsv" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the server supports the TLS_FALLBACK_SCSV mechanism to block downgrade
+<dd><p>True if the server supports the TLS_FALLBACK_SCSV mechanism to block downgrade
 attacks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -756,7 +1132,15 @@ attacks.</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.heartbleed_plugin.HeartbleedScanResult.is_vulnerable_to_heartbleed">
 <code class="descname">is_vulnerable_to_heartbleed</code><a class="headerlink" href="#sslyze.plugins.heartbleed_plugin.HeartbleedScanResult.is_vulnerable_to_heartbleed" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the server is vulnerable to the Heartbleed attack.</p>
+<dd><p>True if the server is vulnerable to the Heartbleed attack.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -778,48 +1162,96 @@ response sent back by the server(s). Also compute the HPKP pins for the server(s
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hsts_header">
 <code class="descname">hsts_header</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hsts_header" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[ParsedHstsHeader]</em> – The content of the HSTS header returned by the server; None if no HSTS
+<dd><p>The content of the HSTS header returned by the server; None if no HSTS
 header was returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[<a class="reference internal" href="#sslyze.plugins.http_headers_plugin.ParsedHstsHeader" title="sslyze.plugins.http_headers_plugin.ParsedHstsHeader">ParsedHstsHeader</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hpkp_header">
 <code class="descname">hpkp_header</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hpkp_header" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[ParsedHpkpHeader]</em> – The content of the HPKP header returned by the server; None if no HPKP
+<dd><p>The content of the HPKP header returned by the server; None if no HPKP
 header was returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[<a class="reference internal" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader" title="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader">ParsedHpkpHeader</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.expect_ct_header">
 <code class="descname">expect_ct_header</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.expect_ct_header" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[ParsedExpectCTHeader]</em> – The content of the Expect-CT header returned by the server;
+<dd><p>The content of the Expect-CT header returned by the server;
 None if no Expect-CT header was returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[ParsedExpectCTHeader]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.is_valid_pin_configured">
 <code class="descname">is_valid_pin_configured</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.is_valid_pin_configured" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[bool]</em> – True if at least one of the configured pins was found in the server’s
+<dd><p>True if at least one of the configured pins was found in the server’s
 verified certificate chain. None if the verified chain could not be built or no HPKP header was returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[bool]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.is_backup_pin_configured">
 <code class="descname">is_backup_pin_configured</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.is_backup_pin_configured" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[bool]</em> – True if if at least one of the configured pins was NOT found in the
+<dd><p>True if if at least one of the configured pins was NOT found in the
 server’s verified certificate chain. None if the verified chain could not be built or no HPKP header was
 returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[bool]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.verified_certificate_chain">
 <code class="descname">verified_certificate_chain</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.verified_certificate_chain" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[cryptography.x509.Certificate]</em> – The verified certificate chain; index 0 is the
+<dd><p>The verified certificate chain; index 0 is the
 leaf certificate and the last element is the anchor/CA certificate from the Mozilla trust store. Will be
 empty if validation failed or the verified chain could not be built. The HPKP pin for each certificate is
 available in the certificate’s hpkp_pin attribute. None if the verified chain could not be built. Each
 certificate is parsed using the cryptography module; documentation is available at
 <a class="reference external" href="https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object">https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[cryptography.x509.Certificate]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -833,19 +1265,43 @@ certificate is parsed using the cryptography module; documentation is available 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHstsHeader.preload">
 <code class="descname">preload</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHstsHeader.preload" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the preload directive is set.</p>
+<dd><p>True if the preload directive is set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHstsHeader.include_subdomains">
 <code class="descname">include_subdomains</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHstsHeader.include_subdomains" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the includesubdomains directive is set.</p>
+<dd><p>True if the includesubdomains directive is set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHstsHeader.max_age">
 <code class="descname">max_age</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHstsHeader.max_age" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The content of the max-age field.</p>
+<dd><p>The content of the max-age field.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -857,32 +1313,86 @@ certificate is parsed using the cryptography module; documentation is available 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_only">
 <code class="descname">report_only</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_only" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the HPKP header used is “Public-Key-Pins-Report-Only” (instead of
+<dd><p>True if the HPKP header used is “Public-Key-Pins-Report-Only” (instead of
 “Public-Key-Pins”).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_uri">
-<code class="descname">report_uri</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_uri" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[str]</em> – The content of the report-uri field.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.include_subdomains">
 <code class="descname">include_subdomains</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.include_subdomains" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the includesubdomains directive is set.</p>
+<dd><p>True if the includesubdomains directive is set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.max_age">
 <code class="descname">max_age</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.max_age" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The content of the max-age field.</p>
+<dd><p>The content of the max-age field.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.pin_sha256_list">
 <code class="descname">pin_sha256_list</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.pin_sha256_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[str]</em> – The list of pin-sha256 values set in the header.</p>
+<dd><p>The list of pin-sha256 values set in the header.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[str]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_uri">
+<code class="descname">report_uri</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_uri" title="Permalink to this definition">¶</a></dt>
+<dd><p>The content of the report-uri field.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[str]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_to">
+<code class="descname">report_to</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>The content of the report-to field.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[str]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -894,27 +1404,45 @@ certificate is parsed using the cryptography module; documentation is available 
 <dl class="attribute">
 <dt>
 <code class="descname">max-age</code></dt>
-<dd><p><em>int</em> – The content of the max-age field.</p>
+<dd><p>The content of the max-age field.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt>
 <code class="descname">report-uri</code></dt>
-<dd><p><em>Optional[str]</em> – The content of report-uri field.</p>
+<dd><p>The content of report-uri field.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader.enforce">
 <code class="descname">enforce</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader.enforce" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if enforce directive is set.</p>
+<dd><p>True if enforce directive is set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="class">
-<dt id="sslyze.plugins.http_headers_plugin.HttpHeaderParsingError">
-<em class="property">class </em><code class="descclassname">sslyze.plugins.http_headers_plugin.</code><code class="descname">HttpHeaderParsingError</code><a class="headerlink" href="#sslyze.plugins.http_headers_plugin.HttpHeaderParsingError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Raised when an HTTP header is badly formatted and could not be parsed.</p>
 </dd></dl>
 
 </div>
@@ -934,7 +1462,15 @@ certificate is parsed using the cryptography module; documentation is available 
 <dl class="attribute">
 <dt id="sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanResult.is_vulnerable_to_ccs_injection">
 <code class="descname">is_vulnerable_to_ccs_injection</code><a class="headerlink" href="#sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanResult.is_vulnerable_to_ccs_injection" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the server is vulnerable to OpenSSL’s CCS injection issue.</p>
+<dd><p>True if the server is vulnerable to OpenSSL’s CCS injection issue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -955,13 +1491,29 @@ certificate is parsed using the cryptography module; documentation is available 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult.accepts_client_renegotiation">
 <code class="descname">accepts_client_renegotiation</code><a class="headerlink" href="#sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult.accepts_client_renegotiation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the server honors client-initiated renegotiation attempts.</p>
+<dd><p>True if the server honors client-initiated renegotiation attempts.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult.supports_secure_renegotiation">
 <code class="descname">supports_secure_renegotiation</code><a class="headerlink" href="#sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult.supports_secure_renegotiation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the server supports secure renegotiation.</p>
+<dd><p>True if the server supports secure renegotiation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -982,45 +1534,101 @@ certificate is parsed using the cryptography module; documentation is available 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.attempted_resumptions_nb">
 <code class="descname">attempted_resumptions_nb</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.attempted_resumptions_nb" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The total number of session ID resumptions that were attempted, which is 5.</p>
+<dd><p>The total number of session ID resumptions that were attempted, which is 5.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.successful_resumptions_nb">
 <code class="descname">successful_resumptions_nb</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.successful_resumptions_nb" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The number of session ID resumptions that were successful.</p>
+<dd><p>The number of session ID resumptions that were successful.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.failed_resumptions_nb">
 <code class="descname">failed_resumptions_nb</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.failed_resumptions_nb" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The number of session ID resumptions that failed.</p>
+<dd><p>The number of session ID resumptions that failed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.errored_resumptions_list">
 <code class="descname">errored_resumptions_list</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.errored_resumptions_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[List[(Text)]</em> – A list of unexpected errors triggered while trying to perform
+<dd><p>A list of unexpected errors triggered while trying to perform
 session ID resumption with the server (should always be empty).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[List[(Text)]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.is_ticket_resumption_supported">
 <code class="descname">is_ticket_resumption_supported</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.is_ticket_resumption_supported" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the server support TLS ticket resumption.</p>
+<dd><p>True if the server support TLS ticket resumption.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.ticket_resumption_failed_reason">
 <code class="descname">ticket_resumption_failed_reason</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.ticket_resumption_failed_reason" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – A message explaining why TLS ticket resumption failed.</p>
+<dd><p>A message explaining why TLS ticket resumption failed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.ticket_resumption_exception">
 <code class="descname">ticket_resumption_exception</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.ticket_resumption_exception" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[str]</em> – An unexpected error that was raised while trying to perform ticket
+<dd><p>An unexpected error that was raised while trying to perform ticket
 resumption (should never happen).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[str]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -1038,26 +1646,58 @@ resumption (should never happen).</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.attempted_resumptions_nb">
 <code class="descname">attempted_resumptions_nb</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.attempted_resumptions_nb" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The total number of session ID resumptions that were attempted, which is 100.</p>
+<dd><p>The total number of session ID resumptions that were attempted, which is 100.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.successful_resumptions_nb">
 <code class="descname">successful_resumptions_nb</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.successful_resumptions_nb" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The number of session ID resumptions that were successful.</p>
+<dd><p>The number of session ID resumptions that were successful.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.failed_resumptions_nb">
 <code class="descname">failed_resumptions_nb</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.failed_resumptions_nb" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The number of session ID resumptions that failed.</p>
+<dd><p>The number of session ID resumptions that failed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.errored_resumptions_list">
 <code class="descname">errored_resumptions_list</code><a class="headerlink" href="#sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.errored_resumptions_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[List[(str)]</em> – A list of unexpected errors triggered while trying to perform
+<dd><p>A list of unexpected errors triggered while trying to perform
 session ID resumption with the server (should always be empty).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[List[(str)]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -1114,7 +1754,15 @@ session ID resumption with the server (should always be empty).</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.robot_plugin.RobotScanResult.robot_result_enum">
 <code class="descname">robot_result_enum</code><a class="headerlink" href="#sslyze.plugins.robot_plugin.RobotScanResult.robot_result_enum" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>RobotScanResultEnum</em> – An Enum providing the result of the Robot scan.</p>
+<dd><p>An Enum providing the result of the Robot scan.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="#sslyze.plugins.robot_plugin.RobotScanResultEnum" title="sslyze.plugins.robot_plugin.RobotScanResultEnum">RobotScanResultEnum</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -1135,7 +1783,15 @@ session ID resumption with the server (should always be empty).</p>
 <dl class="attribute">
 <dt id="sslyze.plugins.early_data_plugin.EarlyDataScanResult.is_early_data_supported">
 <code class="descname">is_early_data_supported</code><a class="headerlink" href="#sslyze.plugins.early_data_plugin.EarlyDataScanResult.is_early_data_supported" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – True if the server accepted early data.</p>
+<dd><p>True if the server accepted early data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -1163,7 +1819,7 @@ session ID resumption with the server (should always be empty).</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, SSLyze.
+        &copy; Copyright 2019, SSLyze
 
     </p>
   </div>
@@ -1182,20 +1838,14 @@ session ID resumption with the server (should always be empty).</p>
 
   
 
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'2.0.2',
-            LANGUAGE:'None',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
 
   
 

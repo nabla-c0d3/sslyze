@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Step 1: Testing Connectivity to a Server &mdash; SSLyze 2.0.2 documentation</title>
+  <title>Step 1: Testing Connectivity to a Server &mdash; SSLyze 2.0.4 documentation</title>
   
 
   
@@ -58,7 +58,7 @@
             
             
               <div class="version">
-                2.0.2
+                2.0.4
               </div>
             
           
@@ -481,78 +481,166 @@ never be instantiated directly.</p>
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.hostname">
 <code class="descname">hostname</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.hostname" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The server’s hostname.</p>
+<dd><p>The server’s hostname.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.port">
 <code class="descname">port</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.port" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – The server’s TLS port number.</p>
+<dd><p>The server’s TLS port number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address">
 <code class="descname">ip_address</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[str]</em> – The server’s IP address. None if we are connecting through a proxy.</p>
+<dd><p>The server’s IP address. None if we are connecting through a proxy.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[str]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.tls_wrapped_protocol">
 <code class="descname">tls_wrapped_protocol</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.tls_wrapped_protocol" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TlsWrappedProtocolEnum</em> – The protocol wrapped in TLS (HTTP, XMPP, etc.) that the server
+<dd><p>The protocol wrapped in TLS (HTTP, XMPP, etc.) that the server
 expects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum" title="sslyze.ssl_settings.TlsWrappedProtocolEnum">TlsWrappedProtocolEnum</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.tls_server_name_indication">
 <code class="descname">tls_server_name_indication</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.tls_server_name_indication" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – The hostname to set within the Server Name Indication TLS extension.</p>
+<dd><p>The hostname to set within the Server Name Indication TLS extension.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.xmpp_to_hostname">
 <code class="descname">xmpp_to_hostname</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.xmpp_to_hostname" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[str]</em> – The hostname to set within the <cite>to</cite> attribute of the XMPP stream; only used
+<dd><p>The hostname to set within the <cite>to</cite> attribute of the XMPP stream; only used
 if the <cite>tls_wrapped_protocol</cite> is an XMPP protocol.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[str]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_credentials">
 <code class="descname">client_auth_credentials</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_credentials" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[ClientAuthenticationCredentials]</em> – The client certificate and private key
+<dd><p>The client certificate and private key
 needed to perform mutual authentication with
 the server. If not supplied, SSLyze will attempt to connect to the server without performing mutual
 authentication.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[<a class="reference internal" href="#sslyze.ssl_settings.ClientAuthenticationCredentials" title="sslyze.ssl_settings.ClientAuthenticationCredentials">ClientAuthenticationCredentials</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.http_tunneling_settings">
 <code class="descname">http_tunneling_settings</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.http_tunneling_settings" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[HttpConnectTunnelingSettings]</em> – The HTTP proxy configuration to use in order
+<dd><p>The HTTP proxy configuration to use in order
 to tunnel the scans through a proxy.
 If not supplied, SSLyze will run the scans by directly connecting to the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[<a class="reference internal" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings" title="sslyze.ssl_settings.HttpConnectTunnelingSettings">HttpConnectTunnelingSettings</a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.highest_ssl_version_supported">
 <code class="descname">highest_ssl_version_supported</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.highest_ssl_version_supported" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OpenSslVersionEnum</em> – The highest version of SSL/TLS supported by the server,
+<dd><p>The highest version of SSL/TLS supported by the server,
 as detected when doing connectivity testing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">OpenSslVersionEnum</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.openssl_cipher_string_supported">
 <code class="descname">openssl_cipher_string_supported</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.openssl_cipher_string_supported" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – An OpenSSL cipher string that contains at least one
+<dd><p>An OpenSSL cipher string that contains at least one
 cipher suite supported by
 the server, as detected when doing connectivity testing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_requirement">
 <code class="descname">client_auth_requirement</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_requirement" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ClientAuthenticationServerConfigurationEnum</em> – Whether the support requires client
+<dd><p>Whether the support requires client
 authentication.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ClientAuthenticationServerConfigurationEnum</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -596,7 +684,7 @@ authentication.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, SSLyze.
+        &copy; Copyright 2019, SSLyze
 
     </p>
   </div>
@@ -615,20 +703,14 @@ authentication.</p>
 
   
 
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'2.0.2',
-            LANGUAGE:'None',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
 
   
 

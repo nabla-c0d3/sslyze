@@ -128,40 +128,40 @@ class RobotScanResultEnum(Enum):
 
 class RobotServerResponsesAnalyzer:
 
-        def __init__(self, payload_responses: Dict[RobotPmsPaddingPayloadEnum, List[str]]) -> None:
-            # A mapping of a ROBOT payload enum -> a list of two server responses as text
-            self._payload_responses = payload_responses
+    def __init__(self, payload_responses: Dict[RobotPmsPaddingPayloadEnum, List[str]]) -> None:
+        # A mapping of a ROBOT payload enum -> a list of two server responses as text
+        self._payload_responses = payload_responses
 
-        def compute_result_enum(self) -> RobotScanResultEnum:
-            """Look at the server's response to each ROBOT payload and return the conclusion of the analysis.
-            """
-            # Ensure the results were consistent
-            for payload_enum, server_responses in self._payload_responses.items():
-                # We ran the check twice per payload and the two responses should be the same
-                if server_responses[0] != server_responses[1]:
-                    return RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS
+    def compute_result_enum(self) -> RobotScanResultEnum:
+        """Look at the server's response to each ROBOT payload and return the conclusion of the analysis.
+        """
+        # Ensure the results were consistent
+        for payload_enum, server_responses in self._payload_responses.items():
+            # We ran the check twice per payload and the two responses should be the same
+            if server_responses[0] != server_responses[1]:
+                return RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS
 
-            # Check if the server acts as an oracle by checking if the server replied differently to the payloads
-            if len(set([server_responses[0] for server_responses in self._payload_responses.values()])) == 1:
-                # All server responses were identical - no oracle
-                return RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE
+        # Check if the server acts as an oracle by checking if the server replied differently to the payloads
+        if len(set([server_responses[0] for server_responses in self._payload_responses.values()])) == 1:
+            # All server responses were identical - no oracle
+            return RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE
 
-            # All server responses were NOT identical, server is vulnerable
-            # Check to see if it is a weak oracle
-            response_1 = self._payload_responses[RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES][0]
-            response_2 = self._payload_responses[RobotPmsPaddingPayloadEnum.WRONG_POSITION_00][0]
-            response_3 = self._payload_responses[RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE][0]
+        # All server responses were NOT identical, server is vulnerable
+        # Check to see if it is a weak oracle
+        response_1 = self._payload_responses[RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES][0]
+        response_2 = self._payload_responses[RobotPmsPaddingPayloadEnum.WRONG_POSITION_00][0]
+        response_3 = self._payload_responses[RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE][0]
 
-            # From the original script:
-            # If the response to the invalid PKCS#1 request (oracle_bad1) is equal to both
-            # requests starting with 0002, we have a weak oracle. This is because the only
-            # case where we can distinguish valid from invalid requests is when we send
-            # correctly formatted PKCS#1 message with 0x00 on a correct position. This
-            # makes our oracle weak
-            if response_1 == response_2 == response_3:
-                return RobotScanResultEnum.VULNERABLE_WEAK_ORACLE
-            else:
-                return RobotScanResultEnum.VULNERABLE_STRONG_ORACLE
+        # From the original script:
+        # If the response to the invalid PKCS#1 request (oracle_bad1) is equal to both
+        # requests starting with 0002, we have a weak oracle. This is because the only
+        # case where we can distinguish valid from invalid requests is when we send
+        # correctly formatted PKCS#1 message with 0x00 on a correct position. This
+        # makes our oracle weak
+        if response_1 == response_2 == response_3:
+            return RobotScanResultEnum.VULNERABLE_WEAK_ORACLE
+        else:
+            return RobotScanResultEnum.VULNERABLE_STRONG_ORACLE
 
 
 class RobotPlugin(plugin_base.Plugin):

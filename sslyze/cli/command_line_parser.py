@@ -197,16 +197,16 @@ class CommandLineParser:
         # Sanity checks on the command line options
         # Prevent --quiet and --xml_out -
         if args_command_list.xml_file and args_command_list.xml_file == '-' and args_command_list.quiet:
-                raise CommandLineParsingError('Cannot use --quiet with --xml_out -.')
+            raise CommandLineParsingError('Cannot use --quiet with --xml_out -.')
 
         # Prevent --quiet and --json_out -
         if args_command_list.json_file and args_command_list.json_file == '-' and args_command_list.quiet:
-                raise CommandLineParsingError('Cannot use --quiet with --json_out -.')
+            raise CommandLineParsingError('Cannot use --quiet with --json_out -.')
 
         # Prevent --xml_out - and --json_out -
         if args_command_list.json_file and args_command_list.json_file == '-' \
                 and args_command_list.xml_file and args_command_list.xml_file == '-':
-                raise CommandLineParsingError('Cannot use --xml_out - with --json_out -.')
+            raise CommandLineParsingError('Cannot use --xml_out - with --json_out -.')
 
         # Sanity checks on the client cert options
         client_auth_creds = None

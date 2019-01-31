@@ -543,7 +543,7 @@ class CipherSuiteScanResult(PluginScanResult):
 
             # All TLS 1.3 cipher suites support forward secrecy
             if isinstance(self.scan_command, Tlsv13ScanCommand):
-                    supports_forward_secrecy = True
+                supports_forward_secrecy = True
             else:
                 for accepted_cipher in self.accepted_cipher_list:
                     if '_DHE_' in accepted_cipher.name or '_ECDHE_' in accepted_cipher.name:

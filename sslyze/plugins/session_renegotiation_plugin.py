@@ -99,7 +99,7 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
             # Errors caused by a server rejecting the renegotiation
             except socket.timeout:
                 # This is how Netty rejects a renegotiation - https://github.com/nabla-c0d3/sslyze/issues/114
-                    accepts_client_renegotiation = False
+                accepts_client_renegotiation = False
             except socket.error as e:
                 if 'connection was forcibly closed' in str(e.args):
                     accepts_client_renegotiation = False

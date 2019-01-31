@@ -550,11 +550,10 @@ class CertificateInfoScanResult(PluginScanResult):
 
             key_attrs = {'algorithm': CertificateUtils.get_public_key_type(certificate)}
             public_key = certificate.public_key()
+            key_attrs['size'] = str(public_key.key_size)
             if isinstance(public_key, EllipticCurvePublicKey):
-                key_attrs['size'] = str(public_key.curve.key_size)
                 key_attrs['curve'] = public_key.curve.name
             else:
-                key_attrs['size'] = str(public_key.key_size)
                 key_attrs['exponent'] = str(public_key.public_numbers().e)
 
             elem_xml = Element('publicKey', attrib=key_attrs)

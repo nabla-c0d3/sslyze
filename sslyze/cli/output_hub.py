@@ -33,12 +33,14 @@ class OutputHub:
 
         # Configure the JSON output
         if args_command_list.json_file:
-            json_file_to = sys.stdout if args_command_list.json_file == '-' else open(args_command_list.json_file, 'wt')
+            json_file_to = sys.stdout if args_command_list.json_file == '-' else open(args_command_list.json_file, 'wt',
+                                                                                      encoding="utf-8")
             self._output_generator_list.append(JsonOutputGenerator(json_file_to))  # type: ignore
 
         # Configure the XML output
         if args_command_list.xml_file:
-            xml_file_to = sys.stdout if args_command_list.xml_file == '-' else open(args_command_list.xml_file, 'wt')
+            xml_file_to = sys.stdout if args_command_list.xml_file == '-' else open(args_command_list.xml_file, 'wt',
+                                                                                    encoding="utf-8")
             self._output_generator_list.append(XmlOutputGenerator(xml_file_to))  # type: ignore
 
         # Forward the notification

@@ -4,6 +4,7 @@ from typing import Dict, Any, TextIO, Type, Set, Union, List
 from cryptography.hazmat.backends.openssl import x509
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.x509.oid import ObjectIdentifier
 from enum import Enum
 from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
@@ -86,6 +87,10 @@ def _object_to_json_dict(obj: Any) -> Union[bool, int, float, str, Dict[str, Any
     if isinstance(obj, Enum):
         # Properly serialize Enums (such as OpenSslVersionEnum)
         result = obj.name
+
+    elif isinstance(obj, ObjectIdentifier):
+        # Use dotted string representation for OIDs
+        result = obj.dotted_string
 
     elif isinstance(obj, x509._Certificate):
         # Properly serialize certificates

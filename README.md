@@ -3,7 +3,7 @@ SSLyze
 
 [![Build Status](https://travis-ci.org/nabla-c0d3/sslyze.svg?branch=master)](https://travis-ci.org/nabla-c0d3/sslyze)
 [![PyPI version](https://badge.fury.io/py/SSLyze.svg)](https://badge.fury.io/py/SSLyze)
-[![](https://images.microbadger.com/badges/image/nablac0d3/sslyze.svg)](https://microbadger.com/images/nablac0d3/sslyze)
+[![](https://images.microbadger.com/badges/image/nablac0d3/sslyze.svg)](https://microbadger.com/images/nablac0d3/sslyze) [![Join the chat at https://gitter.im/sslyze/community](https://badges.gitter.im/sslyze/community.svg)](https://gitter.im/sslyze/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Fast and powerful SSL/TLS server scanning library for Python 3.6+.
 

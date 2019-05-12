@@ -1,6 +1,5 @@
 import threading
-from collections import Callable
-from typing import Tuple, Any, List, Iterable
+from typing import Tuple, Any, List, Iterable, Callable
 
 from queue import Queue
 

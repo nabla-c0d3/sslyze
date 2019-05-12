@@ -81,11 +81,8 @@ class SslConnection:
 
     def do_pre_handshake(self, network_timeout: Optional[int]) -> None:
         # Open a socket to the server
-        sock = socket.socket()
         final_timeout = self.NETWORK_TIMEOUT if network_timeout is None else network_timeout
-        sock.settimeout(final_timeout)
-
-        self._socket_helper.connect_socket(sock)
+        sock = self._socket_helper.create_connection(final_timeout)
         self._start_tls_helper.prepare_socket_for_tls_handshake(sock)
 
         # Pass the connected socket to the SSL client

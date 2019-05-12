@@ -19,7 +19,7 @@ class ConnectionHelper(ABC):
     """
 
     @abstractmethod
-    def connect_socket(self, sock: socket.socket) -> None:
+    def create_connection(self, timeout: int) -> socket.SocketType:
         pass
 
 
@@ -31,8 +31,9 @@ class DirectConnectionHelper(ConnectionHelper):
         self._server_ip_addr = server_ip_addr
         self._server_port = server_port
 
-    def connect_socket(self, sock: socket.socket) -> None:
-        sock.connect((self._server_ip_addr, self._server_port))
+    def create_connection(self, timeout: int) -> socket.SocketType:
+        sock = socket.create_connection((self._server_ip_addr, self._server_port), timeout=timeout)
+        return sock
 
 
 class ProxyTunnelingConnectionHelper(ConnectionHelper):
@@ -60,12 +61,12 @@ class ProxyTunnelingConnectionHelper(ConnectionHelper):
                 f'{quote(tunnel_settings.basic_auth_user)}:{quote(tunnel_settings.basic_auth_password)}'.encode('utf-8')
             )
 
-    def connect_socket(self, sock: socket.socket) -> None:
+    def create_connection(self, timeout: int) -> socket.SocketType:
         """Setup HTTP tunneling with the configured proxy.
         """
         # Setup HTTP tunneling
         try:
-            sock.connect((self._tunnel_host, self._tunnel_port))
+            sock = socket.create_connection((self._tunnel_host, self._tunnel_port), timeout=timeout)
         except socket.timeout as e:
             raise ProxyError(self.ERR_PROXY_OFFLINE.format(str(e)))
         except socket.error as e:
@@ -83,3 +84,5 @@ class ProxyTunnelingConnectionHelper(ConnectionHelper):
         # Check if the proxy was able to connect to the host
         if http_response.status != 200:
             raise ProxyError(self.ERR_CONNECT_REJECTED)
+
+        return sock

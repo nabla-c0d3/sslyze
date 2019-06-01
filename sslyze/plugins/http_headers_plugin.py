@@ -4,6 +4,7 @@ from xml.etree.ElementTree import Element
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import Certificate, load_pem_x509_certificate
+from nassl.ssl_client import CouldNotBuildVerifiedChain
 
 from sslyze.plugins.plugin_base import PluginScanCommand, Plugin, PluginScanResult
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
@@ -53,10 +54,15 @@ class HttpHeadersPlugin(Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection(ssl_verify_locations=mozilla_store.path)
         try:
             ssl_connection.connect()
-            verified_chain = [
-                load_pem_x509_certificate(cert_as_pem.encode('ascii'), backend=default_backend())
-                for cert_as_pem in ssl_connection.ssl_client.get_verified_chain()
-            ]
+            try:
+                verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
+                verified_chain = [
+                    load_pem_x509_certificate(cert_as_pem.encode('ascii'), backend=default_backend())
+                    for cert_as_pem in verified_chain_as_pem
+                ]
+            except CouldNotBuildVerifiedChain:
+                verified_chain = None
+
             # Send an HTTP GET request to the server
             ssl_connection.ssl_client.write(HttpRequestGenerator.get_request(host=server_info.hostname))
 
@@ -336,16 +342,20 @@ class HttpHeadersScanResult(PluginScanResult):
         # This object needs to be pick-able as it gets sent through multiprocessing.Queues
         pickable_dict = self.__dict__.copy()
         # Manually handle non-pickable entries
-        pem_verified_chain = [cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']]
-        pickable_dict['verified_certificate_chain'] = pem_verified_chain
+        if pickable_dict['verified_certificate_chain']:
+            pickable_dict['verified_certificate_chain'] = [
+                cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']
+            ]
         return pickable_dict
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
         self.__dict__.update(state)
         # Manually restore non-pickable entries
-        verified_chain = [load_pem_x509_certificate(cert_pem, default_backend())
-                          for cert_pem in self.__dict__['verified_certificate_chain']]
-        self.__dict__['verified_certificate_chain'] = verified_chain
+        if self.__dict__['verified_certificate_chain']:
+            self.__dict__['verified_certificate_chain'] = [
+                load_pem_x509_certificate(cert_pem, default_backend())
+                for cert_pem in self.__dict__['verified_certificate_chain']
+            ]
 
     _PIN_TXT_FORMAT = '      {0:<50}{1}'.format
     _HEADER_NOT_SENT_TXT = 'NOT SUPPORTED - Server did not return the header'
@@ -368,6 +378,7 @@ class HttpHeadersScanResult(PluginScanResult):
             txt_result.append(
                 self._format_field('ERROR - Could not build verified chain (certificate untrusted?)', '')
             )
+            txt_result.append('')
 
         txt_result.append(self._format_subtitle('Strict-Transport-Security Header'))
         if self.hsts_header:

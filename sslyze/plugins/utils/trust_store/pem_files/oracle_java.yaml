@@ -1,8 +1,8 @@
 platform: ORACLE_JAVA
-version: jdk-11.0.2
-url: http://download.oracle.com/otn-pub/java/jdk/11.0.2+9/f51449fcd52f4d52b93a989c5c56ed3c/jdk-11.0.2_linux-x64_bin.tar.gz
-date_fetched: 2019-01-24
-trusted_certificates_count: 93
+version: jdk-12
+url: http://download.oracle.com/otn-pub/java/jdk/12+33/312335d836a34c7c8bba9d963e26dc23/jdk-12_linux-x64_bin.tar.gz
+date_fetched: 2019-03-21
+trusted_certificates_count: 92
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -82,8 +82,6 @@ trusted_certificates:
   fingerprint: 43df5774b03e7fef5fe40d931a7bedf1bb2e6b42738c4e6d3841103d3aa7f339
 - subject_name: Entrust.net Certification Authority (2048)
   fingerprint: 6dc47172e01cbcb0bf62580d895fe2b8ac9ad4f873801e0c10b9c837d21eb177
-- subject_name: GTE CyberTrust Global Root
-  fingerprint: a53125188d2110aa964b02c7b7c6da3203170894e5fb71fffb6667d5e6810a36
 - subject_name: GeoTrust Global CA
   fingerprint: ff856a2d251dcd88d36656f450126798cfabaade40799c722de4d2b5db36a73a
 - subject_name: GeoTrust Primary Certification Authority

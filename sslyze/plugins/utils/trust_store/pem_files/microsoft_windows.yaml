@@ -1,7 +1,7 @@
 platform: MICROSOFT_WINDOWS
-version: October 2, 2018
-url: https://gallery.technet.microsoft.com/Trusted-Root-Program-831324c6/file/218032/1/Trusted%20Root%20Program%20Participants%20As%20of%20November%2027%202018.xlsx
-date_fetched: 2018-12-08
+version: March 2019
+url: https://gallery.technet.microsoft.com/Trusted-Root-Program-381e7a89/file/220666/1/Trusted%20Root%20Program%20Participants%20As%20of%20March%202019.xlsx
+date_fetched: 2019-05-27
 trusted_certificates_count: 292
 trusted_certificates:
 - subject_name: A-Trust-Qual-02
@@ -38,10 +38,6 @@ trusted_certificates:
   fingerprint: f4336bc2ac75950beccf1c1f2f9da6dddafd1f41161ca71f59c76889bd474033
 - subject_name: ANCERT Certificados Notariales V2
   fingerprint: 4be8b5a1c76c6aead0611918fccf9dbd398b67fb12294758bdf994d0f9682f60
-- subject_name: ANF Global Root CA
-  fingerprint: e0e17aea06cf9ce12aae8190345a2c59720130a7d8ff72f3745ad75dbaa365b6
-- subject_name: ANF Server CA
-  fingerprint: b644d955fff29b74e3b5687e908ee7c3c9197ba3336cc6328531f6c057d677fd
 - subject_name: ATHEX Root CA
   fingerprint: a73563e859cbcfa173cf3285debf2578ede15d47a3bee385861ab7a4fb6d7b6e
 - subject_name: ATHEX Root CA G2
@@ -82,6 +78,8 @@ trusted_certificates:
   fingerprint: cbd8ed38d4a2d677d453d70dd8890af4f6374cba6299943f1ab3a6936c6fd795
 - subject_name: Autoridade Certificadora Raiz Brasileira v2
   fingerprint: fb47d92a9909fd4fa9bec02737543e1f3514ced747407a8d9cfa397b0915067c
+- subject_name: Autoridade Certificadora Raiz Brasileira v5
+  fingerprint: caa53fc6091c6951887c976e378f6ef89aa6377c55d97b6475422b71ed7e9b17
 - subject_name: BYTE Root Certification Authority 001
   fingerprint: 39ae2e6f304a6236bdf9066718ddc69e51af5ed05a63f2ee8d80ca1d1cc8fe4f
 - subject_name: Baltimore CyberTrust Root
@@ -337,6 +335,8 @@ trusted_certificates:
   fingerprint: 847df6a78497943f27fc72eb93f9a637320a02b561d0a91b09e87a7807ed7c61
 - subject_name: Microsoft Time Stamp Root Certificate Authority 2014
   fingerprint: 65af95f4be86847344634282f941b2e605063ef0c8542f014ca088d182109e4f
+- subject_name: NAVER Global Root Certification Authority
+  fingerprint: 88f438dcf8ffd1fa8f429115ffe5f82ae1e06e0c70c375faad717b34a49e7265
 - subject_name: "NetLock Arany (Class Gold) F\u0151tan\xFAs\xEDtv\xE1ny"
   fingerprint: 6c61dac3a2def031506be036d2a6fe401994fbd13df9c8d466599274c446ec98
 - subject_name: NetLock Minositett Kozjegyzoi (Class QA) Tanusitvanykiado
@@ -391,6 +391,8 @@ trusted_certificates:
   fingerprint: 88ef81de202eb018452e43f864725cea5fbd1fc2d9d205730709c5d8b8690f46
 - subject_name: QuoVadis Root Certification Authority
   fingerprint: a45ede3bbbf09c8ae15c72efc07268d693a21c996fd51e67ca079460fd6d8873
+- subject_name: RCSC RootCA
+  fingerprint: 7707bb2be9f7ce057060b8308c3bc087b56529b3638eaf5b2a8049c8e15ed720
 - subject_name: "Registradores de Espa\xF1a - CA Ra\xEDz"
   fingerprint: 7d2bf3489ebc9ad3448b8b0827715a3cbfe3d523e3b56a9b5fc1d2a2da2f20fe
 - subject_name: SAPO Class 2 Root CA
@@ -534,8 +536,6 @@ trusted_certificates:
   fingerprint: 43f257412d440d627476974f877da8f1fc2444565a367ae60eddc27a412531ae
 - subject_name: UTN-USERFirst-Object
   fingerprint: 6fff78e400a70c11011cd85977c459fb5af96a3df0540820d0f4b8607875e58f
-- subject_name: VI Registru Centras RCSC (RootCA)
-  fingerprint: 0536801fbb443b3e905fd6d70d8c81eb88551be8061299110d2b4f82e64cade1
 - subject_name: VRK Gov. Root CA
   fingerprint: f008733ec500dc498763cc9264c6fcea40ec22000e927d053ce9c90bfa046cb2
 - subject_name: VeriSign Class 1 Public Primary Certification Authority - G3
@@ -590,7 +590,7 @@ trusted_certificates:
   fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
 - subject_name: thawte Primary Root CA - G3
   fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 96
+blocked_certificates_count: 98
 blocked_certificates:
 - subject_name: AC RAIZ FNMT-RCM
   fingerprint: 4d9ebb28825c9643ab15d54e5f9614f13cb3e95de3cf4eac971301f320f9226e
@@ -600,6 +600,10 @@ blocked_certificates:
   fingerprint: 00ab444abd6bdba33da8de569ac4ecde326d1be1a61442d5eec3975a0c243f04
 - subject_name: ANCERT Corporaciones de Derecho Publico
   fingerprint: 36544d2fce03c6c72b70eb1a8064264dc1511768c2d8f76a8b9f1f2bbd153b7d
+- subject_name: ANF Global Root CA
+  fingerprint: e0e17aea06cf9ce12aae8190345a2c59720130a7d8ff72f3745ad75dbaa365b6
+- subject_name: ANF Server CA
+  fingerprint: b644d955fff29b74e3b5687e908ee7c3c9197ba3336cc6328531f6c057d677fd
 - subject_name: Actalis Authentication CA G1
   fingerprint: afe80a97ea11159190e927e08ec2e60c59a40559483a3fee838a85321b3aeaad
 - subject_name: Admin-Root-CA
@@ -738,8 +742,6 @@ blocked_certificates:
   fingerprint: af6d08eef3cac4e1584abc63c8a9472ac529af99f3f791319a43776063f58dca
 - subject_name: SecureSign RootCA3
   fingerprint: ae92e90000541a9ebc101b70b6c33a62f5a53a55ba815e81d31abddf03507f5d
-- subject_name: Security Communication EV RootCA1
-  fingerprint: a22dba681e97376e2d397d728aae3a9b6296b9fdba60bc2e11f647f2c675fb37
 - subject_name: Staat der Nederlanden Root CA
   fingerprint: d41d829e8c1659822af93fce62bffcde264fc84e8b950c5ff275d052354695a3
 - subject_name: Starfield Services Root Certificate Authority
@@ -776,6 +778,8 @@ blocked_certificates:
   fingerprint: 6ea54741d004667eed1b4816634aa3a79e6e4b96950f8279dafc8d9bd8812137
 - subject_name: VAS Latvijas Pasts SSI(RCA)
   fingerprint: aad9ceed5aa6b1cea28596a8e4e1abed9386d6ebc9d4aad9acde0fa36ba069d0
+- subject_name: VI Registru Centras RCSC (RootCA)
+  fingerprint: 0536801fbb443b3e905fd6d70d8c81eb88551be8061299110d2b4f82e64cade1
 - subject_name: VeriSign Commercial Software Publishers CA
   fingerprint: ac1fae74b4e97106092131f2e7f746b6734386742bdfd8423731aed14a4ce446
 - subject_name: VeriSign, Inc.

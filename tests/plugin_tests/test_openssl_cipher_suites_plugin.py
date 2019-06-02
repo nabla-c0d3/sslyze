@@ -1,17 +1,16 @@
-import unittest
-
 import pickle
 
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, \
     Sslv30ScanCommand, Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand, Tlsv13ScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ModernOpenSslServer, ClientAuthConfigEnum
 
 
-class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
+class TestOpenSslCipherSuitesPlugin:
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_sslv2_enabled(self):
         with LegacyOpenSslServer() as server:
             server_test = ServerConnectivityTester(
@@ -62,7 +61,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_sslv3_enabled(self):
         with LegacyOpenSslServer() as server:
             server_test = ServerConnectivityTester(
@@ -327,7 +326,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         assert {'TLS_CHACHA20_POLY1305_SHA256', 'TLS_AES_256_GCM_SHA384', 'TLS_AES_128_GCM_SHA256'} == \
             set(accepted_cipher_name_list)
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed_tls_1_2(self):
         # Given a TLS 1.2 server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -347,7 +346,7 @@ class OpenSslCipherSuitesPluginTestCase(unittest.TestCase):
         assert plugin_result.as_text()
         assert plugin_result.as_xml()
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed_tls_1_3(self):
         # Given a TLS 1.3 server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:

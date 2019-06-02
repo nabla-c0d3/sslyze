@@ -1,5 +1,4 @@
 import json
-import unittest
 from io import StringIO
 
 from sslyze.cli import CompletedServerScan
@@ -10,7 +9,7 @@ from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, Mo
     MockPluginScanCommandOne, MockPluginScanCommandTwo, MockServerConnectivityTester
 
 
-class JsonOutputGeneratorTestCase(unittest.TestCase):
+class TestJsonOutputGenerator:
 
     def test(self):
         """The final output only gets written at the end, when calling scans_completed(). Hence we need to call all the

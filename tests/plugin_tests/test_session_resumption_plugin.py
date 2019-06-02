@@ -1,15 +1,14 @@
-import unittest
-
 import pickle
 
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin, SessionResumptionSupportScanCommand, \
     SessionResumptionRateScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum, ClientAuthenticationCredentials
+from sslyze.ssl_settings import ClientAuthenticationCredentials
+from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
 
 
-class SessionResumptionPluginTestCase(unittest.TestCase):
+class TestSessionResumptionPlugin:
 
     def test_resumption_support(self):
         server_test = ServerConnectivityTester(hostname='www.google.com')
@@ -46,7 +45,7 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed_session(self):
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -67,7 +66,7 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
         assert plugin_result.as_text()
         assert plugin_result.as_xml()
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:

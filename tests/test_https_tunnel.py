@@ -1,5 +1,3 @@
-import unittest
-
 import time
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
@@ -20,7 +18,7 @@ def proxy_worker(port):
     httpd.serve_forever()
 
 
-class HttpsTunnelTestCase(unittest.TestCase):
+class TestHttpsTunnel:
 
     def test_https_tunneling_bad_arguments(self):
         # Ensure that an IP address cannot be specified when using an HTTP proxy for scans

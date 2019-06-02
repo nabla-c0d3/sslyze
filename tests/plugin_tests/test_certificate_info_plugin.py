@@ -1,7 +1,4 @@
-import logging
 import os
-import unittest
-
 import pickle
 
 from cryptography.hazmat.backends import default_backend
@@ -11,11 +8,12 @@ from nassl.ocsp_response import OcspResponseStatusEnum
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand, \
     SymantecDistrustTimelineEnum, _SymantecDistructTester
 from sslyze.server_connectivity_tester import ServerConnectivityTester
+from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
 import pytest
 
 
-class CertificateInfoPluginTestCase(unittest.TestCase):
+class TestCertificateInfoPlugin:
 
     def test_ca_file_bad_file(self):
         server_test = ServerConnectivityTester(hostname='www.hotmail.com')
@@ -40,7 +38,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
             else:
                 assert path_validation_result.was_validation_successful
 
-    @unittest.skip('Not implemented - find a server that has must-staple')
+    @pytest.mark.skip('Not implemented - find a server that has must-staple')
     def test_valid_chain_with_ocsp_stapling_and_must_staple(self):
         server_test = ServerConnectivityTester(hostname='www.scotthelme.co.uk')
         server_info = server_test.perform()
@@ -68,11 +66,11 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         assert plugin_result.leaf_certificate_is_ev
 
-        assert (plugin_result.received_certificate_chain) >= 3
+        assert len(plugin_result.received_certificate_chain) >= 3
         assert len(plugin_result.verified_certificate_chain) >= 3
         assert not plugin_result.received_chain_contains_anchor_certificate
 
-        assert len(plugin_result.path_validation_result_list) >= 5
+        assert len(plugin_result.path_validation_result_list) == 5
         for path_validation_result in plugin_result.path_validation_result_list:
             assert path_validation_result.is_certificate_trusted
 
@@ -98,7 +96,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         assert len(plugin_result.path_validation_result_list) >= 5
         for path_validation_result in plugin_result.path_validation_result_list:
-            assert not path_validation_result.is_certificate_trusted
+            assert not path_validation_result.was_validation_successful
 
         assert plugin_result.leaf_certificate_signed_certificate_timestamps_count == 0
 
@@ -150,7 +148,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         assert pickle.dumps(plugin_result)
 
-    @unittest.skip('Find a server with a unicode certificate')
+    @pytest.mark.skip('Find a server with a unicode certificate')
     def test_unicode_certificate(self):
         server_test = ServerConnectivityTester(hostname='เพย์สบาย.th')
         server_info = server_test.perform()
@@ -203,7 +201,13 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        assert plugin_result.successful_trust_store.name == 'Windows'
+        found_microsoft_store = False
+        for validation_result in plugin_result.path_validation_result_list:
+            if validation_result.trust_store.name == 'Windows':
+                found_microsoft_store = True
+                assert validation_result.was_validation_successful
+                break
+        assert found_microsoft_store
 
         assert plugin_result.as_text()
         assert plugin_result.as_xml()
@@ -279,7 +283,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -300,7 +304,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         assert plugin_result.as_xml()
 
 
-class SymantecDistructTestCase(unittest.TestCase):
+class SymantecDistructTestCase:
 
     def test_good(self):
         # Given a certificate chain unaffected by the Symantec deprecation

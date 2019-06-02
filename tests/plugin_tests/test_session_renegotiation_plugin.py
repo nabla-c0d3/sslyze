@@ -1,5 +1,3 @@
-import unittest
-
 import pickle
 
 from nassl.ssl_client import ClientCertificateRequested
@@ -7,11 +5,12 @@ from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin, SessionRenegotiationScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import ClientAuthenticationCredentials
+from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 import pytest
 
 
-class SessionRenegotiationPluginTestCase(unittest.TestCase):
+class TestSessionRenegotiationPlugin:
 
     def test_renegotiation_good(self):
         server_test = ServerConnectivityTester(hostname='www.google.com')
@@ -29,7 +28,7 @@ class SessionRenegotiationPluginTestCase(unittest.TestCase):
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed_session(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -47,7 +46,7 @@ class SessionRenegotiationPluginTestCase(unittest.TestCase):
             with pytest.raises(ClientCertificateRequested):
                 plugin.process_task(server_info, SessionRenegotiationScanCommand())
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:

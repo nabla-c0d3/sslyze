@@ -1,4 +1,3 @@
-import unittest
 from io import StringIO
 
 from sslyze.cli import CompletedServerScan
@@ -9,7 +8,7 @@ from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, Mo
     MockPluginScanCommandTwo, MockServerConnectivityTester
 
 
-class ConsoleOutputGeneratorTestCase(unittest.TestCase):
+class TestConsoleOutputGenerator:
 
     def test_command_line_parsed(self):
         output_file = StringIO()

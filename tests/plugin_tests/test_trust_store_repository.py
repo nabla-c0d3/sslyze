@@ -1,9 +1,7 @@
-import unittest
-
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 
 
-class TrustStoresRepositoryTestCase(unittest.TestCase):
+class TestTrustStoresRepository:
 
     def test_get_default(self):
         repo = TrustStoresRepository.get_default()

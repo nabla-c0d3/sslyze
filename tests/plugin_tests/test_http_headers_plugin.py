@@ -1,4 +1,3 @@
-import unittest
 import pickle
 
 from nassl.ssl_client import ClientCertificateRequested
@@ -6,11 +5,12 @@ from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins.http_headers_plugin import HttpHeadersPlugin, HttpHeadersScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import ClientAuthenticationCredentials
+from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, LegacyOpenSslServer
 import pytest
 
 
-class HttpHeadersPluginTestCase(unittest.TestCase):
+class TestHttpHeadersPlugin:
 
     def test_hsts_enabled(self):
         server_test = ServerConnectivityTester(hostname='hsts.badssl.com')
@@ -83,7 +83,7 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
 
         assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed_tls_1_2(self):
         # Given a server with TLS 1.2 that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -100,7 +100,7 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
             with pytest.raises(ClientCertificateRequested):
                 plugin.process_task(server_info, HttpHeadersScanCommand())
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed_tls_1_3(self):
         # Given a server with TLS 1.3 that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -117,7 +117,7 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
             with pytest.raises(ClientCertificateRequested):
                 plugin.process_task(server_info, HttpHeadersScanCommand())
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:

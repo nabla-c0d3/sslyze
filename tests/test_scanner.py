@@ -1,5 +1,3 @@
-import unittest
-
 from sslyze.concurrent_scanner import ConcurrentScanner
 from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
 from sslyze.plugins.compression_plugin import CompressionScanCommand
@@ -8,7 +6,7 @@ from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.synchronous_scanner import SynchronousScanner
 
 
-class ScannerTestCase(unittest.TestCase):
+class TestScanner:
 
     def test_synchronous_scanner(self):
         server_test = ServerConnectivityTester(hostname='www.google.com')

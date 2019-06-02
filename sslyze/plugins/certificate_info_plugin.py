@@ -308,7 +308,7 @@ class CertificateInfoScanResult(PluginScanResult):
         self.received_certificate_chain = received_certificate_chain
         self.path_validation_result_list = path_validation_result_list
         self.path_validation_error_list = path_validation_error_list
-        self.ocsp_response = ocsp_response
+        self.ocsp_response = ocsp_response.as_dict()  # We only keep the dictionary as an OcspResponse is not pickable
 
         # Sort the path_validation_result_list so the same successful_trust_store always get picked for a given server
         # because threading timings change the order of path_validation_result_list

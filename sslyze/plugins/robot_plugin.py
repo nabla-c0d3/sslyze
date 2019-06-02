@@ -294,7 +294,7 @@ class RobotPlugin(plugin_base.Plugin):
         try:
             # Perform the SSL handshake
             ssl_connection.connect()
-            certificate = ssl_connection.ssl_client.get_peer_certificate()
+            certificate = ssl_connection.ssl_client.get_received_certificate_chain()[0]
             parsed_cert = load_pem_x509_certificate(certificate.as_pem().encode('ascii'), backend=default_backend())
         except SslHandshakeRejected:
             # Server does not support RSA cipher suites?

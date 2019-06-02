@@ -35,9 +35,9 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         self.assertGreaterEqual(len(plugin_result.path_validation_result_list), 6)
         for path_validation_result in plugin_result.path_validation_result_list:
             if path_validation_result.trust_store.name == 'Custom --ca_file':
-                self.assertFalse(path_validation_result.is_certificate_trusted)
+                self.assertFalse(path_validation_result.was_validation_successful)
             else:
-                self.assertTrue(path_validation_result.is_certificate_trusted)
+                self.assertTrue(path_validation_result.was_validation_successful)
 
     @unittest.skip('Not implemented - find a server that has must-staple')
     def test_valid_chain_with_ocsp_stapling_and_must_staple(self):
@@ -67,8 +67,8 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.leaf_certificate_is_ev)
 
-        self.assertEqual(len(plugin_result.received_certificate_chain), 3)
-        self.assertEqual(len(plugin_result.verified_certificate_chain), 3)
+        self.assertGreaterEqual((plugin_result.received_certificate_chain), 3)
+        self.assertGreaterEqual(len(plugin_result.verified_certificate_chain), 3)
         self.assertFalse(plugin_result.received_chain_contains_anchor_certificate)
 
         self.assertGreaterEqual(len(plugin_result.path_validation_result_list), 5)
@@ -218,7 +218,13 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         ca_file_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'self-signed.badssl.com.pem')
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
 
-        self.assertEqual(plugin_result.successful_trust_store.name, 'Custom --ca_file')
+        found_custom_store = False
+        for validation_result in plugin_result.path_validation_result_list:
+            if validation_result.trust_store.name == 'Custom --ca_file':
+                self.assertTrue(validation_result.was_validation_successful)
+                found_custom_store = True
+                break
+        self.assertTrue(found_custom_store)
         self.assertTrue(plugin_result.verified_certificate_chain)
 
         self.assertTrue(plugin_result.as_text())

@@ -18,8 +18,8 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         plugin = HttpHeadersPlugin()
         plugin_result = plugin.process_task(server_info, HttpHeadersScanCommand())
 
-        self.assertTrue(plugin_result.hsts_header)
-        self.assertFalse(plugin_result.hpkp_header)
+        self.assertTrue(plugin_result.strict_transport_security_header)
+        self.assertFalse(plugin_result.public_key_pins_header)
         self.assertIsNone(plugin_result.is_valid_pin_configured)
         self.assertIsNone(plugin_result.is_backup_pin_configured)
 
@@ -36,8 +36,8 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         plugin = HttpHeadersPlugin()
         plugin_result = plugin.process_task(server_info, HttpHeadersScanCommand())
 
-        self.assertFalse(plugin_result.hsts_header)
-        self.assertFalse(plugin_result.hpkp_header)
+        self.assertFalse(plugin_result.strict_transport_security_header)
+        self.assertFalse(plugin_result.public_key_pins_header)
         self.assertIsNone(plugin_result.is_valid_pin_configured)
         self.assertIsNone(plugin_result.is_backup_pin_configured)
 

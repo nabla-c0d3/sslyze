@@ -11,7 +11,7 @@ class TestCertificateUtils:
 
     def test(self):
         leaf_path = Path(__file__).absolute().parent / '..' / 'utils' / 'github.com.pem'
-        leaf_pem = leaf_path.read_text()
+        leaf_pem = leaf_path.read_bytes()
         certificate = load_pem_x509_certificate(leaf_pem, default_backend())
 
         assert CertificateUtils.matches_hostname(certificate, 'www.github.com') is None

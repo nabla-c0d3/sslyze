@@ -81,8 +81,11 @@ class PathValidationResult:
     def __getstate__(self) -> Dict[str, Any]:
         # This object needs to be pick-able as it gets sent through multiprocessing.Queues
         pickable_dict = self.__dict__.copy()
-        pem_verified_chain = [cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']]
-        pickable_dict['verified_certificate_chain'] = pem_verified_chain
+        if pickable_dict['verified_certificate_chain']:
+            pem_verified_chain = [
+                cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']
+            ]
+            pickable_dict['verified_certificate_chain'] = pem_verified_chain
         return pickable_dict
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
@@ -231,6 +234,10 @@ class CertificateInfoPlugin(plugin_base.Plugin):
                 verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
             except CouldNotBuildVerifiedChain:
                 verified_chain_as_pem = None
+            except AttributeError:
+                # Only the modern SSL Client can build the verified chain; hence we get here if the server only supports
+                # an older version of TLS (pre 1.2)
+                verified_chain_as_pem = None
 
             (_, verify_str) = ssl_connection.ssl_client.get_certificate_chain_verify_result()
 
@@ -241,6 +248,10 @@ class CertificateInfoPlugin(plugin_base.Plugin):
             try:
                 verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
             except CouldNotBuildVerifiedChain:
+                verified_chain_as_pem = None
+            except AttributeError:
+                # Only the modern SSL Client can build the verified chain; hence we get here if the server only supports
+                # an older version of TLS (pre 1.2)
                 verified_chain_as_pem = None
 
             (_, verify_str) = ssl_connection.ssl_client.get_certificate_chain_verify_result()
@@ -308,7 +319,8 @@ class CertificateInfoScanResult(PluginScanResult):
         self.received_certificate_chain = received_certificate_chain
         self.path_validation_result_list = path_validation_result_list
         self.path_validation_error_list = path_validation_error_list
-        self.ocsp_response = ocsp_response.as_dict()  # We only keep the dictionary as an OcspResponse is not pickable
+        # We only keep the dictionary as an OcspResponse is not pickable
+        self.ocsp_response = ocsp_response.as_dict() if ocsp_response else None
 
         # Sort the path_validation_result_list so the same successful_trust_store always get picked for a given server
         # because threading timings change the order of path_validation_result_list
@@ -356,8 +368,11 @@ class CertificateInfoScanResult(PluginScanResult):
         pem_received_chain = [cert.public_bytes(Encoding.PEM) for cert in pickable_dict['received_certificate_chain']]
         pickable_dict['received_certificate_chain'] = pem_received_chain
 
-        pem_verified_chain = [cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']]
-        pickable_dict['verified_certificate_chain'] = pem_verified_chain
+        if pickable_dict['verified_certificate_chain']:
+            pem_verified_chain = [
+                cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']
+            ]
+            pickable_dict['verified_certificate_chain'] = pem_verified_chain
         return pickable_dict
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
@@ -921,10 +936,11 @@ class CertificateChainDeploymentAnalyzer:
             pass
 
         # Check if the anchor was sent by the server
-        has_anchor_in_certificate_chain = self.verified_certificate_chain[-1] in self.received_certificate_chain \
-            if self.received_certificate_chain \
-            else None
+        has_anchor_in_certificate_chain = None
+        if self.verified_certificate_chain:
+            has_anchor_in_certificate_chain = self.verified_certificate_chain[-1] in self.received_certificate_chain
 
+        # Check hostname validation
         try:
             CertificateUtils.matches_hostname(leaf_cert, self.server_hostname)
             certificate_matches_hostname = True
@@ -942,7 +958,10 @@ class CertificateChainDeploymentAnalyzer:
                     break
 
         # Check if this is a distrusted Symantec-issued chain
-        symantec_distrust_timeline = _SymantecDistructTester.get_distrust_timeline(self.verified_certificate_chain)
+        verified_chain_has_legacy_symantec_anchor = None
+        if self.verified_certificate_chain:
+            symantec_distrust_timeline = _SymantecDistructTester.get_distrust_timeline(self.verified_certificate_chain)
+            verified_chain_has_legacy_symantec_anchor = True if symantec_distrust_timeline else False
 
         # Check the OCSP response if there is one
         is_ocsp_response_trusted = None
@@ -964,7 +983,7 @@ class CertificateChainDeploymentAnalyzer:
             received_chain_contains_anchor_certificate=has_anchor_in_certificate_chain,
             received_chain_has_valid_order=is_chain_order_valid,
             verified_chain_has_sha1_signature=has_sha1_in_certificate_chain,
-            verified_chain_has_legacy_symantec_anchor=True if symantec_distrust_timeline else False,
+            verified_chain_has_legacy_symantec_anchor=verified_chain_has_legacy_symantec_anchor,
             ocsp_response_is_trusted=is_ocsp_response_trusted,
             ocsp_response_status=ocsp_response_status,
         )

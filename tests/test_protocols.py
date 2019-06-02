@@ -39,7 +39,7 @@ class TestProtocols:
         assert plugin_result.as_text()
         assert plugin_result.as_xml()
 
-    @pytest.mark.skipif(not _is_ipv6_available(), 'IPv6 not available')
+    @pytest.mark.skipif(not _is_ipv6_available(), reason='IPv6 not available')
     def test_ipv6(self):
         server_test = ServerConnectivityTester(hostname='www.google.com', ip_address='2607:f8b0:4005:804::2004')
         server_info = server_test.perform()

@@ -23,13 +23,12 @@ class TestHttpsTunnel:
     def test_https_tunneling_bad_arguments(self):
         # Ensure that an IP address cannot be specified when using an HTTP proxy for scans
         tunnel_settings = HttpConnectTunnelingSettings('fakedomain', 443)
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(ValueError):
             ServerConnectivityTester(
                 hostname='www.google.com',
                 ip_address='1.2.3.4',
                 http_tunneling_settings=tunnel_settings
             )
-        assert re.search(pattern, excinfo.value)
 
     def test_https_tunneling(self):
         # Start a local proxy

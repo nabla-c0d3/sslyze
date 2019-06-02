@@ -76,7 +76,6 @@ class TestHttpHeadersPlugin:
 
         assert plugin_result.expect_ct_header
         assert plugin_result.expect_ct_header.max_age >= 0
-        assert plugin_result.expect_ct_header.report_uri
 
         assert plugin_result.as_text()
         assert plugin_result.as_xml()

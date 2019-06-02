@@ -72,7 +72,7 @@ class TestCertificateInfoPlugin:
 
         assert len(plugin_result.path_validation_result_list) == 5
         for path_validation_result in plugin_result.path_validation_result_list:
-            assert path_validation_result.is_certificate_trusted
+            assert path_validation_result.was_validation_successful
 
         assert len(plugin_result.path_validation_error_list) == 0
         assert plugin_result.leaf_certificate_subject_matches_hostname == True

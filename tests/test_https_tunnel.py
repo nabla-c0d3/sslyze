@@ -8,6 +8,8 @@ from sslyze.ssl_settings import HttpConnectTunnelingSettings
 from tests.tiny_proxy import ProxyHandler
 from tests.tiny_proxy import ThreadingHTTPServer
 import multiprocessing
+import pytest
+import re
 
 
 def proxy_worker(port):
@@ -23,12 +25,13 @@ class HttpsTunnelTestCase(unittest.TestCase):
     def test_https_tunneling_bad_arguments(self):
         # Ensure that an IP address cannot be specified when using an HTTP proxy for scans
         tunnel_settings = HttpConnectTunnelingSettings('fakedomain', 443)
-        with self.assertRaisesRegex(ValueError, 'Cannot specify both ip_address and http_tunneling_settings'):
+        with pytest.raises(ValueError) as excinfo:
             ServerConnectivityTester(
                 hostname='www.google.com',
                 ip_address='1.2.3.4',
                 http_tunneling_settings=tunnel_settings
             )
+        assert re.search(pattern, excinfo.value)
 
     def test_https_tunneling(self):
         # Start a local proxy
@@ -61,10 +64,10 @@ class HttpsTunnelTestCase(unittest.TestCase):
             plugin = CertificateInfoPlugin()
             plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-            self.assertGreaterEqual(len(plugin_result.received_certificate_chain), 1)
+            assert len(plugin_result.received_certificate_chain) >= 1
 
-            self.assertTrue(plugin_result.as_text())
-            self.assertTrue(plugin_result.as_xml())
+            assert plugin_result.as_text()
+            assert plugin_result.as_xml()
         finally:
             # Kill the local proxy - unclean
             p.terminate()

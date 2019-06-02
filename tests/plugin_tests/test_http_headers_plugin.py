@@ -7,6 +7,7 @@ from sslyze.plugins.http_headers_plugin import HttpHeadersPlugin, HttpHeadersSca
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import ClientAuthenticationCredentials
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, LegacyOpenSslServer
+import pytest
 
 
 class HttpHeadersPluginTestCase(unittest.TestCase):
@@ -18,16 +19,16 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         plugin = HttpHeadersPlugin()
         plugin_result = plugin.process_task(server_info, HttpHeadersScanCommand())
 
-        self.assertTrue(plugin_result.strict_transport_security_header)
-        self.assertFalse(plugin_result.public_key_pins_header)
-        self.assertIsNone(plugin_result.is_valid_pin_configured)
-        self.assertIsNone(plugin_result.is_backup_pin_configured)
+        assert plugin_result.strict_transport_security_header
+        assert not plugin_result.public_key_pins_header
+        assert plugin_result.is_valid_pin_configured is None
+        assert plugin_result.is_backup_pin_configured is None
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_hsts_and_hpkp_disabled(self):
         server_test = ServerConnectivityTester(hostname='expired.badssl.com')
@@ -36,16 +37,16 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         plugin = HttpHeadersPlugin()
         plugin_result = plugin.process_task(server_info, HttpHeadersScanCommand())
 
-        self.assertFalse(plugin_result.strict_transport_security_header)
-        self.assertFalse(plugin_result.public_key_pins_header)
-        self.assertIsNone(plugin_result.is_valid_pin_configured)
-        self.assertIsNone(plugin_result.is_backup_pin_configured)
+        assert not plugin_result.strict_transport_security_header
+        assert not plugin_result.public_key_pins_header
+        assert plugin_result.is_valid_pin_configured is None
+        assert plugin_result.is_backup_pin_configured is None
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_hpkp_enabled(self):
         # HPKP is being deprecated in Chrome - I couldn't find a website with the header set
@@ -58,12 +59,12 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         plugin = HttpHeadersPlugin()
         plugin_result = plugin.process_task(server_info, HttpHeadersScanCommand())
 
-        self.assertFalse(plugin_result.expect_ct_header)
+        assert not plugin_result.expect_ct_header
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_expect_ct_enabled(self):
         # Github was the only server I could find with expect-ct header set
@@ -73,14 +74,14 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
         plugin = HttpHeadersPlugin()
         plugin_result = plugin.process_task(server_info, HttpHeadersScanCommand())
 
-        self.assertTrue(plugin_result.expect_ct_header)
-        self.assertTrue(plugin_result.expect_ct_header.max_age >= 0)
-        self.assertTrue(plugin_result.expect_ct_header.report_uri)
+        assert plugin_result.expect_ct_header
+        assert plugin_result.expect_ct_header.max_age >= 0
+        assert plugin_result.expect_ct_header.report_uri
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_fails_when_client_auth_failed_tls_1_2(self):
@@ -96,7 +97,7 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
 
             # The plugin fails when a client cert was not supplied
             plugin = HttpHeadersPlugin()
-            with self.assertRaises(ClientCertificateRequested):
+            with pytest.raises(ClientCertificateRequested):
                 plugin.process_task(server_info, HttpHeadersScanCommand())
 
     @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
@@ -113,7 +114,7 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
 
             # The plugin fails when a client cert was not supplied
             plugin = HttpHeadersPlugin()
-            with self.assertRaises(ClientCertificateRequested):
+            with pytest.raises(ClientCertificateRequested):
                 plugin.process_task(server_info, HttpHeadersScanCommand())
 
     @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
@@ -138,6 +139,6 @@ class HttpHeadersPluginTestCase(unittest.TestCase):
             plugin = HttpHeadersPlugin()
             plugin_result = plugin.process_task(server_info, HttpHeadersScanCommand())
 
-        self.assertIsNone(plugin_result.expect_ct_header)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.expect_ct_header is None
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()

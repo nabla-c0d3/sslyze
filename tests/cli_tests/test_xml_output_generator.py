@@ -54,26 +54,26 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the output properly listed the parsing error
-        self.assertIn('www.badpãrsing.com', received_output)
-        self.assertIn('Pãrsing error', received_output)
+        assert 'www.badpãrsing.com' in received_output
+        assert 'Pãrsing error' in received_output
 
         # Ensure the output properly listed the connectivity error
-        self.assertIn('unibadeéè.com', received_output)
-        self.assertIn('Some érrôr', received_output)
+        assert 'unibadeéè.com' in received_output
+        assert 'Some érrôr' in received_output
 
         # Ensure the output properly listed the online domain
-        self.assertIn(server_info.hostname, received_output)
-        self.assertIn(str(server_info.port), received_output)
-        self.assertIn(server_info.ip_address, received_output)
+        assert server_info.hostname in received_output
+        assert str(server_info.port) in received_output
+        assert server_info.ip_address in received_output
 
         # Ensure the output displayed the plugin's XML output
-        self.assertIn(plugin_result_1.scan_command.get_cli_argument(), received_output)
-        self.assertIn(plugin_result_2.scan_command.get_cli_argument(), received_output)
-        self.assertIn(plugin_result_1.as_xml().text, received_output)
-        self.assertIn(plugin_result_2.as_xml().text, received_output)
+        assert plugin_result_1.scan_command.get_cli_argument() in received_output
+        assert plugin_result_2.scan_command.get_cli_argument() in received_output
+        assert plugin_result_1.as_xml().text in received_output
+        assert plugin_result_2.as_xml().text in received_output
 
         # Ensure the console output displayed the total scan time
-        self.assertIn('totalScanTime="{}"'.format(scan_time), received_output)
+        assert 'totalScanTime="{}"'.format(scan_time) in received_output
 
     def test_with_http_tunneling(self):
         output_file = StringIO()
@@ -93,5 +93,5 @@ class XmlOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the output displayed the tunneling settings
-        self.assertIn('httpsTunnelHostname="{}"'.format(tunneling_settings.hostname), received_output)
-        self.assertIn('httpsTunnelPort="{}"'.format(tunneling_settings.port), received_output)
+        assert 'httpsTunnelHostname="{}"'.format(tunneling_settings.hostname) in received_output
+        assert 'httpsTunnelPort="{}"'.format(tunneling_settings.port) in received_output

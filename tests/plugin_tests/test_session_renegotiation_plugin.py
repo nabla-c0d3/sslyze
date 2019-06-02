@@ -8,6 +8,7 @@ from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlug
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import ClientAuthenticationCredentials
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
+import pytest
 
 
 class SessionRenegotiationPluginTestCase(unittest.TestCase):
@@ -19,14 +20,14 @@ class SessionRenegotiationPluginTestCase(unittest.TestCase):
         plugin = SessionRenegotiationPlugin()
         plugin_result = plugin.process_task(server_info, SessionRenegotiationScanCommand())
 
-        self.assertFalse(plugin_result.accepts_client_renegotiation)
-        self.assertTrue(plugin_result.supports_secure_renegotiation)
+        assert not plugin_result.accepts_client_renegotiation
+        assert plugin_result.supports_secure_renegotiation
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_fails_when_client_auth_failed_session(self):
@@ -43,7 +44,7 @@ class SessionRenegotiationPluginTestCase(unittest.TestCase):
 
             # The plugin fails when a client cert was not supplied
             plugin = SessionRenegotiationPlugin()
-            with self.assertRaises(ClientCertificateRequested):
+            with pytest.raises(ClientCertificateRequested):
                 plugin.process_task(server_info, SessionRenegotiationScanCommand())
 
     @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
@@ -68,8 +69,8 @@ class SessionRenegotiationPluginTestCase(unittest.TestCase):
             plugin = SessionRenegotiationPlugin()
             plugin_result = plugin.process_task(server_info, SessionRenegotiationScanCommand())
 
-        self.assertTrue(plugin_result.accepts_client_renegotiation)
-        self.assertTrue(plugin_result.supports_secure_renegotiation)
+        assert plugin_result.accepts_client_renegotiation
+        assert plugin_result.supports_secure_renegotiation
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()

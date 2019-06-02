@@ -16,8 +16,8 @@ class ScannerTestCase(unittest.TestCase):
 
         sync_scanner = SynchronousScanner()
         plugin_result = sync_scanner.run_scan_command(server_info, CompressionScanCommand())
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     def test_concurrent_scanner(self):
         server_test = ServerConnectivityTester(hostname='www.google.com')
@@ -32,8 +32,8 @@ class ScannerTestCase(unittest.TestCase):
         # Process the results
         nb_results = 0
         for plugin_result in concurrent_scanner.get_results():
-            self.assertTrue(plugin_result.as_text())
-            self.assertTrue(plugin_result.as_xml())
+            assert plugin_result.as_text()
+            assert plugin_result.as_xml()
             nb_results +=1
 
-        self.assertEqual(nb_results, 3)
+        assert nb_results == 3

@@ -48,24 +48,24 @@ class JsonOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the output properly listed the parsing error with unicode escaped as \u sequences
-        self.assertIn('www.badp\\u00e3rsing.com', received_output)
-        self.assertIn('P\\u00e3rsing error', received_output)
+        assert 'www.badp\\u00e3rsing.com' in received_output
+        assert 'P\\u00e3rsing error' in received_output
 
         # Ensure the output properly listed the connectivity error with unicode escaped as \u sequences
-        self.assertIn('unibade\\u00e9\\u00e8.com:443', received_output)
-        self.assertIn('Some \\u00e9rr\\u00f4r', received_output)
+        assert 'unibade\\u00e9\\u00e8.com:443' in received_output
+        assert 'Some \\u00e9rr\\u00f4r' in received_output
 
         # Ensure the output properly listed the online domain
-        self.assertIn(json.dumps(server_info.hostname, ensure_ascii=True), received_output)
-        self.assertIn(str(server_info.port), received_output)
-        self.assertIn(server_info.ip_address, received_output)
+        assert json.dumps(server_info.hostname, ensure_ascii=True) in received_output
+        assert str(server_info.port) in received_output
+        assert server_info.ip_address in received_output
 
         # Ensure the output displayed the plugin's attributes as JSON
-        self.assertIn(plugin_result_1.scan_command.get_cli_argument(), received_output)
-        self.assertIn(plugin_result_2.scan_command.get_cli_argument(), received_output)
-        self.assertIn('"text_output":', received_output)
-        self.assertIn(json.dumps(plugin_result_1.text_output, ensure_ascii=True), received_output)
-        self.assertIn(plugin_result_2.text_output, received_output)
+        assert plugin_result_1.scan_command.get_cli_argument() in received_output
+        assert plugin_result_2.scan_command.get_cli_argument() in received_output
+        assert '"text_output":' in received_output
+        assert json.dumps(plugin_result_1.text_output, ensure_ascii=True) in received_output
+        assert plugin_result_2.text_output in received_output
 
         # Ensure the console output displayed the total scan time
-        self.assertIn(str(scan_time), received_output)
+        assert str(scan_time) in received_output

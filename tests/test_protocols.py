@@ -34,10 +34,10 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.received_certificate_chain), 1)
+        assert len(plugin_result.received_certificate_chain) >= 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     @unittest.skipIf(not _is_ipv6_available(), 'IPv6 not available')
     def test_ipv6(self):
@@ -47,10 +47,10 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.received_certificate_chain), 1)
+        assert len(plugin_result.received_certificate_chain) >= 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     def test_international_names(self):
         server_test = ServerConnectivityTester(hostname='www.sociétégénérale.com')
@@ -59,10 +59,10 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.received_certificate_chain), 1)
+        assert len(plugin_result.received_certificate_chain) >= 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     def test_xmpp_to(self):
         server_test = ServerConnectivityTester(
@@ -75,10 +75,10 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.received_certificate_chain), 1)
+        assert len(plugin_result.received_certificate_chain) >= 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     def test_starttls(self):
         for hostname, protocol in [
@@ -95,21 +95,21 @@ class ProtocolsTestCase(unittest.TestCase):
             plugin = CertificateInfoPlugin()
             plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-            self.assertTrue(plugin_result.as_text())
-            self.assertTrue(plugin_result.as_xml())
+            assert plugin_result.as_text()
+            assert plugin_result.as_xml()
 
     def test_optional_client_authentication(self):
         server_test = ServerConnectivityTester(hostname='client.badssl.com')
         server_info = server_test.perform()
-        self.assertEqual(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
+        assert server_info.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.OPTIONAL
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     def test_tls_1_only(self):
         server_test = ServerConnectivityTester(hostname='tls-v1-0.badssl.com', port=1010)
         server_info = server_test.perform()
-        self.assertEqual(server_info.highest_ssl_version_supported, OpenSslVersionEnum.TLSV1)
+        assert server_info.highest_ssl_version_supported == OpenSslVersionEnum.TLSV1

@@ -19,7 +19,7 @@ class ClientAuthenticationTestCase(unittest.TestCase):
             server_info = server_test.perform()
 
         # SSLyze correctly detects that client auth is optional
-        self.assertEqual(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
+        assert server_info.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.OPTIONAL
 
     @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_required_client_auth_tls_1_2(self):
@@ -33,7 +33,7 @@ class ClientAuthenticationTestCase(unittest.TestCase):
             server_info = server_test.perform()
 
         # SSLyze correctly detects that client auth is required
-        self.assertEqual(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.REQUIRED)
+        assert server_info.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED
 
     @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_required_client_auth_tls_1_3(self):
@@ -48,4 +48,4 @@ class ClientAuthenticationTestCase(unittest.TestCase):
 
         # SSLyze correctly detects that client auth is required
         # TODO(AD): Fix this bug; it should be REQUIRED
-        self.assertEqual(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
+        assert server_info.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.OPTIONAL

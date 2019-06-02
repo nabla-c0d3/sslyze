@@ -16,13 +16,13 @@ class CompressionPluginTestCase(unittest.TestCase):
         plugin = CompressionPlugin()
         plugin_result = plugin.process_task(server_info, CompressionScanCommand())
 
-        self.assertFalse(plugin_result.compression_name)
+        assert not plugin_result.compression_name
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     @unittest.skip('Not implemented')
     def test_compression_enabled(self):
@@ -45,6 +45,6 @@ class CompressionPluginTestCase(unittest.TestCase):
             plugin = CompressionPlugin()
             plugin_result = plugin.process_task(server_info, CompressionScanCommand())
 
-        self.assertFalse(plugin_result.compression_name)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert not plugin_result.compression_name
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()

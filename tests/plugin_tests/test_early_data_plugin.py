@@ -22,13 +22,13 @@ class EarlyDataPluginTestCase(unittest.TestCase):
             plugin = EarlyDataPlugin()
             plugin_result = plugin.process_task(server_info, EarlyDataScanCommand())
 
-        self.assertTrue(plugin_result.is_early_data_supported)
+        assert plugin_result.is_early_data_supported
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_early_data_enabled_online(self):
         server_test = ServerConnectivityTester(hostname='www.cloudflare.com')
@@ -37,13 +37,13 @@ class EarlyDataPluginTestCase(unittest.TestCase):
         plugin = EarlyDataPlugin()
         plugin_result = plugin.process_task(server_info, EarlyDataScanCommand())
 
-        self.assertTrue(plugin_result.is_early_data_supported)
+        assert plugin_result.is_early_data_supported
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_early_data_disabled_no_tls_1_3(self):
@@ -58,13 +58,13 @@ class EarlyDataPluginTestCase(unittest.TestCase):
             plugin = EarlyDataPlugin()
             plugin_result = plugin.process_task(server_info, EarlyDataScanCommand())
 
-        self.assertFalse(plugin_result.is_early_data_supported)
+        assert not plugin_result.is_early_data_supported
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_early_data_disabled(self):
@@ -79,10 +79,10 @@ class EarlyDataPluginTestCase(unittest.TestCase):
             plugin = EarlyDataPlugin()
             plugin_result = plugin.process_task(server_info, EarlyDataScanCommand())
 
-        self.assertFalse(plugin_result.is_early_data_supported)
+        assert not plugin_result.is_early_data_supported
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)

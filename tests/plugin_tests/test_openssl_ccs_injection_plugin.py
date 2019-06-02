@@ -14,10 +14,10 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
         plugin = OpenSslCcsInjectionPlugin()
         plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
 
-        self.assertFalse(plugin_result.is_vulnerable_to_ccs_injection)
+        assert not plugin_result.is_vulnerable_to_ccs_injection
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_ccs_injection_bad(self):
@@ -32,9 +32,9 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
             plugin = OpenSslCcsInjectionPlugin()
             plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
 
-        self.assertTrue(plugin_result.is_vulnerable_to_ccs_injection)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.is_vulnerable_to_ccs_injection
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
     def test_succeeds_when_client_auth_failed(self):
@@ -54,6 +54,6 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
             plugin = OpenSslCcsInjectionPlugin()
             plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
 
-        self.assertTrue(plugin_result.is_vulnerable_to_ccs_injection)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.is_vulnerable_to_ccs_injection
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()

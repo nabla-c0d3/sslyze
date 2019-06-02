@@ -67,7 +67,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
 
         self.assertTrue(plugin_result.is_leaf_certificate_ev)
 
-        self.assertEqual(len(plugin_result.certificate_chain), 3)
+        self.assertEqual(len(plugin_result.received_certificate_chain), 3)
         self.assertEqual(len(plugin_result.verified_certificate_chain), 3)
         self.assertFalse(plugin_result.has_anchor_in_certificate_chain)
 
@@ -93,7 +93,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
         self.assertIsNone(plugin_result.ocsp_response)
-        self.assertEqual(len(plugin_result.certificate_chain), 1)
+        self.assertEqual(len(plugin_result.received_certificate_chain), 1)
 
         self.assertGreaterEqual(len(plugin_result.path_validation_result_list), 5)
         for path_validation_result in plugin_result.path_validation_result_list:
@@ -157,7 +157,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_chain), 1)
+        self.assertGreaterEqual(len(plugin_result.received_certificate_chain), 1)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -172,7 +172,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_chain), 1)
+        self.assertGreaterEqual(len(plugin_result.received_certificate_chain), 1)
 
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
@@ -288,7 +288,7 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
             plugin = CertificateInfoPlugin()
             plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertTrue(plugin_result.certificate_chain)
+        self.assertTrue(plugin_result.received_certificate_chain)
         self.assertTrue(plugin_result.as_text())
         self.assertTrue(plugin_result.as_xml())
 

@@ -27,11 +27,12 @@ class TestOpenSslCipherSuitesPlugin:
         assert not plugin_result.preferred_cipher
 
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
-        assert {'SSL_CK_RC4_128_EXPORT40_WITH_MD5', 'SSL_CK_IDEA_128_CBC_WITH_MD5',
-                          'SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5', 'SSL_CK_DES_192_EDE3_CBC_WITH_MD5',
-                          'SSL_CK_DES_192_EDE3_CBC_WITH_MD5', 'SSL_CK_RC4_128_WITH_MD5',
-                          'SSL_CK_RC2_128_CBC_WITH_MD5', 'SSL_CK_DES_64_CBC_WITH_MD5'} == \
-                         set(accepted_cipher_name_list)
+        assert {
+                   'SSL_CK_RC4_128_EXPORT40_WITH_MD5', 'SSL_CK_IDEA_128_CBC_WITH_MD5',
+                   'SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5', 'SSL_CK_DES_192_EDE3_CBC_WITH_MD5',
+                   'SSL_CK_DES_192_EDE3_CBC_WITH_MD5', 'SSL_CK_RC4_128_WITH_MD5',
+                   'SSL_CK_RC2_128_CBC_WITH_MD5', 'SSL_CK_DES_64_CBC_WITH_MD5'
+               } == set(accepted_cipher_name_list)
 
         assert plugin_result.accepted_cipher_list
         assert not plugin_result.rejected_cipher_list
@@ -75,27 +76,28 @@ class TestOpenSslCipherSuitesPlugin:
 
         # The embedded server does not have a preference
         assert not plugin_result.preferred_cipher
-        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
-        assert {'TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA', 'TLS_RSA_WITH_3DES_EDE_CBC_SHA',
-                          'TLS_DH_anon_WITH_AES_128_CBC_SHA', 'TLS_ECDH_anon_WITH_AES_128_CBC_SHA',
-                          'TLS_DH_anon_WITH_SEED_CBC_SHA', 'TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5',
-                          'TLS_ECDHE_RSA_WITH_NULL_SHA', 'TLS_ECDHE_RSA_WITH_RC4_128_SHA',
-                          'TLS_DH_anon_WITH_AES_256_CBC_SHA',
-                          'TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA', 'TLS_ECDH_anon_WITH_RC4_128_SHA',
-                          'TLS_DH_anon_WITH_3DES_EDE_CBC_SHA', 'TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA',
-                          'TLS_DH_anon_EXPORT_WITH_RC4_40_MD5', 'TLS_RSA_EXPORT_WITH_DES40_CBC_SHA',
-                          'TLS_ECDH_anon_WITH_NULL_SHA',
-                          'TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA', 'TLS_RSA_WITH_RC4_128_SHA',
-                          'TLS_RSA_EXPORT_WITH_RC4_40_MD5',
-                          'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_NULL_MD5',
-                          'TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA', 'TLS_DH_anon_WITH_DES_CBC_SHA',
-                          'TLS_RSA_WITH_SEED_CBC_SHA', 'TLS_RSA_WITH_DES_CBC_SHA',
-                          'TLS_ECDH_anon_WITH_AES_256_CBC_SHA', 'TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA',
-                          'TLS_RSA_WITH_CAMELLIA_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
-                          'TLS_RSA_WITH_RC4_128_MD5', 'TLS_RSA_WITH_CAMELLIA_128_CBC_SHA',
-                          'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_NULL_SHA',
-                          'TLS_RSA_WITH_IDEA_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA', 'TLS_DH_anon_WITH_RC4_128_MD5'} == \
-                         set(accepted_cipher_name_list)
+        expected_ciphers = {
+            'TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA', 'TLS_RSA_WITH_3DES_EDE_CBC_SHA',
+            'TLS_DH_anon_WITH_AES_128_CBC_SHA', 'TLS_ECDH_anon_WITH_AES_128_CBC_SHA',
+            'TLS_DH_anon_WITH_SEED_CBC_SHA', 'TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5',
+            'TLS_ECDHE_RSA_WITH_NULL_SHA', 'TLS_ECDHE_RSA_WITH_RC4_128_SHA',
+            'TLS_DH_anon_WITH_AES_256_CBC_SHA',
+            'TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA', 'TLS_ECDH_anon_WITH_RC4_128_SHA',
+            'TLS_DH_anon_WITH_3DES_EDE_CBC_SHA', 'TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA',
+            'TLS_DH_anon_EXPORT_WITH_RC4_40_MD5', 'TLS_RSA_EXPORT_WITH_DES40_CBC_SHA',
+            'TLS_ECDH_anon_WITH_NULL_SHA',
+            'TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA', 'TLS_RSA_WITH_RC4_128_SHA',
+            'TLS_RSA_EXPORT_WITH_RC4_40_MD5',
+            'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_NULL_MD5',
+            'TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA', 'TLS_DH_anon_WITH_DES_CBC_SHA',
+            'TLS_RSA_WITH_SEED_CBC_SHA', 'TLS_RSA_WITH_DES_CBC_SHA',
+            'TLS_ECDH_anon_WITH_AES_256_CBC_SHA', 'TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA',
+            'TLS_RSA_WITH_CAMELLIA_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
+            'TLS_RSA_WITH_RC4_128_MD5', 'TLS_RSA_WITH_CAMELLIA_128_CBC_SHA',
+            'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_NULL_SHA',
+            'TLS_RSA_WITH_IDEA_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA', 'TLS_DH_anon_WITH_RC4_128_MD5'
+        }
+        assert expected_ciphers == set([cipher.name for cipher in plugin_result.accepted_cipher_list])
 
         assert plugin_result.accepted_cipher_list
         assert plugin_result.rejected_cipher_list
@@ -133,11 +135,12 @@ class TestOpenSslCipherSuitesPlugin:
         plugin_result = plugin.process_task(server_info, Tlsv10ScanCommand())
 
         assert plugin_result.preferred_cipher
-        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
-        assert {'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
-                          'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA',
-                          'TLS_RSA_WITH_3DES_EDE_CBC_SHA'} == \
-                         set(accepted_cipher_name_list)
+        expected_ciphers = {
+            'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
+            'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA',
+            'TLS_RSA_WITH_3DES_EDE_CBC_SHA'
+        }
+        assert expected_ciphers == set([cipher.name for cipher in plugin_result.accepted_cipher_list])
 
         assert plugin_result.accepted_cipher_list
         assert plugin_result.rejected_cipher_list
@@ -176,11 +179,12 @@ class TestOpenSslCipherSuitesPlugin:
 
         assert plugin_result.preferred_cipher
         assert plugin_result.accepted_cipher_list
-        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
-        assert {'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
-                          'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA',
-                          'TLS_RSA_WITH_3DES_EDE_CBC_SHA'} == \
-                         set(accepted_cipher_name_list)
+        expected_ciphers = {
+            'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
+            'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA',
+            'TLS_RSA_WITH_3DES_EDE_CBC_SHA'
+        }
+        assert expected_ciphers == set([cipher.name for cipher in plugin_result.accepted_cipher_list])
 
         assert plugin_result.rejected_cipher_list
         assert not plugin_result.errored_cipher_list
@@ -201,15 +205,15 @@ class TestOpenSslCipherSuitesPlugin:
 
         assert plugin_result.preferred_cipher
         assert plugin_result.accepted_cipher_list
-        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
-
-        assert {'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384', 'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA',
-                          'TLS_RSA_WITH_AES_256_GCM_SHA384', 'TLS_RSA_WITH_AES_256_CBC_SHA',
-                          'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256',
-                          'TLS_RSA_WITH_AES_128_GCM_SHA256', 'TLS_RSA_WITH_AES_128_CBC_SHA',
-                          'TLS_RSA_WITH_3DES_EDE_CBC_SHA', 'TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256',
-                          'TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256'} == \
-                         set(accepted_cipher_name_list)
+        expected_ciphers = {
+            'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384', 'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA',
+            'TLS_RSA_WITH_AES_256_GCM_SHA384', 'TLS_RSA_WITH_AES_256_CBC_SHA',
+            'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256',
+            'TLS_RSA_WITH_AES_128_GCM_SHA256', 'TLS_RSA_WITH_AES_128_CBC_SHA',
+            'TLS_RSA_WITH_3DES_EDE_CBC_SHA', 'TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256',
+            'TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256'
+        }
+        assert expected_ciphers == set([cipher.name for cipher in plugin_result.accepted_cipher_list])
 
         assert plugin_result.rejected_cipher_list
         assert not plugin_result.errored_cipher_list
@@ -227,15 +231,16 @@ class TestOpenSslCipherSuitesPlugin:
         plugin = OpenSslCipherSuitesPlugin()
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
-        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
-        assert {'TLS_ECDH_anon_WITH_AES_256_CBC_SHA', 'TLS_DH_anon_WITH_AES_256_CBC_SHA256',
-                          'TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA', 'TLS_DH_anon_WITH_AES_256_GCM_SHA384',
-                          'TLS_DH_anon_WITH_AES_256_CBC_SHA', 'TLS_ECDH_anon_WITH_AES_128_CBC_SHA',
-                          'TLS_DH_anon_WITH_AES_128_CBC_SHA256', 'TLS_DH_anon_WITH_AES_128_CBC_SHA',
-                          'TLS_DH_anon_WITH_AES_128_GCM_SHA256', 'TLS_DH_anon_WITH_SEED_CBC_SHA',
-                          'TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA', 'TLS_ECDHE_RSA_WITH_NULL_SHA',
-                          'TLS_ECDH_anon_WITH_NULL_SHA', 'TLS_RSA_WITH_NULL_SHA256', 'TLS_RSA_WITH_NULL_SHA'} == \
-                          set(accepted_cipher_name_list)
+        expected_ciphers = {
+            'TLS_ECDH_anon_WITH_AES_256_CBC_SHA', 'TLS_DH_anon_WITH_AES_256_CBC_SHA256',
+            'TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA', 'TLS_DH_anon_WITH_AES_256_GCM_SHA384',
+            'TLS_DH_anon_WITH_AES_256_CBC_SHA', 'TLS_ECDH_anon_WITH_AES_128_CBC_SHA',
+            'TLS_DH_anon_WITH_AES_128_CBC_SHA256', 'TLS_DH_anon_WITH_AES_128_CBC_SHA',
+            'TLS_DH_anon_WITH_AES_128_GCM_SHA256', 'TLS_DH_anon_WITH_SEED_CBC_SHA',
+            'TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA', 'TLS_ECDHE_RSA_WITH_NULL_SHA',
+            'TLS_ECDH_anon_WITH_NULL_SHA', 'TLS_RSA_WITH_NULL_SHA256', 'TLS_RSA_WITH_NULL_SHA'
+        }
+        assert expected_ciphers == set([cipher.name for cipher in plugin_result.accepted_cipher_list])
 
         assert plugin_result.as_text()
         assert plugin_result.as_xml()
@@ -251,8 +256,7 @@ class TestOpenSslCipherSuitesPlugin:
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
-        assert {'TLS_ECDHE_RSA_WITH_RC4_128_SHA', 'TLS_RSA_WITH_RC4_128_SHA'} == \
-                         set(accepted_cipher_name_list)
+        assert {'TLS_ECDHE_RSA_WITH_RC4_128_SHA', 'TLS_RSA_WITH_RC4_128_SHA'} == set(accepted_cipher_name_list)
 
         assert plugin_result.as_text()
         assert plugin_result.as_xml()
@@ -268,8 +272,7 @@ class TestOpenSslCipherSuitesPlugin:
         plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
 
         accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
-        assert {'TLS_RSA_WITH_RC4_128_MD5'} == \
-                         set(accepted_cipher_name_list)
+        assert {'TLS_RSA_WITH_RC4_128_MD5'} == set(accepted_cipher_name_list)
 
         assert plugin_result.as_text()
         assert plugin_result.as_xml()
@@ -287,7 +290,7 @@ class TestOpenSslCipherSuitesPlugin:
 
         assert plugin_result.preferred_cipher
         assert plugin_result.accepted_cipher_list
-        
+
         # Sogou.com follows client cipher suite preference
         server_test = ServerConnectivityTester(hostname='www.sogou.com')
         server_info = server_test.perform()

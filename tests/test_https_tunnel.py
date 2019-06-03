@@ -7,7 +7,6 @@ from tests.tiny_proxy import ProxyHandler
 from tests.tiny_proxy import ThreadingHTTPServer
 import multiprocessing
 import pytest
-import re
 
 
 def proxy_worker(port):
@@ -56,7 +55,6 @@ class TestHttpsTunnel:
                     if proxy_connection_attempts > 3:
                         raise
                     proxy_connection_attempts += 1
-
 
             plugin = CertificateInfoPlugin()
             plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())

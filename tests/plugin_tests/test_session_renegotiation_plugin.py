@@ -40,7 +40,6 @@ class TestSessionRenegotiationPlugin:
             )
             server_info = server_test.perform()
 
-
             # The plugin fails when a client cert was not supplied
             plugin = SessionRenegotiationPlugin()
             with pytest.raises(ClientCertificateRequested):

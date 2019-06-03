@@ -38,10 +38,11 @@ class ProxyHandler(BaseHTTPRequestHandler):
     rbufsize = 0                        # self.rfile Be unbuffered
 
     def handle(self):
-        (ip, port) =  self.client_address
+        (ip, port) = self.client_address
         if hasattr(self, 'allowed_clients') and ip not in self.allowed_clients:
             self.raw_requestline = self.rfile.readline()
-            if self.parse_request(): self.send_error(403)
+            if self.parse_request():
+                self.send_error(403)
         else:
             self.__base_handle()
 
@@ -52,10 +53,13 @@ class ProxyHandler(BaseHTTPRequestHandler):
         else:
             host_port = netloc, 80
         logging.warning('Connecting to {}'.format(host_port))
-        try: soc.connect(host_port)
+        try:
+            soc.connect(host_port)
         except socket.error as arg:
-            try: msg = arg[1]
-            except: msg = arg
+            try:
+                msg = arg[1]
+            except Exception:
+                msg = arg
             self.send_error(404, msg)
             return 0
         return 1
@@ -107,7 +111,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
         while 1:
             count += 1
             (ins, _, exs) = select.select(iw, ow, iw, 3)
-            if exs: break
+            if exs:
+                break
             if ins:
                 for i in ins:
                     if i is soc:
@@ -120,15 +125,18 @@ class ProxyHandler(BaseHTTPRequestHandler):
                         count = 0
             else:
                 logging.warning('Idle')
-            if count == max_idling: break
+            if count == max_idling:
+                break
 
     do_HEAD = do_GET
     do_POST = do_GET
-    do_PUT  = do_GET
-    do_DELETE=do_GET
+    do_PUT = do_GET
+    do_DELETE = do_GET
+
 
 class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     pass
+
 
 if __name__ == '__main__':
     from sys import argv

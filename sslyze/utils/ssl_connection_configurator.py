@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Union, Optional
 
 from nassl.legacy_ssl_client import LegacySslClient
@@ -50,7 +51,7 @@ class SslConnectionConfigurator:
 
             should_ignore_client_auth: bool,
             openssl_cipher_string: Optional[str] = None,
-            ssl_verify_locations: Optional[str] = None,
+            ssl_verify_locations: Optional[Path] = None,
             should_use_legacy_openssl: Optional[bool] = None,
     ) -> SslConnection:
         # We need three things to create an SSL connection
@@ -90,7 +91,7 @@ class SslConnectionConfigurator:
             ssl_client = ssl_client_cls(
                 ssl_version=ssl_version,
                 ssl_verify=OpenSslVerifyEnum.NONE,
-                ssl_verify_locations=ssl_verify_locations,
+                ssl_verify_locations=str(ssl_verify_locations),
                 client_certchain_file=server_info.client_auth_credentials.client_certificate_chain_path,
                 client_key_file=server_info.client_auth_credentials.client_key_path,
                 client_key_type=server_info.client_auth_credentials.client_key_type,
@@ -102,7 +103,7 @@ class SslConnectionConfigurator:
             ssl_client = ssl_client_cls(
                 ssl_version=ssl_version,
                 ssl_verify=OpenSslVerifyEnum.NONE,
-                ssl_verify_locations=ssl_verify_locations,
+                ssl_verify_locations=str(ssl_verify_locations),
                 ignore_client_authentication_requests=should_ignore_client_auth
             )
 

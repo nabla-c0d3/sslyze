@@ -29,7 +29,6 @@ class TestConsoleOutputGenerator:
         assert 'FakePlugin1' in received_output
         assert 'FakePlugin2' in received_output
 
-
     def test_server_connectivity_test_failed(self):
         output_file = StringIO()
         generator = ConsoleOutputGenerator(output_file)
@@ -44,7 +43,6 @@ class TestConsoleOutputGenerator:
         assert 'unicödeéè.com' in received_output
         assert 'Some érrôr' in received_output
         assert 'discarding corresponding tasks' in received_output
-
 
     def test_server_connectivity_test_succeeded(self):
         output_file = StringIO()
@@ -61,7 +59,6 @@ class TestConsoleOutputGenerator:
         assert str(server_info.port) in received_output
         assert server_info.ip_address in received_output
 
-
     def test_server_connectivity_test_succeeded_with_required_client_auth(self):
         # Test when client authentication is required
         output_file = StringIO()
@@ -76,7 +73,6 @@ class TestConsoleOutputGenerator:
         # Ensure the console output properly warned about client authentication
         assert 'Server REQUIRED client authentication' in received_output
 
-
     def test_server_connectivity_test_succeeded_with_optional_client_auth(self):
         # Test when client authentication is optional
         output_file = StringIO()
@@ -90,7 +86,6 @@ class TestConsoleOutputGenerator:
 
         # Ensure the console output properly warned about client authentication
         assert 'Server requested optional client authentication' in received_output
-
 
     def test_server_connectivity_test_succeeded_with_http_tunneling(self):
         output_file = StringIO()
@@ -113,7 +108,6 @@ class TestConsoleOutputGenerator:
         assert tunneling_settings.hostname in received_output
         assert str(tunneling_settings.port) in received_output
 
-
     def test_scans_started(self):
         output_file = StringIO()
         generator = ConsoleOutputGenerator(output_file)
@@ -125,7 +119,6 @@ class TestConsoleOutputGenerator:
 
         # Ensure the console output displayed something
         assert received_output
-
 
     def test_server_scan_completed(self):
         output_file = StringIO()
@@ -149,7 +142,6 @@ class TestConsoleOutputGenerator:
         assert plugin_result_1.text_output in received_output
         assert plugin_result_2.text_output in received_output
 
-
     def test_server_scan_completed_with_http_tunneling(self):
         output_file = StringIO()
         generator = ConsoleOutputGenerator(output_file)
@@ -171,7 +163,6 @@ class TestConsoleOutputGenerator:
         assert 'proxy' in received_output.lower()
         assert tunneling_settings.hostname in received_output.lower()
         assert str(tunneling_settings.port) in received_output.lower()
-
 
     def test_scans_completed(self):
         output_file = StringIO()

@@ -14,7 +14,7 @@ def _is_ipv6_available() -> bool:
     try:
         s.connect(('2607:f8b0:4005:804::2004', 443))
         has_ipv6 = True
-    except:
+    except Exception:
         pass
     finally:
         s.close()

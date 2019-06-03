@@ -4,6 +4,7 @@ from xml.etree.ElementTree import Element
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import Certificate, load_pem_x509_certificate
+from dataclasses import dataclass
 from nassl.ssl_client import CouldNotBuildVerifiedChain
 
 from sslyze.plugins.plugin_base import PluginScanCommand, Plugin, PluginScanResult
@@ -13,7 +14,7 @@ from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.http_response_parser import HttpResponseParser
-from typing import List, Type, Optional, Dict, Any
+from typing import List, Type, Optional, Dict, Any, TypeVar
 
 
 class HttpHeadersScanCommand(PluginScanCommand):
@@ -108,19 +109,18 @@ def _extract_first_header_value(response: HTTPResponse, header_name: str) -> Opt
     return raw_header
 
 
+@dataclass
 class StrictTransportSecurityHeader:
     """A Strict-Transport-Security header parsed from a server's HTTP response.
 
     Attributes:
         preload (bool): True if the preload directive is set.
         include_subdomains (bool): True if the includesubdomains directive is set.
-        max_age (int): The content of the max-age field.
+        max_age (Optional[int]): The content of the max-age field.
     """
-
-    def __init__(self, max_age: int, preload: bool, include_subdomains: bool):
-        self.max_age = max_age
-        self.include_subdomains = include_subdomains
-        self.preload = preload
+    max_age: Optional[int]
+    preload: bool
+    include_subdomains: bool
 
     @classmethod
     def from_http_response(cls, response: HTTPResponse) -> Optional['StrictTransportSecurityHeader']:
@@ -150,41 +150,37 @@ class StrictTransportSecurityHeader:
         return cls(max_age, preload, include_subdomains)
 
 
+_T = TypeVar('_T', bound='PublicKeyPinsHeader')
+
+
+@dataclass
 class PublicKeyPinsHeader:
     """A Public-Key-Pins header parsed from a server's HTTP response.
 
     Attributes:
         include_subdomains (bool): True if the includesubdomains directive is set.
-        max_age (int): The content of the max-age field.
+        max_age (Optional[int]): The content of the max-age field.
         pin_sha256_list (List[str]): The list of pin-sha256 values set in the header.
         report_uri (Optional[str]): The content of the report-uri field.
         report_to (Optional[str]): The content of the report-to field, available via the Reporting API as described at
             https://w3c.github.io/reporting/#examples.
     """
 
-    def __init__(
-            self,
-            max_age: int,
-            pin_sha256_list: List[str],
-            include_subdomains: bool,
-            report_uri: Optional[str],
-            report_to: Optional[str],
-    ) -> None:
-        self.max_age = max_age
-        self.pin_sha256_list = pin_sha256_list
-        self.include_subdomains = include_subdomains
-        self.report_uri = report_uri
-        self.report_to = report_to
+    max_age: Optional[int]
+    pin_sha256_list: List[str]
+    include_subdomains: bool
+    report_uri: Optional[str]
+    report_to: Optional[str]
 
     @classmethod
-    def from_http_response(cls, response: HTTPResponse) -> Optional['PublicKeyPinsHeader']:
+    def from_http_response(cls: Type[_T], response: HTTPResponse) -> Optional[_T]:
         raw_hpkp_header = _extract_first_header_value(response, 'public-key-pins')
         if not raw_hpkp_header:
             return None
         return cls._from_header(raw_hpkp_header)
 
     @classmethod
-    def _from_header(cls, raw_hpkp_header: str) -> 'PublicKeyPinsHeader':
+    def _from_header(cls: Type[_T], raw_hpkp_header: str) -> _T:
         report_uri = None
         include_subdomains = False
         max_age = None
@@ -214,12 +210,13 @@ class PublicKeyPinsHeader:
         return cls(max_age, pin_sha256_list, include_subdomains, report_uri, report_to)
 
 
+@dataclass
 class PublicKeyPinsReportOnlyHeader(PublicKeyPinsHeader):
     """A Public-Key-Pins-Report-Only header parsed from a server's HTTP response.
 
     Attributes:
         include_subdomains (bool): True if the includesubdomains directive is set.
-        max_age (int): The content of the max-age field.
+        max_age (Optional[int]): The content of the max-age field.
         pin_sha256_list (List[str]): The list of pin-sha256 values set in the header.
         report_uri (Optional[str]): The content of the report-uri field.
         report_to (Optional[str]): The content of the report-to field, available via the Reporting API as described at
@@ -227,26 +224,25 @@ class PublicKeyPinsReportOnlyHeader(PublicKeyPinsHeader):
     """
 
     @classmethod
-    def from_http_response(cls, response: HTTPResponse) -> Optional['PublicKeyPinsReportOnlyHeader']:
+    def from_http_response(cls: Type[_T], response: HTTPResponse) -> Optional[_T]:
         raw_hpkp_report_only_header = _extract_first_header_value(response, 'public-key-pins-report-only')
         if not raw_hpkp_report_only_header:
             return None
         return cls._from_header(raw_hpkp_report_only_header)
 
 
+@dataclass
 class ExpectCtHeader:
     """An Expect-CT header parsed from a server's HTTP response.
 
     Attributes:
-        max-age (int): The content of the max-age field.
-        report-uri (str): The content of report-uri field.
+        max-age (Optional[int]): The content of the max-age field.
+        report-uri (Optional[str]): The content of report-uri field.
         enforce (bool): True if enforce directive is set.
     """
-
-    def __init__(self, max_age: int, report_uri: str, enforce: bool) -> None:
-        self.max_age = max_age
-        self.report_uri = report_uri
-        self.enforce = enforce
+    max_age: Optional[int]
+    report_uri: Optional[str]
+    enforce: bool
 
     @classmethod
     def from_http_response(cls, response: HTTPResponse) -> Optional['ExpectCtHeader']:
@@ -384,11 +380,12 @@ class HttpHeadersScanResult(PluginScanResult):
         txt_result.append(self._format_subtitle('Strict-Transport-Security Header'))
         if self.strict_transport_security_header:
             txt_result.append(self._format_field("Max Age:", str(self.strict_transport_security_header.max_age)))
-            txt_result.append(self._format_field("Include Subdomains:", str(self.strict_transport_security_header.include_subdomains)))
+            txt_result.append(self._format_field(
+                "Include Subdomains:", str(self.strict_transport_security_header.include_subdomains))
+            )
             txt_result.append(self._format_field("Preload:", str(self.strict_transport_security_header.preload)))
         else:
             txt_result.append(self._format_field(self._HEADER_NOT_SENT_TXT, ""))
-
 
         for header, subtitle in [
             (self.public_key_pins_header, 'Public-Key-Pins Header'),
@@ -466,7 +463,7 @@ class HttpHeadersScanResult(PluginScanResult):
                     xml_hpkp_attr['isValidPinConfigured'] = str(self.is_valid_pin_configured)
                     xml_hpkp_attr['isBackupPinConfigured'] = str(self.is_backup_pin_configured)
 
-                for pin in self.public_key_pins_header.pin_sha256_list:
+                for pin in self.public_key_pins_header.pin_sha256_list:  # type: ignore
                     xml_pin = Element('pinSha256')
                     xml_pin.text = pin
                     xml_pin_list.append(xml_pin)

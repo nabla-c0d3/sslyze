@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 from nassl.ssl_client import OpenSslVersionEnum
@@ -70,7 +71,7 @@ class ServerConnectivityInfo:
     def get_preconfigured_ssl_connection(
             self,
             override_ssl_version: Optional[OpenSslVersionEnum] = None,
-            ssl_verify_locations: Optional[str] = None,
+            ssl_verify_locations: Optional[Path] = None,
             should_use_legacy_openssl: Optional[bool] = None,
     ) -> SslConnection:
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.

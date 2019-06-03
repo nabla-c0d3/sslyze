@@ -32,6 +32,6 @@ class TestScanner:
         for plugin_result in concurrent_scanner.get_results():
             assert plugin_result.as_text()
             assert plugin_result.as_xml()
-            nb_results +=1
+            nb_results += 1
 
         assert nb_results == 3

@@ -13,7 +13,7 @@ def test(ctx):
     ctx.run('pytest')
 
     # Run linters
-    ctx.run('flake8 sslyze')
+    ctx.run('flake8 .')
     ctx.run('mypy sslyze')
 
 
@@ -43,7 +43,6 @@ def release(ctx):
 
     # Generate the doc
     gen_doc(ctx)
-
 
     # Upload to Pypi
     ctx.run('python setup.py sdist')

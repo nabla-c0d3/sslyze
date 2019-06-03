@@ -75,7 +75,7 @@ class TestCertificateInfoPlugin:
             assert path_validation_result.was_validation_successful
 
         assert len(plugin_result.path_validation_error_list) == 0
-        assert plugin_result.leaf_certificate_subject_matches_hostname == True
+        assert plugin_result.leaf_certificate_subject_matches_hostname
         assert plugin_result.received_chain_has_valid_order
 
         assert plugin_result.as_text()
@@ -101,7 +101,7 @@ class TestCertificateInfoPlugin:
         assert plugin_result.leaf_certificate_signed_certificate_timestamps_count == 0
 
         assert len(plugin_result.path_validation_error_list) == 0
-        assert plugin_result.leaf_certificate_subject_matches_hostname == True
+        assert plugin_result.leaf_certificate_subject_matches_hostname
         assert plugin_result.received_chain_has_valid_order
         assert plugin_result.received_chain_contains_anchor_certificate is None
         assert plugin_result.verified_chain_has_sha1_signature is None
@@ -496,8 +496,7 @@ wJH9LUwwjr2MpQSRu6Srfw/Yb/BmAMmjXPWwj4PmnFrmtrnFvL7kAg==
                 default_backend()
             ),
             # GeoTrust Global CA
-            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding='ascii'),  default_backend()
-            ),
+            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding='ascii'),  default_backend()),
         ]
 
         # The class to check for Symantec CAs returns the right result
@@ -574,8 +573,7 @@ Px8G8k/Ll6BKWcZ40egDuYVtLLrhX7atKz4lecWLVtXjCYDqwSfC2Q7sRwrp0Mr8
                 default_backend()
             ),
             # GeoTrust Global CA
-            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding='ascii'), default_backend()
-            ),
+            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding='ascii'), default_backend()),
         ]
 
         # The class to check for Symantec CAs returns the right result

@@ -24,6 +24,5 @@ class TestCertificateUtils:
             'github.com', 'www.github.com'
         ]
 
-        expected_name =  'DigiCert SHA2 Extended Validation Server CA'
+        expected_name = 'DigiCert SHA2 Extended Validation Server CA'
         assert CertificateUtils.get_name_as_short_text(certificate.issuer) == expected_name
-

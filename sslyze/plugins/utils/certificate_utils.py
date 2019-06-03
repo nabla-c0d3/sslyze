@@ -90,4 +90,3 @@ class CertificateUtils:
             return 'EllipticCurve'
         else:
             raise ValueError('Unexpected key algorithm')
-

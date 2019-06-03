@@ -352,6 +352,9 @@ class RobotPlugin(plugin_base.Plugin):
         except ServerResponseToRobot as e:
             # Should always be thrown
             server_response = e.server_response
+        except socket.timeout:
+            # https://github.com/nabla-c0d3/sslyze/issues/361
+            server_response = 'Connection timed out'
         finally:
             ssl_connection.close()
 

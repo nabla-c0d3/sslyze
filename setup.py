@@ -81,7 +81,8 @@ setup(
     install_requires=[
         'nassl>=2.2.0,<2.3.0',
         'cryptography==2.5',
-        'tls-parser>=1.2.0,<1.3.0'
+        'tls-parser>=1.2.0,<1.3.0',
+        'dataclasses',  # To remove when we drop support for Python 3.6
     ],
 
     # cx_freeze info for Windows builds with Python embedded

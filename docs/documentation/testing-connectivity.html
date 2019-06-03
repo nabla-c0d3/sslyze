@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Step 1: Testing Connectivity to a Server &mdash; SSLyze 2.0.4 documentation</title>
+  <title>Step 1: Testing Connectivity to a Server &mdash; SSLyze 2.1.0 documentation</title>
   
 
   
@@ -17,34 +17,36 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Step 2: Running Scan Commands Against a Server" href="running-scan-commands.html" />
     <link rel="prev" title="SSLyze Python API" href="index.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -58,7 +60,7 @@
             
             
               <div class="version">
-                2.0.4
+                2.1.0
               </div>
             
           
@@ -202,95 +204,91 @@ server is an HTTPS server listening on port 443.</p>
 <h3>The ServerConnectivityTester class<a class="headerlink" href="#the-serverconnectivitytester-class" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.server_connectivity_tester.ServerConnectivityTester">
-<em class="property">class </em><code class="descclassname">sslyze.server_connectivity_tester.</code><code class="descname">ServerConnectivityTester</code><span class="sig-paren">(</span><em>hostname</em>, <em>port=None</em>, <em>ip_address=None</em>, <em>tls_wrapped_protocol=&lt;TlsWrappedProtocolEnum.PLAIN_TLS: 1&gt;</em>, <em>tls_server_name_indication=None</em>, <em>xmpp_to_hostname=None</em>, <em>client_auth_credentials=None</em>, <em>http_tunneling_settings=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityTester" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.server_connectivity_tester.</code><code class="sig-name descname">ServerConnectivityTester</code><span class="sig-paren">(</span><em class="sig-param">hostname</em>, <em class="sig-param">port=None</em>, <em class="sig-param">ip_address=None</em>, <em class="sig-param">tls_wrapped_protocol=&lt;TlsWrappedProtocolEnum.PLAIN_TLS: 1&gt;</em>, <em class="sig-param">tls_server_name_indication=None</em>, <em class="sig-param">xmpp_to_hostname=None</em>, <em class="sig-param">client_auth_credentials=None</em>, <em class="sig-param">http_tunneling_settings=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityTester" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="sslyze.server_connectivity_tester.ServerConnectivityTester.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>hostname</em>, <em>port=None</em>, <em>ip_address=None</em>, <em>tls_wrapped_protocol=&lt;TlsWrappedProtocolEnum.PLAIN_TLS: 1&gt;</em>, <em>tls_server_name_indication=None</em>, <em>xmpp_to_hostname=None</em>, <em>client_auth_credentials=None</em>, <em>http_tunneling_settings=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityTester.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">hostname</em>, <em class="sig-param">port=None</em>, <em class="sig-param">ip_address=None</em>, <em class="sig-param">tls_wrapped_protocol=&lt;TlsWrappedProtocolEnum.PLAIN_TLS: 1&gt;</em>, <em class="sig-param">tls_server_name_indication=None</em>, <em class="sig-param">xmpp_to_hostname=None</em>, <em class="sig-param">client_auth_credentials=None</em>, <em class="sig-param">http_tunneling_settings=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityTester.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructor to specify how to connect to a given SSL/TLS server to be scanned.</p>
 <p>Most arguments are optional but can be supplied in order to be more specific about the server’s configuration.</p>
 <p>After initialization, the <cite>perform()</cite> method must be called next to ensure that the
 server is actually reachable. The <cite>ServerConnectivityInfo</cite> returned by <cite>perform()</cite> can then be passed to a
 <cite>SynchronousScanner</cite> or <cite>ConcurrentScanner</cite> in order to run scan commands on the server.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>hostname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The server’s hostname.</li>
-<li><strong>port</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – The server’s TLS port number. If not supplied, the default port number for the specified
-<cite>tls_wrapped_protocol</cite> will be used.</li>
-<li><strong>ip_address</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The server’s IP address. If not supplied, a DNS lookup for the specified <cite>hostname</cite> will be
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hostname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The server’s hostname.</p></li>
+<li><p><strong>port</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – The server’s TLS port number. If not supplied, the default port number for the specified
+<cite>tls_wrapped_protocol</cite> will be used.</p></li>
+<li><p><strong>ip_address</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The server’s IP address. If not supplied, a DNS lookup for the specified <cite>hostname</cite> will be
 performed. If <cite>http_tunneling_settings</cite> is specified, <cite>ip_address</cite> cannot be supplied as the HTTP proxy
-will be responsible for looking up and connecting to the server to be scanned.</li>
-<li><strong>tls_wrapped_protocol</strong> (<a class="reference internal" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum" title="sslyze.ssl_settings.TlsWrappedProtocolEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">TlsWrappedProtocolEnum</span></code></a>) – The protocol wrapped in TLS that the server expects. It allows sslyze to figure out
+will be responsible for looking up and connecting to the server to be scanned.</p></li>
+<li><p><strong>tls_wrapped_protocol</strong> (<a class="reference internal" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum" title="sslyze.ssl_settings.TlsWrappedProtocolEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">TlsWrappedProtocolEnum</span></code></a>) – The protocol wrapped in TLS that the server expects. It allows sslyze to figure out
 how to establish a (Start)TLS connection to the server and what kind of “hello” message
 (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not supplied, standard
-TLS will be used.</li>
-<li><strong>tls_server_name_indication</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The hostname to set within the Server Name Indication TLS extension. If not
-supplied, the specified <cite>hostname</cite> will be used.</li>
-<li><strong>xmpp_to_hostname</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The hostname to set within the <cite>to</cite> attribute of the XMPP stream. If not supplied, the
+TLS will be used.</p></li>
+<li><p><strong>tls_server_name_indication</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The hostname to set within the Server Name Indication TLS extension. If not
+supplied, the specified <cite>hostname</cite> will be used.</p></li>
+<li><p><strong>xmpp_to_hostname</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The hostname to set within the <cite>to</cite> attribute of the XMPP stream. If not supplied, the
 specified <cite>hostname</cite> will be used. Should only be set if the supplied <cite>tls_wrapped_protocol</cite> is an
-XMPP protocol.</li>
-<li><strong>client_auth_credentials</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.ssl_settings.ClientAuthenticationCredentials" title="sslyze.ssl_settings.ClientAuthenticationCredentials"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClientAuthenticationCredentials</span></code></a>]) – The client certificate and private key needed to perform mutual authentication
+XMPP protocol.</p></li>
+<li><p><strong>client_auth_credentials</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.ssl_settings.ClientAuthenticationCredentials" title="sslyze.ssl_settings.ClientAuthenticationCredentials"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClientAuthenticationCredentials</span></code></a>]) – The client certificate and private key needed to perform mutual authentication
 with the server. If not supplied, sslyze will attempt to connect to the server without performing
-mutual authentication.</li>
-<li><strong>http_tunneling_settings</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings" title="sslyze.ssl_settings.HttpConnectTunnelingSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpConnectTunnelingSettings</span></code></a>]) – The HTTP proxy configuration to use in order to tunnel the scans through a proxy.
-If not supplied, sslyze will run the scans by directly connecting to the server.</li>
+mutual authentication.</p></li>
+<li><p><strong>http_tunneling_settings</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings" title="sslyze.ssl_settings.HttpConnectTunnelingSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpConnectTunnelingSettings</span></code></a>]) – The HTTP proxy configuration to use in order to tunnel the scans through a proxy.
+If not supplied, sslyze will run the scans by directly connecting to the server.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first simple">
-<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – If <cite>xmpp_to_hostname</cite> was specified for a non-XMPP protocol.</li>
-<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – If both <cite>ip_address</cite> and <cite>http_tunneling_settings</cite> were supplied.</li>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <cite>xmpp_to_hostname</cite> was specified for a non-XMPP protocol.</p></li>
+<li><p><strong>ValueError</strong> – If both <cite>ip_address</cite> and <cite>http_tunneling_settings</cite> were supplied.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="sslyze.server_connectivity_tester.ServerConnectivityTester.perform">
-<code class="descname">perform</code><span class="sig-paren">(</span><em>network_timeout=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityTester.perform" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">perform</code><span class="sig-paren">(</span><em class="sig-param">network_timeout=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityTester.perform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attempt to perform a full SSL/TLS handshake with the server.</p>
 <p>This method will ensure that the server can be reached, and will also identify one SSL/TLS version and one
 cipher suite that is supported by the server.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>network_timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – Network timeout value in seconds passed to the underlying socket.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#sslyze.server_connectivity_info.ServerConnectivityInfo" title="sslyze.server_connectivity_info.ServerConnectivityInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerConnectivityInfo</span></code></a></td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An object encapsulating all the information needed to connect to the server, to be
-passed to a <cite>SynchronousScanner</cite> or <cite>ConcurrentScanner</cite> in order to run scan commands on the server.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#sslyze.server_connectivity_tester.ServerConnectivityError" title="sslyze.server_connectivity_tester.ServerConnectivityError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ServerConnectivityError</span></code></a> – If the server was not reachable or an SSL/TLS handshake could not be completed.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>network_timeout</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – Network timeout value in seconds passed to the underlying socket.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#sslyze.server_connectivity_info.ServerConnectivityInfo" title="sslyze.server_connectivity_info.ServerConnectivityInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerConnectivityInfo</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>An object encapsulating all the information needed to connect to the server, to be
+passed to a <cite>SynchronousScanner</cite> or <cite>ConcurrentScanner</cite> in order to run scan commands on the server.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#sslyze.server_connectivity_tester.ServerConnectivityError" title="sslyze.server_connectivity_tester.ServerConnectivityError"><strong>ServerConnectivityError</strong></a> – If the server was not reachable or an SSL/TLS handshake could not be completed.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="sslyze.server_connectivity_tester.ServerConnectivityError">
-<em class="property">class </em><code class="descclassname">sslyze.server_connectivity_tester.</code><code class="descname">ServerConnectivityError</code><span class="sig-paren">(</span><em>server_info</em>, <em>error_message</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.server_connectivity_tester.</code><code class="sig-name descname">ServerConnectivityError</code><span class="sig-paren">(</span><em class="sig-param">server_info</em>, <em class="sig-param">error_message</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generic error for when SSLyze was unable to successfully complete connectivity testing with the server.</p>
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_tester.ServerConnectivityError.server_info">
-<code class="descname">server_info</code><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityError.server_info" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">server_info</code><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityError.server_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>The connectivity tester that failed, containing all the server’s information
 (hostname, port, etc.) that was used to test connectivity.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_tester.ServerConnectivityError.error_message">
-<code class="descname">error_message</code><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityError.error_message" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">error_message</code><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerConnectivityError.error_message" title="Permalink to this definition">¶</a></dt>
 <dd><p>The error that was returned.</p>
 </dd></dl>
 
@@ -298,22 +296,22 @@ passed to a <cite>SynchronousScanner</cite> or <cite>ConcurrentScanner</cite> in
 
 <dl class="class">
 <dt id="sslyze.server_connectivity_tester.ServerRejectedConnection">
-<em class="property">class </em><code class="descclassname">sslyze.server_connectivity_tester.</code><code class="descname">ServerRejectedConnection</code><span class="sig-paren">(</span><em>server_info</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerRejectedConnection" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.server_connectivity_tester.</code><code class="sig-name descname">ServerRejectedConnection</code><span class="sig-paren">(</span><em class="sig-param">server_info</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerRejectedConnection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="class">
 <dt id="sslyze.server_connectivity_tester.ConnectionToServerTimedOut">
-<em class="property">class </em><code class="descclassname">sslyze.server_connectivity_tester.</code><code class="descname">ConnectionToServerTimedOut</code><span class="sig-paren">(</span><em>server_info</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ConnectionToServerTimedOut" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.server_connectivity_tester.</code><code class="sig-name descname">ConnectionToServerTimedOut</code><span class="sig-paren">(</span><em class="sig-param">server_info</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ConnectionToServerTimedOut" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="class">
 <dt id="sslyze.server_connectivity_tester.ServerHostnameCouldNotBeResolved">
-<em class="property">class </em><code class="descclassname">sslyze.server_connectivity_tester.</code><code class="descname">ServerHostnameCouldNotBeResolved</code><span class="sig-paren">(</span><em>server_info</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerHostnameCouldNotBeResolved" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.server_connectivity_tester.</code><code class="sig-name descname">ServerHostnameCouldNotBeResolved</code><span class="sig-paren">(</span><em class="sig-param">server_info</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerHostnameCouldNotBeResolved" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="class">
 <dt id="sslyze.server_connectivity_tester.ServerTlsConfigurationNotSuportedError">
-<em class="property">class </em><code class="descclassname">sslyze.server_connectivity_tester.</code><code class="descname">ServerTlsConfigurationNotSuportedError</code><span class="sig-paren">(</span><em>server_info</em>, <em>error_message</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerTlsConfigurationNotSuportedError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.server_connectivity_tester.</code><code class="sig-name descname">ServerTlsConfigurationNotSuportedError</code><span class="sig-paren">(</span><em class="sig-param">server_info</em>, <em class="sig-param">error_message</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ServerTlsConfigurationNotSuportedError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The server was online but SSLyze was unable to find one TLS version and cipher suite supported by the server.</p>
 <p>This should never happen unless the server has a very exotic TLS configuration (such as supporting a very small
 set of niche cipher suites).</p>
@@ -321,7 +319,7 @@ set of niche cipher suites).</p>
 
 <dl class="class">
 <dt id="sslyze.server_connectivity_tester.ProxyConnectivityError">
-<em class="property">class </em><code class="descclassname">sslyze.server_connectivity_tester.</code><code class="descname">ProxyConnectivityError</code><span class="sig-paren">(</span><em>server_info</em>, <em>error_message</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ProxyConnectivityError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.server_connectivity_tester.</code><code class="sig-name descname">ProxyConnectivityError</code><span class="sig-paren">(</span><em class="sig-param">server_info</em>, <em class="sig-param">error_message</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_tester.ProxyConnectivityError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The proxy was offline, or timed out, or rejected the connection while doing connectivity testing.</p>
 </dd></dl>
 
@@ -330,63 +328,63 @@ set of niche cipher suites).</p>
 <span id="enabling-starttls-and-other-supported-protocols"></span><h3>Enabling StartTLS and other supported protocols<a class="headerlink" href="#module-sslyze.ssl_settings" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum">
-<em class="property">class </em><code class="descclassname">sslyze.ssl_settings.</code><code class="descname">TlsWrappedProtocolEnum</code><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.ssl_settings.</code><code class="sig-name descname">TlsWrappedProtocolEnum</code><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>The list of TLS-wrapped protocols supported by SSLyze.</p>
 <p>SSLyze uses this to figure out how to establish an SSL/TLS connection to the server and what kind of “hello” message
 to send after the handshake was completed.</p>
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.PLAIN_TLS">
-<code class="descname">PLAIN_TLS</code><em class="property"> = 1</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.PLAIN_TLS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PLAIN_TLS</code><em class="property"> = 1</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.PLAIN_TLS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.HTTPS">
-<code class="descname">HTTPS</code><em class="property"> = 2</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.HTTPS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">HTTPS</code><em class="property"> = 2</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.HTTPS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_SMTP">
-<code class="descname">STARTTLS_SMTP</code><em class="property"> = 3</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_SMTP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">STARTTLS_SMTP</code><em class="property"> = 3</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_SMTP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_XMPP">
-<code class="descname">STARTTLS_XMPP</code><em class="property"> = 4</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_XMPP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">STARTTLS_XMPP</code><em class="property"> = 4</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_XMPP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER">
-<code class="descname">STARTTLS_XMPP_SERVER</code><em class="property"> = 5</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">STARTTLS_XMPP_SERVER</code><em class="property"> = 5</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_FTP">
-<code class="descname">STARTTLS_FTP</code><em class="property"> = 6</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_FTP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">STARTTLS_FTP</code><em class="property"> = 6</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_FTP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_POP3">
-<code class="descname">STARTTLS_POP3</code><em class="property"> = 7</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_POP3" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">STARTTLS_POP3</code><em class="property"> = 7</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_POP3" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_LDAP">
-<code class="descname">STARTTLS_LDAP</code><em class="property"> = 8</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_LDAP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">STARTTLS_LDAP</code><em class="property"> = 8</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_LDAP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_IMAP">
-<code class="descname">STARTTLS_IMAP</code><em class="property"> = 9</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_IMAP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">STARTTLS_IMAP</code><em class="property"> = 9</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_IMAP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_RDP">
-<code class="descname">STARTTLS_RDP</code><em class="property"> = 10</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_RDP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">STARTTLS_RDP</code><em class="property"> = 10</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_RDP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_POSTGRES">
-<code class="descname">STARTTLS_POSTGRES</code><em class="property"> = 11</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_POSTGRES" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">STARTTLS_POSTGRES</code><em class="property"> = 11</em><a class="headerlink" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_POSTGRES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -396,28 +394,24 @@ to send after the handshake was completed.</p>
 <h3>Running scan commands through a proxy<a class="headerlink" href="#running-scan-commands-through-a-proxy" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.ssl_settings.HttpConnectTunnelingSettings">
-<em class="property">class </em><code class="descclassname">sslyze.ssl_settings.</code><code class="descname">HttpConnectTunnelingSettings</code><span class="sig-paren">(</span><em>hostname</em>, <em>port</em>, <em>basic_auth_user=None</em>, <em>basic_auth_password=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.ssl_settings.</code><code class="sig-name descname">HttpConnectTunnelingSettings</code><span class="sig-paren">(</span><em class="sig-param">hostname</em>, <em class="sig-param">port</em>, <em class="sig-param">basic_auth_user=None</em>, <em class="sig-param">basic_auth_password=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Container for specifying the settings to tunnel all traffic through an HTTP Connect Proxy.</p>
 <dl class="method">
 <dt id="sslyze.ssl_settings.HttpConnectTunnelingSettings.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>hostname</em>, <em>port</em>, <em>basic_auth_user=None</em>, <em>basic_auth_password=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>hostname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The proxy’s hostname.</li>
-<li><strong>port</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The proxy’s port.</li>
-<li><strong>basic_auth_user</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The username to use if the proxy requires Basic Authentication.</li>
-<li><strong>basic_auth_password</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The password to use if the proxy requires Basic Authentication.</li>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">hostname</em>, <em class="sig-param">port</em>, <em class="sig-param">basic_auth_user=None</em>, <em class="sig-param">basic_auth_password=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hostname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The proxy’s hostname.</p></li>
+<li><p><strong>port</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The proxy’s port.</p></li>
+<li><p><strong>basic_auth_user</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The username to use if the proxy requires Basic Authentication.</p></li>
+<li><p><strong>basic_auth_password</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – The password to use if the proxy requires Basic Authentication.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -427,44 +421,40 @@ to send after the handshake was completed.</p>
 <h3>Enabling client authentication<a class="headerlink" href="#enabling-client-authentication" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.ssl_settings.ClientAuthenticationCredentials">
-<em class="property">class </em><code class="descclassname">sslyze.ssl_settings.</code><code class="descname">ClientAuthenticationCredentials</code><span class="sig-paren">(</span><em>client_certificate_chain_path</em>, <em>client_key_path</em>, <em>client_key_type=&lt;OpenSslFileTypeEnum.PEM: 1&gt;</em>, <em>client_key_password=''</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ssl_settings.ClientAuthenticationCredentials" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.ssl_settings.</code><code class="sig-name descname">ClientAuthenticationCredentials</code><span class="sig-paren">(</span><em class="sig-param">client_certificate_chain_path</em>, <em class="sig-param">client_key_path</em>, <em class="sig-param">client_key_type=&lt;OpenSslFileTypeEnum.PEM: 1&gt;</em>, <em class="sig-param">client_key_password=''</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ssl_settings.ClientAuthenticationCredentials" title="Permalink to this definition">¶</a></dt>
 <dd><p>Container for specifying the settings to perform SSL/TLS client authentication with the server.</p>
 <dl class="method">
 <dt id="sslyze.ssl_settings.ClientAuthenticationCredentials.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>client_certificate_chain_path</em>, <em>client_key_path</em>, <em>client_key_type=&lt;OpenSslFileTypeEnum.PEM: 1&gt;</em>, <em>client_key_password=''</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ssl_settings.ClientAuthenticationCredentials.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>client_certificate_chain_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Path to the file containing the client’s certificate.</li>
-<li><strong>client_key_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Path to the file containing the client’s private key.</li>
-<li><strong>client_key_type</strong> (<a class="reference internal" href="#nassl.ssl_client.OpenSslFileTypeEnum" title="nassl.ssl_client.OpenSslFileTypeEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpenSslFileTypeEnum</span></code></a>) – The format of the key file.</li>
-<li><strong>client_key_password</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The password to decrypt the private key.</li>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">client_certificate_chain_path</em>, <em class="sig-param">client_key_path</em>, <em class="sig-param">client_key_type=&lt;OpenSslFileTypeEnum.PEM: 1&gt;</em>, <em class="sig-param">client_key_password=''</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ssl_settings.ClientAuthenticationCredentials.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_certificate_chain_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Path to the file containing the client’s certificate.</p></li>
+<li><p><strong>client_key_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Path to the file containing the client’s private key.</p></li>
+<li><p><strong>client_key_type</strong> (<a class="reference internal" href="#nassl.ssl_client.OpenSslFileTypeEnum" title="nassl.ssl_client.OpenSslFileTypeEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpenSslFileTypeEnum</span></code></a>) – The format of the key file.</p></li>
+<li><p><strong>client_key_password</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The password to decrypt the private key.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
 <span class="target" id="module-nassl.ssl_client"></span><dl class="class">
 <dt id="nassl.ssl_client.OpenSslFileTypeEnum">
-<em class="property">class </em><code class="descclassname">nassl.ssl_client.</code><code class="descname">OpenSslFileTypeEnum</code><a class="headerlink" href="#nassl.ssl_client.OpenSslFileTypeEnum" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">nassl.ssl_client.</code><code class="sig-name descname">OpenSslFileTypeEnum</code><a class="headerlink" href="#nassl.ssl_client.OpenSslFileTypeEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Certificate and private key format constants which map to the SSL_FILETYPE_XXX OpenSSL constants.</p>
 <dl class="attribute">
 <dt id="nassl.ssl_client.OpenSslFileTypeEnum.PEM">
-<code class="descname">PEM</code><em class="property"> = 1</em><a class="headerlink" href="#nassl.ssl_client.OpenSslFileTypeEnum.PEM" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PEM</code><em class="property"> = 1</em><a class="headerlink" href="#nassl.ssl_client.OpenSslFileTypeEnum.PEM" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="nassl.ssl_client.OpenSslFileTypeEnum.ASN1">
-<code class="descname">ASN1</code><em class="property"> = 2</em><a class="headerlink" href="#nassl.ssl_client.OpenSslFileTypeEnum.ASN1" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ASN1</code><em class="property"> = 2</em><a class="headerlink" href="#nassl.ssl_client.OpenSslFileTypeEnum.ASN1" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -474,188 +464,152 @@ to send after the handshake was completed.</p>
 <span id="the-serverconnectivityinfo-class"></span><h3>The ServerConnectivityInfo class<a class="headerlink" href="#module-sslyze.server_connectivity_info" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo">
-<em class="property">class </em><code class="descclassname">sslyze.server_connectivity_info.</code><code class="descname">ServerConnectivityInfo</code><span class="sig-paren">(</span><em>hostname</em>, <em>port</em>, <em>ip_address</em>, <em>tls_wrapped_protocol</em>, <em>tls_server_name_indication</em>, <em>xmpp_to_hostname</em>, <em>client_auth_credentials</em>, <em>http_tunneling_settings</em>, <em>highest_ssl_version_supported</em>, <em>openssl_cipher_string_supported</em>, <em>client_auth_requirement</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.server_connectivity_info.</code><code class="sig-name descname">ServerConnectivityInfo</code><span class="sig-paren">(</span><em class="sig-param">hostname</em>, <em class="sig-param">port</em>, <em class="sig-param">ip_address</em>, <em class="sig-param">tls_wrapped_protocol</em>, <em class="sig-param">tls_server_name_indication</em>, <em class="sig-param">xmpp_to_hostname</em>, <em class="sig-param">client_auth_credentials</em>, <em class="sig-param">http_tunneling_settings</em>, <em class="sig-param">highest_ssl_version_supported</em>, <em class="sig-param">openssl_cipher_string_supported</em>, <em class="sig-param">client_auth_requirement</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo" title="Permalink to this definition">¶</a></dt>
 <dd><p>All the settings (hostname, port, SSL version, etc.) needed to successfully connect to a given SSL/TLS server.</p>
 <p>Such objects are returned by <cite>ServerConnectivityTester.perform()</cite> if connectivity testing was successful, and should
 never be instantiated directly.</p>
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.hostname">
-<code class="descname">hostname</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.hostname" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">hostname</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.hostname" title="Permalink to this definition">¶</a></dt>
 <dd><p>The server’s hostname.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.port">
-<code class="descname">port</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.port" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">port</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.port" title="Permalink to this definition">¶</a></dt>
 <dd><p>The server’s TLS port number.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address">
-<code class="descname">ip_address</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ip_address</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address" title="Permalink to this definition">¶</a></dt>
 <dd><p>The server’s IP address. None if we are connecting through a proxy.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[str]</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.tls_wrapped_protocol">
-<code class="descname">tls_wrapped_protocol</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.tls_wrapped_protocol" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tls_wrapped_protocol</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.tls_wrapped_protocol" title="Permalink to this definition">¶</a></dt>
 <dd><p>The protocol wrapped in TLS (HTTP, XMPP, etc.) that the server
 expects.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum" title="sslyze.ssl_settings.TlsWrappedProtocolEnum">TlsWrappedProtocolEnum</a></td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#sslyze.ssl_settings.TlsWrappedProtocolEnum" title="sslyze.ssl_settings.TlsWrappedProtocolEnum">TlsWrappedProtocolEnum</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.tls_server_name_indication">
-<code class="descname">tls_server_name_indication</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.tls_server_name_indication" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tls_server_name_indication</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.tls_server_name_indication" title="Permalink to this definition">¶</a></dt>
 <dd><p>The hostname to set within the Server Name Indication TLS extension.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.xmpp_to_hostname">
-<code class="descname">xmpp_to_hostname</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.xmpp_to_hostname" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">xmpp_to_hostname</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.xmpp_to_hostname" title="Permalink to this definition">¶</a></dt>
 <dd><p>The hostname to set within the <cite>to</cite> attribute of the XMPP stream; only used
 if the <cite>tls_wrapped_protocol</cite> is an XMPP protocol.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[str]</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_credentials">
-<code class="descname">client_auth_credentials</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_credentials" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">client_auth_credentials</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_credentials" title="Permalink to this definition">¶</a></dt>
 <dd><p>The client certificate and private key
 needed to perform mutual authentication with
 the server. If not supplied, SSLyze will attempt to connect to the server without performing mutual
 authentication.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[<a class="reference internal" href="#sslyze.ssl_settings.ClientAuthenticationCredentials" title="sslyze.ssl_settings.ClientAuthenticationCredentials">ClientAuthenticationCredentials</a>]</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="#sslyze.ssl_settings.ClientAuthenticationCredentials" title="sslyze.ssl_settings.ClientAuthenticationCredentials">ClientAuthenticationCredentials</a>]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.http_tunneling_settings">
-<code class="descname">http_tunneling_settings</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.http_tunneling_settings" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">http_tunneling_settings</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.http_tunneling_settings" title="Permalink to this definition">¶</a></dt>
 <dd><p>The HTTP proxy configuration to use in order
 to tunnel the scans through a proxy.
 If not supplied, SSLyze will run the scans by directly connecting to the server.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Optional[<a class="reference internal" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings" title="sslyze.ssl_settings.HttpConnectTunnelingSettings">HttpConnectTunnelingSettings</a>]</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="#sslyze.ssl_settings.HttpConnectTunnelingSettings" title="sslyze.ssl_settings.HttpConnectTunnelingSettings">HttpConnectTunnelingSettings</a>]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.highest_ssl_version_supported">
-<code class="descname">highest_ssl_version_supported</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.highest_ssl_version_supported" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">highest_ssl_version_supported</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.highest_ssl_version_supported" title="Permalink to this definition">¶</a></dt>
 <dd><p>The highest version of SSL/TLS supported by the server,
 as detected when doing connectivity testing.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">OpenSslVersionEnum</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>OpenSslVersionEnum</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.openssl_cipher_string_supported">
-<code class="descname">openssl_cipher_string_supported</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.openssl_cipher_string_supported" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">openssl_cipher_string_supported</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.openssl_cipher_string_supported" title="Permalink to this definition">¶</a></dt>
 <dd><p>An OpenSSL cipher string that contains at least one
 cipher suite supported by
 the server, as detected when doing connectivity testing.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_requirement">
-<code class="descname">client_auth_requirement</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_requirement" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">client_auth_requirement</code><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_requirement" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether the support requires client
 authentication.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ClientAuthenticationServerConfigurationEnum</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ClientAuthenticationServerConfigurationEnum</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="sslyze.server_connectivity_info.ServerConnectivityInfo.get_preconfigured_ssl_connection">
-<code class="descname">get_preconfigured_ssl_connection</code><span class="sig-paren">(</span><em>override_ssl_version=None</em>, <em>ssl_verify_locations=None</em>, <em>should_use_legacy_openssl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.get_preconfigured_ssl_connection" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_preconfigured_ssl_connection</code><span class="sig-paren">(</span><em class="sig-param">override_ssl_version=None</em>, <em class="sig-param">ssl_verify_locations=None</em>, <em class="sig-param">should_use_legacy_openssl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.server_connectivity_info.ServerConnectivityInfo.get_preconfigured_ssl_connection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.</p>
 <p>Used by all plugins to connect to the server and run scans.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">SslConnection</span></code></td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">SslConnection</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -675,7 +629,7 @@ authentication.</p>
         <a href="running-scan-commands.html" class="btn btn-neutral float-right" title="Step 2: Running Scan Commands Against a Server" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="SSLyze Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="SSLyze Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -701,26 +655,16 @@ authentication.</p>
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

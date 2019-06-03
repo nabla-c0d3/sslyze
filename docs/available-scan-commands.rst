@@ -27,8 +27,6 @@ CertificateInfoPlugin
 .. autoclass:: CertificateInfoScanCommand()
    :members: __init__
 .. autoclass:: CertificateInfoScanResult()
-.. autoclass:: CertificateChainDeploymentAnalyzer()
-.. autoclass:: CertificateChainDeploymentAnalysisResult()
 
 
 Additional helper classes
@@ -42,6 +40,10 @@ Additional helper classes
 .. autoclass:: SymantecDistrustTimelineEnum()
    :members:
    :undoc-members:
+
+.. autoclass:: CertificateChainDeploymentAnalyzer()
+   :members: perform
+.. autoclass:: CertificateChainDeploymentAnalysisResult()
 
 .. automodule:: sslyze.plugins.utils.trust_store.trust_store
 .. autoclass:: TrustStore()

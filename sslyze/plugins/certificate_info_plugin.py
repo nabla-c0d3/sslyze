@@ -901,6 +901,8 @@ class CertificateChainDeploymentAnalyzer:
         self.received_ocsp_response = received_ocsp_response
 
     def perform(self) -> CertificateChainDeploymentAnalysisResult:
+        """Run the analysis.
+        """
         leaf_cert = self.received_certificate_chain[0]
 
         # OCSP Must-Staple

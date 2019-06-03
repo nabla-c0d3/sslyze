@@ -214,14 +214,16 @@
     <xs:element name="http_headers">
         <xs:complexType>
             <xs:all>
-                <xs:element minOccurs="0" ref="httpStrictTransportSecurity"/>
-                <xs:element minOccurs="0" ref="httpPublicKeyPinning"/>
+                <xs:element minOccurs="0" ref="strictTransportSecurity"/>
+                <xs:element minOccurs="0" ref="publicKeyPins"/>
+                <xs:element minOccurs="0" ref="publicKeyPinsReportOnly"/>
+                <xs:element minOccurs="0" ref="expectCt"/>
             </xs:all>
             <xs:attribute name="title"/>
             <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
-    <xs:element name="httpStrictTransportSecurity">
+    <xs:element name="strictTransportSecurity">
         <xs:complexType>
             <xs:attribute name="includeSubDomains"/>
             <xs:attribute name="isSupported" use="required"/>
@@ -230,7 +232,16 @@
             <xs:attribute name="exception"/>
         </xs:complexType>
     </xs:element>
-    <xs:element name="httpPublicKeyPinning">
+    <xs:element name="expectCt">
+        <xs:complexType>
+            <xs:attribute name="isSupported" use="required"/>
+            <xs:attribute name="maxAge"/>
+            <xs:attribute name="enforce"/>
+            <xs:attribute name="reportUri"/>
+            <xs:attribute name="exception"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="publicKeyPins">
         <xs:complexType>
             <xs:sequence>
                 <xs:element minOccurs="0" maxOccurs="unbounded" ref="pinSha256"/>
@@ -238,7 +249,20 @@
             <xs:attribute name="includeSubDomains"/>
             <xs:attribute name="isSupported" use="required"/>
             <xs:attribute name="maxAge"/>
-            <xs:attribute name="reportOnly"/>
+            <xs:attribute name="reportUri"/>
+            <xs:attribute name="isValidPinConfigured"/>
+            <xs:attribute name="isBackupPinConfigured"/>
+            <xs:attribute name="exception"/>
+        </xs:complexType>    
+    </xs:element>
+        <xs:element name="publicKeyPinsReportOnly">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="0" maxOccurs="unbounded" ref="pinSha256"/>
+            </xs:sequence>
+            <xs:attribute name="includeSubDomains"/>
+            <xs:attribute name="isSupported" use="required"/>
+            <xs:attribute name="maxAge"/>
             <xs:attribute name="reportUri"/>
             <xs:attribute name="isValidPinConfigured"/>
             <xs:attribute name="isBackupPinConfigured"/>

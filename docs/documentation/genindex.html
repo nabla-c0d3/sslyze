@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; SSLyze 2.0.4 documentation</title>
+  <title>Index &mdash; SSLyze 2.1.0 documentation</title>
   
 
   
@@ -18,32 +18,34 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -57,7 +59,7 @@
             
             
               <div class="version">
-                2.0.4
+                2.1.0
               </div>
             
           
@@ -165,6 +167,7 @@
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
@@ -175,6 +178,7 @@
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  | <a href="#X"><strong>X</strong></a>
  
 </div>
@@ -225,13 +229,9 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_chain">certificate_chain (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateChainDeploymentAnalysisResult">CertificateChainDeploymentAnalysisResult (class in sslyze.plugins.certificate_info_plugin)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_has_must_staple_extension">certificate_has_must_staple_extension (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_included_scts_count">certificate_included_scts_count (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.certificate_matches_hostname">certificate_matches_hostname (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateChainDeploymentAnalyzer">CertificateChainDeploymentAnalyzer (class in sslyze.plugins.certificate_info_plugin)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand">CertificateInfoScanCommand (class in sslyze.plugins.certificate_info_plugin)</a>
 </li>
@@ -239,10 +239,10 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult">CipherSuiteScanResult (class in sslyze.plugins.openssl_cipher_suites_plugin)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_credentials">client_auth_credentials (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.client_auth_requirement">client_auth_requirement (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.ssl_settings.ClientAuthenticationCredentials">ClientAuthenticationCredentials (class in sslyze.ssl_settings)</a>
@@ -266,8 +266,6 @@
       <li><a href="available-scan-commands.html#sslyze.plugins.early_data_plugin.EarlyDataScanCommand">EarlyDataScanCommand (class in sslyze.plugins.early_data_plugin)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.early_data_plugin.EarlyDataScanResult">EarlyDataScanResult (class in sslyze.plugins.early_data_plugin)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader.enforce">enforce (sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader attribute)</a>
 </li>
       <li><a href="running-scan-commands.html#sslyze.concurrent_scanner.PluginRaisedExceptionScanResult.error_message">error_message (sslyze.concurrent_scanner.PluginRaisedExceptionScanResult attribute)</a>
 
@@ -333,10 +331,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.handshake_error_message">handshake_error_message (sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite attribute)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.has_anchor_in_certificate_chain">has_anchor_in_certificate_chain (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.has_sha1_in_certificate_chain">has_sha1_in_certificate_chain (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
-</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.heartbleed_plugin.HeartbleedScanCommand">HeartbleedScanCommand (class in sslyze.plugins.heartbleed_plugin)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.heartbleed_plugin.HeartbleedScanResult">HeartbleedScanResult (class in sslyze.plugins.heartbleed_plugin)</a>
@@ -347,10 +341,6 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hpkp_header">hpkp_header (sslyze.plugins.http_headers_plugin.HttpHeadersScanResult attribute)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.hsts_header">hsts_header (sslyze.plugins.http_headers_plugin.HttpHeadersScanResult attribute)</a>
-</li>
       <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.http_tunneling_settings">http_tunneling_settings (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.ssl_settings.HttpConnectTunnelingSettings">HttpConnectTunnelingSettings (class in sslyze.ssl_settings)</a>
@@ -367,12 +357,6 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.include_subdomains">include_subdomains (sslyze.plugins.http_headers_plugin.ParsedHpkpHeader attribute)</a>
-
-      <ul>
-        <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHstsHeader.include_subdomains">(sslyze.plugins.http_headers_plugin.ParsedHstsHeader attribute)</a>
-</li>
-      </ul></li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.INTERNAL_ERROR">INTERNAL_ERROR (sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum attribute)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.ip_address">ip_address (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
@@ -391,13 +375,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.is_backup_pin_configured">is_backup_pin_configured (sslyze.plugins.http_headers_plugin.HttpHeadersScanResult attribute)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.PathValidationResult.is_certificate_trusted">is_certificate_trusted (sslyze.plugins.certificate_info_plugin.PathValidationResult attribute)</a>
-</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.early_data_plugin.EarlyDataScanResult.is_early_data_supported">is_early_data_supported (sslyze.plugins.early_data_plugin.EarlyDataScanResult attribute)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.is_leaf_certificate_ev">is_leaf_certificate_ev (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.is_ocsp_response_trusted">is_ocsp_response_trusted (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.is_ticket_resumption_supported">is_ticket_resumption_supported (sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult attribute)</a>
 </li>
@@ -418,21 +396,31 @@
   </ul></td>
 </tr></table>
 
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.leaf_certificate_has_must_staple_extension">leaf_certificate_has_must_staple_extension (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+</li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.leaf_certificate_is_ev">leaf_certificate_is_ev (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.leaf_certificate_signed_certificate_timestamps_count">leaf_certificate_signed_certificate_timestamps_count (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+</li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.leaf_certificate_subject_matches_hostname">leaf_certificate_subject_matches_hostname (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.MALFORMED_REQUEST">MALFORMED_REQUEST (sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum attribute)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.SymantecDistrustTimelineEnum.MARCH_2018">MARCH_2018 (sslyze.plugins.certificate_info_plugin.SymantecDistrustTimelineEnum attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.max_age">max_age (sslyze.plugins.http_headers_plugin.ParsedHpkpHeader attribute)</a>
-
-      <ul>
-        <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHstsHeader.max_age">(sslyze.plugins.http_headers_plugin.ParsedHstsHeader attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.SymantecDistrustTimelineEnum.MARCH_2018">MARCH_2018 (sslyze.plugins.certificate_info_plugin.SymantecDistrustTimelineEnum attribute)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -465,12 +453,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.ocsp_response">ocsp_response (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
 </li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.ocsp_response_is_trusted">ocsp_response_is_trusted (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.ocsp_response_status">ocsp_response_status (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum">OcspResponseStatusEnum (class in sslyze.plugins.certificate_info_plugin)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo.openssl_cipher_string_supported">openssl_cipher_string_supported (sslyze.server_connectivity_info.ServerConnectivityInfo attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite.openssl_name">openssl_name (sslyze.plugins.openssl_cipher_suites_plugin.AcceptedCipherSuite attribute)</a>
 
       <ul>
@@ -479,8 +471,6 @@
         <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite.openssl_name">(sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanCommand">OpenSslCcsInjectionScanCommand (class in sslyze.plugins.openssl_ccs_injection_plugin)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanResult">OpenSslCcsInjectionScanResult (class in sslyze.plugins.openssl_ccs_injection_plugin)</a>
@@ -493,12 +483,6 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedExpectCtHeader">ParsedExpectCtHeader (class in sslyze.plugins.http_headers_plugin)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader">ParsedHpkpHeader (class in sslyze.plugins.http_headers_plugin)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHstsHeader">ParsedHstsHeader (class in sslyze.plugins.http_headers_plugin)</a>
-</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.utils.trust_store.trust_store.TrustStore.path">path (sslyze.plugins.utils.trust_store.trust_store.TrustStore attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.path_validation_error_list">path_validation_error_list (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
@@ -511,16 +495,18 @@
 </li>
       <li><a href="testing-connectivity.html#nassl.ssl_client.OpenSslFileTypeEnum.PEM">PEM (nassl.ssl_client.OpenSslFileTypeEnum attribute)</a>
 </li>
-      <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerConnectivityTester.perform">perform() (sslyze.server_connectivity_tester.ServerConnectivityTester method)</a>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateChainDeploymentAnalyzer.perform">perform() (sslyze.plugins.certificate_info_plugin.CertificateChainDeploymentAnalyzer method)</a>
+
+      <ul>
+        <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ServerConnectivityTester.perform">(sslyze.server_connectivity_tester.ServerConnectivityTester method)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.pin_sha256_list">pin_sha256_list (sslyze.plugins.http_headers_plugin.ParsedHpkpHeader attribute)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      </ul></li>
       <li><a href="testing-connectivity.html#sslyze.ssl_settings.TlsWrappedProtocolEnum.PLAIN_TLS">PLAIN_TLS (sslyze.ssl_settings.TlsWrappedProtocolEnum attribute)</a>
 </li>
       <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.Plugin">Plugin (class in sslyze.plugins.plugin_base)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="running-scan-commands.html#sslyze.concurrent_scanner.PluginRaisedExceptionScanResult">PluginRaisedExceptionScanResult (class in sslyze.concurrent_scanner)</a>
 </li>
       <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand">PluginScanCommand (class in sslyze.plugins.plugin_base)</a>
@@ -533,11 +519,13 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.preferred_cipher">preferred_cipher (sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult attribute)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHstsHeader.preload">preload (sslyze.plugins.http_headers_plugin.ParsedHstsHeader attribute)</a>
-</li>
       <li><a href="writing-a-plugin.html#sslyze.plugins.plugin_base.Plugin.process_task">process_task() (sslyze.plugins.plugin_base.Plugin method)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.server_connectivity_tester.ProxyConnectivityError">ProxyConnectivityError (class in sslyze.server_connectivity_tester)</a>
+</li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.public_key_pins_header">public_key_pins_header (sslyze.plugins.http_headers_plugin.HttpHeadersScanResult attribute)</a>
+</li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.public_key_pins_report_only_header">public_key_pins_report_only_header (sslyze.plugins.http_headers_plugin.HttpHeadersScanResult attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -553,15 +541,15 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.received_certificate_chain">received_certificate_chain (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+</li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.received_chain_contains_anchor_certificate">received_chain_contains_anchor_certificate (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+</li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.received_chain_has_valid_order">received_chain_has_valid_order (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult.rejected_cipher_list">rejected_cipher_list (sslyze.plugins.openssl_cipher_suites_plugin.CipherSuiteScanResult attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.openssl_cipher_suites_plugin.RejectedCipherSuite">RejectedCipherSuite (class in sslyze.plugins.openssl_cipher_suites_plugin)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_only">report_only (sslyze.plugins.http_headers_plugin.ParsedHpkpHeader attribute)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_to">report_to (sslyze.plugins.http_headers_plugin.ParsedHpkpHeader attribute)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.ParsedHpkpHeader.report_uri">report_uri (sslyze.plugins.http_headers_plugin.ParsedHpkpHeader attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -687,6 +675,8 @@
 </li>
       <li><a href="testing-connectivity.html#sslyze.ssl_settings.TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER">STARTTLS_XMPP_SERVER (sslyze.ssl_settings.TlsWrappedProtocolEnum attribute)</a>
 </li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.strict_transport_security_header">strict_transport_security_header (sslyze.plugins.http_headers_plugin.HttpHeadersScanResult attribute)</a>
+</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum.SUCCESSFUL">SUCCESSFUL (sslyze.plugins.certificate_info_plugin.OcspResponseStatusEnum attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult.successful_resumptions_nb">successful_resumptions_nb (sslyze.plugins.session_resumption_plugin.SessionResumptionRateScanResult attribute)</a>
@@ -695,13 +685,9 @@
         <li><a href="available-scan-commands.html#sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult.successful_resumptions_nb">(sslyze.plugins.session_resumption_plugin.SessionResumptionSupportScanResult attribute)</a>
 </li>
       </ul></li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.successful_trust_store">successful_trust_store (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
-</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanResult.supports_fallback_scsv">supports_fallback_scsv (sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanResult attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult.supports_secure_renegotiation">supports_secure_renegotiation (sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult attribute)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.symantec_distrust_timeline">symantec_distrust_timeline (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.SymantecDistrustTimelineEnum">SymantecDistrustTimelineEnum (class in sslyze.plugins.certificate_info_plugin)</a>
 </li>
@@ -768,18 +754,32 @@
       <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.verified_certificate_chain">verified_certificate_chain (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
 
       <ul>
+        <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.PathValidationResult.verified_certificate_chain">(sslyze.plugins.certificate_info_plugin.PathValidationResult attribute)</a>
+</li>
         <li><a href="available-scan-commands.html#sslyze.plugins.http_headers_plugin.HttpHeadersScanResult.verified_certificate_chain">(sslyze.plugins.http_headers_plugin.HttpHeadersScanResult attribute)</a>
 </li>
       </ul></li>
-      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.PathValidationResult.verify_string">verify_string (sslyze.plugins.certificate_info_plugin.PathValidationResult attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.verified_chain_has_legacy_symantec_anchor">verified_chain_has_legacy_symantec_anchor (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult.verified_chain_has_sha1_signature">verified_chain_has_sha1_signature (sslyze.plugins.certificate_info_plugin.CertificateInfoScanResult attribute)</a>
+</li>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.PathValidationResult.verify_string">verify_string (sslyze.plugins.certificate_info_plugin.PathValidationResult attribute)</a>
+</li>
       <li><a href="available-scan-commands.html#sslyze.plugins.utils.trust_store.trust_store.TrustStore.version">version (sslyze.plugins.utils.trust_store.trust_store.TrustStore attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.robot_plugin.RobotScanResultEnum.VULNERABLE_STRONG_ORACLE">VULNERABLE_STRONG_ORACLE (sslyze.plugins.robot_plugin.RobotScanResultEnum attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.plugins.robot_plugin.RobotScanResultEnum.VULNERABLE_WEAK_ORACLE">VULNERABLE_WEAK_ORACLE (sslyze.plugins.robot_plugin.RobotScanResultEnum attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="available-scan-commands.html#sslyze.plugins.certificate_info_plugin.PathValidationResult.was_validation_successful">was_validation_successful (sslyze.plugins.certificate_info_plugin.PathValidationResult attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -821,26 +821,16 @@
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

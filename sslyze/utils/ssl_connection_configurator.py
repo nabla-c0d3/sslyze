@@ -79,19 +79,20 @@ class SslConnectionConfigurator:
         # 3. Create the SSL client
         if should_use_legacy_openssl is None:
             # For older versions of TLS/SSL, we have to use a legacy OpenSSL
-            final_should_use_legacy_openssl = False if ssl_version in [OpenSslVersionEnum.TLSV1_2,
-                                                                       OpenSslVersionEnum.TLSV1_3] \
+            final_should_use_legacy_openssl = False \
+                if ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_3] \
                 else True
         else:
             final_should_use_legacy_openssl = should_use_legacy_openssl
         ssl_client_cls = LegacySslClient if final_should_use_legacy_openssl else SslClient
 
+        ssl_verify_locations_str = str(ssl_verify_locations) if ssl_verify_locations else None
         if server_info.client_auth_credentials:
             # A client certificate and private key were provided
             ssl_client = ssl_client_cls(
                 ssl_version=ssl_version,
                 ssl_verify=OpenSslVerifyEnum.NONE,
-                ssl_verify_locations=str(ssl_verify_locations),
+                ssl_verify_locations=ssl_verify_locations_str,
                 client_certchain_file=server_info.client_auth_credentials.client_certificate_chain_path,
                 client_key_file=server_info.client_auth_credentials.client_key_path,
                 client_key_type=server_info.client_auth_credentials.client_key_type,
@@ -103,7 +104,7 @@ class SslConnectionConfigurator:
             ssl_client = ssl_client_cls(
                 ssl_version=ssl_version,
                 ssl_verify=OpenSslVerifyEnum.NONE,
-                ssl_verify_locations=str(ssl_verify_locations),
+                ssl_verify_locations=ssl_verify_locations_str,
                 ignore_client_authentication_requests=should_ignore_client_auth
             )
 

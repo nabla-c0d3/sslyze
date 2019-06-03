@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e954978bfb405cf0797bea8ba68a508107a2091bc3a20ff8811e1b1347ae217b"
+            "sha256": "5914ded0f66392ad4bfade0bfde0f896084dbc64fc2a4492fd22b5ce93d89b3a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -91,17 +91,13 @@
         },
         "nassl": {
             "hashes": [
-                "sha256:2733fa35942d0d7d882b71e63f837dc016835b9be8a8528862bd6b131c1e2ceb",
-                "sha256:28056e3b8e3adbc7616b251624be4e494a9cc0b84d1e1f3b867865420831f71e",
-                "sha256:449ae9c5614b920341b1fc65e971142f8dfedb42b650866065a6304688716ec0",
-                "sha256:573b64ec60061909608fb63b3f0d5b1ac204cdd9e22dbc0201bc463eaab74068",
-                "sha256:7ce26e0c3809ed831be10b2a00d640aa0e027cc35d1d596e82347885a4bb6568",
-                "sha256:c9f82ebe5ca2f2bf552d572f9762828308354eaeaafcc324312767aff772a037",
-                "sha256:dc6b3df7e88e3f86555298568ae4a8510f85ca963054f33ad57a2921f17ef9b3",
-                "sha256:dd8cff6c7e159cba514d1d4204414e5e1713576ad0077d87c611b4a3cbe18d80"
+                "sha256:2cad7e728aca58a97c8f6dee2efa3a922e1d5a7090d179cf01ddbb26788e734a",
+                "sha256:7b48f07e1a7778b8b9ba6ab23db52a0e6e226f6eb5a6ce430b860c020b3cef04",
+                "sha256:860093b431437acf48d34c1823a1e04eb536f8fd3a99fa271b382f1f9c62d899",
+                "sha256:bc13593434d90c0a791d1d2d38c286e6d12034ae1c3c23a8b24ced1584b185ad"
             ],
             "index": "pypi",
-            "version": "==2.1.2"
+            "version": "==2.2.0"
         },
         "pycparser": {
             "hashes": [
@@ -173,14 +169,6 @@
                 "sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"
             ],
             "version": "==3.0.4"
-        },
-        "colorama": {
-            "hashes": [
-                "sha256:05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d",
-                "sha256:f8ac84de7840f5b9c4e3347b3c1eaa50f7e49c2b07596221daec5edaabbd7c48"
-            ],
-            "markers": "sys_platform == 'win32'",
-            "version": "==0.4.1"
         },
         "cx-freeze": {
             "hashes": [

@@ -1,4 +1,3 @@
-import unittest
 from io import StringIO
 
 from sslyze.cli import CompletedServerScan
@@ -9,7 +8,7 @@ from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, Mo
     MockPluginScanCommandTwo, MockServerConnectivityTester
 
 
-class ConsoleOutputGeneratorTestCase(unittest.TestCase):
+class TestConsoleOutputGenerator:
 
     def test_command_line_parsed(self):
         output_file = StringIO()
@@ -27,9 +26,8 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output properly listed the available plugins
-        self.assertIn('FakePlugin1', received_output)
-        self.assertIn('FakePlugin2', received_output)
-
+        assert 'FakePlugin1' in received_output
+        assert 'FakePlugin2' in received_output
 
     def test_server_connectivity_test_failed(self):
         output_file = StringIO()
@@ -42,10 +40,9 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output properly listed the connectivity error with unicode
-        self.assertIn('unicödeéè.com', received_output)
-        self.assertIn('Some érrôr', received_output)
-        self.assertIn('discarding corresponding tasks', received_output)
-
+        assert 'unicödeéè.com' in received_output
+        assert 'Some érrôr' in received_output
+        assert 'discarding corresponding tasks' in received_output
 
     def test_server_connectivity_test_succeeded(self):
         output_file = StringIO()
@@ -58,10 +55,9 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output properly listed the online domain
-        self.assertIn(server_info.hostname, received_output)
-        self.assertIn(str(server_info.port), received_output)
-        self.assertIn(server_info.ip_address, received_output)
-
+        assert server_info.hostname in received_output
+        assert str(server_info.port) in received_output
+        assert server_info.ip_address in received_output
 
     def test_server_connectivity_test_succeeded_with_required_client_auth(self):
         # Test when client authentication is required
@@ -75,8 +71,7 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output properly warned about client authentication
-        self.assertIn('Server REQUIRED client authentication', received_output)
-
+        assert 'Server REQUIRED client authentication' in received_output
 
     def test_server_connectivity_test_succeeded_with_optional_client_auth(self):
         # Test when client authentication is optional
@@ -90,8 +85,7 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output properly warned about client authentication
-        self.assertIn('Server requested optional client authentication', received_output)
-
+        assert 'Server requested optional client authentication' in received_output
 
     def test_server_connectivity_test_succeeded_with_http_tunneling(self):
         output_file = StringIO()
@@ -108,12 +102,11 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output properly listed the online domain and that it was going through a proxy
-        self.assertIn(server_info.hostname, received_output)
-        self.assertIn(str(server_info.port), received_output)
-        self.assertIn('Proxy', received_output)
-        self.assertIn(tunneling_settings.hostname, received_output)
-        self.assertIn(str(tunneling_settings.port), received_output)
-
+        assert server_info.hostname in received_output
+        assert str(server_info.port) in received_output
+        assert 'Proxy' in received_output
+        assert tunneling_settings.hostname in received_output
+        assert str(tunneling_settings.port) in received_output
 
     def test_scans_started(self):
         output_file = StringIO()
@@ -125,8 +118,7 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output displayed something
-        self.assertTrue(received_output)
-
+        assert received_output
 
     def test_server_scan_completed(self):
         output_file = StringIO()
@@ -142,14 +134,13 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output displayed the server's info
-        self.assertIn(server_info.hostname, received_output.lower())
-        self.assertIn(str(server_info.port), received_output)
-        self.assertIn(server_info.ip_address, received_output.lower())
+        assert server_info.hostname in received_output.lower()
+        assert str(server_info.port) in received_output
+        assert server_info.ip_address in received_output.lower()
 
         # Ensure the console output displayed the plugin text outputs
-        self.assertIn(plugin_result_1.text_output, received_output)
-        self.assertIn(plugin_result_2.text_output, received_output)
-
+        assert plugin_result_1.text_output in received_output
+        assert plugin_result_2.text_output in received_output
 
     def test_server_scan_completed_with_http_tunneling(self):
         output_file = StringIO()
@@ -167,12 +158,11 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output properly listed the online domain and that it was going through a proxy
-        self.assertIn(server_info.hostname, received_output.lower())
-        self.assertIn(str(server_info.port), received_output.lower())
-        self.assertIn('proxy', received_output.lower())
-        self.assertIn(tunneling_settings.hostname, received_output.lower())
-        self.assertIn(str(tunneling_settings.port), received_output.lower())
-
+        assert server_info.hostname in received_output.lower()
+        assert str(server_info.port) in received_output.lower()
+        assert 'proxy' in received_output.lower()
+        assert tunneling_settings.hostname in received_output.lower()
+        assert str(tunneling_settings.port) in received_output.lower()
 
     def test_scans_completed(self):
         output_file = StringIO()
@@ -184,4 +174,4 @@ class ConsoleOutputGeneratorTestCase(unittest.TestCase):
         output_file.close()
 
         # Ensure the console output displayed the total scan time
-        self.assertIn(str(scan_time), received_output)
+        assert str(scan_time) in received_output

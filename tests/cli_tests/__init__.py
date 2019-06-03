@@ -1,5 +1,3 @@
-from xml.etree.ElementTree import Element
-
 from sslyze.plugins.plugin_base import PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity_info import ServerConnectivityInfo

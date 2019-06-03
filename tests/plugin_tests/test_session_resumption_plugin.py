@@ -1,15 +1,14 @@
-import unittest
-
 import pickle
 
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin, SessionResumptionSupportScanCommand, \
     SessionResumptionRateScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum, ClientAuthenticationCredentials
+from sslyze.ssl_settings import ClientAuthenticationCredentials
+from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
 
 
-class SessionResumptionPluginTestCase(unittest.TestCase):
+class TestSessionResumptionPlugin:
 
     def test_resumption_support(self):
         server_test = ServerConnectivityTester(hostname='www.google.com')
@@ -18,16 +17,16 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
         plugin = SessionResumptionPlugin()
         plugin_result = plugin.process_task(server_info, SessionResumptionSupportScanCommand())
 
-        self.assertTrue(plugin_result.is_ticket_resumption_supported)
-        self.assertTrue(plugin_result.attempted_resumptions_nb)
-        self.assertTrue(plugin_result.successful_resumptions_nb)
-        self.assertFalse(plugin_result.errored_resumptions_list)
+        assert plugin_result.is_ticket_resumption_supported
+        assert plugin_result.attempted_resumptions_nb
+        assert plugin_result.successful_resumptions_nb
+        assert not plugin_result.errored_resumptions_list
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_resumption_rate(self):
         server_test = ServerConnectivityTester(hostname='www.google.com')
@@ -36,17 +35,17 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
         plugin = SessionResumptionPlugin()
         plugin_result = plugin.process_task(server_info, SessionResumptionRateScanCommand())
 
-        self.assertTrue(plugin_result.attempted_resumptions_nb)
-        self.assertTrue(plugin_result.successful_resumptions_nb)
-        self.assertFalse(plugin_result.errored_resumptions_list)
+        assert plugin_result.attempted_resumptions_nb
+        assert plugin_result.successful_resumptions_nb
+        assert not plugin_result.errored_resumptions_list
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed_session(self):
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -63,11 +62,11 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
             plugin_result = plugin.process_task(server_info, SessionResumptionSupportScanCommand())
 
         # All session resumption attempts returned an error because of client authentication
-        self.assertEqual(len(plugin_result.errored_resumptions_list), 5)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert len(plugin_result.errored_resumptions_list) == 5
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -89,6 +88,6 @@ class SessionResumptionPluginTestCase(unittest.TestCase):
             plugin = SessionResumptionPlugin()
             plugin_result = plugin.process_task(server_info, SessionResumptionSupportScanCommand())
 
-        self.assertEqual(plugin_result.successful_resumptions_nb, 5)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.successful_resumptions_nb == 5
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()

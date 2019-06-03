@@ -21,7 +21,7 @@ import sys
 
 # Add sslyze to the path
 sys.path.insert(0, os.path.abspath('..'))
-import sslyze
+import sslyze  # noqa: E402
 
 
 # -- General configuration ------------------------------------------------
@@ -156,4 +156,3 @@ texinfo_documents = [
 ]
 
 autodoc_member_order = 'bysource'
-

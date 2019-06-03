@@ -1,5 +1,5 @@
 import ssl
-from typing import List, Optional
+from typing import List
 
 import cryptography
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
@@ -90,41 +90,3 @@ class CertificateUtils:
             return 'EllipticCurve'
         else:
             raise ValueError('Unexpected key algorithm')
-
-    @staticmethod
-    def has_ocsp_must_staple_extension(certificate: cryptography.x509.Certificate) -> bool:
-        """Return True if the certificate has the OCSP Must-Staple extension defined in RFC 6066.
-        """
-        has_ocsp_must_staple = False
-        try:
-            tls_feature_ext = certificate.extensions.get_extension_for_oid(ExtensionOID.TLS_FEATURE)
-            for feature_type in tls_feature_ext.value:
-                if feature_type == cryptography.x509.TLSFeatureType.status_request:
-                    has_ocsp_must_staple = True
-                    break
-        except ExtensionNotFound:
-            pass
-
-        return has_ocsp_must_staple
-
-    @staticmethod
-    def count_scts_in_sct_extension(certificate: cryptography.x509.Certificate) -> Optional[int]:
-        """Return the number of Signed Certificate Timestamps (SCTs) embedded in the certificate.
-        """
-        scts_count = 0
-        try:
-            # Look for the x509 extension
-            sct_ext = certificate.extensions.get_extension_for_oid(
-                ExtensionOID.PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS
-            )
-
-            if isinstance(sct_ext.value, cryptography.x509.UnrecognizedExtension):
-                # The version of OpenSSL on the system is too old and can't parse the SCT extension
-                return None
-
-            # Count the number of entries in the extension
-            scts_count = len(sct_ext.value)
-        except ExtensionNotFound:
-            pass
-
-        return scts_count

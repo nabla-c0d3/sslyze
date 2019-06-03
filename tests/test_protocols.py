@@ -1,6 +1,6 @@
 import socket
-import unittest
 
+import pytest
 from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
@@ -14,14 +14,14 @@ def _is_ipv6_available() -> bool:
     try:
         s.connect(('2607:f8b0:4005:804::2004', 443))
         has_ipv6 = True
-    except:
+    except Exception:
         pass
     finally:
         s.close()
     return has_ipv6
 
 
-class ProtocolsTestCase(unittest.TestCase):
+class TestProtocols:
 
     def test_smtp_custom_port(self):
         server_test = ServerConnectivityTester(
@@ -34,12 +34,12 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_chain), 1)
+        assert len(plugin_result.received_certificate_chain) >= 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
-    @unittest.skipIf(not _is_ipv6_available(), 'IPv6 not available')
+    @pytest.mark.skipif(not _is_ipv6_available(), reason='IPv6 not available')
     def test_ipv6(self):
         server_test = ServerConnectivityTester(hostname='www.google.com', ip_address='2607:f8b0:4005:804::2004')
         server_info = server_test.perform()
@@ -47,10 +47,10 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_chain), 1)
+        assert len(plugin_result.received_certificate_chain) >= 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     def test_international_names(self):
         server_test = ServerConnectivityTester(hostname='www.sociétégénérale.com')
@@ -59,10 +59,10 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_chain), 1)
+        assert len(plugin_result.received_certificate_chain) >= 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     def test_xmpp_to(self):
         server_test = ServerConnectivityTester(
@@ -75,10 +75,10 @@ class ProtocolsTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_chain), 1)
+        assert len(plugin_result.received_certificate_chain) >= 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     def test_starttls(self):
         for hostname, protocol in [
@@ -95,21 +95,21 @@ class ProtocolsTestCase(unittest.TestCase):
             plugin = CertificateInfoPlugin()
             plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-            self.assertTrue(plugin_result.as_text())
-            self.assertTrue(plugin_result.as_xml())
+            assert plugin_result.as_text()
+            assert plugin_result.as_xml()
 
     def test_optional_client_authentication(self):
         server_test = ServerConnectivityTester(hostname='client.badssl.com')
         server_info = server_test.perform()
-        self.assertEqual(server_info.client_auth_requirement, ClientAuthenticationServerConfigurationEnum.OPTIONAL)
+        assert server_info.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.OPTIONAL
 
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     def test_tls_1_only(self):
         server_test = ServerConnectivityTester(hostname='tls-v1-0.badssl.com', port=1010)
         server_info = server_test.perform()
-        self.assertEqual(server_info.highest_ssl_version_supported, OpenSslVersionEnum.TLSV1)
+        assert server_info.highest_ssl_version_supported == OpenSslVersionEnum.TLSV1

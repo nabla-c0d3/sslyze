@@ -27,6 +27,8 @@ CertificateInfoPlugin
 .. autoclass:: CertificateInfoScanCommand()
    :members: __init__
 .. autoclass:: CertificateInfoScanResult()
+.. autoclass:: CertificateChainDeploymentAnalyzer()
+.. autoclass:: CertificateChainDeploymentAnalysisResult()
 
 
 Additional helper classes

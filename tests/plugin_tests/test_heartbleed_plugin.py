@@ -1,14 +1,13 @@
-import unittest
-
 import pickle
 
 from sslyze.plugins.heartbleed_plugin import HeartbleedPlugin, HeartbleedScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
+from tests.markers import can_only_run_on_linux_64
 
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
 
-class HeartbleedPluginTestCase(unittest.TestCase):
+class TestHeartbleedPlugin:
 
     def test_heartbleed_good(self):
         server_test = ServerConnectivityTester(hostname='www.google.com')
@@ -17,32 +16,33 @@ class HeartbleedPluginTestCase(unittest.TestCase):
         plugin = HeartbleedPlugin()
         plugin_result = plugin.process_task(server_info, HeartbleedScanCommand())
 
-        self.assertFalse(plugin_result.is_vulnerable_to_heartbleed)
+        assert not plugin_result.is_vulnerable_to_heartbleed
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_heartbleed_bad(self):
         with LegacyOpenSslServer() as server:
-            server_test = ServerConnectivityTester(hostname=server.hostname, ip_address=server.ip_address,
-                                                 port=server.port)
+            server_test = ServerConnectivityTester(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
             server_info = server_test.perform()
 
             plugin = HeartbleedPlugin()
             plugin_result = plugin.process_task(server_info, HeartbleedScanCommand())
 
-        self.assertTrue(plugin_result.is_vulnerable_to_heartbleed)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.is_vulnerable_to_heartbleed
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(
@@ -60,6 +60,6 @@ class HeartbleedPluginTestCase(unittest.TestCase):
             plugin = HeartbleedPlugin()
             plugin_result = plugin.process_task(server_info, HeartbleedScanCommand())
 
-        self.assertTrue(plugin_result.is_vulnerable_to_heartbleed)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.is_vulnerable_to_heartbleed
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()

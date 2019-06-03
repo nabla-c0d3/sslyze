@@ -1,7 +1,4 @@
-import logging
 import os
-import unittest
-
 import pickle
 
 from cryptography.hazmat.backends import default_backend
@@ -11,17 +8,19 @@ from nassl.ocsp_response import OcspResponseStatusEnum
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand, \
     SymantecDistrustTimelineEnum, _SymantecDistructTester
 from sslyze.server_connectivity_tester import ServerConnectivityTester
+from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
+import pytest
 
 
-class CertificateInfoPluginTestCase(unittest.TestCase):
+class TestCertificateInfoPlugin:
 
     def test_ca_file_bad_file(self):
         server_test = ServerConnectivityTester(hostname='www.hotmail.com')
         server_info = server_test.perform()
 
         plugin = CertificateInfoPlugin()
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             plugin.process_task(server_info, CertificateInfoScanCommand(ca_file='doesntexist'))
 
     def test_ca_file(self):
@@ -32,14 +31,14 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
 
-        self.assertGreaterEqual(len(plugin_result.path_validation_result_list), 6)
+        assert len(plugin_result.path_validation_result_list) >= 6
         for path_validation_result in plugin_result.path_validation_result_list:
             if path_validation_result.trust_store.name == 'Custom --ca_file':
-                self.assertFalse(path_validation_result.is_certificate_trusted)
+                assert not path_validation_result.was_validation_successful
             else:
-                self.assertTrue(path_validation_result.is_certificate_trusted)
+                assert path_validation_result.was_validation_successful
 
-    @unittest.skip('Not implemented - find a server that has must-staple')
+    @pytest.mark.skip('Not implemented - find a server that has must-staple')
     def test_valid_chain_with_ocsp_stapling_and_must_staple(self):
         server_test = ServerConnectivityTester(hostname='www.scotthelme.co.uk')
         server_info = server_test.perform()
@@ -47,16 +46,16 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertTrue(plugin_result.ocsp_response)
-        self.assertEqual(plugin_result.ocsp_response_status, OcspResponseStatusEnum.SUCCESSFUL)
-        self.assertTrue(plugin_result.is_ocsp_response_trusted)
-        self.assertTrue(plugin_result.certificate_has_must_staple_extension)
+        assert plugin_result.ocsp_response
+        assert plugin_result.ocsp_response_status == OcspResponseStatusEnum.SUCCESSFUL
+        assert plugin_result.ocsp_response_is_trusted
+        assert plugin_result.leaf_certificate_has_must_staple_extension
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_valid_chain_with_ev_cert(self):
         server_test = ServerConnectivityTester(hostname='www.comodo.com')
@@ -65,25 +64,25 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertTrue(plugin_result.is_leaf_certificate_ev)
+        assert plugin_result.leaf_certificate_is_ev
 
-        self.assertEqual(len(plugin_result.certificate_chain), 3)
-        self.assertEqual(len(plugin_result.verified_certificate_chain), 3)
-        self.assertFalse(plugin_result.has_anchor_in_certificate_chain)
+        assert len(plugin_result.received_certificate_chain) >= 3
+        assert len(plugin_result.verified_certificate_chain) >= 3
+        assert not plugin_result.received_chain_contains_anchor_certificate
 
-        self.assertGreaterEqual(len(plugin_result.path_validation_result_list), 5)
+        assert len(plugin_result.path_validation_result_list) == 5
         for path_validation_result in plugin_result.path_validation_result_list:
-            self.assertTrue(path_validation_result.is_certificate_trusted)
+            assert path_validation_result.was_validation_successful
 
-        self.assertEqual(len(plugin_result.path_validation_error_list), 0)
-        self.assertEqual(plugin_result.certificate_matches_hostname, True)
-        self.assertTrue(plugin_result.is_certificate_chain_order_valid)
+        assert len(plugin_result.path_validation_error_list) == 0
+        assert plugin_result.leaf_certificate_subject_matches_hostname
+        assert plugin_result.received_chain_has_valid_order
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_invalid_chain(self):
         server_test = ServerConnectivityTester(hostname='self-signed.badssl.com')
@@ -92,27 +91,27 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertIsNone(plugin_result.ocsp_response)
-        self.assertEqual(len(plugin_result.certificate_chain), 1)
+        assert plugin_result.ocsp_response is None
+        assert len(plugin_result.received_certificate_chain) == 1
 
-        self.assertGreaterEqual(len(plugin_result.path_validation_result_list), 5)
+        assert len(plugin_result.path_validation_result_list) >= 5
         for path_validation_result in plugin_result.path_validation_result_list:
-            self.assertFalse(path_validation_result.is_certificate_trusted)
+            assert not path_validation_result.was_validation_successful
 
-        self.assertEqual(plugin_result.certificate_included_scts_count, 0)
+        assert plugin_result.leaf_certificate_signed_certificate_timestamps_count == 0
 
-        self.assertEqual(len(plugin_result.path_validation_error_list), 0)
-        self.assertEqual(plugin_result.certificate_matches_hostname, True)
-        self.assertTrue(plugin_result.is_certificate_chain_order_valid)
-        self.assertIsNone(plugin_result.has_anchor_in_certificate_chain)
-        self.assertIsNone(plugin_result.has_sha1_in_certificate_chain)
-        self.assertFalse(plugin_result.verified_certificate_chain)
+        assert len(plugin_result.path_validation_error_list) == 0
+        assert plugin_result.leaf_certificate_subject_matches_hostname
+        assert plugin_result.received_chain_has_valid_order
+        assert plugin_result.received_chain_contains_anchor_certificate is None
+        assert plugin_result.verified_chain_has_sha1_signature is None
+        assert not plugin_result.verified_certificate_chain
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_1000_sans_chain(self):
         # Ensure SSLyze can process a leaf cert with 1000 SANs
@@ -129,10 +128,10 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertTrue(plugin_result.has_sha1_in_certificate_chain)
+        assert plugin_result.verified_chain_has_sha1_signature
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
     def test_sha256_chain(self):
         server_test = ServerConnectivityTester(hostname='sha256.badssl.com')
@@ -141,15 +140,15 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertFalse(plugin_result.has_sha1_in_certificate_chain)
+        assert not plugin_result.verified_chain_has_sha1_signature
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
-    @unittest.skip('Find a server with a unicode certificate')
+    @pytest.mark.skip('Find a server with a unicode certificate')
     def test_unicode_certificate(self):
         server_test = ServerConnectivityTester(hostname='เพย์สบาย.th')
         server_info = server_test.perform()
@@ -157,13 +156,13 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_chain), 1)
+        assert len(plugin_result.received_certificate_chain) >= 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_ecdsa_certificate(self):
         server_test = ServerConnectivityTester(hostname='www.cloudflare.com')
@@ -172,13 +171,13 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreaterEqual(len(plugin_result.certificate_chain), 1)
+        assert len(plugin_result.received_certificate_chain) >= 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_chain_with_anchor(self):
         server_test = ServerConnectivityTester(hostname='www.verizon.com')
@@ -187,13 +186,13 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertTrue(plugin_result.has_anchor_in_certificate_chain)
+        assert plugin_result.received_chain_contains_anchor_certificate
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
         server_test = ServerConnectivityTester(hostname='webmail.russia.nasa.gov')
@@ -202,13 +201,19 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertEqual(plugin_result.successful_trust_store.name, 'Windows')
+        found_microsoft_store = False
+        for validation_result in plugin_result.path_validation_result_list:
+            if validation_result.trust_store.name == 'Windows':
+                found_microsoft_store = True
+                assert validation_result.was_validation_successful
+                break
+        assert found_microsoft_store
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_only_trusted_by_custom_ca_file(self):
         server_test = ServerConnectivityTester(hostname='self-signed.badssl.com')
@@ -218,14 +223,20 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         ca_file_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'self-signed.badssl.com.pem')
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
 
-        self.assertEqual(plugin_result.successful_trust_store.name, 'Custom --ca_file')
-        self.assertTrue(plugin_result.verified_certificate_chain)
+        found_custom_store = False
+        for validation_result in plugin_result.path_validation_result_list:
+            if validation_result.trust_store.name == 'Custom --ca_file':
+                assert validation_result.was_validation_successful
+                found_custom_store = True
+                break
+        assert found_custom_store
+        assert plugin_result.verified_certificate_chain
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_certificate_with_no_cn(self):
         server_test = ServerConnectivityTester(hostname='no-common-name.badssl.com')
@@ -234,13 +245,13 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertTrue(plugin_result.verified_certificate_chain)
+        assert plugin_result.verified_certificate_chain
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_certificate_with_no_subject(self):
         server_test = ServerConnectivityTester(hostname='no-subject.badssl.com')
@@ -249,13 +260,13 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertTrue(plugin_result.verified_certificate_chain)
+        assert plugin_result.verified_certificate_chain
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
     def test_certificate_with_scts(self):
         server_test = ServerConnectivityTester(hostname='www.apple.com')
@@ -264,15 +275,15 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertGreater(plugin_result.certificate_included_scts_count, 1)
+        assert plugin_result.leaf_certificate_signed_certificate_timestamps_count > 1
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not ModernOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -288,12 +299,12 @@ class CertificateInfoPluginTestCase(unittest.TestCase):
             plugin = CertificateInfoPlugin()
             plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
 
-        self.assertTrue(plugin_result.certificate_chain)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.received_certificate_chain
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
 
-class SymantecDistructTestCase(unittest.TestCase):
+class SymantecDistructTestCase:
 
     def test_good(self):
         # Given a certificate chain unaffected by the Symantec deprecation
@@ -388,7 +399,7 @@ TBj0/VLZjmmx6BEP3ojY+x1J96relc8geMJgEtslQIxq/H5COEBkEveegeGTLg==
         ]
 
         # The class to check for Symantec CAs returns the right result
-        self.assertIsNone(_SymantecDistructTester.get_distrust_timeline(cert_chain))
+        assert _SymantecDistructTester.get_distrust_timeline(cert_chain) is None
 
     # One of the deprecated Symantec CA certs
     _GEOTRUST_GLOBAL_CA_CERT = """-----BEGIN CERTIFICATE-----
@@ -485,15 +496,12 @@ wJH9LUwwjr2MpQSRu6Srfw/Yb/BmAMmjXPWwj4PmnFrmtrnFvL7kAg==
                 default_backend()
             ),
             # GeoTrust Global CA
-            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding='ascii'),  default_backend()
-            ),
+            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding='ascii'),  default_backend()),
         ]
 
         # The class to check for Symantec CAs returns the right result
-        self.assertEqual(
-            _SymantecDistructTester.get_distrust_timeline(cert_chain),
+        assert _SymantecDistructTester.get_distrust_timeline(cert_chain) == \
             SymantecDistrustTimelineEnum.MARCH_2018
-        )
 
     def test_september_2018(self):
         # Given a certificate chain issued by a Symantec CA that will be distrusted in September 2018
@@ -565,12 +573,9 @@ Px8G8k/Ll6BKWcZ40egDuYVtLLrhX7atKz4lecWLVtXjCYDqwSfC2Q7sRwrp0Mr8
                 default_backend()
             ),
             # GeoTrust Global CA
-            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding='ascii'), default_backend()
-            ),
+            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding='ascii'), default_backend()),
         ]
 
         # The class to check for Symantec CAs returns the right result
-        self.assertEqual(
-            _SymantecDistructTester.get_distrust_timeline(cert_chain),
+        assert _SymantecDistructTester.get_distrust_timeline(cert_chain) == \
             SymantecDistrustTimelineEnum.SEPTEMBER_2018
-        )

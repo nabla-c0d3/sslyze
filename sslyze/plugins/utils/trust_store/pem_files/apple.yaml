@@ -1,5 +1,5 @@
-platform: APPLE_IOS
-version: 12, macOS 10.14, watchOS 5, and tvOS 12
+platform: APPLE
+version: iOS 12, macOS 10.14, watchOS 5, and tvOS 12
 url: https://support.apple.com/kb/HT209144
 date_fetched: 2018-12-20
 trusted_certificates_count: 174

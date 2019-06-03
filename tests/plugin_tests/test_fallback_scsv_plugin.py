@@ -1,5 +1,3 @@
-import unittest
-
 import pickle
 
 from nassl.ssl_client import ClientCertificateRequested
@@ -7,10 +5,12 @@ from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin, FallbackScsvScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import ClientAuthenticationCredentials
+from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
+import pytest
 
 
-class FallbackScsvPluginTestCase(unittest.TestCase):
+class TestFallbackScsvPlugin:
 
     def test_fallback_good(self):
         server_test = ServerConnectivityTester(hostname='www.google.com')
@@ -19,15 +19,15 @@ class FallbackScsvPluginTestCase(unittest.TestCase):
         plugin = FallbackScsvPlugin()
         plugin_result = plugin.process_task(server_info, FallbackScsvScanCommand())
 
-        self.assertTrue(plugin_result.supports_fallback_scsv)
+        assert plugin_result.supports_fallback_scsv
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_fallback_bad(self):
         with LegacyOpenSslServer() as server:
             server_test = ServerConnectivityTester(
@@ -40,14 +40,14 @@ class FallbackScsvPluginTestCase(unittest.TestCase):
             plugin = FallbackScsvPlugin()
             plugin_result = plugin.process_task(server_info, FallbackScsvScanCommand())
 
-        self.assertFalse(plugin_result.supports_fallback_scsv)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert not plugin_result.supports_fallback_scsv
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        self.assertTrue(pickle.dumps(plugin_result))
+        assert pickle.dumps(plugin_result)
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -61,10 +61,10 @@ class FallbackScsvPluginTestCase(unittest.TestCase):
 
             # The plugin fails when a client cert was not supplied
             plugin = FallbackScsvPlugin()
-            with self.assertRaises(ClientCertificateRequested):
+            with pytest.raises(ClientCertificateRequested):
                 plugin.process_task(server_info, FallbackScsvScanCommand())
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -86,7 +86,7 @@ class FallbackScsvPluginTestCase(unittest.TestCase):
             plugin = FallbackScsvPlugin()
             plugin_result = plugin.process_task(server_info, FallbackScsvScanCommand())
 
-        self.assertFalse(plugin_result.supports_fallback_scsv)
+        assert not plugin_result.supports_fallback_scsv
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()

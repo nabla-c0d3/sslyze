@@ -1,7 +1,7 @@
 import optparse
-import os
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from ssl import CertificateError
 from xml.etree.ElementTree import Element
 
@@ -9,21 +9,21 @@ import binascii
 
 import pickle
 
+import cryptography
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
-from cryptography.x509 import Certificate, load_pem_x509_certificate
+from cryptography.x509 import Certificate, load_pem_x509_certificate, ExtensionOID, ExtensionNotFound
+from dataclasses import dataclass
 from nassl.ocsp_response import OcspResponse, OcspResponseStatusEnum
 from nassl.ocsp_response import OcspResponseNotTrustedError
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested, CouldNotBuildVerifiedChain
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.plugins.utils.trust_store.trust_store import TrustStore
-from sslyze.plugins.utils.trust_store.trust_store import InvalidCertificateChainOrderError
-from sslyze.plugins.utils.trust_store.trust_store import AnchorCertificateNotInTrustStoreError
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.utils.thread_pool import ThreadPool
@@ -61,13 +61,45 @@ class PathValidationResult:
 
     Attributes:
         trust_store (TrustStore): The trust store used for validation.
-        verify_string (Text): The string returned by OpenSSL's validation function.
-        is_certificate_trusted (bool): Whether the certificate chain is trusted when using supplied the trust_store.
+        verified_certificate_chain: (Optional[List[cryptography.x509.Certificate]]): The verified certificate chain
+            returned by OpenSSL. Index 0 is the leaf certificate and the last element is the anchor/CA certificate
+            from the trust store. Will be None if the validation failed or the verified chain could not be built.
+            Each certificate is parsed using the cryptography module; documentation is available at
+            https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
+        verify_string (str): The result string returned by OpenSSL's validation function.
+        was_validation_successful (bool): Whether the certificate chain is trusted when using supplied the trust_store.
     """
-    def __init__(self, trust_store: TrustStore, verify_string: str) -> None:
+    def __init__(
+            self,
+            trust_store: TrustStore,
+            verified_chain: Optional[List[Certificate]],
+            verify_string: str
+    ) -> None:
         self.trust_store = trust_store
+        self.verified_certificate_chain = verified_chain
         self.verify_string = verify_string
-        self.is_certificate_trusted = True if verify_string == 'ok' else False
+
+    @property
+    def was_validation_successful(self) -> bool:
+        return True if self.verified_certificate_chain else False
+
+    def __getstate__(self) -> Dict[str, Any]:
+        # This object needs to be pick-able as it gets sent through multiprocessing.Queues
+        pickable_dict = self.__dict__.copy()
+        if pickable_dict['verified_certificate_chain']:
+            pem_verified_chain = [
+                cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']
+            ]
+            pickable_dict['verified_certificate_chain'] = pem_verified_chain
+        return pickable_dict
+
+    def __setstate__(self, state: Dict[str, Any]) -> None:
+        self.__dict__.update(state)
+        verified_chain = [
+            load_pem_x509_certificate(cert_pem, default_backend())
+            for cert_pem in self.__dict__['verified_certificate_chain']
+        ]
+        self.__dict__['verified_certificate_chain'] = verified_chain
 
 
 class PathValidationError:
@@ -118,9 +150,10 @@ class CertificateInfoPlugin(plugin_base.Plugin):
 
         final_trust_store_list = TrustStoresRepository.get_default().get_all_stores()
         if scan_command.custom_ca_file:
-            if not os.path.isfile(scan_command.custom_ca_file):
-                raise ValueError('Could not open supplied CA file at "{}"'.format(scan_command.custom_ca_file))
-            final_trust_store_list.append(TrustStore(scan_command.custom_ca_file, 'Custom --ca_file', 'N/A'))
+            custom_ca_file_path = Path(scan_command.custom_ca_file)
+            if not custom_ca_file_path.is_file():
+                raise ValueError(f'Could not open supplied CA file at "{custom_ca_file_path}"')
+            final_trust_store_list.append(TrustStore(custom_ca_file_path, 'Custom --ca_file', 'N/A'))
 
         # Workaround for https://github.com/pyca/cryptography/issues/3495
         default_backend()
@@ -134,21 +167,32 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         thread_pool.start(len(final_trust_store_list))
 
         # Store the results as they come
-        certificate_chain: List[Certificate] = []
         path_validation_result_list = []
         path_validation_error_list = []
         ocsp_response = None
+        received_chain = None
 
         for (job, result) in thread_pool.get_result():
             (_, (_, trust_store)) = job
-            certificate_chain, validation_result, _ocsp_response = result
+            received_chain_as_pem, verified_chain_as_pem, validation_result, _ocsp_response = result
 
-            # Keep the OCSP response if the validation was succesful and a response was returned
+            # Parse the certificates using the cryptography module
+            if not received_chain:
+                received_chain = [
+                    load_pem_x509_certificate(pem_cert.encode('ascii'), backend=default_backend())
+                    for pem_cert in received_chain_as_pem
+                ]
+            verified_chain = [
+                load_pem_x509_certificate(cert_as_pem.encode('ascii'), backend=default_backend())
+                for cert_as_pem in verified_chain_as_pem
+            ] if verified_chain_as_pem else None
+
+            # Keep the OCSP response if the validation was successful and a response was returned
             if _ocsp_response:
                 ocsp_response = _ocsp_response
 
             # Store the returned verify string for each trust store
-            path_validation_result_list.append(PathValidationResult(trust_store, validation_result))
+            path_validation_result_list.append(PathValidationResult(trust_store, verified_chain, validation_result))
 
         # Store thread pool errors
         last_exception = None
@@ -163,17 +207,25 @@ class CertificateInfoPlugin(plugin_base.Plugin):
             # All connections failed unexpectedly; raise an exception instead of returning a result
             raise last_exception  # type: ignore
 
+        if not received_chain:
+            raise ValueError('Error: Could not retrieve the server certificate chain')
+
         # All done
-        return CertificateInfoScanResult(server_info, scan_command, certificate_chain, path_validation_result_list,
-                                         path_validation_error_list, ocsp_response)
+        return CertificateInfoScanResult(
+            server_info,
+            scan_command,
+            received_chain,
+            path_validation_result_list,
+            path_validation_error_list,
+            ocsp_response
+        )
 
     @staticmethod
     def _get_and_verify_certificate_chain(
             server_info: ServerConnectivityInfo,
             trust_store: TrustStore
-    ) -> Tuple[List[Certificate], str, Optional[OcspResponse]]:
-        """Connects to the target server and uses the supplied trust store to validate the server's certificate.
-        Returns the server's certificate and OCSP response.
+    ) -> Tuple[List[str], Optional[List[str]], str, Optional[OcspResponse]]:
+        """Connect to the target server and uses the supplied trust store to validate the server's certificate.
         """
         ssl_connection = server_info.get_preconfigured_ssl_connection(ssl_verify_locations=trust_store.path)
 
@@ -184,186 +236,167 @@ class CertificateInfoPlugin(plugin_base.Plugin):
             ssl_connection.connect()
 
             ocsp_response = ssl_connection.ssl_client.get_tlsext_status_ocsp_resp()
-            x509_cert_chain = ssl_connection.ssl_client.get_peer_cert_chain()
+            received_chain_as_pem = ssl_connection.ssl_client.get_received_chain()
+            try:
+                verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
+            except CouldNotBuildVerifiedChain:
+                verified_chain_as_pem = None
+            except AttributeError:
+                # Only the modern SSL Client can build the verified chain; hence we get here if the server only supports
+                # an older version of TLS (pre 1.2)
+                verified_chain_as_pem = None
+
             (_, verify_str) = ssl_connection.ssl_client.get_certificate_chain_verify_result()
 
         except ClientCertificateRequested:  # The server asked for a client cert
             # We can get the server cert anyway
             ocsp_response = ssl_connection.ssl_client.get_tlsext_status_ocsp_resp()
-            x509_cert_chain = ssl_connection.ssl_client.get_peer_cert_chain()
+            received_chain_as_pem = ssl_connection.ssl_client.get_received_chain()
+            try:
+                verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
+            except CouldNotBuildVerifiedChain:
+                verified_chain_as_pem = None
+            except AttributeError:
+                # Only the modern SSL Client can build the verified chain; hence we get here if the server only supports
+                # an older version of TLS (pre 1.2)
+                verified_chain_as_pem = None
+
             (_, verify_str) = ssl_connection.ssl_client.get_certificate_chain_verify_result()
 
         finally:
             ssl_connection.close()
 
-        # Parse the certificates using the cryptography module
-        parsed_x509_chain = [load_pem_x509_certificate(x509_cert.as_pem().encode('ascii'), backend=default_backend())
-                             for x509_cert in x509_cert_chain]
-        return parsed_x509_chain, verify_str, ocsp_response
+        return received_chain_as_pem, verified_chain_as_pem, verify_str, ocsp_response
 
 
-# TODO(AD): Rename some of the attributes to make the naming consistent (is_cert_xxx VS cert_is_xxx)
 class CertificateInfoScanResult(PluginScanResult):
     """The result of running a CertificateInfoScanCommand on a specific server.
 
+    Any certificate available as an attribute is parsed using the cryptography module; documentation is available at
+    https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object
+
     Attributes:
-        certificate_chain (List[cryptography.x509.Certificate]): The certificate chain sent by the server; index 0 is
-            the leaf certificate. Each certificate is parsed using the cryptography module; documentation is available
-            at https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
-        path_validation_result_list (List[PathValidationResult]): The list of attempts at validating the server's
-            certificate chain path using the trust stores packaged with SSLyze (Mozilla, Apple, etc.).
+        received_certificate_chain (List[cryptography.x509.Certificate]): The certificate chain sent by the server;
+            index 0 is the leaf certificate.
+        verified_certificate_chain: (Optional[List[cryptography.x509.Certificate]]): The verified certificate chain
+            returned by OpenSSL for one of the trust stores packaged within SSLyze. Will be None if the validation
+            failed with all of the available trust stores (Apple, Mozilla, etc.). This is essentially  a shortcut to
+            path_validation_result_list[0].verified_certificate_chain.
+        path_validation_result_list (List[PathValidationResult]): The result of validating the server's
+            certificate chain using each trust store that is packaged with SSLyze (Mozilla, Apple, etc.).
+            If for a given trust store, the validation was successful, the verified certificate chain built by OpenSSL
+            can be retrieved from the PathValidationResult.
         path_validation_error_list (List[PathValidationError]):  The list of attempts at validating the server's
             certificate chain path that triggered an unexpected error.
-        successful_trust_store (Optional[TrustStore]): The first trust store that successfully validated the server's
-            certificate chain among all the trust stores packaged with SSLyze (Mozilla, Apple, Microsoft, etc.) as well
-            as the custom store, if supplied using the ca_file option. This trust store is then used to build the
-            server's verified certificate chain and to validate the OCSP response (if one is returned by the server).
-            Will be None if none of the available trust stores were able to successfully validate the server's
-            certificate chain.
-        verified_certificate_chain (List[cryptography.x509.Certificate]): The verified certificate chain built using the
-            successful_trust_store; index 0 is the leaf certificate and the last element is the anchor/CA certificate
-            from the trust store. Will be empty if the validation failed with all available trust store, or the
-            verified chain could not be built. Each certificate is parsed using the cryptography module; documentation
-            is available at https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
-        certificate_matches_hostname (bool): True if hostname validation was successful ie. the leaf certificate was
-            issued for the server's hostname.
-        is_leaf_certificate_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
-        certificate_has_must_staple_extension (bool): True if the leaf certificate has the OCSP Must-Staple
-            extension as defined in RFC 6066.
-        certificate_included_scts_count (Optional[int]): The number of Signed Certificate Timestamps (SCTs) for
-            Certificate Transparency embedded in the leaf certificate. None if the version of OpenSSL installed on the
-            system is too old to be able to parse the SCT extension.
+        leaf_certificate_subject_matches_hostname (bool)
+        leaf_certificate_is_ev (bool): True if the leaf certificate is Extended Validation according to Mozilla.
+        leaf_certificate_has_must_staple_extension (bool)
+        leaf_certificate_signed_certificate_timestamps_count (Optional[int]): The number of Signed Certificate
+            Timestamps (SCTs) for Certificate Transparency embedded in the leaf certificate. None if the version of
+            OpenSSL installed on the system is too old to be able to parse the SCT extension.
+        received_chain_has_valid_order (bool)
+        received_chain_contains_anchor_certificate (Optional[bool]): True if the server included the anchor/root
+            certificate in the chain it sends back to clients. None if the verified chain could not be built.
+        verified_chain_has_sha1_signature (Optional[bool]): True if any of the leaf or intermediate certificates are
+            signed using the SHA-1 algorithm. None if the verified chain could not be built.
+        verified_chain_has_legacy_symantec_anchor (Optional[bool]): True if the certificate chain contains a distrusted
+            Symantec anchor
+            (https://blog.qualys.com/ssllabs/2017/09/26/google-and-mozilla-deprecating-existing-symantec-certificates).
+            None if the verified chain could not be built.
         ocsp_response (Optional[Dict[Text, Any]]): The OCSP response returned by the server. None if no response was
             sent by the server.
         ocsp_response_status (Optional[OcspResponseStatusEnum]): The status of the OCSP response returned by the server.
             None if no response was sent by the server.
-        is_ocsp_response_trusted (Optional[bool]): True if the OCSP response is trusted using the Mozilla trust store.
+        ocsp_response_is_trusted (Optional[bool]): True if the OCSP response is trusted using the Mozilla trust store.
             None if no OCSP response was sent by the server.
-        has_sha1_in_certificate_chain (bool): True if any of the leaf or intermediate certificates are signed using the
-            SHA-1 algorithm. None if the verified chain could not be built.
-        has_anchor_in_certificate_chain (bool): True if the server included the anchor/root certificate in the chain it
-            send back to clients. None if the verified chain could not be built.
-        symantec_distrust_timeline (Optional[SymantecDistrustTimelineEnum]): When the certificate will be distrusted
-            in Chrome and Firefox
-            (https://blog.qualys.com/ssllabs/2017/09/26/google-and-mozilla-deprecating-existing-symantec-certificates).
-            None if the certificate chain was not issued by one of the Symantec CAs.
+
     """
 
     def __init__(
             self,
             server_info: ServerConnectivityInfo,
             scan_command: CertificateInfoScanCommand,
-            certificate_chain: List[Certificate],
+            received_certificate_chain: List[Certificate],
             path_validation_result_list: List[PathValidationResult],
             path_validation_error_list: List[PathValidationError],
-            ocsp_response: OcspResponse
+            ocsp_response: Optional[OcspResponse],
     ) -> None:
         super().__init__(server_info, scan_command)
-        # Find the first trust store that successfully validated the certificate chain
-        self.successful_trust_store = None
+
+        self.received_certificate_chain = received_certificate_chain
+        self.path_validation_result_list = path_validation_result_list
+        self.path_validation_error_list = path_validation_error_list
+        # We only keep the dictionary as an OcspResponse is not pickable
+        self.ocsp_response = ocsp_response.as_dict() if ocsp_response else None
 
         # Sort the path_validation_result_list so the same successful_trust_store always get picked for a given server
         # because threading timings change the order of path_validation_result_list
         def sort_function(path_validation: PathValidationResult) -> str:
             return path_validation.trust_store.name.lower()
 
+        # Find the first trust store that successfully validated the certificate chain
+        trust_store_used_to_build_verified_chain = None
+        self.verified_certificate_chain = None
         path_validation_result_list.sort(key=sort_function)
         for path_result in path_validation_result_list:
-            if path_result.is_certificate_trusted:
-                self.successful_trust_store = path_result.trust_store
+            if path_result.was_validation_successful:
+                trust_store_used_to_build_verified_chain = path_result.trust_store
+                self.verified_certificate_chain = path_result.verified_certificate_chain
+                break
 
-        self.ocsp_response = None
-        self.is_ocsp_response_trusted = None
-        self.ocsp_response_status = None
-        if ocsp_response:
-            self.ocsp_response_status = ocsp_response.status
-            # We only keep the dictionary as a nassl.OcspResponse is not pickable
-            self.ocsp_response = ocsp_response.as_dict()
-            if self.successful_trust_store and self.ocsp_response_status == OcspResponseStatusEnum.SUCCESSFUL:
-                try:
-                    ocsp_response.verify(self.successful_trust_store.path)
-                    self.is_ocsp_response_trusted = True
-                except OcspResponseNotTrustedError:
-                    self.is_ocsp_response_trusted = False
-
-        self.certificate_chain = certificate_chain
-
-        # Check if it is EV - we only have the EV OIDs for Mozilla
-        self.is_leaf_certificate_ev = TrustStoresRepository.get_default().get_main_store().is_extended_validation(
-            self.certificate_chain[0]
+        # Analyze the certificate chain deployment
+        analyzer = CertificateChainDeploymentAnalyzer(
+            server_hostname=server_info.tls_server_name_indication,
+            received_chain=self.received_certificate_chain,
+            verified_chain=self.verified_certificate_chain,
+            trust_store_used_to_build_verified_chain=trust_store_used_to_build_verified_chain,
+            received_ocsp_response=ocsp_response,
         )
+        analysis_result = analyzer.perform()
 
-        # Look for the Must-Staple extension
-        has_must_staple = CertificateUtils.has_ocsp_must_staple_extension(self.certificate_chain[0])
-        self.certificate_has_must_staple_extension = has_must_staple
-
-        # Look for the certificate transparency extension
-        self.certificate_included_scts_count = CertificateUtils.count_scts_in_sct_extension(self.certificate_chain[0])
-
-        # Try to build the verified chain
-        self.verified_certificate_chain: List[Certificate] = []
-        self.is_certificate_chain_order_valid = True
-        if self.successful_trust_store:
-            try:
-                self.verified_certificate_chain = self.successful_trust_store.build_verified_certificate_chain(
-                    self.certificate_chain
-                )
-            except InvalidCertificateChainOrderError:
-                self.is_certificate_chain_order_valid = False
-            except AnchorCertificateNotInTrustStoreError:
-                pass
-
-        self.has_anchor_in_certificate_chain = None
-        if self.verified_certificate_chain:
-            self.has_anchor_in_certificate_chain = self.verified_certificate_chain[-1] in self.certificate_chain
-
-        self.path_validation_result_list = path_validation_result_list
-        self.path_validation_error_list = path_validation_error_list
-        try:
-            CertificateUtils.matches_hostname(certificate_chain[0], server_info.tls_server_name_indication)
-            self.certificate_matches_hostname = True
-        except CertificateError:
-            self.certificate_matches_hostname = False
-
-        # Check if a SHA1-signed certificate is in the chain
-        # Root certificates can still be signed with SHA1 so we only check leaf and intermediate certificates
-        self.has_sha1_in_certificate_chain = None
-        if self.verified_certificate_chain:
-            self.has_sha1_in_certificate_chain = False
-            for cert in self.verified_certificate_chain[:-1]:
-                if isinstance(cert.signature_hash_algorithm, hashes.SHA1):
-                    self.has_sha1_in_certificate_chain = True
-                    break
-
-        # Check if this is a distrusted Symantec-issued chain
-        self.symantec_distrust_timeline = _SymantecDistructTester.get_distrust_timeline(self.verified_certificate_chain)
+        # Store the result of the analysis
+        self.leaf_certificate_subject_matches_hostname = analysis_result.leaf_certificate_subject_matches_hostname
+        self.leaf_certificate_is_ev = analysis_result.leaf_certificate_is_ev
+        self.leaf_certificate_has_must_staple_extension = analysis_result.leaf_certificate_has_must_staple_extension
+        self.leaf_certificate_signed_certificate_timestamps_count = analysis_result.leaf_certificate_signed_certificate_timestamps_count  # noqa: E501
+        self.received_chain_contains_anchor_certificate = analysis_result.received_chain_contains_anchor_certificate
+        self.received_chain_has_valid_order = analysis_result.received_chain_has_valid_order
+        self.verified_chain_has_sha1_signature = analysis_result.verified_chain_has_sha1_signature
+        self.verified_chain_has_legacy_symantec_anchor = analysis_result.verified_chain_has_legacy_symantec_anchor
+        self.ocsp_response_status = analysis_result.ocsp_response_status
+        self.ocsp_response_is_trusted = analysis_result.ocsp_response_is_trusted
 
     def __getstate__(self) -> Dict[str, Any]:
         # This object needs to be pick-able as it gets sent through multiprocessing.Queues
         pickable_dict = self.__dict__.copy()
         # Manually handle non-pickable entries
-        pickable_dict['successful_trust_store'] = pickle.dumps(pickable_dict['successful_trust_store'])
         pickable_dict['path_validation_result_list'] = pickle.dumps(pickable_dict['path_validation_result_list'])
 
-        pem_certificate_chain = [cert.public_bytes(Encoding.PEM) for cert in pickable_dict['certificate_chain']]
-        pickable_dict['certificate_chain'] = pem_certificate_chain
+        pem_received_chain = [cert.public_bytes(Encoding.PEM) for cert in pickable_dict['received_certificate_chain']]
+        pickable_dict['received_certificate_chain'] = pem_received_chain
 
-        pem_verified_chain = [cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']]
-        pickable_dict['verified_certificate_chain'] = pem_verified_chain
+        if pickable_dict['verified_certificate_chain']:
+            pem_verified_chain = [
+                cert.public_bytes(Encoding.PEM) for cert in pickable_dict['verified_certificate_chain']
+            ]
+            pickable_dict['verified_certificate_chain'] = pem_verified_chain
         return pickable_dict
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
         self.__dict__.update(state)
         # Manually restore non-pickable entries
-        self.__dict__['successful_trust_store'] = pickle.loads(self.__dict__['successful_trust_store'])
         self.__dict__['path_validation_result_list'] = pickle.loads(self.__dict__['path_validation_result_list'])
 
-        certificate_chain = [load_pem_x509_certificate(cert_pem, default_backend())
-                             for cert_pem in self.__dict__['certificate_chain']]
-        self.__dict__['certificate_chain'] = certificate_chain
+        received_chain = [
+            load_pem_x509_certificate(cert_pem, default_backend())
+            for cert_pem in self.__dict__['received_certificate_chain']
+        ]
+        self.__dict__['received_certificate_chain'] = received_chain
 
-        verified_chain = [load_pem_x509_certificate(cert_pem, default_backend())
-                          for cert_pem in self.__dict__['verified_certificate_chain']]
+        verified_chain = [
+            load_pem_x509_certificate(cert_pem, default_backend())
+            for cert_pem in self.__dict__['verified_certificate_chain']
+        ]
         self.__dict__['verified_certificate_chain'] = verified_chain
 
     TRUST_FORMAT = '{store_name} CA Store ({store_version}):'
@@ -382,16 +415,16 @@ class CertificateInfoScanResult(PluginScanResult):
             text_output.append(self._format_field("SNI enabled with virtual domain:", server_name_indication))
 
         hostname_validation_text = 'OK - Certificate matches {hostname}'.format(hostname=server_name_indication) \
-            if self.certificate_matches_hostname \
+            if self.leaf_certificate_subject_matches_hostname \
             else 'FAILED - Certificate does NOT match {hostname}'.format(hostname=server_name_indication)
         text_output.append(self._format_field('Hostname Validation:', hostname_validation_text))
 
         # Path validation that was successfully tested
         for path_result in self.path_validation_result_list:
-            if path_result.is_certificate_trusted:
+            if path_result.was_validation_successful:
                 # EV certs - Only Mozilla supported for now
                 ev_txt = ''
-                if self.is_leaf_certificate_ev and path_result.trust_store.ev_oids:
+                if self.leaf_certificate_is_ev and path_result.trust_store.ev_oids:
                     ev_txt = ', Extended Validation'
                 path_txt = 'OK - Certificate is trusted{}'.format(ev_txt)
 
@@ -399,9 +432,12 @@ class CertificateInfoScanResult(PluginScanResult):
                 path_txt = 'FAILED - Certificate is NOT Trusted: {}'.format(path_result.verify_string)
 
             text_output.append(self._format_field(
-                self.TRUST_FORMAT.format(store_name=path_result.trust_store.name,
-                                         store_version=path_result.trust_store.version),
-                path_txt))
+                self.TRUST_FORMAT.format(
+                    store_name=path_result.trust_store.name,
+                    store_version=path_result.trust_store.version
+                ),
+                path_txt)
+            )
 
         # Path validation that ran into errors
         for path_error in self.path_validation_error_list:
@@ -413,8 +449,9 @@ class CertificateInfoScanResult(PluginScanResult):
                 ),
                 error_txt))
 
-        if self.symantec_distrust_timeline is not None:
-            timeline_str = 'March 2018' if self.symantec_distrust_timeline == SymantecDistrustTimelineEnum.MARCH_2018 \
+        if self.verified_chain_has_legacy_symantec_anchor is not None:
+            timeline_str = 'March 2018' \
+                if self.verified_chain_has_legacy_symantec_anchor == SymantecDistrustTimelineEnum.MARCH_2018 \
                 else 'September 2018'
             symantec_str = 'WARNING: Certificate distrusted by Google and Mozilla on {}'.format(timeline_str)
         else:
@@ -422,33 +459,36 @@ class CertificateInfoScanResult(PluginScanResult):
         text_output.append(self._format_field('Symantec 2018 Deprecation:', symantec_str))
 
         # Print the Common Names within the certificate chain
-        cns_in_certificate_chain = [CertificateUtils.get_name_as_short_text(cert.subject)
-                                    for cert in self.certificate_chain]
+        cns_in_certificate_chain = [
+            CertificateUtils.get_name_as_short_text(cert.subject) for cert in self.received_certificate_chain
+        ]
         text_output.append(self._format_field('Received Chain:', ' --> '.join(cns_in_certificate_chain)))
 
         # Print the Common Names within the verified certificate chain if validation was successful
         if self.verified_certificate_chain:
-            cns_in_certificate_chain = [CertificateUtils.get_name_as_short_text(cert.subject)
-                                        for cert in self.verified_certificate_chain]
+            cns_in_certificate_chain = [
+                CertificateUtils.get_name_as_short_text(cert.subject) for cert in self.verified_certificate_chain
+            ]
             verified_chain_txt = ' --> '.join(cns_in_certificate_chain)
         else:
             verified_chain_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
         text_output.append(self._format_field('Verified Chain:', verified_chain_txt))
 
         if self.verified_certificate_chain:
-            chain_with_anchor_txt = 'OK - Anchor certificate not sent' if not self.has_anchor_in_certificate_chain \
+            chain_with_anchor_txt = 'OK - Anchor certificate not sent' \
+                if not self.received_chain_contains_anchor_certificate \
                 else 'WARNING - Received certificate chain contains the anchor certificate'
         else:
             chain_with_anchor_txt = self.NO_VERIFIED_CHAIN_ERROR_TXT
         text_output.append(self._format_field('Received Chain Contains Anchor:', chain_with_anchor_txt))
 
-        chain_order_txt = 'OK - Order is valid' if self.is_certificate_chain_order_valid \
+        chain_order_txt = 'OK - Order is valid' if self.received_chain_has_valid_order \
             else 'FAILED - Certificate chain out of order!'
         text_output.append(self._format_field('Received Chain Order:', chain_order_txt))
 
         if self.verified_certificate_chain:
             sha1_text = 'OK - No SHA1-signed certificate in the verified certificate chain' \
-                if not self.has_sha1_in_certificate_chain \
+                if not self.verified_chain_has_sha1_signature \
                 else 'INSECURE - SHA1-signed certificate in the verified certificate chain'
         else:
             sha1_text = self.NO_VERIFIED_CHAIN_ERROR_TXT
@@ -459,12 +499,12 @@ class CertificateInfoScanResult(PluginScanResult):
 
         # OCSP must-staple
         must_staple_txt = 'OK - Extension present' \
-            if self.certificate_has_must_staple_extension \
+            if self.leaf_certificate_has_must_staple_extension \
             else 'NOT SUPPORTED - Extension not found'
         text_output.append(self._format_field('OCSP Must-Staple:', must_staple_txt))
 
         # Look for SCT extension
-        scts_count = self.certificate_included_scts_count
+        scts_count = self.leaf_certificate_signed_certificate_timestamps_count
         if scts_count is None:
             sct_txt = 'OK - Extension present'
         elif scts_count == 0:
@@ -488,7 +528,7 @@ class CertificateInfoScanResult(PluginScanResult):
                 ))]
             else:
                 ocsp_trust_txt = 'OK - Response is trusted' \
-                    if self.is_ocsp_response_trusted \
+                    if self.ocsp_response_is_trusted \
                     else 'FAILED - Response is NOT trusted'
 
                 ocsp_resp_txt = [
@@ -575,15 +615,16 @@ class CertificateInfoScanResult(PluginScanResult):
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
 
         # Certificate chain
+        contains_anchor = str(False) if not self.received_chain_contains_anchor_certificate else str(True)
         cert_chain_attrs = {
-            'isChainOrderValid': str(self.is_certificate_chain_order_valid),
+            'isChainOrderValid': str(self.received_chain_has_valid_order),
             'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
-            'containsAnchorCertificate': str(False) if not self.has_anchor_in_certificate_chain else str(True),
-            'hasMustStapleExtension': str(self.certificate_has_must_staple_extension),
-            'includedSctsCount': str(self.certificate_included_scts_count),
+            'containsAnchorCertificate': contains_anchor,
+            'hasMustStapleExtension': str(self.leaf_certificate_has_must_staple_extension),
+            'includedSctsCount': str(self.leaf_certificate_signed_certificate_timestamps_count),
         }
         cert_chain_xml = Element('receivedCertificateChain', attrib=cert_chain_attrs)
-        for cert_xml in self._certificate_chain_to_xml(self.certificate_chain):
+        for cert_xml in self._certificate_chain_to_xml(self.received_certificate_chain):
             cert_chain_xml.append(cert_xml)
         xml_output.append(cert_chain_xml)
 
@@ -591,8 +632,11 @@ class CertificateInfoScanResult(PluginScanResult):
         trust_validation_xml = Element('certificateValidation')
 
         # Hostname validation
-        host_validation_xml = Element('hostnameValidation', serverHostname=self.server_info.tls_server_name_indication,
-                                      certificateMatchesServerHostname=str(self.certificate_matches_hostname))
+        host_validation_xml = Element(
+            'hostnameValidation',
+            serverHostname=self.server_info.tls_server_name_indication,
+            certificateMatchesServerHostname=str(self.leaf_certificate_subject_matches_hostname)
+        )
         trust_validation_xml.append(host_validation_xml)
 
         # Path validation that was successful
@@ -604,8 +648,8 @@ class CertificateInfoScanResult(PluginScanResult):
             }
 
             # Things we only do with the Mozilla store: EV certs
-            if self.is_leaf_certificate_ev and path_result.trust_store.ev_oids:
-                path_attrib_xml['isExtendedValidationCertificate'] = str(self.is_leaf_certificate_ev)
+            if self.leaf_certificate_is_ev and path_result.trust_store.ev_oids:
+                path_attrib_xml['isExtendedValidationCertificate'] = str(self.leaf_certificate_is_ev)
 
             path_valid_xml = Element('pathValidation', attrib=path_attrib_xml)
             trust_validation_xml.append(path_valid_xml)
@@ -622,15 +666,15 @@ class CertificateInfoScanResult(PluginScanResult):
 
         # Verified chain
         if self.verified_certificate_chain:
+            is_affected_by_symantec = str(True if self.verified_chain_has_legacy_symantec_anchor else False)
             verified_cert_chain_xml = Element(
                 'verifiedCertificateChain',
                 {
-                    'hasSha1SignedCertificate': str(self.has_sha1_in_certificate_chain),
+                    'hasSha1SignedCertificate': str(self.verified_chain_has_sha1_signature),
                     'suppliedServerNameIndication': self.server_info.tls_server_name_indication,
-                    'successfulTrustStore': self.successful_trust_store.name,  # type: ignore
-                    'hasMustStapleExtension': str(self.certificate_has_must_staple_extension),
-                    'includedSctsCount': str(self.certificate_included_scts_count),
-                    'isAffectedBySymantecDeprecation': str(True if self.symantec_distrust_timeline else False)
+                    'hasMustStapleExtension': str(self.leaf_certificate_has_must_staple_extension),
+                    'includedSctsCount': str(self.leaf_certificate_signed_certificate_timestamps_count),
+                    'isAffectedBySymantecDeprecation': is_affected_by_symantec,
                 }
             )
             for cert_xml in self._certificate_chain_to_xml(self.verified_certificate_chain):
@@ -651,7 +695,7 @@ class CertificateInfoScanResult(PluginScanResult):
             else:
                 ocsp_resp_xmp = Element('ocspResponse',
                                         attrib={
-                                            'isTrustedByMozillaCAStore': str(self.is_ocsp_response_trusted),
+                                            'isTrustedByMozillaCAStore': str(self.ocsp_response_is_trusted),
                                             'status': self.ocsp_response_status.name  # type: ignore
                                         })
 
@@ -670,8 +714,8 @@ class CertificateInfoScanResult(PluginScanResult):
         return xml_output
 
     def _get_basic_certificate_text(self) -> List[str]:
-        certificate = self.certificate_chain[0]
-        public_key = self.certificate_chain[0].public_key()
+        certificate = self.received_certificate_chain[0]
+        public_key = self.received_certificate_chain[0].public_key()
         text_output = [
             self._format_field('SHA1 Fingerprint:',
                                binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode('ascii')),
@@ -695,8 +739,9 @@ class CertificateInfoScanResult(PluginScanResult):
 
         try:
             # Print the SAN extension if there's one
-            text_output.append(self._format_field('DNS Subject Alternative Names:',
-                                                  str(CertificateUtils.get_dns_subject_alternative_names(certificate))))
+            text_output.append(self._format_field(
+                'DNS Subject Alternative Names:', str(CertificateUtils.get_dns_subject_alternative_names(certificate))
+            ))
         except KeyError:
             pass
 
@@ -818,3 +863,146 @@ class _SymantecDistructTester:
             else:
                 distrust_enum = SymantecDistrustTimelineEnum.SEPTEMBER_2018
         return distrust_enum
+
+
+@dataclass
+class CertificateChainDeploymentAnalysisResult:
+
+    leaf_certificate_subject_matches_hostname: bool
+    leaf_certificate_has_must_staple_extension: bool
+    leaf_certificate_is_ev: bool
+    leaf_certificate_signed_certificate_timestamps_count: Optional[int]
+    received_chain_contains_anchor_certificate: Optional[bool]
+    received_chain_has_valid_order: bool
+    verified_chain_has_sha1_signature: Optional[bool]
+    verified_chain_has_legacy_symantec_anchor: Optional[bool]
+    ocsp_response_is_trusted: Optional[bool]
+    ocsp_response_status: Optional[OcspResponseStatusEnum]
+
+
+class CertificateChainDeploymentAnalyzer:
+    """Utility class for analyzing a certificate chain as deployed on a specific server.
+
+    Useful for checking a server's certificate chain without having to use the CertificateInfoPlugin.
+    """
+
+    def __init__(
+            self,
+            server_hostname: str,
+            received_chain: List[Certificate],
+            verified_chain: Optional[List[Certificate]],
+            trust_store_used_to_build_verified_chain: Optional[TrustStore],
+            received_ocsp_response: Optional[OcspResponse]
+    ) -> None:
+        self.server_hostname = server_hostname
+        self.received_certificate_chain = received_chain
+        self.verified_certificate_chain = verified_chain
+        self.trust_store_used_to_build_verified_chain = trust_store_used_to_build_verified_chain
+        self.received_ocsp_response = received_ocsp_response
+
+    def perform(self) -> CertificateChainDeploymentAnalysisResult:
+        leaf_cert = self.received_certificate_chain[0]
+
+        # OCSP Must-Staple
+        has_ocsp_must_staple = False
+        try:
+            tls_feature_ext = leaf_cert.extensions.get_extension_for_oid(ExtensionOID.TLS_FEATURE)
+            for feature_type in tls_feature_ext.value:
+                if feature_type == cryptography.x509.TLSFeatureType.status_request:
+                    has_ocsp_must_staple = True
+                    break
+        except ExtensionNotFound:
+            pass
+
+        # Received chain order
+        is_chain_order_valid = True
+        previous_issuer = None
+        for index, cert in enumerate(self.received_certificate_chain):
+            current_subject = cert.subject
+
+            if index > 0:
+                # Compare the current subject with the previous issuer in the chain
+                if current_subject != previous_issuer:
+                    is_chain_order_valid = False
+                    break
+            try:
+                previous_issuer = cert.issuer
+            except KeyError:
+                # Missing issuer; this is okay if this is the last cert
+                previous_issuer = u"missing issuer {}".format(index)
+
+        # Check if it is EV - we only have the EV OIDs for Mozilla
+        is_leaf_certificate_ev = TrustStoresRepository.get_default().get_main_store().is_extended_validation(
+            self.received_certificate_chain[0]
+        )
+
+        # Check for Signed Timestamps
+        number_of_scts: Optional[int] = 0
+        try:
+            # Look for the x509 extension
+            sct_ext = leaf_cert.extensions.get_extension_for_oid(
+                ExtensionOID.PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS
+            )
+
+            if isinstance(sct_ext.value, cryptography.x509.UnrecognizedExtension):
+                # The version of OpenSSL on the system is too old and can't parse the SCT extension
+                number_of_scts = None
+
+            # Count the number of entries in the extension
+            number_of_scts = len(sct_ext.value)
+        except ExtensionNotFound:
+            pass
+
+        # Check if the anchor was sent by the server
+        has_anchor_in_certificate_chain = None
+        if self.verified_certificate_chain:
+            has_anchor_in_certificate_chain = self.verified_certificate_chain[-1] in self.received_certificate_chain
+
+        # Check hostname validation
+        try:
+            CertificateUtils.matches_hostname(leaf_cert, self.server_hostname)
+            certificate_matches_hostname = True
+        except CertificateError:
+            certificate_matches_hostname = False
+
+        # Check if a SHA1-signed certificate is in the chain
+        # Root certificates can still be signed with SHA1 so we only check leaf and intermediate certificates
+        has_sha1_in_certificate_chain = None
+        if self.verified_certificate_chain:
+            has_sha1_in_certificate_chain = False
+            for cert in self.verified_certificate_chain[:-1]:
+                if isinstance(cert.signature_hash_algorithm, hashes.SHA1):
+                    has_sha1_in_certificate_chain = True
+                    break
+
+        # Check if this is a distrusted Symantec-issued chain
+        verified_chain_has_legacy_symantec_anchor = None
+        if self.verified_certificate_chain:
+            symantec_distrust_timeline = _SymantecDistructTester.get_distrust_timeline(self.verified_certificate_chain)
+            verified_chain_has_legacy_symantec_anchor = True if symantec_distrust_timeline else False
+
+        # Check the OCSP response if there is one
+        is_ocsp_response_trusted = None
+        ocsp_response_status = None
+        if self.received_ocsp_response:
+            ocsp_response_status = self.received_ocsp_response.status
+            if self.trust_store_used_to_build_verified_chain \
+                    and ocsp_response_status == OcspResponseStatusEnum.SUCCESSFUL:
+                try:
+                    self.received_ocsp_response.verify(self.trust_store_used_to_build_verified_chain.path)
+                    is_ocsp_response_trusted = True
+                except OcspResponseNotTrustedError:
+                    is_ocsp_response_trusted = False
+
+        return CertificateChainDeploymentAnalysisResult(
+            leaf_certificate_subject_matches_hostname=certificate_matches_hostname,
+            leaf_certificate_has_must_staple_extension=has_ocsp_must_staple,
+            leaf_certificate_is_ev=is_leaf_certificate_ev,
+            leaf_certificate_signed_certificate_timestamps_count=number_of_scts,
+            received_chain_contains_anchor_certificate=has_anchor_in_certificate_chain,
+            received_chain_has_valid_order=is_chain_order_valid,
+            verified_chain_has_sha1_signature=has_sha1_in_certificate_chain,
+            verified_chain_has_legacy_symantec_anchor=verified_chain_has_legacy_symantec_anchor,
+            ocsp_response_is_trusted=is_ocsp_response_trusted,
+            ocsp_response_status=ocsp_response_status,
+        )

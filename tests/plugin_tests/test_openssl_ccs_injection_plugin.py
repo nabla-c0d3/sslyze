@@ -1,11 +1,10 @@
-import unittest
-
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin, OpenSslCcsInjectionScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
+from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
 
-class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
+class TestOpenSslCcsInjectionPlugin:
 
     def test_ccs_injection_good(self):
         server_test = ServerConnectivityTester(hostname='www.google.com')
@@ -14,12 +13,12 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
         plugin = OpenSslCcsInjectionPlugin()
         plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
 
-        self.assertFalse(plugin_result.is_vulnerable_to_ccs_injection)
+        assert not plugin_result.is_vulnerable_to_ccs_injection
 
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_ccs_injection_bad(self):
         with LegacyOpenSslServer() as server:
             server_test = ServerConnectivityTester(
@@ -32,11 +31,11 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
             plugin = OpenSslCcsInjectionPlugin()
             plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
 
-        self.assertTrue(plugin_result.is_vulnerable_to_ccs_injection)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.is_vulnerable_to_ccs_injection
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()
 
-    @unittest.skipIf(not LegacyOpenSslServer.is_platform_supported(), 'Not on Linux 64')
+    @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(
@@ -54,6 +53,6 @@ class OpenSslCcsInjectionPluginTestCase(unittest.TestCase):
             plugin = OpenSslCcsInjectionPlugin()
             plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
 
-        self.assertTrue(plugin_result.is_vulnerable_to_ccs_injection)
-        self.assertTrue(plugin_result.as_text())
-        self.assertTrue(plugin_result.as_xml())
+        assert plugin_result.is_vulnerable_to_ccs_injection
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()

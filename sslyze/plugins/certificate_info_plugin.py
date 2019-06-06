@@ -95,11 +95,12 @@ class PathValidationResult:
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
         self.__dict__.update(state)
-        verified_chain = [
-            load_pem_x509_certificate(cert_pem, default_backend())
-            for cert_pem in self.__dict__['verified_certificate_chain']
-        ]
-        self.__dict__['verified_certificate_chain'] = verified_chain
+        if self.__dict__['verified_certificate_chain']:
+            verified_chain = [
+                load_pem_x509_certificate(cert_pem, default_backend())
+                for cert_pem in self.__dict__['verified_certificate_chain']
+            ]
+            self.__dict__['verified_certificate_chain'] = verified_chain
 
 
 class PathValidationError:
@@ -393,11 +394,12 @@ class CertificateInfoScanResult(PluginScanResult):
         ]
         self.__dict__['received_certificate_chain'] = received_chain
 
-        verified_chain = [
-            load_pem_x509_certificate(cert_pem, default_backend())
-            for cert_pem in self.__dict__['verified_certificate_chain']
-        ]
-        self.__dict__['verified_certificate_chain'] = verified_chain
+        if self.__dict__['verified_certificate_chain']:
+            verified_chain = [
+                load_pem_x509_certificate(cert_pem, default_backend())
+                for cert_pem in self.__dict__['verified_certificate_chain']
+            ]
+            self.__dict__['verified_certificate_chain'] = verified_chain
 
     TRUST_FORMAT = '{store_name} CA Store ({store_version}):'
     NO_VERIFIED_CHAIN_ERROR_TXT = 'ERROR - Could not build verified chain (certificate untrusted?)'

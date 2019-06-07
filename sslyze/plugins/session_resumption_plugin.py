@@ -384,9 +384,9 @@ class SessionResumptionSupportScanResult(PluginScanResult):
                 str(ticket_resumption_exception.__class__.__name__), str(ticket_resumption_exception)
             )
         # We use a SessionResumptionRateScanResult to re-use code in as_text() and as_xml()
-        self._rate_result = SessionResumptionRateScanResult(
+        self._rate_result = SessionResumptionRateScanResult(  # type: ignore
             server_info,
-            scan_command,  # type: ignore
+            scan_command,
             attempted_resum_nb,
             successful_resum_nb,
             errored_resumptions_list,

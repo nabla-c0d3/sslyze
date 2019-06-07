@@ -13,7 +13,6 @@ from sslyze.cli.command_line_parser import ServerStringParsingError
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
-from sslyze.plugins.utils.trust_store.trust_store import TrustStore
 from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.server_connectivity_tester import ServerConnectivityError
 

@@ -385,11 +385,7 @@ class SessionResumptionSupportScanResult(PluginScanResult):
             )
         # We use a SessionResumptionRateScanResult to re-use code in as_text() and as_xml()
         self._rate_result = SessionResumptionRateScanResult(  # type: ignore
-            server_info,
-            scan_command,
-            attempted_resum_nb,
-            successful_resum_nb,
-            errored_resumptions_list,
+            server_info, scan_command, attempted_resum_nb, successful_resum_nb, errored_resumptions_list
         )
 
     RESUMPTION_LINE_FORMAT = "      {resumption_type:<35}{result}"

@@ -31,11 +31,11 @@ class RobotScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'robot'
+        return "robot"
 
     @classmethod
     def get_title(cls) -> str:
-        return 'ROBOT Attack'
+        return "ROBOT Attack"
 
     @classmethod
     def is_aggressive(cls) -> bool:
@@ -58,27 +58,23 @@ class RobotTlsRecordPayloads:
     # hoping that the server is going to give a different response (a TLS alert, a connection reset, no data, etc.) for
     # each payload
     _CKE_PAYLOADS_HEX = {
-        RobotPmsPaddingPayloadEnum.VALID:                   "0002{pms_padding}00{tls_version}{pms}",  # noqa: E241
-        RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES:   "4117{pms_padding}00{tls_version}{pms}",  # noqa: E241
-        RobotPmsPaddingPayloadEnum.WRONG_POSITION_00:       "0002{pms_padding}11{pms}0011",  # noqa: E241
-        RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE:     "0002{pms_padding}111111{pms}",  # noqa: E241
-        RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER:    "0002{pms_padding}000202{pms}",  # noqa: E241
+        RobotPmsPaddingPayloadEnum.VALID: "0002{pms_padding}00{tls_version}{pms}",  # noqa: E241
+        RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES: "4117{pms_padding}00{tls_version}{pms}",  # noqa: E241
+        RobotPmsPaddingPayloadEnum.WRONG_POSITION_00: "0002{pms_padding}11{pms}0011",  # noqa: E241
+        RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE: "0002{pms_padding}111111{pms}",  # noqa: E241
+        RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER: "0002{pms_padding}000202{pms}",  # noqa: E241
     }
 
     _PMS_HEX = "aa112233445566778899112233445566778899112233445566778899112233445566778899112233445566778899"
 
     @classmethod
     def get_client_key_exchange_record(
-            cls,
-            robot_payload_enum: RobotPmsPaddingPayloadEnum,
-            tls_version: TlsVersionEnum,
-            modulus: int,
-            exponent: int
+        cls, robot_payload_enum: RobotPmsPaddingPayloadEnum, tls_version: TlsVersionEnum, modulus: int, exponent: int
     ) -> TlsRsaClientKeyExchangeRecord:
         """A client key exchange record with a hardcoded pre_master_secret, and a valid or invalid padding.
         """
         pms_padding = cls._compute_pms_padding(modulus)
-        tls_version_hex = binascii.b2a_hex(TlsRecordTlsVersionBytes[tls_version.name].value).decode('ascii')
+        tls_version_hex = binascii.b2a_hex(TlsRecordTlsVersionBytes[tls_version.name].value).decode("ascii")
 
         pms_with_padding_payload = cls._CKE_PAYLOADS_HEX[robot_payload_enum]
         final_pms = pms_with_padding_payload.format(
@@ -101,8 +97,8 @@ class RobotTlsRecordPayloads:
 
     # Encrypted Finished record corresponding to the PMS below and the ch_def client hello in the ROBOT poc script
     _FINISHED_RECORD = bytearray.fromhex(
-        '005091a3b6aaa2b64d126e5583b04c113259c4efa48e40a19b8e5f2542c3b1d30f8d80b7582b72f08b21dfcbff09d4b281676a0fb40'
-        'd48c20c4f388617ff5c00808a96fbfe9bb6cc631101a6ba6b6bc696f0'
+        "005091a3b6aaa2b64d126e5583b04c113259c4efa48e40a19b8e5f2542c3b1d30f8d80b7582b72f08b21dfcbff09d4b281676a0fb40"
+        "d48c20c4f388617ff5c00808a96fbfe9bb6cc631101a6ba6b6bc696f0"
     )
 
     @classmethod
@@ -113,12 +109,13 @@ class RobotTlsRecordPayloads:
         # etc.); as the Finished record contains a hashes of all previous records, it will be wrong and will cause
         # servers to send a TLS Alert 20
         # Here just like in the poc script, the Finished message does not match the Client Hello we sent
-        return b'\x16' + TlsRecordTlsVersionBytes[tls_version.name].value + cls._FINISHED_RECORD
+        return b"\x16" + TlsRecordTlsVersionBytes[tls_version.name].value + cls._FINISHED_RECORD
 
 
 class RobotScanResultEnum(Enum):
     """An enum to provide the result of running a RobotScanCommand.
     """
+
     VULNERABLE_WEAK_ORACLE = 1  #: The server is vulnerable but the attack would take too long
     VULNERABLE_STRONG_ORACLE = 2  #: The server is vulnerable and real attacks are feasible
     NOT_VULNERABLE_NO_ORACLE = 3  #: The server supports RSA cipher suites but does not act as an oracle
@@ -127,7 +124,6 @@ class RobotScanResultEnum(Enum):
 
 
 class RobotServerResponsesAnalyzer:
-
     def __init__(self, payload_responses: Dict[RobotPmsPaddingPayloadEnum, List[str]]) -> None:
         # A mapping of a ROBOT payload enum -> a list of two server responses as text
         self._payload_responses = payload_responses
@@ -172,9 +168,9 @@ class RobotPlugin(plugin_base.Plugin):
     def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
         return [RobotScanCommand]
 
-    def process_task(self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand) -> 'RobotScanResult':
+    def process_task(self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand) -> "RobotScanResult":
         if not isinstance(scan_command, RobotScanCommand):
-            raise ValueError('Unexpected scan command')
+            raise ValueError("Unexpected scan command")
 
         # Try with TLS 1.2 even if the server supports TLS 1.3 or higher
         if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
@@ -185,12 +181,12 @@ class RobotPlugin(plugin_base.Plugin):
         rsa_params = None
         # With TLS 1.2 some servers are only vulnerable when using the GCM cipher suites - try them first
         if ssl_version_to_use == OpenSslVersionEnum.TLSV1_2:
-            cipher_string = 'AES128-GCM-SHA256:AES256-GCM-SHA384'
+            cipher_string = "AES128-GCM-SHA256:AES256-GCM-SHA384"
             rsa_params = self._get_rsa_parameters(server_info, cipher_string)
 
         if rsa_params is None:
             # The attempts with GCM TLS 1.2 RSA cipher suites failed - try the normal RSA cipher suites
-            cipher_string = 'RSA'
+            cipher_string = "RSA"
             rsa_params = self._get_rsa_parameters(server_info, cipher_string)
 
         if rsa_params is None:
@@ -214,50 +210,54 @@ class RobotPlugin(plugin_base.Plugin):
                 cipher_string,
                 rsa_modulus,
                 rsa_exponent,
-                robot_should_complete_handshake
+                robot_should_complete_handshake,
             )
 
         return RobotScanResult(server_info, scan_command, robot_result_enum)
 
     @classmethod
     def _run_oracle_over_threads(
-            cls,
-            server_info: ServerConnectivityInfo,
-            ssl_version_to_use: OpenSslVersionEnum,
-            cipher_string: str,
-            rsa_modulus: int,
-            rsa_exponent: int,
-            should_complete_handshake: bool
+        cls,
+        server_info: ServerConnectivityInfo,
+        ssl_version_to_use: OpenSslVersionEnum,
+        cipher_string: str,
+        rsa_modulus: int,
+        rsa_exponent: int,
+        should_complete_handshake: bool,
     ) -> RobotScanResultEnum:
         # Use threads to speed things up
         thread_pool = ThreadPool()
 
         for payload_enum in RobotPmsPaddingPayloadEnum:
             # Run each payload twice to ensure the results are consistent
-            thread_pool.add_job((
-                cls._send_robot_payload,
-                [
-                    server_info,
-                    ssl_version_to_use,
-                    cipher_string,
-                    payload_enum,
-                    should_complete_handshake,
-                    rsa_modulus,
-                    rsa_exponent
-                ]
-            ))
-            thread_pool.add_job((
-                cls._send_robot_payload,
-                [
-                    server_info,
-                    ssl_version_to_use,
-                    cipher_string,
-                    payload_enum,
-                    should_complete_handshake,
-                    rsa_modulus,
-                    rsa_exponent
-                ]
-            ))
+            thread_pool.add_job(
+                (
+                    cls._send_robot_payload,
+                    [
+                        server_info,
+                        ssl_version_to_use,
+                        cipher_string,
+                        payload_enum,
+                        should_complete_handshake,
+                        rsa_modulus,
+                        rsa_exponent,
+                    ],
+                )
+            )
+            thread_pool.add_job(
+                (
+                    cls._send_robot_payload,
+                    [
+                        server_info,
+                        ssl_version_to_use,
+                        cipher_string,
+                        payload_enum,
+                        should_complete_handshake,
+                        rsa_modulus,
+                        rsa_exponent,
+                    ],
+                )
+            )
 
         # Use one thread per check
         thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum) * 2)
@@ -285,8 +285,7 @@ class RobotPlugin(plugin_base.Plugin):
 
     @staticmethod
     def _get_rsa_parameters(
-            server_info: ServerConnectivityInfo,
-            openssl_cipher_string: str
+        server_info: ServerConnectivityInfo, openssl_cipher_string: str
     ) -> Optional[Tuple[int, int]]:
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
@@ -295,7 +294,7 @@ class RobotPlugin(plugin_base.Plugin):
             # Perform the SSL handshake
             ssl_connection.connect()
             cert_as_pem = ssl_connection.ssl_client.get_received_chain()[0]
-            parsed_cert = load_pem_x509_certificate(cert_as_pem.encode('ascii'), backend=default_backend())
+            parsed_cert = load_pem_x509_certificate(cert_as_pem.encode("ascii"), backend=default_backend())
         except SslHandshakeRejected:
             # Server does not support RSA cipher suites?
             pass
@@ -318,22 +317,20 @@ class RobotPlugin(plugin_base.Plugin):
 
     @staticmethod
     def _send_robot_payload(
-            server_info: ServerConnectivityInfo,
-            ssl_version_to_use: OpenSslVersionEnum,
-            rsa_cipher_string: str,
-            robot_payload_enum: RobotPmsPaddingPayloadEnum,
-            robot_should_finish_handshake: bool,
-            rsa_modulus: int,
-            rsa_exponent: int,
+        server_info: ServerConnectivityInfo,
+        ssl_version_to_use: OpenSslVersionEnum,
+        rsa_cipher_string: str,
+        robot_payload_enum: RobotPmsPaddingPayloadEnum,
+        robot_should_finish_handshake: bool,
+        rsa_modulus: int,
+        rsa_exponent: int,
     ) -> Tuple[RobotPmsPaddingPayloadEnum, str]:
         # Do a handshake which each record and keep track of what the server returned
         ssl_connection = server_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version_to_use)
 
         # Replace nassl.sslClient.do_handshake() with a ROBOT checking SSL handshake so that all the SSLyze
         # options (startTLS, proxy, etc.) still work
-        ssl_connection.ssl_client.do_handshake = types.MethodType(
-            do_handshake_with_robot, ssl_connection.ssl_client
-        )
+        ssl_connection.ssl_client.do_handshake = types.MethodType(do_handshake_with_robot, ssl_connection.ssl_client)
         ssl_connection.ssl_client.set_cipher_list(rsa_cipher_string)
 
         # Compute the  payload
@@ -345,7 +342,7 @@ class RobotPlugin(plugin_base.Plugin):
         ssl_connection.ssl_client._robot_cke_record = cke_payload
         ssl_connection.ssl_client._robot_should_finish_handshake = robot_should_finish_handshake
 
-        server_response = ''
+        server_response = ""
         try:
             # Start the SSL handshake
             ssl_connection.connect()
@@ -354,7 +351,7 @@ class RobotPlugin(plugin_base.Plugin):
             server_response = e.server_response
         except socket.timeout:
             # https://github.com/nabla-c0d3/sslyze/issues/361
-            server_response = 'Connection timed out'
+            server_response = "Connection timed out"
         finally:
             ssl_connection.close()
 
@@ -387,7 +384,7 @@ def do_handshake_with_robot(self):  # type: ignore
     # Retrieve data until we get to the ServerHelloDone
     # The server may send back a ServerHello, an Alert or a CertificateRequest first
     did_receive_hello_done = False
-    remaining_bytes = b''
+    remaining_bytes = b""
     while not did_receive_hello_done:
         try:
             tls_record, len_consumed = TlsRecordParser.parse_bytes(remaining_bytes)
@@ -413,7 +410,7 @@ def do_handshake_with_robot(self):  # type: ignore
             # Server returned a TLS alert
             break
         else:
-            raise ValueError('Unknown record? Type {}'.format(tls_record.header.type))
+            raise ValueError("Unknown record? Type {}".format(tls_record.header.type))
 
     if did_receive_hello_done:
         # Send a special Client Key Exchange Record as the payload
@@ -421,9 +418,7 @@ def do_handshake_with_robot(self):  # type: ignore
 
         if self._robot_should_finish_handshake:
             # Then send a CCS record
-            ccs_record = TlsChangeCipherSpecRecord.from_parameters(
-                tls_version=TlsVersionEnum[self._ssl_version.name]
-            )
+            ccs_record = TlsChangeCipherSpecRecord.from_parameters(tls_version=TlsVersionEnum[self._ssl_version.name])
             self._sock.send(ccs_record.to_bytes())
 
             # Lastly send a Finished record
@@ -442,21 +437,22 @@ def do_handshake_with_robot(self):  # type: ignore
                     raw_ssl_bytes = self._sock.recv(16381)
                     if not raw_ssl_bytes:
                         # No data?
-                        raise ServerResponseToRobot('No data')
+                        raise ServerResponseToRobot("No data")
                 except socket.error as e:
                     # Server closed the connection after receiving the CCS payload
-                    raise ServerResponseToRobot('socket.error {}'.format(str(e)))
+                    raise ServerResponseToRobot("socket.error {}".format(str(e)))
 
                 remaining_bytes = remaining_bytes + raw_ssl_bytes
                 continue
 
             if isinstance(tls_record, TlsAlertRecord):
-                raise ServerResponseToRobot('TLS Alert {} {}'.format(tls_record.alert_description,
-                                                                     tls_record.alert_severity))
+                raise ServerResponseToRobot(
+                    "TLS Alert {} {}".format(tls_record.alert_description, tls_record.alert_severity)
+                )
             else:
                 break
 
-        raise ServerResponseToRobot('Ok')
+        raise ServerResponseToRobot("Ok")
 
 
 class RobotScanResult(PluginScanResult):
@@ -467,31 +463,31 @@ class RobotScanResult(PluginScanResult):
     """
 
     def __init__(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: RobotScanCommand,
-            robot_result_enum: RobotScanResultEnum
+        self,
+        server_info: ServerConnectivityInfo,
+        scan_command: RobotScanCommand,
+        robot_result_enum: RobotScanResultEnum,
     ) -> None:
         super().__init__(server_info, scan_command)
         self.robot_result_enum = robot_result_enum
 
     def as_text(self) -> List[str]:
         if self.robot_result_enum == RobotScanResultEnum.VULNERABLE_STRONG_ORACLE:
-            robot_txt = 'VULNERABLE - Strong oracle, a real attack is possible'
+            robot_txt = "VULNERABLE - Strong oracle, a real attack is possible"
         elif self.robot_result_enum == RobotScanResultEnum.VULNERABLE_WEAK_ORACLE:
-            robot_txt = 'VULNERABLE - Weak oracle, the attack would take too long'
+            robot_txt = "VULNERABLE - Weak oracle, the attack would take too long"
         elif self.robot_result_enum == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE:
-            robot_txt = 'OK - Not vulnerable'
+            robot_txt = "OK - Not vulnerable"
         elif self.robot_result_enum == RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED:
-            robot_txt = 'OK - Not vulnerable, RSA cipher suites not supported'
+            robot_txt = "OK - Not vulnerable, RSA cipher suites not supported"
         elif self.robot_result_enum == RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS:
-            robot_txt = 'UNKNOWN - Received inconsistent results'
+            robot_txt = "UNKNOWN - Received inconsistent results"
         else:
-            raise ValueError('Should never happen')
+            raise ValueError("Should never happen")
 
-        return [self._format_title(self.scan_command.get_title()), self._format_field('', robot_txt)]
+        return [self._format_title(self.scan_command.get_title()), self._format_field("", robot_txt)]
 
     def as_xml(self) -> Element:
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-        xml_output.append(Element('robotAttack', resultEnum=self.robot_result_enum.name))
+        xml_output.append(Element("robotAttack", resultEnum=self.robot_result_enum.name))
         return xml_output

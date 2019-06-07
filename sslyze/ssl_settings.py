@@ -17,6 +17,7 @@ class TlsWrappedProtocolEnum(Enum):
     SSLyze uses this to figure out how to establish an SSL/TLS connection to the server and what kind of "hello" message
     to send after the handshake was completed.
     """
+
     PLAIN_TLS = 1  # Standard TLS connection
     HTTPS = 2
     STARTTLS_SMTP = 3
@@ -33,6 +34,7 @@ class TlsWrappedProtocolEnum(Enum):
 class ClientAuthenticationServerConfigurationEnum(Enum):
     """Whether the server asked for client authentication.
     """
+
     DISABLED = 1
     OPTIONAL = 2
     REQUIRED = 3
@@ -43,11 +45,11 @@ class ClientAuthenticationCredentials:
     """
 
     def __init__(
-            self,
-            client_certificate_chain_path: str,
-            client_key_path: str,
-            client_key_type: OpenSslFileTypeEnum = OpenSslFileTypeEnum.PEM,
-            client_key_password: str = ''
+        self,
+        client_certificate_chain_path: str,
+        client_key_path: str,
+        client_key_type: OpenSslFileTypeEnum = OpenSslFileTypeEnum.PEM,
+        client_key_password: str = "",
     ) -> None:
         """
         Args:
@@ -58,24 +60,24 @@ class ClientAuthenticationCredentials:
         """
         self.client_certificate_chain_path = client_certificate_chain_path
         if not os.path.isfile(self.client_certificate_chain_path):
-            raise ValueError('Could not open the client certificate file')
+            raise ValueError("Could not open the client certificate file")
 
         self.client_key_path = client_key_path
         if not os.path.isfile(self.client_key_path):
-            raise ValueError('Could not open the client private key file')
+            raise ValueError("Could not open the client private key file")
 
         self.client_key_password = client_key_password
 
         self.client_key_type = client_key_type
         if self.client_key_type not in OpenSslFileTypeEnum:
-            raise ValueError('Invalid certificate format specified')
+            raise ValueError("Invalid certificate format specified")
 
         # Try to load the cert and key in OpenSSL; will raise an exception if something is wrong
         SslClient(
             client_certchain_file=self.client_certificate_chain_path,
             client_key_file=self.client_key_path,
             client_key_type=self.client_key_type,
-            client_key_password=self.client_key_password
+            client_key_password=self.client_key_password,
         )
 
     def __str__(self) -> str:
@@ -91,11 +93,7 @@ class HttpConnectTunnelingSettings:
     """
 
     def __init__(
-            self,
-            hostname: str,
-            port: int,
-            basic_auth_user: Optional[str] = None,
-            basic_auth_password: Optional[str] = None
+        self, hostname: str, port: int, basic_auth_user: Optional[str] = None, basic_auth_password: Optional[str] = None
     ) -> None:
         """
         Args:
@@ -111,25 +109,22 @@ class HttpConnectTunnelingSettings:
 
     def __str__(self) -> str:
         return '<{class_name}: proxy_server=({hostname}, {port}), username="{user}">'.format(
-            class_name=self.__class__.__name__,
-            hostname=self.hostname,
-            port=self.port,
-            user=self.basic_auth_user,
+            class_name=self.__class__.__name__, hostname=self.hostname, port=self.port, user=self.basic_auth_user
         )
 
     @classmethod
-    def from_url(cls, proxy_url: str) -> 'HttpConnectTunnelingSettings':
+    def from_url(cls, proxy_url: str) -> "HttpConnectTunnelingSettings":
         parsed_url = urlparse(proxy_url)
 
         if not parsed_url.netloc or not parsed_url.hostname:
-            raise ValueError('Invalid Proxy URL')
+            raise ValueError("Invalid Proxy URL")
 
-        if parsed_url.scheme == 'http':
+        if parsed_url.scheme == "http":
             default_port = 80
-        elif parsed_url.scheme == 'https':
+        elif parsed_url.scheme == "https":
             default_port = 443
         else:
-            raise ValueError('Invalid URL scheme')
+            raise ValueError("Invalid URL scheme")
 
         port = parsed_url.port if parsed_url.port else default_port
         return cls(parsed_url.hostname, port, parsed_url.username, parsed_url.password)

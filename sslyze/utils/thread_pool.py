@@ -17,6 +17,7 @@ class ThreadPool:
     Any unhandled exception happening in the work function goes to the error queue that can be read using get_error().
     Anything else goes to the result queue that can be read using get_result().
     """
+
     def __init__(self) -> None:
         self._active_threads = 0
         self._job_q: Queue = Queue()
@@ -61,13 +62,11 @@ class ThreadPool:
         """Should only be called once all the jobs have been added using add_job().
         """
         if self._active_threads:
-            raise Exception('Threads already started.')
+            raise Exception("Threads already started.")
 
         # Create thread pool
         for _ in range(nb_threads):
-            worker = threading.Thread(
-                target=_work_function,
-                args=(self._job_q, self._result_q, self._error_q))
+            worker = threading.Thread(target=_work_function, args=(self._job_q, self._result_q, self._error_q))
             worker.start()
             self._thread_list.append(worker)
             self._active_threads += 1

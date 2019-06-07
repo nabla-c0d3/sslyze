@@ -10,8 +10,19 @@ from sslyze.utils.ssl_connection import SslConnection
 
 from typing import TYPE_CHECKING
 
-from sslyze.utils.tls_wrapped_protocol_helpers import SmtpHelper, HttpsHelper, XmppHelper, XmppServerHelper,\
-    Pop3Helper, ImapHelper, FtpHelper, LdapHelper, RdpHelper, PostgresHelper, TlsHelper
+from sslyze.utils.tls_wrapped_protocol_helpers import (
+    SmtpHelper,
+    HttpsHelper,
+    XmppHelper,
+    XmppServerHelper,
+    Pop3Helper,
+    ImapHelper,
+    FtpHelper,
+    LdapHelper,
+    RdpHelper,
+    PostgresHelper,
+    TlsHelper,
+)
 
 if TYPE_CHECKING:
     from sslyze.server_connectivity_info import ServerConnectivityInfo  # noqa: F401
@@ -38,21 +49,19 @@ class SslConnectionConfigurator:
 
     # Restrict cipher list to make the client hello smaller so we don't run into
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
-    DEFAULT_SSL_CIPHER_LIST = 'HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA'
+    DEFAULT_SSL_CIPHER_LIST = "HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA"
 
     @classmethod
     def get_connection(
-            cls,
-            ssl_version: OpenSslVersionEnum,
-
-            # This method leverages the fact that ServerConnectivityInfo and ServerConnectivityTester have attributes
-            # with the same names (hacky)
-            server_info: Union['ServerConnectivityInfo', 'ServerConnectivityTester'],
-
-            should_ignore_client_auth: bool,
-            openssl_cipher_string: Optional[str] = None,
-            ssl_verify_locations: Optional[Path] = None,
-            should_use_legacy_openssl: Optional[bool] = None,
+        cls,
+        ssl_version: OpenSslVersionEnum,
+        # This method leverages the fact that ServerConnectivityInfo and ServerConnectivityTester have attributes
+        # with the same names (hacky)
+        server_info: Union["ServerConnectivityInfo", "ServerConnectivityTester"],
+        should_ignore_client_auth: bool,
+        openssl_cipher_string: Optional[str] = None,
+        ssl_verify_locations: Optional[Path] = None,
+        should_use_legacy_openssl: Optional[bool] = None,
     ) -> SslConnection:
         # We need three things to create an SSL connection
 
@@ -65,7 +74,7 @@ class SslConnectionConfigurator:
         else:
             if server_info.ip_address is None:
                 # We received a ServerConnectivityTester whose perform() method has not been called; should never happen
-                raise ValueError('Received ServerConnectivityTester with a None ip_address')
+                raise ValueError("Received ServerConnectivityTester with a None ip_address")
             connection_helper = DirectConnectionHelper(server_info.ip_address, server_info.port)
 
         # 2. Create the StartTLS helper
@@ -79,9 +88,9 @@ class SslConnectionConfigurator:
         # 3. Create the SSL client
         if should_use_legacy_openssl is None:
             # For older versions of TLS/SSL, we have to use a legacy OpenSSL
-            final_should_use_legacy_openssl = False \
-                if ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_3] \
-                else True
+            final_should_use_legacy_openssl = (
+                False if ssl_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_3] else True
+            )
         else:
             final_should_use_legacy_openssl = should_use_legacy_openssl
         ssl_client_cls = LegacySslClient if final_should_use_legacy_openssl else SslClient
@@ -97,7 +106,7 @@ class SslConnectionConfigurator:
                 client_key_file=server_info.client_auth_credentials.client_key_path,
                 client_key_type=server_info.client_auth_credentials.client_key_type,
                 client_key_password=server_info.client_auth_credentials.client_key_password,
-                ignore_client_authentication_requests=False
+                ignore_client_authentication_requests=False,
             )
         else:
             # No client cert and key
@@ -105,7 +114,7 @@ class SslConnectionConfigurator:
                 ssl_version=ssl_version,
                 ssl_verify=OpenSslVerifyEnum.NONE,
                 ssl_verify_locations=ssl_verify_locations_str,
-                ignore_client_authentication_requests=should_ignore_client_auth
+                ignore_client_authentication_requests=should_ignore_client_auth,
             )
 
         # Add Server Name Indication

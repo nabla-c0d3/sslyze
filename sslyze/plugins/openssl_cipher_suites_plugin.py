@@ -18,7 +18,6 @@ from sslyze.utils.tls12_workaround import WorkaroundForTls12ForCipherSuites
 
 
 class CipherSuiteScanCommand(PluginScanCommand, ABC):
-
     def __init__(self, http_get: bool = False, hide_rejected_ciphers: bool = False) -> None:
         super().__init__()
         # TODO(ad): Move these options to the CLI parser ?
@@ -31,15 +30,16 @@ class CipherSuiteScanCommand(PluginScanCommand, ABC):
 
     @classmethod
     def get_title(cls) -> str:
-        return '{} Cipher Suites'.format(cls.get_cli_argument().upper())
+        return "{} Cipher Suites".format(cls.get_cli_argument().upper())
 
 
 class Sslv20ScanCommand(CipherSuiteScanCommand):
     """List the SSL 2.0 OpenSSL cipher suites supported by the server(s).
     """
+
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'sslv2'
+        return "sslv2"
 
     @classmethod
     def is_aggressive(cls) -> bool:
@@ -50,41 +50,46 @@ class Sslv20ScanCommand(CipherSuiteScanCommand):
 class Sslv30ScanCommand(CipherSuiteScanCommand):
     """List the SSL 3.0 OpenSSL cipher suites supported by the server(s).
     """
+
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'sslv3'
+        return "sslv3"
 
 
 class Tlsv10ScanCommand(CipherSuiteScanCommand):
     """List the TLS 1.0 OpenSSL cipher suites supported by the server(s).
     """
+
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'tlsv1'
+        return "tlsv1"
 
 
 class Tlsv11ScanCommand(CipherSuiteScanCommand):
     """List the TLS 1.1 OpenSSL cipher suites supported by the server(s).
     """
+
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'tlsv1_1'
+        return "tlsv1_1"
 
 
 class Tlsv12ScanCommand(CipherSuiteScanCommand):
     """List the TLS 1.2 OpenSSL cipher suites supported by the server(s).
     """
+
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'tlsv1_2'
+        return "tlsv1_2"
 
 
 class Tlsv13ScanCommand(CipherSuiteScanCommand):
     """List the TLS 1.3 OpenSSL cipher suites supported by the server(s).
     """
+
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'tlsv1_3'
+        return "tlsv1_3"
 
 
 class OpenSslCipherSuitesPlugin(Plugin):
@@ -114,29 +119,27 @@ class OpenSslCipherSuitesPlugin(Plugin):
         options.append(
             optparse.make_option(
                 # TODO(ad): Move this option to the CLI parser ?
-                '--http_get',
-                help='Option - For each cipher suite, sends an HTTP GET request after completing the SSL handshake '
-                     'and returns the HTTP status code.',
-                action='store_true'
+                "--http_get",
+                help="Option - For each cipher suite, sends an HTTP GET request after completing the SSL handshake "
+                "and returns the HTTP status code.",
+                action="store_true",
             )
         )
         options.append(
             optparse.make_option(
                 # TODO(ad): Move this option to the CLI parser ?
-                '--hide_rejected_ciphers',
-                help='Option - Hides the (usually long) list of cipher suites that were rejected by the server(s).',
-                action='store_true'
+                "--hide_rejected_ciphers",
+                help="Option - Hides the (usually long) list of cipher suites that were rejected by the server(s).",
+                action="store_true",
             )
         )
         return options
 
     def process_task(
-            self,
-            server_connectivity_info: ServerConnectivityInfo,
-            scan_command: PluginScanCommand
-    ) -> 'CipherSuiteScanResult':
+        self, server_connectivity_info: ServerConnectivityInfo, scan_command: PluginScanCommand
+    ) -> "CipherSuiteScanResult":
         if not isinstance(scan_command, CipherSuiteScanCommand):
-            raise ValueError('Unexpected scan command')
+            raise ValueError("Unexpected scan command")
 
         ssl_version = self.SSL_VERSIONS_MAPPING[scan_command.__class__]
         # Get the list of available cipher suites for the given ssl version
@@ -146,16 +149,16 @@ class OpenSslCipherSuitesPlugin(Plugin):
             ssl_connection_legacy = server_connectivity_info.get_preconfigured_ssl_connection(
                 override_ssl_version=ssl_version, should_use_legacy_openssl=True
             )
-            ssl_connection_legacy.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
+            ssl_connection_legacy.ssl_client.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
             cipher_list.extend(ssl_connection_legacy.ssl_client.get_cipher_list())
 
             ssl_connection_modern = server_connectivity_info.get_preconfigured_ssl_connection(
                 override_ssl_version=ssl_version, should_use_legacy_openssl=False
             )
             # Disable the TLS 1.3 cipher suites with the new OpenSSL API
-            ssl_connection_modern.ssl_client.set_ciphersuites('')
+            ssl_connection_modern.ssl_client.set_ciphersuites("")
             # Enable all other cipher suites
-            ssl_connection_modern.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
+            ssl_connection_modern.ssl_client.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
             cipher_list.extend(ssl_connection_modern.ssl_client.get_cipher_list())
 
             # And remove duplicates (ie. supported by both legacy and modern OpenSSL)
@@ -163,18 +166,18 @@ class OpenSslCipherSuitesPlugin(Plugin):
         elif ssl_version == OpenSslVersionEnum.TLSV1_3:
             # TLS 1.3 only has 5 cipher suites so we can hardcode them
             cipher_list = [
-                'TLS_AES_256_GCM_SHA384',
-                'TLS_CHACHA20_POLY1305_SHA256',
-                'TLS_AES_128_GCM_SHA256',
-                'TLS_AES_128_CCM_8_SHA256',
-                'TLS_AES_128_CCM_SHA256',
+                "TLS_AES_256_GCM_SHA384",
+                "TLS_CHACHA20_POLY1305_SHA256",
+                "TLS_AES_128_GCM_SHA256",
+                "TLS_AES_128_CCM_8_SHA256",
+                "TLS_AES_128_CCM_SHA256",
             ]
         else:
             ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(override_ssl_version=ssl_version)
             # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
-            ssl_connection.ssl_client.set_cipher_list('ALL:COMPLEMENTOFALL:-PSK:-SRP')
+            ssl_connection.ssl_client.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
             # And remove TLS 1.3 cipher suites
-            cipher_list = [cipher for cipher in ssl_connection.ssl_client.get_cipher_list() if 'TLS13' not in cipher]
+            cipher_list = [cipher for cipher in ssl_connection.ssl_client.get_cipher_list() if "TLS13" not in cipher]
 
         # Scan for every available cipher suite
         thread_pool = ThreadPool()
@@ -198,7 +201,7 @@ class OpenSslCipherSuitesPlugin(Plugin):
             elif isinstance(cipher_result, ErroredCipherSuite):
                 errored_cipher_list.append(cipher_result)
             else:
-                raise ValueError('Unexpected result')
+                raise ValueError("Unexpected result")
 
         # Store thread pool errors; only something completely unexpected would trigger an error
         for failed_job in thread_pool.get_error():
@@ -211,16 +214,20 @@ class OpenSslCipherSuitesPlugin(Plugin):
         preferred_cipher = self._get_preferred_cipher_suite(server_connectivity_info, ssl_version, accepted_cipher_list)
 
         # Generate the results
-        plugin_result = CipherSuiteScanResult(server_connectivity_info, scan_command, preferred_cipher,
-                                              accepted_cipher_list, rejected_cipher_list, errored_cipher_list)
+        plugin_result = CipherSuiteScanResult(
+            server_connectivity_info,
+            scan_command,
+            preferred_cipher,
+            accepted_cipher_list,
+            rejected_cipher_list,
+            errored_cipher_list,
+        )
         return plugin_result
 
     @staticmethod
     def _test_cipher_suite(
-            server_connectivity_info: ServerConnectivityInfo,
-            ssl_version: OpenSslVersionEnum,
-            openssl_cipher_name: str
-    ) -> 'CipherSuite':
+        server_connectivity_info: ServerConnectivityInfo, ssl_version: OpenSslVersionEnum, openssl_cipher_name: str
+    ) -> "CipherSuite":
         """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
         """
         requires_legacy_openssl = True
@@ -231,27 +238,28 @@ class OpenSslCipherSuitesPlugin(Plugin):
             requires_legacy_openssl = False
 
         ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(
-            override_ssl_version=ssl_version,
-            should_use_legacy_openssl=requires_legacy_openssl
+            override_ssl_version=ssl_version, should_use_legacy_openssl=requires_legacy_openssl
         )
 
         # Only enable the cipher suite to test; not trivial anymore since OpenSSL 1.1.1 and TLS 1.3
         if ssl_version == OpenSslVersionEnum.TLSV1_3:
             # The function to control cipher suites is different for TLS 1.3
             # Disable the default, non-TLS 1.3 cipher suites
-            ssl_connection.ssl_client.set_cipher_list('')
+            ssl_connection.ssl_client.set_cipher_list("")
             # Enable the one TLS 1.3 cipher suite we want to test
             ssl_connection.ssl_client.set_ciphersuites(openssl_cipher_name)
         else:
             if not requires_legacy_openssl:
                 # Disable the TLS 1.3 cipher suites if we are using the modern client
-                ssl_connection.ssl_client.set_ciphersuites('')
+                ssl_connection.ssl_client.set_ciphersuites("")
 
             ssl_connection.ssl_client.set_cipher_list(openssl_cipher_name)
 
         if len(ssl_connection.ssl_client.get_cipher_list()) != 1:
-            raise ValueError(f'Passed an OpenSSL string for multiple cipher suites: "{openssl_cipher_name}": '
-                             f'{str(ssl_connection.ssl_client.get_cipher_list())}')
+            raise ValueError(
+                f'Passed an OpenSSL string for multiple cipher suites: "{openssl_cipher_name}": '
+                f"{str(ssl_connection.ssl_client.get_cipher_list())}"
+            )
 
         try:
             # Perform the SSL handshake
@@ -281,11 +289,11 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
     @classmethod
     def _get_preferred_cipher_suite(
-            cls,
-            server_connectivity_info: ServerConnectivityInfo,
-            ssl_version: OpenSslVersionEnum,
-            accepted_cipher_list: List['AcceptedCipherSuite']
-    ) -> Optional['AcceptedCipherSuite']:
+        cls,
+        server_connectivity_info: ServerConnectivityInfo,
+        ssl_version: OpenSslVersionEnum,
+        accepted_cipher_list: List["AcceptedCipherSuite"],
+    ) -> Optional["AcceptedCipherSuite"]:
         """Try to detect the server's preferred cipher suite among all cipher suites supported by SSLyze.
         """
         if len(accepted_cipher_list) < 2:
@@ -307,9 +315,9 @@ class OpenSslCipherSuitesPlugin(Plugin):
                     should_use_legacy_openssl = False
                     break
 
-        first_cipher_str = ', '.join(accepted_cipher_names)
+        first_cipher_str = ", ".join(accepted_cipher_names)
         # Swap the first two ciphers in the list to see if the server always picks the client's first cipher
-        second_cipher_str = ', '.join([accepted_cipher_names[1], accepted_cipher_names[0]] + accepted_cipher_names[2:])
+        second_cipher_str = ", ".join([accepted_cipher_names[1], accepted_cipher_names[0]] + accepted_cipher_names[2:])
 
         try:
             first_cipher = cls._get_selected_cipher_suite(
@@ -331,11 +339,11 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
     @staticmethod
     def _get_selected_cipher_suite(
-            server_connectivity: ServerConnectivityInfo,
-            ssl_version: OpenSslVersionEnum,
-            openssl_cipher_str: str,
-            should_use_legacy_openssl: Optional[bool]
-    ) -> 'AcceptedCipherSuite':
+        server_connectivity: ServerConnectivityInfo,
+        ssl_version: OpenSslVersionEnum,
+        openssl_cipher_str: str,
+        should_use_legacy_openssl: Optional[bool],
+    ) -> "AcceptedCipherSuite":
         """Given an OpenSSL cipher string (which may specify multiple cipher suites), return the cipher suite that was
         selected by the server during the SSL handshake.
         """
@@ -356,11 +364,10 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
 
 class CipherSuite(ABC):
-
     def __init__(self, openssl_name: str, ssl_version: OpenSslVersionEnum) -> None:
         self.openssl_name = openssl_name
         self.ssl_version = ssl_version
-        self.is_anonymous = True if 'anon' in self.name else False
+        self.is_anonymous = True if "anon" in self.name else False
 
     @property
     def name(self) -> str:
@@ -384,12 +391,13 @@ class AcceptedCipherSuite(CipherSuite):
             an HTTP response when scanning an HTTPS server with TlsWrappedProtocolEnum.HTTPS as the
             tls_wrapped_protocol.
     """
+
     def __init__(
-            self,
-            openssl_name: str,
-            ssl_version: OpenSslVersionEnum,
-            key_size: Optional[int],  # TODO(AD): Make it non-optional again by fixing client certificate handling
-            post_handshake_response: Optional[str] = None,
+        self,
+        openssl_name: str,
+        ssl_version: OpenSslVersionEnum,
+        key_size: Optional[int],  # TODO(AD): Make it non-optional again by fixing client certificate handling
+        post_handshake_response: Optional[str] = None,
     ) -> None:
         super().__init__(openssl_name, ssl_version)
         self.key_size = key_size
@@ -397,10 +405,8 @@ class AcceptedCipherSuite(CipherSuite):
 
     @classmethod
     def from_ongoing_ssl_connection(
-            cls,
-            ssl_connection: SslConnection,
-            ssl_version: OpenSslVersionEnum
-    ) -> 'AcceptedCipherSuite':
+        cls, ssl_connection: SslConnection, ssl_version: OpenSslVersionEnum
+    ) -> "AcceptedCipherSuite":
         keysize = ssl_connection.ssl_client.get_current_cipher_bits()
         picked_cipher_name = ssl_connection.ssl_client.get_current_cipher_name()
         status_msg = ssl_connection.post_handshake_check()
@@ -417,6 +423,7 @@ class RejectedCipherSuite(CipherSuite):
         is_anonymous (bool): True if the cipher suite is an anonymous cipher suite (ie. no server authentication).
         handshake_error_message (str): The SSL/TLS error returned by the server to close the handshake.
     """
+
     def __init__(self, openssl_name: str, ssl_version: OpenSslVersionEnum, handshake_error_message: str) -> None:
         super().__init__(openssl_name, ssl_version)
         self.handshake_error_message = handshake_error_message
@@ -432,10 +439,11 @@ class ErroredCipherSuite(CipherSuite):
         is_anonymous (bool): True if the cipher suite is an anonymous cipher suite (ie. no server authentication).
         error_message (str): The text-formatted exception that was raised during the handshake.
     """
+
     def __init__(self, openssl_name: str, ssl_version: OpenSslVersionEnum, exception: Exception) -> None:
         super().__init__(openssl_name, ssl_version)
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
-        self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
+        self.error_message = "{} - {}".format(str(exception.__class__.__name__), str(exception))
 
 
 class CipherSuiteScanResult(PluginScanResult):
@@ -454,13 +462,13 @@ class CipherSuiteScanResult(PluginScanResult):
     """
 
     def __init__(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: CipherSuiteScanCommand,
-            preferred_cipher: Optional[AcceptedCipherSuite],
-            accepted_cipher_list: List[AcceptedCipherSuite],
-            rejected_cipher_list: List[RejectedCipherSuite],
-            errored_cipher_list: List[ErroredCipherSuite]
+        self,
+        server_info: ServerConnectivityInfo,
+        scan_command: CipherSuiteScanCommand,
+        preferred_cipher: Optional[AcceptedCipherSuite],
+        accepted_cipher_list: List[AcceptedCipherSuite],
+        rejected_cipher_list: List[RejectedCipherSuite],
+        errored_cipher_list: List[ErroredCipherSuite],
     ) -> None:
         super().__init__(server_info, scan_command)
 
@@ -468,51 +476,62 @@ class CipherSuiteScanResult(PluginScanResult):
 
         # Sort all the lists
         self.accepted_cipher_list = accepted_cipher_list
-        self.accepted_cipher_list.sort(key=attrgetter('name'), reverse=True)
+        self.accepted_cipher_list.sort(key=attrgetter("name"), reverse=True)
 
         self.rejected_cipher_list = rejected_cipher_list
-        self.rejected_cipher_list.sort(key=attrgetter('name'), reverse=True)
+        self.rejected_cipher_list.sort(key=attrgetter("name"), reverse=True)
 
         self.errored_cipher_list = errored_cipher_list
-        self.errored_cipher_list.sort(key=attrgetter('name'), reverse=True)
+        self.errored_cipher_list.sort(key=attrgetter("name"), reverse=True)
 
     def as_xml(self) -> Element:
         is_protocol_supported = True if len(self.accepted_cipher_list) > 0 else False
-        result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title(),
-                             isProtocolSupported=str(is_protocol_supported))
+        result_xml = Element(
+            self.scan_command.get_cli_argument(),
+            title=self.scan_command.get_title(),
+            isProtocolSupported=str(is_protocol_supported),
+        )
 
         # Output the preferred cipher
-        preferred_xml = Element('preferredCipherSuite')
+        preferred_xml = Element("preferredCipherSuite")
         if self.preferred_cipher:
             preferred_xml.append(self._format_accepted_cipher_xml(self.preferred_cipher))
         result_xml.append(preferred_xml)
 
         # Output all the accepted ciphers if any
-        accepted_xml = Element('acceptedCipherSuites')
+        accepted_xml = Element("acceptedCipherSuites")
         if len(self.accepted_cipher_list) > 0:
             for accepted_cipher in self.accepted_cipher_list:
                 accepted_xml.append(self._format_accepted_cipher_xml(accepted_cipher))
         result_xml.append(accepted_xml)
 
         # Output all the rejected ciphers if any
-        rejected_xml = Element('rejectedCipherSuites')
+        rejected_xml = Element("rejectedCipherSuites")
         if len(self.rejected_cipher_list) > 0:
             for rejected_cipher in self.rejected_cipher_list:
-                cipher_xml = Element('cipherSuite',
-                                     attrib={'name': rejected_cipher.name,
-                                             'anonymous': str(rejected_cipher.is_anonymous),
-                                             'connectionStatus': rejected_cipher.handshake_error_message})
+                cipher_xml = Element(
+                    "cipherSuite",
+                    attrib={
+                        "name": rejected_cipher.name,
+                        "anonymous": str(rejected_cipher.is_anonymous),
+                        "connectionStatus": rejected_cipher.handshake_error_message,
+                    },
+                )
                 rejected_xml.append(cipher_xml)
         result_xml.append(rejected_xml)
 
         # Output all the errored ciphers if any
-        error_xml = Element('errors')
+        error_xml = Element("errors")
         if len(self.errored_cipher_list) > 0:
             for cipher in self.errored_cipher_list:
-                cipher_xml = Element('cipherSuite',
-                                     attrib={'name': cipher.name,
-                                             'anonymous': str(cipher.is_anonymous),
-                                             'connectionStatus': cipher.error_message})
+                cipher_xml = Element(
+                    "cipherSuite",
+                    attrib={
+                        "name": cipher.name,
+                        "anonymous": str(cipher.is_anonymous),
+                        "connectionStatus": cipher.error_message,
+                    },
+                )
                 error_xml.append(cipher_xml)
         result_xml.append(error_xml)
 
@@ -521,18 +540,18 @@ class CipherSuiteScanResult(PluginScanResult):
     @staticmethod
     def _format_accepted_cipher_xml(cipher: AcceptedCipherSuite) -> Element:
         cipher_attributes = {
-            'name': cipher.name,
-            'keySize': str(cipher.key_size),
-            'anonymous': str(cipher.is_anonymous)
+            "name": cipher.name,
+            "keySize": str(cipher.key_size),
+            "anonymous": str(cipher.is_anonymous),
         }
         if cipher.post_handshake_response is not None:
-            cipher_attributes['connectionStatus'] = cipher.post_handshake_response
+            cipher_attributes["connectionStatus"] = cipher.post_handshake_response
 
-        cipher_xml = Element('cipherSuite', attrib=cipher_attributes)
+        cipher_xml = Element("cipherSuite", attrib=cipher_attributes)
         return cipher_xml
 
-    ACCEPTED_CIPHER_LINE_FORMAT = '        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {status:<60}'
-    REJECTED_CIPHER_LINE_FORMAT = '        {cipher_name:<50}{error_message:<60}'
+    ACCEPTED_CIPHER_LINE_FORMAT = "        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {status:<60}"
+    REJECTED_CIPHER_LINE_FORMAT = "        {cipher_name:<50}{error_message:<60}"
 
     def as_text(self) -> List[str]:
         result_txt = [self._format_title(self.scan_command.get_title())]
@@ -546,74 +565,77 @@ class CipherSuiteScanResult(PluginScanResult):
                 supports_forward_secrecy = True
             else:
                 for accepted_cipher in self.accepted_cipher_list:
-                    if '_DHE_' in accepted_cipher.name or '_ECDHE_' in accepted_cipher.name:
+                    if "_DHE_" in accepted_cipher.name or "_ECDHE_" in accepted_cipher.name:
                         supports_forward_secrecy = True
                         break
 
-            result_txt.append(self._format_field(
-                'Forward Secrecy',
-                'OK - Supported' if supports_forward_secrecy else 'INSECURE - Not Supported',
-            ))
+            result_txt.append(
+                self._format_field(
+                    "Forward Secrecy", "OK - Supported" if supports_forward_secrecy else "INSECURE - Not Supported"
+                )
+            )
 
             supports_rc4 = False
             for accepted_cipher in self.accepted_cipher_list:
-                if '_RC4_' in accepted_cipher.name:
+                if "_RC4_" in accepted_cipher.name:
                     supports_rc4 = True
                     break
-            result_txt.append(self._format_field(
-                'RC4',
-                'INSECURE - Supported' if supports_rc4 else 'OK - Not Supported',
-            ))
-            result_txt.append('')
+            result_txt.append(
+                self._format_field("RC4", "INSECURE - Supported" if supports_rc4 else "OK - Not Supported")
+            )
+            result_txt.append("")
 
         # Output all the accepted ciphers if any
         if len(self.accepted_cipher_list) > 0:
             # Start with the preferred cipher
-            result_txt.append(self._format_subtitle('Preferred:'))
+            result_txt.append(self._format_subtitle("Preferred:"))
             if self.preferred_cipher:
                 result_txt.append(self._format_accepted_cipher_txt(self.preferred_cipher))
             else:
-                result_txt.append(self.REJECTED_CIPHER_LINE_FORMAT.format(
-                    cipher_name='None - Server followed client cipher suite preference.', error_message=''
-                ))
+                result_txt.append(
+                    self.REJECTED_CIPHER_LINE_FORMAT.format(
+                        cipher_name="None - Server followed client cipher suite preference.", error_message=""
+                    )
+                )
 
             # Then display all ciphers that were accepted
-            result_txt.append(self._format_subtitle('Accepted:'))
+            result_txt.append(self._format_subtitle("Accepted:"))
             for accepted_cipher in self.accepted_cipher_list:
                 result_txt.append(self._format_accepted_cipher_txt(accepted_cipher))
         elif self.scan_command.hide_rejected_ciphers:  # type: ignore
-            result_txt.append('      Server rejected all cipher suites.')
+            result_txt.append("      Server rejected all cipher suites.")
 
         # Output all errors if any
         if len(self.errored_cipher_list) > 0:
-            result_txt.append(self._format_subtitle('Undefined - An unexpected error happened:'))
+            result_txt.append(self._format_subtitle("Undefined - An unexpected error happened:"))
             for err_cipher in self.errored_cipher_list:
-                cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT.format(cipher_name=err_cipher.name,
-                                                                          error_message=err_cipher.error_message)
+                cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT.format(
+                    cipher_name=err_cipher.name, error_message=err_cipher.error_message
+                )
                 result_txt.append(cipher_line_txt)
 
         # Output all rejected ciphers if needed
         if len(self.rejected_cipher_list) > 0 and not self.scan_command.hide_rejected_ciphers:  # type: ignore
-            result_txt.append(self._format_subtitle('Rejected:'))
+            result_txt.append(self._format_subtitle("Rejected:"))
             for rejected_cipher in self.rejected_cipher_list:
                 cipher_line_txt = self.REJECTED_CIPHER_LINE_FORMAT.format(
-                    cipher_name=rejected_cipher.name,
-                    error_message=rejected_cipher.handshake_error_message
+                    cipher_name=rejected_cipher.name, error_message=rejected_cipher.handshake_error_message
                 )
                 result_txt.append(cipher_line_txt)
 
         return result_txt
 
     def _format_accepted_cipher_txt(self, cipher: AcceptedCipherSuite) -> str:
-        keysize_str = '{} bits'.format(cipher.key_size) if cipher.key_size is not None else ''
+        keysize_str = "{} bits".format(cipher.key_size) if cipher.key_size is not None else ""
         if cipher.is_anonymous:
             # Always display ANON as the key size for anonymous ciphers to make it visible
-            keysize_str = 'ANONYMOUS'
+            keysize_str = "ANONYMOUS"
 
         cipher_line_txt = self.ACCEPTED_CIPHER_LINE_FORMAT.format(
             cipher_name=cipher.name,
-            dh_size='', key_size=keysize_str,
-            status=cipher.post_handshake_response if cipher.post_handshake_response is not None else '',
+            dh_size="",
+            key_size=keysize_str,
+            status=cipher.post_handshake_response if cipher.post_handshake_response is not None else "",
         )
         return cipher_line_txt
 
@@ -833,10 +855,8 @@ TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
     "AES256-CCM8": "RSA_WITH_AES_256_CCM_8",
     "DHE-RSA-AES128-CCM8": "DHE_RSA_WITH_AES_128_CCM_8",
     "DHE-RSA-AES256-CCM8": "DHE_RSA_WITH_AES_256_CCM_8",
-
     "ECDHE-ECDSA-AES128-CCM": "ECDHE_ECDSA_WITH_AES_128_CCM",
     "ECDHE-ECDSA-AES256-CCM": "ECDHE_ECDSA_WITH_AES_256_CCM",
-
     "ECDHE-ECDSA-AES128-CCM8": "ECDHE_ECDSA_WITH_AES_128_CCM_8",
     "ECDHE-ECDSA-AES256-CCM8": "ECDHE_ECDSA_WITH_AES_256_CCM_8",
 }

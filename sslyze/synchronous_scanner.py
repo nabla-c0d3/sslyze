@@ -14,9 +14,7 @@ class SynchronousScanner:
     DEFAULT_NETWORK_TIMEOUT = 5  # in seconds
 
     def __init__(
-            self,
-            network_retries: int = DEFAULT_NETWORK_RETRIES,
-            network_timeout: int = DEFAULT_NETWORK_TIMEOUT
+        self, network_retries: int = DEFAULT_NETWORK_RETRIES, network_timeout: int = DEFAULT_NETWORK_TIMEOUT
     ) -> None:
         """Create a scanner for running scanning commands synchronously.
 
@@ -30,9 +28,7 @@ class SynchronousScanner:
         SslConnection.set_global_network_settings(network_retries, network_timeout)
 
     def run_scan_command(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: PluginScanCommand
+        self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand
     ) -> PluginScanResult:
         """Run a single scan command against a server; will block until the scan command has been completed.
 

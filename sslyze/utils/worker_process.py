@@ -9,11 +9,12 @@ class WorkerProcess(Process):
     """
 
     def __init__(
-            self,
-            priority_queue_in: JoinableQueue,
-            queue_in: JoinableQueue, queue_out: JoinableQueue,
-            network_retries: int,
-            network_timeout: int
+        self,
+        priority_queue_in: JoinableQueue,
+        queue_in: JoinableQueue,
+        queue_out: JoinableQueue,
+        network_retries: int,
+        network_timeout: int,
     ) -> None:
         Process.__init__(self)
         self.priority_queue_in = priority_queue_in

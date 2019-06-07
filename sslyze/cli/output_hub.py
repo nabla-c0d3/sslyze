@@ -16,31 +16,39 @@ from sslyze.server_connectivity_tester import ServerConnectivityError
 class OutputHub:
     """Configure the SSLyze CLI's output and forward notification of events to all enabled output generators.
     """
+
     def __init__(self) -> None:
         self._output_generator_list: List[OutputGenerator] = []
 
     def command_line_parsed(
-            self,
-            available_plugins: Set[Type[Plugin]],
-            args_command_list: Any,
-            malformed_servers: List[ServerStringParsingError]
+        self,
+        available_plugins: Set[Type[Plugin]],
+        args_command_list: Any,
+        malformed_servers: List[ServerStringParsingError],
     ) -> None:
         # Configure the console output
-        should_print_text_results = not args_command_list.quiet and args_command_list.xml_file != '-' \
-            and args_command_list.json_file != '-'
+        should_print_text_results = (
+            not args_command_list.quiet and args_command_list.xml_file != "-" and args_command_list.json_file != "-"
+        )
         if should_print_text_results:
             self._output_generator_list.append(ConsoleOutputGenerator(sys.stdout))
 
         # Configure the JSON output
         if args_command_list.json_file:
-            json_file_to = sys.stdout if args_command_list.json_file == '-' else open(args_command_list.json_file, 'wt',
-                                                                                      encoding="utf-8")
+            json_file_to = (
+                sys.stdout
+                if args_command_list.json_file == "-"
+                else open(args_command_list.json_file, "wt", encoding="utf-8")
+            )
             self._output_generator_list.append(JsonOutputGenerator(json_file_to))  # type: ignore
 
         # Configure the XML output
         if args_command_list.xml_file:
-            xml_file_to = sys.stdout if args_command_list.xml_file == '-' else open(args_command_list.xml_file, 'wt',
-                                                                                    encoding="utf-8")
+            xml_file_to = (
+                sys.stdout
+                if args_command_list.xml_file == "-"
+                else open(args_command_list.xml_file, "wt", encoding="utf-8")
+            )
             self._output_generator_list.append(XmlOutputGenerator(xml_file_to))  # type: ignore
 
         # Forward the notification

@@ -21,9 +21,17 @@ class PluginsRepository:
     """
 
     _PLUGIN_CLASSES = [
-        OpenSslCipherSuitesPlugin, CertificateInfoPlugin, CompressionPlugin, FallbackScsvPlugin,
-        HeartbleedPlugin, HttpHeadersPlugin, OpenSslCcsInjectionPlugin, SessionRenegotiationPlugin,
-        SessionResumptionPlugin, RobotPlugin, EarlyDataPlugin
+        OpenSslCipherSuitesPlugin,
+        CertificateInfoPlugin,
+        CompressionPlugin,
+        FallbackScsvPlugin,
+        HeartbleedPlugin,
+        HttpHeadersPlugin,
+        OpenSslCcsInjectionPlugin,
+        SessionRenegotiationPlugin,
+        SessionResumptionPlugin,
+        RobotPlugin,
+        EarlyDataPlugin,
     ]
 
     def __init__(self, plugin_classes: List[Type[Plugin]] = _PLUGIN_CLASSES) -> None:
@@ -35,7 +43,7 @@ class PluginsRepository:
 
                 # Sanity check: no duplicate scan commands
                 if scan_command_class in scan_command_classes_to_plugin_classes.keys():
-                    raise KeyError('Found duplicate scan command: {}'.format(scan_command_class))
+                    raise KeyError("Found duplicate scan command: {}".format(scan_command_class))
 
                 scan_command_classes_to_plugin_classes[scan_command_class] = plugin_class
 

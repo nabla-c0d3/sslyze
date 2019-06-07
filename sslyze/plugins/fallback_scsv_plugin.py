@@ -14,11 +14,11 @@ class FallbackScsvScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'fallback'
+        return "fallback"
 
     @classmethod
     def get_title(cls) -> str:
-        return 'Downgrade Attacks'
+        return "Downgrade Attacks"
 
 
 class FallbackScsvPlugin(plugin_base.Plugin):
@@ -30,15 +30,13 @@ class FallbackScsvPlugin(plugin_base.Plugin):
         return [FallbackScsvScanCommand]
 
     def process_task(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: PluginScanCommand
-    ) -> 'FallbackScsvScanResult':
+        self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand
+    ) -> "FallbackScsvScanResult":
         if not isinstance(scan_command, FallbackScsvScanCommand):
-            raise ValueError('Unexpected scan command')
+            raise ValueError("Unexpected scan command")
 
         if server_info.highest_ssl_version_supported.value <= OpenSslVersionEnum.SSLV3.value:
-            raise ValueError('Server only supports SSLv3; no downgrade attacks are possible')
+            raise ValueError("Server only supports SSLv3; no downgrade attacks are possible")
 
         # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no downgrade possible with TLS 1.3
         if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
@@ -58,7 +56,7 @@ class FallbackScsvPlugin(plugin_base.Plugin):
 
         except _nassl.OpenSSLError as e:
             # This is the right, specific alert the server should return
-            if 'tlsv1 alert inappropriate fallback' in str(e.args):
+            if "tlsv1 alert inappropriate fallback" in str(e.args):
                 supports_fallback_scsv = True
             else:
                 raise
@@ -84,23 +82,20 @@ class FallbackScsvScanResult(PluginScanResult):
     """
 
     def __init__(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: FallbackScsvScanCommand,
-            supports_fallback_scsv: bool
+        self, server_info: ServerConnectivityInfo, scan_command: FallbackScsvScanCommand, supports_fallback_scsv: bool
     ) -> None:
         super().__init__(server_info, scan_command)
         self.supports_fallback_scsv = supports_fallback_scsv
 
     def as_text(self) -> List[str]:
         result_txt = [self._format_title(self.scan_command.get_title())]
-        downgrade_txt = 'OK - Supported' \
-            if self.supports_fallback_scsv \
-            else 'VULNERABLE - Signaling cipher suite not supported'
-        result_txt.append(self._format_field('TLS_FALLBACK_SCSV:', downgrade_txt))
+        downgrade_txt = (
+            "OK - Supported" if self.supports_fallback_scsv else "VULNERABLE - Signaling cipher suite not supported"
+        )
+        result_txt.append(self._format_field("TLS_FALLBACK_SCSV:", downgrade_txt))
         return result_txt
 
     def as_xml(self) -> Element:
         result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-        result_xml.append(Element('tlsFallbackScsv', attrib={'isSupported': str(self.supports_fallback_scsv)}))
+        result_xml.append(Element("tlsFallbackScsv", attrib={"isSupported": str(self.supports_fallback_scsv)}))
         return result_xml

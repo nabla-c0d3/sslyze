@@ -22,10 +22,10 @@ class OutputGenerator(ABC):
 
     @abstractmethod
     def command_line_parsed(
-            self,
-            available_plugins: Set[Type[Plugin]],
-            args_command_list: Any,
-            malformed_servers: List[ServerStringParsingError]
+        self,
+        available_plugins: Set[Type[Plugin]],
+        args_command_list: Any,
+        malformed_servers: List[ServerStringParsingError],
     ) -> None:
         """The CLI was just started and successfully parsed the command line.
         """

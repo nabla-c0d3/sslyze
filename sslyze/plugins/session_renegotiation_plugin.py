@@ -17,11 +17,11 @@ class SessionRenegotiationScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'reneg'
+        return "reneg"
 
     @classmethod
     def get_title(cls) -> str:
-        return 'Session Renegotiation'
+        return "Session Renegotiation"
 
 
 class SessionRenegotiationPlugin(plugin_base.Plugin):
@@ -33,12 +33,10 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
         return [SessionRenegotiationScanCommand]
 
     def process_task(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: PluginScanCommand
-    ) -> 'SessionRenegotiationScanResult':
+        self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand
+    ) -> "SessionRenegotiationScanResult":
         if not isinstance(scan_command, SessionRenegotiationScanCommand):
-            raise ValueError('Unexpected scan command')
+            raise ValueError("Unexpected scan command")
 
         # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
         if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
@@ -101,23 +99,23 @@ class SessionRenegotiationPlugin(plugin_base.Plugin):
                 # This is how Netty rejects a renegotiation - https://github.com/nabla-c0d3/sslyze/issues/114
                 accepts_client_renegotiation = False
             except socket.error as e:
-                if 'connection was forcibly closed' in str(e.args):
+                if "connection was forcibly closed" in str(e.args):
                     accepts_client_renegotiation = False
-                elif 'reset by peer' in str(e.args):
+                elif "reset by peer" in str(e.args):
                     accepts_client_renegotiation = False
-                elif 'Nassl SSL handshake failed' in str(e.args):
+                elif "Nassl SSL handshake failed" in str(e.args):
                     accepts_client_renegotiation = False
                 else:
                     raise
             except OpenSSLError as e:
-                if 'handshake failure' in str(e.args):
+                if "handshake failure" in str(e.args):
                     accepts_client_renegotiation = False
-                elif 'no renegotiation' in str(e.args):
+                elif "no renegotiation" in str(e.args):
                     accepts_client_renegotiation = False
-                elif 'tlsv1 unrecognized name' in str(e.args):
+                elif "tlsv1 unrecognized name" in str(e.args):
                     # Yahoo's very own way of rejecting a renegotiation
                     accepts_client_renegotiation = False
-                elif 'tlsv1 alert internal error' in str(e.args):
+                elif "tlsv1 alert internal error" in str(e.args):
                     # Jetty server: https://github.com/nabla-c0d3/sslyze/issues/290
                     accepts_client_renegotiation = False
                 else:
@@ -141,11 +139,11 @@ class SessionRenegotiationScanResult(PluginScanResult):
     """
 
     def __init__(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: SessionRenegotiationScanCommand,
-            accepts_client_renegotiation: bool,
-            supports_secure_renegotiation: bool
+        self,
+        server_info: ServerConnectivityInfo,
+        scan_command: SessionRenegotiationScanCommand,
+        accepts_client_renegotiation: bool,
+        supports_secure_renegotiation: bool,
     ) -> None:
         super().__init__(server_info, scan_command)
         self.accepts_client_renegotiation = accepts_client_renegotiation
@@ -155,22 +153,32 @@ class SessionRenegotiationScanResult(PluginScanResult):
         result_txt = [self._format_title(self.scan_command.get_title())]
 
         # Client-initiated reneg
-        client_reneg_txt = 'VULNERABLE - Server honors client-initiated renegotiations' \
-            if self.accepts_client_renegotiation \
-            else 'OK - Rejected'
-        result_txt.append(self._format_field('Client-initiated Renegotiation:', client_reneg_txt))
+        client_reneg_txt = (
+            "VULNERABLE - Server honors client-initiated renegotiations"
+            if self.accepts_client_renegotiation
+            else "OK - Rejected"
+        )
+        result_txt.append(self._format_field("Client-initiated Renegotiation:", client_reneg_txt))
 
         # Secure reneg
-        secure_txt = 'OK - Supported' \
-            if self.supports_secure_renegotiation \
-            else 'VULNERABLE - Secure renegotiation not supported'
-        result_txt.append(self._format_field('Secure Renegotiation:', secure_txt))
+        secure_txt = (
+            "OK - Supported"
+            if self.supports_secure_renegotiation
+            else "VULNERABLE - Secure renegotiation not supported"
+        )
+        result_txt.append(self._format_field("Secure Renegotiation:", secure_txt))
 
         return result_txt
 
     def as_xml(self) -> Element:
         result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-        result_xml.append(Element('sessionRenegotiation',
-                                  attrib={'canBeClientInitiated': str(self.accepts_client_renegotiation),
-                                          'isSecure': str(self.supports_secure_renegotiation)}))
+        result_xml.append(
+            Element(
+                "sessionRenegotiation",
+                attrib={
+                    "canBeClientInitiated": str(self.accepts_client_renegotiation),
+                    "isSecure": str(self.supports_secure_renegotiation),
+                },
+            )
+        )
         return result_xml

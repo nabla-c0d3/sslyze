@@ -19,22 +19,19 @@ class PluginRaisedExceptionScanResult(PluginScanResult):
     """
 
     def __init__(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: PluginScanCommand,
-            exception: Exception
+        self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand, exception: Exception
     ) -> None:
         super().__init__(server_info, scan_command)
         # Cannot keep the full exception as it may not be pickable (ie. _nassl.OpenSSLError)
-        self.error_message = '{} - {}'.format(str(exception.__class__.__name__), str(exception))
+        self.error_message = "{} - {}".format(str(exception.__class__.__name__), str(exception))
 
-    ERROR_TXT_FORMAT = 'Unhandled exception while running --{command}:'
+    ERROR_TXT_FORMAT = "Unhandled exception while running --{command}:"
 
     def as_text(self) -> List[str]:
         return [
             self._format_title(self.scan_command.get_title()),
             self.ERROR_TXT_FORMAT.format(command=self.scan_command.get_cli_argument()),
-            self.error_message
+            self.error_message,
         ]
 
     def as_xml(self) -> Element:
@@ -51,11 +48,11 @@ class ConcurrentScanner:
     _DEFAULT_PROCESSES_PER_HOSTNAME_NB = 3
 
     def __init__(
-            self,
-            network_retries: int = SynchronousScanner.DEFAULT_NETWORK_RETRIES,
-            network_timeout: int = SynchronousScanner.DEFAULT_NETWORK_TIMEOUT,
-            max_processes_nb: int = _DEFAULT_MAX_PROCESSES_NB,
-            max_processes_per_hostname_nb: int = _DEFAULT_PROCESSES_PER_HOSTNAME_NB
+        self,
+        network_retries: int = SynchronousScanner.DEFAULT_NETWORK_RETRIES,
+        network_timeout: int = SynchronousScanner.DEFAULT_NETWORK_TIMEOUT,
+        max_processes_nb: int = _DEFAULT_MAX_PROCESSES_NB,
+        max_processes_per_hostname_nb: int = _DEFAULT_PROCESSES_PER_HOSTNAME_NB,
     ) -> None:
         """Create a scanner for running scanning commands concurrently using a pool of processes.
 
@@ -109,8 +106,9 @@ class ConcurrentScanner:
                 hostname_queue: JoinableQueue = JoinableQueue()
                 self._hostname_queues_dict[hostname] = hostname_queue
 
-                process = WorkerProcess(hostname_queue, self._task_queue, self._result_queue, self._network_retries,
-                                        self._network_timeout)
+                process = WorkerProcess(
+                    hostname_queue, self._task_queue, self._result_queue, self._network_retries, self._network_timeout
+                )
                 process.start()
                 self._processes_dict[hostname] = [process]
             else:
@@ -121,11 +119,18 @@ class ConcurrentScanner:
 
         else:
             # We have seen this hostname before - create a new process if possible
-            if len(self._processes_dict[hostname]) < self._max_processes_per_hostname_nb \
-                    and self._get_current_processes_nb() < self._max_processes_nb:
+            if (
+                len(self._processes_dict[hostname]) < self._max_processes_per_hostname_nb
+                and self._get_current_processes_nb() < self._max_processes_nb
+            ):
                 # We can create a new process; no need to create a queue as it already exists
-                process = WorkerProcess(self._hostname_queues_dict[hostname], self._task_queue, self._result_queue,
-                                        self._network_retries, self._network_timeout)
+                process = WorkerProcess(
+                    self._hostname_queues_dict[hostname],
+                    self._task_queue,
+                    self._result_queue,
+                    self._network_retries,
+                    self._network_timeout,
+                )
                 process.start()
                 self._processes_dict[hostname].append(process)
 

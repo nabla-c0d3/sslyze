@@ -42,7 +42,7 @@ class TrustStore:
     def __getstate__(self) -> Dict[str, Any]:
         pickable_dict = self.__dict__.copy()
         # Remove non-pickable entries
-        pickable_dict['ev_oids'] = []
+        pickable_dict["ev_oids"] = []
         return pickable_dict
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
@@ -54,7 +54,7 @@ class TrustStore:
         """Is the supplied server certificate EV?
         """
         if not self.ev_oids:
-            raise ValueError('No EV OIDs supplied for {} store - cannot detect EV certificates'.format(self.name))
+            raise ValueError("No EV OIDs supplied for {} store - cannot detect EV certificates".format(self.name))
 
         try:
             cert_policies_ext = certificate.extensions.get_extension_for_oid(ExtensionOID.CERTIFICATE_POLICIES)

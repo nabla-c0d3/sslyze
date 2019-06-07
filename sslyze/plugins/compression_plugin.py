@@ -14,11 +14,11 @@ class CompressionScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'compression'
+        return "compression"
 
     @classmethod
     def get_title(cls) -> str:
-        return 'Deflate Compression'
+        return "Deflate Compression"
 
 
 class CompressionPlugin(plugin_base.Plugin):
@@ -30,12 +30,10 @@ class CompressionPlugin(plugin_base.Plugin):
         return [CompressionScanCommand]
 
     def process_task(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: PluginScanCommand
-    ) -> 'CompressionScanResult':
+        self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand
+    ) -> "CompressionScanResult":
         if not isinstance(scan_command, CompressionScanCommand):
-            raise ValueError('Unexpected scan command')
+            raise ValueError("Unexpected scan command")
 
         # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no compression with TLS 1.3
         if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
@@ -48,9 +46,9 @@ class CompressionPlugin(plugin_base.Plugin):
         )
 
         # Make sure OpenSSL was built with support for compression to avoid false negatives
-        if 'zlib compression' not in ssl_connection.ssl_client.get_available_compression_methods():
+        if "zlib compression" not in ssl_connection.ssl_client.get_available_compression_methods():
             raise RuntimeError(
-                'OpenSSL was not built with support for zlib / compression. Did you build nassl yourself ?'
+                "OpenSSL was not built with support for zlib / compression. Did you build nassl yourself ?"
             )
 
         try:
@@ -62,7 +60,7 @@ class CompressionPlugin(plugin_base.Plugin):
             compression_name = ssl_connection.ssl_client.get_current_compression_method()
         except SslHandshakeRejected:
             # Should only happen when the server only supports TLS 1.3, which does not support compression
-            compression_name = ''
+            compression_name = ""
         finally:
             ssl_connection.close()
 
@@ -78,10 +76,7 @@ class CompressionScanResult(PluginScanResult):
     """
 
     def __init__(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: CompressionScanCommand,
-            compression_name: str
+        self, server_info: ServerConnectivityInfo, scan_command: CompressionScanCommand, compression_name: str
     ) -> None:
         super().__init__(server_info, scan_command)
         self.compression_name = compression_name
@@ -89,15 +84,15 @@ class CompressionScanResult(PluginScanResult):
     def as_text(self) -> List[str]:
         txt_result = [self._format_title(self.scan_command.get_title())]
         if self.compression_name:
-            txt_result.append(self._format_field('', 'VULNERABLE - Server supports Deflate compression'))
+            txt_result.append(self._format_field("", "VULNERABLE - Server supports Deflate compression"))
         else:
-            txt_result.append(self._format_field('', 'OK - Compression disabled'))
+            txt_result.append(self._format_field("", "OK - Compression disabled"))
         return txt_result
 
     def as_xml(self) -> Element:
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
         if self.compression_name:
-            xml_result.append(Element('compressionMethod', type="DEFLATE", isSupported="True"))
+            xml_result.append(Element("compressionMethod", type="DEFLATE", isSupported="True"))
         else:
-            xml_result.append(Element('compressionMethod', type="DEFLATE", isSupported="False"))
+            xml_result.append(Element("compressionMethod", type="DEFLATE", isSupported="False"))
         return xml_result

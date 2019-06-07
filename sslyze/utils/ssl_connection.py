@@ -15,6 +15,7 @@ from sslyze.utils.tls_wrapped_protocol_helpers import TlsWrappedProtocolHelper
 class SslHandshakeRejected(IOError):
     """The server explicitly rejected the SSL handshake.
     """
+
     pass
 
 
@@ -27,36 +28,33 @@ class SslConnection:
     # The following errors mean that the server explicitly rejected the handshake. The goal to differentiate rejected
     # handshakes from random network errors such as the server going offline, etc.
     HANDSHAKE_REJECTED_SOCKET_ERRORS = {
-        'Nassl SSL handshake failed': 'Unexpected EOF',
-        'was forcibly closed': 'Received FIN',
-        'reset by peer': 'Received RST'
+        "Nassl SSL handshake failed": "Unexpected EOF",
+        "was forcibly closed": "Received FIN",
+        "reset by peer": "Received RST",
     }
 
     HANDSHAKE_REJECTED_SSL_ERRORS = {
-        'excessive message size': 'Excessive message size',
-        'bad mac decode': 'Bad mac decode',
-        'wrong version number': 'Wrong version number',
-        'no cipher match': 'No cipher match',
-        'bad decompression': 'Bad decompression',
-        'peer error no cipher': 'Peer error no cipher',
-        'no cipher list': 'No ciphers list',
-        'insufficient security': 'Insufficient security',
-        'block type is not 01': 'block type is not 01',  # Actually an RSA error
-        'wrong ssl version': 'Wrong SSL version',
-        'sslv3 alert handshake failure': 'Alert: handshake failure',
-        'tlsv1 alert protocol version': 'Alert: protocol version ',
-        'tlsv1 alert decrypt error': 'Alert: Decrypt error',
-        'tlsv1 alert decode error': 'Alert: Decode error',
-
+        "excessive message size": "Excessive message size",
+        "bad mac decode": "Bad mac decode",
+        "wrong version number": "Wrong version number",
+        "no cipher match": "No cipher match",
+        "bad decompression": "Bad decompression",
+        "peer error no cipher": "Peer error no cipher",
+        "no cipher list": "No ciphers list",
+        "insufficient security": "Insufficient security",
+        "block type is not 01": "block type is not 01",  # Actually an RSA error
+        "wrong ssl version": "Wrong SSL version",
+        "sslv3 alert handshake failure": "Alert: handshake failure",
+        "tlsv1 alert protocol version": "Alert: protocol version ",
+        "tlsv1 alert decrypt error": "Alert: Decrypt error",
+        "tlsv1 alert decode error": "Alert: Decode error",
         # The following issues have nothing to do with the server or the connection
         # They are client-side (SSLyze) issues
-
         # This one is returned by OpenSSL when a cipher set via set_cipher_list() is not
         # actually supported
-        'no ciphers available': 'No ciphers available',
-
+        "no ciphers available": "No ciphers available",
         # This one is when OpenSSL rejects DH parameters (to protect against Logjam)
-        'dh key too small': 'DH Key too small',
+        "dh key too small": "DH Key too small",
     }
 
     # Default socket settings global to all SSLyze connections; can be overridden
@@ -70,10 +68,7 @@ class SslConnection:
         cls.NETWORK_TIMEOUT = network_timeout
 
     def __init__(
-            self,
-            socket_helper: ConnectionHelper,
-            start_tls_helper: TlsWrappedProtocolHelper,
-            ssl_client: SslClient,
+        self, socket_helper: ConnectionHelper, start_tls_helper: TlsWrappedProtocolHelper, ssl_client: SslClient
     ) -> None:
         self._socket_helper = socket_helper
         self._start_tls_helper = start_tls_helper
@@ -129,14 +124,14 @@ class SslConnection:
         except socket.error as e:
             for error_msg in self.HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                 if error_msg in str(e.args):
-                    raise SslHandshakeRejected('TCP / ' + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
+                    raise SslHandshakeRejected("TCP / " + self.HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
 
             # Unknown socket error
             raise
         except _nassl.OpenSSLError as e:
             for error_msg in self.HANDSHAKE_REJECTED_SSL_ERRORS.keys():
                 if error_msg in str(e.args):
-                    raise SslHandshakeRejected('TLS / ' + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
+                    raise SslHandshakeRejected("TLS / " + self.HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
             raise  # Unknown SSL error if we get there
 
     def close(self) -> None:

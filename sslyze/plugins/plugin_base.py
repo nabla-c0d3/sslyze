@@ -31,7 +31,7 @@ class PluginScanCommand(ABC):
         """The description is expected to be the command class' docstring.
         """
         if cls.__doc__ is None:
-            raise ValueError('No docstring found for {}'.format(cls.__name__))
+            raise ValueError("No docstring found for {}".format(cls.__name__))
         return cls.__doc__.strip()
 
     @classmethod
@@ -68,7 +68,7 @@ class Plugin(ABC):
     @classmethod
     def get_description(cls) -> str:
         if cls.__doc__ is None:
-            raise ValueError('No docstring found for {}'.format(cls.__name__))
+            raise ValueError("No docstring found for {}".format(cls.__name__))
         return cls.__doc__.strip()
 
     @classmethod
@@ -81,12 +81,17 @@ class Plugin(ABC):
         # TODO(ad): Refactor this to do more, after switching away from optparse
         options = []
         for scan_command_class in cls.get_available_commands():
-            options.append(optparse.make_option('--' + scan_command_class.get_cli_argument(), action='store_true',
-                                                help=scan_command_class.get_description()))
+            options.append(
+                optparse.make_option(
+                    "--" + scan_command_class.get_cli_argument(),
+                    action="store_true",
+                    help=scan_command_class.get_description(),
+                )
+            )
         return options
 
     @abstractmethod
-    def process_task(self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand) -> 'PluginScanResult':
+    def process_task(self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand) -> "PluginScanResult":
         """Should run the supplied scan command on the server and return the result.
 
         Args:
@@ -126,12 +131,12 @@ class PluginScanResult(ABC):
     # Common formatting methods to have a consistent console output
     @staticmethod
     def _format_title(title: str) -> str:
-        return ' * {0}:'.format(title)
+        return " * {0}:".format(title)
 
     @staticmethod
     def _format_subtitle(subtitle: str) -> str:
-        return '     {0}'.format(subtitle)
+        return "     {0}".format(subtitle)
 
     @staticmethod
     def _format_field(title: str, value: str) -> str:
-        return '       {0:<35}{1}'.format(title, value)
+        return "       {0:<35}{1}".format(title, value)

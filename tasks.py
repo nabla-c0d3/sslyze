@@ -15,6 +15,7 @@ def test(ctx):
     # Run linters
     ctx.run('flake8 .')
     ctx.run('mypy sslyze')
+    ctx.run('black -l 120 sslyze --check')
 
 
 @task

@@ -6,8 +6,12 @@ from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.utils.connection_helpers import ProxyError
 from sslyze.utils.ssl_connection_configurator import SslConnectionConfigurator
-from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
-    ClientAuthenticationServerConfigurationEnum
+from sslyze.ssl_settings import (
+    TlsWrappedProtocolEnum,
+    ClientAuthenticationCredentials,
+    HttpConnectTunnelingSettings,
+    ClientAuthenticationServerConfigurationEnum,
+)
 from sslyze.utils.ssl_connection import SslHandshakeRejected
 from sslyze.utils.thread_pool import ThreadPool
 from sslyze.utils.tls_wrapped_protocol_helpers import StartTlsError
@@ -22,7 +26,7 @@ class ServerConnectivityError(Exception):
         error_message: The error that was returned.
     """
 
-    def __init__(self, server_info: 'ServerConnectivityTester', error_message: str) -> None:
+    def __init__(self, server_info: "ServerConnectivityTester", error_message: str) -> None:
         self.server_info = server_info
         self.error_message = error_message
 
@@ -37,21 +41,18 @@ class ServerConnectivityError(Exception):
 
 
 class ServerRejectedConnection(ServerConnectivityError):
-
-    def __init__(self, server_info: 'ServerConnectivityTester') -> None:
-        super().__init__(server_info, 'Connection rejected')
+    def __init__(self, server_info: "ServerConnectivityTester") -> None:
+        super().__init__(server_info, "Connection rejected")
 
 
 class ConnectionToServerTimedOut(ServerConnectivityError):
-
-    def __init__(self, server_info: 'ServerConnectivityTester') -> None:
-        super().__init__(server_info, 'Could not connect (timeout)')
+    def __init__(self, server_info: "ServerConnectivityTester") -> None:
+        super().__init__(server_info, "Could not connect (timeout)")
 
 
 class ServerHostnameCouldNotBeResolved(ServerConnectivityError):
-
-    def __init__(self, server_info: 'ServerConnectivityTester') -> None:
-        super().__init__(server_info, 'Could not resolve hostname')
+    def __init__(self, server_info: "ServerConnectivityTester") -> None:
+        super().__init__(server_info, "Could not resolve hostname")
 
 
 class ServerTlsConfigurationNotSuportedError(ServerConnectivityError):
@@ -79,27 +80,24 @@ class ServerConnectivityTester:
         TlsWrappedProtocolEnum.STARTTLS_LDAP: 389,
         TlsWrappedProtocolEnum.STARTTLS_IMAP: 143,
         TlsWrappedProtocolEnum.STARTTLS_RDP: 3389,
-        TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 5432
+        TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 5432,
     }
 
     def __str__(self) -> str:
-        return '<{class_name}: server=({hostname}, {ip_addr}, {port})>'.format(
-            class_name=self.__class__.__name__,
-            hostname=self.hostname,
-            ip_addr=self.ip_address,
-            port=self.port,
+        return "<{class_name}: server=({hostname}, {ip_addr}, {port})>".format(
+            class_name=self.__class__.__name__, hostname=self.hostname, ip_addr=self.ip_address, port=self.port
         )
 
     def __init__(
-            self,
-            hostname: str,
-            port: Optional[int] = None,
-            ip_address: Optional[str] = None,
-            tls_wrapped_protocol: TlsWrappedProtocolEnum = TlsWrappedProtocolEnum.PLAIN_TLS,
-            tls_server_name_indication: Optional[str] = None,
-            xmpp_to_hostname: Optional[str] = None,
-            client_auth_credentials: Optional[ClientAuthenticationCredentials] = None,
-            http_tunneling_settings: Optional[HttpConnectTunnelingSettings] = None,
+        self,
+        hostname: str,
+        port: Optional[int] = None,
+        ip_address: Optional[str] = None,
+        tls_wrapped_protocol: TlsWrappedProtocolEnum = TlsWrappedProtocolEnum.PLAIN_TLS,
+        tls_server_name_indication: Optional[str] = None,
+        xmpp_to_hostname: Optional[str] = None,
+        client_auth_credentials: Optional[ClientAuthenticationCredentials] = None,
+        http_tunneling_settings: Optional[HttpConnectTunnelingSettings] = None,
     ) -> None:
         """Constructor to specify how to connect to a given SSL/TLS server to be scanned.
 
@@ -136,21 +134,23 @@ class ServerConnectivityTester:
             ValueError: If both `ip_address` and `http_tunneling_settings` were supplied.
         """
         # Store the hostname in ACE format in the case the domain name is unicode
-        self.hostname = hostname.encode('idna').decode('utf-8')
+        self.hostname = hostname.encode("idna").decode("utf-8")
         self.tls_wrapped_protocol = tls_wrapped_protocol
         self.port = port if port else self.TLS_DEFAULT_PORTS[tls_wrapped_protocol]
 
         if ip_address and http_tunneling_settings:
-            raise ValueError('Cannot specify both ip_address and http_tunneling_settings.')
+            raise ValueError("Cannot specify both ip_address and http_tunneling_settings.")
         self.ip_address = ip_address
 
         # Use the hostname as the default SNI
         self.tls_server_name_indication = tls_server_name_indication if tls_server_name_indication else self.hostname
 
         self.xmpp_to_hostname = xmpp_to_hostname
-        if self.xmpp_to_hostname and self.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.STARTTLS_XMPP,
-                                                                       TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER]:
-            raise ValueError('Can only specify xmpp_to for the XMPP StartTLS protocol.')
+        if self.xmpp_to_hostname and self.tls_wrapped_protocol not in [
+            TlsWrappedProtocolEnum.STARTTLS_XMPP,
+            TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
+        ]:
+            raise ValueError("Can only specify xmpp_to for the XMPP StartTLS protocol.")
 
         self.client_auth_credentials = client_auth_credentials
         self.http_tunneling_settings = http_tunneling_settings
@@ -196,9 +196,7 @@ class ServerConnectivityTester:
         # Then try to connect
         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.DISABLED
         ssl_connection = SslConnectionConfigurator.get_connection(
-            ssl_version=OpenSslVersionEnum.SSLV23,
-            server_info=self,
-            should_ignore_client_auth=True,
+            ssl_version=OpenSslVersionEnum.SSLV23, server_info=self, should_ignore_client_auth=True
         )
 
         # First only try a socket connection
@@ -221,7 +219,7 @@ class ServerConnectivityTester:
 
         # Other errors
         except Exception as e:
-            raise ServerConnectivityError(self, '{0}: {1}'.format(str(type(e).__name__), e.args[0]))
+            raise ServerConnectivityError(self, "{0}: {1}".format(str(type(e).__name__), e.args[0]))
 
         finally:
             ssl_connection.close()
@@ -237,10 +235,10 @@ class ServerConnectivityTester:
             OpenSslVersionEnum.TLSV1_1,
             OpenSslVersionEnum.TLSV1,
             OpenSslVersionEnum.SSLV3,
-            OpenSslVersionEnum.SSLV23
+            OpenSslVersionEnum.SSLV23,
         ]:
             # First try the default cipher list, and then all ciphers
-            for cipher_list in [SslConnectionConfigurator.DEFAULT_SSL_CIPHER_LIST, 'ALL:COMPLEMENTOFALL:-PSK:-SRP']:
+            for cipher_list in [SslConnectionConfigurator.DEFAULT_SSL_CIPHER_LIST, "ALL:COMPLEMENTOFALL:-PSK:-SRP"]:
                 ssl_connection = SslConnectionConfigurator.get_connection(
                     ssl_version=ssl_version,
                     server_info=self,
@@ -296,7 +294,7 @@ class ServerConnectivityTester:
 
         if ssl_version_supported is None or ssl_cipher_supported is None:
             raise ServerTlsConfigurationNotSuportedError(
-                self, 'Could not complete an SSL/TLS handshake with the server'
+                self, "Could not complete an SSL/TLS handshake with the server"
             )
 
         return ServerConnectivityInfo(
@@ -310,7 +308,7 @@ class ServerConnectivityTester:
             client_auth_requirement=client_auth_requirement,
             xmpp_to_hostname=self.xmpp_to_hostname,
             client_auth_credentials=self.client_auth_credentials,
-            http_tunneling_settings=self.http_tunneling_settings
+            http_tunneling_settings=self.http_tunneling_settings,
         )
 
 
@@ -326,9 +324,7 @@ class ConcurrentServerConnectivityTester:
         self._server_connectivity_testers = server_connectivity_testers
 
     def start_connectivity_testing(
-            self,
-            max_threads: int = _DEFAULT_MAX_THREADS,
-            network_timeout: Optional[int] = None
+        self, max_threads: int = _DEFAULT_MAX_THREADS, network_timeout: Optional[int] = None
     ) -> None:
         for server_tester in self._server_connectivity_testers:
             self._thread_pool.add_job((server_tester.perform, [network_timeout]))

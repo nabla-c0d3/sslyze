@@ -3,10 +3,8 @@ from typing import List
 
 import cryptography
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
-from cryptography.hazmat.primitives.serialization import Encoding, \
-    PublicFormat
-from cryptography.x509 import DNSName, ExtensionNotFound, ExtensionOID, \
-    NameOID
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from cryptography.x509 import DNSName, ExtensionNotFound, ExtensionOID, NameOID
 
 from base64 import b64encode
 from hashlib import sha256
@@ -41,8 +39,8 @@ class CertificateUtils:
         """
         # Extract the names from the certificate to create the properly-formatted dictionary
         certificate_names = {
-            'subject': (tuple([('commonName', name) for name in cls.get_common_names(certificate.subject)]),),
-            'subjectAltName': tuple([('DNS', name) for name in cls.get_dns_subject_alternative_names(certificate)]),
+            "subject": (tuple([("commonName", name) for name in cls.get_common_names(certificate.subject)]),),
+            "subjectAltName": tuple([("DNS", name) for name in cls.get_dns_subject_alternative_names(certificate)]),
         }
         # CertificateError is raised on failure
         ssl.match_hostname(certificate_names, hostname)  # type: ignore
@@ -62,13 +60,12 @@ class CertificateUtils:
 
     @classmethod
     def get_name_as_text(cls, name_field: cryptography.x509.Name) -> str:
-        return ', '.join(['{}={}'.format(attr.oid._name, attr.value) for attr in name_field])
+        return ", ".join(["{}={}".format(attr.oid._name, attr.value) for attr in name_field])
 
     @staticmethod
     def get_public_key_sha256(certificate: cryptography.x509.Certificate) -> bytes:
         pub_bytes = certificate.public_key().public_bytes(
-            encoding=Encoding.DER,
-            format=PublicFormat.SubjectPublicKeyInfo
+            encoding=Encoding.DER, format=PublicFormat.SubjectPublicKeyInfo
         )
         digest = sha256(pub_bytes).digest()
         return digest
@@ -77,16 +74,16 @@ class CertificateUtils:
     def get_hpkp_pin(cls, certificate: cryptography.x509.Certificate) -> str:
         """Generate the HTTP Public Key Pinning hash (RFC 7469) for the given certificate.
         """
-        return b64encode(cls.get_public_key_sha256(certificate)).decode('utf-8')
+        return b64encode(cls.get_public_key_sha256(certificate)).decode("utf-8")
 
     @staticmethod
     def get_public_key_type(certificate: cryptography.x509.Certificate) -> str:
         public_key = certificate.public_key()
         if isinstance(public_key, rsa.RSAPublicKey):
-            return 'RSA'
+            return "RSA"
         elif isinstance(public_key, dsa.DSAPublicKey):
-            return 'DSA'
+            return "DSA"
         elif isinstance(public_key, ec.EllipticCurvePublicKey):
-            return 'EllipticCurve'
+            return "EllipticCurve"
         else:
-            raise ValueError('Unexpected key algorithm')
+            raise ValueError("Unexpected key algorithm")

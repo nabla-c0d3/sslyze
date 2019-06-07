@@ -27,7 +27,7 @@ class HttpResponseParser:
         """Trick to standardize the API between sockets and SSLConnection objects.
         """
         response = read_method(4096)
-        while b'HTTP/' not in response or b'\r\n\r\n' not in response:
+        while b"HTTP/" not in response or b"\r\n\r\n" not in response:
             # Parse until the end of the headers
             response += read_method(4096)
 

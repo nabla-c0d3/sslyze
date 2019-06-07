@@ -17,11 +17,11 @@ class EarlyDataScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'early_data'
+        return "early_data"
 
     @classmethod
     def get_title(cls) -> str:
-        return 'TLS 1.3 Early Data'
+        return "TLS 1.3 Early Data"
 
 
 class EarlyDataPlugin(plugin_base.Plugin):
@@ -35,12 +35,10 @@ class EarlyDataPlugin(plugin_base.Plugin):
         return [EarlyDataScanCommand]
 
     def process_task(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: PluginScanCommand
-    ) -> 'EarlyDataScanResult':
+        self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand
+    ) -> "EarlyDataScanResult":
         if not isinstance(scan_command, EarlyDataScanCommand):
-            raise ValueError('Unexpected scan command')
+            raise ValueError("Unexpected scan command")
 
         session = None
         is_early_data_supported = False
@@ -70,7 +68,7 @@ class EarlyDataPlugin(plugin_base.Plugin):
                 ssl_connection2.do_pre_handshake(None)
 
                 # Send one byte of early data
-                ssl_connection2.ssl_client.write_early_data(b'E')
+                ssl_connection2.ssl_client.write_early_data(b"E")
                 ssl_connection2.ssl_client.do_handshake()
                 if ssl_connection2.ssl_client.get_early_data_status() == OpenSslEarlyDataStatusEnum.ACCEPTED:
                     is_early_data_supported = True
@@ -78,7 +76,7 @@ class EarlyDataPlugin(plugin_base.Plugin):
                     is_early_data_supported = False
 
             except OpenSSLError as e:
-                if 'function you should not call' in e.args[0]:
+                if "function you should not call" in e.args[0]:
                     # This is what OpenSSL returns when the server did not enable early data
                     is_early_data_supported = False
                 else:
@@ -98,10 +96,7 @@ class EarlyDataScanResult(PluginScanResult):
     """
 
     def __init__(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: EarlyDataScanCommand,
-            is_early_data_supported: bool,
+        self, server_info: ServerConnectivityInfo, scan_command: EarlyDataScanCommand, is_early_data_supported: bool
     ) -> None:
         super().__init__(server_info, scan_command)
         self.is_early_data_supported = is_early_data_supported
@@ -109,12 +104,12 @@ class EarlyDataScanResult(PluginScanResult):
     def as_text(self) -> List[str]:
         txt_result = [self._format_title(self.scan_command.get_title())]
         if self.is_early_data_supported:
-            txt_result.append(self._format_field('', 'Suppported - Server accepted early data'))
+            txt_result.append(self._format_field("", "Suppported - Server accepted early data"))
         else:
-            txt_result.append(self._format_field('', 'Not Supported'))
+            txt_result.append(self._format_field("", "Not Supported"))
         return txt_result
 
     def as_xml(self) -> Element:
         xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-        xml_result.append(Element('earlyData', isSupported=str(self.is_early_data_supported)))
+        xml_result.append(Element("earlyData", isSupported=str(self.is_early_data_supported)))
         return xml_result

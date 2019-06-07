@@ -24,11 +24,11 @@ class OpenSslCcsInjectionScanCommand(plugin_base.PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'openssl_ccs'
+        return "openssl_ccs"
 
     @classmethod
     def get_title(cls) -> str:
-        return 'OpenSSL CCS Injection'
+        return "OpenSSL CCS Injection"
 
 
 class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
@@ -40,12 +40,10 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         return [OpenSslCcsInjectionScanCommand]
 
     def process_task(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: plugin_base.PluginScanCommand
-    ) -> 'OpenSslCcsInjectionScanResult':
+        self, server_info: ServerConnectivityInfo, scan_command: plugin_base.PluginScanCommand
+    ) -> "OpenSslCcsInjectionScanResult":
         if not isinstance(scan_command, OpenSslCcsInjectionScanCommand):
-            raise ValueError('Unexpected scan command')
+            raise ValueError("Unexpected scan command")
 
         if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
             # The server uses a recent version of OpenSSL and it cannot be vulnerable to CCS Injection
@@ -54,8 +52,9 @@ class OpenSslCcsInjectionPlugin(plugin_base.Plugin):
         ssl_connection = server_info.get_preconfigured_ssl_connection()
         # Replace nassl.sslClient.do_handshake() with a CCS checking SSL handshake so that all the SSLyze options
         # (startTLS, proxy, etc.) still work
-        ssl_connection.ssl_client.do_handshake = types.MethodType(do_handshake_with_ccs_injection,
-                                                                  ssl_connection.ssl_client)
+        ssl_connection.ssl_client.do_handshake = types.MethodType(
+            do_handshake_with_ccs_injection, ssl_connection.ssl_client
+        )
 
         is_vulnerable = False
         try:
@@ -103,7 +102,7 @@ def do_handshake_with_ccs_injection(self):  # type: ignore
     # Retrieve data until we get to the ServerHelloDone
     # The server may send back a ServerHello, an Alert or a CertificateRequest first
     did_receive_hello_done = False
-    remaining_bytes = b''
+    remaining_bytes = b""
     while not did_receive_hello_done:
         try:
             tls_record, len_consumed = TlsRecordParser.parse_bytes(remaining_bytes)
@@ -129,17 +128,19 @@ def do_handshake_with_ccs_injection(self):  # type: ignore
             # Server returned a TLS alert
             break
         else:
-            raise ValueError('Unknown record? Type {}'.format(tls_record.header.type))
+            raise ValueError("Unknown record? Type {}".format(tls_record.header.type))
 
     if did_receive_hello_done:
         # Send an early CCS record - this should be rejected by the server
         payload = TlsChangeCipherSpecRecord.from_parameters(
-            tls_version=TlsVersionEnum[self._ssl_version.name]).to_bytes()
+            tls_version=TlsVersionEnum[self._ssl_version.name]
+        ).to_bytes()
         self._sock.send(payload)
 
         # Send an early application data record which should be ignored by the server
-        app_data_record = TlsApplicationDataRecord.from_parameters(tls_version=TlsVersionEnum[self._ssl_version.name],
-                                                                   application_data=b'\x00\x00')
+        app_data_record = TlsApplicationDataRecord.from_parameters(
+            tls_version=TlsVersionEnum[self._ssl_version.name], application_data=b"\x00\x00"
+        )
         self._sock.send(app_data_record.to_bytes())
 
         # Check if an alert was sent back
@@ -184,25 +185,28 @@ class OpenSslCcsInjectionScanResult(PluginScanResult):
     """
 
     def __init__(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: OpenSslCcsInjectionScanCommand,
-            is_vulnerable_to_ccs_injection: bool
+        self,
+        server_info: ServerConnectivityInfo,
+        scan_command: OpenSslCcsInjectionScanCommand,
+        is_vulnerable_to_ccs_injection: bool,
     ) -> None:
         super().__init__(server_info, scan_command)
         self.is_vulnerable_to_ccs_injection = is_vulnerable_to_ccs_injection
 
     def as_xml(self) -> Element:
         result_xml = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-        result_xml.append(Element('openSslCcsInjection',
-                                  attrib={'isVulnerable': str(self.is_vulnerable_to_ccs_injection)}))
+        result_xml.append(
+            Element("openSslCcsInjection", attrib={"isVulnerable": str(self.is_vulnerable_to_ccs_injection)})
+        )
         return result_xml
 
     def as_text(self) -> List[str]:
         result_txt = [self._format_title(self.scan_command.get_title())]
 
-        ccs_text = 'VULNERABLE - Server is vulnerable to OpenSSL CCS injection' \
-            if self.is_vulnerable_to_ccs_injection \
-            else 'OK - Not vulnerable to OpenSSL CCS injection'
-        result_txt.append(self._format_field('', ccs_text))
+        ccs_text = (
+            "VULNERABLE - Server is vulnerable to OpenSSL CCS injection"
+            if self.is_vulnerable_to_ccs_injection
+            else "OK - Not vulnerable to OpenSSL CCS injection"
+        )
+        result_txt.append(self._format_field("", ccs_text))
         return result_txt

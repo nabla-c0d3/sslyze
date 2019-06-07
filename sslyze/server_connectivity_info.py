@@ -3,8 +3,12 @@ from typing import Optional
 
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials, HttpConnectTunnelingSettings, \
-    ClientAuthenticationServerConfigurationEnum
+from sslyze.ssl_settings import (
+    TlsWrappedProtocolEnum,
+    ClientAuthenticationCredentials,
+    HttpConnectTunnelingSettings,
+    ClientAuthenticationServerConfigurationEnum,
+)
 from sslyze.utils.ssl_connection import SslConnection
 from sslyze.utils.ssl_connection_configurator import SslConnectionConfigurator
 
@@ -41,18 +45,18 @@ class ServerConnectivityInfo:
     """
 
     def __init__(
-            self,
-            hostname: str,
-            port: int,
-            ip_address: Optional[str],
-            tls_wrapped_protocol: TlsWrappedProtocolEnum,
-            tls_server_name_indication: str,
-            xmpp_to_hostname: Optional[str],
-            client_auth_credentials: Optional[ClientAuthenticationCredentials],
-            http_tunneling_settings: Optional[HttpConnectTunnelingSettings],
-            highest_ssl_version_supported: OpenSslVersionEnum,
-            openssl_cipher_string_supported: str,
-            client_auth_requirement: ClientAuthenticationServerConfigurationEnum,
+        self,
+        hostname: str,
+        port: int,
+        ip_address: Optional[str],
+        tls_wrapped_protocol: TlsWrappedProtocolEnum,
+        tls_server_name_indication: str,
+        xmpp_to_hostname: Optional[str],
+        client_auth_credentials: Optional[ClientAuthenticationCredentials],
+        http_tunneling_settings: Optional[HttpConnectTunnelingSettings],
+        highest_ssl_version_supported: OpenSslVersionEnum,
+        openssl_cipher_string_supported: str,
+        client_auth_requirement: ClientAuthenticationServerConfigurationEnum,
     ) -> None:
         self.hostname = hostname
         self.port = port
@@ -69,10 +73,10 @@ class ServerConnectivityInfo:
         self.client_auth_requirement = client_auth_requirement
 
     def get_preconfigured_ssl_connection(
-            self,
-            override_ssl_version: Optional[OpenSslVersionEnum] = None,
-            ssl_verify_locations: Optional[Path] = None,
-            should_use_legacy_openssl: Optional[bool] = None,
+        self,
+        override_ssl_version: Optional[OpenSslVersionEnum] = None,
+        ssl_verify_locations: Optional[Path] = None,
+        should_use_legacy_openssl: Optional[bool] = None,
     ) -> SslConnection:
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
 
@@ -115,9 +119,6 @@ class ServerConnectivityInfo:
         return ssl_connection
 
     def __str__(self) -> str:
-        return '<{class_name}: server=({hostname}, {ip_addr}, {port})>'.format(
-            class_name=self.__class__.__name__,
-            hostname=self.hostname,
-            ip_addr=self.ip_address,
-            port=self.port,
+        return "<{class_name}: server=({hostname}, {ip_addr}, {port})>".format(
+            class_name=self.__class__.__name__, hostname=self.hostname, ip_addr=self.ip_address, port=self.port
         )

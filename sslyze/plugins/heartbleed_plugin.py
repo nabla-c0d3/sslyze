@@ -23,11 +23,11 @@ class HeartbleedScanCommand(PluginScanCommand):
 
     @classmethod
     def get_cli_argument(cls) -> str:
-        return 'heartbleed'
+        return "heartbleed"
 
     @classmethod
     def get_title(cls) -> str:
-        return 'OpenSSL Heartbleed'
+        return "OpenSSL Heartbleed"
 
 
 class HeartbleedPlugin(plugin_base.Plugin):
@@ -39,12 +39,10 @@ class HeartbleedPlugin(plugin_base.Plugin):
         return [HeartbleedScanCommand]
 
     def process_task(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: PluginScanCommand
-    ) -> 'HeartbleedScanResult':
+        self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand
+    ) -> "HeartbleedScanResult":
         if not isinstance(scan_command, HeartbleedScanCommand):
-            raise ValueError('Unexpected scan command')
+            raise ValueError("Unexpected scan command")
 
         if server_info.highest_ssl_version_supported >= OpenSslVersionEnum.TLSV1_3:
             # The server uses a recent version of OpenSSL and it cannot be vulnerable to Heartbleed
@@ -81,24 +79,26 @@ class HeartbleedScanResult(PluginScanResult):
     """
 
     def __init__(
-            self,
-            server_info: ServerConnectivityInfo,
-            scan_command: HeartbleedScanCommand,
-            is_vulnerable_to_heartbleed: bool
+        self,
+        server_info: ServerConnectivityInfo,
+        scan_command: HeartbleedScanCommand,
+        is_vulnerable_to_heartbleed: bool,
     ) -> None:
         super().__init__(server_info, scan_command)
         self.is_vulnerable_to_heartbleed = is_vulnerable_to_heartbleed
 
     def as_text(self) -> List[str]:
-        heartbleed_txt = 'VULNERABLE - Server is vulnerable to Heartbleed' \
-            if self.is_vulnerable_to_heartbleed \
-            else 'OK - Not vulnerable to Heartbleed'
+        heartbleed_txt = (
+            "VULNERABLE - Server is vulnerable to Heartbleed"
+            if self.is_vulnerable_to_heartbleed
+            else "OK - Not vulnerable to Heartbleed"
+        )
 
-        return [self._format_title(self.scan_command.get_title()), self._format_field('', heartbleed_txt)]
+        return [self._format_title(self.scan_command.get_title()), self._format_field("", heartbleed_txt)]
 
     def as_xml(self) -> Element:
         xml_output = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-        xml_output.append(Element('openSslHeartbleed', isVulnerable=str(self.is_vulnerable_to_heartbleed)))
+        xml_output.append(Element("openSslHeartbleed", isVulnerable=str(self.is_vulnerable_to_heartbleed)))
         return xml_output
 
 
@@ -131,13 +131,11 @@ def do_handshake_with_heartbleed(self):  # type: ignore
     # Build the heartbleed payload - based on
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
     payload = TlsHeartbeatRequestRecord.from_parameters(
-        tls_version=TlsVersionEnum[self._ssl_version.name],
-        heartbeat_data=b'\x01' * 16381
+        tls_version=TlsVersionEnum[self._ssl_version.name], heartbeat_data=b"\x01" * 16381
     ).to_bytes()
 
     payload += TlsHeartbeatRequestRecord.from_parameters(
-        TlsVersionEnum[self._ssl_version.name],
-        heartbeat_data=b'\x01\x00\x00'
+        TlsVersionEnum[self._ssl_version.name], heartbeat_data=b"\x01\x00\x00"
     ).to_bytes()
 
     # Send the payload
@@ -147,7 +145,7 @@ def do_handshake_with_heartbleed(self):  # type: ignore
     # Retrieve data until we get to the ServerHelloDone
     # The server may send back a ServerHello, an Alert, a CertificateRequest or may just close the connection
     did_receive_hello_done = False
-    remaining_bytes = b''
+    remaining_bytes = b""
     while not did_receive_hello_done:
         try:
             tls_record, len_consumed = TlsRecordParser.parse_bytes(remaining_bytes)
@@ -178,11 +176,11 @@ def do_handshake_with_heartbleed(self):  # type: ignore
             # Server returned a TLS alert
             break
         else:
-            raise ValueError('Unknown record? Type {}'.format(tls_record.header.type))
+            raise ValueError("Unknown record? Type {}".format(tls_record.header.type))
 
     is_vulnerable_to_heartbleed = False
     if did_receive_hello_done:
-        expected_heartbleed_payload = b'\x01' * 10
+        expected_heartbleed_payload = b"\x01" * 10
         if expected_heartbleed_payload in remaining_bytes:
             # Server replied with our hearbeat payload
             is_vulnerable_to_heartbleed = True

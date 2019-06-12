@@ -133,8 +133,8 @@ class RobotServerResponsesAnalyzer:
         """
         # Ensure the results were consistent
         for payload_enum, server_responses in self._payload_responses.items():
-            # We ran the check twice per payload and the two responses should be the same
-            if server_responses[0] != server_responses[1]:
+            # We ran the check three time per payload and the three responses should be the same
+            if not (server_responses[0] == server_responses[1] == server_responses[2]):
                 return RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS
 
         # Check if the server acts as an oracle by checking if the server replied differently to the payloads
@@ -229,38 +229,25 @@ class RobotPlugin(plugin_base.Plugin):
         thread_pool = ThreadPool()
 
         for payload_enum in RobotPmsPaddingPayloadEnum:
-            # Run each payload twice to ensure the results are consistent
-            thread_pool.add_job(
-                (
-                    cls._send_robot_payload,
-                    [
-                        server_info,
-                        ssl_version_to_use,
-                        cipher_string,
-                        payload_enum,
-                        should_complete_handshake,
-                        rsa_modulus,
-                        rsa_exponent,
-                    ],
+            # Run each payload three times to ensure the results are consistent
+            for _ in range(3):
+                thread_pool.add_job(
+                    (
+                        cls._send_robot_payload,
+                        [
+                            server_info,
+                            ssl_version_to_use,
+                            cipher_string,
+                            payload_enum,
+                            should_complete_handshake,
+                            rsa_modulus,
+                            rsa_exponent,
+                        ],
+                    )
                 )
-            )
-            thread_pool.add_job(
-                (
-                    cls._send_robot_payload,
-                    [
-                        server_info,
-                        ssl_version_to_use,
-                        cipher_string,
-                        payload_enum,
-                        should_complete_handshake,
-                        rsa_modulus,
-                        rsa_exponent,
-                    ],
-                )
-            )
 
         # Use one thread per check
-        thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum) * 2)
+        thread_pool.start(nb_threads=len(RobotPmsPaddingPayloadEnum))
 
         # Store the results - two attempts per ROBOT payload
         payload_responses: Dict[RobotPmsPaddingPayloadEnum, List[str]] = {

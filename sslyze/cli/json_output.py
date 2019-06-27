@@ -71,7 +71,7 @@ class JsonOutputGenerator(OutputGenerator):
 
 
 class _CustomJsonEncoder(json.JSONEncoder):
-    def default(self, obj: Any) -> Union[bool, int, float, str, Dict[str, Any]]:
+    def default(self, obj: Any) -> Union[bytes, bool, int, float, str, Dict[str, Any]]:
         if isinstance(obj, Enum):
             result = obj.name
 
@@ -109,6 +109,9 @@ class _CustomJsonEncoder(json.JSONEncoder):
 
         elif isinstance(obj, Path):
             result = str(obj)
+
+        elif isinstance(obj, bytes):
+            result = obj.decode(encoding="utf-8")
 
         elif isinstance(obj, object):
             # Some objects (like str) don't have a __dict__

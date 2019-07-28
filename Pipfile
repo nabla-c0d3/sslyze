@@ -13,16 +13,13 @@ dataclasses = "*"
 mypy = "*"
 "flake8" = "*"
 invoke = "*"
-cx-freeze = "*"
 pytest = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
 twine = "*"
 sphinx-autodoc-typehints = "*"
-black = "*"
+black = "==19.3b0"
+cx-freeze = {git = "https://github.com/anthony-tuininga/cx_Freeze.git"}
 
 [requires]
 python_version = "3.6"
-
-[pipenv]
-allow_prereleases = true

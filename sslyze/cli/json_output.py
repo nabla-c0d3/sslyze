@@ -72,6 +72,8 @@ class JsonOutputGenerator(OutputGenerator):
 
 class _CustomJsonEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Union[bool, int, float, str, Dict[str, Any]]:
+        result: Union[bool, int, float, str, Dict[str, Any]]
+
         if isinstance(obj, Enum):
             result = obj.name
 
@@ -80,7 +82,7 @@ class _CustomJsonEncoder(json.JSONEncoder):
 
         elif isinstance(obj, x509._Certificate):
             certificate = obj
-            result = {  # type: ignore
+            result = {
                 # Add general info
                 "as_pem": obj.public_bytes(Encoding.PEM).decode("ascii"),
                 "hpkp_pin": CertificateUtils.get_hpkp_pin(obj),
@@ -122,7 +124,7 @@ class _CustomJsonEncoder(json.JSONEncoder):
                     result[key] = self.default(value)
             else:
                 # Simple object like a bool
-                result = obj
+                result = obj  # type: ignore
 
         else:
             raise TypeError("Unknown type: {}".format(repr(obj)))

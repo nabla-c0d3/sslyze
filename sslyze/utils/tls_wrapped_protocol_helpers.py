@@ -1,6 +1,7 @@
 import socket
 import struct
 from abc import abstractmethod, ABC
+from typing import ClassVar
 
 from nassl.ssl_client import SslClient
 
@@ -16,9 +17,9 @@ class StartTlsError(IOError):
 
 
 class TlsWrappedProtocolHelper(ABC):
-    @abstractmethod
+
     def __init__(self, server_hostname: str) -> None:
-        pass
+        self._server_hostname = server_hostname
 
     @abstractmethod
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
@@ -37,9 +38,6 @@ class TlsHelper(TlsWrappedProtocolHelper):
     """Do not do anything.
     """
 
-    def __init__(self, server_hostname: str) -> None:
-        pass
-
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         pass
 
@@ -55,9 +53,6 @@ class HttpsHelper(TlsWrappedProtocolHelper):
     ERR_NOT_HTTP = "Server response was not HTTP"
     ERR_GENERIC = "Error sending HTTP GET"
 
-    def __init__(self, server_hostname: str) -> None:
-        self._hostname = server_hostname
-
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         # Nothing to do here
         pass
@@ -66,7 +61,7 @@ class HttpsHelper(TlsWrappedProtocolHelper):
         """Send an HTTP GET to the server and return the HTTP status code.
         """
         try:
-            ssl_client.write(HttpRequestGenerator.get_request(self._hostname))
+            ssl_client.write(HttpRequestGenerator.get_request(self._server_hostname))
 
             # Parse the response and print the Location header
             http_response = HttpResponseParser.parse_from_ssl_connection(ssl_client)
@@ -96,9 +91,6 @@ class SmtpHelper(TlsWrappedProtocolHelper):
 
     ERR_SMTP_REJECTED = "SMTP EHLO was rejected"
     ERR_NO_SMTP_STARTTLS = "SMTP STARTTLS not supported"
-
-    def __init__(self, server_hostname: str) -> None:
-        pass
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         # Get the SMTP banner
@@ -138,6 +130,7 @@ class XmppHelper(TlsWrappedProtocolHelper):
     XMPP_STARTTLS = b"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
     def __init__(self, server_hostname: str) -> None:
+        super().__init__(server_hostname)
         self._xmpp_to = server_hostname
 
     def override_xmpp_to(self, xmpp_to: str) -> None:
@@ -191,9 +184,6 @@ class LdapHelper(TlsWrappedProtocolHelper):
         b"\x2e\x31\x2e\x34\x2e\x31\x2e\x31\x34\x36\x36\x2e\x32\x30\x30\x33\x37\x8b\x00"
     )
 
-    def __init__(self, server_hostname: str) -> None:
-        pass
-
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         sock.send(self.START_TLS_CMD)
         data = sock.recv(2048)
@@ -213,9 +203,6 @@ class RdpHelper(TlsWrappedProtocolHelper):
 
     START_TLS_CMD = b"\x03\x00\x00\x13\x0E\xE0\x00\x00\x00\x00\x00\x01\x00\x08\x00\x03\x00\x00\x00"
     START_TLS_OK = b"Start TLS request accepted."
-
-    def __init__(self, server_hostname: str) -> None:
-        pass
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         sock.send(self.START_TLS_CMD)
@@ -238,13 +225,12 @@ class GenericStartTlsHelper(TlsWrappedProtocolHelper, ABC):
     """
 
     # To be defined in subclasses
-    ERR_NO_STARTTLS = b""
-    START_TLS_CMD = b""
-    START_TLS_OK = b""
-    SHOULD_WAIT_FOR_SERVER_BANNER = True
+    ERR_NO_STARTTLS: ClassVar[str]  # Error to display to the user when StartTLS failed
 
-    def __init__(self, server_hostname: str) -> None:
-        pass
+    START_TLS_CMD: ClassVar[bytes]  # How to initiate StartTLS with the server
+    START_TLS_OK: ClassVar[bytes]  # What is returned by the server when StartTLS was successful
+
+    SHOULD_WAIT_FOR_SERVER_BANNER = True
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         # Grab the banner
@@ -263,7 +249,7 @@ class GenericStartTlsHelper(TlsWrappedProtocolHelper, ABC):
 
 class ImapHelper(GenericStartTlsHelper):
 
-    ERR_NO_STARTTLS = b"IMAP START TLS was rejected"
+    ERR_NO_STARTTLS = "IMAP START TLS was rejected"
 
     START_TLS_CMD = b". STARTTLS\r\n"
     START_TLS_OK = b". OK"
@@ -271,7 +257,7 @@ class ImapHelper(GenericStartTlsHelper):
 
 class Pop3Helper(GenericStartTlsHelper):
 
-    ERR_NO_STARTTLS = b"POP START TLS was rejected"
+    ERR_NO_STARTTLS = "POP START TLS was rejected"
 
     START_TLS_CMD = b"STLS\r\n"
     START_TLS_OK = b"+OK"
@@ -279,7 +265,7 @@ class Pop3Helper(GenericStartTlsHelper):
 
 class FtpHelper(GenericStartTlsHelper):
 
-    ERR_NO_STARTTLS = b"FTP AUTH TLS was rejected"
+    ERR_NO_STARTTLS = "FTP AUTH TLS was rejected"
 
     START_TLS_CMD = b"AUTH TLS\r\n"
     START_TLS_OK = b"234"
@@ -287,7 +273,7 @@ class FtpHelper(GenericStartTlsHelper):
 
 class PostgresHelper(GenericStartTlsHelper):
 
-    ERR_NO_STARTTLS = b"Postgres AUTH TLS was rejected"
+    ERR_NO_STARTTLS = "Postgres AUTH TLS was rejected"
 
     START_TLS_CMD = b"\x00\x00\x00\x08\x04\xD2\x16\x2F"
     START_TLS_OK = b"S"

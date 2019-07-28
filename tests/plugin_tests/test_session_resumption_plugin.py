@@ -11,7 +11,7 @@ from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
 class TestSessionResumptionPlugin:
 
     def test_resumption_support(self):
-        server_test = ServerConnectivityTester(hostname='www.google.com')
+        server_test = ServerConnectivityTester(hostname='www.facebook.com')
         server_info = server_test.perform()
 
         plugin = SessionResumptionPlugin()

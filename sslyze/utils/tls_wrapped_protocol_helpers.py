@@ -17,7 +17,6 @@ class StartTlsError(IOError):
 
 
 class TlsWrappedProtocolHelper(ABC):
-
     def __init__(self, server_hostname: str) -> None:
         self._server_hostname = server_hostname
 

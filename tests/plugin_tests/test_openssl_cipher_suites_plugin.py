@@ -1,6 +1,6 @@
 import pickle
 
-from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, \
+from sslyze.plugins.openssl_cipher_suites_plugin import Sslv20ScanCommand, \
     Sslv30ScanCommand, Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand, Tlsv13ScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import TlsWrappedProtocolEnum

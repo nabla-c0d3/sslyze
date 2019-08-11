@@ -3,7 +3,7 @@ from io import StringIO
 from sslyze.cli import CompletedServerScan
 from sslyze.cli.console_output import ConsoleOutputGenerator
 from sslyze.server_connectivity_tester import ServerConnectivityError
-from sslyze.ssl_settings import HttpConnectTunnelingSettings, ClientAuthenticationServerConfigurationEnum
+from sslyze.ssl_settings import ClientAuthenticationServerConfigurationEnum
 from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, MockPluginScanCommandOne, \
     MockPluginScanCommandTwo, MockServerConnectivityTester
 

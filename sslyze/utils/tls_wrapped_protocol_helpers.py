@@ -1,7 +1,7 @@
 import socket
 import struct
 from abc import abstractmethod, ABC
-from typing import ClassVar
+from typing import ClassVar, Optional
 
 from nassl.ssl_client import SslClient
 
@@ -128,12 +128,9 @@ class XmppHelper(TlsWrappedProtocolHelper):
     )
     XMPP_STARTTLS = b"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
-    def __init__(self, server_hostname: str) -> None:
+    def __init__(self, server_hostname: str,  xmpp_to: Optional[str]) -> None:
         super().__init__(server_hostname)
-        self._xmpp_to = server_hostname
-
-    def override_xmpp_to(self, xmpp_to: str) -> None:
-        self._xmpp_to = xmpp_to
+        self._xmpp_to = xmpp_to if xmpp_to else server_hostname
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         # Open an XMPP stream

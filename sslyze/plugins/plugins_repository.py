@@ -5,7 +5,6 @@ from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin
 from sslyze.plugins.heartbleed_plugin import HeartbleedPlugin
 from sslyze.plugins.http_headers_plugin import HttpHeadersPlugin
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin
-from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.plugin_base import PluginScanCommand
 from sslyze.plugins.robot_plugin import RobotPlugin
@@ -21,7 +20,7 @@ class PluginsRepository:
     """
 
     _PLUGIN_CLASSES = [
-        OpenSslCipherSuitesPlugin,
+        #OpenSslCipherSuitesPlugin,
         CertificateInfoPlugin,
         CompressionPlugin,
         FallbackScsvPlugin,

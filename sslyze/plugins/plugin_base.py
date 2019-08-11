@@ -4,10 +4,49 @@
 import inspect
 import optparse
 from abc import ABC, abstractmethod
+from concurrent.futures import Future
 from xml.etree.ElementTree import Element
 
+from dataclasses import dataclass
+
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from typing import List, Type
+from typing import List, Type, ClassVar, Callable, Any, TypeVar, Generic
+
+
+@dataclass(frozen=True)
+class ScanCommand(ABC):
+    server_info: ServerConnectivityInfo
+
+
+_ScanCommandTypeVar = TypeVar("_ScanCommandTypeVar", bound=ScanCommand)
+
+
+@dataclass(frozen=True)
+class ScanJob:
+    spawned_by_scan_command: ScanCommand
+
+    function_to_call: Callable
+    function_arguments: Any
+
+
+@dataclass(frozen=True)
+class ScanCommandResult(Generic[_ScanCommandTypeVar]):
+    scan_command: _ScanCommandTypeVar
+
+
+class ScanCommandImplementation(Generic[_ScanCommandTypeVar]):
+
+    @abstractmethod
+    def scan_jobs_for_scan_command(self, scan_command: _ScanCommandTypeVar) -> List[ScanJob]:
+        pass
+
+    @abstractmethod
+    def result_for_completed_scan_jobs(
+        self,
+        scan_command: _ScanCommandTypeVar,
+        completed_scan_jobs: List[Future]
+    ) -> ScanCommandResult[_ScanCommandTypeVar]:
+        pass
 
 
 class PluginScanCommand(ABC):
@@ -81,11 +120,14 @@ class Plugin(ABC):
         # TODO(ad): Refactor this to do more, after switching away from optparse
         options = []
         for scan_command_class in cls.get_available_commands():
+            if scan_command_class.__doc__ is None:
+                raise ValueError("No docstring found for {}".format(cls.__name__))
+
             options.append(
                 optparse.make_option(
-                    "--" + scan_command_class.get_cli_argument(),
+                    "--" + scan_command_class.cli_argument,
                     action="store_true",
-                    help=scan_command_class.get_description(),
+                    help=scan_command_class.scan_command_class.__doc__.strip(),
                 )
             )
         return options

@@ -1,37 +1,27 @@
-from sslyze.concurrent_scanner import ConcurrentScanner
-from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
-from sslyze.plugins.compression_plugin import CompressionScanCommand
-from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanCommand
+from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv10ScanCommand, \
+    Tlsv11ScanCommand, CliConnector
+from sslyze.scanner import Scanner
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from sslyze.synchronous_scanner import SynchronousScanner
+from sslyze.server_setting import ServerNetworkLocationThroughDirectConnection, ServerTlsConfiguration
 
 
+# TODO: Finish this
 class TestScanner:
 
-    def test_synchronous_scanner(self):
-        server_test = ServerConnectivityTester(hostname='www.google.com')
-        server_info = server_test.perform()
+    def test(self):
+        server_location = ServerNetworkLocationThroughDirectConnection.with_ip_address_lookup("www.google.com", 443)
+        tls_config = ServerTlsConfiguration.get_default("www.google.com")
 
-        sync_scanner = SynchronousScanner()
-        plugin_result = sync_scanner.run_scan_command(server_info, CompressionScanCommand())
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+        server_test = ServerConnectivityTester()
+        server_info = server_test.perform(server_location, tls_config)
 
-    def test_concurrent_scanner(self):
-        server_test = ServerConnectivityTester(hostname='www.google.com')
-        server_info = server_test.perform()
+        print(server_info)
 
-        # Queue some scan commands that are quick
-        concurrent_scanner = ConcurrentScanner()
-        concurrent_scanner.queue_scan_command(server_info, CertificateInfoScanCommand())
-        concurrent_scanner.queue_scan_command(server_info, SessionRenegotiationScanCommand())
-        concurrent_scanner.queue_scan_command(server_info, CompressionScanCommand())
+        scanner = Scanner()
+        scanner.queue_scan_command(Tlsv10ScanCommand(server_info))
+        scanner.queue_scan_command(Tlsv11ScanCommand(server_info))
+        for result in scanner.get_results():
+            for line in CliConnector(hide_rejected_ciphers=False).print_result(result):
+                print(line)
 
-        # Process the results
-        nb_results = 0
-        for plugin_result in concurrent_scanner.get_results():
-            assert plugin_result.as_text()
-            assert plugin_result.as_xml()
-            nb_results += 1
-
-        assert nb_results == 3
+        raise Exception()

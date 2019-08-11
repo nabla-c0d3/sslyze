@@ -5,7 +5,6 @@ from sslyze.cli import CompletedServerScan
 from sslyze.cli.command_line_parser import ServerStringParsingError
 from sslyze.cli.xml_output import XmlOutputGenerator
 from sslyze.server_connectivity_tester import ServerConnectivityError
-from sslyze.ssl_settings import HttpConnectTunnelingSettings
 from tests.cli_tests import MockServerConnectivityInfo, MockPluginScanResult, MockCommandLineValues, \
     MockPluginScanCommandOne, MockPluginScanCommandTwo, MockServerConnectivityTester
 

@@ -248,6 +248,5 @@ class SslConnection:
         if sock:
             sock.close()
 
-    # TODO(AD): Rename this method to match send_request() ?
-    def post_handshake_check(self) -> str:
-        return self._start_tls_helper.send_request(self.ssl_client)
+    def send_sample_request(self) -> str:
+        return self._start_tls_helper.send_sample_request(self.ssl_client)

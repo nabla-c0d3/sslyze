@@ -1,5 +1,6 @@
-from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv10ScanCommand, \
-    Tlsv11ScanCommand, CliConnector
+from sslyze.plugins.openssl_cipher_suites.cli_connector import CliConnector
+from sslyze.plugins.openssl_cipher_suites.scan_commands import Tlsv10ScanCommand, \
+    Tlsv11ScanCommand
 from sslyze.scanner import Scanner
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationThroughDirectConnection, ServerTlsConfiguration
@@ -23,5 +24,5 @@ class TestScanner:
         for result in scanner.get_results():
             for line in CliConnector(hide_rejected_ciphers=False).print_result(result):
                 print(line)
-
+            pass
         raise Exception()

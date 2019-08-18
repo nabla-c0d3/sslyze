@@ -27,7 +27,7 @@ class TlsWrappedProtocolHelper(ABC):
         pass
 
     @abstractmethod
-    def send_request(self, ssl_client: SslClient) -> str:
+    def send_sample_request(self, ssl_client: SslClient) -> str:
         """Send a protocol-specific "test" request to validate that the TLS handshake was successful.
         """
         pass
@@ -40,8 +40,8 @@ class TlsHelper(TlsWrappedProtocolHelper):
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         pass
 
-    def send_request(self, ssl_client: SslClient) -> str:
-        return ""
+    def send_sample_request(self, ssl_client: SslClient) -> str:
+        raise NotImplementedError("Unknown protocol wrapped in TLS; can't send a sample request")
 
 
 class HttpsHelper(TlsWrappedProtocolHelper):
@@ -56,7 +56,7 @@ class HttpsHelper(TlsWrappedProtocolHelper):
         # Nothing to do here
         pass
 
-    def send_request(self, ssl_client: SslClient) -> str:
+    def send_sample_request(self, ssl_client: SslClient) -> str:
         """Send an HTTP GET to the server and return the HTTP status code.
         """
         try:
@@ -105,7 +105,7 @@ class SmtpHelper(TlsWrappedProtocolHelper):
         if b"220" not in sock.recv(2048):
             raise StartTlsError(self.ERR_NO_SMTP_STARTTLS)
 
-    def send_request(self, ssl_client: SslClient) -> str:
+    def send_sample_request(self, ssl_client: SslClient) -> str:
         try:
             ssl_client.write(b"NOOP\r\n")
             result = ssl_client.read(2048).strip().decode("utf-8")
@@ -154,7 +154,7 @@ class XmppHelper(TlsWrappedProtocolHelper):
         if b"proceed" not in xmpp_resp:
             raise StartTlsError(self.ERR_XMPP_NO_STARTTLS)
 
-    def send_request(self, ssl_client: SslClient) -> str:
+    def send_sample_request(self, ssl_client: SslClient) -> str:
         # Not implemented
         return ""
 
@@ -186,7 +186,7 @@ class LdapHelper(TlsWrappedProtocolHelper):
         if self.START_TLS_OK not in data and self.START_TLS_OK_APACHEDS not in data and self.START_TLS_OK2 not in data:
             raise StartTlsError(self.ERR_NO_STARTTLS + ', returned: "' + repr(data) + '"')
 
-    def send_request(self, ssl_client: SslClient) -> str:
+    def send_sample_request(self, ssl_client: SslClient) -> str:
         # Not implemented
         return ""
 
@@ -211,7 +211,7 @@ class RdpHelper(TlsWrappedProtocolHelper):
         if not data or len(data) != packet_len:
             raise StartTlsError(self.ERR_NO_STARTTLS)
 
-    def send_request(self, ssl_client: SslClient) -> str:
+    def send_sample_request(self, ssl_client: SslClient) -> str:
         # Not implemented
         return ""
 
@@ -238,7 +238,7 @@ class GenericStartTlsHelper(TlsWrappedProtocolHelper, ABC):
         if self.START_TLS_OK not in sock.recv(2048):
             raise StartTlsError(self.ERR_NO_STARTTLS)
 
-    def send_request(self, ssl_client: SslClient) -> str:
+    def send_sample_request(self, ssl_client: SslClient) -> str:
         # Not implemented
         return ""
 

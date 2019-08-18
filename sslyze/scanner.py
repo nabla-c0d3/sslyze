@@ -3,7 +3,6 @@ from concurrent.futures import Future, as_completed, TimeoutError
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Dict, Iterable, List
 
-from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv10Implementation
 from sslyze.plugins.plugin_base import ScanCommand, ScanCommandResult
 from sslyze.plugins.plugins_repository import PluginsRepository
 from sslyze.server_connectivity_info import ServerNetworkLocation
@@ -30,12 +29,8 @@ class Scanner:
 
     def queue_scan_command(self, scan_cmd: ScanCommand) -> None:
         # Convert the scan command into jobs
-        # TODO
-        #plugin_cls = self._plugins_repository.get_plugin_class_for_command(scan_command)
-        plugin_cls = Tlsv10Implementation
-        plugin = plugin_cls()
-
-        jobs = plugin.scan_jobs_for_scan_command(scan_cmd)
+        implementation_cls = scan_cmd.scan_command_implementation_cls
+        jobs = implementation_cls.scan_jobs_for_scan_command(scan_cmd)
 
         server_network_location = scan_cmd.server_info.network_location
         if server_network_location not in self._server_to_thread_pool:
@@ -66,17 +61,14 @@ class Scanner:
             except TimeoutError:
                 pass
 
-            # Have all the scans of a given scan command completed?
+            # Have all the jobs of a given scan command completed?
             scan_cmds_completed = []
             for scan_cmd in scan_command_to_completed_futures:
                 if scan_cmd not in self._queued_future_to_scan_command.values():
                     # Yes - return a result
-                    # TODO
-                    plugin_cls = Tlsv10Implementation
-                    plugin = plugin_cls()
-
-                    result = plugin.result_for_completed_scan_jobs(
-                        scan_cmd,
+                    implementation_cls = scan_cmd.scan_command_implementation_cls
+                    result = implementation_cls.result_for_completed_scan_jobs(
+                        scan_cmd.server_info,
                         scan_command_to_completed_futures[scan_cmd]
                     )
                     scan_cmds_completed.append(scan_cmd)

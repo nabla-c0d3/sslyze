@@ -15,6 +15,8 @@ from typing import List, Type, ClassVar, Callable, Any, TypeVar, Generic
 
 @dataclass(frozen=True)
 class ScanCommand(ABC):
+    scan_command_implementation_cls: ClassVar[Type["ScanCommandImplementation"]]
+
     server_info: ServerConnectivityInfo
 
 
@@ -30,22 +32,26 @@ class ScanJob:
 
 
 @dataclass(frozen=True)
-class ScanCommandResult(Generic[_ScanCommandTypeVar]):
-    scan_command: _ScanCommandTypeVar
+class ScanCommandResult:
+    server_info: ServerConnectivityInfo
 
 
 class ScanCommandImplementation(Generic[_ScanCommandTypeVar]):
 
+    scan_command_result_cls: ClassVar[Type[ScanCommandResult]]
+
+    @classmethod
     @abstractmethod
-    def scan_jobs_for_scan_command(self, scan_command: _ScanCommandTypeVar) -> List[ScanJob]:
+    def scan_jobs_for_scan_command(cls, scan_command: _ScanCommandTypeVar) -> List[ScanJob]:
         pass
 
+    @classmethod
     @abstractmethod
     def result_for_completed_scan_jobs(
-        self,
-        scan_command: _ScanCommandTypeVar,
+        cls,
+        server_info: ServerConnectivityInfo,
         completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult[_ScanCommandTypeVar]:
+    ) -> ScanCommandResult:
         pass
 
 

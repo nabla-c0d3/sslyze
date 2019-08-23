@@ -57,6 +57,10 @@ class HttpHeadersPlugin(Plugin):
                 verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
             except CouldNotBuildVerifiedChain:
                 verified_chain_as_pem = None
+            except AttributeError:
+                # Only the modern SSL Client can build the verified chain; hence we get here if the server only supports
+                # an older version of TLS (pre 1.2)
+                verified_chain_as_pem = None
 
             # Send an HTTP GET request to the server
             ssl_connection.ssl_client.write(HttpRequestGenerator.get_request(host=server_info.hostname))

@@ -146,7 +146,7 @@ class TestHttpHeadersPlugin:
         # Given a tls1.0 server
         server_test = ServerConnectivityTester(hostname='tls-v1-0.badssl.com', port=1010)
         server_info = server_test.perform()
-        
+
         # The plugin does not throw an exception trying to access LegacySslClient.get_verified_chain()
         plugin = HttpHeadersPlugin()
         plugin_result = plugin.process_task(server_info, HttpHeadersScanCommand())

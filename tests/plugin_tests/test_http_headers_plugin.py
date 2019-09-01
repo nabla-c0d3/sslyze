@@ -141,3 +141,15 @@ class TestHttpHeadersPlugin:
         assert plugin_result.expect_ct_header is None
         assert plugin_result.as_text()
         assert plugin_result.as_xml()
+
+    def test_legacy_ssl_client_missing_verified_chain(self):
+        # Given a tls1.0 server
+        server_test = ServerConnectivityTester(hostname='tls-v1-0.badssl.com', port=1010)
+        server_info = server_test.perform()
+
+        # The plugin does not throw an exception trying to access LegacySslClient.get_verified_chain()
+        plugin = HttpHeadersPlugin()
+        plugin_result = plugin.process_task(server_info, HttpHeadersScanCommand())
+
+        assert plugin_result.as_text()
+        assert plugin_result.as_xml()

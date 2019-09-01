@@ -1,5 +1,7 @@
 import pickle
 
+import pytest
+
 from sslyze.plugins.early_data_plugin import EarlyDataPlugin, EarlyDataScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from tests.markers import can_only_run_on_linux_64
@@ -29,6 +31,7 @@ class TestEarlyDataPlugin:
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         assert pickle.dumps(plugin_result)
 
+    @pytest.mark.skip("Find an online server that supports early data; cloudflare disabled support for it")
     def test_early_data_enabled_online(self):
         server_test = ServerConnectivityTester(hostname='www.cloudflare.com')
         server_info = server_test.perform()

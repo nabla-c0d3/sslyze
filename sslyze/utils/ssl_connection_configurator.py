@@ -8,7 +8,6 @@ from sslyze.server_setting import ServerTlsConfiguration, ServerNetworkLocation
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.utils.ssl_connection import SslConnection
 
-from typing import TYPE_CHECKING
 
 from sslyze.utils.tls_wrapped_protocol_helpers import (
     SmtpHelper,

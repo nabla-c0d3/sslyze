@@ -10,10 +10,6 @@ from sslyze.server_connectivity_info import ServerNetworkLocation
 
 class Scanner:
 
-    # Controls every socket connection done by every plugin
-    DEFAULT_NETWORK_RETRIES = 3
-    DEFAULT_NETWORK_TIMEOUT = 5  # in seconds
-
     def __init__(self, per_server_concurrent_connections_limit: int = 5, concurrent_server_scans_limit: int = 10):
         self._plugins_repository = PluginsRepository()
 
@@ -76,7 +72,6 @@ class Scanner:
 
             for scan_cmd in scan_cmds_completed:
                 del scan_command_to_completed_futures[scan_cmd]
-
 
         self._shutdown_thread_pools()
 

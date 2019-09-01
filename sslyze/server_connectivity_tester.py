@@ -84,9 +84,6 @@ class ServerConnectivityTester:
         TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 5432,
     }
 
-    def __init__(self, network_timeout: Optional[int] = None):
-        self._network_timeout = network_timeout
-
     def perform(self, network_location: ServerNetworkLocation, tls_configuration: ServerTlsConfiguration) -> ServerConnectivityInfo:
         """Attempt to perform a full SSL/TLS handshake with the server.
 

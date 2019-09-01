@@ -24,11 +24,11 @@ class _ConnectionHelper(ABC):
     """
 
     @abstractmethod
-    def __init__(self, server_location: ServerNetworkLocation) -> None:
-        pass
+    def __init__(self, server_location: ServerNetworkLocation, network_timeout: int) -> None:
+        self._network_timeout = network_timeout
 
     @abstractmethod
-    def create_connection(self, timeout: int) -> socket.SocketType:
+    def create_connection(self) -> socket.SocketType:
         pass
 
 
@@ -36,21 +36,19 @@ class _DirectConnectionHelper(_ConnectionHelper):
     """Open a socket to a server by directly connecting to it.
     """
 
-    def __init__(self, server_location: ServerNetworkLocationThroughDirectConnection) -> None:
-        super().__init__(server_location)
+    def __init__(self, server_location: ServerNetworkLocationThroughDirectConnection, network_timeout: int) -> None:
+        super().__init__(server_location, network_timeout)
         self._server_ip_addr = server_location.ip_address
         self._server_port = server_location.port
 
-    def create_connection(self, timeout: int) -> socket.SocketType:
-        sock = socket.create_connection((self._server_ip_addr, self._server_port), timeout=timeout)
+    def create_connection(self) -> socket.SocketType:
+        sock = socket.create_connection((self._server_ip_addr, self._server_port), timeout=self._network_timeout)
         return sock
 
 
 class ProxyError(IOError):
     """The proxy was offline or did not return HTTP 200 to our CONNECT request.
     """
-
-    pass
 
 
 class _ProxyTunnelingConnectionHelper(_ConnectionHelper):
@@ -63,8 +61,8 @@ class _ProxyTunnelingConnectionHelper(_ConnectionHelper):
     ERR_CONNECT_REJECTED = "The proxy rejected the CONNECT request for this host"
     ERR_PROXY_OFFLINE = 'Could not connect to the proxy: "{0}"'
 
-    def __init__(self, server_location: ServerNetworkLocationThroughProxy) -> None:
-        super().__init__(server_location)
+    def __init__(self, server_location: ServerNetworkLocationThroughProxy, network_timeout: int) -> None:
+        super().__init__(server_location, network_timeout)
         # The server we want to connect to via the proxy
         self._server_host = server_location.hostname
         self._server_port = server_location.port
@@ -81,12 +79,12 @@ class _ProxyTunnelingConnectionHelper(_ConnectionHelper):
                 f"{quote(basic_auth_user)}:{quote(basic_auth_password)}".encode("utf-8")
             )
 
-    def create_connection(self, timeout: int) -> socket.SocketType:
+    def create_connection(self) -> socket.SocketType:
         """Setup HTTP tunneling with the configured proxy.
         """
         # Setup HTTP tunneling
         try:
-            sock = socket.create_connection((self._tunnel_host, self._tunnel_port), timeout=timeout)
+            sock = socket.create_connection((self._tunnel_host, self._tunnel_port), timeout=self._network_timeout)
         except socket.timeout as e:
             raise ProxyError(self.ERR_PROXY_OFFLINE.format(str(e)))
         except socket.error as e:
@@ -113,9 +111,6 @@ class _ProxyTunnelingConnectionHelper(_ConnectionHelper):
 class SslHandshakeRejected(IOError):
     """The server explicitly rejected the SSL handshake.
     """
-
-    pass
-
 
 class SslConnection:
     """SSL connection that handles error processing, including retries when receiving timeouts.
@@ -155,18 +150,12 @@ class SslConnection:
         "dh key too small": "DH Key too small",
     }
 
-    # Default socket settings global to all SSLyze connections; can be overridden
-    NETWORK_MAX_RETRIES = 3
-    NETWORK_TIMEOUT = 5
-
-    @classmethod
-    def set_global_network_settings(cls, network_max_retries: int, network_timeout: int) -> None:
-        # Not thread-safe
-        cls.NETWORK_MAX_RETRIES = network_max_retries
-        cls.NETWORK_TIMEOUT = network_timeout
-
     def __init__(
-        self, server_location: ServerNetworkLocation, start_tls_helper: TlsWrappedProtocolHelper, ssl_client: SslClient
+        self,
+        server_location: ServerNetworkLocation,
+        start_tls_helper: TlsWrappedProtocolHelper,
+        ssl_client: SslClient,
+        max_network_retry_attempts_count: int,
     ) -> None:
         connection_helper: _ConnectionHelper
         if isinstance(server_location, ServerNetworkLocationThroughProxy):
@@ -179,18 +168,17 @@ class SslConnection:
         self._connection_helper = connection_helper
         self._start_tls_helper = start_tls_helper
         self.ssl_client = ssl_client
+        self._max_network_retry_attempts_count = max_network_retry_attempts_count
 
-    def do_pre_handshake(self, network_timeout: Optional[int]) -> None:
+    def do_pre_handshake(self) -> None:
         # Open a socket to the server
-        final_timeout = self.NETWORK_TIMEOUT if network_timeout is None else network_timeout
-        sock = self._connection_helper.create_connection(final_timeout)
+        sock = self._connection_helper.create_connection()
         self._start_tls_helper.prepare_socket_for_tls_handshake(sock)
 
         # Pass the connected socket to the SSL client
         self.ssl_client.set_underlying_socket(sock)
 
-    def connect(self, network_timeout: Optional[int] = None, network_max_retries: Optional[int] = None) -> None:
-        final_max_retries = self.NETWORK_MAX_RETRIES if network_max_retries is None else network_max_retries
+    def connect(self) -> None:
         retry_attempts = 0
         delay = 0
 
@@ -199,12 +187,12 @@ class SslConnection:
             # Sleep if it's a retry attempt
             time.sleep(delay)
             try:
-                self.do_pre_handshake(network_timeout)
+                self.do_pre_handshake()
 
             except socket.timeout:
                 # Attempt to retry connection if a network error occurred during connection or the handshake
                 retry_attempts += 1
-                if retry_attempts >= final_max_retries:
+                if retry_attempts >= self._max_network_retry_attempts_count:
                     # Exhausted the number of retry attempts, give up
                     raise
                 elif retry_attempts == 1:
@@ -242,11 +230,6 @@ class SslConnection:
 
     def close(self) -> None:
         self.ssl_client.shutdown()
-
-        # TODO(AD): Remove this after updating nassl
-        sock = self.ssl_client.get_underlying_socket()
-        if sock:
-            sock.close()
 
     def send_sample_request(self) -> str:
         return self._start_tls_helper.send_sample_request(self.ssl_client)

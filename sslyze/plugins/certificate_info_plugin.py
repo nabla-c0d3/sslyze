@@ -458,7 +458,7 @@ class CertificateInfoScanResult(PluginScanResult):
                 )
             )
 
-        if self.verified_chain_has_legacy_symantec_anchor is not None:
+        if self.verified_chain_has_legacy_symantec_anchor:
             timeline_str = (
                 "March 2018"
                 if self.verified_chain_has_legacy_symantec_anchor == SymantecDistrustTimelineEnum.MARCH_2018

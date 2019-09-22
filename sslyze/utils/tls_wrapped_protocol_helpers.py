@@ -5,6 +5,7 @@ from typing import ClassVar, Optional
 
 from nassl.ssl_client import SslClient
 
+from sslyze.server_setting import TlsWrappedProtocolEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.http_response_parser import HttpResponseParser
 
@@ -274,3 +275,18 @@ class PostgresHelper(GenericStartTlsHelper):
     START_TLS_CMD = b"\x00\x00\x00\x08\x04\xD2\x16\x2F"
     START_TLS_OK = b"S"
     SHOULD_WAIT_FOR_SERVER_BANNER = False
+
+
+START_TLS_HELPER_CLASSES = {
+    TlsWrappedProtocolEnum.PLAIN_TLS: TlsHelper,
+    TlsWrappedProtocolEnum.HTTPS: HttpsHelper,
+    TlsWrappedProtocolEnum.STARTTLS_SMTP: SmtpHelper,
+    TlsWrappedProtocolEnum.STARTTLS_XMPP: XmppHelper,
+    TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER: XmppServerHelper,
+    TlsWrappedProtocolEnum.STARTTLS_POP3: Pop3Helper,
+    TlsWrappedProtocolEnum.STARTTLS_IMAP: ImapHelper,
+    TlsWrappedProtocolEnum.STARTTLS_FTP: FtpHelper,
+    TlsWrappedProtocolEnum.STARTTLS_LDAP: LdapHelper,
+    TlsWrappedProtocolEnum.STARTTLS_RDP: RdpHelper,
+    TlsWrappedProtocolEnum.STARTTLS_POSTGRES: PostgresHelper,
+}

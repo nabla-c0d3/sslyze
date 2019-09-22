@@ -12,16 +12,15 @@ class Scanner:
 
     def __init__(self, per_server_concurrent_connections_limit: int = 5, concurrent_server_scans_limit: int = 10):
         self._plugins_repository = PluginsRepository()
+        self._queued_future_to_scan_command: Dict[Future, ScanCommand] = {}
 
-        # To rate-limit how connections per server
+        # To rate-limit how many connections per server
         # Total number of concurrent connections = concurrent_server_scans_limit * per_server_concurrent_connections_limit
         self._all_thread_pools = [
             ThreadPoolExecutor(max_workers=per_server_concurrent_connections_limit)
             for _ in range(concurrent_server_scans_limit)
         ]
         self._server_to_thread_pool: Dict[ServerNetworkLocation, ThreadPoolExecutor] = {}
-
-        self._queued_future_to_scan_command: Dict[Future, ScanCommand] = {}
 
     def queue_scan_command(self, scan_cmd: ScanCommand) -> None:
         # Convert the scan command into jobs

@@ -5,7 +5,6 @@ from typing import Optional
 
 from nassl.legacy_ssl_client import LegacySslClient
 
-from sslyze.server_connectivity_tester import ClientAuthenticationServerConfigurationEnum, ServerConnectivityInfo
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkLocationViaDirectConnection, \
     ServerNetworkLocationViaHttpProxy, ServerNetworkConfiguration
 from sslyze.utils.http_response_parser import HttpResponseParser
@@ -117,66 +116,6 @@ class SslConnection:
 
     This it the base class to use to connect to a server in order to scan it.
     """
-
-    @classmethod
-    def for_connectivity_testing(
-        cls,
-        server_location: ServerNetworkLocation,
-        network_configuration: ServerNetworkConfiguration,
-        tls_version: OpenSslVersionEnum,
-        should_ignore_client_auth: bool,
-    ):
-        """Only to be used for connectivity testing
-        """
-        return cls(
-            server_location=server_location,
-            network_configuration=network_configuration,
-            tls_version=tls_version,
-            should_ignore_client_auth=should_ignore_client_auth,
-        )
-
-    @classmethod
-    def for_scanning(
-        cls,
-        server_info: ServerConnectivityInfo,
-        override_tls_version: Optional[OpenSslVersionEnum] = None,
-        ca_certificates_path: Optional[Path] = None,
-        should_use_legacy_openssl: Optional[bool] = None,
-    ):
-        """To be used for actual scans run by the plugins.
-        """
-        final_ssl_version = server_info.tls_probing_result.highest_tls_version_supported
-        final_openssl_cipher_string = server_info.tls_probing_result.openssl_cipher_string_supported
-        if override_tls_version is not None:
-            # Caller wants to override the ssl version to use for this connection
-            final_ssl_version = override_tls_version
-            # Then we don't know which cipher suite is supported by the server for this ssl version
-            final_openssl_cipher_string = None
-
-        if should_use_legacy_openssl is not None:
-            final_openssl_cipher_string = None
-
-        if server_info.network_configuration.tls_client_auth_credentials is not None:
-            # If we have creds for client authentication, go ahead and use them
-            should_ignore_client_auth = False
-        else:
-            # Ignore client auth requests if the server allows optional TLS client authentication
-            should_ignore_client_auth = True
-            # But do not ignore them is client authentication is required so that the right exceptions get thrown
-            # within the plugins, providing a better output
-            if server_info.tls_probing_result.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED:
-                should_ignore_client_auth = False
-
-        ssl_connection = cls(
-            server_location=server_info.server_location,
-            network_configuration=server_info.network_configuration,
-            tls_version=final_ssl_version,
-            should_ignore_client_auth=should_ignore_client_auth,
-            ca_certificates_path=ca_certificates_path,
-            should_use_legacy_openssl=should_use_legacy_openssl,
-        )
-        if final_openssl_cipher_string:
-            ssl_connection.ssl_client.set_cipher_list(final_openssl_cipher_string)
 
     def __init__(
         self,

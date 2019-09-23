@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TextIO, Set, Type, Any, List
 
 from sslyze.cli import CompletedServerScan
-from sslyze.cli.command_line_parser import ServerStringParsingError
+from sslyze.cli.command_line_parser import InvalidServerStringError
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.server_connectivity_tester import ServerConnectivityError
@@ -25,7 +25,7 @@ class OutputGenerator(ABC):
         self,
         available_plugins: Set[Type[Plugin]],
         args_command_list: Any,
-        malformed_servers: List[ServerStringParsingError],
+        malformed_servers: List[InvalidServerStringError],
     ) -> None:
         """The CLI was just started and successfully parsed the command line.
         """

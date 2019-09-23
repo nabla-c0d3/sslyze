@@ -1,5 +1,5 @@
 from sslyze.cli import CompletedServerScan
-from sslyze.cli.command_line_parser import ServerStringParsingError
+from sslyze.cli.command_line_parser import InvalidServerStringError
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.server_connectivity_tester import ServerConnectivityError
@@ -30,7 +30,7 @@ class ConsoleOutputGenerator(OutputGenerator):
         self,
         available_plugins: Set[Type[Plugin]],
         args_command_list: Any,
-        malformed_servers: List[ServerStringParsingError],
+        malformed_servers: List[InvalidServerStringError],
     ) -> None:
         self._file_to.write("\n\n\n" + self._format_title("Available plugins"))
         self._file_to.write("\n")

@@ -1,9 +1,10 @@
 import sys
-from typing import Any, Text, Dict, List
+from concurrent.futures import as_completed
+from concurrent.futures.thread import ThreadPoolExecutor
+from typing import Any, Dict, List, Optional
 
 from sslyze.plugins.plugin_base import PluginScanResult
 
-from sslyze.concurrent_scanner import ConcurrentScanner
 from sslyze.plugins.plugins_repository import PluginsRepository
 from sslyze.cli.output_hub import OutputHub
 from sslyze.cli import CompletedServerScan
@@ -12,9 +13,12 @@ from sslyze.cli.command_line_parser import CommandLineParsingError, CommandLineP
 import signal
 from multiprocessing import freeze_support
 from time import time
-from sslyze.server_connectivity_tester import ConcurrentServerConnectivityTester
 
-global_scanner = None
+from sslyze.scanner import Scanner
+from sslyze.server_connectivity_tester import ServerConnectivityTester, ServerConnectivityError, ServerConnectivityInfo
+from sslyze.server_setting import ServerNetworkLocation
+
+global_scanner: Optional[Scanner] = None
 
 
 def sigint_handler(signum: int, frame: Any) -> None:
@@ -41,84 +45,67 @@ def main() -> None:
     # Create the command line parser and the list of available options
     sslyze_parser = CommandLineParser(available_plugins, __version__)
     try:
-        good_server_list, malformed_server_list, args_command_list = sslyze_parser.parse_command_line()
+        good_servers, invalid_servers, args_command_list = sslyze_parser.parse_command_line()
     except CommandLineParsingError as e:
         print(e.get_error_msg())
         return
 
     output_hub = OutputHub()
-    output_hub.command_line_parsed(available_plugins, args_command_list, malformed_server_list)
+    output_hub.command_line_parsed(available_plugins, args_command_list, invalid_servers)
 
-    # Initialize the pool of processes that will run each plugin
-    if args_command_list.https_tunnel or args_command_list.slow_connection:
-        # Maximum one process to not kill the proxy or the connection
-        global_scanner = ConcurrentScanner(max_processes_nb=1)
-    else:
-        global_scanner = ConcurrentScanner()
+    # Initialize the scanner that will concurrently run each scan command
+    concurrent_server_scans_limit = None
+    per_server_concurrent_connections_limit = None
+    if args_command_list.https_tunnel:
+        # All the connections will go through a single proxy; only scan one server at a time to not DOS the proxy
+        concurrent_server_scans_limit = 1
+    if args_command_list.slow_connection:
+        # Go easy on the servers; only open 2 concurrent connections against each server
+        per_server_concurrent_connections_limit = 2
+    global_scanner = Scanner(per_server_concurrent_connections_limit, concurrent_server_scans_limit)
 
     # Figure out which hosts are up and fill the task queue with work to do
-    connectivity_tester = ConcurrentServerConnectivityTester(good_server_list)
-    connectivity_tester.start_connectivity_testing()
+    connectivity_tester = ServerConnectivityTester()
+    online_servers: List[ServerConnectivityInfo] = []
+    with ThreadPoolExecutor(max_workers=10) as thread_pool:
+        futures = [thread_pool.submit(connectivity_tester.perform, server_data) for server_data in good_servers]
+        for completed_future in as_completed(futures):
+            try:
+                server_connectivity_info = completed_future.result()
 
-    # Store and print servers we were able to connect to
-    online_servers_list = []
-    for server_connectivity_info in connectivity_tester.get_reachable_servers():
-        online_servers_list.append(server_connectivity_info)
-        output_hub.server_connectivity_test_succeeded(server_connectivity_info)
+                # Connectivity testing was successful - store the server's info
+                online_servers.append(server_connectivity_info)
+                output_hub.server_connectivity_test_succeeded(server_connectivity_info)
 
-        # Send tasks to worker processes
-        for scan_command_class in available_commands:
-            if getattr(args_command_list, scan_command_class.get_cli_argument()):
-                # Get this command's optional argument if there's any
-                optional_args = {}
-                for optional_arg_name in scan_command_class.get_optional_arguments():
-                    # Was this option set ?
-                    if getattr(args_command_list, optional_arg_name):
-                        optional_args[optional_arg_name] = getattr(args_command_list, optional_arg_name)
-                scan_command = scan_command_class(**optional_args)  # type: ignore
+                # Send scan commands for this server to the scanner
+                # TODO(AD): Fix this
+                for scan_command in args_command_list:
+                   global_scanner.queue_scan_command(scan_command)
 
-                global_scanner.queue_scan_command(server_connectivity_info, scan_command)
+            except ServerConnectivityError as e:
+                # Process servers we were NOT able to connect to
+                output_hub.server_connectivity_test_failed(e)
 
-    # Store and print servers we were NOT able to connect to
-    for connectivity_exception in connectivity_tester.get_invalid_servers():
-        output_hub.server_connectivity_test_failed(connectivity_exception)
-
-    # Keep track of how many tasks have to be performed for each target
-    task_num = 0
+    # Keep track of how many scan command have to be performed for each target
+    spawned_scan_commands_count = 0
     output_hub.scans_started()
     for scan_command_class in available_commands:
         if getattr(args_command_list, scan_command_class.get_cli_argument()):
-            task_num += 1
+            spawned_scan_commands_count += 1
 
     # Each host has a list of results
-    result_dict: Dict[Text, List[PluginScanResult]] = {}
-    # We cannot use the server_info object directly as its address will change due to multiprocessing
-    RESULT_KEY_FORMAT = "{hostname}:{ip_address}:{port}"
-    for server_info in online_servers_list:
-        result_dict[
-            RESULT_KEY_FORMAT.format(
-                hostname=server_info.hostname, ip_address=server_info.ip_address, port=server_info.port
-            )
-        ] = []
+    result_dict: Dict[ServerNetworkLocation, List[PluginScanResult]] = {}
+    for server_info in online_servers:
+        result_dict[server_info.server_location] = []
 
     # Process the results as they come
     for plugin_result in global_scanner.get_results():
         server_info = plugin_result.server_info
-        result_dict[
-            RESULT_KEY_FORMAT.format(
-                hostname=server_info.hostname, ip_address=server_info.ip_address, port=server_info.port
-            )
-        ].append(plugin_result)
+        result_dict[server_info].append(plugin_result)
 
-        plugin_result_list = result_dict[
-            RESULT_KEY_FORMAT.format(
-                hostname=server_info.hostname, ip_address=server_info.ip_address, port=server_info.port
-            )
-        ]
-
-        if len(plugin_result_list) == task_num:
-            # Done with this server; send the result to the output hub
-            output_hub.server_scan_completed(CompletedServerScan(server_info, plugin_result_list))
+        if len(result_dict[server_info]) == spawned_scan_commands_count:
+            # All scan commands for this server have been completed; send the result to the output hub
+            output_hub.server_scan_completed(CompletedServerScan(server_info, result_dict[server_info]))
 
     # All done
     exec_time = time() - start_time

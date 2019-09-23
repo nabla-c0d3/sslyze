@@ -14,8 +14,6 @@ class StartTlsError(IOError):
     """The server rejected the StartTLS negotiation.
     """
 
-    pass
-
 
 class TlsWrappedProtocolHelper(ABC):
     def __init__(self, server_hostname: str) -> None:

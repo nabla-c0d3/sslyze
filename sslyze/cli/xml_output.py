@@ -4,7 +4,7 @@ from xml.dom import minidom
 
 from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
-from sslyze.cli.command_line_parser import ServerStringParsingError
+from sslyze.cli.command_line_parser import InvalidServerStringError
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.server_connectivity_info import ServerConnectivityInfo
@@ -45,7 +45,7 @@ class XmlOutputGenerator(OutputGenerator):
         self,
         available_plugins: Set[Type[Plugin]],
         args_command_list: Any,
-        malformed_servers: List[ServerStringParsingError],
+        malformed_servers: List[InvalidServerStringError],
     ) -> None:
         for bad_server_str in malformed_servers:
             failed_scan_node = Element("invalidTarget", error=bad_server_str.error_message)

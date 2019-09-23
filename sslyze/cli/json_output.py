@@ -9,7 +9,7 @@ from cryptography.x509.oid import ObjectIdentifier
 from enum import Enum
 from sslyze import PROJECT_URL, __version__
 from sslyze.cli import CompletedServerScan
-from sslyze.cli.command_line_parser import ServerStringParsingError
+from sslyze.cli.command_line_parser import InvalidServerStringError
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
@@ -26,7 +26,7 @@ class JsonOutputGenerator(OutputGenerator):
         self,
         available_plugins: Set[Type[Plugin]],
         args_command_list: Any,
-        malformed_servers: List[ServerStringParsingError],
+        malformed_servers: List[InvalidServerStringError],
     ) -> None:
         self._json_dict.update({"invalid_targets": [], "accepted_targets": []})
 

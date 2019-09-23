@@ -1,7 +1,3 @@
-#!/bin/sh -
-"exec" "python" "-O" "$0" "$@"
-from __future__ import print_function
-
 __doc__ = """Tiny HTTP Proxy.
 
 This module implements GET, HEAD, POST, PUT and DELETE methods
@@ -14,16 +10,10 @@ Any help will be greatly appreciated.		SUZUKI Hisao
 
 # Ported to Python 3 by @nabla_c0d3
 __version__ = "0.3.0"
-try:
-    # Python 3
-    from http.server import HTTPServer, BaseHTTPRequestHandler, test
-    from urllib.parse import urlparse, urlunparse
-    from socketserver import ThreadingMixIn
-except ImportError:
-    # Python 2
-    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer, test
-    from SocketServer import ThreadingMixIn
-    from urlparse import urlparse, urlunparse
+
+from http.server import HTTPServer, BaseHTTPRequestHandler, test
+from urllib.parse import urlparse, urlunparse
+from socketserver import ThreadingMixIn
 
 import select
 import logging

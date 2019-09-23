@@ -12,6 +12,10 @@ from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresR
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials
 
+from sslyze.server_setting import HttpProxySettings, ServerNetworkLocationViaDirectConnection, \
+    ServerNetworkLocationViaHttpProxy, ServerNetworkLocation, ServerNetworkConfiguration, \
+    InvalidServerNetworkConfigurationError, ServerHostnameCouldNotBeResolved
+
 
 class CommandLineParsingError(ValueError):
 
@@ -27,7 +31,7 @@ class TrustStoresUpdateCompleted(CommandLineParsingError):
         return "Trust stores successfully updated."
 
 
-class ServerStringParsingError(ValueError):
+class InvalidServerStringError(ValueError):
     """Exception raised when SSLyze was unable to parse a hostname:port string supplied via the command line.
     """
 
@@ -79,14 +83,14 @@ class CommandLineServerStringParser:
             try:
                 port = int((server_str.split(":"))[1])
             except ValueError:  # Port is not an int
-                raise ServerStringParsingError(server_str, cls.SERVER_STRING_ERROR_BAD_PORT)
+                raise InvalidServerStringError(server_str, cls.SERVER_STRING_ERROR_BAD_PORT)
 
         return host, port
 
     @classmethod
     def _parse_ipv6_server_string(cls, server_str: str) -> Tuple[str, Optional[int]]:
         if not socket.has_ipv6:
-            raise ServerStringParsingError(server_str, cls.SERVER_STRING_ERROR_NO_IPV6)
+            raise InvalidServerStringError(server_str, cls.SERVER_STRING_ERROR_NO_IPV6)
 
         port = None
         target_split = server_str.split("]")
@@ -95,7 +99,7 @@ class CommandLineServerStringParser:
             try:
                 port = int(target_split[1].rsplit(":")[1])
             except ValueError:  # Port is not an int
-                raise ServerStringParsingError(server_str, cls.SERVER_STRING_ERROR_BAD_PORT)
+                raise InvalidServerStringError(server_str, cls.SERVER_STRING_ERROR_BAD_PORT)
         return ipv6_addr, port
 
 
@@ -172,7 +176,9 @@ class CommandLineParser:
         regular_help = "Regular HTTPS scan; shortcut for --{}".format(" --".join(self.REGULAR_CMD))
         self._parser.add_option("--regular", action="store_true", dest=None, help=regular_help)
 
-    def parse_command_line(self) -> Tuple[List[ServerConnectivityTester], List[ServerStringParsingError], Any]:
+    def parse_command_line(
+        self
+    ) -> Tuple[List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]], List[InvalidServerStringError], Any]:
         """Parses the command line used to launch SSLyze.
         """
         (args_command_list, args_target_list) = self._parser.parse_args()
@@ -249,10 +255,10 @@ class CommandLineParser:
                 raise CommandLineParsingError("Invalid client authentication settings: {}.".format(e.args[0]))
 
         # HTTP CONNECT proxy
-        http_tunneling_settings = None
+        http_proxy_settings = None
         if args_command_list.https_tunnel:
             try:
-                http_tunneling_settings = HttpConnectTunnelingSettings.from_url(args_command_list.https_tunnel)
+                http_proxy_settings = HttpProxySettings.from_url(args_command_list.https_tunnel)
             except ValueError as e:
                 raise CommandLineParsingError("Invalid proxy URL for --https_tunnel: {}.".format(e.args[0]))
 
@@ -267,53 +273,62 @@ class CommandLineParser:
                     # Protocol was given in the command line
                     tls_wrapped_protocol = self.STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
 
-        # Create the server connectivity tester for each specified servers
-        # A limitation when using the command line is that only one client_auth_credentials and http_tunneling_settings
-        # can be specified, for all the servers to scan
-        good_server_list = []
-        bad_server_list = []
+        # Create the server location objects for each specified servers
+        good_servers: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]] = []
+        invalid_servers: List[InvalidServerStringError] = []
         for server_string in args_target_list:
             try:
+                # Parse the string supplied via the CLI for this server
                 hostname, ip_address, port = CommandLineServerStringParser.parse_server_string(server_string)
-            except ServerStringParsingError as e:
-                # Will happen if the server string is malformed
-                bad_server_list.append(e)
+            except InvalidServerStringError as e:
+                # The server string is malformed
+                invalid_servers.append(e)
                 continue
 
+            # Figure out how we're going to connect to the server
+            server_location: ServerNetworkLocation
+            if not http_proxy_settings:
+                # Connect to the server directly
+                if not ip_address:
+                    # No IP address supplied - do a DNS lookup
+                    try:
+                        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+                            hostname=hostname, port=port
+                        )
+                    except ServerHostnameCouldNotBeResolved:
+                        invalid_servers.append(
+                            InvalidServerStringError(f"{hostname}:{port}", f"Could not resolve hostname {hostname}")
+                        )
+                        continue
+                else:
+                    server_location = ServerNetworkLocationViaDirectConnection(
+                        hostname=hostname, port=port, ip_address=ip_address
+                    )
+            else:
+                # Connect to the server via an HTTP proxy
+                # A limitation when using the CLI is that only one http_proxy_settings can be specified for all servers
+                server_location = ServerNetworkLocationViaHttpProxy(
+                    hostname=hostname, port=port, http_proxy_settings=http_proxy_settings
+                )
+
+            # Figure out extra network config for this server
+            # Handle --starttls=auto to auto-detect the protocol via the port number now that the port has been parsed
+            if args_command_list.starttls == "auto":
+                if port in self.STARTTLS_PROTOCOL_DICT.keys():
+                    tls_wrapped_protocol = self.STARTTLS_PROTOCOL_DICT[port]
+
             try:
-                # TODO(AD): Unicode hostnames may fail on Python2
-                # hostname = hostname.decode('utf-8')
-                server_info = ServerConnectivityTester(
-                    hostname=hostname,
-                    port=port,
-                    ip_address=ip_address,
+                network_config = ServerNetworkConfiguration(
                     tls_wrapped_protocol=tls_wrapped_protocol,
                     tls_server_name_indication=args_command_list.sni,
+                    tls_client_auth_credentials=client_auth_creds,
                     xmpp_to_hostname=args_command_list.xmpp_to,
-                    client_auth_credentials=client_auth_creds,
-                    http_tunneling_settings=http_tunneling_settings,
                 )
-                good_server_list.append(server_info)
-            except ValueError as e:
-                # Will happen for example if xmpp_to is specified for a non-XMPP connection
+                good_servers.append((server_location, network_config))
+            except InvalidServerNetworkConfigurationError as e:
                 raise CommandLineParsingError(e.args[0])
 
-        # Command line hacks
-        # Handle --starttls=auto now that we parsed the server strings
-        if args_command_list.starttls == "auto":
-            for server_info in good_server_list:
-                # We use the port number to deduce the protocol
-                if server_info.port in self.STARTTLS_PROTOCOL_DICT.keys():
-                    server_info.tls_wrapped_protocol = self.STARTTLS_PROTOCOL_DICT[server_info.port]
-
-        # Handle --http_get now that we parsed the server strings
-        # Doing it here is hacky as the option is defined within PluginOpenSSLCipherSuites
-        if args_command_list.http_get:
-            for server_info in good_server_list:
-                if server_info.port == 443:
-                    server_info.tls_wrapped_protocol = TlsWrappedProtocolEnum.HTTPS
-
-        return good_server_list, bad_server_list, args_command_list
+        return good_servers, invalid_servers, args_command_list
 
     def _add_default_options(self) -> None:
         """Add default command line options to the parser.

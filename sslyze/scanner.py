@@ -1,24 +1,32 @@
 import secrets
 from concurrent.futures import Future, as_completed, TimeoutError
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Optional
 
 from sslyze.plugins.plugin_base import ScanCommand, ScanCommandResult
 from sslyze.plugins.plugins_repository import PluginsRepository
-from sslyze.server_connectivity_info import ServerNetworkLocation
+from sslyze.server_setting import ServerNetworkLocation
 
 
 class Scanner:
 
-    def __init__(self, per_server_concurrent_connections_limit: int = 5, concurrent_server_scans_limit: int = 10):
+    def __init__(
+        self,
+        per_server_concurrent_connections_limit: Optional[int] = None,
+        concurrent_server_scans_limit: Optional[int] = None
+    ):
         self._plugins_repository = PluginsRepository()
         self._queued_future_to_scan_command: Dict[Future, ScanCommand] = {}
 
-        # To rate-limit how many connections per server
-        # Total number of concurrent connections = concurrent_server_scans_limit * per_server_concurrent_connections_limit
+        # Rate-limit how many connections the scanner will open
+        # Total number of concurrent connections = final_server_scans_limit * final_per_server_connections_limit
+        final_server_scans_limit = concurrent_server_scans_limit if concurrent_server_scans_limit else 10
+        final_per_server_connections_limit = \
+            per_server_concurrent_connections_limit if per_server_concurrent_connections_limit else 5
+
         self._all_thread_pools = [
-            ThreadPoolExecutor(max_workers=per_server_concurrent_connections_limit)
-            for _ in range(concurrent_server_scans_limit)
+            ThreadPoolExecutor(max_workers=final_per_server_connections_limit)
+            for _ in range(final_server_scans_limit)
         ]
         self._server_to_thread_pool: Dict[ServerNetworkLocation, ThreadPoolExecutor] = {}
 
@@ -74,10 +82,10 @@ class Scanner:
 
         self._shutdown_thread_pools()
 
+    def _shutdown_thread_pools(self):
+        [thread_pool.shutdown(wait=True) for thread_pool in self._all_thread_pools]
+
     def emergency_shutdown(self) -> None:
         for future in self._queued_future_to_scan_command:
             future.cancel()
         self._shutdown_thread_pools()
-
-    def _shutdown_thread_pools(self):
-        [thread_pool.shutdown(wait=True) for thread_pool in self._all_thread_pools]

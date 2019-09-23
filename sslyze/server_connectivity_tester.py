@@ -1,60 +1,128 @@
 import socket
-from typing import Optional, List, Iterable, cast
+from enum import Enum
+from pathlib import Path
+from typing import Optional
 
+from dataclasses import dataclass
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
-from sslyze.server_connectivity_info import ServerConnectivityInfo, ServerTlsProbingResult
-from sslyze.server_setting import ServerNetworkLocation, ServerTlsConfiguration
-from sslyze.utils.ssl_connection_configurator import SslConnectionConfigurator
-from sslyze.ssl_settings import (
-    TlsWrappedProtocolEnum,
-    ClientAuthenticationCredentials,
-    ClientAuthenticationServerConfigurationEnum,
-)
-from sslyze.utils.ssl_connection import SslHandshakeRejected, ProxyError
-from sslyze.utils.thread_pool import ThreadPool
+from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
+from sslyze.utils.ssl_connection import SslHandshakeRejected, SslConnection
 from sslyze.utils.tls_wrapped_protocol_helpers import StartTlsError
+
+
+class ClientAuthenticationServerConfigurationEnum(Enum):
+    """Whether the server asked for client authentication.
+    """
+    DISABLED = 1
+    OPTIONAL = 2
+    REQUIRED = 3
+
+
+@dataclass(frozen=True)
+class ServerTlsProbingResult:
+    """Additional details about the server, detected via connectivity testing.
+    """
+    highest_tls_version_supported: OpenSslVersionEnum
+    openssl_cipher_string_supported: str
+    client_auth_requirement: ClientAuthenticationServerConfigurationEnum
+
+
+# TODO: Update doc
+@dataclass(frozen=True)
+class ServerConnectivityInfo:
+    """All the settings (hostname, port, SSL version, etc.) needed to successfully connect to a given SSL/TLS server.
+
+    Such objects are returned by `ServerConnectivityTester.perform()` if connectivity testing was successful, and should
+    never be instantiated directly.
+
+    Attributes:
+        server_location:
+        network_configuration:
+        tls_probing_result:
+    """
+    server_location: ServerNetworkLocation
+    network_configuration: ServerNetworkConfiguration
+    tls_probing_result: ServerTlsProbingResult
+
+    def get_preconfigured_ssl_connection(
+        self,
+        override_tls_version: Optional[OpenSslVersionEnum] = None,
+        ca_certificates_path: Optional[Path] = None,
+        should_use_legacy_openssl: Optional[bool] = None,
+    ) -> SslConnection:
+        """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
+
+        Used by all plugins to connect to the server and run scans.
+        """
+        final_ssl_version = self.tls_probing_result.highest_tls_version_supported
+        final_openssl_cipher_string = self.tls_probing_result.openssl_cipher_string_supported
+        if override_tls_version is not None:
+            # Caller wants to override the ssl version to use for this connection
+            final_ssl_version = override_tls_version
+            # Then we don't know which cipher suite is supported by the server for this ssl version
+            final_openssl_cipher_string = None
+
+        if should_use_legacy_openssl is not None:
+            final_openssl_cipher_string = None
+
+        if self.network_configuration.tls_client_auth_credentials is not None:
+            # If we have creds for client authentication, go ahead and use them
+            should_ignore_client_auth = False
+        else:
+            # Ignore client auth requests if the server allows optional TLS client authentication
+            should_ignore_client_auth = True
+            # But do not ignore them is client authentication is required so that the right exceptions get thrown
+            # within the plugins, providing a better output
+            if self.tls_probing_result.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.REQUIRED:
+                should_ignore_client_auth = False
+
+        ssl_connection = SslConnection(
+            server_location=self.server_location,
+            network_configuration=self.network_configuration,
+            tls_version=final_ssl_version,
+            should_ignore_client_auth=should_ignore_client_auth,
+            ca_certificates_path=ca_certificates_path,
+            should_use_legacy_openssl=should_use_legacy_openssl,
+        )
+        if final_openssl_cipher_string:
+            ssl_connection.ssl_client.set_cipher_list(final_openssl_cipher_string)
+
+        return ssl_connection
 
 
 class ServerConnectivityError(Exception):
     """Generic error for when SSLyze was unable to successfully complete connectivity testing with the server.
-
-    Attributes:
-        server_info: The connectivity tester that failed, containing all the server's information
-            (hostname, port, etc.) that was used to test connectivity.
-        error_message: The error that was returned.
     """
 
-    def __init__(self, server_info: "ServerConnectivityTester", error_message: str) -> None:
-        self.server_info = server_info
+    def __init__(
+        self,
+        server_location: ServerNetworkLocation,
+        network_configuration: ServerNetworkConfiguration,
+        error_message: str
+    ) -> None:
+        self.server_location = server_location
+        self.network_configuration = network_configuration
         self.error_message = error_message
 
     def __str__(self) -> str:
-        return '<{class_name}: server=({hostname}, {ip_addr}, {port}), error="{error_message}">'.format(
+        return '<{class_name}: server=({hostname}, {port}), error="{error_message}">'.format(
             class_name=self.__class__.__name__,
-            hostname=self.server_info.hostname,
-            ip_addr=self.server_info.ip_address,
-            port=self.server_info.port,
+            hostname=self.server_location.hostname,
+            port=self.server_location.port,
             error_message=self.error_message,
         )
 
 
 class ServerRejectedConnection(ServerConnectivityError):
-    def __init__(self, server_info: "ServerConnectivityTester") -> None:
-        super().__init__(server_info, "Connection rejected")
+    pass
 
 
 class ConnectionToServerTimedOut(ServerConnectivityError):
-    def __init__(self, server_info: "ServerConnectivityTester") -> None:
-        super().__init__(server_info, "Could not connect (timeout)")
+    pass
 
 
-class ServerHostnameCouldNotBeResolved(ServerConnectivityError):
-    def __init__(self, server_info: "ServerConnectivityTester") -> None:
-        super().__init__(server_info, "Could not resolve hostname")
-
-
-class ServerTlsConfigurationNotSuportedError(ServerConnectivityError):
+class ServerTlsConfigurationNotSupportedError(ServerConnectivityError):
     """The server was online but SSLyze was unable to find one TLS version and cipher suite supported by the server.
 
     This should never happen unless the server has a very exotic TLS configuration (such as supporting a very small
@@ -62,76 +130,55 @@ class ServerTlsConfigurationNotSuportedError(ServerConnectivityError):
     """
 
 
-class ProxyConnectivityError(ServerConnectivityError):
-    """The proxy was offline, or timed out, or rejected the connection while doing connectivity testing.
-    """
-
-
-# TODO: Remove self and turn into a function?
 class ServerConnectivityTester:
 
-    # TODO: Move this out
-    TLS_DEFAULT_PORTS = {
-        TlsWrappedProtocolEnum.PLAIN_TLS: 443,
-        TlsWrappedProtocolEnum.STARTTLS_SMTP: 25,
-        TlsWrappedProtocolEnum.STARTTLS_XMPP: 5222,
-        TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER: 5269,
-        TlsWrappedProtocolEnum.STARTTLS_FTP: 21,
-        TlsWrappedProtocolEnum.STARTTLS_POP3: 110,
-        TlsWrappedProtocolEnum.STARTTLS_LDAP: 389,
-        TlsWrappedProtocolEnum.STARTTLS_IMAP: 143,
-        TlsWrappedProtocolEnum.STARTTLS_RDP: 3389,
-        TlsWrappedProtocolEnum.STARTTLS_POSTGRES: 5432,
-    }
-
-    def perform(self, network_location: ServerNetworkLocation, tls_configuration: ServerTlsConfiguration) -> ServerConnectivityInfo:
+    def perform(
+        self,
+        server_location: ServerNetworkLocation,
+        network_configuration: Optional[ServerNetworkConfiguration] = None
+    ) -> ServerConnectivityInfo:
         """Attempt to perform a full SSL/TLS handshake with the server.
 
         This method will ensure that the server can be reached, and will also identify one SSL/TLS version and one
         cipher suite that is supported by the server.
 
         Args:
-            network_timeout: Network timeout value in seconds passed to the underlying socket.
+            server_location
+            network_configuration
 
         Returns:
             An object encapsulating all the information needed to connect to the server, to be
-            passed to a `SynchronousScanner` or `ConcurrentScanner` in order to run scan commands on the server.
+            passed to a `Scanner` in order to run scan commands against the server.
 
         Raises:
             ServerConnectivityError: If the server was not reachable or an SSL/TLS handshake could not be completed.
         """
+        if network_configuration is None:
+            final_network_config = ServerNetworkConfiguration.default_for_server_location(server_location)
+        else:
+            final_network_config = network_configuration
 
         # Then try to connect
         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.DISABLED
-        ssl_connection = SslConnectionConfigurator.get_connection(
-            network_location=network_location,
-            tls_configuration=tls_configuration,
-            ssl_version=OpenSslVersionEnum.SSLV23,
-            openssl_cipher_string=SslConnectionConfigurator.DEFAULT_SSL_CIPHER_LIST,
+        ssl_connection = SslConnection(
+            server_location=server_location,
+            network_configuration=final_network_config,
+            tls_version=OpenSslVersionEnum.SSLV23,
             should_ignore_client_auth=True,
         )
 
         # First only try a socket connection
         try:
-            ssl_connection.do_pre_handshake(network_timeout=self._network_timeout)
+            ssl_connection.do_pre_handshake()
 
-        # Socket errors
-        except socket.timeout:  # Host is down
-            raise ConnectionToServerTimedOut(self)
+        except socket.timeout:
+            raise ConnectionToServerTimedOut(server_location, final_network_config, "Could not connect (timeout)")
         except ConnectionError:
-            raise ServerRejectedConnection(self)
-
-        # StartTLS errors
+            raise ServerRejectedConnection(server_location, final_network_config, "Connection rejected")
         except StartTlsError as e:
-            raise ServerTlsConfigurationNotSuportedError(self, e.args[0])
-
-        # Proxy errors
-        except ProxyError as e:
-            raise ProxyConnectivityError(self, e.args[0])
-
-        # Other errors
+            raise ServerTlsConfigurationNotSupportedError(server_location, final_network_config, e.args[0])
         except Exception as e:
-            raise ServerConnectivityError(self, "{0}: {1}".format(str(type(e).__name__), e.args[0]))
+            raise ServerConnectivityError(server_location, final_network_config, f"{e.args[0]}")
 
         finally:
             ssl_connection.close()
@@ -150,17 +197,19 @@ class ServerConnectivityTester:
             OpenSslVersionEnum.SSLV23,
         ]:
             # First try the default cipher list, and then all ciphers
-            for cipher_list in [SslConnectionConfigurator.DEFAULT_SSL_CIPHER_LIST, "ALL:COMPLEMENTOFALL:-PSK:-SRP"]:
-                ssl_connection = SslConnectionConfigurator.get_connection(
-                    network_location=network_location,
-                    tls_configuration=tls_configuration,
-                    ssl_version=ssl_version,
-                    openssl_cipher_string=cipher_list,
+            for cipher_list in [None, "ALL:COMPLEMENTOFALL:-PSK:-SRP"]:
+                ssl_connection = SslConnection(
+                    server_location=server_location,
+                    network_configuration=final_network_config,
+                    tls_version=ssl_version,
                     should_ignore_client_auth=False,
                 )
+                if cipher_list:
+                    ssl_connection.ssl_client.set_cipher_list(cipher_list)
+
                 try:
                     # Only do one attempt when testing connectivity
-                    ssl_connection.connect(network_timeout=self._network_timeout, network_max_retries=0)
+                    ssl_connection.connect()
                     highest_ssl_version_supported = ssl_version
                     ssl_cipher_supported = ssl_connection.ssl_client.get_current_cipher_name()
                 except ClientCertificateRequested:
@@ -172,15 +221,16 @@ class ServerConnectivityTester:
                     ssl_connection.close()
 
                     # Try a new connection to see if client authentication is optional
-                    ssl_connection_auth = SslConnectionConfigurator.get_connection(
-                        network_location=network_location,
-                        tls_configuration=tls_configuration,
-                        ssl_version=ssl_version,
-                        openssl_cipher_string=cipher_list,
+                    ssl_connection_auth = SslConnection(
+                        server_location=server_location,
+                        network_configuration=final_network_config,
+                        tls_version=ssl_version,
                         should_ignore_client_auth=True,
                     )
+                    if cipher_list:
+                        ssl_connection_auth.ssl_client.set_cipher_list(cipher_list)
                     try:
-                        ssl_connection_auth.connect(network_timeout=self._network_timeout, network_max_retries=0)
+                        ssl_connection_auth.connect()
                         ssl_cipher_supported = ssl_connection_auth.ssl_client.get_current_cipher_name()
                         client_auth_requirement = ClientAuthenticationServerConfigurationEnum.OPTIONAL
 
@@ -207,45 +257,17 @@ class ServerConnectivityTester:
                 break
 
         if highest_ssl_version_supported is None or ssl_cipher_supported is None:
-            raise ServerTlsConfigurationNotSuportedError(
-                self, "Could not complete an SSL/TLS handshake with the server"
+            raise ServerTlsConfigurationNotSupportedError(
+                server_location, final_network_config, "Could not complete an SSL/TLS handshake with the server"
             )
         tls_probing_result = ServerTlsProbingResult(
-            highest_ssl_version_supported=highest_ssl_version_supported,
+            highest_tls_version_supported=highest_ssl_version_supported,
             openssl_cipher_string_supported=ssl_cipher_supported,
             client_auth_requirement=client_auth_requirement,
         )
 
         return ServerConnectivityInfo(
-            network_location=network_location,
-            tls_configuration=tls_configuration,
+            server_location=server_location,
+            network_configuration=final_network_config,
             tls_probing_result=tls_probing_result,
         )
-
-
-class ConcurrentServerConnectivityTester:
-    """Utility class to run servers connectivity testing using a thread pool.
-    """
-
-    _DEFAULT_MAX_THREADS = 20
-
-    def __init__(self, server_connectivity_testers: List[ServerConnectivityTester]) -> None:
-        # Use a thread pool to connect to each server
-        self._thread_pool = ThreadPool()
-        self._server_connectivity_testers = server_connectivity_testers
-
-    def start_connectivity_testing(
-        self, max_threads: int = _DEFAULT_MAX_THREADS, network_timeout: Optional[int] = None
-    ) -> None:
-        for server_tester in self._server_connectivity_testers:
-            self._thread_pool.add_job((server_tester.perform, [network_timeout]))
-        nb_threads = min(len(self._server_connectivity_testers), max_threads)
-        self._thread_pool.start(nb_threads)
-
-    def get_reachable_servers(self) -> Iterable[ServerConnectivityInfo]:
-        for (_, server_info) in self._thread_pool.get_result():
-            yield server_info
-
-    def get_invalid_servers(self) -> Iterable[ServerConnectivityError]:
-        for (_, exception) in self._thread_pool.get_error():
-            yield cast(ServerConnectivityError, exception)

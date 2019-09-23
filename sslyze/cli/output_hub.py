@@ -3,7 +3,7 @@ from io import open
 from typing import Type, Any, Set, List
 
 from sslyze.cli import CompletedServerScan
-from sslyze.cli.command_line_parser import ServerStringParsingError
+from sslyze.cli.command_line_parser import InvalidServerStringError
 from sslyze.cli.console_output import ConsoleOutputGenerator
 from sslyze.cli.json_output import JsonOutputGenerator
 from sslyze.cli.output_generator import OutputGenerator
@@ -24,7 +24,7 @@ class OutputHub:
         self,
         available_plugins: Set[Type[Plugin]],
         args_command_list: Any,
-        malformed_servers: List[ServerStringParsingError],
+        malformed_servers: List[InvalidServerStringError],
     ) -> None:
         # Configure the console output
         should_print_text_results = (

@@ -71,8 +71,8 @@ class HttpProxySettings:
     hostname: str
     port: int
 
-    basic_auth_user: Optional[str]
-    basic_auth_password: Optional[str]
+    basic_auth_user: Optional[str] = None
+    basic_auth_password: Optional[str] = None
 
     @classmethod
     def from_url(cls, proxy_url: str) -> "HttpProxySettings":
@@ -157,6 +157,10 @@ class ClientAuthenticationCredentials:
         )
 
 
+class InvalidServerNetworkConfigurationError(Exception):
+    pass
+
+
 # TODO(AD): Update doc
 @dataclass(frozen=True)
 class ServerNetworkConfiguration:
@@ -189,4 +193,8 @@ class ServerNetworkConfiguration:
             TlsWrappedProtocolEnum.STARTTLS_XMPP,
             TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
         ]:
-            raise ValueError("Can only specify xmpp_to for the XMPP StartTLS protocol.")
+            raise InvalidServerNetworkConfigurationError("Can only specify xmpp_to for the XMPP StartTLS protocol.")
+
+    @classmethod
+    def default_for_server_location(cls, server_location: ServerNetworkLocation) -> "ServerNetworkConfiguration":
+        return cls(tls_server_name_indication=server_location.hostname)

@@ -398,10 +398,12 @@ class AcceptedCipherSuite(CipherSuite):
         ssl_version: OpenSslVersionEnum,
         key_size: Optional[int],  # TODO(AD): Make it non-optional again by fixing client certificate handling
         post_handshake_response: Optional[str] = None,
+        dh_info: Optional[dict] = None,
     ) -> None:
         super().__init__(openssl_name, ssl_version)
         self.key_size = key_size
         self.post_handshake_response = post_handshake_response
+        self.dh_info = dh_info
 
     @classmethod
     def from_ongoing_ssl_connection(
@@ -410,7 +412,13 @@ class AcceptedCipherSuite(CipherSuite):
         keysize = ssl_connection.ssl_client.get_current_cipher_bits()
         picked_cipher_name = ssl_connection.ssl_client.get_current_cipher_name()
         status_msg = ssl_connection.post_handshake_check()
-        return AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, status_msg)
+        try:
+            dh_info = ssl_connection.ssl_client.get_dh_info()
+            if len(dh_info) == 0:
+                dh_info = None
+        except TypeError:
+            dh_info = None
+        return AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, status_msg, dh_info)
 
 
 class RejectedCipherSuite(CipherSuite):
@@ -548,6 +556,29 @@ class CipherSuiteScanResult(PluginScanResult):
             cipher_attributes["connectionStatus"] = cipher.post_handshake_response
 
         cipher_xml = Element("cipherSuite", attrib=cipher_attributes)
+
+        if cipher.dh_info is not None:
+            attribs = {
+                "type": cipher.dh_info["type"],
+                "size": str(cipher.dh_info["size"]),
+                "public_key": str(cipher.dh_info["public_key"]),
+            }
+
+            if cipher.dh_info["type"] == "DH":
+                attribs["generator"] = str(cipher.dh_info["generator"])
+                attribs["prime"] = str(cipher.dh_info["prime"])
+            elif cipher.dh_info["type"] == "ECDH":
+                curve = cipher.dh_info["curve"].lower()
+                attribs["curve"] = curve
+
+                if curve != "x25519" and curve != "x448":
+                    attribs["nist_curve"] = cipher.dh_info["nist_curve"]
+                    attribs["x"] = cipher.dh_info["x"]
+                    attribs["y"] = cipher.dh_info["y"]
+
+            key_exchange_xml = Element("keyExchange", attrib=attribs)
+            cipher_xml.append(key_exchange_xml)
+
         return cipher_xml
 
     ACCEPTED_CIPHER_LINE_FORMAT = "        {cipher_name:<50}{dh_size:<15}{key_size:<10}    {status:<60}"
@@ -631,9 +662,16 @@ class CipherSuiteScanResult(PluginScanResult):
             # Always display ANON as the key size for anonymous ciphers to make it visible
             keysize_str = "ANONYMOUS"
 
+        dh_size = ""
+        if cipher.dh_info is not None:
+            if cipher.dh_info["type"] == "DH":
+                dh_size = "DH-{} bits".format(cipher.dh_info["size"])
+            else:
+                dh_size = "ECDH-{} bits".format(cipher.dh_info["size"])
+
         cipher_line_txt = self.ACCEPTED_CIPHER_LINE_FORMAT.format(
             cipher_name=cipher.name,
-            dh_size="",
+            dh_size=dh_size,
             key_size=keysize_str,
             status=cipher.post_handshake_response if cipher.post_handshake_response is not None else "",
         )

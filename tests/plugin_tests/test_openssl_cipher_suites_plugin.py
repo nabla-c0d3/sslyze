@@ -1,4 +1,5 @@
 import pickle
+import random
 
 from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugin, Sslv20ScanCommand, \
     Sslv30ScanCommand, Tlsv10ScanCommand, Tlsv11ScanCommand, Tlsv12ScanCommand, Tlsv13ScanCommand
@@ -303,6 +304,37 @@ class TestOpenSslCipherSuitesPlugin:
 
         # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
         assert pickle.dumps(plugin_result)
+
+    @can_only_run_on_linux_64
+    def test_server_cipher_ordering(self):
+        configured_ciphers = [
+            'ECDHE-RSA-CHACHA20-POLY1305', 'ECDHE-RSA-AES128-GCM-SHA256',
+            'ECDHE-RSA-AES256-GCM-SHA384', 'ECDHE-RSA-AES128-SHA256',
+            'ECDHE-RSA-AES256-SHA384', 'ECDHE-RSA-AES128-SHA',
+            'ECDHE-RSA-AES256-SHA', 'AES128-GCM-SHA256',
+            'AES256-GCM-SHA384', 'AES128-SHA256',
+            'AES256-SHA256', 'AES128-SHA',
+            'AES256-SHA'
+        ]
+        random.shuffle(configured_ciphers)
+        cipher_string = ":".join(configured_ciphers)
+
+        with ModernOpenSslServer(cipher=cipher_string, prefer_server_order=True) as server:
+            # And the client does NOT provide a client certificate
+            server_test = ServerConnectivityTester(
+                hostname=server.hostname,
+                ip_address=server.ip_address,
+                port=server.port
+            )
+            server_info = server_test.perform()
+
+            # OpenSslCipherSuitesPlugin works even when a client cert was not supplied
+            plugin = OpenSslCipherSuitesPlugin()
+            plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
+
+            detected_ciphers = [c.openssl_name for c in plugin_result.accepted_cipher_list]
+
+        assert configured_ciphers == detected_ciphers
 
     def test_smtp_post_handshake_response(self):
         server_test = ServerConnectivityTester(

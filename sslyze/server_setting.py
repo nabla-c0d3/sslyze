@@ -140,8 +140,8 @@ class ClientAuthenticationCredentials:
        Attributes:
            certificate_chain_path: Path to the file containing the client's certificate.
            key_path: Path to the file containing the client's private key.
-           key_type: The format of the key file.
            key_password: The password to decrypt the private key.
+           key_type: The format of the key file.
     """
     certificate_chain_path: Path
     key_path: Path
@@ -162,23 +162,24 @@ class InvalidServerNetworkConfigurationError(Exception):
     pass
 
 
-# TODO(AD): Update doc
 @dataclass(frozen=True)
 class ServerNetworkConfiguration:
     """
     Attributes:
-        tls_wrapped_protocol: The protocol wrapped in TLS that the server expects. It allows sslyze to figure out
+        tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension.
+        tls_wrapped_protocol: The protocol wrapped in TLS that the server expects. It allows SSLyze to figure out
             how to establish a (Start)TLS connection to the server and what kind of "hello" message
             (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not supplied, standard
             TLS will be used.
-        tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension. If not
-            supplied, the server's hostname will be used.
+        tls_client_auth_credentials: The client certificate and private key needed to perform mutual authentication
+            with the server. If not supplied, SSLyze will attempt to connect to the server without performing
+            client authentication.
         xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream. If not supplied, the
             server's hostname will be used. Should only be set if the supplied `tls_wrapped_protocol` is an
             XMPP protocol.
-        client_auth_credentials: The client certificate and private key needed to perform mutual authentication
-            with the server. If not supplied, sslyze will attempt to connect to the server without performing
-            mutual authentication.
+        timeout: The timeout (in seconds) to be used when attempting to establish a connection to the server.
+        max_connection_attempts: The number of retries SSLyze will perform when attempting to establish a connection
+            to the server.
     """
     tls_server_name_indication: str
     tls_wrapped_protocol: TlsWrappedProtocolEnum = TlsWrappedProtocolEnum.PLAIN_TLS

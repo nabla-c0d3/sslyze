@@ -26,7 +26,7 @@ def _open_socket_for_direct_connection(
     return socket.create_connection((server_location.ip_address, server_location.port), timeout=network_timeout)
 
 
-class ProxyConnectivityError(Exception):
+class CouldNotConnectToHttpProxyError(Exception):
     """The proxy was offline or did not return HTTP 200 to our CONNECT request.
     """
 
@@ -41,9 +41,9 @@ def _open_socket_for_connection_via_http_proxy(
             timeout=network_timeout
         )
     except socket.timeout as e:
-        raise ProxyConnectivityError(f"Could not connect to the proxy: {str(e)}")
+        raise CouldNotConnectToHttpProxyError(f"Could not connect to the proxy: {str(e)}")
     except socket.error as e:
-        raise ProxyConnectivityError(f"Could not connect to the proxy: {str(e)}")
+        raise CouldNotConnectToHttpProxyError(f"Could not connect to the proxy: {str(e)}")
 
     # Send a CONNECT request with the host we want to tunnel to
     proxy_authorization_header = server_location.http_proxy_settings.proxy_authorization_header
@@ -58,7 +58,7 @@ def _open_socket_for_connection_via_http_proxy(
 
     # Check if the proxy was able to connect to the host
     if http_response.status != 200:
-        raise ProxyConnectivityError(
+        raise CouldNotConnectToHttpProxyError(
             f"The proxy rejected the CONNECT request for {server_location.hostname}:{server_location.port}"
         )
 

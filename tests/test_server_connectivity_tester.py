@@ -2,7 +2,8 @@ import threading
 
 import pytest
 
-from sslyze.server_connectivity_tester import ServerConnectivityTester, ClientAuthenticationServerConfigurationEnum
+from sslyze.server_connectivity_tester import ServerConnectivityTester, ClientAuthenticationServerConfigurationEnum, \
+    HttpProxyConnectivityError
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkLocationViaHttpProxy, \
     HttpProxySettings
 from tests.markers import can_only_run_on_linux_64
@@ -13,21 +14,35 @@ from tests.tiny_proxy import ThreadingHTTPServer, ProxyHandler
 class TestServerConnectivityTester:
 
     def test_via_direct_connection(self):
+        # Given a server location
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
 
-        # TODO(AD): Better name?
+        # When testing connectivity
         server_info = ServerConnectivityTester().perform(server_location)
 
+        # It succeeds
         assert server_info.tls_probing_result.openssl_cipher_string_supported
         assert server_info.tls_probing_result.highest_tls_version_supported
         assert server_info.tls_probing_result.client_auth_requirement
 
+    def test_via_direct_connection_but_server_offline(self):
+        # Given a server location for a server that's offline
+        server_location = ServerNetworkLocationViaDirectConnection(
+            "notarealdomain.not.real.notreal.not", 1234, "123.123.123.123"
+        )
+
+        # When testing connectivity, it fails with the right error
+        with pytest.raises(HttpProxyConnectivityError):
+            ServerConnectivityTester().perform(server_location)
+
     def test_via_http_proxy(self):
+        # Given a server location configured with a proxy
         proxy_port = 8123
         proxy_server = ThreadingHTTPServer(("", proxy_port), ProxyHandler)
         proxy_server_thread = threading.Thread(target=proxy_server.serve_forever)
         proxy_server_thread.start()
 
+        # When testing connectivity
         try:
             proxy_settings = HttpProxySettings("localhost", proxy_port)
             server_location = ServerNetworkLocationViaHttpProxy("www.google.com", 443, proxy_settings)
@@ -36,12 +51,22 @@ class TestServerConnectivityTester:
         finally:
             proxy_server.shutdown()
 
+        # It succeeds
         assert server_info.tls_probing_result.openssl_cipher_string_supported
         assert server_info.tls_probing_result.highest_tls_version_supported
         assert server_info.tls_probing_result.client_auth_requirement
 
+    def test_via_http_proxy_but_proxy_offline(self):
+        # Given a server location configured with a proxy that's offline
+        proxy_settings = HttpProxySettings("notarealdomain.not.real.notreal.not", 1234)
+        server_location = ServerNetworkLocationViaHttpProxy("www.google.com", 443, proxy_settings)
 
-class TestServerConnectivityTesterClientAuthRequirementDetection:
+        # When testing connectivity, it fails with the right error
+        with pytest.raises(HttpProxyConnectivityError):
+            ServerConnectivityTester().perform(server_location)
+
+
+class TestConnectivityTesterClientAuthRequirementDetection:
 
     @can_only_run_on_linux_64
     def test_optional_client_auth(self):

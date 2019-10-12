@@ -100,6 +100,7 @@ class HttpProxySettings:
         else:
             return None
 
+
 @dataclass(frozen=True)
 class ServerNetworkLocationViaHttpProxy(ServerNetworkLocation):
     """All the information needed to connect to a server by tunneling the traffic through an HTTP proxy.

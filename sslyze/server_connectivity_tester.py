@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
-from sslyze.utils.ssl_connection import SslHandshakeRejected, SslConnection
+from sslyze.utils.ssl_connection import SslHandshakeRejected, SslConnection, CouldNotConnectToHttpProxyError
 from sslyze.utils.tls_wrapped_protocol_helpers import StartTlsError
 
 
@@ -106,12 +106,7 @@ class ServerConnectivityError(Exception):
         self.error_message = error_message
 
     def __str__(self) -> str:
-        return '<{class_name}: server=({hostname}, {port}), error="{error_message}">'.format(
-            class_name=self.__class__.__name__,
-            hostname=self.server_location.hostname,
-            port=self.server_location.port,
-            error_message=self.error_message,
-        )
+        return f"Could not connect to <{self.server_location}>: {self.error_message}."
 
 
 class ServerRejectedConnection(ServerConnectivityError):
@@ -122,12 +117,16 @@ class ConnectionToServerTimedOut(ServerConnectivityError):
     pass
 
 
-class ServerTlsConfigurationNotSupportedError(ServerConnectivityError):
+class ServerTlsConfigurationNotSupported(ServerConnectivityError):
     """The server was online but SSLyze was unable to find one TLS version and cipher suite supported by the server.
 
     This should never happen unless the server has a very exotic TLS configuration (such as supporting a very small
     set of niche cipher suites).
     """
+
+
+class HttpProxyConnectivityError(ServerConnectivityError):
+    pass
 
 
 class ServerConnectivityTester:
@@ -172,11 +171,17 @@ class ServerConnectivityTester:
             ssl_connection.do_pre_handshake()
 
         except socket.timeout:
-            raise ConnectionToServerTimedOut(server_location, final_network_config, "Could not connect (timeout)")
+            raise ConnectionToServerTimedOut(
+                server_location,
+                final_network_config,
+                f"Connection timed out after {final_network_config.timeout} seconds"
+            )
         except ConnectionError:
             raise ServerRejectedConnection(server_location, final_network_config, "Connection rejected")
         except StartTlsError as e:
-            raise ServerTlsConfigurationNotSupportedError(server_location, final_network_config, e.args[0])
+            raise ServerTlsConfigurationNotSupported(server_location, final_network_config, e.args[0])
+        except CouldNotConnectToHttpProxyError:
+            raise HttpProxyConnectivityError(server_location, final_network_config, "Could not connect to HTTP proxy")
         except Exception as e:
             raise ServerConnectivityError(server_location, final_network_config, f"{e.args[0]}")
 
@@ -257,7 +262,7 @@ class ServerConnectivityTester:
                 break
 
         if highest_ssl_version_supported is None or ssl_cipher_supported is None:
-            raise ServerTlsConfigurationNotSupportedError(
+            raise ServerTlsConfigurationNotSupported(
                 server_location, final_network_config, "Could not complete an SSL/TLS handshake with the server"
             )
         tls_probing_result = ServerTlsProbingResult(

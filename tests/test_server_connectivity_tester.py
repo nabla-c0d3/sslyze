@@ -3,7 +3,7 @@ import threading
 import pytest
 
 from sslyze.server_connectivity_tester import ServerConnectivityTester, ClientAuthenticationServerConfigurationEnum, \
-    HttpProxyConnectivityError
+    HttpProxyConnectivityError, ConnectionToServerTimedOut
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkLocationViaHttpProxy, \
     HttpProxySettings
 from tests.markers import can_only_run_on_linux_64
@@ -24,6 +24,7 @@ class TestServerConnectivityTester:
         assert server_info.tls_probing_result.openssl_cipher_string_supported
         assert server_info.tls_probing_result.highest_tls_version_supported
         assert server_info.tls_probing_result.client_auth_requirement
+        assert server_info.get_preconfigured_ssl_connection()
 
     def test_via_direct_connection_but_server_offline(self):
         # Given a server location for a server that's offline
@@ -32,7 +33,7 @@ class TestServerConnectivityTester:
         )
 
         # When testing connectivity, it fails with the right error
-        with pytest.raises(HttpProxyConnectivityError):
+        with pytest.raises(ConnectionToServerTimedOut):
             ServerConnectivityTester().perform(server_location)
 
     def test_via_http_proxy(self):
@@ -55,6 +56,7 @@ class TestServerConnectivityTester:
         assert server_info.tls_probing_result.openssl_cipher_string_supported
         assert server_info.tls_probing_result.highest_tls_version_supported
         assert server_info.tls_probing_result.client_auth_requirement
+        assert server_info.get_preconfigured_ssl_connection()
 
     def test_via_http_proxy_but_proxy_offline(self):
         # Given a server location configured with a proxy that's offline

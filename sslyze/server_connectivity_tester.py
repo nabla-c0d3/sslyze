@@ -28,18 +28,17 @@ class ServerTlsProbingResult:
     client_auth_requirement: ClientAuthenticationServerConfigurationEnum
 
 
-# TODO: Update doc
 @dataclass(frozen=True)
 class ServerConnectivityInfo:
     """All the settings (hostname, port, SSL version, etc.) needed to successfully connect to a given SSL/TLS server.
 
-    Such objects are returned by `ServerConnectivityTester.perform()` if connectivity testing was successful, and should
-    never be instantiated directly.
+    Such objects should never be instantiated directly and are instead returned by `ServerConnectivityTester.perform()`
+    when connectivity testing was successful.
 
     Attributes:
-        server_location:
-        network_configuration:
-        tls_probing_result:
+        server_location: The minimum information needed to establish a connection to the server.
+        network_configuration: Some additional configuration regarding how to connect to the server.
+        tls_probing_result: Some additional details about the server's TLS configuration.
     """
     server_location: ServerNetworkLocation
     network_configuration: ServerNetworkConfiguration
@@ -92,7 +91,7 @@ class ServerConnectivityInfo:
 
 
 class ServerConnectivityError(Exception):
-    """Generic error for when SSLyze was unable to successfully complete connectivity testing with the server.
+    """Error for when SSLyze was unable to successfully complete connectivity testing with the server.
     """
 
     def __init__(
@@ -130,6 +129,8 @@ class HttpProxyConnectivityError(ServerConnectivityError):
 
 
 class ServerConnectivityTester:
+    """Utility class to ensure that SSLyze is able to connect to a server before scanning it.
+    """
 
     def perform(
         self,

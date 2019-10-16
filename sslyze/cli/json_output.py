@@ -15,6 +15,7 @@ from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.server_connectivity_info import ServerConnectivityInfo
 from sslyze.server_connectivity_tester import ServerConnectivityError
+from nassl.temp_key_info import TempKeyInfo
 
 
 class JsonOutputGenerator(OutputGenerator):
@@ -111,6 +112,9 @@ class _CustomJsonEncoder(json.JSONEncoder):
 
         elif isinstance(obj, Path):
             result = str(obj)
+
+        elif isinstance(obj, TempKeyInfo):
+            return obj.as_dict()
 
         elif isinstance(obj, object):
             # Some objects (like str) don't have a __dict__

@@ -4,6 +4,7 @@ from operator import attrgetter
 from xml.etree.ElementTree import Element
 
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
+from nassl.temp_key_info import TempKeyInfo, OpenSslEvpPkeyEnum
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity_info import ServerConnectivityInfo
@@ -398,7 +399,7 @@ class AcceptedCipherSuite(CipherSuite):
         ssl_version: OpenSslVersionEnum,
         key_size: Optional[int],  # TODO(AD): Make it non-optional again by fixing client certificate handling
         post_handshake_response: Optional[str] = None,
-        dh_info: Optional[dict] = None,
+        dh_info: Optional[TempKeyInfo] = None,
     ) -> None:
         super().__init__(openssl_name, ssl_version)
         self.key_size = key_size
@@ -412,12 +413,7 @@ class AcceptedCipherSuite(CipherSuite):
         keysize = ssl_connection.ssl_client.get_current_cipher_bits()
         picked_cipher_name = ssl_connection.ssl_client.get_current_cipher_name()
         status_msg = ssl_connection.post_handshake_check()
-        try:
-            dh_info = ssl_connection.ssl_client.get_dh_info()
-            if len(dh_info) == 0:
-                dh_info = None
-        except TypeError:
-            dh_info = None
+        dh_info = ssl_connection.ssl_client.get_dh_info()
         return AcceptedCipherSuite(picked_cipher_name, ssl_version, keysize, status_msg, dh_info)
 
 
@@ -558,25 +554,7 @@ class CipherSuiteScanResult(PluginScanResult):
         cipher_xml = Element("cipherSuite", attrib=cipher_attributes)
 
         if cipher.dh_info is not None:
-            attribs = {
-                "type": cipher.dh_info["type"],
-                "size": str(cipher.dh_info["size"]),
-                "public_key": str(cipher.dh_info["public_key"]),
-            }
-
-            if cipher.dh_info["type"] == "DH":
-                attribs["generator"] = str(cipher.dh_info["generator"])
-                attribs["prime"] = str(cipher.dh_info["prime"])
-            elif cipher.dh_info["type"] == "ECDH":
-                curve = cipher.dh_info["curve"].lower()
-                attribs["curve"] = curve
-
-                if curve != "x25519" and curve != "x448":
-                    attribs["nist_curve"] = cipher.dh_info["nist_curve"]
-                    attribs["x"] = cipher.dh_info["x"]
-                    attribs["y"] = cipher.dh_info["y"]
-
-            key_exchange_xml = Element("keyExchange", attrib=attribs)
+            key_exchange_xml = Element("keyExchange", attrib=cipher.dh_info.as_dict())
             cipher_xml.append(key_exchange_xml)
 
         return cipher_xml
@@ -664,10 +642,10 @@ class CipherSuiteScanResult(PluginScanResult):
 
         dh_size = ""
         if cipher.dh_info is not None:
-            if cipher.dh_info["type"] == "DH":
-                dh_size = "DH-{} bits".format(cipher.dh_info["size"])
+            if cipher.dh_info.key_type == OpenSslEvpPkeyEnum.DH:
+                dh_size = "DH-{} bits".format(cipher.dh_info.key_size)
             else:
-                dh_size = "ECDH-{} bits".format(cipher.dh_info["size"])
+                dh_size = "ECDH-{} bits".format(cipher.dh_info.key_size)
 
         cipher_line_txt = self.ACCEPTED_CIPHER_LINE_FORMAT.format(
             cipher_name=cipher.name,

@@ -29,7 +29,9 @@ class TestServerConnectivityTester:
     def test_via_direct_connection_but_server_offline(self):
         # Given a server location for a server that's offline
         server_location = ServerNetworkLocationViaDirectConnection(
-            "notarealdomain.not.real.notreal.not", 1234, "123.123.123.123"
+            hostname="notarealdomain.not.real.notreal.not",
+            port=1234,
+            ip_address="123.123.123.123",
         )
 
         # When testing connectivity, it fails with the right error
@@ -37,17 +39,22 @@ class TestServerConnectivityTester:
             ServerConnectivityTester().perform(server_location)
 
     def test_via_http_proxy(self):
-        # Given a server location configured with a proxy
+        # Given an HTTP proxy
         proxy_port = 8123
         proxy_server = ThreadingHTTPServer(("", proxy_port), ProxyHandler)
         proxy_server_thread = threading.Thread(target=proxy_server.serve_forever)
         proxy_server_thread.start()
 
+        # And a server location
+        server_location = ServerNetworkLocationViaHttpProxy(
+            hostname="www.google.com",
+            port=443,
+            # Configured with this proxy
+            http_proxy_settings=HttpProxySettings("localhost", proxy_port)
+        )
+
         # When testing connectivity
         try:
-            proxy_settings = HttpProxySettings("localhost", proxy_port)
-            server_location = ServerNetworkLocationViaHttpProxy("www.google.com", 443, proxy_settings)
-
             server_info = ServerConnectivityTester().perform(server_location)
         finally:
             proxy_server.shutdown()
@@ -59,9 +66,13 @@ class TestServerConnectivityTester:
         assert server_info.get_preconfigured_ssl_connection()
 
     def test_via_http_proxy_but_proxy_offline(self):
-        # Given a server location configured with a proxy that's offline
-        proxy_settings = HttpProxySettings("notarealdomain.not.real.notreal.not", 1234)
-        server_location = ServerNetworkLocationViaHttpProxy("www.google.com", 443, proxy_settings)
+        # Given a server location
+        server_location = ServerNetworkLocationViaHttpProxy(
+            hostname="www.google.com",
+            port=443,
+            # Configured with a proxy that's offline
+            http_proxy_settings=HttpProxySettings("notarealdomain.not.real.notreal.not", 1234)
+        )
 
         # When testing connectivity, it fails with the right error
         with pytest.raises(HttpProxyConnectivityError):

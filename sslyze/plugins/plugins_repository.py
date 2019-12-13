@@ -9,6 +9,7 @@ from sslyze.plugins.openssl_cipher_suites_plugin import OpenSslCipherSuitesPlugi
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.plugins.plugin_base import PluginScanCommand
 from sslyze.plugins.robot_plugin import RobotPlugin
+from sslyze.plugins.tls_curves_plugin import TLSCurvesPlugin
 
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationPlugin
 from sslyze.plugins.session_resumption_plugin import SessionResumptionPlugin
@@ -32,6 +33,7 @@ class PluginsRepository:
         SessionResumptionPlugin,
         RobotPlugin,
         EarlyDataPlugin,
+        TLSCurvesPlugin,
     ]
 
     def __init__(self, plugin_classes: List[Type[Plugin]] = _PLUGIN_CLASSES) -> None:

@@ -19,7 +19,7 @@ from cryptography.x509 import Certificate, load_pem_x509_certificate, ExtensionO
 from dataclasses import dataclass
 from nassl.ocsp_response import OcspResponse, OcspResponseStatusEnum
 from nassl.ocsp_response import OcspResponseNotTrustedError
-from nassl.ssl_client import ClientCertificateRequested, CouldNotBuildVerifiedChain
+from nassl.ssl_client import ClientCertificateRequested, CertificateChainVerificationFailed
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
@@ -240,7 +240,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
             received_chain_as_pem = ssl_connection.ssl_client.get_received_chain()
             try:
                 verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
-            except CouldNotBuildVerifiedChain:
+            except CertificateChainVerificationFailed:
                 verified_chain_as_pem = None
             except AttributeError:
                 # Only the modern SSL Client can build the verified chain; hence we get here if the server only supports
@@ -255,7 +255,7 @@ class CertificateInfoPlugin(plugin_base.Plugin):
             received_chain_as_pem = ssl_connection.ssl_client.get_received_chain()
             try:
                 verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
-            except CouldNotBuildVerifiedChain:
+            except CertificateChainVerificationFailed:
                 verified_chain_as_pem = None
             except AttributeError:
                 # Only the modern SSL Client can build the verified chain; hence we get here if the server only supports

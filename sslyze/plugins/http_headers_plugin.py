@@ -5,7 +5,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import Certificate, load_pem_x509_certificate
 from dataclasses import dataclass
-from nassl.ssl_client import CouldNotBuildVerifiedChain
+from nassl.ssl_client import CertificateChainVerificationFailed
 
 from sslyze.plugins.plugin_base import PluginScanCommand, Plugin, PluginScanResult
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
@@ -55,7 +55,7 @@ class HttpHeadersPlugin(Plugin):
             ssl_connection.connect()
             try:
                 verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
-            except CouldNotBuildVerifiedChain:
+            except CertificateChainVerificationFailed:
                 verified_chain_as_pem = None
             except AttributeError:
                 # Only the modern SSL Client can build the verified chain; hence we get here if the server only supports

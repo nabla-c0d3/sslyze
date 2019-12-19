@@ -5,8 +5,7 @@ from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
 
 from sslyze.server_connectivity_tester import ServerConnectivityTester, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
-from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv12ScanCommand, Tlsv10ScanCommand
-from sslyze.plugins.tls_curves_plugin import TLSCurvesScanCommand
+from sslyze.plugins.openssl_cipher_suites_plugin import Sslv30ScanCommand, Tlsv12ScanCommand, Tlsv13ScanCommand, Tlsv11ScanCommand, Tlsv10ScanCommand
 from sslyze.synchronous_scanner import SynchronousScanner
 
 
@@ -40,13 +39,12 @@ def demo_synchronous_scanner():
         # Could not establish an SSL connection to the server
         raise RuntimeError(f'Could not connect to {e.server_info.hostname}: {e.error_message}')
 
-    command = TLSCurvesScanCommand()
+    command = Tlsv13ScanCommand()
 
     synchronous_scanner = SynchronousScanner()
 
     scan_result = synchronous_scanner.run_scan_command(server_info, command)
-    for curve in scan_result.supported_curves:
-        print(f"    {curve}")
+    print(scan_result.as_text())
 
 
 def demo_concurrent_scanner():

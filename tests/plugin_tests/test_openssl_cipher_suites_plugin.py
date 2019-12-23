@@ -368,3 +368,22 @@ class TestOpenSslCipherSuitesPlugin:
         assert plugin_result.accepted_cipher_list
         assert plugin_result.as_text()
         assert plugin_result.as_xml()
+
+    @can_only_run_on_linux_64
+    def test_supported_curves(self):
+        with ModernOpenSslServer() as server:
+            server_test = ServerConnectivityTester(
+                hostname=server.hostname,
+                ip_address=server.ip_address,
+                port=server.port
+            )
+            server_info = server_test.perform()
+
+            plugin = OpenSslCipherSuitesPlugin()
+            plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
+
+            reference = ['X25519', 'X448', 'prime256v1', 'secp384r1', 'secp521r1']
+
+            assert plugin_result.supported_curves == reference
+            assert plugin_result.as_text()
+            assert plugin_result.as_xml()

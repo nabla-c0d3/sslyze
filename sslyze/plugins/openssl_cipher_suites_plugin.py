@@ -4,6 +4,7 @@ from operator import attrgetter
 from xml.etree.ElementTree import Element
 
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
+from nassl.key_exchange_info import EcDhKeyExchangeInfo
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity_info import ServerConnectivityInfo
@@ -407,15 +408,18 @@ class OpenSslCipherSuitesPlugin(Plugin):
                 # cipher suite source: https://www.openssl.org/docs/man1.0.2/man1/ciphers.html
                 ssl_connection.ssl_client.set_cipher_list("ECDH")
 
+            # set curve to test whether it is supported by the server
             ssl_connection.ssl_client.set1_groups_list(curve)
 
             try:
                 ssl_connection.connect()
-                # TODO check if the curve was really used with: ssl_connection.ssl_client.get_dh_info()
-                supported_curves.append(curve)
+                # if no error occurred check if the curve was really used
+                dh_info = ssl_connection.ssl_client.get_dh_info()
+                if isinstance(dh_info, EcDhKeyExchangeInfo) and dh_info.curve_name == curve.lower():
+                    supported_curves.append(curve)
             except SslHandshakeRejected:
                 pass
-            except OSError:
+            except Exception:
                 break
             finally:
                 ssl_connection.close()

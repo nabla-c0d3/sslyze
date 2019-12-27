@@ -458,15 +458,19 @@ class CertificateInfoScanResult(PluginScanResult):
                 )
             )
 
-        if self.verified_chain_has_legacy_symantec_anchor:
+        if self.verified_chain_has_legacy_symantec_anchor is None:
+            symantec_str = self.NO_VERIFIED_CHAIN_ERROR_TXT
+        elif self.verified_chain_has_legacy_symantec_anchor:
             timeline_str = (
                 "March 2018"
                 if self.verified_chain_has_legacy_symantec_anchor == SymantecDistrustTimelineEnum.MARCH_2018
                 else "September 2018"
             )
             symantec_str = "WARNING: Certificate distrusted by Google and Mozilla on {}".format(timeline_str)
-        else:
+        elif not self.verified_chain_has_legacy_symantec_anchor:
             symantec_str = "OK - Not a Symantec-issued certificate"
+        else:
+            raise RuntimeError("Should never happen")
         text_output.append(self._format_field("Symantec 2018 Deprecation:", symantec_str))
 
         # Print the Common Names within the certificate chain

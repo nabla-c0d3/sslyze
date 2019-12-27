@@ -79,7 +79,7 @@ class ProxyTunnelingConnectionHelper(ConnectionHelper):
         else:
             sock.send(
                 self.HTTP_CONNECT_REQ_PROXY_AUTH_BASIC.format(
-                    self._server_host, self._server_port, self._tunnel_basic_auth_token
+                    self._server_host, self._server_port, self._tunnel_basic_auth_token.decode()
                 ).encode("utf-8")
             )
         http_response = HttpResponseParser.parse_from_socket(sock)

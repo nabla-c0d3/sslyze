@@ -19,7 +19,8 @@ from cryptography.x509 import Certificate, load_pem_x509_certificate, ExtensionO
 from dataclasses import dataclass
 from nassl.ocsp_response import OcspResponse, OcspResponseStatusEnum
 from nassl.ocsp_response import OcspResponseNotTrustedError
-from nassl.ssl_client import ClientCertificateRequested, CouldNotBuildVerifiedChain
+from nassl.ssl_client import ClientCertificateRequested
+from nassl.cert_chain_verifier import CertificateChainVerificationFailed
 from sslyze.plugins import plugin_base
 from sslyze.plugins.plugin_base import PluginScanResult, PluginScanCommand
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
@@ -233,6 +234,8 @@ class CertificateInfoPlugin(plugin_base.Plugin):
         # Enable OCSP stapling
         ssl_connection.ssl_client.set_tlsext_status_ocsp()
 
+        verify_str = 'ok'
+
         try:  # Perform the SSL handshake
             ssl_connection.connect()
 
@@ -240,14 +243,13 @@ class CertificateInfoPlugin(plugin_base.Plugin):
             received_chain_as_pem = ssl_connection.ssl_client.get_received_chain()
             try:
                 verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
-            except CouldNotBuildVerifiedChain:
+            except CertificateChainVerificationFailed as e:
                 verified_chain_as_pem = None
+                verify_str = e.openssl_error_string
             except AttributeError:
                 # Only the modern SSL Client can build the verified chain; hence we get here if the server only supports
                 # an older version of TLS (pre 1.2)
                 verified_chain_as_pem = None
-
-            (_, verify_str) = ssl_connection.ssl_client.get_certificate_chain_verify_result()
 
         except ClientCertificateRequested:  # The server asked for a client cert
             # We can get the server cert anyway
@@ -255,14 +257,13 @@ class CertificateInfoPlugin(plugin_base.Plugin):
             received_chain_as_pem = ssl_connection.ssl_client.get_received_chain()
             try:
                 verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
-            except CouldNotBuildVerifiedChain:
+            except CertificateChainVerificationFailed as e:
                 verified_chain_as_pem = None
+                verify_str = e.openssl_error_string
             except AttributeError:
                 # Only the modern SSL Client can build the verified chain; hence we get here if the server only supports
                 # an older version of TLS (pre 1.2)
                 verified_chain_as_pem = None
-
-            (_, verify_str) = ssl_connection.ssl_client.get_certificate_chain_verify_result()
 
         finally:
             ssl_connection.close()
@@ -559,20 +560,20 @@ class CertificateInfoScanResult(PluginScanResult):
                 )
 
                 ocsp_resp_txt = [
-                    self._format_field("OCSP Response Status:", self.ocsp_response["responseStatus"]),
+                    self._format_field("OCSP Response Status:", self.ocsp_response["status"]),
                     self._format_field("Validation w/ Mozilla Store:", ocsp_trust_txt),
-                    self._format_field("Responder Id:", self.ocsp_response["responderID"]),
+                    self._format_field("Responder Id:", self.ocsp_response["responder_id"]),
                 ]
 
-                if "successful" in self.ocsp_response["responseStatus"]:
+                if self.ocsp_response["status"] == OcspResponseStatusEnum.SUCCESSFUL:
                     ocsp_resp_txt.extend(
                         [
-                            self._format_field("Cert Status:", self.ocsp_response["responses"][0]["certStatus"]),
+                            self._format_field("Cert Status:", self.ocsp_response["certificate_status"]),
                             self._format_field(
-                                "Cert Serial Number:", self.ocsp_response["responses"][0]["certID"]["serialNumber"]
+                                "Cert Serial Number:", self.ocsp_response["serial_number"]
                             ),
-                            self._format_field("This Update:", self.ocsp_response["responses"][0]["thisUpdate"]),
-                            self._format_field("Next Update:", self.ocsp_response["responses"][0]["nextUpdate"]),
+                            self._format_field("This Update:", self.ocsp_response["this_update"]),
+                            self._format_field("Next Update:", self.ocsp_response["next_update"]),
                         ]
                     )
             text_output.extend(ocsp_resp_txt)
@@ -738,11 +739,11 @@ class CertificateInfoScanResult(PluginScanResult):
                 )
 
                 responder_xml = Element("responderID")
-                responder_xml.text = self.ocsp_response["responderID"]
+                responder_xml.text = self.ocsp_response["responder_id"]
                 ocsp_resp_xmp.append(responder_xml)
 
                 produced_xml = Element("producedAt")
-                produced_xml.text = self.ocsp_response["producedAt"]
+                produced_xml.text = self.ocsp_response["produced_at"]
                 ocsp_resp_xmp.append(produced_xml)
 
             ocsp_xml.append(ocsp_resp_xmp)

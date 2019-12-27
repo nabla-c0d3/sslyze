@@ -2,9 +2,10 @@ import optparse
 from abc import ABC
 from operator import attrgetter
 from xml.etree.ElementTree import Element
+import dataclasses
 
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
-from nassl.temp_key_info import TempKeyInfo, OpenSslEvpPkeyEnum
+from nassl.key_exchange_info import KeyExchangeInfo, OpenSslEvpPkeyEnum
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity_info import ServerConnectivityInfo
@@ -399,7 +400,7 @@ class AcceptedCipherSuite(CipherSuite):
         ssl_version: OpenSslVersionEnum,
         key_size: Optional[int],  # TODO(AD): Make it non-optional again by fixing client certificate handling
         post_handshake_response: Optional[str] = None,
-        dh_info: Optional[TempKeyInfo] = None,
+        dh_info: Optional[KeyExchangeInfo] = None,
     ) -> None:
         super().__init__(openssl_name, ssl_version)
         self.key_size = key_size
@@ -554,7 +555,7 @@ class CipherSuiteScanResult(PluginScanResult):
         cipher_xml = Element("cipherSuite", attrib=cipher_attributes)
 
         if cipher.dh_info is not None:
-            key_exchange_xml = Element("keyExchange", attrib=cipher.dh_info.as_dict())
+            key_exchange_xml = Element("keyExchange", attrib=dataclasses.asdict(cipher.dh_info))
             cipher_xml.append(key_exchange_xml)
 
         return cipher_xml

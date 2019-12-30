@@ -1,13 +1,13 @@
-import os
-import pickle
+from pathlib import Path
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 from nassl.ocsp_response import OcspResponseStatusEnum
 
-from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand, \
-    SymantecDistrustTimelineEnum, _SymantecDistructTester
+from sslyze.plugins.certificate_info.scan_commands import CertificateInfoImplementation, CertificateInfoExtraArguments
+from sslyze.plugins.certificate_info.symantec import SymantecDistructTester, SymantecDistrustTimelineEnum
 from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
 import pytest
@@ -16,292 +16,228 @@ import pytest
 class TestCertificateInfoPlugin:
 
     def test_ca_file_bad_file(self):
-        server_test = ServerConnectivityTester(hostname='www.hotmail.com')
-        server_info = server_test.perform()
+        # Given a server to scan
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
+        # When trying to enable a custom CA file but the path is wrong, it fails
         with pytest.raises(ValueError):
-            plugin.process_task(server_info, CertificateInfoScanCommand(ca_file='doesntexist'))
+            CertificateInfoImplementation.perform(server_info, CertificateInfoExtraArguments(
+                custom_ca_file=Path("doesntexist")
+            ))
 
     def test_ca_file(self):
-        server_test = ServerConnectivityTester(hostname='www.hotmail.com')
-        server_info = server_test.perform()
+        # Given a server to scan
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        ca_file_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'wildcard-self-signed.pem')
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
+        # And a valid path to a custom CA file
+        ca_file_path = Path(__file__).parent / '..' / 'utils' / 'wildcard-self-signed.pem'
 
-        assert len(plugin_result.path_validation_result_list) >= 6
-        for path_validation_result in plugin_result.path_validation_result_list:
-            if path_validation_result.trust_store.name == 'Custom --ca_file':
+        # When running the scan with the custom CA file enabled
+        plugin_result = CertificateInfoImplementation.perform(server_info, CertificateInfoExtraArguments(
+            custom_ca_file=ca_file_path
+        ))
+
+        # It succeeds
+        assert len(plugin_result.path_validation_results) >= 6
+        for path_validation_result in plugin_result.path_validation_results:
+            if path_validation_result.trust_store.path == ca_file_path:
                 assert not path_validation_result.was_validation_successful
             else:
                 assert path_validation_result.was_validation_successful
 
-    @pytest.mark.skip('Not implemented - find a server that has must-staple')
-    def test_valid_chain_with_ocsp_stapling_and_must_staple(self):
-        server_test = ServerConnectivityTester(hostname='www.scotthelme.co.uk')
-        server_info = server_test.perform()
+    def test_valid_chain_with_ocsp_stapling(self):
+        # Given a server to scan that supports OCSP stapling
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.digitalocean.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan
+        plugin_result = CertificateInfoImplementation.perform(server_info)
 
+        # The result contains details about the server's OCSP config
         assert plugin_result.ocsp_response
         assert plugin_result.ocsp_response_status == OcspResponseStatusEnum.SUCCESSFUL
         assert plugin_result.ocsp_response_is_trusted
-        assert plugin_result.leaf_certificate_has_must_staple_extension
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
+        assert not plugin_result.leaf_certificate_has_must_staple_extension
 
     def test_valid_chain_with_ev_cert(self):
-        server_test = ServerConnectivityTester(hostname='www.comodo.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has an EV certificate
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.comodo.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan
+        plugin_result = CertificateInfoImplementation.perform(server_info)
 
+        # The result returns that the certificate is EV
         assert plugin_result.leaf_certificate_is_ev
 
+        # And the result has other details about the certificate chain
         assert len(plugin_result.received_certificate_chain) >= 3
         assert len(plugin_result.verified_certificate_chain) >= 3
         assert not plugin_result.received_chain_contains_anchor_certificate
 
-        assert len(plugin_result.path_validation_result_list) == 5
-        for path_validation_result in plugin_result.path_validation_result_list:
+        assert len(plugin_result.path_validation_results) == 5
+        for path_validation_result in plugin_result.path_validation_results:
             assert path_validation_result.was_validation_successful
 
-        assert len(plugin_result.path_validation_error_list) == 0
         assert plugin_result.leaf_certificate_subject_matches_hostname
         assert plugin_result.received_chain_has_valid_order
 
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
-
     def test_invalid_chain(self):
-        server_test = ServerConnectivityTester(hostname='self-signed.badssl.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has a self-signed certificate
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("self-signed.badssl.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan
+        plugin_result = CertificateInfoImplementation.perform(server_info)
 
+        # A verified chain cannot be built
+        assert not plugin_result.verified_certificate_chain
+        assert plugin_result.verified_chain_has_sha1_signature is None
+
+        # And the result has other details about the certificate chain
         assert plugin_result.ocsp_response is None
         assert len(plugin_result.received_certificate_chain) == 1
 
-        assert len(plugin_result.path_validation_result_list) >= 5
-        for path_validation_result in plugin_result.path_validation_result_list:
+        assert len(plugin_result.path_validation_results) >= 5
+        for path_validation_result in plugin_result.path_validation_results:
             assert not path_validation_result.was_validation_successful
 
         assert plugin_result.leaf_certificate_signed_certificate_timestamps_count == 0
 
-        assert len(plugin_result.path_validation_error_list) == 0
         assert plugin_result.leaf_certificate_subject_matches_hostname
         assert plugin_result.received_chain_has_valid_order
         assert plugin_result.received_chain_contains_anchor_certificate is None
-        assert plugin_result.verified_chain_has_sha1_signature is None
-        assert not plugin_result.verified_certificate_chain
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
 
     def test_1000_sans_chain(self):
-        # Ensure SSLyze can process a leaf cert with 1000 SANs
-        server_test = ServerConnectivityTester(hostname='1000-sans.badssl.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has a leaf cert with 1000 SANs
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("1000-sans.badssl.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan, it succeeds
+        CertificateInfoImplementation.perform(server_info)
 
     def test_sha1_chain(self):
-        server_test = ServerConnectivityTester(hostname='sha1-intermediate.badssl.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has a SHA1-signed certificate
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            "sha1-intermediate.badssl.com", 443
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan
+        plugin_result = CertificateInfoImplementation.perform(server_info)
 
+        # The SHA1 signature is detected
         assert plugin_result.verified_chain_has_sha1_signature
 
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
     def test_sha256_chain(self):
-        server_test = ServerConnectivityTester(hostname='sha256.badssl.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has a SHA256-signed certificate
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            "sha256.badssl.com", 443
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan
+        plugin_result = CertificateInfoImplementation.perform(server_info)
 
+        # No SHA1 signature is detected
         assert not plugin_result.verified_chain_has_sha1_signature
 
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
-
-    @pytest.mark.skip('Find a server with a unicode certificate')
-    def test_unicode_certificate(self):
-        server_test = ServerConnectivityTester(hostname='เพย์สบาย.th')
-        server_info = server_test.perform()
-
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
-
-        assert len(plugin_result.received_certificate_chain) >= 1
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
-
     def test_ecdsa_certificate(self):
-        server_test = ServerConnectivityTester(hostname='www.cloudflare.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has an ECDSA certificate
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            "www.cloudflare.com", 443
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
-
-        assert len(plugin_result.received_certificate_chain) >= 1
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
+        # When running the scan, it succeeds
+        CertificateInfoImplementation.perform(server_info)
 
     def test_chain_with_anchor(self):
-        server_test = ServerConnectivityTester(hostname='www.verizon.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has its anchor certificate returned in its chain
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            "www.verizon.com", 443
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan, it succeeds
+        plugin_result = CertificateInfoImplementation.perform(server_info)
 
+        # And the anchor certificate was detected
         assert plugin_result.received_chain_contains_anchor_certificate
 
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
-
     def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
-        server_test = ServerConnectivityTester(hostname='webmail.russia.nasa.gov')
-        server_info = server_test.perform()
+        # Given a server to scan that has a certificate chain valid for the Microsoft but not the Mozilla trust stores
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            "webmail.russia.nasa.gov", 443
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan, it succeeds
+        plugin_result = CertificateInfoImplementation.perform(server_info)
 
+        # And the chain was correctly identified as valid with the Microsoft store
         found_microsoft_store = False
-        for validation_result in plugin_result.path_validation_result_list:
+        for validation_result in plugin_result.path_validation_results:
             if validation_result.trust_store.name == 'Windows':
                 found_microsoft_store = True
                 assert validation_result.was_validation_successful
                 break
         assert found_microsoft_store
 
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
-
-    def test_only_trusted_by_custom_ca_file(self):
-        server_test = ServerConnectivityTester(hostname='self-signed.badssl.com')
-        server_info = server_test.perform()
-
-        plugin = CertificateInfoPlugin()
-        ca_file_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'self-signed.badssl.com.pem')
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand(ca_file=ca_file_path))
-
-        found_custom_store = False
-        for validation_result in plugin_result.path_validation_result_list:
-            if validation_result.trust_store.name == 'Custom --ca_file':
-                assert validation_result.was_validation_successful
-                found_custom_store = True
-                break
-        assert found_custom_store
-        assert plugin_result.verified_certificate_chain
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
-
     def test_certificate_with_no_cn(self):
-        server_test = ServerConnectivityTester(hostname='no-common-name.badssl.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has a certificate with no CN
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            "no-common-name.badssl.com", 443
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan, it succeeds
+        plugin_result = CertificateInfoImplementation.perform(server_info)
 
         assert plugin_result.verified_certificate_chain
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
 
     def test_certificate_with_no_subject(self):
-        server_test = ServerConnectivityTester(hostname='no-subject.badssl.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has a certificate with no Subject
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            "no-subject.badssl.com", 443
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan, it succeeds
+        plugin_result = CertificateInfoImplementation.perform(server_info)
 
         assert plugin_result.verified_certificate_chain
 
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
-
     def test_certificate_with_scts(self):
-        server_test = ServerConnectivityTester(hostname='www.apple.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has a certificate with SCTS
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            "www.apple.com", 443
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CertificateInfoPlugin()
-        plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
+        # When running the scan, it succeeds
+        plugin_result = CertificateInfoImplementation.perform(server_info)
 
+        # And the SCTS were detected
         assert plugin_result.leaf_certificate_signed_certificate_timestamps_count > 1
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
 
     @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
-            server_test = ServerConnectivityTester(
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
+                port=server.port,
                 ip_address=server.ip_address,
-                port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            # CertificateInfoPlugin works even when a client cert was not supplied
-            plugin = CertificateInfoPlugin()
-            plugin_result = plugin.process_task(server_info, CertificateInfoScanCommand())
-
-        assert plugin_result.received_certificate_chain
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+            # When running the scan, it succeeds
+            plugin_result = CertificateInfoImplementation.perform(server_info)
+            assert plugin_result.received_certificate_chain
 
 
 class SymantecDistructTestCase:
@@ -399,7 +335,7 @@ TBj0/VLZjmmx6BEP3ojY+x1J96relc8geMJgEtslQIxq/H5COEBkEveegeGTLg==
         ]
 
         # The class to check for Symantec CAs returns the right result
-        assert _SymantecDistructTester.get_distrust_timeline(cert_chain) is None
+        assert SymantecDistructTester.get_distrust_timeline(cert_chain) is None
 
     # One of the deprecated Symantec CA certs
     _GEOTRUST_GLOBAL_CA_CERT = """-----BEGIN CERTIFICATE-----
@@ -500,7 +436,7 @@ wJH9LUwwjr2MpQSRu6Srfw/Yb/BmAMmjXPWwj4PmnFrmtrnFvL7kAg==
         ]
 
         # The class to check for Symantec CAs returns the right result
-        assert _SymantecDistructTester.get_distrust_timeline(cert_chain) == \
+        assert SymantecDistructTester.get_distrust_timeline(cert_chain) == \
             SymantecDistrustTimelineEnum.MARCH_2018
 
     def test_september_2018(self):
@@ -577,5 +513,5 @@ Px8G8k/Ll6BKWcZ40egDuYVtLLrhX7atKz4lecWLVtXjCYDqwSfC2Q7sRwrp0Mr8
         ]
 
         # The class to check for Symantec CAs returns the right result
-        assert _SymantecDistructTester.get_distrust_timeline(cert_chain) == \
+        assert SymantecDistructTester.get_distrust_timeline(cert_chain) == \
             SymantecDistrustTimelineEnum.SEPTEMBER_2018

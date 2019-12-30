@@ -107,7 +107,6 @@ class Scanner:
                     )
                     del self._pending_server_scan_results[server_scan.server_info]
 
-
         self._shutdown_thread_pools()
 
     def _shutdown_thread_pools(self):

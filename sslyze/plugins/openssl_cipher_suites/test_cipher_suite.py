@@ -1,7 +1,7 @@
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuiteScanResult, CipherSuiteScanResultEnum
-from sslyze.server_connectivity_info import ServerConnectivityInfo
+from sslyze.server_connectivity_tester import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SslHandshakeRejected
 from sslyze.utils.tls12_workaround import WorkaroundForTls12ForCipherSuites
 
@@ -22,7 +22,7 @@ def test_cipher_suite(
         requires_legacy_openssl = False
 
     ssl_connection = server_connectivity_info.get_preconfigured_ssl_connection(
-        override_ssl_version=ssl_version, should_use_legacy_openssl=requires_legacy_openssl
+        override_tls_version=ssl_version, should_use_legacy_openssl=requires_legacy_openssl
     )
 
     # Only enable the cipher suite to test; not trivial anymore since OpenSSL 1.1.1 and TLS 1.3
@@ -54,6 +54,7 @@ def test_cipher_suite(
         result_enum = CipherSuiteScanResultEnum.ACCEPTED_BY_SERVER
         if should_send_request_after_handshake:
             try:
+                # TODO(AD): Fix this for HTTPS / PLAIN_TLS
                 post_tls_handshake_response = ssl_connection.send_sample_request()
             except NotImplementedError:
                 # We don't have code to send a sample request for the protocol we are using with this server

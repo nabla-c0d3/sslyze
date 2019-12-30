@@ -37,7 +37,7 @@ class Scanner:
     def queue_scan(self, server_scan: ServerScanRequest) -> None:
         # Only one scan per server can be submitted
         if server_scan.server_info in self._pending_server_scan_results:
-            raise ValueError(f"Already submitted a scan for server {server_scan.server_info}")
+            raise ValueError(f"Already submitted a scan for server {server_scan.server_info.server_location}")
         self._queued_server_scans.append(server_scan)
         self._pending_server_scan_results[server_scan.server_info] = {}
 

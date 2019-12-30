@@ -7,49 +7,64 @@ from abc import ABC, abstractmethod
 from concurrent.futures import Future
 from xml.etree.ElementTree import Element
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from sslyze.server_connectivity_info import ServerConnectivityInfo
-from typing import List, Type, ClassVar, Callable, Any, TypeVar, Generic
+from typing import List, Type, Callable, Any, Set, Dict, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sslyze.plugins.scan_commands import ScanCommandEnum
+    from sslyze.server_connectivity_tester import ServerConnectivityInfo
+
+
+class ScanCommandResult(ABC):
+    pass
+
+
+class ScanCommandExtraArguments(ABC):
+    pass
 
 
 @dataclass(frozen=True)
-class ScanCommand(ABC):
-    scan_command_implementation_cls: ClassVar[Type["ScanCommandImplementation"]]
+class ServerScanRequest:
+    server_info: "ServerConnectivityInfo"
+    scan_commands: Set["ScanCommandEnum"]
+    scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments] = field(default_factory=dict)
 
-    server_info: ServerConnectivityInfo
 
+@dataclass(frozen=True)
+class ServerScanResult:
+    scan_commands_results: Dict["ScanCommandEnum", ScanCommandResult]
 
-_ScanCommandTypeVar = TypeVar("_ScanCommandTypeVar", bound=ScanCommand)
+    # What was passed in the corresponding ServerScanRequest
+    server_info: "ServerConnectivityInfo"
+    scan_commands: Set["ScanCommandEnum"]
+    scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments]
 
 
 @dataclass(frozen=True)
 class ScanJob:
-    spawned_by_scan_command: ScanCommand
-
+    """TODO: 1 job - 1 connection.
+    """
     function_to_call: Callable
     function_arguments: Any
 
 
-@dataclass(frozen=True)
-class ScanCommandResult:
-    server_info: ServerConnectivityInfo
-
-
-class ScanCommandImplementation(Generic[_ScanCommandTypeVar]):
-
-    scan_command_result_cls: ClassVar[Type[ScanCommandResult]]
+class ScanCommandImplementation(ABC):
 
     @classmethod
     @abstractmethod
-    def scan_jobs_for_scan_command(cls, scan_command: _ScanCommandTypeVar) -> List[ScanJob]:
+    def scan_jobs_for_scan_command(
+        cls,
+        server_info: "ServerConnectivityInfo",
+        extra_arguments: Optional[ScanCommandExtraArguments] = None
+    ) -> List[ScanJob]:
         pass
 
     @classmethod
     @abstractmethod
     def result_for_completed_scan_jobs(
         cls,
-        server_info: ServerConnectivityInfo,
+        server_info: "ServerConnectivityInfo",
         completed_scan_jobs: List[Future]
     ) -> ScanCommandResult:
         pass
@@ -139,7 +154,7 @@ class Plugin(ABC):
         return options
 
     @abstractmethod
-    def process_task(self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand) -> "PluginScanResult":
+    def process_task(self, server_info: "ServerConnectivityInfo", scan_command: PluginScanCommand) -> "PluginScanResult":
         """Should run the supplied scan command on the server and return the result.
 
         Args:
@@ -160,7 +175,7 @@ class PluginScanResult(ABC):
         scan_command (PluginScanCommand): The scan command that was run against the server.
     """
 
-    def __init__(self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand) -> None:
+    def __init__(self, server_info: "ServerConnectivityInfo", scan_command: PluginScanCommand) -> None:
         self.server_info = server_info
         self.scan_command = scan_command
 

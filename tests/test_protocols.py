@@ -3,7 +3,6 @@ import socket
 import pytest
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin, CertificateInfoScanCommand
 from sslyze.server_connectivity_tester import ServerConnectivityTester, ClientAuthenticationServerConfigurationEnum
 from sslyze.server_setting import TlsWrappedProtocolEnum, ServerNetworkLocationViaDirectConnection, \
     ServerNetworkConfiguration

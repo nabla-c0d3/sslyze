@@ -1,4 +1,3 @@
-from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.plugins.compression_plugin import CompressionPlugin
 from sslyze.plugins.early_data_plugin import EarlyDataPlugin
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin
@@ -20,8 +19,6 @@ class PluginsRepository:
     """
 
     _PLUGIN_CLASSES = [
-        #OpenSslCipherSuitesPlugin,
-        CertificateInfoPlugin,
         CompressionPlugin,
         FallbackScsvPlugin,
         HeartbleedPlugin,

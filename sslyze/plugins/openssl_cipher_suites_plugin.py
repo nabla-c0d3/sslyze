@@ -359,6 +359,10 @@ class OpenSslCipherSuitesPlugin(Plugin):
                 if not WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_name):
                     modern_supported_cipher_count += 1
 
+                # Workaround for CHACHA20 ciphers, which require the modern OpenSSL for comparison to work
+                if "CHACHA20" in cipher_name:
+                    modern_supported_cipher_count += 1
+
                 if modern_supported_cipher_count > 1:
                     should_use_legacy_openssl = False
                     break

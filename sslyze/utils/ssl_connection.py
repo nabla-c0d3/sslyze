@@ -5,8 +5,12 @@ from typing import Optional
 
 from nassl.legacy_ssl_client import LegacySslClient
 
-from sslyze.server_setting import ServerNetworkLocation, ServerNetworkLocationViaDirectConnection, \
-    ServerNetworkLocationViaHttpProxy, ServerNetworkConfiguration
+from sslyze.server_setting import (
+    ServerNetworkLocation,
+    ServerNetworkLocationViaDirectConnection,
+    ServerNetworkLocationViaHttpProxy,
+    ServerNetworkConfiguration,
+)
 from sslyze.utils.http_response_parser import HttpResponseParser
 
 import time
@@ -15,13 +19,16 @@ from nassl import _nassl
 from nassl.ssl_client import SslClient, OpenSslVersionEnum, BaseSslClient, OpenSslVerifyEnum
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.utils.tls_wrapped_protocol_helpers import TlsWrappedProtocolHelper, XmppHelper, XmppServerHelper, \
-    START_TLS_HELPER_CLASSES
+from sslyze.utils.tls_wrapped_protocol_helpers import (
+    TlsWrappedProtocolHelper,
+    XmppHelper,
+    XmppServerHelper,
+    START_TLS_HELPER_CLASSES,
+)
 
 
 def _open_socket_for_direct_connection(
-    server_location: ServerNetworkLocationViaDirectConnection,
-    network_timeout: int
+    server_location: ServerNetworkLocationViaDirectConnection, network_timeout: int
 ) -> socket.socket:
     return socket.create_connection((server_location.ip_address, server_location.port), timeout=network_timeout)
 
@@ -32,13 +39,12 @@ class CouldNotConnectToHttpProxyError(Exception):
 
 
 def _open_socket_for_connection_via_http_proxy(
-    server_location: ServerNetworkLocationViaHttpProxy,
-    network_timeout: int
+    server_location: ServerNetworkLocationViaHttpProxy, network_timeout: int
 ) -> socket.socket:
     try:
         sock = socket.create_connection(
             (server_location.http_proxy_settings.hostname, server_location.http_proxy_settings.port),
-            timeout=network_timeout
+            timeout=network_timeout,
         )
     except socket.timeout as e:
         raise CouldNotConnectToHttpProxyError(f"Could not connect to the proxy: {str(e)}")
@@ -77,6 +83,7 @@ def _open_socket(server_location: ServerNetworkLocation, network_timeout: int) -
 class SslHandshakeRejected(IOError):
     """The server explicitly rejected the SSL handshake.
     """
+
 
 # The following errors mean that the server explicitly rejected the handshake. The goal to differentiate rejected
 # handshakes from random network errors such as the server going offline, etc.

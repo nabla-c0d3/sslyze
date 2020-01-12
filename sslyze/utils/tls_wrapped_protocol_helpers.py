@@ -127,7 +127,7 @@ class XmppHelper(TlsWrappedProtocolHelper):
     )
     XMPP_STARTTLS = b"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
 
-    def __init__(self, server_hostname: str,  xmpp_to: Optional[str]) -> None:
+    def __init__(self, server_hostname: str, xmpp_to: Optional[str]) -> None:
         super().__init__(server_hostname)
         self._xmpp_to = xmpp_to if xmpp_to else server_hostname
 

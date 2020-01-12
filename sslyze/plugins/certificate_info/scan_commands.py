@@ -8,13 +8,13 @@ from nassl.ocsp_response import OcspResponseStatusEnum
 
 from sslyze.plugins.certificate_info.cert_chain_analyzer import CertificateChainDeploymentAnalyzer
 from sslyze.plugins.certificate_info.get_cert_chain import get_and_verify_certificate_chain, PathValidationResult
-from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, \
-    ScanCommandExtraArguments
+from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
 from sslyze.plugins.utils.trust_store.trust_store import TrustStore
 from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
 
 
+@dataclass(frozen=True)
 class CertificateInfoExtraArguments(ScanCommandExtraArguments):
     """Verify the validity of the server(s) certificate(s) against various trust stores (Mozilla, Apple, etc.), and
     check for OCSP stapling support.
@@ -25,6 +25,10 @@ class CertificateInfoExtraArguments(ScanCommandExtraArguments):
     """
 
     custom_ca_file: Path
+
+    def __post_init__(self):
+        if not self.custom_ca_file.is_file():
+            raise ValueError(f'Could not open supplied CA file at "{self.custom_ca_file}"')
 
 
 @dataclass(frozen=True)
@@ -66,6 +70,7 @@ class CertificateInfoScanResult(ScanCommandResult):
             None if no OCSP response was sent by the server.
 
     """
+
     received_certificate_chain: List[Certificate]
     path_validation_results: List[PathValidationResult]
 
@@ -95,22 +100,15 @@ class CertificateInfoScanResult(ScanCommandResult):
 class CertificateInfoImplementation(ScanCommandImplementation):
     @classmethod
     def scan_jobs_for_scan_command(
-            cls,
-            server_info: ServerConnectivityInfo,
-            extra_arguments: Optional[CertificateInfoExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[CertificateInfoExtraArguments] = None
     ) -> List[ScanJob]:
         final_trust_store_list = TrustStoresRepository.get_default().get_all_stores()
         if extra_arguments:
-            if not extra_arguments.custom_ca_file.is_file():
-                raise ValueError(f'Could not open supplied CA file at "{extra_arguments.custom_ca_file}"')
             final_trust_store_list.append(TrustStore(extra_arguments.custom_ca_file, "Supplied CA file", "N/A"))
 
         # Run one job per trust store to test for
         scan_jobs = [
-            ScanJob(
-                function_to_call=get_and_verify_certificate_chain,
-                function_arguments=[server_info, trust_store],
-            )
+            ScanJob(function_to_call=get_and_verify_certificate_chain, function_arguments=[server_info, trust_store])
             for trust_store in final_trust_store_list
         ]
         return scan_jobs

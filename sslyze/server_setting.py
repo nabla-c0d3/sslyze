@@ -111,6 +111,7 @@ class ServerNetworkLocationViaHttpProxy(ServerNetworkLocation):
         http_proxy_settings: The HTTP proxy configuration to use in order to tunnel the scans through a proxy. The
             proxy will be responsible for looking up the server's IP address and connecting to it.
     """
+
     http_proxy_settings: HttpProxySettings
 
 
@@ -143,6 +144,7 @@ class ClientAuthenticationCredentials:
            key_password: The password to decrypt the private key.
            key_type: The format of the key file.
     """
+
     certificate_chain_path: Path
     key_path: Path
     key_password: str
@@ -181,6 +183,7 @@ class ServerNetworkConfiguration:
         max_connection_attempts: The number of retries SSLyze will perform when attempting to establish a connection
             to the server.
     """
+
     tls_server_name_indication: str
     tls_wrapped_protocol: TlsWrappedProtocolEnum = TlsWrappedProtocolEnum.PLAIN_TLS
     tls_client_auth_credentials: Optional[ClientAuthenticationCredentials] = None

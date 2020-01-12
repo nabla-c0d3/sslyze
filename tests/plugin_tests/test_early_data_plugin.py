@@ -1,7 +1,6 @@
-import pickle
-
-from sslyze.plugins.early_data_plugin import EarlyDataPlugin, EarlyDataScanCommand
+from sslyze.plugins.early_data_plugin import EarlyDataScanResult, EarlyDataImplementation
 from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, LegacyOpenSslServer
 
@@ -10,78 +9,51 @@ class TestEarlyDataPlugin:
 
     @can_only_run_on_linux_64
     def test_early_data_enabled(self):
+        # Given a server to scan that supports early data
         with ModernOpenSslServer(max_early_data=256) as server:
-            server_test = ServerConnectivityTester(
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            plugin = EarlyDataPlugin()
-            plugin_result = plugin.process_task(server_info, EarlyDataScanCommand())
+            # When testing for early data support, it succeeds
+            result: EarlyDataScanResult = EarlyDataImplementation.perform(server_info)
 
-        assert plugin_result.is_early_data_supported
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
-
-    def test_early_data_enabled_online(self):
-        server_test = ServerConnectivityTester(hostname='www.cloudflare.com')
-        server_info = server_test.perform()
-
-        plugin = EarlyDataPlugin()
-        plugin_result = plugin.process_task(server_info, EarlyDataScanCommand())
-
-        assert plugin_result.is_early_data_supported
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
+        # And the right result is returned
+        assert result.supports_early_data
 
     @can_only_run_on_linux_64
     def test_early_data_disabled_no_tls_1_3(self):
+        # Given a server to scan that does NOT support early data because it does not support TLS 1.3
         with LegacyOpenSslServer() as server:
-            server_test = ServerConnectivityTester(
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            plugin = EarlyDataPlugin()
-            plugin_result = plugin.process_task(server_info, EarlyDataScanCommand())
+            # When testing for early data support, it succeeds
+            result: EarlyDataScanResult = EarlyDataImplementation.perform(server_info)
 
-        assert not plugin_result.is_early_data_supported
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
+        # And the right result is returned
+        assert not result.supports_early_data
 
     @can_only_run_on_linux_64
     def test_early_data_disabled(self):
+        # Given a server to scan that does NOT support early data because it it is disabled
         with ModernOpenSslServer(max_early_data=None) as server:
-            server_test = ServerConnectivityTester(
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            plugin = EarlyDataPlugin()
-            plugin_result = plugin.process_task(server_info, EarlyDataScanCommand())
+            # When testing for early data support, it succeeds
+            result: EarlyDataScanResult = EarlyDataImplementation.perform(server_info)
 
-        assert not plugin_result.is_early_data_supported
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
+            # And the right result is returned
+        assert not result.supports_early_data

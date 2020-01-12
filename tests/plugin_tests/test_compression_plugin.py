@@ -17,10 +17,10 @@ class TestCompressionPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When testing for compression support, it succeeds
-        plugin_result: CompressionScanResult = CompressionImplementation.perform(server_info)
+        result: CompressionScanResult = CompressionImplementation.perform(server_info)
 
         # And the right result is returned
-        assert not plugin_result.supports_compression
+        assert not result.supports_compression
 
     @pytest.mark.skip('Not implemented; find a server vulnerable to TLS compression')
     def test_compression_enabled(self):
@@ -40,6 +40,6 @@ class TestCompressionPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for compression support, it succeeds
-            plugin_result: CompressionScanResult = CompressionImplementation.perform(server_info)
+            result: CompressionScanResult = CompressionImplementation.perform(server_info)
 
-        assert not plugin_result.supports_compression
+        assert not result.supports_compression

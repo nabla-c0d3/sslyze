@@ -3,6 +3,7 @@ from typing import Dict, Type, TYPE_CHECKING
 
 from sslyze.plugins.certificate_info.core import CertificateInfoImplementation
 from sslyze.plugins.compression_plugin import CompressionImplementation
+from sslyze.plugins.early_data_plugin import EarlyDataImplementation
 from sslyze.plugins.openssl_cipher_suites.scan_commands import (
     Sslv20ScanImplementation,
     Sslv30ScanImplementation,
@@ -29,6 +30,8 @@ class ScanCommandEnum(Enum):
 
     TLS_COMPRESSION = "compression"
 
+    TLS_1_3_EARLY_DATA = "early_data"
+
     def _get_implementation_cls(self):
         return _IMPLEMENTATION_CLASSES[self]
 
@@ -42,4 +45,5 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommandEnum, Type["ScanCommandImplementation"]
     ScanCommandEnum.TLS_1_2_CIPHER_SUITES: Tlsv12ScanImplementation,
     ScanCommandEnum.TLS_1_3_CIPHER_SUITES: Tlsv13ScanImplementation,
     ScanCommandEnum.TLS_COMPRESSION: CompressionImplementation,
+    ScanCommandEnum.TLS_1_3_EARLY_DATA: EarlyDataImplementation,
 }

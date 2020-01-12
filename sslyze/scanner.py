@@ -3,17 +3,14 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Dict, Iterable, List, Tuple
 
 from sslyze.plugins.plugin_base import ServerScanRequest, ServerScanResult, ScanCommandResult
-from sslyze.plugins.plugins_repository import PluginsRepository
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
 
 
 class Scanner:
     def __init__(self, per_server_concurrent_connections_limit: int = 5, concurrent_server_scans_limit: int = 10):
-        self._plugins_repository = PluginsRepository()
-        self._queued_future_to_server_and_scan_cmd: Dict[Future, Tuple[ServerConnectivityInfo, ScanCommandEnum]] = {}
-
         self._queued_server_scans: List[ServerScanRequest] = []
+        self._queued_future_to_server_and_scan_cmd: Dict[Future, Tuple[ServerConnectivityInfo, ScanCommandEnum]] = {}
         self._pending_server_scan_results: Dict[ServerConnectivityInfo, Dict[ScanCommandEnum, ScanCommandResult]] = {}
 
         # Rate-limit how many connections the scanner will open

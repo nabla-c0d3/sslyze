@@ -4,7 +4,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 from nassl.ocsp_response import OcspResponseStatusEnum
 
-from sslyze.plugins.certificate_info.scan_commands import CertificateInfoImplementation, CertificateInfoExtraArguments
+from sslyze.plugins.certificate_info.core import CertificateInfoImplementation, CertificateInfoExtraArguments
 from sslyze.plugins.certificate_info.symantec import SymantecDistructTester, SymantecDistrustTimelineEnum
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection

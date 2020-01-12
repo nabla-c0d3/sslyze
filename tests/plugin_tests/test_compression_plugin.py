@@ -1,9 +1,8 @@
-import pickle
-
 import pytest
 
-from sslyze.plugins.compression_plugin import CompressionPlugin, CompressionScanCommand
+from sslyze.plugins.compression_plugin import CompressionImplementation, CompressionScanResult
 from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
@@ -11,21 +10,19 @@ from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 class TestCompressionPlugin:
 
     def test_compression_disabled(self):
-        server_test = ServerConnectivityTester(hostname='www.google.com')
-        server_info = server_test.perform()
+        # Given a server to scan that has TLS compression disabled
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            "www.google.com", 443
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = CompressionPlugin()
-        plugin_result = plugin.process_task(server_info, CompressionScanCommand())
+        # When testing for compression support, it succeeds
+        plugin_result: CompressionScanResult = CompressionImplementation.perform(server_info)
 
-        assert not plugin_result.compression_name
+        # And the right result is returned
+        assert not plugin_result.supports_compression
 
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
-
-    @pytest.mark.skip('Not implemented')
+    @pytest.mark.skip('Not implemented; find a server vulnerable to TLS compression')
     def test_compression_enabled(self):
         # TODO
         pass
@@ -34,18 +31,15 @@ class TestCompressionPlugin:
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
-            # And the client does NOT provide a client certificate
-            server_test = ServerConnectivityTester(
+            # And sslyze does NOT provide a client certificate
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            # The plugin works even when a client cert was not supplied
-            plugin = CompressionPlugin()
-            plugin_result = plugin.process_task(server_info, CompressionScanCommand())
+            # When testing for compression support, it succeeds
+            plugin_result: CompressionScanResult = CompressionImplementation.perform(server_info)
 
-        assert not plugin_result.compression_name
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+        assert not plugin_result.supports_compression

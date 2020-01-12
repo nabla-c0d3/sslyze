@@ -4,6 +4,8 @@ from typing import Dict, Type, TYPE_CHECKING
 from sslyze.plugins.certificate_info.core import CertificateInfoImplementation
 from sslyze.plugins.compression_plugin import CompressionImplementation
 from sslyze.plugins.early_data_plugin import EarlyDataImplementation
+from sslyze.plugins.fallback_scsv_plugin import FallbackScsvImplementation
+from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionImplementation
 from sslyze.plugins.openssl_cipher_suites.scan_commands import (
     Sslv20ScanImplementation,
     Sslv30ScanImplementation,
@@ -34,7 +36,9 @@ class ScanCommandEnum(Enum):
 
     OPENSSL_CCS_INJECTION = "openssl_ccs"
 
-    def _get_implementation_cls(self):
+    TLS_FALLBACK_SCSV = "fallback"
+
+    def _get_implementation_cls(self) -> Type["ScanCommandImplementation"]:
         return _IMPLEMENTATION_CLASSES[self]
 
 
@@ -48,4 +52,6 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommandEnum, Type["ScanCommandImplementation"]
     ScanCommandEnum.TLS_1_3_CIPHER_SUITES: Tlsv13ScanImplementation,
     ScanCommandEnum.TLS_COMPRESSION: CompressionImplementation,
     ScanCommandEnum.TLS_1_3_EARLY_DATA: EarlyDataImplementation,
+    ScanCommandEnum.OPENSSL_CCS_INJECTION: OpenSslCcsInjectionImplementation,
+    ScanCommandEnum.TLS_FALLBACK_SCSV: FallbackScsvImplementation,
 }

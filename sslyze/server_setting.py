@@ -147,7 +147,7 @@ class ClientAuthenticationCredentials:
 
     certificate_chain_path: Path
     key_path: Path
-    key_password: str
+    key_password: str = ""
     key_type: OpenSslFileTypeEnum = OpenSslFileTypeEnum.PEM
 
     def __post_init__(self):

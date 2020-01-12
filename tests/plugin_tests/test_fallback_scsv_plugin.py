@@ -1,10 +1,10 @@
-import pickle
-
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.plugins.fallback_scsv_plugin import FallbackScsvPlugin, FallbackScsvScanCommand
+from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanResult, FallbackScsvImplementation
 from sslyze.server_connectivity_tester import ServerConnectivityTester
-from sslyze.ssl_settings import ClientAuthenticationCredentials
+
+from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkConfiguration, \
+    ClientAuthenticationCredentials
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 import pytest
@@ -13,80 +13,70 @@ import pytest
 class TestFallbackScsvPlugin:
 
     def test_fallback_good(self):
-        server_test = ServerConnectivityTester(hostname='www.google.com')
-        server_info = server_test.perform()
+        # Given a server that supports SCSV
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = FallbackScsvPlugin()
-        plugin_result = plugin.process_task(server_info, FallbackScsvScanCommand())
+        # When testing for SCSV, it succeeds
+        result: FallbackScsvScanResult = FallbackScsvImplementation.perform(server_info)
 
-        assert plugin_result.supports_fallback_scsv
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
+        # And the server is reported as supporting SCSV
+        assert result.supports_fallback_scsv
 
     @can_only_run_on_linux_64
     def test_fallback_bad(self):
+        # Given a server that does NOT support SCSV
         with LegacyOpenSslServer() as server:
-            server_test = ServerConnectivityTester(
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            plugin = FallbackScsvPlugin()
-            plugin_result = plugin.process_task(server_info, FallbackScsvScanCommand())
+            # When testing for SCSV, it succeeds
+            result: FallbackScsvScanResult = FallbackScsvImplementation.perform(server_info)
 
-        assert not plugin_result.supports_fallback_scsv
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
+        # And the server is reported as NOT supporting SCSV
+        assert not result.supports_fallback_scsv
 
     @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed(self):
-        # Given a server that requires client authentication
+        # Given a server that does NOT support SCSV and that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
-            # And the client does NOT provide a client certificate
-            server_test = ServerConnectivityTester(
+            # And sslyze does NOT provide a client certificate
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            # The plugin fails when a client cert was not supplied
-            plugin = FallbackScsvPlugin()
+            # When testing for SCSV, it fails as a client cert was not supplied
             with pytest.raises(ClientCertificateRequested):
-                plugin.process_task(server_info, FallbackScsvScanCommand())
+                FallbackScsvImplementation.perform(server_info)
 
     @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):
-        # Given a server that requires client authentication
+        # Given a server that does NOT support SCSV and that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
-            # And the client provides a client certificate
-            client_creds = ClientAuthenticationCredentials(
-                client_certificate_chain_path=server.get_client_certificate_path(),
-                client_key_path=server.get_client_key_path(),
-            )
-
-            server_test = ServerConnectivityTester(
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
-                port=server.port,
-                client_auth_credentials=client_creds,
+                port=server.port
             )
-            server_info = server_test.perform()
+            # And sslyze provides a client certificate
+            network_config = ServerNetworkConfiguration(
+                tls_server_name_indication=server.hostname,
+                tls_client_auth_credentials=ClientAuthenticationCredentials(
+                    certificate_chain_path=server.get_client_certificate_path(),
+                    key_path=server.get_client_key_path(),
+                ),
+            )
+            server_info = ServerConnectivityTester().perform(server_location, network_config)
 
-            # The plugin works fine
-            plugin = FallbackScsvPlugin()
-            plugin_result = plugin.process_task(server_info, FallbackScsvScanCommand())
+            # When testing for SCSV, it succeeds
+            result: FallbackScsvScanResult = FallbackScsvImplementation.perform(server_info)
 
-        assert not plugin_result.supports_fallback_scsv
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+        # And the server is reported as NOT supporting SCSV
+        assert not result.supports_fallback_scsv

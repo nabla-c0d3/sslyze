@@ -38,9 +38,7 @@ class TestOpenSslCcsInjectionPlugin:
     @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):
         # Given a server that is vulnerable to CCS injection and that requires client authentication
-        with LegacyOpenSslServer(
-                client_auth_config=ClientAuthConfigEnum.REQUIRED
-        ) as server:
+        with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does not provide a client certificate
             server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,

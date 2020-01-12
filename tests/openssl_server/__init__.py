@@ -1,4 +1,3 @@
-import os
 import shlex
 
 import subprocess
@@ -74,8 +73,8 @@ class _OpenSslServer(ABC):
     """A wrapper around OpenSSL's s_server CLI.
     """
 
-    _SERVER_CERT_PATH = os.path.join(os.path.dirname(__file__), 'server-self-signed-cert.pem')
-    _SERVER_KEY_PATH = os.path.join(os.path.dirname(__file__), 'server-self-signed-key.pem')
+    _SERVER_CERT_PATH = Path(__file__).parent.absolute() / 'server-self-signed-cert.pem'
+    _SERVER_KEY_PATH = Path(__file__).parent.absolute() / 'server-self-signed-key.pem'
 
     _AVAILABLE_LOCAL_PORTS = set(range(8110, 8150))
 
@@ -83,20 +82,18 @@ class _OpenSslServer(ABC):
                     ' -cipher "ALL:COMPLEMENTOFALL" {verify_arg} {extra_args}'
 
     # Client authentication - files generated using https://gist.github.com/nabla-c0d3/c2c5799a84a4867e5cbae42a5c43f89a
-    _CLIENT_CA_PATH = os.path.join(os.path.dirname(__file__), 'client-ca.pem')
-    _CLIENT_CERT_PATH = os.path.join(os.path.dirname(__file__), 'client-cert.pem')
-    _CLIENT_KEY_PATH = os.path.join(os.path.dirname(__file__), 'client-key.pem')
+    _CLIENT_CA_PATH = Path(__file__).parent.absolute() / 'client-ca.pem'
 
     # A special message clients can send to get a reply from s_server
     HELLO_MSG = b'Hello\r\n'
 
     @classmethod
-    def get_client_certificate_path(cls) -> str:
-        return cls._CLIENT_CERT_PATH
+    def get_client_certificate_path(cls) -> Path:
+        return Path(__file__).parent.absolute() / 'client-cert.pem'
 
     @classmethod
-    def get_client_key_path(cls) -> str:
-        return cls._CLIENT_KEY_PATH
+    def get_client_key_path(cls) -> Path:
+        return Path(__file__).parent.absolute() / 'client-key.pem'
 
     @classmethod
     @abstractmethod

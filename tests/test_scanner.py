@@ -5,7 +5,7 @@ import pytest
 
 from sslyze.plugins.plugin_base import ServerScanRequest
 from sslyze.scanner import Scanner
-from tests.mock_factories import ServerConnectivityInfoFactory
+from tests.factories import ServerConnectivityInfoFactory
 from tests.mock_plugin import MockPlugin1ScanResult, MockPlugin2ScanResult, MockPlugin1ExtraArguments, \
     ScanCommandEnumForTests
 

@@ -5,6 +5,7 @@ from sslyze.plugins.certificate_info.core import CertificateInfoImplementation
 from sslyze.plugins.compression_plugin import CompressionImplementation
 from sslyze.plugins.early_data_plugin import EarlyDataImplementation
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvImplementation
+from sslyze.plugins.heartbleed_plugin import HeartbleedImplementation
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionImplementation
 from sslyze.plugins.openssl_cipher_suites.scan_commands import (
     Sslv20ScanImplementation,
@@ -38,6 +39,8 @@ class ScanCommandEnum(Enum):
 
     TLS_FALLBACK_SCSV = "fallback"
 
+    HEARTBLEED = "heartbleed"
+
     def _get_implementation_cls(self) -> Type["ScanCommandImplementation"]:
         return _IMPLEMENTATION_CLASSES[self]
 
@@ -54,4 +57,5 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommandEnum, Type["ScanCommandImplementation"]
     ScanCommandEnum.TLS_1_3_EARLY_DATA: EarlyDataImplementation,
     ScanCommandEnum.OPENSSL_CCS_INJECTION: OpenSslCcsInjectionImplementation,
     ScanCommandEnum.TLS_FALLBACK_SCSV: FallbackScsvImplementation,
+    ScanCommandEnum.HEARTBLEED: HeartbleedImplementation,
 }

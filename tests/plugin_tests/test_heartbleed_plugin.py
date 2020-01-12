@@ -1,7 +1,6 @@
-import pickle
-
-from sslyze.plugins.heartbleed_plugin import HeartbleedPlugin, HeartbleedScanCommand
+from sslyze.plugins.heartbleed_plugin import HeartbleedScanResult, HeartbleedImplementation
 from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64
 
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
@@ -10,56 +9,47 @@ from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 class TestHeartbleedPlugin:
 
     def test_heartbleed_good(self):
-        server_test = ServerConnectivityTester(hostname='www.google.com')
-        server_info = server_test.perform()
+        # Given a server that is NOT vulnerable to Heartbleed
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = HeartbleedPlugin()
-        plugin_result = plugin.process_task(server_info, HeartbleedScanCommand())
+        # When testing for Heartbleed, it succeeds
+        result: HeartbleedScanResult = HeartbleedImplementation.perform(server_info)
 
-        assert not plugin_result.is_vulnerable_to_heartbleed
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
+        # And the server is reported as not vulnerable
+        assert result.is_vulnerable_to_heartbleed
 
     @can_only_run_on_linux_64
     def test_heartbleed_bad(self):
+        # Given a server that is vulnerable to Heartbleed
         with LegacyOpenSslServer() as server:
-            server_test = ServerConnectivityTester(
-                hostname=server.hostname, ip_address=server.ip_address, port=server.port
-            )
-            server_info = server_test.perform()
-
-            plugin = HeartbleedPlugin()
-            plugin_result = plugin.process_task(server_info, HeartbleedScanCommand())
-
-        assert plugin_result.is_vulnerable_to_heartbleed
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
-
-    @can_only_run_on_linux_64
-    def test_succeeds_when_client_auth_failed(self):
-        # Given a server that requires client authentication
-        with LegacyOpenSslServer(
-                client_auth_config=ClientAuthConfigEnum.REQUIRED
-        ) as server:
-            # And the client does NOT provide a client certificate
-            server_test = ServerConnectivityTester(
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            # The plugin works even when a client cert was not supplied
-            plugin = HeartbleedPlugin()
-            plugin_result = plugin.process_task(server_info, HeartbleedScanCommand())
+            # When testing for Heartbleed, it succeeds
+            result: HeartbleedScanResult = HeartbleedImplementation.perform(server_info)
 
-        assert plugin_result.is_vulnerable_to_heartbleed
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+        # And the server is reported as vulnerable
+        assert result.is_vulnerable_to_heartbleed
+
+    @can_only_run_on_linux_64
+    def test_succeeds_when_client_auth_failed(self):
+        # Given a server that is vulnerable to Heartbleed and that requires client authentication
+        with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
+            # And sslyze does NOT provide a client certificate
+            server_location = ServerNetworkLocationViaDirectConnection(
+                hostname=server.hostname,
+                ip_address=server.ip_address,
+                port=server.port
+            )
+            server_info = ServerConnectivityTester().perform(server_location)
+
+            # When testing for Heartbleed, it succeeds
+            result: HeartbleedScanResult = HeartbleedImplementation.perform(server_info)
+
+        # And the server is reported as vulnerable
+        assert result.is_vulnerable_to_heartbleed

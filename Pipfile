@@ -21,6 +21,7 @@ sphinx-autodoc-typehints = "*"
 black = "==19.3b0"
 cx-freeze = {git = "https://github.com/anthony-tuininga/cx_Freeze.git"}
 pytest-cov = "*"
+faker = "*"
 
 [requires]
 python_version = "3.7"

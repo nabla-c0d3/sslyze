@@ -14,6 +14,7 @@ from sslyze.utils.tls_wrapped_protocol_helpers import StartTlsError
 class ClientAuthenticationServerConfigurationEnum(Enum):
     """Whether the server asked for client authentication.
     """
+
     DISABLED = 1
     OPTIONAL = 2
     REQUIRED = 3
@@ -23,8 +24,9 @@ class ClientAuthenticationServerConfigurationEnum(Enum):
 class ServerTlsProbingResult:
     """Additional details about the server, detected via connectivity testing.
     """
+
     highest_tls_version_supported: OpenSslVersionEnum
-    openssl_cipher_string_supported: str
+    openssl_cipher_string_supported: str  # TODO(AD): Switch to RFC cipher name?
     client_auth_requirement: ClientAuthenticationServerConfigurationEnum
 
 
@@ -40,6 +42,7 @@ class ServerConnectivityInfo:
         network_configuration: Some additional configuration regarding how to connect to the server.
         tls_probing_result: Some additional details about the server's TLS configuration.
     """
+
     server_location: ServerNetworkLocation
     network_configuration: ServerNetworkConfiguration
     tls_probing_result: ServerTlsProbingResult
@@ -98,7 +101,7 @@ class ServerConnectivityError(Exception):
         self,
         server_location: ServerNetworkLocation,
         network_configuration: ServerNetworkConfiguration,
-        error_message: str
+        error_message: str,
     ) -> None:
         self.server_location = server_location
         self.network_configuration = network_configuration
@@ -133,9 +136,7 @@ class ServerConnectivityTester:
     """
 
     def perform(
-        self,
-        server_location: ServerNetworkLocation,
-        network_configuration: Optional[ServerNetworkConfiguration] = None
+        self, server_location: ServerNetworkLocation, network_configuration: Optional[ServerNetworkConfiguration] = None
     ) -> ServerConnectivityInfo:
         """Attempt to perform a full SSL/TLS handshake with the server.
 
@@ -175,7 +176,7 @@ class ServerConnectivityTester:
             raise ConnectionToServerTimedOut(
                 server_location,
                 final_network_config,
-                f"Connection timed out after {final_network_config.timeout} seconds"
+                f"Connection timed out after {final_network_config.timeout} seconds",
             )
         except ConnectionError:
             raise ServerRejectedConnection(server_location, final_network_config, "Connection rejected")

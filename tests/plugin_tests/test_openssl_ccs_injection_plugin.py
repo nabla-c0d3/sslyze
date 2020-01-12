@@ -1,5 +1,6 @@
-from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionPlugin, OpenSslCcsInjectionScanCommand
+from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionImplementation, OpenSslCcsInjectionScanResult
 from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
@@ -7,52 +8,49 @@ from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 class TestOpenSslCcsInjectionPlugin:
 
     def test_ccs_injection_good(self):
-        server_test = ServerConnectivityTester(hostname='www.google.com')
-        server_info = server_test.perform()
+        # Given a server that is NOT vulnerable to CCS injection
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = OpenSslCcsInjectionPlugin()
-        plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
+        # When testing for CCS injection, it succeeds
+        result: OpenSslCcsInjectionScanResult = OpenSslCcsInjectionImplementation.perform(server_info)
 
-        assert not plugin_result.is_vulnerable_to_ccs_injection
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+        # And the server is reported as not vulnerable
+        assert not result.is_vulnerable_to_ccs_injection
 
     @can_only_run_on_linux_64
     def test_ccs_injection_bad(self):
+        # Given a server that is vulnerable to CCS injection
         with LegacyOpenSslServer() as server:
-            server_test = ServerConnectivityTester(
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            plugin = OpenSslCcsInjectionPlugin()
-            plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
+            # When testing for CCS injection, it succeeds
+            result: OpenSslCcsInjectionScanResult = OpenSslCcsInjectionImplementation.perform(server_info)
 
-        assert plugin_result.is_vulnerable_to_ccs_injection
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+        # And the server is reported as vulnerable
+        assert result.is_vulnerable_to_ccs_injection
 
     @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):
-        # Given a server that requires client authentication
+        # Given a server that is vulnerable to CCS injection and that requires client authentication
         with LegacyOpenSslServer(
                 client_auth_config=ClientAuthConfigEnum.REQUIRED
         ) as server:
-            # And the client does NOT provide a client certificate
-            server_test = ServerConnectivityTester(
+            # And sslyze does not provide a client certificate
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            # OpenSslCcsInjectionPlugin works even when a client cert was not supplied
-            plugin = OpenSslCcsInjectionPlugin()
-            plugin_result = plugin.process_task(server_info, OpenSslCcsInjectionScanCommand())
+            # When testing for CCS injection, it succeeds
+            result: OpenSslCcsInjectionScanResult = OpenSslCcsInjectionImplementation.perform(server_info)
 
-        assert plugin_result.is_vulnerable_to_ccs_injection
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+        # And the server is reported as vulnerable
+        assert result.is_vulnerable_to_ccs_injection

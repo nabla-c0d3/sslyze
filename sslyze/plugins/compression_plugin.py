@@ -25,7 +25,7 @@ class CompressionImplementation(ScanCommandImplementation):
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
         if extra_arguments:
-            raise ValueError("Compression plugin does not take extra arguments")
+            raise ValueError("This plugin does not take extra arguments")
 
         return [ScanJob(function_to_call=_test_compression_support, function_arguments=[server_info])]
 

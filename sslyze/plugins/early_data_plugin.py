@@ -5,8 +5,7 @@ from typing import List, Optional
 from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum, OpenSslEarlyDataStatusEnum
 
-from sslyze.plugins.plugin_base import ScanCommandResult, \
-    ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
+from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.ssl_connection import SslHandshakeRejected
@@ -19,6 +18,7 @@ class EarlyDataScanResult(ScanCommandResult):
     Attributes:
         supports_early_data: True if the server accepted early data.
     """
+
     supports_early_data: bool
 
 
@@ -28,7 +28,7 @@ class EarlyDataImplementation(ScanCommandImplementation):
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
         if extra_arguments:
-            raise ValueError("Compression plugin does not take extra arguments")
+            raise ValueError("This plugin does not take extra arguments")
 
         return [ScanJob(function_to_call=_test_early_data_support, function_arguments=[server_info])]
 
@@ -61,9 +61,7 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
 
     # Then try to re-use the session and send early data
     if session is not None:
-        ssl_connection2 = server_info.get_preconfigured_ssl_connection(
-            override_tls_version=OpenSslVersionEnum.TLSV1_3
-        )
+        ssl_connection2 = server_info.get_preconfigured_ssl_connection(override_tls_version=OpenSslVersionEnum.TLSV1_3)
         ssl_connection2.ssl_client.set_session(session)
 
         try:

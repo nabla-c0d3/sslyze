@@ -14,7 +14,7 @@ from sslyze.plugins.openssl_cipher_suites.scan_commands import (
 )
 
 if TYPE_CHECKING:
-    from sslyze.plugins.plugin_base import ScanCommandImplementation
+    from sslyze.plugins.plugin_base import ScanCommandImplementation  # noqa: F401
 
 
 @unique
@@ -31,6 +31,8 @@ class ScanCommandEnum(Enum):
     TLS_COMPRESSION = "compression"
 
     TLS_1_3_EARLY_DATA = "early_data"
+
+    OPENSSL_CCS_INJECTION = "openssl_ccs"
 
     def _get_implementation_cls(self):
         return _IMPLEMENTATION_CLASSES[self]

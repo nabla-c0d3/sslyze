@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from typing import List, Type, Callable, Any, Set, Dict, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from sslyze.plugins.scan_commands import ScanCommandEnum
+    from sslyze.plugins.scan_commands import ScanCommandEnum  # noqa: F401
     from sslyze.server_connectivity_tester import ServerConnectivityInfo
 
 
@@ -30,7 +30,7 @@ class ServerScanRequest:
     scan_commands: Set["ScanCommandEnum"]
     scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """"Validate that the extra arguments match the scan commands.
         """
         if not self.scan_commands_extra_arguments:

@@ -7,10 +7,10 @@ from sslyze.utils.tls12_workaround import WorkaroundForTls12ForCipherSuites
 
 
 def test_cipher_suite(
-        server_connectivity_info: ServerConnectivityInfo,
-        ssl_version: OpenSslVersionEnum,
-        openssl_cipher_name: str,
-        should_send_request_after_handshake: bool
+    server_connectivity_info: ServerConnectivityInfo,
+    ssl_version: OpenSslVersionEnum,
+    openssl_cipher_name: str,
+    should_send_request_after_handshake: bool,
 ) -> CipherSuiteScanResult:
     """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
     """

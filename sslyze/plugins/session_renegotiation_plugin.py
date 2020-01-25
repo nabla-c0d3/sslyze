@@ -7,8 +7,7 @@ from typing import List, Optional, Tuple
 from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.plugins.plugin_base import ScanCommandImplementation, \
-    ScanCommandExtraArguments, ScanJob, ScanCommandResult
+from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandExtraArguments, ScanJob, ScanCommandResult
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
 
 
@@ -33,6 +32,7 @@ class _ScanJobResultEnum(Enum):
 class SessionRenegotiationImplementation(ScanCommandImplementation):
     """Test a server for insecure TLS renegotiation and client-initiated renegotiation.
     """
+
     @classmethod
     def scan_jobs_for_scan_command(
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
@@ -70,8 +70,7 @@ class SessionRenegotiationImplementation(ScanCommandImplementation):
 
 
 def _test_secure_renegotiation(
-    server_info: ServerConnectivityInfo,
-    tls_version_to_use: OpenSslVersionEnum
+    server_info: ServerConnectivityInfo, tls_version_to_use: OpenSslVersionEnum
 ) -> Tuple[_ScanJobResultEnum, bool]:
     """Check whether the server supports secure renegotiation.
     """
@@ -91,8 +90,7 @@ def _test_secure_renegotiation(
 
 
 def _test_client_renegotiation(
-    server_info: ServerConnectivityInfo,
-    tls_version_to_use: OpenSslVersionEnum
+    server_info: ServerConnectivityInfo, tls_version_to_use: OpenSslVersionEnum
 ) -> Tuple[_ScanJobResultEnum, bool]:
     """Check whether the server honors session renegotiation requests.
     """

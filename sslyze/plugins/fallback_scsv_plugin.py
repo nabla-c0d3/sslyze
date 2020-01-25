@@ -3,8 +3,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from nassl import _nassl
 from nassl.ssl_client import OpenSslVersionEnum
-from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, \
-    ScanCommandExtraArguments, ScanJob
+from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
 from sslyze.utils.ssl_connection import SslHandshakeRejected
 
@@ -16,6 +15,7 @@ class FallbackScsvScanResult(ScanCommandResult):
     Attributes:
         supports_fallback_scsv: True if the server supports the TLS_FALLBACK_SCSV mechanism.
     """
+
     supports_fallback_scsv: bool
 
 
@@ -77,7 +77,6 @@ def _test_scsv(server_info: ServerConnectivityInfo) -> bool:
 
 # TODO
 class CliConnector:
-
     def as_text(self) -> List[str]:
         result_txt = [self._format_title(self.scan_command.get_title())]
         downgrade_txt = (

@@ -2,7 +2,7 @@ import socket
 import types
 from concurrent.futures._base import Future
 from dataclasses import dataclass
-from typing import Type, List, Optional
+from typing import List, Optional
 
 from nassl._nassl import WantReadError
 from nassl.ssl_client import OpenSslVersionEnum
@@ -25,6 +25,7 @@ class HeartbleedScanResult(ScanCommandResult):
     Attributes:
         is_vulnerable_to_heartbleed: True if the server is vulnerable to the Heartbleed attack.
     """
+
     is_vulnerable_to_heartbleed: bool
 
 
@@ -56,9 +57,7 @@ def _test_heartbleed(server_info: ServerConnectivityInfo) -> bool:
     ssl_connection = server_info.get_preconfigured_ssl_connection()
     # Replace nassl.sslClient.do_handshake() with a heartbleed checking SSL handshake so that all the SSLyze options
     # (startTLS, proxy, etc.) still work
-    ssl_connection.ssl_client.do_handshake = types.MethodType(
-        _do_handshake_with_heartbleed, ssl_connection.ssl_client
-    )
+    ssl_connection.ssl_client.do_handshake = types.MethodType(_do_handshake_with_heartbleed, ssl_connection.ssl_client)
 
     is_vulnerable_to_heartbleed = False
     try:

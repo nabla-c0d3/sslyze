@@ -23,6 +23,11 @@ class EarlyDataScanResult(ScanCommandResult):
 
 
 class EarlyDataImplementation(ScanCommandImplementation):
+    """Test the server(s) for TLS 1.3 early data support.
+
+    This will only work for HTTPS servers; other TLS servers (SMTP, POP3, etc.) are not supported.
+    """
+
     @classmethod
     def scan_jobs_for_scan_command(
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
@@ -91,11 +96,6 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
 
 # TODO
 class CliConnector:
-    """Test the server(s) for TLS 1.3 early data support.
-
-    This plugin will only work for HTTPS servers; other TLS servers (SMTP, POP3, etc.) are not supported.
-    """
-
     def as_text(self) -> List[str]:
         txt_result = [self._format_title(self.scan_command.get_title())]
         if self.is_early_data_supported:

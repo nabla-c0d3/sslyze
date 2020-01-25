@@ -12,9 +12,15 @@ from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresR
 from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials
 
-from sslyze.server_setting import HttpProxySettings, ServerNetworkLocationViaDirectConnection, \
-    ServerNetworkLocationViaHttpProxy, ServerNetworkLocation, ServerNetworkConfiguration, \
-    InvalidServerNetworkConfigurationError, ServerHostnameCouldNotBeResolved
+from sslyze.server_setting import (
+    HttpProxySettings,
+    ServerNetworkLocationViaDirectConnection,
+    ServerNetworkLocationViaHttpProxy,
+    ServerNetworkLocation,
+    ServerNetworkConfiguration,
+    InvalidServerNetworkConfigurationError,
+    ServerHostnameCouldNotBeResolved,
+)
 
 
 class CommandLineParsingError(ValueError):

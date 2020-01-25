@@ -16,8 +16,7 @@ from sslyze.server_connectivity_tester import ServerConnectivityInfo
 
 @dataclass(frozen=True)
 class CertificateInfoExtraArguments(ScanCommandExtraArguments):
-    """Verify the validity of the server(s) certificate(s) against various trust stores (Mozilla, Apple, etc.), and
-    check for OCSP stapling support.
+    """Additional configuration for running the CERTIFICATE_INFO scan command.
 
     Attributes:
         custom_ca_file: The path to a custom trust store file to use for certificate validation. The file should contain
@@ -98,6 +97,9 @@ class CertificateInfoScanResult(ScanCommandResult):
 
 
 class CertificateInfoImplementation(ScanCommandImplementation):
+    """Verify the validity of the server(s) certificate(s) against various trust stores (Mozilla, Apple, etc.).
+    """
+
     @classmethod
     def scan_jobs_for_scan_command(
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[CertificateInfoExtraArguments] = None

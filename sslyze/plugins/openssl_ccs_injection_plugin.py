@@ -7,12 +7,7 @@ from typing import List, Optional
 from nassl._nassl import WantReadError
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
-    ScanCommandImplementation,
-    ScanCommandExtraArguments,
-    ScanJob,
-)
+from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.application_data_protocol import TlsApplicationDataRecord
 from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord

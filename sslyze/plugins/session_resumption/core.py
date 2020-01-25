@@ -143,7 +143,8 @@ class SessionResumptionSupportImplementation(ScanCommandImplementation):
 
         # Sort TLS ticket VS session ID result
         results_dict: Dict[_ScanJobResultEnum, List[Any]] = {
-            _ScanJobResultEnum.SESSION_ID_RESUMPTION: [], _ScanJobResultEnum.TLS_TICKET_RESUMPTION: []
+            _ScanJobResultEnum.SESSION_ID_RESUMPTION: [],
+            _ScanJobResultEnum.TLS_TICKET_RESUMPTION: [],
         }
         for job in completed_scan_jobs:
             result_enum, value = job.result()

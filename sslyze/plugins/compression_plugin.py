@@ -20,6 +20,9 @@ class CompressionScanResult(ScanCommandResult):
 
 
 class CompressionImplementation(ScanCommandImplementation):
+    """Test a server for TLS compression support, which can be leveraged to perform a CRIME attack.
+    """
+
     @classmethod
     def scan_jobs_for_scan_command(
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None

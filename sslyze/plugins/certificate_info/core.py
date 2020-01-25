@@ -9,8 +9,8 @@ from nassl.ocsp_response import OcspResponseStatusEnum
 from sslyze.plugins.certificate_info.cert_chain_analyzer import CertificateChainDeploymentAnalyzer
 from sslyze.plugins.certificate_info.get_cert_chain import get_and_verify_certificate_chain, PathValidationResult
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
-from sslyze.plugins.utils.trust_store.trust_store import TrustStore
-from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
+from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
+from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
 
 

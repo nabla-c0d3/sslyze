@@ -32,7 +32,7 @@ def get_include_files():
     """"Get the list of trust stores so they properly packaged when doing a cx_freeze build.
     """
     plugin_data_files = []
-    trust_stores_pem_path = path.join(root_path, 'sslyze', 'plugins', 'utils', 'trust_store', 'pem_files')
+    trust_stores_pem_path = path.join(root_path, 'sslyze', 'plugins', 'certificate_info', 'trust_stores', 'pem_files')
     for file in listdir(trust_stores_pem_path):
         file = path.join(trust_stores_pem_path, file)
         if path.isfile(file):  # skip directories
@@ -74,7 +74,7 @@ setup(
 
     # Package info
     packages=find_packages(exclude=['docs', 'tests']),
-    package_data={'sslyze.plugins.utils.trust_store': ['pem_files/*.pem', 'pem_files/*.yaml']},
+    package_data={'sslyze.plugins.certificate_info.trust_stores': ['pem_files/*.pem', 'pem_files/*.yaml']},
     entry_points={'console_scripts': ['sslyze = sslyze.__main__:main']},
 
     # Dependencies

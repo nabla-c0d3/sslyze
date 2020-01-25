@@ -9,7 +9,10 @@ from urllib.request import urlretrieve
 import inspect
 import sys
 from os.path import realpath
-from sslyze.plugins.utils.trust_store.trust_store import TrustStore
+
+from cryptography.hazmat._oid import ObjectIdentifier
+
+from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from typing import List
 
 
@@ -122,7 +125,9 @@ class TrustStoresRepository:
                 path=store_pem_path,
                 name=self._STORE_PRETTY_NAMES[store_enum],
                 version=store_version,
-                ev_oids=_MOZILLA_EV_OIDS if store_enum == TrustStoreEnum.MOZILLA_NSS else None,
+                ev_oids=[
+                    ObjectIdentifier(oid) for oid in _MOZILLA_EV_OIDS
+                ] if store_enum == TrustStoreEnum.MOZILLA_NSS else None,
             )
 
         self._available_stores = available_stores

@@ -5,7 +5,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate, Certificate
 from nassl.ssl_client import CouldNotBuildVerifiedChain, ClientCertificateRequested
 
-from sslyze.plugins.utils.trust_store.trust_store import TrustStore
+from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
 
 
@@ -19,14 +19,14 @@ class PathValidationResult:
     """The result of trying to validate a server's certificate chain using a specific trust store.
 
     Attributes:
-        trust_store: The trust store used for validation.
+        trust_stores: The trust store used for validation.
         verified_certificate_chain: The verified certificate chain returned by OpenSSL.
             Index 0 is the leaf certificate and the last element is the anchor/CA certificate from the trust store.
             Will be None if the validation failed or the verified chain could not be built.
             Each certificate is parsed using the cryptography module; documentation is available at
             https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
         openssL_verify_string: The result string returned by OpenSSL's validation function.
-        was_validation_successful: Whether the certificate chain is trusted when using supplied the trust_store.
+        was_validation_successful: Whether the certificate chain is trusted when using supplied the trust_stores.
     """
 
     trust_store: TrustStore

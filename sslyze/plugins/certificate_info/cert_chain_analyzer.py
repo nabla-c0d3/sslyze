@@ -9,8 +9,8 @@ from nassl.ocsp_response import OcspResponseStatusEnum, OcspResponseNotTrustedEr
 
 from sslyze.plugins.certificate_info.symantec import SymantecDistructTester
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
-from sslyze.plugins.utils.trust_store.trust_store import TrustStore
-from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
+from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
+from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 
 
 @dataclass(frozen=True)
@@ -85,7 +85,7 @@ class CertificateChainDeploymentAnalyzer:
         is_leaf_certificate_ev = (
             TrustStoresRepository.get_default()
             .get_main_store()
-            .is_extended_validation(self.received_certificate_chain[0])
+            .is_certificate_extended_validation(self.received_certificate_chain[0])
         )
 
         # Check for Signed Timestamps

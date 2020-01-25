@@ -32,7 +32,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # And a valid path to a custom CA file
-        ca_file_path = Path(__file__).parent / '..' / 'utils' / 'wildcard-self-signed.pem'
+        ca_file_path = Path(__file__).parent / '..' / '..' / 'utils' / 'wildcard-self-signed.pem'
 
         # When running the scan with the custom CA file enabled
         plugin_result = CertificateInfoImplementation.perform(server_info, CertificateInfoExtraArguments(

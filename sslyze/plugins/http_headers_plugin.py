@@ -1,103 +1,98 @@
+from concurrent.futures._base import Future
 from http.client import HTTPResponse
-from xml.etree.ElementTree import Element
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509 import Certificate, load_pem_x509_certificate
 from dataclasses import dataclass
-from nassl.ssl_client import CouldNotBuildVerifiedChain
 
-from sslyze.plugins.plugin_base import PluginScanCommand, Plugin, PluginScanResult
+from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandExtraArguments, ScanJob, ScanCommandResult
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
-from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
-from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_setting import TlsWrappedProtocolEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.http_response_parser import HttpResponseParser
-from typing import List, Type, Optional, Dict, Any, TypeVar
+from typing import List, Type, Optional, TypeVar
 
 
-class HttpHeadersScanCommand(PluginScanCommand):
-    """Check for the HTTP Strict Transport Security (HSTS) and HTTP Public Key Pinning (HPKP) HTTP headers within the
-    response sent back by the server(s). Also compute the HPKP pins for the server(s)' current certificate chain.
+@dataclass(frozen=True)
+class HttpHeadersScanResult(ScanCommandResult):
+    """The result of testing a server for HTTP headers related to security.
+
+    Each HTTP header described below will be None if the server did not return it.
+
+    Attributes:
+        strict_transport_security_header: The Strict-Transport-Security header returned by the server.
+        public_key_pins_header: The Public-Key-Pins header returned by the server.
+        public_key_pins_report_only_header: The Public-Key-Pins-Report-Only header returned by the server.
+        expect_ct_header: The Expect-CT header returned by the server.
+    """
+
+    strict_transport_security_header: Optional["StrictTransportSecurityHeader"]
+
+    public_key_pins_header: Optional["PublicKeyPinsHeader"]
+    public_key_pins_report_only_header: Optional["PublicKeyPinsReportOnlyHeader"]
+
+    expect_ct_header: Optional["ExpectCtHeader"]
+
+
+class HttpHeadersImplementation(ScanCommandImplementation):
+    """Test a server for HTTP headers related to security, including HSTS and HPKP.
     """
 
     @classmethod
-    def get_cli_argument(cls) -> str:
-        return "http_headers"
+    def scan_jobs_for_scan_command(
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+    ) -> List[ScanJob]:
+        if extra_arguments:
+            raise ValueError("This plugin does not take extra arguments")
 
-    @classmethod
-    def get_title(cls) -> str:
-        return "HTTP Security Headers"
-
-
-class HttpHeadersPlugin(Plugin):
-    """Test the server(s) for the presence of security-related HTTP headers.
-    """
-
-    @classmethod
-    def get_available_commands(cls) -> List[Type[PluginScanCommand]]:
-        return [HttpHeadersScanCommand]
-
-    def process_task(
-        self, server_info: ServerConnectivityInfo, scan_command: PluginScanCommand
-    ) -> "HttpHeadersScanResult":
-        if not isinstance(scan_command, HttpHeadersScanCommand):
-            raise ValueError("Unexpected scan command")
-
-        if server_info.tls_wrapped_protocol not in [TlsWrappedProtocolEnum.PLAIN_TLS, TlsWrappedProtocolEnum.HTTPS]:
+        if server_info.network_configuration.tls_wrapped_protocol not in [
+            TlsWrappedProtocolEnum.PLAIN_TLS,
+            TlsWrappedProtocolEnum.HTTPS,
+        ]:
+            # TODO(AD): CouldNotScanServerError?
             raise ValueError("Cannot test for HTTP headers on a StartTLS connection.")
 
-        # Perform the SSL handshake
-        mozilla_store = TrustStoresRepository.get_default().get_main_store()
-        ssl_connection = server_info.get_preconfigured_ssl_connection(ssl_verify_locations=mozilla_store.path)
-        try:
-            ssl_connection.connect()
-            try:
-                verified_chain_as_pem = ssl_connection.ssl_client.get_verified_chain()
-            except CouldNotBuildVerifiedChain:
-                verified_chain_as_pem = None
+        return [ScanJob(function_to_call=_retrieve_and_analyze_http_response, function_arguments=[server_info])]
 
-            # Send an HTTP GET request to the server
-            ssl_connection.ssl_client.write(HttpRequestGenerator.get_request(host=server_info.hostname))
+    @classmethod
+    def result_for_completed_scan_jobs(
+        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+    ) -> ScanCommandResult:
+        if len(completed_scan_jobs) != 1:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 
-            # We do not follow redirections because the security headers must be set on the first page according to
-            # https://hstspreload.appspot.com/:
-            # "If you are serving an additional redirect from your HTTPS site, that redirect must still have the HSTS
-            # header (rather than the page it redirects to)."
-            http_response = HttpResponseParser.parse_from_ssl_connection(ssl_connection.ssl_client)
-        finally:
-            ssl_connection.close()
+        return completed_scan_jobs[0].result()
 
-        if http_response.version == 9:
-            # HTTP 0.9 => Probably not an HTTP response
-            raise ValueError("Server did not return an HTTP response")
 
-        # Parse the certificate chain
-        verified_chain = (
-            [
-                load_pem_x509_certificate(cert_as_pem.encode("ascii"), backend=default_backend())
-                for cert_as_pem in verified_chain_as_pem
-            ]
-            if verified_chain_as_pem
-            else None
+def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> HttpHeadersScanResult:
+    # Perform the TLS handshake
+    ssl_connection = server_info.get_preconfigured_ssl_connection()
+    try:
+        ssl_connection.connect()
+
+        # Send an HTTP GET request to the server
+        ssl_connection.ssl_client.write(
+            HttpRequestGenerator.get_request(host=server_info.network_configuration.tls_server_name_indication)
         )
 
-        # Parse each header
-        hsts_header = StrictTransportSecurityHeader.from_http_response(http_response)
-        expect_ct_header = ExpectCtHeader.from_http_response(http_response)
-        hpkp_header = PublicKeyPinsHeader.from_http_response(http_response)
-        hpkp_report_only_header = PublicKeyPinsReportOnlyHeader.from_http_response(http_response)
+        # We do not follow redirections because the security headers must be set on the first page according to
+        # https://hstspreload.appspot.com/:
+        # "If you are serving an additional redirect from your HTTPS site, that redirect must still have the HSTS
+        # header (rather than the page it redirects to)."
+        http_response = HttpResponseParser.parse_from_ssl_connection(ssl_connection.ssl_client)
+    finally:
+        ssl_connection.close()
 
-        return HttpHeadersScanResult(
-            server_info,
-            scan_command,
-            hsts_header,
-            hpkp_header,
-            hpkp_report_only_header,
-            expect_ct_header,
-            verified_chain,
-        )
+    if http_response.version == 9:
+        # HTTP 0.9 => Probably not an HTTP response
+        raise ValueError("Server did not return an HTTP response")
+
+    # Parse and return each header
+    return HttpHeadersScanResult(
+        strict_transport_security_header=StrictTransportSecurityHeader.from_http_response(http_response),
+        public_key_pins_header=PublicKeyPinsHeader.from_http_response(http_response),
+        public_key_pins_report_only_header=PublicKeyPinsReportOnlyHeader.from_http_response(http_response),
+        expect_ct_header=ExpectCtHeader.from_http_response(http_response),
+    )
 
 
 def _extract_first_header_value(response: HTTPResponse, header_name: str) -> Optional[str]:
@@ -111,14 +106,14 @@ def _extract_first_header_value(response: HTTPResponse, header_name: str) -> Opt
     return raw_header
 
 
-@dataclass
+@dataclass(frozen=True)
 class StrictTransportSecurityHeader:
     """A Strict-Transport-Security header parsed from a server's HTTP response.
 
     Attributes:
-        preload (bool): True if the preload directive is set.
-        include_subdomains (bool): True if the includesubdomains directive is set.
-        max_age (Optional[int]): The content of the max-age field.
+        preload: True if the preload directive is set.
+        include_subdomains: True if the includesubdomains directive is set.
+        max_age: The content of the max-age field.
     """
 
     max_age: Optional[int]
@@ -156,21 +151,21 @@ class StrictTransportSecurityHeader:
 _T = TypeVar("_T", bound="PublicKeyPinsHeader")
 
 
-@dataclass
+@dataclass(frozen=True)
 class PublicKeyPinsHeader:
     """A Public-Key-Pins header parsed from a server's HTTP response.
 
     Attributes:
-        include_subdomains (bool): True if the includesubdomains directive is set.
-        max_age (Optional[int]): The content of the max-age field.
-        pin_sha256_list (List[str]): The list of pin-sha256 values set in the header.
-        report_uri (Optional[str]): The content of the report-uri field.
-        report_to (Optional[str]): The content of the report-to field, available via the Reporting API as described at
+        include_subdomains: True if the includesubdomains directive is set.
+        max_age: The content of the max-age field.
+        sha256_pins: The list of pin-sha256 values set in the header.
+        report_uri: The content of the report-uri field.
+        report_to: The content of the report-to field, available via the Reporting API as described at
             https://w3c.github.io/reporting/#examples.
     """
 
     max_age: Optional[int]
-    pin_sha256_list: List[str]
+    sha256_pins: List[str]
     include_subdomains: bool
     report_uri: Optional[str]
     report_to: Optional[str]
@@ -213,16 +208,16 @@ class PublicKeyPinsHeader:
         return cls(max_age, pin_sha256_list, include_subdomains, report_uri, report_to)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PublicKeyPinsReportOnlyHeader(PublicKeyPinsHeader):
     """A Public-Key-Pins-Report-Only header parsed from a server's HTTP response.
 
     Attributes:
-        include_subdomains (bool): True if the includesubdomains directive is set.
-        max_age (Optional[int]): The content of the max-age field.
-        pin_sha256_list (List[str]): The list of pin-sha256 values set in the header.
-        report_uri (Optional[str]): The content of the report-uri field.
-        report_to (Optional[str]): The content of the report-to field, available via the Reporting API as described at
+        include_subdomains: True if the includesubdomains directive is set.
+        max_age: The content of the max-age field.
+        sha256_pins: The list of pin-sha256 values set in the header.
+        report_uri: The content of the report-uri field.
+        report_to: The content of the report-to field, available via the Reporting API as described at
             https://w3c.github.io/reporting/#examples.
     """
 
@@ -234,7 +229,7 @@ class PublicKeyPinsReportOnlyHeader(PublicKeyPinsHeader):
         return cls._from_header(raw_hpkp_report_only_header)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ExpectCtHeader:
     """An Expect-CT header parsed from a server's HTTP response.
 
@@ -275,88 +270,8 @@ class ExpectCtHeader:
         return cls(max_age, report_uri, enforce)
 
 
-class HttpHeadersScanResult(PluginScanResult):
-    """The result of running a HttpHeadersScanCommand on a specific server.
-
-    Each HTTP header described below will be None if the server did not return it.
-
-    Attributes:
-        strict_transport_security_header (Optional[StrictTransportSecurityHeader]): The Strict-Transport-Security
-            header returned by the server.
-        public_key_pins_header (Optional[PublicKeyPinsHeader]): The Public-Key-Pins header returned by the server.
-        public_key_pins_report_only_header (Optional[PublicKeyPinsReportOnlyHeader]): The Public-Key-Pins-Report-Only
-            header returned by the server.
-        expect_ct_header (Optional[ExpectCtHeader]): The Expect-CT header returned by the server.
-        is_valid_pin_configured (Optional[bool]): True if at least one of the configured pins was found in the server's
-            verified certificate chain. None if the verified chain could not be built or no HPKP header was returned.
-        is_backup_pin_configured (Optional[bool]): True if if at least one of the configured pins was NOT found in the
-            server's verified certificate chain. None if the verified chain could not be built or no HPKP header was
-            returned.
-        verified_certificate_chain (Optional[List[cryptography.x509.Certificate]]): The verified certificate chain;
-            index 0 is the leaf certificate and the last element is the anchor/CA certificate from the Mozilla trust
-            store. Will be `None` if validation failed or the verified chain could not be built. The HPKP pin for each
-            certificate is available in the certificate's hpkp_pin attribute.
-            Each certificate is parsed using the cryptography module; documentation is available at
-            https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
-    """
-
-    def __init__(
-        self,
-        server_info: ServerConnectivityInfo,
-        scan_command: HttpHeadersScanCommand,
-        strict_transport_security_header: Optional[StrictTransportSecurityHeader],
-        public_key_pins_header: Optional[PublicKeyPinsHeader],
-        public_key_pins_report_only_header: Optional[PublicKeyPinsReportOnlyHeader],
-        expect_ct_header: Optional[ExpectCtHeader],
-        verified_chain: Optional[List[Certificate]],
-    ) -> None:
-        super().__init__(server_info, scan_command)
-        self.strict_transport_security_header = strict_transport_security_header
-        self.public_key_pins_header = public_key_pins_header
-        self.public_key_pins_report_only_header = public_key_pins_report_only_header
-        self.expect_ct_header = expect_ct_header
-        self.verified_certificate_chain = verified_chain
-
-        # Is the pinning configuration valid?
-        self.is_valid_pin_configured = None
-        self.is_backup_pin_configured = None
-
-        returned_hpkp_header = None
-        if self.public_key_pins_header:
-            returned_hpkp_header = self.public_key_pins_header
-        elif self.public_key_pins_report_only_header:
-            returned_hpkp_header = self.public_key_pins_report_only_header
-
-        if self.verified_certificate_chain and returned_hpkp_header:
-            # Is one of the configured pins in the current server chain?
-            self.is_valid_pin_configured = False
-            server_pin_list = [CertificateUtils.get_hpkp_pin(cert) for cert in self.verified_certificate_chain]
-            for pin in returned_hpkp_header.pin_sha256_list:
-                if pin in server_pin_list:
-                    self.is_valid_pin_configured = True
-                    break
-
-            # Is a backup pin configured?
-            self.is_backup_pin_configured = set(returned_hpkp_header.pin_sha256_list) != set(server_pin_list)
-
-    def __getstate__(self) -> Dict[str, Any]:
-        # This object needs to be pick-able as it gets sent through multiprocessing.Queues
-        pickable_dict = self.__dict__.copy()
-        # Manually handle non-pickable entries
-        if pickable_dict["verified_certificate_chain"]:
-            pickable_dict["verified_certificate_chain"] = [
-                cert.public_bytes(Encoding.PEM) for cert in pickable_dict["verified_certificate_chain"]
-            ]
-        return pickable_dict
-
-    def __setstate__(self, state: Dict[str, Any]) -> None:
-        self.__dict__.update(state)
-        # Manually restore non-pickable entries
-        if self.__dict__["verified_certificate_chain"]:
-            self.__dict__["verified_certificate_chain"] = [
-                load_pem_x509_certificate(cert_pem, default_backend())
-                for cert_pem in self.__dict__["verified_certificate_chain"]
-            ]
+# TODO
+class CliConnector:
 
     _PIN_TXT_FORMAT = "      {0:<50}{1}".format
     _HEADER_NOT_SENT_TXT = "NOT SUPPORTED - Server did not return the header"
@@ -427,66 +342,3 @@ class HttpHeadersScanResult(PluginScanResult):
             txt_result.append(self._format_field(self._HEADER_NOT_SENT_TXT, ""))
 
         return txt_result
-
-    def as_xml(self) -> Element:
-        xml_result = Element(self.scan_command.get_cli_argument(), title=self.scan_command.get_title())
-
-        # HSTS header
-        if self.strict_transport_security_header is None:
-            xml_hsts_attr = {"isSupported": str(False)}
-        else:
-            xml_hsts_attr = {
-                "isSupported": str(True),
-                "maxAge": str(self.strict_transport_security_header.max_age),
-                "includeSubDomains": str(self.strict_transport_security_header.include_subdomains),
-                "preload": str(self.strict_transport_security_header.preload),
-            }
-
-        xml_hsts = Element("strictTransportSecurity", attrib=xml_hsts_attr)
-        xml_result.append(xml_hsts)
-
-        # HPKP headers
-        for header, xml_name in [
-            (self.public_key_pins_header, "publicKeyPins"),
-            (self.public_key_pins_report_only_header, "publicKeyPinsReportOnly"),
-        ]:
-            xml_pin_list = []
-            if header is None:
-                xml_hpkp_attr = {"isSupported": str(False)}
-            else:
-                xml_hpkp_attr = {
-                    "isSupported": str(True),
-                    "maxAge": str(header.max_age),
-                    "includeSubDomains": str(header.include_subdomains),
-                    "reportUri": str(header.report_uri),
-                }
-
-                if self.verified_certificate_chain:
-                    xml_hpkp_attr["isValidPinConfigured"] = str(self.is_valid_pin_configured)
-                    xml_hpkp_attr["isBackupPinConfigured"] = str(self.is_backup_pin_configured)
-
-                for pin in self.public_key_pins_header.pin_sha256_list:  # type: ignore
-                    xml_pin = Element("pinSha256")
-                    xml_pin.text = pin
-                    xml_pin_list.append(xml_pin)
-
-            xml_hpkp = Element(xml_name, attrib=xml_hpkp_attr)
-            for xml_pin in xml_pin_list:
-                xml_hpkp.append(xml_pin)
-            xml_result.append(xml_hpkp)
-
-        # Expect-CT header
-        if self.expect_ct_header is not None:
-            xml_expect_ct_attr = {
-                "isSupported": str(True),
-                "maxAge": str(self.expect_ct_header.max_age),
-                "reportUri": str(self.expect_ct_header.report_uri),
-                "enforce": str(self.expect_ct_header.enforce),
-            }
-        else:
-            xml_expect_ct_attr = {"isSupported": str(False)}
-
-        xml_expect_ct = Element("expectCt", attrib=xml_expect_ct_attr)
-        xml_result.append(xml_expect_ct)
-
-        return xml_result

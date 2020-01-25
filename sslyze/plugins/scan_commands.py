@@ -6,6 +6,7 @@ from sslyze.plugins.compression_plugin import CompressionImplementation
 from sslyze.plugins.early_data_plugin import EarlyDataImplementation
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvImplementation
 from sslyze.plugins.heartbleed_plugin import HeartbleedImplementation
+from sslyze.plugins.http_headers_plugin import HttpHeadersImplementation
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionImplementation
 from sslyze.plugins.openssl_cipher_suites.scan_commands import (
     Sslv20ScanImplementation,
@@ -52,6 +53,8 @@ class ScanCommandEnum(Enum):
     SESSION_RESUMPTION = "resum"
     SESSION_RESUMPTION_RATE = "resum_rate"
 
+    HTTP_HEADERS = "http_headers"
+
     def _get_implementation_cls(self) -> Type["ScanCommandImplementation"]:
         return _IMPLEMENTATION_CLASSES[self]
 
@@ -72,4 +75,5 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommandEnum, Type["ScanCommandImplementation"]
     ScanCommandEnum.SESSION_RENEGOTIATION: SessionRenegotiationImplementation,
     ScanCommandEnum.SESSION_RESUMPTION: SessionResumptionSupportImplementation,
     ScanCommandEnum.SESSION_RESUMPTION_RATE: SessionResumptionRateImplementation,
+    ScanCommandEnum.HTTP_HEADERS: HttpHeadersImplementation,
 }

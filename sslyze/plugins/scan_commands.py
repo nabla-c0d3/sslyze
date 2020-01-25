@@ -15,6 +15,11 @@ from sslyze.plugins.openssl_cipher_suites.scan_commands import (
     Tlsv12ScanImplementation,
     Tlsv11ScanImplementation,
 )
+from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationImplementation
+from sslyze.plugins.session_resumption.core import (
+    SessionResumptionRateImplementation,
+    SessionResumptionSupportImplementation,
+)
 
 if TYPE_CHECKING:
     from sslyze.plugins.plugin_base import ScanCommandImplementation  # noqa: F401
@@ -41,6 +46,12 @@ class ScanCommandEnum(Enum):
 
     HEARTBLEED = "heartbleed"
 
+
+    SESSION_RENEGOTIATION = "reneg"
+
+    SESSION_RESUMPTION = "resum"
+    SESSION_RESUMPTION_RATE = "resum_rate"
+
     def _get_implementation_cls(self) -> Type["ScanCommandImplementation"]:
         return _IMPLEMENTATION_CLASSES[self]
 
@@ -58,4 +69,7 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommandEnum, Type["ScanCommandImplementation"]
     ScanCommandEnum.OPENSSL_CCS_INJECTION: OpenSslCcsInjectionImplementation,
     ScanCommandEnum.TLS_FALLBACK_SCSV: FallbackScsvImplementation,
     ScanCommandEnum.HEARTBLEED: HeartbleedImplementation,
+    ScanCommandEnum.SESSION_RENEGOTIATION: SessionRenegotiationImplementation,
+    ScanCommandEnum.SESSION_RESUMPTION: SessionResumptionSupportImplementation,
+    ScanCommandEnum.SESSION_RESUMPTION_RATE: SessionResumptionRateImplementation,
 }

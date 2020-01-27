@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandExtraArguments, ScanJob, ScanCommandResult
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
-from sslyze.server_setting import TlsWrappedProtocolEnum
+from sslyze.utils.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.utils.http_request_generator import HttpRequestGenerator
 from sslyze.utils.http_response_parser import HttpResponseParser
 from typing import List, Type, Optional, TypeVar
@@ -44,11 +44,7 @@ class HttpHeadersImplementation(ScanCommandImplementation):
         if extra_arguments:
             raise ValueError("This plugin does not take extra arguments")
 
-        if server_info.network_configuration.tls_wrapped_protocol not in [
-            TlsWrappedProtocolEnum.PLAIN_TLS,
-            TlsWrappedProtocolEnum.HTTPS,
-        ]:
-            # TODO(AD): CouldNotScanServerError?
+        if server_info.network_configuration.tls_opportunistic_encryption:
             raise ValueError("Cannot test for HTTP headers on a StartTLS connection.")
 
         return [ScanJob(function_to_call=_retrieve_and_analyze_http_response, function_arguments=[server_info])]

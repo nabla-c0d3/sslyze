@@ -8,7 +8,7 @@ from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
 from sslyze.utils.ssl_connection import SslHandshakeRejected, SslConnection, CouldNotConnectToHttpProxyError
-from sslyze.utils.tls_wrapped_protocol_helpers import StartTlsError
+from sslyze.utils.opportunistic_tls_helpers import StartTlsError
 
 
 class ClientAuthenticationServerConfigurationEnum(Enum):
@@ -176,7 +176,7 @@ class ServerConnectivityTester:
             raise ConnectionToServerTimedOut(
                 server_location,
                 final_network_config,
-                f"Connection timed out after {final_network_config.timeout} seconds",
+                f"Connection timed out after {final_network_config.network_timeout} seconds",
             )
         except ConnectionError:
             raise ServerRejectedConnection(server_location, final_network_config, "Connection rejected")

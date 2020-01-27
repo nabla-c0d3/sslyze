@@ -1,7 +1,6 @@
 import socket
 from abc import ABC
 from base64 import b64encode
-from enum import Enum
 from pathlib import Path
 from typing import Optional
 
@@ -11,6 +10,8 @@ from dataclasses import dataclass
 from urllib.parse import urlparse
 
 from nassl.ssl_client import OpenSslFileTypeEnum, SslClient
+
+from sslyze.utils.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 
 
 @dataclass(frozen=True)
@@ -115,29 +116,10 @@ class ServerNetworkLocationViaHttpProxy(ServerNetworkLocation):
     http_proxy_settings: HttpProxySettings
 
 
-class TlsWrappedProtocolEnum(Enum):
-    """The list of TLS-wrapped protocols supported by SSLyze.
-
-    SSLyze uses this to figure out how to establish an SSL/TLS connection to the server and what kind of "hello" message
-    to send after the handshake was completed.
-    """
-
-    PLAIN_TLS = 1  # Standard TLS connection
-    HTTPS = 2
-    STARTTLS_SMTP = 3
-    STARTTLS_XMPP = 4
-    STARTTLS_XMPP_SERVER = 5
-    STARTTLS_FTP = 6
-    STARTTLS_POP3 = 7
-    STARTTLS_LDAP = 8
-    STARTTLS_IMAP = 9
-    STARTTLS_RDP = 10
-    STARTTLS_POSTGRES = 11
-
-
 @dataclass(frozen=True)
 class ClientAuthenticationCredentials:
-    """Container for specifying the settings to perform SSL/TLS client authentication with the server.
+    """Everything needed by a client to perform SSL/TLS client authentication with the server.
+
        Attributes:
            certificate_chain_path: Path to the file containing the client's certificate.
            key_path: Path to the file containing the client's private key.
@@ -179,26 +161,33 @@ class ServerNetworkConfiguration:
         xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream. If not supplied, the
             server's hostname will be used. Should only be set if the supplied `tls_wrapped_protocol` is an
             XMPP protocol.
-        timeout: The timeout (in seconds) to be used when attempting to establish a connection to the server.
-        max_connection_attempts: The number of retries SSLyze will perform when attempting to establish a connection
+        network_timeout: The timeout (in seconds) to be used when attempting to establish a connection to the
+            server.
+        network_max_retries: The number of retries SSLyze will perform when attempting to establish a connection
             to the server.
     """
 
     tls_server_name_indication: str
-    tls_wrapped_protocol: TlsWrappedProtocolEnum = TlsWrappedProtocolEnum.PLAIN_TLS
+    tls_opportunistic_encryption: Optional[ProtocolWithOpportunisticTlsEnum] = None
     tls_client_auth_credentials: Optional[ClientAuthenticationCredentials] = None
 
     xmpp_to_hostname: Optional[str] = None
 
-    timeout: int = 5
-    max_connection_attempts: int = 3
+    network_timeout: int = 5
+    network_max_retries: int = 3
 
     def __post_init__(self):
-        if self.xmpp_to_hostname and self.tls_wrapped_protocol not in [
-            TlsWrappedProtocolEnum.STARTTLS_XMPP,
-            TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
+        if self.tls_opportunistic_encryption in [
+            ProtocolWithOpportunisticTlsEnum.XMPP,
+            ProtocolWithOpportunisticTlsEnum.XMPP_SERVER,
         ]:
-            raise InvalidServerNetworkConfigurationError("Can only specify xmpp_to for the XMPP StartTLS protocol.")
+            if not self.xmpp_to_hostname:
+                # Official workaround for frozen: https://docs.python.org/3/library/dataclasses.html#frozen-instances
+                # If no XMPP to hostname was supplied, used the ones from SNI
+                object.__setattr__(self, "xmpp_to_hostname", self.tls_server_name_indication)
+        else:
+            if self.xmpp_to_hostname:
+                raise InvalidServerNetworkConfigurationError("Can only specify xmpp_to for the XMPP StartTLS protocol.")
 
     @classmethod
     def default_for_server_location(cls, server_location: ServerNetworkLocation) -> "ServerNetworkConfiguration":

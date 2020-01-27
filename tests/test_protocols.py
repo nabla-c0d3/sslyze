@@ -4,8 +4,9 @@ import pytest
 from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.server_connectivity_tester import ServerConnectivityTester, ClientAuthenticationServerConfigurationEnum
-from sslyze.server_setting import TlsWrappedProtocolEnum, ServerNetworkLocationViaDirectConnection, \
+from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, \
     ServerNetworkConfiguration
+from sslyze.utils.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 
 
 def _is_ipv6_available() -> bool:
@@ -66,7 +67,7 @@ class TestProtocols:
         )
         network_configuration = ServerNetworkConfiguration(
             tls_server_name_indication=hostname,
-            tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_XMPP,
+            tls_opportunistic_encryption=ProtocolWithOpportunisticTlsEnum.XMPP,
             # That requires a special xmpp_to config
             xmpp_to_hostname='gmail.com',
         )
@@ -83,13 +84,13 @@ class TestProtocols:
     @pytest.mark.parametrize(
         "hostname, port, protocol",
         [
-            ('smtp.gmail.com', 587, TlsWrappedProtocolEnum.STARTTLS_SMTP),
-            ('imap.comcast.net', 143, TlsWrappedProtocolEnum.STARTTLS_IMAP),
-            ('pop.comcast.net', 110, TlsWrappedProtocolEnum.STARTTLS_POP3),
-            ('ldap.uchicago.edu', 389, TlsWrappedProtocolEnum.STARTTLS_LDAP),
-            ('jabber.org', 5222, TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER),
+            ('smtp.gmail.com', 587, ProtocolWithOpportunisticTlsEnum.SMTP),
+            ('imap.comcast.net', 143, ProtocolWithOpportunisticTlsEnum.IMAP),
+            ('pop.comcast.net', 110, ProtocolWithOpportunisticTlsEnum.POP3),
+            ('ldap.uchicago.edu', 389, ProtocolWithOpportunisticTlsEnum.LDAP),
+            ('jabber.org', 5222, ProtocolWithOpportunisticTlsEnum.XMPP_SERVER),
             # Some Heroku Postgres instance I created
-            ('ec2-54-75-226-17.eu-west-1.compute.amazonaws.com', 5432, TlsWrappedProtocolEnum.STARTTLS_POSTGRES)
+            ('ec2-54-75-226-17.eu-west-1.compute.amazonaws.com', 5432, ProtocolWithOpportunisticTlsEnum.POSTGRES)
         ]
     )
     def test_starttls(self, hostname, port, protocol):
@@ -97,7 +98,7 @@ class TestProtocols:
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(hostname, port)
         network_configuration = ServerNetworkConfiguration(
             tls_server_name_indication=hostname,
-            tls_wrapped_protocol=protocol,
+            tls_opportunistic_encryption=protocol,
         )
 
         # When testing connectivity against it

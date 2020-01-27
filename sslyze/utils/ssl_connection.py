@@ -19,12 +19,7 @@ from nassl import _nassl
 from nassl.ssl_client import SslClient, OpenSslVersionEnum, BaseSslClient, OpenSslVerifyEnum
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.utils.tls_wrapped_protocol_helpers import (
-    TlsWrappedProtocolHelper,
-    XmppHelper,
-    XmppServerHelper,
-    START_TLS_HELPER_CLASSES,
-)
+from sslyze.utils.opportunistic_tls_helpers import get_opportunistic_tls_helper
 
 
 def _open_socket_for_direct_connection(
@@ -136,16 +131,6 @@ class SslConnection:
         self._server_location = server_location
         self._network_configuration = network_configuration
 
-        # Create the StartTLS helper
-        self._start_tls_helper: TlsWrappedProtocolHelper
-        start_tls_helper_cls = START_TLS_HELPER_CLASSES[self._network_configuration.tls_wrapped_protocol]
-        if start_tls_helper_cls in [XmppHelper, XmppServerHelper]:
-            self._start_tls_helper = start_tls_helper_cls(
-                server_hostname=self._server_location.hostname, xmpp_to=self._network_configuration.xmpp_to_hostname
-            )
-        else:
-            self._start_tls_helper = start_tls_helper_cls(server_hostname=self._server_location.hostname)
-
         # Create the SSL client
         self.ssl_client: BaseSslClient
         # For older versions of TLS/SSL, we have to use a legacy OpenSSL
@@ -185,12 +170,19 @@ class SslConnection:
 
         # And a default cipher list to make the client hello smaller so we don't run into
         # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
-        self.ssl_client.set_cipher_list("HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA")
+        if tls_version != OpenSslVersionEnum.TLSV1_3:
+            self.ssl_client.set_cipher_list("HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA")
 
     def do_pre_handshake(self) -> None:
         # Open a socket to the server
-        sock = _open_socket(self._server_location, self._network_configuration.timeout)
-        self._start_tls_helper.prepare_socket_for_tls_handshake(sock)
+        sock = _open_socket(self._server_location, self._network_configuration.network_timeout)
+
+        # Do the Opportunistic/StartTLS negotiation if needed
+        if self._network_configuration.tls_opportunistic_encryption:
+            opportunistic_tls_helper = get_opportunistic_tls_helper(
+                self._network_configuration.tls_opportunistic_encryption, self._network_configuration.xmpp_to_hostname
+            )
+            opportunistic_tls_helper.prepare_socket_for_tls_handshake(sock)
 
         # Pass the connected socket to the SSL client
         self.ssl_client.set_underlying_socket(sock)
@@ -209,7 +201,7 @@ class SslConnection:
             except socket.timeout:
                 # Attempt to retry connection if a network error occurred during connection or the handshake
                 retry_attempts += 1
-                if retry_attempts >= self._network_configuration.max_connection_attempts:
+                if retry_attempts >= self._network_configuration.network_max_retries:
                     # Exhausted the number of retry attempts, give up
                     raise
                 elif retry_attempts == 1:
@@ -247,6 +239,3 @@ class SslConnection:
 
     def close(self) -> None:
         self.ssl_client.shutdown()
-
-    def send_sample_request(self) -> str:
-        return self._start_tls_helper.send_sample_request(self.ssl_client)

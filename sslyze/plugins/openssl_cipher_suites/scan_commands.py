@@ -5,19 +5,13 @@ from operator import attrgetter
 from dataclasses import dataclass
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuiteScanResult, CipherSuiteScanResultEnum
+from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuiteScanResult
 from sslyze.plugins.openssl_cipher_suites.test_cipher_suite import test_cipher_suite
-from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandResult, ScanJob, \
-    ScanCommandExtraArguments
+from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandResult, ScanJob, ScanCommandExtraArguments
 from typing import ClassVar, Set, Optional
 from typing import List
 
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
-
-
-@dataclass(frozen=True)
-class CipherSuitesExtraArguments(ScanCommandExtraArguments):
-    should_send_request_after_tls_handshake: bool
 
 
 @dataclass(frozen=True)
@@ -44,34 +38,30 @@ class CipherSuitesScanResult(ScanCommandResult):
 class _CipherSuitesScanImplementation(ScanCommandImplementation):
 
     # The SSL version corresponding to the scan command
-    _ssl_version: ClassVar[OpenSslVersionEnum]
+    _tls_version: ClassVar[OpenSslVersionEnum]
 
     @classmethod
     @abstractmethod
-    def _ciphers_to_scan_for(self, server_info: ServerConnectivityInfo) -> Set[str]:
+    def _cipher_suites_to_scan_for(self, server_info: ServerConnectivityInfo) -> Set[str]:
         pass
 
     @classmethod
     def scan_jobs_for_scan_command(
-            cls,
-            server_info: ServerConnectivityInfo,
-            extra_arguments: Optional[CipherSuitesExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
+        if extra_arguments:
+            raise ValueError("This plugin does not take extra arguments")
+
         # Get the list of available cipher suites for the given ssl version
-        cipher_list = cls._ciphers_to_scan_for(server_info)
-        should_send_request_after_tls_handshake = extra_arguments.should_send_request_after_tls_handshake if extra_arguments else False
+        cipher_list = cls._cipher_suites_to_scan_for(server_info)
 
         # Run one job per cipher suite to test for
         scan_jobs = [
             ScanJob(
                 function_to_call=test_cipher_suite,
-                function_arguments=[
-                    server_info,
-                    cls._ssl_version,
-                    cipher,
-                    should_send_request_after_tls_handshake
-                ]
-            ) for cipher in cipher_list
+                function_arguments=[server_info, cls._tls_version, cipher],
+            )
+            for cipher in cipher_list
         ]
         return scan_jobs
 
@@ -116,9 +106,9 @@ class _SimpleCipherSuitesScanImplementation(_CipherSuitesScanImplementation):
     """
 
     @classmethod
-    def _ciphers_to_scan_for(cls, server_info: ServerConnectivityInfo) -> Set[str]:
+    def _cipher_suites_to_scan_for(cls, server_info: ServerConnectivityInfo) -> Set[str]:
         # Simple case for SSL 2 to TLS 1.1
-        ssl_connection = server_info.get_preconfigured_ssl_connection(override_tls_version=cls._ssl_version)
+        ssl_connection = server_info.get_preconfigured_ssl_connection(override_tls_version=cls._tls_version)
         # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
         ssl_connection.ssl_client.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
         # And remove TLS 1.3 cipher suites
@@ -126,28 +116,29 @@ class _SimpleCipherSuitesScanImplementation(_CipherSuitesScanImplementation):
 
 
 class Sslv20ScanImplementation(_SimpleCipherSuitesScanImplementation):
-    _ssl_version = OpenSslVersionEnum.SSLV2
+    _tls_version = OpenSslVersionEnum.SSLV2
 
 
 class Sslv30ScanImplementation(_SimpleCipherSuitesScanImplementation):
-    _ssl_version = OpenSslVersionEnum.SSLV3
+    _tls_version = OpenSslVersionEnum.SSLV3
 
 
 class Tlsv10ScanImplementation(_SimpleCipherSuitesScanImplementation):
-    _ssl_version = OpenSslVersionEnum.TLSV1
+    _tls_version = OpenSslVersionEnum.TLSV1
 
 
 class Tlsv11ScanImplementation(_SimpleCipherSuitesScanImplementation):
-    _ssl_version = OpenSslVersionEnum.TLSV1_1
+    _tls_version = OpenSslVersionEnum.TLSV1_1
 
 
 class Tlsv12ScanImplementation(_CipherSuitesScanImplementation):
     """The implementation for TLS 1.2 is customized because some ciphers are supported by different versions of OpenSSL.
     """
-    _ssl_version = OpenSslVersionEnum.TLSV1_2
+
+    _tls_version = OpenSslVersionEnum.TLSV1_2
 
     @classmethod
-    def _ciphers_to_scan_for(cls, server_info: ServerConnectivityInfo) -> Set[str]:
+    def _cipher_suites_to_scan_for(cls, server_info: ServerConnectivityInfo) -> Set[str]:
         cipher_list: List[str] = []
 
         # For TLS 1.2, we have to use both the legacy and modern OpenSSL to cover all cipher suites
@@ -171,10 +162,10 @@ class Tlsv12ScanImplementation(_CipherSuitesScanImplementation):
 
 
 class Tlsv13ScanImplementation(_CipherSuitesScanImplementation):
-    _ssl_version = OpenSslVersionEnum.TLSV1_3
+    _tls_version = OpenSslVersionEnum.TLSV1_3
 
     @classmethod
-    def _ciphers_to_scan_for(cls, server_info: ServerConnectivityInfo) -> Set[str]:
+    def _cipher_suites_to_scan_for(cls, server_info: ServerConnectivityInfo) -> Set[str]:
         # TLS 1.3 only has 5 cipher suites so we can hardcode them
         return {
             "TLS_AES_256_GCM_SHA384",

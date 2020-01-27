@@ -10,7 +10,6 @@ def test_cipher_suite(
     server_connectivity_info: ServerConnectivityInfo,
     ssl_version: OpenSslVersionEnum,
     openssl_cipher_name: str,
-    should_send_request_after_handshake: bool,
 ) -> CipherSuiteScanResult:
     """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
     """
@@ -50,15 +49,7 @@ def test_cipher_suite(
     try:
         # Perform the SSL handshake
         ssl_connection.connect()
-
         result_enum = CipherSuiteScanResultEnum.ACCEPTED_BY_SERVER
-        if should_send_request_after_handshake:
-            try:
-                # TODO(AD): Fix this for HTTPS / PLAIN_TLS
-                post_tls_handshake_response = ssl_connection.send_sample_request()
-            except NotImplementedError:
-                # We don't have code to send a sample request for the protocol we are using with this server
-                pass
 
     except SslHandshakeRejected as e:
         result_enum = CipherSuiteScanResultEnum.REJECTED_BY_SERVER

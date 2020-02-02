@@ -6,7 +6,7 @@ from cryptography.x509 import load_pem_x509_certificate, Certificate
 from nassl.ssl_client import CouldNotBuildVerifiedChain, ClientCertificateRequested
 
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @dataclass(frozen=True)

@@ -8,7 +8,7 @@ from typing import Optional, List, ClassVar, Type, Dict
 
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, \
     ScanCommandExtraArguments
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @unique

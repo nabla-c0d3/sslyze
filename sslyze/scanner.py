@@ -4,7 +4,7 @@ from typing import Dict, Iterable, List, Tuple
 
 from sslyze.plugins.plugin_base import ServerScanRequest, ServerScanResult, ScanCommandResult
 from sslyze.plugins.scan_commands import ScanCommandEnum
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 class Scanner:

@@ -11,10 +11,10 @@ from sslyze.server_setting import (
     ServerNetworkLocationViaHttpProxy,
     ServerNetworkConfiguration,
 )
-from sslyze.utils.connection_errors import ConnectionToServerTimedOut, ServerRejectedConnection, \
+from sslyze.connection_helpers.errors import ConnectionToServerTimedOut, ServerRejectedConnection, \
     ConnectionToServerFailed, ConnectionToHttpProxyTimedOut, HttpProxyRejectedConnection, ConnectionToHttpProxyFailed, \
     ServerRejectedOpportunisticTlsNegotiation, ServerRejectedTlsHandshake, ServerTlsConfigurationNotSupported
-from sslyze.utils.http_response_parser import HttpResponseParser
+from sslyze.connection_helpers.http_response_parser import HttpResponseParser
 
 import time
 
@@ -22,7 +22,7 @@ from nassl import _nassl
 from nassl.ssl_client import SslClient, OpenSslVersionEnum, BaseSslClient, OpenSslVerifyEnum
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.utils.opportunistic_tls_helpers import get_opportunistic_tls_helper, OpportunisticTlsError
+from sslyze.connection_helpers.opportunistic_tls_helpers import get_opportunistic_tls_helper, OpportunisticTlsError
 
 
 def _open_socket_for_direct_connection(

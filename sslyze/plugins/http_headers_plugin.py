@@ -5,10 +5,10 @@ from dataclasses import dataclass
 
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandExtraArguments, ScanJob, ScanCommandResult
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
-from sslyze.utils.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
-from sslyze.utils.http_request_generator import HttpRequestGenerator
-from sslyze.utils.http_response_parser import HttpResponseParser
+from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
+from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
+from sslyze.connection_helpers.http_response_parser import HttpResponseParser
 from typing import List, Type, Optional, TypeVar
 
 

@@ -1,7 +1,7 @@
 from sslyze.plugins.plugin_base import PluginScanResult
 from typing import List
 
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 class CompletedServerScan:
     """The results of a successful SSLyze scan on a single server.

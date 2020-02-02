@@ -15,7 +15,7 @@ from tls_parser.heartbeat_protocol import TlsHeartbeatRequestRecord
 from tls_parser.parser import TlsRecordParser
 from tls_parser.record_protocol import TlsVersionEnum
 
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @dataclass(frozen=True)

@@ -1,7 +1,7 @@
 from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanResult, FallbackScsvImplementation
-from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.server_connectivity import ServerConnectivityTester
 
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkConfiguration, \
     ClientAuthenticationCredentials

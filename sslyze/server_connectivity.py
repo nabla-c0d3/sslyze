@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
-from sslyze.utils.connection_errors import ServerRejectedTlsHandshake, ServerTlsConfigurationNotSupported, \
+from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake, ServerTlsConfigurationNotSupported, \
     TlsHandshakeFailed
-from sslyze.utils.ssl_connection import SslConnection
+from sslyze.connection_helpers.tls_connection import SslConnection
 
 
 @unique

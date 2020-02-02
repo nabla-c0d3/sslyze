@@ -5,7 +5,7 @@ from sslyze.cli import CompletedServerScan
 from sslyze.cli.command_line_parser import InvalidServerStringError
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.server_connectivity_tester import ServerConnectivityError
+from sslyze.server_connectivity import ServerConnectivityError
 
 
 class OutputGenerator(ABC):

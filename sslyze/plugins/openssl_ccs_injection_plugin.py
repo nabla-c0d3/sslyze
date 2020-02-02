@@ -16,7 +16,7 @@ from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeBy
 from tls_parser.parser import TlsRecordParser
 from tls_parser.tls_version import TlsVersionEnum
 
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @dataclass(frozen=True)

@@ -10,7 +10,7 @@ from sslyze.cli.output_generator import OutputGenerator
 from sslyze.cli.xml_output import XmlOutputGenerator
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.server_connectivity_tester import ServerConnectivityError
+from sslyze.server_connectivity import ServerConnectivityError
 
 
 class OutputHub:

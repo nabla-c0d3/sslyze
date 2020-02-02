@@ -8,7 +8,7 @@ from sslyze.cli.command_line_parser import InvalidServerStringError
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.plugins.plugin_base import Plugin
 from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.server_connectivity_tester import ServerConnectivityError
+from sslyze.server_connectivity import ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from xml.etree.ElementTree import Element, tostring
 

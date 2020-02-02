@@ -1,6 +1,6 @@
 from sslyze.plugins.session_resumption.core import SessionResumptionSupportImplementation, \
     SessionResumptionSupportScanResult, SessionResumptionRateImplementation, SessionResumptionRateScanResult
-from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.server_connectivity import ServerConnectivityTester
 
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkConfiguration, \
     ClientAuthenticationCredentials

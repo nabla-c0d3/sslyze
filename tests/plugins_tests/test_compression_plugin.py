@@ -1,7 +1,7 @@
 import pytest
 
 from sslyze.plugins.compression_plugin import CompressionImplementation, CompressionScanResult
-from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum

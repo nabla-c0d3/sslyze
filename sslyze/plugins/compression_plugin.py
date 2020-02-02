@@ -4,8 +4,8 @@ from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
 from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanJob, ScanCommandExtraArguments
 from typing import List, Optional
 
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
-from sslyze.utils.connection_errors import ServerRejectedTlsHandshake
+from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 
 
 @dataclass(frozen=True)

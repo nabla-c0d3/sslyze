@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 import nassl
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 class _ScanJobResultEnum(Enum):

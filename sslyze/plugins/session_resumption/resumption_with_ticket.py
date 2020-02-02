@@ -5,8 +5,8 @@ import nassl
 from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.session_resumption.resumption_with_id import resume_tls_session, _ScanJobResultEnum
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
-from sslyze.utils.connection_errors import ServerRejectedTlsHandshake
+from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 
 
 class TslSessionTicketSupportEnum(Enum):

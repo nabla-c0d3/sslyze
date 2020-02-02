@@ -15,7 +15,7 @@ from multiprocessing import freeze_support
 from time import time
 
 from sslyze.scanner import Scanner
-from sslyze.server_connectivity_tester import ServerConnectivityTester, ServerConnectivityError, ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityTester, ServerConnectivityError, ServerConnectivityInfo
 from sslyze.server_setting import ServerNetworkLocation
 
 global_scanner: Optional[Scanner] = None

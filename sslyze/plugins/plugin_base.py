@@ -13,7 +13,7 @@ from typing import List, Type, Callable, Any, Set, Dict, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sslyze.plugins.scan_commands import ScanCommandEnum  # noqa: F401
-    from sslyze.server_connectivity_tester import ServerConnectivityInfo
+    from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 class ScanCommandResult(ABC):

@@ -11,7 +11,7 @@ from sslyze.plugins.certificate_info.get_cert_chain import get_and_verify_certif
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @dataclass(frozen=True)

@@ -6,9 +6,9 @@ from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum, OpenSslEarlyDataStatusEnum
 
 from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
-from sslyze.utils.connection_errors import ServerRejectedTlsHandshake
-from sslyze.utils.http_request_generator import HttpRequestGenerator
+from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
+from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
 
 
 @dataclass(frozen=True)

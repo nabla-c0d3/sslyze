@@ -11,7 +11,7 @@ from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandRes
 from typing import ClassVar, Set, Optional
 from typing import List
 
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @dataclass(frozen=True)

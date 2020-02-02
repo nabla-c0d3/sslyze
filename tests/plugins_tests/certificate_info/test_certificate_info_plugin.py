@@ -6,7 +6,7 @@ from nassl.ocsp_response import OcspResponseStatusEnum
 
 from sslyze.plugins.certificate_info.core import CertificateInfoImplementation, CertificateInfoExtraArguments
 from sslyze.plugins.certificate_info.symantec import SymantecDistructTester, SymantecDistrustTimelineEnum
-from sslyze.server_connectivity_tester import ServerConnectivityTester
+from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
@@ -32,7 +32,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # And a valid path to a custom CA file
-        ca_file_path = Path(__file__).parent / '..' / '..' / 'utils' / 'wildcard-self-signed.pem'
+        ca_file_path = Path(__file__).parent / '..' / '..' / 'connection_helpers' / 'wildcard-self-signed.pem'
 
         # When running the scan with the custom CA file enabled
         plugin_result = CertificateInfoImplementation.perform(server_info, CertificateInfoExtraArguments(

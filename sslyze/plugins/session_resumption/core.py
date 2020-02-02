@@ -7,7 +7,7 @@ from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
 from sslyze.plugins.session_resumption.resumption_with_id import resume_with_session_id, _ScanJobResultEnum
 from sslyze.plugins.session_resumption.resumption_with_ticket import resume_with_tls_ticket, TslSessionTicketSupportEnum
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @dataclass(frozen=True)

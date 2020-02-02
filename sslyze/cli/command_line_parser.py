@@ -7,9 +7,8 @@ from typing import Optional, Set, Type, List, Any
 from typing import Tuple
 
 from sslyze.plugins.plugin_base import Plugin
-from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
+from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 
-from sslyze.server_connectivity_tester import ServerConnectivityTester
 from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials
 
 from sslyze.server_setting import (

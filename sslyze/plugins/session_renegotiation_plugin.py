@@ -8,7 +8,7 @@ from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandExtraArguments, ScanJob, ScanCommandResult
-from sslyze.server_connectivity_tester import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @dataclass(frozen=True)

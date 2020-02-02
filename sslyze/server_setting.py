@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 from nassl.ssl_client import OpenSslFileTypeEnum, SslClient
 
-from sslyze.utils.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
+from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 
 
 @dataclass(frozen=True)

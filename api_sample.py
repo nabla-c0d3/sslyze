@@ -3,7 +3,7 @@ from cryptography.x509 import NameOID
 from sslyze.concurrent_scanner import ConcurrentScanner, PluginRaisedExceptionScanResult
 from sslyze.plugins.certificate_info_plugin import CertificateInfoScanCommand
 
-from sslyze.server_connectivity_tester import ServerConnectivityTester, ServerConnectivityError
+from sslyze.server_connectivity import ServerConnectivityTester, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
 from sslyze.plugins.openssl_cipher_suites_plugin import Tlsv12ScanCommand, Tlsv10ScanCommand
 from sslyze.synchronous_scanner import SynchronousScanner

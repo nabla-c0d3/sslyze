@@ -54,8 +54,3 @@ class ServerRejectedTlsHandshake(TlsHandshakeFailed):
 @dataclass(frozen=True)
 class ServerTlsConfigurationNotSupported(TlsHandshakeFailed):
     pass
-
-
-@dataclass(frozen=True)
-class ServerRequestedClientCertificate(TlsHandshakeFailed):
-    pass

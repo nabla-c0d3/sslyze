@@ -1,4 +1,3 @@
-import random
 import socket
 from pathlib import Path
 from typing import Optional

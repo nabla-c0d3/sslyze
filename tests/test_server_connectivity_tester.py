@@ -6,7 +6,8 @@ from sslyze.server_connectivity_tester import ServerConnectivityTester, ClientAu
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkLocationViaHttpProxy, \
     HttpProxySettings
 from sslyze.utils.connection_errors import ConnectionToServerTimedOut, ConnectionToHttpProxyTimedOut, \
-    ConnectionToHttpProxyFailed, HttpProxyRejectedConnection, ServerRejectedConnection
+    ConnectionToHttpProxyFailed, HttpProxyRejectedConnection, ServerRejectedConnection, \
+    ServerTlsConfigurationNotSupported
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, LegacyOpenSslServer
 from tests.tiny_proxy import ThreadingHTTPServer, ProxyHandler
@@ -48,6 +49,17 @@ class TestServerConnectivityTester:
 
         # When testing connectivity, it fails with the right error
         with pytest.raises(ServerRejectedConnection):
+            ServerConnectivityTester().perform(server_location)
+
+    def test_via_direct_connection_but_server_tls_config_not_supported(self):
+        # Given a server location for a server that only supports DH settings that SSLyze can't use
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            hostname="dh480.badssl.com",
+            port=443,
+        )
+
+        # When testing connectivity, it fails with the right error
+        with pytest.raises(ServerTlsConfigurationNotSupported):
             ServerConnectivityTester().perform(server_location)
 
     def test_via_http_proxy(self):

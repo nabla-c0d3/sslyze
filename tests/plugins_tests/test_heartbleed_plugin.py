@@ -17,7 +17,7 @@ class TestHeartbleedPlugin:
         result: HeartbleedScanResult = HeartbleedImplementation.perform(server_info)
 
         # And the server is reported as not vulnerable
-        assert result.is_vulnerable_to_heartbleed
+        assert not result.is_vulnerable_to_heartbleed
 
     @can_only_run_on_linux_64
     def test_heartbleed_bad(self):

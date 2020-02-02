@@ -188,7 +188,7 @@ class SslConnection:
         if tls_version != OpenSslVersionEnum.TLSV1_3:
             self.ssl_client.set_cipher_list("HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA")
 
-    def do_pre_handshake(self) -> None:
+    def _do_pre_handshake(self) -> None:
         # Open a socket to the server
         try:
             sock = _open_socket(self._server_location, self._network_configuration.network_timeout)
@@ -239,7 +239,7 @@ class SslConnection:
             # Sleep if it's a retry attempt
             time.sleep(delay_for_next_attempt)
             try:
-                self.do_pre_handshake()
+                self._do_pre_handshake()
             except socket.timeout as e:
                 # Attempt to retry connection if a network error occurred during connection or the handshake
                 connection_attempts_nb += 1
@@ -282,7 +282,11 @@ class SslConnection:
             raise
         except socket.timeout as e:
             # Network timeout, propagate the error
-            raise ConnectionToServerTimedOut(server_location=self._server_location, error_message=e.strerror)
+            raise ConnectionToServerTimedOut(
+                server_location=self._server_location,
+                network_configuration=self._network_configuration,
+                error_message=e.strerror
+            )
         except socket.error as e:
             for error_msg in _HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                 if error_msg in str(e.args):

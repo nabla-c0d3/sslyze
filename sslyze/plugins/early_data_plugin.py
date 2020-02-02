@@ -71,7 +71,7 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
 
         try:
             # Open a socket to the server but don't do the actual TLS handshake
-            ssl_connection2.do_pre_handshake()
+            ssl_connection2._do_pre_handshake()
 
             # Send one byte of early data
             ssl_connection2.ssl_client.write_early_data(b"E")

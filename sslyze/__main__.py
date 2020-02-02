@@ -80,7 +80,7 @@ def main() -> None:
                 # Send scan commands for this server to the scanner
                 # TODO(AD): Fix this
                 for scan_command in args_command_list:
-                   global_scanner.queue_scan_command(scan_command)
+                    global_scanner.queue_scan_command(scan_command)
 
             except ServerConnectivityError as e:
                 # Process servers we were NOT able to connect to

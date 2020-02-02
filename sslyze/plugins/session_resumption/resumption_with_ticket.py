@@ -6,7 +6,7 @@ from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.session_resumption.resumption_with_id import resume_tls_session, _ScanJobResultEnum
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
-from sslyze.utils.ssl_connection import SslHandshakeRejected
+from sslyze.utils.connection_errors import ServerRejectedTlsHandshake
 
 
 class TslSessionTicketSupportEnum(Enum):
@@ -24,7 +24,7 @@ def resume_with_tls_ticket(
     # Connect to the server and keep the SSL session
     try:
         session1 = resume_tls_session(server_info, tls_version_to_use, should_enable_tls_ticket=True)
-    except SslHandshakeRejected:
+    except ServerRejectedTlsHandshake:
         if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
             return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TslSessionTicketSupportEnum.FAILED_ONLY_TLS_1_3_SUPPORTED
         else:

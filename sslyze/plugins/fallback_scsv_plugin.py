@@ -5,7 +5,7 @@ from nassl import _nassl
 from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
-from sslyze.utils.ssl_connection import SslHandshakeRejected
+from sslyze.utils.connection_errors import ServerRejectedTlsHandshake
 
 
 @dataclass(frozen=True)
@@ -48,7 +48,7 @@ def _test_scsv(server_info: ServerConnectivityInfo) -> bool:
 
     # Try to connect using a lower TLS version with the fallback cipher suite enabled
     ssl_version_downgrade = OpenSslVersionEnum(ssl_version_to_use.value - 1)  # type: ignore
-    ssl_connection = server_info.get_preconfigured_ssl_connection(override_tls_version=ssl_version_downgrade)
+    ssl_connection = server_info.get_preconfigured_tls_connection(override_tls_version=ssl_version_downgrade)
     ssl_connection.ssl_client.enable_fallback_scsv()
 
     supports_fallback_scsv = False
@@ -63,7 +63,7 @@ def _test_scsv(server_info: ServerConnectivityInfo) -> bool:
         else:
             raise
 
-    except SslHandshakeRejected:
+    except ServerRejectedTlsHandshake:
         # If the handshake is rejected, we assume downgrade attacks are prevented (this is how F5 balancers do it)
         # although it could also be because the server does not support this version of TLS
         # https://github.com/nabla-c0d3/sslyze/issues/119

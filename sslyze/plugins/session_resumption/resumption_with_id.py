@@ -21,7 +21,7 @@ def resume_tls_session(
     """Connect to the server and returns the session object that was assigned for that connection.
     If ssl_session is given, tries to resume that session.
     """
-    ssl_connection = server_info.get_preconfigured_ssl_connection(override_tls_version=tls_version_to_use)
+    ssl_connection = server_info.get_preconfigured_tls_connection(override_tls_version=tls_version_to_use)
     if not should_enable_tls_ticket:
         # Need to disable TLS tickets to test session IDs, according to rfc5077:
         # If a ticket is presented by the client, the server MUST NOT attempt

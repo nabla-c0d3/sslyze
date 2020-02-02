@@ -55,7 +55,7 @@ def _test_for_ccs_injection(server_info: ServerConnectivityInfo) -> bool:
         # The server uses a recent version of OpenSSL and it cannot be vulnerable to CCS Injection
         return False
 
-    ssl_connection = server_info.get_preconfigured_ssl_connection()
+    ssl_connection = server_info.get_preconfigured_tls_connection()
     # Replace nassl.sslClient.do_handshake() with a CCS checking SSL handshake so that all the SSLyze options
     # (startTLS, proxy, etc.) still work
     ssl_connection.ssl_client.do_handshake = types.MethodType(

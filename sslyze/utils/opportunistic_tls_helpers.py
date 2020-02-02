@@ -21,10 +21,8 @@ class ProtocolWithOpportunisticTlsEnum(Enum):
     POSTGRES = auto()
 
 
-# TODO: Better name and dont inherit
-class StartTlsError(IOError):
-    """The server rejected the StartTLS negotiation.
-    """
+class OpportunisticTlsError(Exception):
+    pass
 
 
 class _OpportunisticTlsHelper(ABC):
@@ -46,12 +44,12 @@ class _SmtpHelper(_OpportunisticTlsHelper):
         # Send a EHLO and wait for the 250 status
         sock.send(b"EHLO sslyze.scan\r\n")
         if b"250 " not in sock.recv(2048):
-            raise StartTlsError("SMTP EHLO was rejected")
+            raise OpportunisticTlsError("SMTP EHLO was rejected")
 
         # Send a STARTTLS
         sock.send(b"STARTTLS\r\n")
         if b"220" not in sock.recv(2048):
-            raise StartTlsError("SMTP STARTTLS not supported")
+            raise OpportunisticTlsError("SMTP STARTTLS not supported")
 
 
 class _XmppHelper(_OpportunisticTlsHelper):
@@ -74,7 +72,7 @@ class _XmppHelper(_OpportunisticTlsHelper):
         # Get the server's features and check for an error
         server_resp = sock.recv(4096)
         if b"<stream:error>" in server_resp:
-            raise StartTlsError("Error opening XMPP stream, try --xmpp_to")
+            raise OpportunisticTlsError("Error opening XMPP stream, try --xmpp_to")
         elif b"</stream:features>" not in server_resp:
             # Get all the server features before initiating startTLS
             sock.recv(4096)
@@ -84,10 +82,10 @@ class _XmppHelper(_OpportunisticTlsHelper):
         xmpp_resp = sock.recv(2048)
 
         if b"host-unknown" in xmpp_resp:
-            raise StartTlsError("Error opening XMPP stream: server returned host-unknown error, try --xmpp_to")
+            raise OpportunisticTlsError("Error opening XMPP stream: server returned host-unknown error, try --xmpp_to")
 
         if b"proceed" not in xmpp_resp:
-            raise StartTlsError("XMPP STARTTLS not supported")
+            raise OpportunisticTlsError("XMPP STARTTLS not supported")
 
 
 class _XmppServerHelper(_XmppHelper):
@@ -112,7 +110,7 @@ class _LdapHelper(_OpportunisticTlsHelper):
         sock.send(self.START_TLS_CMD)
         data = sock.recv(2048)
         if self.START_TLS_OK not in data and self.START_TLS_OK_APACHEDS not in data and self.START_TLS_OK2 not in data:
-            raise StartTlsError(f"LDAP AUTH TLS was rejected; returned: {repr(data)}")
+            raise OpportunisticTlsError(f"LDAP AUTH TLS was rejected; returned: {repr(data)}")
 
 
 class _RdpHelper(_OpportunisticTlsHelper):
@@ -128,12 +126,12 @@ class _RdpHelper(_OpportunisticTlsHelper):
         sock.send(self.START_TLS_CMD)
         data = sock.recv(4)
         if not data or len(data) != 4 or data[:2] != b"\x03\x00":
-            raise StartTlsError(self.ERR_NO_STARTTLS)
+            raise OpportunisticTlsError(self.ERR_NO_STARTTLS)
         packet_len = struct.unpack(">H", data[2:])[0] - 4
         data = sock.recv(packet_len)
 
         if not data or len(data) != packet_len:
-            raise StartTlsError(self.ERR_NO_STARTTLS)
+            raise OpportunisticTlsError(self.ERR_NO_STARTTLS)
 
 
 class _GenericOpportunisticTlsHelper(_OpportunisticTlsHelper, ABC):
@@ -153,7 +151,7 @@ class _GenericOpportunisticTlsHelper(_OpportunisticTlsHelper, ABC):
         # Send Start TLS
         sock.send(self.START_TLS_CMD)
         if self.START_TLS_OK not in sock.recv(2048):
-            raise StartTlsError(self.ERR_NO_STARTTLS)
+            raise OpportunisticTlsError(self.ERR_NO_STARTTLS)
 
 
 class _ImapHelper(_GenericOpportunisticTlsHelper):

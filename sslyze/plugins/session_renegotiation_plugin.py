@@ -74,7 +74,7 @@ def _test_secure_renegotiation(
 ) -> Tuple[_ScanJobResultEnum, bool]:
     """Check whether the server supports secure renegotiation.
     """
-    ssl_connection = server_info.get_preconfigured_ssl_connection(
+    ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version_to_use, should_use_legacy_openssl=True
     )
 
@@ -94,7 +94,7 @@ def _test_client_renegotiation(
 ) -> Tuple[_ScanJobResultEnum, bool]:
     """Check whether the server honors session renegotiation requests.
     """
-    ssl_connection = server_info.get_preconfigured_ssl_connection(
+    ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version_to_use, should_use_legacy_openssl=True
     )
 

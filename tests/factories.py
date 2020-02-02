@@ -3,7 +3,7 @@ from faker.providers import internet
 from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.server_connectivity_tester import ServerConnectivityInfo, ServerTlsProbingResult, \
-    ClientAuthenticationServerConfigurationEnum
+    ClientAuthRequirementEnum
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkConfiguration
 
 
@@ -28,6 +28,6 @@ class ServerConnectivityInfoFactory:
             tls_probing_result=ServerTlsProbingResult(
                 highest_tls_version_supported=OpenSslVersionEnum.TLSV1_2,
                 openssl_cipher_string_supported="AES",
-                client_auth_requirement=ClientAuthenticationServerConfigurationEnum.DISABLED
+                client_auth_requirement=ClientAuthRequirementEnum.DISABLED
             ),
         )

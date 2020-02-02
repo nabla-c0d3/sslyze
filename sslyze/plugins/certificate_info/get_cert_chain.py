@@ -43,7 +43,7 @@ def get_and_verify_certificate_chain(
 ) -> Tuple[List[str], PathValidationResult, Optional[OcspResponse]]:
     """Connect to the target server and uses the supplied trust store to validate the server's certificate.
     """
-    ssl_connection = server_info.get_preconfigured_ssl_connection(ca_certificates_path=trust_store.path)
+    ssl_connection = server_info.get_preconfigured_tls_connection(ca_certificates_path=trust_store.path)
 
     # Enable OCSP stapling
     ssl_connection.ssl_client.set_tlsext_status_ocsp()

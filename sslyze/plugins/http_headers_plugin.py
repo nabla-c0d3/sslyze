@@ -61,7 +61,7 @@ class HttpHeadersImplementation(ScanCommandImplementation):
 
 def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> HttpHeadersScanResult:
     # Perform the TLS handshake
-    ssl_connection = server_info.get_preconfigured_ssl_connection()
+    ssl_connection = server_info.get_preconfigured_tls_connection()
     try:
         ssl_connection.connect()
 

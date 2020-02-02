@@ -5,7 +5,7 @@ from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementat
 from typing import List, Optional
 
 from sslyze.server_connectivity_tester import ServerConnectivityInfo
-from sslyze.utils.ssl_connection import SslHandshakeRejected
+from sslyze.utils.connection_errors import ServerRejectedTlsHandshake
 
 
 @dataclass(frozen=True)
@@ -49,7 +49,7 @@ def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
     else:
         ssl_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
 
-    ssl_connection = server_info.get_preconfigured_ssl_connection(
+    ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=ssl_version_to_use, should_use_legacy_openssl=True
     )
 
@@ -65,7 +65,7 @@ def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
     except ClientCertificateRequested:
         # The server asked for a client cert
         compression_name = ssl_connection.ssl_client.get_current_compression_method()
-    except SslHandshakeRejected:
+    except ServerRejectedTlsHandshake:
         # Should only happen when the server only supports TLS 1.3, which does not support compression
         pass
     finally:

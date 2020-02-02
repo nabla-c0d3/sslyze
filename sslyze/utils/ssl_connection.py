@@ -11,6 +11,9 @@ from sslyze.server_setting import (
     ServerNetworkLocationViaHttpProxy,
     ServerNetworkConfiguration,
 )
+from sslyze.utils.connection_errors import ConnectionToServerTimedOut, ServerRejectedConnection, \
+    ConnectionToServerFailed, ConnectionToHttpProxyTimedOut, HttpProxyRejectedConnection, ConnectionToHttpProxyFailed, \
+    ServerRejectedOpportunisticTlsNegotiation, ServerRejectedTlsHandshake, ServerTlsConfigurationNotSupported
 from sslyze.utils.http_response_parser import HttpResponseParser
 
 import time
@@ -19,18 +22,26 @@ from nassl import _nassl
 from nassl.ssl_client import SslClient, OpenSslVersionEnum, BaseSslClient, OpenSslVerifyEnum
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.utils.opportunistic_tls_helpers import get_opportunistic_tls_helper
+from sslyze.utils.opportunistic_tls_helpers import get_opportunistic_tls_helper, OpportunisticTlsError
 
 
 def _open_socket_for_direct_connection(
     server_location: ServerNetworkLocationViaDirectConnection, network_timeout: int
 ) -> socket.socket:
+    # Exceptions get caught/processed by the caller
     return socket.create_connection((server_location.ip_address, server_location.port), timeout=network_timeout)
 
 
-class CouldNotConnectToHttpProxyError(Exception):
-    """The proxy was offline or did not return HTTP 200 to our CONNECT request.
-    """
+class _ConnectionToHttpProxyTimedOut(Exception):
+    pass
+
+
+class _HttpProxyRejectedConnection(Exception):
+    pass
+
+
+class _ConnectionToHttpProxyFailed(Exception):
+    pass
 
 
 def _open_socket_for_connection_via_http_proxy(
@@ -41,27 +52,27 @@ def _open_socket_for_connection_via_http_proxy(
             (server_location.http_proxy_settings.hostname, server_location.http_proxy_settings.port),
             timeout=network_timeout,
         )
-    except socket.timeout as e:
-        raise CouldNotConnectToHttpProxyError(f"Could not connect to the proxy: {str(e)}")
-    except socket.error as e:
-        raise CouldNotConnectToHttpProxyError(f"Could not connect to the proxy: {str(e)}")
 
-    # Send a CONNECT request with the host we want to tunnel to
-    proxy_authorization_header = server_location.http_proxy_settings.proxy_authorization_header
-    if proxy_authorization_header is None:
-        sock.send(f"CONNECT {server_location.hostname}:{server_location.port} HTTP/1.1\r\n\r\n".encode("utf-8"))
-    else:
-        sock.send(
-            f"CONNECT {server_location.hostname}:{server_location.port} HTTP/1.1\r\n"
-            f"Proxy-Authorization: Basic {proxy_authorization_header}\r\n\r\n".encode("utf-8")
-        )
-    http_response = HttpResponseParser.parse_from_socket(sock)
+        # Send a CONNECT request with the host we want to tunnel to
+        proxy_authorization_header = server_location.http_proxy_settings.proxy_authorization_header
+        if proxy_authorization_header is None:
+            sock.send(f"CONNECT {server_location.hostname}:{server_location.port} HTTP/1.1\r\n\r\n".encode("utf-8"))
+        else:
+            sock.send(
+                f"CONNECT {server_location.hostname}:{server_location.port} HTTP/1.1\r\n"
+                f"Proxy-Authorization: Basic {proxy_authorization_header}\r\n\r\n".encode("utf-8")
+            )
+        http_response = HttpResponseParser.parse_from_socket(sock)
+    except socket.timeout as e:
+        raise _ConnectionToHttpProxyTimedOut(e.strerror)
+    except ConnectionError as e:
+        raise _HttpProxyRejectedConnection(e.strerror)
+    except socket.error as e:
+        raise _ConnectionToHttpProxyFailed(e.strerror)
 
     # Check if the proxy was able to connect to the host
     if http_response.status != 200:
-        raise CouldNotConnectToHttpProxyError(
-            f"The proxy rejected the CONNECT request for {server_location.hostname}:{server_location.port}"
-        )
+        raise _HttpProxyRejectedConnection("The proxy rejected the HTTP CONNECT request")
 
     return sock
 
@@ -75,41 +86,45 @@ def _open_socket(server_location: ServerNetworkLocation, network_timeout: int) -
         raise ValueError()
 
 
-class SslHandshakeRejected(IOError):
-    """The server explicitly rejected the SSL handshake.
-    """
-
-
 # The following errors mean that the server explicitly rejected the handshake. The goal to differentiate rejected
 # handshakes from random network errors such as the server going offline, etc.
 _HANDSHAKE_REJECTED_SOCKET_ERRORS = {
-    "Nassl SSL handshake failed": "Unexpected EOF",
-    "was forcibly closed": "Received FIN",
-    "reset by peer": "Received RST",
+    "Nassl SSL handshake failed": "Server closed the connection: unexpected EOF",
+    "was forcibly closed": "Server closed the connection: received TCP FIN",
+    "reset by peer": "Server closed the connection: received TCP RST",
 }
 
-_HANDSHAKE_REJECTED_SSL_ERRORS = {
-    "excessive message size": "Excessive message size",
-    "bad mac decode": "Bad mac decode",
-    "wrong version number": "Wrong version number",
-    "no cipher match": "No cipher match",
-    "bad decompression": "Bad decompression",
-    "peer error no cipher": "Peer error no cipher",
-    "no cipher list": "No ciphers list",
-    "insufficient security": "Insufficient security",
-    "block type is not 01": "block type is not 01",  # Actually an RSA error
-    "wrong ssl version": "Wrong SSL version",
-    "sslv3 alert handshake failure": "Alert: handshake failure",
-    "tlsv1 alert protocol version": "Alert: protocol version ",
-    "tlsv1 alert decrypt error": "Alert: Decrypt error",
-    "tlsv1 alert decode error": "Alert: Decode error",
-    # The following issues have nothing to do with the server or the connection
-    # They are client-side (SSLyze) issues
-    # This one is returned by OpenSSL when a cipher set via set_cipher_list() is not
-    # actually supported
-    "no ciphers available": "No ciphers available",
-    # This one is when OpenSSL rejects DH parameters (to protect against Logjam)
+
+_HANDSHAKE_REJECTED_TLS_ERRORS = {
+    "excessive message size": "TLS error: excessive message size",
+    "bad mac decode": "TLS error: bad mac decode",
+    "wrong version number": "TLS error: wrong version number",
+    "no cipher match": "TLS error: no cipher match",
+    "bad decompression": "TLS error: bad decompression",
+    "peer error no cipher": "TLS error: peer error no cipher",
+    "no cipher list": "TLS error: no ciphers list",
+    "insufficient security": "TLS error: insufficient security",
+    "block type is not 01": "TLS error: block type is not 01",  # Actually an RSA error
+    "wrong ssl version": "TLS error: wrong SSL version",
+    "sslv3 alert handshake failure": "TLS alert: handshake failure",
+    "tlsv1 alert protocol version": "TLS alert: protocol version ",
+    "tlsv1 alert decrypt error": "TLS alert: Decrypt error",
+    "tlsv1 alert decode error": "TLS alert: Decode error",
+}
+
+
+_HANDSHAKE_ACCEPTED_SSL_ERRORS = {
+    # The following issues have nothing to do with the server or the connection; they are client-side (SSLyze) issues
+    # This one is when OpenSSL rejects DH parameters (to protect against Logjam); this actually means the server
+    # supports whatever cipher suite was used
     "dh key too small": "DH Key too small",
+}
+
+
+_HANDSHAKE_SHOULD_NEVER_HAPPEN_SSL_ERRORS = {
+    # The following issues have nothing to do with the server or the connection; they are client-side (SSLyze) issues
+    # This one is returned by OpenSSL when a cipher set via set_cipher_list() is not actually supported
+    "no ciphers available": "No ciphers available",
 }
 
 
@@ -175,40 +190,84 @@ class SslConnection:
 
     def do_pre_handshake(self) -> None:
         # Open a socket to the server
-        sock = _open_socket(self._server_location, self._network_configuration.network_timeout)
+        try:
+            sock = _open_socket(self._server_location, self._network_configuration.network_timeout)
+        # Re-raise any proxy error with additional context/info
+        except _ConnectionToHttpProxyTimedOut as e:
+            raise ConnectionToHttpProxyTimedOut(
+                server_location=self._server_location,
+                network_configuration=self._network_configuration,
+                error_message=e.args[0]
+            )
+        except _HttpProxyRejectedConnection as e:
+            raise HttpProxyRejectedConnection(
+                server_location=self._server_location,
+                network_configuration=self._network_configuration,
+                error_message=e.args[0]
+            )
+        except _ConnectionToHttpProxyFailed as e:
+            raise ConnectionToHttpProxyFailed(
+                server_location=self._server_location,
+                network_configuration=self._network_configuration,
+                error_message=e.args[0]
+            )
 
         # Do the Opportunistic/StartTLS negotiation if needed
         if self._network_configuration.tls_opportunistic_encryption:
             opportunistic_tls_helper = get_opportunistic_tls_helper(
                 self._network_configuration.tls_opportunistic_encryption, self._network_configuration.xmpp_to_hostname
             )
-            opportunistic_tls_helper.prepare_socket_for_tls_handshake(sock)
+            try:
+                opportunistic_tls_helper.prepare_socket_for_tls_handshake(sock)
+            except OpportunisticTlsError as e:
+                raise ServerRejectedOpportunisticTlsNegotiation(
+                    server_location=self._server_location,
+                    error_message=e.args[0],
+                    network_configuration=self._network_configuration
+                )
 
         # Pass the connected socket to the SSL client
         self.ssl_client.set_underlying_socket(sock)
 
-    def connect(self) -> None:
-        retry_attempts = 0
-        delay = 0
+    def connect(self, should_retry_connection=True) -> None:
+        max_attempts_nb = self._network_configuration.network_max_retries if should_retry_connection else 1
+        connection_attempts_nb = 0
+        delay_for_next_attempt = 0
 
         # First try to connect to the server, and do retries if there are timeouts
         while True:
             # Sleep if it's a retry attempt
-            time.sleep(delay)
+            time.sleep(delay_for_next_attempt)
             try:
                 self.do_pre_handshake()
-
-            except socket.timeout:
+            except socket.timeout as e:
                 # Attempt to retry connection if a network error occurred during connection or the handshake
-                retry_attempts += 1
-                if retry_attempts >= self._network_configuration.network_max_retries:
+                connection_attempts_nb += 1
+                if connection_attempts_nb >= max_attempts_nb:
                     # Exhausted the number of retry attempts, give up
-                    raise
-                elif retry_attempts == 1:
-                    delay = int(random.random())
+                    raise ConnectionToServerTimedOut(
+                        server_location=self._server_location,
+                        network_configuration=self._network_configuration,
+                        error_message=e.strerror
+                    )
+                elif connection_attempts_nb == 1:
+                    # Start with a 1 second delay
+                    delay_for_next_attempt = 1
                 else:
-                    # Exponential back off
-                    delay = min(6, 2 * delay)  # Cap max delay at 6 seconds
+                    # Exponential back off; cap maximum delay at 6 seconds
+                    delay_for_next_attempt = min(6, 2 * delay_for_next_attempt)
+            except ConnectionError as e:
+                raise ServerRejectedConnection(
+                    server_location=self._server_location,
+                    network_configuration=self._network_configuration,
+                    error_message=e.strerror
+                )
+            except socket.error as e:
+                raise ConnectionToServerFailed(
+                    server_location=self._server_location,
+                    network_configuration=self._network_configuration,
+                    error_message=e.strerror
+                )
 
             else:
                 # No network error occurred
@@ -221,21 +280,44 @@ class SslConnection:
         except ClientCertificateRequested:
             # Server expected a client certificate and we didn't provide one
             raise
-        except socket.timeout:
+        except socket.timeout as e:
             # Network timeout, propagate the error
-            raise
+            raise ConnectionToServerTimedOut(server_location=self._server_location, error_message=e.strerror)
         except socket.error as e:
             for error_msg in _HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                 if error_msg in str(e.args):
-                    raise SslHandshakeRejected("TCP / " + _HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg])
+                    raise ServerRejectedTlsHandshake(
+                        server_location=self._server_location,
+                        network_configuration=self._network_configuration,
+                        error_message=_HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg]
+                    )
 
             # Unknown socket error
             raise
         except _nassl.OpenSSLError as e:
-            for error_msg in _HANDSHAKE_REJECTED_SSL_ERRORS.keys():
+            for error_msg in _HANDSHAKE_ACCEPTED_SSL_ERRORS:
                 if error_msg in str(e.args):
-                    raise SslHandshakeRejected("TLS / " + _HANDSHAKE_REJECTED_SSL_ERRORS[error_msg])
-            raise  # Unknown SSL error if we get there
+                    raise ServerTlsConfigurationNotSupported(
+                        server_location=self._server_location,
+                        network_configuration=self._network_configuration,
+                        error_message=_HANDSHAKE_ACCEPTED_SSL_ERRORS[error_msg]
+                    )
+
+            for error_msg in _HANDSHAKE_SHOULD_NEVER_HAPPEN_SSL_ERRORS:
+                if error_msg in str(e.args):
+                    # Errors that should never happen ie. SSLyze bugs
+                    raise
+
+            for error_msg in _HANDSHAKE_REJECTED_TLS_ERRORS.keys():
+                if error_msg in str(e.args):
+                    raise ServerRejectedTlsHandshake(
+                        server_location=self._server_location,
+                        network_configuration=self._network_configuration,
+                        error_message=_HANDSHAKE_REJECTED_TLS_ERRORS[error_msg]
+                    )
+
+            # Unknown SSL error if we get there
+            raise
 
     def close(self) -> None:
         self.ssl_client.shutdown()

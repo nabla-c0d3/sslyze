@@ -3,9 +3,10 @@ import socket
 import pytest
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.server_connectivity_tester import ServerConnectivityTester, ClientAuthenticationServerConfigurationEnum
+from sslyze.server_connectivity_tester import ServerConnectivityTester, ClientAuthRequirementEnum
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, \
     ServerNetworkConfiguration
+from sslyze.utils.connection_errors import ServerRejectedOpportunisticTlsNegotiation
 from sslyze.utils.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 
 
@@ -40,7 +41,7 @@ class TestProtocols:
         assert server_info.tls_probing_result
         assert server_info.tls_probing_result.client_auth_requirement
         assert server_info.tls_probing_result.highest_tls_version_supported
-        assert server_info.tls_probing_result.openssl_cipher_string_supported
+        assert server_info.tls_probing_result.cipher_suite_supported
 
     def test_international_hostname(self):
         # Given a server with non-ascii characters in its hostname
@@ -56,30 +57,7 @@ class TestProtocols:
         assert server_info.tls_probing_result
         assert server_info.tls_probing_result.client_auth_requirement
         assert server_info.tls_probing_result.highest_tls_version_supported
-        assert server_info.tls_probing_result.openssl_cipher_string_supported
-
-    def test_xmpp_to(self):
-        # Given an XMPP server
-        hostname = "talk.google.com"
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            hostname=hostname,
-            port=5222,
-        )
-        network_configuration = ServerNetworkConfiguration(
-            tls_server_name_indication=hostname,
-            tls_opportunistic_encryption=ProtocolWithOpportunisticTlsEnum.XMPP,
-            # That requires a special xmpp_to config
-            xmpp_to_hostname='gmail.com',
-        )
-
-        # When testing connectivity against it
-        server_info = ServerConnectivityTester().perform(server_location, network_configuration)
-
-        # It succeeds
-        assert server_info.tls_probing_result
-        assert server_info.tls_probing_result.client_auth_requirement
-        assert server_info.tls_probing_result.highest_tls_version_supported
-        assert server_info.tls_probing_result.openssl_cipher_string_supported
+        assert server_info.tls_probing_result.cipher_suite_supported
 
     @pytest.mark.parametrize(
         "hostname, port, protocol",
@@ -93,8 +71,8 @@ class TestProtocols:
             ('ec2-54-75-226-17.eu-west-1.compute.amazonaws.com', 5432, ProtocolWithOpportunisticTlsEnum.POSTGRES)
         ]
     )
-    def test_starttls(self, hostname, port, protocol):
-        # Given some server using a non-HTTP protocol with StartTLS
+    def test_opportunistic_tls(self, hostname, port, protocol):
+        # Given some server using a non-HTTP protocol with Opportunistic TLS
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(hostname, port)
         network_configuration = ServerNetworkConfiguration(
             tls_server_name_indication=hostname,
@@ -108,7 +86,25 @@ class TestProtocols:
         assert server_info.tls_probing_result
         assert server_info.tls_probing_result.client_auth_requirement
         assert server_info.tls_probing_result.highest_tls_version_supported
-        assert server_info.tls_probing_result.openssl_cipher_string_supported
+        assert server_info.tls_probing_result.cipher_suite_supported
+
+    def test_xmpp_but_server_rejected_opportunistic_tls(self):
+        # Given an XMPP server
+        hostname = "jabber.org"
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            hostname=hostname,
+            port=5222,
+        )
+        network_configuration = ServerNetworkConfiguration(
+            # But we provide a wrong XMPP setting
+            xmpp_to_hostname="lol.lol",
+            tls_server_name_indication=hostname,
+            tls_opportunistic_encryption=ProtocolWithOpportunisticTlsEnum.XMPP,
+        )
+
+        # When testing connectivity, it fails with the right error
+        with pytest.raises(ServerRejectedOpportunisticTlsNegotiation):
+            ServerConnectivityTester().perform(server_location, network_configuration)
 
     def test_optional_client_authentication(self):
         # Given a server that requires a client certificate
@@ -123,10 +119,10 @@ class TestProtocols:
         # It succeeds
         assert server_info.tls_probing_result
         assert server_info.tls_probing_result.highest_tls_version_supported
-        assert server_info.tls_probing_result.openssl_cipher_string_supported
+        assert server_info.tls_probing_result.cipher_suite_supported
 
         # And it detected the client authentication
-        assert server_info.tls_probing_result.client_auth_requirement == ClientAuthenticationServerConfigurationEnum.OPTIONAL
+        assert server_info.tls_probing_result.client_auth_requirement == ClientAuthRequirementEnum.OPTIONAL
 
     def test_tls_1_only(self):
         # Given a server that only supports TLS 1.0
@@ -141,7 +137,7 @@ class TestProtocols:
         # It succeeds
         assert server_info.tls_probing_result
         assert server_info.tls_probing_result.client_auth_requirement
-        assert server_info.tls_probing_result.openssl_cipher_string_supported
+        assert server_info.tls_probing_result.cipher_suite_supported
 
         # And it detected that only TLS 1.0 is supported
         assert server_info.tls_probing_result.highest_tls_version_supported == OpenSslVersionEnum.TLSV1

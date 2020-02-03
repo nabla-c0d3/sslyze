@@ -51,13 +51,15 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv10ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.0 is supported
-        assert result.cipher_suite_preferred_by_server
+        # assert result.cipher_suite_preferred_by_server
         expected_ciphers = {
             'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
             'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA',
             'TLS_RSA_WITH_3DES_EDE_CBC_SHA'
         }
-        assert expected_ciphers == {cipher.name for cipher in result.accepted_cipher_suites}
+        assert expected_ciphers == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
 
         assert result.rejected_cipher_suites
 
@@ -87,13 +89,15 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv11ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.1 is not supported
-        assert result.cipher_suite_preferred_by_server
+        # assert result.cipher_suite_preferred_by_server
         expected_ciphers = {
             'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
             'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA',
             'TLS_RSA_WITH_3DES_EDE_CBC_SHA'
         }
-        assert expected_ciphers == {cipher.name for cipher in result.accepted_cipher_suites}
+        assert expected_ciphers == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
 
         assert result.rejected_cipher_suites
 
@@ -108,7 +112,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.2 is not supported
-        assert result.cipher_suite_preferred_by_server
+        #assert result.cipher_suite_preferred_by_server
         expected_ciphers = {
             'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384', 'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA',
             'TLS_RSA_WITH_AES_256_GCM_SHA384', 'TLS_RSA_WITH_AES_256_CBC_SHA',
@@ -117,7 +121,9 @@ class TestCipherSuitesPluginWithOnlineServer:
             'TLS_RSA_WITH_3DES_EDE_CBC_SHA', 'TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256',
             'TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256'
         }
-        assert expected_ciphers == {cipher.name for cipher in result.accepted_cipher_suites}
+        assert expected_ciphers == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
 
     def test_null_cipher_suites(self):
         # Given a server to scan that supports NULL cipher suites
@@ -139,7 +145,9 @@ class TestCipherSuitesPluginWithOnlineServer:
             'TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA', 'TLS_ECDHE_RSA_WITH_NULL_SHA',
             'TLS_ECDH_anon_WITH_NULL_SHA', 'TLS_RSA_WITH_NULL_SHA256', 'TLS_RSA_WITH_NULL_SHA'
         }
-        assert expected_ciphers == {cipher.name for cipher in result.accepted_cipher_suites}
+        assert expected_ciphers == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
 
     def test_rc4_cipher_suites(self):
         # Given a server to scan that supports RC4 cipher suites
@@ -153,7 +161,7 @@ class TestCipherSuitesPluginWithOnlineServer:
 
         # And the RC4 cipher suites were detected
         assert {'TLS_ECDHE_RSA_WITH_RC4_128_SHA', 'TLS_RSA_WITH_RC4_128_SHA'} == {
-            cipher.name for cipher in result.accepted_cipher_suites
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
         }
 
     def test_does_not_follow_client_cipher_suite_preference(self):
@@ -186,7 +194,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         # Given an SMTP server to scan
         hostname = "smtp.gmail.com"
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            hostname, 443
+            hostname, 587
         )
         network_configuration = ServerNetworkConfiguration(
             tls_server_name_indication=hostname,
@@ -209,59 +217,53 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv13ScanImplementation.perform(server_info)
         assert result.accepted_cipher_suites
 
-        assert {'TLS_CHACHA20_POLY1305_SHA256', 'TLS_AES_256_GCM_SHA384', 'TLS_AES_128_GCM_SHA256'} == \
-            set([cipher_suite.name for cipher_suite in result.accepted_cipher_suites])
+        assert {'TLS_CHACHA20_POLY1305_SHA256', 'TLS_AES_256_GCM_SHA384', 'TLS_AES_128_GCM_SHA256'} == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
 
 
 @can_only_run_on_linux_64
 class TestCipherSuitesPluginWithLocalServer:
 
     def test_sslv2_enabled(self):
+        # Given a server to scan that supports SSL 2.0
         with LegacyOpenSslServer() as server:
-            server_test = ServerConnectivityTester(
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            plugin = OpenSslCipherSuitesPlugin()
-            plugin_result = plugin.process_task(server_info, Sslv20ScanCommand())
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Sslv20ScanImplementation.perform(server_info)
 
         # The embedded server does not have a preference
-        assert not plugin_result.preferred_cipher
-
-        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
+        assert not result.cipher_suite_preferred_by_server
         assert {
-                   'SSL_CK_RC4_128_EXPORT40_WITH_MD5', 'SSL_CK_IDEA_128_CBC_WITH_MD5',
-                   'SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5', 'SSL_CK_DES_192_EDE3_CBC_WITH_MD5',
-                   'SSL_CK_DES_192_EDE3_CBC_WITH_MD5', 'SSL_CK_RC4_128_WITH_MD5',
-                   'SSL_CK_RC2_128_CBC_WITH_MD5', 'SSL_CK_DES_64_CBC_WITH_MD5'
-               } == set(accepted_cipher_name_list)
+           'SSL_CK_RC4_128_EXPORT40_WITH_MD5', 'SSL_CK_IDEA_128_CBC_WITH_MD5',
+           'SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5', 'SSL_CK_DES_192_EDE3_CBC_WITH_MD5',
+           'SSL_CK_DES_192_EDE3_CBC_WITH_MD5', 'SSL_CK_RC4_128_WITH_MD5',
+           'SSL_CK_RC2_128_CBC_WITH_MD5', 'SSL_CK_DES_64_CBC_WITH_MD5'
+        } == {accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites}
+        assert not result.rejected_cipher_suites
 
-        assert plugin_result.accepted_cipher_list
-        assert not plugin_result.rejected_cipher_list
-        assert not plugin_result.errored_cipher_list
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
 
     def test_sslv3_enabled(self):
+        # Given a server to scan that supports SSL 3.0
         with LegacyOpenSslServer() as server:
-            server_test = ServerConnectivityTester(
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
-                port=server.port)
-            server_info = server_test.perform()
+                port=server.port
+            )
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            plugin = OpenSslCipherSuitesPlugin()
-            plugin_result = plugin.process_task(server_info, Sslv30ScanCommand())
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Sslv30ScanImplementation.perform(server_info)
 
         # The embedded server does not have a preference
-        assert not plugin_result.preferred_cipher
+        assert not result.preferred_cipher
         expected_ciphers = {
             'TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA', 'TLS_RSA_WITH_3DES_EDE_CBC_SHA',
             'TLS_DH_anon_WITH_AES_128_CBC_SHA', 'TLS_ECDH_anon_WITH_AES_128_CBC_SHA',
@@ -283,52 +285,39 @@ class TestCipherSuitesPluginWithLocalServer:
             'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_NULL_SHA',
             'TLS_RSA_WITH_IDEA_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA', 'TLS_DH_anon_WITH_RC4_128_MD5'
         }
-        assert expected_ciphers == set([cipher.name for cipher in plugin_result.accepted_cipher_list])
-
-        assert plugin_result.accepted_cipher_list
-        assert plugin_result.rejected_cipher_list
-        assert not plugin_result.errored_cipher_list
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
-
-        # Ensure the results are pickable so the ConcurrentScanner can receive them via a Queue
-        assert pickle.dumps(plugin_result)
+        assert expected_ciphers == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
 
     def test_succeeds_when_client_auth_failed_tls_1_2(self):
         # Given a TLS 1.2 server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
-            # And the client does NOT provide a client certificate
-            server_test = ServerConnectivityTester(
+            # And SSLyze does NOT provide a client certificate
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            # OpenSslCipherSuitesPlugin works even when a client cert was not supplied
-            plugin = OpenSslCipherSuitesPlugin()
-            plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
 
-        assert plugin_result.accepted_cipher_list
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+        assert result.accepted_cipher_suites
 
     def test_succeeds_when_client_auth_failed_tls_1_3(self):
         # Given a TLS 1.3 server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
-            # And the client does NOT provide a client certificate
-            server_test = ServerConnectivityTester(
+            # And SSLyze does NOT provide a client certificate
+            server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname,
                 ip_address=server.ip_address,
                 port=server.port
             )
-            server_info = server_test.perform()
+            server_info = ServerConnectivityTester().perform(server_location)
 
-            # OpenSslCipherSuitesPlugin works even when a client cert was not supplied
-            plugin = OpenSslCipherSuitesPlugin()
-            plugin_result = plugin.process_task(server_info, Tlsv13ScanCommand())
 
-        assert plugin_result.accepted_cipher_list
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Tlsv13ScanImplementation.perform(server_info)
+
+        assert result.accepted_cipher_suites

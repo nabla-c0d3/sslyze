@@ -18,11 +18,18 @@ class CipherSuite:
         return _RFC_NAME_TO_KEY_SIZE_MAPPING[self.name]
 
     @classmethod
-    def from_openssl(cls, cipher_suite_openssl_name, tls_version):
-        return cls(
-            name=_OPENSSL_TO_RFC_NAMES_MAPPING[tls_version][cipher_suite_openssl_name],
-            openssl_name=cipher_suite_openssl_name
-        )
+    def from_openssl(cls, cipher_suite_openssl_name: str, tls_version: OpenSslVersionEnum) -> "CipherSuite":
+        if tls_version == OpenSslVersionEnum.TLSV1_3:
+            # For TLS 1.3 OpenSSL started using the official names
+            return cls(
+                name=cipher_suite_openssl_name,
+                openssl_name=cipher_suite_openssl_name
+            )
+        else:
+            return cls(
+                name=_OPENSSL_TO_RFC_NAMES_MAPPING[tls_version][cipher_suite_openssl_name],
+                openssl_name=cipher_suite_openssl_name
+            )
 
 
 # Cipher suite name mappings so we can return the RFC names, instead of the OpenSSL names

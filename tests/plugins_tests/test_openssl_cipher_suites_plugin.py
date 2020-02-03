@@ -1,7 +1,9 @@
+from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.plugins.openssl_cipher_suites.scan_commands import Sslv20ScanImplementation, CipherSuitesScanResult, \
-    Sslv30ScanImplementation, Tlsv10ScanImplementation, Tlsv11ScanImplementation, Tlsv12ScanImplementation
+    Sslv30ScanImplementation, Tlsv10ScanImplementation, Tlsv11ScanImplementation, Tlsv12ScanImplementation, \
+    Tlsv13ScanImplementation
 from sslyze.server_connectivity import ServerConnectivityTester
-from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
+from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkConfiguration
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ModernOpenSslServer, ClientAuthConfigEnum
 
@@ -19,7 +21,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Sslv20ScanImplementation.perform(server_info)
 
         # And the result confirms that SSL 2.0 is not supported
-        assert result.preferred_cipher_suite is None
+        assert result.cipher_suite_preferred_by_server is None
         assert not result.accepted_cipher_suites
         assert result.rejected_cipher_suites
 
@@ -34,7 +36,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Sslv30ScanImplementation.perform(server_info)
 
         # And the result confirms that SSL 3.0 is not supported
-        assert result.preferred_cipher_suite is None
+        assert result.cipher_suite_preferred_by_server is None
         assert not result.accepted_cipher_suites
         assert result.rejected_cipher_suites
 
@@ -49,7 +51,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv10ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.0 is supported
-        assert result.preferred_cipher_suite
+        assert result.cipher_suite_preferred_by_server
         expected_ciphers = {
             'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
             'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA',
@@ -70,7 +72,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv10ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.0 is not supported
-        assert result.preferred_cipher_suite is None
+        assert result.cipher_suite_preferred_by_server is None
         assert not result.accepted_cipher_suites
         assert result.rejected_cipher_suites
 
@@ -85,7 +87,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv11ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.1 is not supported
-        assert result.preferred_cipher_suite
+        assert result.cipher_suite_preferred_by_server
         expected_ciphers = {
             'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA', 'TLS_RSA_WITH_AES_256_CBC_SHA',
             'TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA', 'TLS_RSA_WITH_AES_128_CBC_SHA',
@@ -106,7 +108,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.2 is not supported
-        assert result.preferred_cipher_suite
+        assert result.cipher_suite_preferred_by_server
         expected_ciphers = {
             'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384', 'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA',
             'TLS_RSA_WITH_AES_256_GCM_SHA384', 'TLS_RSA_WITH_AES_256_CBC_SHA',
@@ -180,30 +182,35 @@ class TestCipherSuitesPluginWithOnlineServer:
         # And the server is detected as following the client's preference
         assert result.follows_cipher_suite_preference_from_client
 
-    def test_smtp_post_handshake_response(self):
-        server_test = ServerConnectivityTester(
-            hostname='smtp.gmail.com',
-            port=587,
-            tls_wrapped_protocol=TlsWrappedProtocolEnum.STARTTLS_SMTP
+    def test_smtp(self):
+        # Given an SMTP server to scan
+        hostname = "smtp.gmail.com"
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            hostname, 443
         )
-        server_info = server_test.perform()
+        network_configuration = ServerNetworkConfiguration(
+            tls_server_name_indication=hostname,
+            tls_opportunistic_encryption=ProtocolWithOpportunisticTlsEnum.SMTP,
+        )
+        server_info = ServerConnectivityTester().perform(server_location, network_configuration)
 
-        plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
-
-        assert plugin_result.as_text()
-        assert plugin_result.as_xml()
+        # When scanning for cipher suites, it succeeds
+        result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+        assert result.accepted_cipher_suites
 
     def test_tls_1_3_cipher_suites(self):
-        server_test = ServerConnectivityTester(hostname='www.cloudflare.com')
-        server_info = server_test.perform()
+        # Given a server to scan that supports TLS 1.3
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+            "www.cloudflare.com", 443
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
 
-        plugin = OpenSslCipherSuitesPlugin()
-        plugin_result = plugin.process_task(server_info, Tlsv13ScanCommand())
+        # When scanning for cipher suites, it succeeds
+        result: CipherSuitesScanResult = Tlsv13ScanImplementation.perform(server_info)
+        assert result.accepted_cipher_suites
 
-        accepted_cipher_name_list = [cipher.name for cipher in plugin_result.accepted_cipher_list]
         assert {'TLS_CHACHA20_POLY1305_SHA256', 'TLS_AES_256_GCM_SHA384', 'TLS_AES_128_GCM_SHA256'} == \
-            set(accepted_cipher_name_list)
+            set([cipher_suite.name for cipher_suite in result.accepted_cipher_suites])
 
 
 @can_only_run_on_linux_64

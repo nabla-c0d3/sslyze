@@ -5,8 +5,9 @@ from operator import attrgetter
 from dataclasses import dataclass
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuiteScanResult
-from sslyze.plugins.openssl_cipher_suites.test_cipher_suite import test_cipher_suite
+from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite
+from sslyze.plugins.openssl_cipher_suites.test_cipher_suite import test_cipher_suite, CipherSuiteRejectedByServer, \
+    CipherSuiteAcceptedByServer
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandResult, ScanJob, ScanCommandExtraArguments
 from typing import ClassVar, Set, Optional
 from typing import List
@@ -27,12 +28,23 @@ class CipherSuitesScanResult(ScanCommandResult):
             `None` if the server follows the client's preference or if none of SSLyze's cipher suites are supported by
             the server.
     """
+    tls_version_used: OpenSslVersionEnum
 
-    preferred_cipher: Optional[CipherSuiteScanResult]
+    cipher_suite_preferred_by_server: Optional[CipherSuiteAcceptedByServer]
+    accepted_cipher_suites: List[CipherSuiteAcceptedByServer]
+    rejected_cipher_suites: List[CipherSuiteRejectedByServer]
 
-    accepted_ciphers: List[CipherSuiteScanResult]
-    rejected_ciphers: List[CipherSuiteScanResult]
-    errored_ciphers: List[CipherSuiteScanResult]
+    @property
+    def is_tls_protocol_version_supported(self) -> bool:
+        """Is the SSL/TLS version used to connect the server supported by it?
+        """
+        return True if self.accepted_cipher_suites else False
+
+    @property
+    def follows_cipher_suite_preference_from_client(self) -> bool:
+        """Did the server the pick the cipher suite preferred by the client?
+        """
+        return True if self.cipher_suite_preferred_by_server is None else False
 
 
 class _CipherSuitesScanImplementation(ScanCommandImplementation):
@@ -52,16 +64,13 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation):
         if extra_arguments:
             raise ValueError("This plugin does not take extra arguments")
 
-        # Get the list of available cipher suites for the given ssl version
-        cipher_list = cls._cipher_suites_to_scan_for(server_info)
-
         # Run one job per cipher suite to test for
         scan_jobs = [
             ScanJob(
                 function_to_call=test_cipher_suite,
-                function_arguments=[server_info, cls._tls_version, cipher],
+                function_arguments=[server_info, cls._tls_version, cipher_name],
             )
-            for cipher in cipher_list
+            for cipher_name in cls._cipher_suites_to_scan_for(server_info)
         ]
         return scan_jobs
 
@@ -69,66 +78,63 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation):
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
     ) -> ScanCommandResult:
-        accepted_cipher_list = []
-        rejected_cipher_list = []
-        errored_cipher_list = []
-
         # Store the results as they come
+        accepted_cipher_suites = []
+        rejected_cipher_suites = []
         for completed_job in completed_scan_jobs:
-            try:
-                cipher_result: CipherSuiteScanResult = completed_job.result()
-            except Exception:
-                raise
-            if cipher_result.result == CipherSuiteScanResultEnum.ACCEPTED_BY_SERVER:
-                accepted_cipher_list.append(cipher_result)
-            elif cipher_result.result == CipherSuiteScanResultEnum.REJECTED_BY_SERVER:
-                rejected_cipher_list.append(cipher_result)
-            elif cipher_result.result == CipherSuiteScanResultEnum.UNKNOWN_ERROR:
-                errored_cipher_list.append(cipher_result)
+            cipher_suite_result = completed_job.result()
+            if isinstance(cipher_suite_result, CipherSuiteAcceptedByServer):
+                accepted_cipher_suites.append(cipher_suite_result)
+            elif isinstance(cipher_suite_result, CipherSuiteRejectedByServer):
+                rejected_cipher_suites.append(cipher_suite_result)
+            else:
+                raise ValueError("Should never happen")
 
         # Sort all the lists
-        accepted_cipher_list.sort(key=attrgetter("name"), reverse=True)
-        rejected_cipher_list.sort(key=attrgetter("name"), reverse=True)
-        errored_cipher_list.sort(key=attrgetter("name"), reverse=True)
+        accepted_cipher_suites.sort(key=attrgetter("cipher_suite.name"), reverse=True)
+        rejected_cipher_suites.sort(key=attrgetter("cipher_suite.name"), reverse=True)
 
         # Generate the results
-        plugin_result = CipherSuitesScanResult(
-            None,  # TODO: preferred
-            accepted_cipher_list,
-            rejected_cipher_list,
-            errored_cipher_list,
+        return CipherSuitesScanResult(
+            tls_version_used=cls._tls_version,
+            cipher_suite_preferred_by_server=None,  # TODO
+            accepted_cipher_suites=accepted_cipher_suites,
+            rejected_cipher_suites=rejected_cipher_suites,
         )
-        return plugin_result
 
 
 class _SimpleCipherSuitesScanImplementation(_CipherSuitesScanImplementation):
     """"From SSL 2.0 to TLS 1.1, the implementation is identical and defined here.
     """
+    _openssl_cipher_string: ClassVar[str]
 
     @classmethod
     def _cipher_suites_to_scan_for(cls, server_info: ServerConnectivityInfo) -> Set[str]:
         # Simple case for SSL 2 to TLS 1.1
-        ssl_connection = server_info.get_preconfigured_ssl_connection(override_tls_version=cls._tls_version)
+        ssl_connection = server_info.get_preconfigured_tls_connection(override_tls_version=cls._tls_version)
         # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
-        ssl_connection.ssl_client.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
-        # And remove TLS 1.3 cipher suites
-        return {cipher for cipher in ssl_connection.ssl_client.get_cipher_list() if "TLS13" not in cipher}
+        ssl_connection.ssl_client.set_cipher_list(f"{cls._openssl_cipher_string}:-PSK:-SRP")
+        return set(ssl_connection.ssl_client.get_cipher_list())
 
 
 class Sslv20ScanImplementation(_SimpleCipherSuitesScanImplementation):
     _tls_version = OpenSslVersionEnum.SSLV2
+    _openssl_cipher_string = "SSLv2"
 
 
 class Sslv30ScanImplementation(_SimpleCipherSuitesScanImplementation):
     _tls_version = OpenSslVersionEnum.SSLV3
+    _openssl_cipher_string = "SSLv3"
 
 
 class Tlsv10ScanImplementation(_SimpleCipherSuitesScanImplementation):
     _tls_version = OpenSslVersionEnum.TLSV1
+    _openssl_cipher_string = "TLSv1"
 
 
 class Tlsv11ScanImplementation(_SimpleCipherSuitesScanImplementation):
     _tls_version = OpenSslVersionEnum.TLSV1_1
+    _openssl_cipher_string = "TLSv1"  # Same as TLS 1.0
 
 
 class Tlsv12ScanImplementation(_CipherSuitesScanImplementation):
@@ -142,19 +148,19 @@ class Tlsv12ScanImplementation(_CipherSuitesScanImplementation):
         cipher_list: List[str] = []
 
         # For TLS 1.2, we have to use both the legacy and modern OpenSSL to cover all cipher suites
-        ssl_connection_legacy = server_info.get_preconfigured_ssl_connection(
-            override_tls_version=cls._ssl_version, should_use_legacy_openssl=True
+        ssl_connection_legacy = server_info.get_preconfigured_tls_connection(
+            override_tls_version=cls._tls_version, should_use_legacy_openssl=True
         )
-        ssl_connection_legacy.ssl_client.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
+        ssl_connection_legacy.ssl_client.set_cipher_list("TLSv1.2:-PSK:-SRP")
         cipher_list.extend(ssl_connection_legacy.ssl_client.get_cipher_list())
 
-        ssl_connection_modern = server_info.get_preconfigured_ssl_connection(
-            override_tls_version=cls._ssl_version, should_use_legacy_openssl=False
+        ssl_connection_modern = server_info.get_preconfigured_tls_connection(
+            override_tls_version=cls._tls_version, should_use_legacy_openssl=False
         )
         # Disable the TLS 1.3 cipher suites with the new OpenSSL API
         ssl_connection_modern.ssl_client.set_ciphersuites("")
         # Enable all other cipher suites
-        ssl_connection_modern.ssl_client.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
+        ssl_connection_modern.ssl_client.set_cipher_list("TLSv1.2:-PSK:-SRP")
         cipher_list.extend(ssl_connection_modern.ssl_client.get_cipher_list())
 
         # And remove duplicates (ie. supported by both legacy and modern OpenSSL)

@@ -112,19 +112,9 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
 }
 
 
-_HANDSHAKE_ACCEPTED_SSL_ERRORS = {
-    # The following issues have nothing to do with the server or the connection; they are client-side (SSLyze) issues
-    # This one is when OpenSSL rejects DH parameters (to protect against Logjam); this actually means the server
-    # supports whatever cipher suite was used
-    "dh key too small": "DH Key too small",
-}
-
-
-_HANDSHAKE_SHOULD_NEVER_HAPPEN_SSL_ERRORS = {
-    # The following issues have nothing to do with the server or the connection; they are client-side (SSLyze) issues
-    # This one is returned by OpenSSL when a cipher set via set_cipher_list() is not actually supported
-    "no ciphers available": "No ciphers available",
-}
+class NoCiphersAvailableBugInSSlyze(Exception):
+    """Should never happen.
+    """
 
 
 class SslConnection:
@@ -298,21 +288,25 @@ class SslConnection:
             # Unknown socket error
             raise
         except _nassl.OpenSSLError as e:
-            for error_msg in _HANDSHAKE_ACCEPTED_SSL_ERRORS:
-                if error_msg in str(e.args):
-                    raise ServerTlsConfigurationNotSupported(
-                        server_location=self._server_location,
-                        network_configuration=self._network_configuration,
-                        error_message=_HANDSHAKE_ACCEPTED_SSL_ERRORS[error_msg]
-                    )
+            openssl_error_message = e.args[0]
+            if "dh key too small" in openssl_error_message:
+                # This is when SSLyze's OpenSSL rejects DH parameters (to protect against Logjam); this actually
+                # means the server supports whatever cipher suite was used
+                raise ServerTlsConfigurationNotSupported(
+                    server_location=self._server_location,
+                    network_configuration=self._network_configuration,
+                    error_message="DH key too small"
+                )
 
-            for error_msg in _HANDSHAKE_SHOULD_NEVER_HAPPEN_SSL_ERRORS:
-                if error_msg in str(e.args):
-                    # Errors that should never happen ie. SSLyze bugs
-                    raise
+            if "no ciphers available" in openssl_error_message:
+                # This one is returned by OpenSSL when a cipher set via set_cipher_list() is not actually supported
+                # Should never happen (SSLyze bugs)
+                raise NoCiphersAvailableBugInSSlyze(
+                    f"Set a cipher that is not supported by nassl: {self.ssl_client.get_cipher_list()}"
+                )
 
             for error_msg in _HANDSHAKE_REJECTED_TLS_ERRORS.keys():
-                if error_msg in str(e.args):
+                if error_msg in openssl_error_message:
                     raise ServerRejectedTlsHandshake(
                         server_location=self._server_location,
                         network_configuration=self._network_configuration,

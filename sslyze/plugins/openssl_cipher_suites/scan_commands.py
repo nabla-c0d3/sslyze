@@ -7,8 +7,11 @@ from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.connection_helpers.tls_connection import NoCiphersAvailableBugInSSlyze
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite
-from sslyze.plugins.openssl_cipher_suites.test_cipher_suite import test_cipher_suite, CipherSuiteRejectedByServer, \
-    CipherSuiteAcceptedByServer
+from sslyze.plugins.openssl_cipher_suites.test_cipher_suite import (
+    test_cipher_suite,
+    CipherSuiteRejectedByServer,
+    CipherSuiteAcceptedByServer,
+)
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandResult, ScanJob, ScanCommandExtraArguments
 from typing import ClassVar, Set, Optional
 from typing import List
@@ -29,6 +32,7 @@ class CipherSuitesScanResult(ScanCommandResult):
             `None` if the server follows the client's preference or if none of SSLyze's cipher suites are supported by
             the server.
     """
+
     tls_version_used: OpenSslVersionEnum
 
     cipher_suite_preferred_by_server: Optional[CipherSuiteAcceptedByServer]
@@ -67,10 +71,7 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation):
 
         # Run one job per cipher suite to test for
         scan_jobs = [
-            ScanJob(
-                function_to_call=test_cipher_suite,
-                function_arguments=[server_info, cls._tls_version, cipher_name],
-            )
+            ScanJob(function_to_call=test_cipher_suite, function_arguments=[server_info, cls._tls_version, cipher_name])
             for cipher_name in cls._cipher_suites_to_scan_for(server_info)
         ]
         return scan_jobs

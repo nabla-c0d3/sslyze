@@ -10,6 +10,7 @@ class ProtocolWithOpportunisticTlsEnum(Enum):
 
     This allows SSLyze to figure out how to complete an SSL/TLS handshake with the server.
     """
+
     SMTP = auto()
     XMPP = auto()
     XMPP_SERVER = auto()
@@ -26,7 +27,6 @@ class OpportunisticTlsError(Exception):
 
 
 class _OpportunisticTlsHelper(ABC):
-
     @abstractmethod
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         """Send the right protocol-specific requests to prepare the server for the TLS handshake.
@@ -37,6 +37,7 @@ class _OpportunisticTlsHelper(ABC):
 class _SmtpHelper(_OpportunisticTlsHelper):
     """Perform an SMTP StartTLS negotiation.
     """
+
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         # Get the SMTP banner
         sock.recv(2048)
@@ -98,6 +99,7 @@ class _XmppServerHelper(_XmppHelper):
 class _LdapHelper(_OpportunisticTlsHelper):
     """Performs an LDAP StartTLS negotiation.
     """
+
     START_TLS_CMD = b"0\x1d\x02\x01\x01w\x18\x80\x161.3.6.1.4.1.1466.20037"
     START_TLS_OK = b"\x30\x0c\x02\x01\x01\x78\x07\x0a\x01\x00\x04\x00\x04"
     START_TLS_OK2 = b"Start TLS request accepted"
@@ -201,8 +203,7 @@ _START_TLS_HELPER_CLASSES = {
 
 
 def get_opportunistic_tls_helper(
-    protocol: ProtocolWithOpportunisticTlsEnum,
-    xmpp_to_hostname: Optional[str]
+    protocol: ProtocolWithOpportunisticTlsEnum, xmpp_to_hostname: Optional[str]
 ) -> _OpportunisticTlsHelper:
     helper_cls = _START_TLS_HELPER_CLASSES[protocol]
     if protocol not in [ProtocolWithOpportunisticTlsEnum.XMPP, ProtocolWithOpportunisticTlsEnum.XMPP_SERVER]:

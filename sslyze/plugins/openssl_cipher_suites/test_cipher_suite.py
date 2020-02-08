@@ -3,8 +3,11 @@ from typing import Optional, Union
 
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
-from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake, ServerTlsConfigurationNotSupported, \
-    ConnectionToServerFailed
+from sslyze.connection_helpers.errors import (
+    ServerRejectedTlsHandshake,
+    ServerTlsConfigurationNotSupported,
+    ConnectionToServerFailed,
+)
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.openssl_cipher_suites.tls12_workaround import WorkaroundForTls12ForCipherSuites
@@ -23,9 +26,7 @@ class CipherSuiteRejectedByServer:
 
 
 def test_cipher_suite(
-    server_connectivity_info: ServerConnectivityInfo,
-    tls_version: OpenSslVersionEnum,
-    cipher_openssl_name: str,
+    server_connectivity_info: ServerConnectivityInfo, tls_version: OpenSslVersionEnum, cipher_openssl_name: str
 ) -> Union[CipherSuiteAcceptedByServer, CipherSuiteRejectedByServer]:
     """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
     """
@@ -68,34 +69,22 @@ def test_cipher_suite(
     except ServerTlsConfigurationNotSupported:
         # SSLyze rejected the handshake because the server's DH config was too insecure; this means the
         # cipher suite is actually supported
-        return CipherSuiteAcceptedByServer(
-            cipher_suite=cipher_suite,
-        )
+        return CipherSuiteAcceptedByServer(cipher_suite=cipher_suite)
 
     except ClientCertificateRequested:
         # When the handshake failed due to ClientCertificateRequested
-        return CipherSuiteAcceptedByServer(
-            cipher_suite=cipher_suite,
-        )
+        return CipherSuiteAcceptedByServer(cipher_suite=cipher_suite)
 
     except ServerRejectedTlsHandshake as e:
-        return CipherSuiteRejectedByServer(
-            cipher_suite=cipher_suite,
-            error_message=e.error_message
-        )
+        return CipherSuiteRejectedByServer(cipher_suite=cipher_suite, error_message=e.error_message)
     finally:
         ssl_connection.close()
 
-    return CipherSuiteAcceptedByServer(
-        cipher_suite=cipher_suite,
-    )
+    return CipherSuiteAcceptedByServer(cipher_suite=cipher_suite)
 
 
 def get_preferred_cipher_suite(
-    cls,
-    server_connectivity_info: ServerConnectivityInfo,
-    tls_version: OpenSslVersionEnum,
-    cipher_suites_to_enable: str,
+    cls, server_connectivity_info: ServerConnectivityInfo, tls_version: OpenSslVersionEnum, cipher_suites_to_enable: str
 ) -> Optional[CipherSuite]:
     """Try to detect the server's preferred cipher suite among all cipher suites supported by SSLyze.
     """

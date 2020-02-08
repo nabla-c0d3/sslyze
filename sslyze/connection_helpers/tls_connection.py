@@ -10,9 +10,17 @@ from sslyze.server_setting import (
     ServerNetworkLocationViaHttpProxy,
     ServerNetworkConfiguration,
 )
-from sslyze.connection_helpers.errors import ConnectionToServerTimedOut, ServerRejectedConnection, \
-    ConnectionToServerFailed, ConnectionToHttpProxyTimedOut, HttpProxyRejectedConnection, ConnectionToHttpProxyFailed, \
-    ServerRejectedOpportunisticTlsNegotiation, ServerRejectedTlsHandshake, ServerTlsConfigurationNotSupported
+from sslyze.connection_helpers.errors import (
+    ConnectionToServerTimedOut,
+    ServerRejectedConnection,
+    ConnectionToServerFailed,
+    ConnectionToHttpProxyTimedOut,
+    HttpProxyRejectedConnection,
+    ConnectionToHttpProxyFailed,
+    ServerRejectedOpportunisticTlsNegotiation,
+    ServerRejectedTlsHandshake,
+    ServerTlsConfigurationNotSupported,
+)
 from sslyze.connection_helpers.http_response_parser import HttpResponseParser
 
 import time
@@ -186,19 +194,19 @@ class SslConnection:
             raise ConnectionToHttpProxyTimedOut(
                 server_location=self._server_location,
                 network_configuration=self._network_configuration,
-                error_message=e.args[0]
+                error_message=e.args[0],
             )
         except _HttpProxyRejectedConnection as e:
             raise HttpProxyRejectedConnection(
                 server_location=self._server_location,
                 network_configuration=self._network_configuration,
-                error_message=e.args[0]
+                error_message=e.args[0],
             )
         except _ConnectionToHttpProxyFailed as e:
             raise ConnectionToHttpProxyFailed(
                 server_location=self._server_location,
                 network_configuration=self._network_configuration,
-                error_message=e.args[0]
+                error_message=e.args[0],
             )
 
         # Do the Opportunistic/StartTLS negotiation if needed
@@ -212,7 +220,7 @@ class SslConnection:
                 raise ServerRejectedOpportunisticTlsNegotiation(
                     server_location=self._server_location,
                     error_message=e.args[0],
-                    network_configuration=self._network_configuration
+                    network_configuration=self._network_configuration,
                 )
 
         # Pass the connected socket to the SSL client
@@ -237,7 +245,7 @@ class SslConnection:
                     raise ConnectionToServerTimedOut(
                         server_location=self._server_location,
                         network_configuration=self._network_configuration,
-                        error_message=e.strerror
+                        error_message=e.strerror,
                     )
                 elif connection_attempts_nb == 1:
                     # Start with a 1 second delay
@@ -249,13 +257,13 @@ class SslConnection:
                 raise ServerRejectedConnection(
                     server_location=self._server_location,
                     network_configuration=self._network_configuration,
-                    error_message=e.strerror
+                    error_message=e.strerror,
                 )
             except socket.error as e:
                 raise ConnectionToServerFailed(
                     server_location=self._server_location,
                     network_configuration=self._network_configuration,
-                    error_message=e.strerror
+                    error_message=e.strerror,
                 )
 
             else:
@@ -274,7 +282,7 @@ class SslConnection:
             raise ConnectionToServerTimedOut(
                 server_location=self._server_location,
                 network_configuration=self._network_configuration,
-                error_message=e.strerror
+                error_message=e.strerror,
             )
         except socket.error as e:
             for error_msg in _HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
@@ -282,7 +290,7 @@ class SslConnection:
                     raise ServerRejectedTlsHandshake(
                         server_location=self._server_location,
                         network_configuration=self._network_configuration,
-                        error_message=_HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg]
+                        error_message=_HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg],
                     )
 
             # Unknown socket error
@@ -295,7 +303,7 @@ class SslConnection:
                 raise ServerTlsConfigurationNotSupported(
                     server_location=self._server_location,
                     network_configuration=self._network_configuration,
-                    error_message="DH key too small"
+                    error_message="DH key too small",
                 )
 
             if "no ciphers available" in openssl_error_message:
@@ -310,7 +318,7 @@ class SslConnection:
                     raise ServerRejectedTlsHandshake(
                         server_location=self._server_location,
                         network_configuration=self._network_configuration,
-                        error_message=_HANDSHAKE_REJECTED_TLS_ERRORS[error_msg]
+                        error_message=_HANDSHAKE_REJECTED_TLS_ERRORS[error_msg],
                     )
 
             # Unknown SSL error if we get there

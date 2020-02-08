@@ -6,8 +6,11 @@ from dataclasses import dataclass
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
-from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake, ServerTlsConfigurationNotSupported, \
-    TlsHandshakeFailed
+from sslyze.connection_helpers.errors import (
+    ServerRejectedTlsHandshake,
+    ServerTlsConfigurationNotSupported,
+    TlsHandshakeFailed,
+)
 from sslyze.connection_helpers.tls_connection import SslConnection
 
 
@@ -15,6 +18,7 @@ from sslyze.connection_helpers.tls_connection import SslConnection
 class ClientAuthRequirementEnum(Enum):
     """Whether the server asked for client authentication.
     """
+
     DISABLED = auto()
     OPTIONAL = auto()
     REQUIRED = auto()
@@ -200,7 +204,7 @@ class ServerConnectivityTester:
             raise ServerTlsConfigurationNotSupported(
                 server_location=server_location,
                 network_configuration=final_network_config,
-                error_message="Probing failed: could not find a TLS version and cipher suite supported by the server"
+                error_message="Probing failed: could not find a TLS version and cipher suite supported by the server",
             )
         tls_probing_result = ServerTlsProbingResult(
             highest_tls_version_supported=highest_tls_version_supported,

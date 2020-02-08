@@ -1,3 +1,4 @@
+import ssl
 from dataclasses import dataclass
 from ssl import CertificateError
 from typing import Optional, List
@@ -8,9 +9,23 @@ from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate
 from nassl.ocsp_response import OcspResponseStatusEnum, OcspResponseNotTrustedError, OcspResponse
 
 from sslyze.plugins.certificate_info.symantec import SymantecDistructTester
-from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
+
+
+def _certificate_matches_hostname(cls, certificate: cryptography.x509.Certificate, hostname: str) -> None:
+    """Verify that the certificate was issued for the given hostname.
+
+    Raises:
+        CertificateError: If the certificate was not issued for the supplied hostname.
+    """
+    # Extract the names from the certificate to create the properly-formatted dictionary
+    certificate_names = {
+        "subject": (tuple([("commonName", name) for name in cls.get_common_names(certificate.subject)]),),
+        "subjectAltName": tuple([("DNS", name) for name in cls.get_dns_subject_alternative_names(certificate)]),
+    }
+    # CertificateError is raised on failure
+    ssl.match_hostname(certificate_names, hostname)  # type: ignore
 
 
 @dataclass(frozen=True)
@@ -110,7 +125,7 @@ class CertificateChainDeploymentAnalyzer:
 
         # Check hostname validation
         try:
-            CertificateUtils.matches_hostname(leaf_cert, self.server_hostname)
+            _certificate_matches_hostname(leaf_cert, self.server_hostname)
             certificate_matches_hostname = True
         except CertificateError:
             certificate_matches_hostname = False

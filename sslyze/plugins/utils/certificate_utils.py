@@ -31,21 +31,6 @@ class CertificateUtils:
         return subj_alt_names
 
     @classmethod
-    def matches_hostname(cls, certificate: cryptography.x509.Certificate, hostname: str) -> None:
-        """Verify that the certificate was issued for the given hostname.
-
-        Raises:
-            CertificateError: If the certificate was not issued for the supplied hostname.
-        """
-        # Extract the names from the certificate to create the properly-formatted dictionary
-        certificate_names = {
-            "subject": (tuple([("commonName", name) for name in cls.get_common_names(certificate.subject)]),),
-            "subjectAltName": tuple([("DNS", name) for name in cls.get_dns_subject_alternative_names(certificate)]),
-        }
-        # CertificateError is raised on failure
-        ssl.match_hostname(certificate_names, hostname)  # type: ignore
-
-    @classmethod
     def get_name_as_short_text(cls, name_field: cryptography.x509.Name) -> str:
         """Convert a name field returned by the cryptography module to a string suitable for displaying it to the user.
         """

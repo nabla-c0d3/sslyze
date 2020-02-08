@@ -4,10 +4,18 @@ from concurrent.futures._base import as_completed
 import pytest
 
 from sslyze.plugins.plugin_base import ServerScanRequest
+from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.scanner import Scanner
 from tests.factories import ServerConnectivityInfoFactory
 from tests.mock_plugin import MockPlugin1ScanResult, MockPlugin2ScanResult, MockPlugin1ExtraArguments, \
     ScanCommandEnumForTests
+
+
+class TestScanCommands:
+
+    def test_all_commands_are_implemented(self):
+        for scan_command in ScanCommandEnum:
+            assert scan_command._get_implementation_cls
 
 
 class TestScanner:

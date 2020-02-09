@@ -7,7 +7,13 @@ from typing import List, Optional, Tuple
 from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandExtraArguments, ScanJob, ScanCommandResult
+from sslyze.plugins.plugin_base import (
+    ScanCommandImplementation,
+    ScanCommandExtraArguments,
+    ScanJob,
+    ScanCommandResult,
+    ScanCommandWrongUsageError,
+)
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -38,7 +44,7 @@ class SessionRenegotiationImplementation(ScanCommandImplementation):
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
         if extra_arguments:
-            raise ValueError("This plugin does not take extra arguments")
+            raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
         if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:

@@ -1,17 +1,65 @@
 from concurrent.futures import Future, as_completed, TimeoutError
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Dict, Iterable, List, Tuple
+from dataclasses import dataclass, field
+from enum import unique, Enum, auto
+from traceback import TracebackException
+from typing import Dict, Iterable, List, Tuple, Set, Union
 
-from sslyze.plugins.plugin_base import ServerScanRequest, ServerScanResult, ScanCommandResult
+from nassl.ssl_client import ClientCertificateRequested
+
+from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandExtraArguments, ScanCommandWrongUsageError
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.server_connectivity import ServerConnectivityInfo
+
+
+@unique
+class ScanCommandErrorReasonEnum(Enum):
+    BUG_IN_SSLYZE = auto()
+    CLIENT_CERTIFICATE_NEEDED = auto()
+    WRONG_USAGE = auto()
+
+
+@dataclass(frozen=True)
+class ScanCommandError:
+    reason: ScanCommandErrorReasonEnum
+    exception_trace: TracebackException
+
+
+@dataclass(frozen=True)
+class ServerScanRequest:
+    server_info: "ServerConnectivityInfo"
+    scan_commands: Set["ScanCommandEnum"]
+    scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """"Validate that the extra arguments match the scan commands.
+        """
+        if not self.scan_commands_extra_arguments:
+            return
+
+        for scan_command in self.scan_commands_extra_arguments:
+            if scan_command not in self.scan_commands:
+                raise ValueError(f"Received an extra argument for a scan command that wasn't enabled: {scan_command}")
+
+
+@dataclass(frozen=True)
+class ServerScanResult:
+    scan_commands_results: Dict["ScanCommandEnum", ScanCommandResult]
+    scan_commands_errors: Dict["ScanCommandEnum", ScanCommandError]  # Populated when some scan commands failed
+
+    # What was passed in the corresponding ServerScanRequest
+    server_info: "ServerConnectivityInfo"
+    scan_commands: Set["ScanCommandEnum"]
+    scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments]
 
 
 class Scanner:
     def __init__(self, per_server_concurrent_connections_limit: int = 5, concurrent_server_scans_limit: int = 10):
         self._queued_server_scans: List[ServerScanRequest] = []
         self._queued_future_to_server_and_scan_cmd: Dict[Future, Tuple[ServerConnectivityInfo, ScanCommandEnum]] = {}
-        self._pending_server_scan_results: Dict[ServerConnectivityInfo, Dict[ScanCommandEnum, ScanCommandResult]] = {}
+        self._pending_server_scan_results: Dict[
+            ServerConnectivityInfo, Dict[ScanCommandEnum, Union[ScanCommandResult, ScanCommandError]]
+        ] = {}
 
         # Rate-limit how many connections the scanner will open
         # Total number of concurrent connections = server_scans_limit * per_server_connections_limit
@@ -39,9 +87,24 @@ class Scanner:
         for scan_cmd_enum in server_scan.scan_commands:
             implementation_cls = scan_cmd_enum._get_implementation_cls()
             scan_cmd_extra_args = server_scan.scan_commands_extra_arguments.get(scan_cmd_enum)
-            jobs_to_run = implementation_cls.scan_jobs_for_scan_command(
-                server_info=server_scan.server_info, extra_arguments=scan_cmd_extra_args
-            )
+
+            jobs_to_run = []
+            try:
+                jobs_to_run = implementation_cls.scan_jobs_for_scan_command(
+                    server_info=server_scan.server_info, extra_arguments=scan_cmd_extra_args
+                )
+            # Process exceptions and instantly "complete" the scan command if the call to create the jobs failed
+            except ScanCommandWrongUsageError as e:
+                result = ScanCommandError(
+                    reason=ScanCommandErrorReasonEnum.WRONG_USAGE, exception_trace=TracebackException.from_exception(e)
+                )
+                self._pending_server_scan_results[server_scan.server_info][scan_cmd_enum] = result
+            except Exception as e:
+                result = ScanCommandError(
+                    reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
+                    exception_trace=TracebackException.from_exception(e),
+                )
+                self._pending_server_scan_results[server_scan.server_info][scan_cmd_enum] = result
 
             # Schedule the jobs
             for job in jobs_to_run:
@@ -74,9 +137,21 @@ class Scanner:
                     # Yes - store the result
                     server_info, scan_cmd_enum = server_and_scan_cmd
                     implementation_cls = scan_cmd_enum._get_implementation_cls()
-                    result = implementation_cls.result_for_completed_scan_jobs(
-                        server_info, server_and_scan_cmd_to_completed_futures[server_and_scan_cmd]
-                    )
+                    try:
+                        result = implementation_cls.result_for_completed_scan_jobs(
+                            server_info, server_and_scan_cmd_to_completed_futures[server_and_scan_cmd]
+                        )
+                    # Process exceptions that may have been raised while the jobs were being completed
+                    except ClientCertificateRequested as e:
+                        result = ScanCommandError(
+                            reason=ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED,
+                            exception_trace=TracebackException.from_exception(e),
+                        )
+                    except Exception as e:
+                        result = ScanCommandError(
+                            reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
+                            exception_trace=TracebackException.from_exception(e),
+                        )
                     scan_cmds_completed.append(server_and_scan_cmd)
                     self._pending_server_scan_results[server_info][scan_cmd_enum] = result
 
@@ -87,8 +162,20 @@ class Scanner:
             for server_scan in self._queued_server_scans:
                 if len(server_scan.scan_commands) == len(self._pending_server_scan_results[server_scan.server_info]):
                     # Yes - return the fully completed server scan
+                    # Triage actual results from errors
+                    scan_commands_results = {
+                        scan_command: result
+                        for scan_command, result in self._pending_server_scan_results[server_scan.server_info].items()
+                        if not isinstance(result, ScanCommandError)
+                    }
+                    scan_commands_errors = {
+                        scan_command: result
+                        for scan_command, result in self._pending_server_scan_results[server_scan.server_info].items()
+                        if isinstance(result, ScanCommandError)
+                    }
                     yield ServerScanResult(
-                        scan_commands_results=self._pending_server_scan_results[server_scan.server_info],
+                        scan_commands_results=scan_commands_results,
+                        scan_commands_errors=scan_commands_errors,
                         server_info=server_scan.server_info,
                         scan_commands=server_scan.scan_commands,
                         scan_commands_extra_arguments=server_scan.scan_commands_extra_arguments,

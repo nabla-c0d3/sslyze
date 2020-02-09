@@ -15,6 +15,8 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class ScanCommandEnumForTests(Enum):
     MOCK_COMMAND_1 = "mock1"
     MOCK_COMMAND_2 = "mock2"
+    MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS = "mock3"
+    MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS = "mock4"
 
     def _get_implementation_cls(self):
         return _IMPLEMENTATION_CLASSES[self]
@@ -83,7 +85,31 @@ class MockPlugin2Implementation(_MockPluginImplementation):
     result_cls = MockPlugin2ScanResult
 
 
+class _MockPluginExceptionWhenSchedulingJobsImplementation(_MockPluginImplementation):
+    result_cls = _MockPluginScanResult
+
+    @classmethod
+    def scan_jobs_for_scan_command(
+            cls,
+            server_info: ServerConnectivityInfo,
+            extra_arguments: Optional[MockPlugin1ExtraArguments] = None
+    ) -> List[ScanJob]:
+        raise RuntimeError("Ran into a problem when creating the scan jobs")
+
+
+class _MockPluginExceptionWhenProcessingJobsImplementation(_MockPluginImplementation):
+    result_cls = _MockPluginScanResult
+
+    @classmethod
+    def result_for_completed_scan_jobs(
+        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+    ) -> ScanCommandResult:
+        raise RuntimeError("Ran into a problem when processing results")
+
+
 _IMPLEMENTATION_CLASSES: Dict[ScanCommandEnumForTests, Type["ScanCommandImplementation"]] = {
     ScanCommandEnumForTests.MOCK_COMMAND_1: MockPlugin1Implementation,
     ScanCommandEnumForTests.MOCK_COMMAND_2: MockPlugin2Implementation,
+    ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS: _MockPluginExceptionWhenSchedulingJobsImplementation,
+    ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS: _MockPluginExceptionWhenProcessingJobsImplementation,
 }

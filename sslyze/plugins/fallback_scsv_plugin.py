@@ -3,7 +3,13 @@ from dataclasses import dataclass
 from typing import List, Optional
 from nassl import _nassl
 from nassl.ssl_client import OpenSslVersionEnum
-from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
+from sslyze.plugins.plugin_base import (
+    ScanCommandResult,
+    ScanCommandImplementation,
+    ScanCommandExtraArguments,
+    ScanJob,
+    ScanCommandWrongUsageError,
+)
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 
@@ -25,7 +31,7 @@ class FallbackScsvImplementation(ScanCommandImplementation):
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
         if extra_arguments:
-            raise ValueError("This plugin does not take extra arguments")
+            raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         return [ScanJob(function_to_call=_test_scsv, function_arguments=[server_info])]
 

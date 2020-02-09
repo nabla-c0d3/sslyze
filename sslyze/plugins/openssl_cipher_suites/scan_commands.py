@@ -12,7 +12,13 @@ from sslyze.plugins.openssl_cipher_suites.test_cipher_suite import (
     CipherSuiteRejectedByServer,
     CipherSuiteAcceptedByServer,
 )
-from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanCommandResult, ScanJob, ScanCommandExtraArguments
+from sslyze.plugins.plugin_base import (
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanJob,
+    ScanCommandExtraArguments,
+    ScanCommandWrongUsageError,
+)
 from typing import ClassVar, Set, Optional
 from typing import List
 
@@ -67,7 +73,7 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation):
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
         if extra_arguments:
-            raise ValueError("This plugin does not take extra arguments")
+            raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         # Run one job per cipher suite to test for
         scan_jobs = [

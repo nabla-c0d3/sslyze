@@ -4,12 +4,11 @@
 from abc import ABC, abstractmethod
 from concurrent.futures import Future, ThreadPoolExecutor
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from typing import List, Callable, Any, Set, Dict, Optional, TYPE_CHECKING
+from typing import List, Callable, Any, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from sslyze.plugins.scan_commands import ScanCommandEnum  # noqa: F401
     from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -21,31 +20,11 @@ class ScanCommandExtraArguments(ABC):
     pass
 
 
-@dataclass(frozen=True)
-class ServerScanRequest:
-    server_info: "ServerConnectivityInfo"
-    scan_commands: Set["ScanCommandEnum"]
-    scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments] = field(default_factory=dict)
+class ScanCommandWrongUsageError(Exception):
+    """Raised when the configuration or arguments passed to complete a scan command are wrong.
+    """
 
-    def __post_init__(self) -> None:
-        """"Validate that the extra arguments match the scan commands.
-        """
-        if not self.scan_commands_extra_arguments:
-            return
-
-        for scan_command in self.scan_commands_extra_arguments:
-            if scan_command not in self.scan_commands:
-                raise ValueError(f"Received an extra argument for a scan command that wasn't enabled: {scan_command}")
-
-
-@dataclass(frozen=True)
-class ServerScanResult:
-    scan_commands_results: Dict["ScanCommandEnum", ScanCommandResult]
-
-    # What was passed in the corresponding ServerScanRequest
-    server_info: "ServerConnectivityInfo"
-    scan_commands: Set["ScanCommandEnum"]
-    scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments]
+    pass
 
 
 @dataclass(frozen=True)

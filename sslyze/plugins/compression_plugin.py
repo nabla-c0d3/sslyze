@@ -1,7 +1,13 @@
 from concurrent.futures._base import Future
 from dataclasses import dataclass
 from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
-from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanJob, ScanCommandExtraArguments
+from sslyze.plugins.plugin_base import (
+    ScanCommandResult,
+    ScanCommandImplementation,
+    ScanJob,
+    ScanCommandExtraArguments,
+    ScanCommandWrongUsageError,
+)
 from typing import List, Optional
 
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -28,7 +34,7 @@ class CompressionImplementation(ScanCommandImplementation):
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
         if extra_arguments:
-            raise ValueError("This plugin does not take extra arguments")
+            raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         return [ScanJob(function_to_call=_test_compression_support, function_arguments=[server_info])]
 

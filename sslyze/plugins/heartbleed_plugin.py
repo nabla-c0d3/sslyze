@@ -7,7 +7,13 @@ from typing import List, Optional
 from nassl._nassl import WantReadError
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanJob, ScanCommandExtraArguments
+from sslyze.plugins.plugin_base import (
+    ScanCommandResult,
+    ScanCommandImplementation,
+    ScanJob,
+    ScanCommandExtraArguments,
+    ScanCommandWrongUsageError,
+)
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte
@@ -35,7 +41,7 @@ class HeartbleedImplementation(ScanCommandImplementation):
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
         if extra_arguments:
-            raise ValueError("This plugin does not take extra arguments")
+            raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         return [ScanJob(function_to_call=_test_heartbleed, function_arguments=[server_info])]
 

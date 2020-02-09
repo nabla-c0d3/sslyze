@@ -5,7 +5,13 @@ from typing import List, Optional
 from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslVersionEnum, OpenSslEarlyDataStatusEnum
 
-from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
+from sslyze.plugins.plugin_base import (
+    ScanCommandResult,
+    ScanCommandImplementation,
+    ScanCommandExtraArguments,
+    ScanJob,
+    ScanCommandWrongUsageError,
+)
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
@@ -33,7 +39,7 @@ class EarlyDataImplementation(ScanCommandImplementation):
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
         if extra_arguments:
-            raise ValueError("This plugin does not take extra arguments")
+            raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         return [ScanJob(function_to_call=_test_early_data_support, function_arguments=[server_info])]
 

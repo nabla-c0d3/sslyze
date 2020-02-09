@@ -2,8 +2,13 @@ from concurrent.futures._base import Future
 from dataclasses import dataclass
 from typing import Optional, List, Dict
 
-from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
-
+from sslyze.plugins.plugin_base import (
+    ScanCommandResult,
+    ScanCommandImplementation,
+    ScanCommandExtraArguments,
+    ScanJob,
+    ScanCommandWrongUsageError,
+)
 
 from sslyze.plugins.robot.robot_tester import (
     RobotScanResultEnum,
@@ -35,7 +40,7 @@ class RobotImplementation(ScanCommandImplementation):
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
         if extra_arguments:
-            raise ValueError("This plugin does not take extra arguments")
+            raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         # Run the test three times to ensure the results are consistent
         return [

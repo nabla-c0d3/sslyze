@@ -3,11 +3,10 @@ from concurrent.futures._base import as_completed
 
 import pytest
 
-from sslyze.plugins.plugin_base import ServerScanRequest
 from sslyze.plugins.scan_commands import ScanCommandEnum
-from sslyze.scanner import Scanner
+from sslyze.scanner import Scanner, ScanCommandErrorReasonEnum, ServerScanRequest
 from tests.factories import ServerConnectivityInfoFactory
-from tests.mock_plugin import MockPlugin1ScanResult, MockPlugin2ScanResult, MockPlugin1ExtraArguments, \
+from tests.mock_plugins import MockPlugin1ScanResult, MockPlugin2ScanResult, MockPlugin1ExtraArguments, \
     ScanCommandEnumForTests
 
 
@@ -16,6 +15,23 @@ class TestScanCommands:
     def test_all_commands_are_implemented(self):
         for scan_command in ScanCommandEnum:
             assert scan_command._get_implementation_cls
+
+
+class TestServerScanRequest:
+
+    def test_with_extra_arguments_but_no_corresponding_scan_command(self):
+        # When trying to queue a scan for a server
+        with pytest.raises(ValueError):
+            ServerScanRequest(
+                server_info=ServerConnectivityInfoFactory.create(),
+                # With an extra argument for one command
+                scan_commands_extra_arguments={
+                    ScanCommandEnumForTests.MOCK_COMMAND_1: MockPlugin1ExtraArguments(extra_field="test")
+                },
+                # But that specific scan command was not queued
+                scan_commands={ScanCommandEnumForTests.MOCK_COMMAND_2},
+            )
+            # It fails
 
 
 class TestScanner:
@@ -89,6 +105,74 @@ class TestScanner:
 
             # And the extra argument was taken into account
             assert result.scan_commands_extra_arguments == server_scan.scan_commands_extra_arguments
+
+        assert len(all_results) == 1
+
+    def test_exception_when_scheduling_jobs(self):
+        # Given a server to scan
+        server_scan = ServerScanRequest(
+            server_info=ServerConnectivityInfoFactory.create(),
+            scan_commands={
+                ScanCommandEnumForTests.MOCK_COMMAND_1,
+
+                # And one of the scan commands will trigger an exception when scheduling scan jobs
+                ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS
+            },
+        )
+
+        # When queuing the scan
+        scanner = Scanner()
+        scanner.queue_scan(server_scan)
+
+        # It succeeds
+        all_results = []
+        for result in scanner.get_results():
+            all_results.append(result)
+
+            assert result.server_info == server_scan.server_info
+            assert result.scan_commands == server_scan.scan_commands
+            assert result.scan_commands_extra_arguments == server_scan.scan_commands_extra_arguments
+            assert len(result.scan_commands_results) == 1
+
+            # And the exception was properly caught and returned
+            assert len(result.scan_commands_errors) == 1
+            error = result.scan_commands_errors[ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS]
+            assert ScanCommandErrorReasonEnum.BUG_IN_SSLYZE == error.reason
+            assert error.exception_trace
+
+        assert len(all_results) == 1
+
+    def test_exception_when_processing_jobs(self):
+        # Given a server to scan
+        server_scan = ServerScanRequest(
+            server_info=ServerConnectivityInfoFactory.create(),
+            scan_commands={
+                ScanCommandEnumForTests.MOCK_COMMAND_1,
+
+                # And one of the scan commands will trigger an exception when processing the completed scan jobs
+                ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS
+            },
+        )
+
+        # When queuing the scan
+        scanner = Scanner()
+        scanner.queue_scan(server_scan)
+
+        # It succeeds
+        all_results = []
+        for result in scanner.get_results():
+            all_results.append(result)
+
+            assert result.server_info == server_scan.server_info
+            assert result.scan_commands == server_scan.scan_commands
+            assert result.scan_commands_extra_arguments == server_scan.scan_commands_extra_arguments
+            assert len(result.scan_commands_results) == 1
+
+            # And the exception was properly caught and returned
+            assert len(result.scan_commands_errors) == 1
+            error = result.scan_commands_errors[ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS]
+            assert ScanCommandErrorReasonEnum.BUG_IN_SSLYZE == error.reason
+            assert error.exception_trace
 
         assert len(all_results) == 1
 

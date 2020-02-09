@@ -4,7 +4,13 @@ from typing import List, Optional, Dict, Any
 
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandImplementation, ScanCommandExtraArguments, ScanJob
+from sslyze.plugins.plugin_base import (
+    ScanCommandResult,
+    ScanCommandImplementation,
+    ScanCommandExtraArguments,
+    ScanJob,
+    ScanCommandWrongUsageError,
+)
 from sslyze.plugins.session_resumption.resumption_with_id import resume_with_session_id, _ScanJobResultEnum
 from sslyze.plugins.session_resumption.resumption_with_ticket import resume_with_tls_ticket, TslSessionTicketSupportEnum
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -79,7 +85,7 @@ class SessionResumptionRateImplementation(ScanCommandImplementation):
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
         if extra_arguments:
-            raise ValueError("This plugin does not take extra arguments")
+            raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         return _create_resume_with_session_id_scan_jobs(server_info, cls._SESSION_ID_RESUMPTION_ATTEMPTS_NB)
 

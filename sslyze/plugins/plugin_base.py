@@ -6,7 +6,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 
 from dataclasses import dataclass
 
-from typing import List, Callable, Any, Optional, TYPE_CHECKING
+from typing import List, Callable, Any, Optional, TYPE_CHECKING, Tuple, ClassVar, Dict, Type, Union
 
 if TYPE_CHECKING:
     from sslyze.server_connectivity import ServerConnectivityInfo
@@ -39,11 +39,20 @@ class ScanJob:
 
 
 class ScanCommandImplementation(ABC):
+
+    # Contains all the logic for making the scan command available via the CLI
+    cli_connector_cls: ClassVar[Type["ScanCommandCliConnector"]]
+
     @classmethod
     @abstractmethod
     def scan_jobs_for_scan_command(
         cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[ScanCommandExtraArguments] = None
     ) -> List[ScanJob]:
+        """Transform a scan command to run into smaller scan jobs to be run concurrently.
+
+        To ensure reliability of the scans, each job should use at most one network connection to the server that is
+        being scanned.
+        """
         pass
 
     @classmethod
@@ -51,8 +60,11 @@ class ScanCommandImplementation(ABC):
     def result_for_completed_scan_jobs(
         cls, server_info: "ServerConnectivityInfo", completed_scan_jobs: List[Future]
     ) -> ScanCommandResult:
+        """Transform the completed scan jobs for a given scan command into a result.
+        """
         pass
 
+    # TODO: Better name
     @classmethod
     def perform(
         cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[ScanCommandExtraArguments] = None
@@ -72,3 +84,64 @@ class ScanCommandImplementation(ABC):
 
         result = cls.result_for_completed_scan_jobs(server_info, all_futures)
         return result
+
+
+@dataclass(frozen=True)
+class OptParseCliOption:
+    option: str
+    help: str
+
+
+class ScanCommandCliConnector(ABC):
+    """Contains all the logic for making a scan command available via the CLI.
+    """
+
+    _cli_option : ClassVar[str]
+    _cli_description: ClassVar[str]
+
+    @classmethod
+    def get_cli_options(cls) -> List[OptParseCliOption]:
+        """Return the CLI option(s) relevant to the scan command.
+        """
+        # Subclasses can add command line options for extra arguments here; by default scan commands don't have
+        # extra arguments
+        return [OptParseCliOption(
+            option=cls._cli_option,
+            help=cls._cli_description,
+        )]
+
+    @classmethod
+    def find_cli_options_in_command_line(
+        cls,
+        parsed_command_line: Dict[str, Union[None, bool, str]]
+    ) -> Tuple[bool, Optional[ScanCommandExtraArguments]]:
+        """Check a parsed command line to see if the CLI option for the scan command was enabled.
+        """
+        try:
+            option = parsed_command_line[cls._cli_option]
+            is_scan_cmd_enabled = True if option else False
+        except KeyError:
+            is_scan_cmd_enabled = False
+
+        extra_arguments = None
+        return is_scan_cmd_enabled, extra_arguments
+
+    @classmethod
+    @abstractmethod
+    def result_to_console_output(cls, result: ScanCommandResult) -> List[str]:
+        """Transform the result of the scan command into lines of text to be printed by the CLI.
+        """
+        pass
+
+    # Common formatting methods to have a consistent console output
+    @staticmethod
+    def _format_title(title: str) -> str:
+        return " * {0}:".format(title)
+
+    @staticmethod
+    def _format_subtitle(subtitle: str) -> str:
+        return "     {0}".format(subtitle)
+
+    @staticmethod
+    def _format_field(title: str, value: str) -> str:
+        return "       {0:<35}{1}".format(title, value)

@@ -1,15 +1,19 @@
+import socket
+import sys
+from dataclasses import dataclass, field
+from io import TextIOWrapper
 from optparse import OptionParser, OptionGroup
 
-import socket
+from pathlib import Path
 
 from nassl.ssl_client import OpenSslFileTypeEnum
-from typing import Optional, Set, Type, List, Any
+from typing import Set, Type, List, Any, Optional, Dict, TextIO
 from typing import Tuple
 
-from sslyze.plugins.plugin_base import Plugin
+from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
-
-from sslyze.ssl_settings import TlsWrappedProtocolEnum, ClientAuthenticationCredentials
+from sslyze.plugins.plugin_base import ScanCommandExtraArguments
+from sslyze.plugins.scan_commands import ScanCommandEnum
 
 from sslyze.server_setting import (
     HttpProxySettings,
@@ -19,10 +23,10 @@ from sslyze.server_setting import (
     ServerNetworkConfiguration,
     InvalidServerNetworkConfigurationError,
     ServerHostnameCouldNotBeResolved,
-)
+    ClientAuthenticationCredentials)
 
 
-class CommandLineParsingError(ValueError):
+class CommandLineParsingError(Exception):
 
     PARSING_ERROR_FORMAT = "  Command line error: {0}\n  Use -h for help."
 
@@ -36,13 +40,12 @@ class TrustStoresUpdateCompleted(CommandLineParsingError):
         return "Trust stores successfully updated."
 
 
-class InvalidServerStringError(ValueError):
+@dataclass(frozen=True)
+class InvalidServerStringError(Exception):
     """Exception raised when SSLyze was unable to parse a hostname:port string supplied via the command line.
     """
-
-    def __init__(self, supplied_server_string: str, error_message: str) -> None:
-        self.server_string = supplied_server_string
-        self.error_message = error_message
+    server_string: str
+    error_message: str
 
 
 class CommandLineServerStringParser:
@@ -108,8 +111,27 @@ class CommandLineServerStringParser:
         return ipv6_addr, port
 
 
-class CommandLineParser:
+@dataclass(frozen=True)
+class ParsedCommandLine:
+    """The result of parsing a command line used to launch sslyze.
+    """
+    invalid_servers: List[InvalidServerStringError]
 
+    # Servers to scan
+    servers_to_scans: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]]
+    scan_commands: Set["ScanCommandEnum"]
+    scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments]
+
+    # Output settings
+    json_file_out: Optional[TextIO]
+    should_disable_console_output: bool
+
+    # Network settings
+    per_server_concurrent_connections_limit: Optional[int]
+    concurrent_server_scans_limit: Optional[int]
+
+
+class CommandLineParser:
     # Defines what --regular means
     REGULAR_CMD = [
         "sslv2",
@@ -121,7 +143,6 @@ class CommandLineParser:
         "reneg",
         "resum",
         "certinfo",
-        "http_get",
         "hide_rejected_ciphers",
         "compression",
         "heartbleed",
@@ -140,33 +161,34 @@ class CommandLineParser:
         "for each target servers.".format(" , ".join(START_TLS_PROTOCOLS))
     )
 
+    # TODO
     # Mapping of StartTls protocols and ports; useful for starttls=auto
     STARTTLS_PROTOCOL_DICT = {
-        "smtp": TlsWrappedProtocolEnum.STARTTLS_SMTP,
-        587: TlsWrappedProtocolEnum.STARTTLS_SMTP,
-        25: TlsWrappedProtocolEnum.STARTTLS_SMTP,
-        "xmpp": TlsWrappedProtocolEnum.STARTTLS_XMPP,
-        5222: TlsWrappedProtocolEnum.STARTTLS_XMPP,
-        "xmpp_server": TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
-        5269: TlsWrappedProtocolEnum.STARTTLS_XMPP_SERVER,
-        "pop3": TlsWrappedProtocolEnum.STARTTLS_POP3,
-        109: TlsWrappedProtocolEnum.STARTTLS_POP3,
-        110: TlsWrappedProtocolEnum.STARTTLS_POP3,
-        "imap": TlsWrappedProtocolEnum.STARTTLS_IMAP,
-        143: TlsWrappedProtocolEnum.STARTTLS_IMAP,
-        220: TlsWrappedProtocolEnum.STARTTLS_IMAP,
-        "ftp": TlsWrappedProtocolEnum.STARTTLS_FTP,
-        21: TlsWrappedProtocolEnum.STARTTLS_FTP,
-        "ldap": TlsWrappedProtocolEnum.STARTTLS_LDAP,
-        3268: TlsWrappedProtocolEnum.STARTTLS_LDAP,
-        389: TlsWrappedProtocolEnum.STARTTLS_LDAP,
-        "rdp": TlsWrappedProtocolEnum.STARTTLS_RDP,
-        3389: TlsWrappedProtocolEnum.STARTTLS_RDP,
-        "postgres": TlsWrappedProtocolEnum.STARTTLS_POSTGRES,
-        5432: TlsWrappedProtocolEnum.STARTTLS_POSTGRES,
+        "smtp": ProtocolWithOpportunisticTlsEnum.SMTP,
+        587: ProtocolWithOpportunisticTlsEnum.SMTP,
+        25: ProtocolWithOpportunisticTlsEnum.SMTP,
+        "xmpp": ProtocolWithOpportunisticTlsEnum.XMPP,
+        5222: ProtocolWithOpportunisticTlsEnum.XMPP,
+        "xmpp_server": ProtocolWithOpportunisticTlsEnum.XMPP_SERVER,
+        5269: ProtocolWithOpportunisticTlsEnum.XMPP_SERVER,
+        "pop3": ProtocolWithOpportunisticTlsEnum.POP3,
+        109: ProtocolWithOpportunisticTlsEnum.POP3,
+        110: ProtocolWithOpportunisticTlsEnum.POP3,
+        "imap": ProtocolWithOpportunisticTlsEnum.IMAP,
+        143: ProtocolWithOpportunisticTlsEnum.IMAP,
+        220: ProtocolWithOpportunisticTlsEnum.IMAP,
+        "ftp": ProtocolWithOpportunisticTlsEnum.FTP,
+        21: ProtocolWithOpportunisticTlsEnum.FTP,
+        "ldap": ProtocolWithOpportunisticTlsEnum.LDAP,
+        3268: ProtocolWithOpportunisticTlsEnum.LDAP,
+        389: ProtocolWithOpportunisticTlsEnum.LDAP,
+        "rdp": ProtocolWithOpportunisticTlsEnum.RDP,
+        3389: ProtocolWithOpportunisticTlsEnum.RDP,
+        "postgres": ProtocolWithOpportunisticTlsEnum.POSTGRES,
+        5432: ProtocolWithOpportunisticTlsEnum.POSTGRES,
     }
 
-    def __init__(self, available_plugins: Set[Type[Plugin]], sslyze_version: str) -> None:
+    def __init__(self, sslyze_version: str) -> None:
         """Generate SSLyze's command line parser.
         """
         self._parser = OptionParser(version=sslyze_version, usage=self.SSLYZE_USAGE)
@@ -175,15 +197,13 @@ class CommandLineParser:
         self._add_default_options()
 
         # Add plugin-specific options to the parser
-        self._add_plugin_options(available_plugins)
+        self._add_plugin_scan_commands()
 
         # Add the --regular command line parameter as a shortcut if possible
         regular_help = "Regular HTTPS scan; shortcut for --{}".format(" --".join(self.REGULAR_CMD))
         self._parser.add_option("--regular", action="store_true", dest=None, help=regular_help)
 
-    def parse_command_line(
-        self
-    ) -> Tuple[List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]], List[InvalidServerStringError], Any]:
+    def parse_command_line(self) -> ParsedCommandLine:
         """Parses the command line used to launch SSLyze.
         """
         (args_command_list, args_target_list) = self._parser.parse_args()
@@ -219,23 +239,15 @@ class CommandLineParser:
                 for cmd in self.REGULAR_CMD:
                     setattr(args_command_list, cmd, True)
 
-        # Sanity checks on the command line options
-        # Prevent --quiet and --xml_out -
-        if args_command_list.xml_file and args_command_list.xml_file == "-" and args_command_list.quiet:
-            raise CommandLineParsingError("Cannot use --quiet with --xml_out -.")
-
-        # Prevent --quiet and --json_out -
-        if args_command_list.json_file and args_command_list.json_file == "-" and args_command_list.quiet:
-            raise CommandLineParsingError("Cannot use --quiet with --json_out -.")
-
-        # Prevent --xml_out - and --json_out -
-        if (
-            args_command_list.json_file
-            and args_command_list.json_file == "-"
-            and args_command_list.xml_file
-            and args_command_list.xml_file == "-"
-        ):
-            raise CommandLineParsingError("Cannot use --xml_out - with --json_out -.")
+        # Handle JSON settings
+        json_file_out = None
+        if args_command_list.json_file:
+            if args_command_list.json_file == "-":
+                json_file_out = sys.stdout
+                if args_command_list.quiet:
+                    raise CommandLineParsingError("Cannot use --quiet with --json_out -.")
+            else:
+                json_file_out = open(args_command_list.json_file, "wt", encoding="utf-8")
 
         # Sanity checks on the client cert options
         client_auth_creds = None
@@ -254,7 +266,10 @@ class CommandLineParser:
             # Let's try to open the cert and key files
             try:
                 client_auth_creds = ClientAuthenticationCredentials(
-                    args_command_list.cert, args_command_list.key, key_type, args_command_list.keypass
+                    certificate_chain_path=Path(args_command_list.cert),
+                    key_path=Path(args_command_list.key),
+                    key_password=args_command_list.keypass,
+                    key_type=key_type,
                 )
             except ValueError as e:
                 raise CommandLineParsingError("Invalid client authentication settings: {}.".format(e.args[0]))
@@ -268,7 +283,7 @@ class CommandLineParser:
                 raise CommandLineParsingError("Invalid proxy URL for --https_tunnel: {}.".format(e.args[0]))
 
         # STARTTLS
-        tls_wrapped_protocol = TlsWrappedProtocolEnum.PLAIN_TLS
+        opportunistic_tls: Optional[ProtocolWithOpportunisticTlsEnum] = None
         if args_command_list.starttls:
             if args_command_list.starttls not in self.START_TLS_PROTOCOLS:
                 raise CommandLineParsingError(self.START_TLS_USAGE)
@@ -276,56 +291,57 @@ class CommandLineParser:
                 # StartTLS was specified
                 if args_command_list.starttls in self.STARTTLS_PROTOCOL_DICT.keys():
                     # Protocol was given in the command line
-                    tls_wrapped_protocol = self.STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
+                    opportunistic_tls = self.STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
 
         # Create the server location objects for each specified servers
         good_servers: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]] = []
-        invalid_servers: List[InvalidServerStringError] = []
+        invalid_server_strings: List[InvalidServerStringError] = []
         for server_string in args_target_list:
             try:
                 # Parse the string supplied via the CLI for this server
                 hostname, ip_address, port = CommandLineServerStringParser.parse_server_string(server_string)
             except InvalidServerStringError as e:
                 # The server string is malformed
-                invalid_servers.append(e)
+                invalid_server_strings.append(e)
                 continue
 
             # Figure out how we're going to connect to the server
             server_location: ServerNetworkLocation
-            if not http_proxy_settings:
+            if http_proxy_settings:
+                # Connect to the server via an HTTP proxy
+                # A limitation when using the CLI is that only one http_proxy_settings can be specified for all servers
+                server_location = ServerNetworkLocationViaHttpProxy(
+                    hostname=hostname, port=port, http_proxy_settings=http_proxy_settings
+                )
+            else:
                 # Connect to the server directly
-                if not ip_address:
+                if ip_address:
+                    server_location = ServerNetworkLocationViaDirectConnection(
+                        hostname=hostname, port=port, ip_address=ip_address
+                    )
+                else:
                     # No IP address supplied - do a DNS lookup
                     try:
                         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
                             hostname=hostname, port=port
                         )
                     except ServerHostnameCouldNotBeResolved:
-                        invalid_servers.append(
+                        invalid_server_strings.append(
                             InvalidServerStringError(f"{hostname}:{port}", f"Could not resolve hostname {hostname}")
                         )
                         continue
-                else:
-                    server_location = ServerNetworkLocationViaDirectConnection(
-                        hostname=hostname, port=port, ip_address=ip_address
-                    )
-            else:
-                # Connect to the server via an HTTP proxy
-                # A limitation when using the CLI is that only one http_proxy_settings can be specified for all servers
-                server_location = ServerNetworkLocationViaHttpProxy(
-                    hostname=hostname, port=port, http_proxy_settings=http_proxy_settings
-                )
 
             # Figure out extra network config for this server
             # Handle --starttls=auto to auto-detect the protocol via the port number now that the port has been parsed
             if args_command_list.starttls == "auto":
                 if port in self.STARTTLS_PROTOCOL_DICT.keys():
-                    tls_wrapped_protocol = self.STARTTLS_PROTOCOL_DICT[port]
+                    opportunistic_tls = self.STARTTLS_PROTOCOL_DICT[port]
 
             try:
+                sni_hostname = args_command_list.sni if args_command_list.sni else hostname
                 network_config = ServerNetworkConfiguration(
-                    tls_wrapped_protocol=tls_wrapped_protocol,
-                    tls_server_name_indication=args_command_list.sni,
+                    tls_opportunistic_encryption=opportunistic_tls,
+                    tls_server_name_indication=sni_hostname,
                     tls_client_auth_credentials=client_auth_creds,
                     xmpp_to_hostname=args_command_list.xmpp_to,
                 )
@@ -333,7 +349,39 @@ class CommandLineParser:
             except InvalidServerNetworkConfigurationError as e:
                 raise CommandLineParsingError(e.args[0])
 
-        return good_servers, invalid_servers, args_command_list
+        # Figure out global network settings
+        concurrent_server_scans_limit = None
+        per_server_concurrent_connections_limit = None
+        if args_command_list.https_tunnel:
+            # All the connections will go through a single proxy; only scan one server at a time to not DOS the proxy
+            concurrent_server_scans_limit = 1
+        if args_command_list.slow_connection:
+            # Go easy on the servers; only open 2 concurrent connections against each server
+            per_server_concurrent_connections_limit = 2
+
+        # Figure out the scan commands that enabled
+        # TODO
+        scan_commands: Set["ScanCommandEnum"] = set()
+        scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments] = {}
+        #for scan_command in ScanCommandEnum:
+        for scan_command in [ScanCommandEnum.TLS_COMPRESSION]:
+            cli_connector_cls = scan_command._get_implementation_cls().cli_connector_cls
+            is_scan_cmd_enabled, extra_args = cli_connector_cls.find_cli_options_in_command_line(args_command_list.__dict__)
+            if is_scan_cmd_enabled:
+                scan_commands.add(scan_command)
+                if extra_args:
+                    scan_commands_extra_arguments[scan_command] = extra_args
+
+        return ParsedCommandLine(
+            invalid_servers=invalid_server_strings,
+            servers_to_scans=good_servers,
+            scan_commands=scan_commands,
+            scan_commands_extra_arguments=scan_commands_extra_arguments,
+            json_file_out=json_file_out,
+            should_disable_console_output=args_command_list.quiet or args_command_list.json_file == "-",
+            concurrent_server_scans_limit=concurrent_server_scans_limit,
+            per_server_concurrent_connections_limit=per_server_concurrent_connections_limit,
+        )
 
     def _add_default_options(self) -> None:
         """Add default command line options to the parser.
@@ -368,15 +416,6 @@ class CommandLineParser:
 
         # Input / output
         output_group = OptionGroup(self._parser, "Input and output options", "")
-        # XML output
-        output_group.add_option(
-            "--xml_out",
-            help='Write the scan results as an XML document to the file XML_FILE. If XML_FILE is set to "-", the XML '
-            "output will instead be printed to stdout. The corresponding XML Schema Definition is available at "
-            "./docs/xml_out.xsd",
-            dest="xml_file",
-            default=None,
-        )
         # JSON output
         output_group.add_option(
             "--json_out",
@@ -400,7 +439,7 @@ class CommandLineParser:
             "--quiet",
             action="store_true",
             dest="quiet",
-            help="Do not output anything to stdout; useful when using --xml_out or --json_out.",
+            help="Do not output anything to stdout; useful when using --json_out.",
         )
         self._parser.add_option_group(output_group)
 
@@ -450,13 +489,21 @@ class CommandLineParser:
         )
         self._parser.add_option_group(connect_group)
 
-    def _add_plugin_options(self, available_plugins: Set[Type[Plugin]]) -> None:
+    def _add_plugin_scan_commands(self) -> None:
         """Recovers the list of command line options implemented by the available plugins and adds them to the command
         line parser.
         """
-        for plugin_class in available_plugins:
-            # Add the current plugin's commands to the parser
-            group = OptionGroup(self._parser, plugin_class.get_title(), plugin_class.get_description())
-            for option in plugin_class.get_cli_option_group():
-                group.add_option(option)
-            self._parser.add_option_group(group)
+        scan_commands_group = OptionGroup(self._parser, "Scan commands", "")
+        # TODO
+        #for scan_command in ScanCommandEnum:
+        for scan_command in [ScanCommandEnum.TLS_COMPRESSION]:
+            cli_connector_cls = scan_command._get_implementation_cls().cli_connector_cls
+            for option in cli_connector_cls.get_cli_options():
+                scan_commands_group.add_option(
+                    f"--{option.option}",
+                    help=option.help,
+                    dest=option.option,
+                    action="store_true",
+                )
+
+        self._parser.add_option_group(scan_commands_group)

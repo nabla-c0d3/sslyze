@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import TextIO, Set, Type, Any, List
+from typing import TextIO
 
-from sslyze.cli import CompletedServerScan
-from sslyze.cli.command_line_parser import InvalidServerStringError
-from sslyze.plugins.plugin_base import Plugin
-from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.server_connectivity import ServerConnectivityError
+from sslyze.cli.command_line_parser import ParsedCommandLine
+from sslyze.connection_helpers.errors import ConnectionToServerFailed
+from sslyze.scanner import ServerScanResult
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 class OutputGenerator(ABC):
@@ -21,17 +20,12 @@ class OutputGenerator(ABC):
         self._file_to.close()
 
     @abstractmethod
-    def command_line_parsed(
-        self,
-        available_plugins: Set[Type[Plugin]],
-        args_command_list: Any,
-        malformed_servers: List[InvalidServerStringError],
-    ) -> None:
+    def command_line_parsed(self, parsed_command_line: ParsedCommandLine) -> None:
         """The CLI was just started and successfully parsed the command line.
         """
 
     @abstractmethod
-    def server_connectivity_test_failed(self, connectivity_error: ServerConnectivityError) -> None:
+    def server_connectivity_test_failed(self, connectivity_error: ConnectionToServerFailed) -> None:
         """The CLI found a server that it could not connect to; no scans will be performed against this server.
         """
 
@@ -46,7 +40,7 @@ class OutputGenerator(ABC):
         """
 
     @abstractmethod
-    def server_scan_completed(self, server_scan_result: CompletedServerScan) -> None:
+    def server_scan_completed(self, server_scan_result: ServerScanResult) -> None:
         """The CLI has finished scanning one single server.
         """
 

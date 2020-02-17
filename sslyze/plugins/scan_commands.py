@@ -1,8 +1,8 @@
-from enum import Enum, unique
+from enum import Enum, unique, auto
 from typing import Dict, Type, TYPE_CHECKING
 
 from sslyze.plugins.certificate_info.core import CertificateInfoImplementation
-from sslyze.plugins.compression_plugin import CompressionImplementation
+from sslyze.plugins.compression_plugin import CompressionImplementation, CompressionCliConnector
 from sslyze.plugins.early_data_plugin import EarlyDataImplementation
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvImplementation
 from sslyze.plugins.heartbleed_plugin import HeartbleedImplementation
@@ -29,34 +29,35 @@ if TYPE_CHECKING:
 
 @unique
 class ScanCommandEnum(Enum):
-    CERTIFICATE_INFO = "certinfo"
+    CERTIFICATE_INFO = auto()
 
-    SSL_2_0_CIPHER_SUITES = "sslv2"
-    SSL_3_0_CIPHER_SUITES = "sslv3"
-    TLS_1_0_CIPHER_SUITES = "tlsv1_0"
-    TLS_1_1_CIPHER_SUITES = "tlsv1_1"
-    TLS_1_2_CIPHER_SUITES = "tlsv1_2"
-    TLS_1_3_CIPHER_SUITES = "tlsv1_3"
+    SSL_2_0_CIPHER_SUITES = auto()
+    SSL_3_0_CIPHER_SUITES = auto()
+    TLS_1_0_CIPHER_SUITES = auto()
+    TLS_1_1_CIPHER_SUITES = auto()
+    TLS_1_2_CIPHER_SUITES = auto()
+    TLS_1_3_CIPHER_SUITES = auto()
 
-    TLS_COMPRESSION = "compression"
+    TLS_COMPRESSION = auto()
 
-    TLS_1_3_EARLY_DATA = "early_data"
+    TLS_1_3_EARLY_DATA = auto()
 
-    OPENSSL_CCS_INJECTION = "openssl_ccs"
+    OPENSSL_CCS_INJECTION = auto()
 
-    TLS_FALLBACK_SCSV = "fallback"
+    TLS_FALLBACK_SCSV = auto()
 
-    HEARTBLEED = "heartbleed"
+    HEARTBLEED = auto()
 
-    ROBOT = "robot"
+    ROBOT = auto()
 
-    SESSION_RENEGOTIATION = "reneg"
+    SESSION_RENEGOTIATION = auto()
 
-    SESSION_RESUMPTION = "resum"
-    SESSION_RESUMPTION_RATE = "resum_rate"
+    SESSION_RESUMPTION = auto()
+    SESSION_RESUMPTION_RATE = auto()
 
-    HTTP_HEADERS = "http_headers"
+    HTTP_HEADERS = auto()
 
+    # TODO(AD): Make public
     def _get_implementation_cls(self) -> Type["ScanCommandImplementation"]:
         return _IMPLEMENTATION_CLASSES[self]
 

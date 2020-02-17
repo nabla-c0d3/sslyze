@@ -3,7 +3,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import unique, Enum, auto
 from traceback import TracebackException
-from typing import Dict, Iterable, List, Tuple, Set, Union
+from typing import Dict, Iterable, List, Tuple, Set, Union, Optional
 
 from nassl.ssl_client import ClientCertificateRequested
 
@@ -54,18 +54,28 @@ class ServerScanResult:
 
 
 class Scanner:
-    def __init__(self, per_server_concurrent_connections_limit: int = 5, concurrent_server_scans_limit: int = 10):
+    def __init__(self, per_server_concurrent_connections_limit: Optional[int] = None, concurrent_server_scans_limit: Optional[int] = None):
         self._queued_server_scans: List[ServerScanRequest] = []
         self._queued_future_to_server_and_scan_cmd: Dict[Future, Tuple[ServerConnectivityInfo, ScanCommandEnum]] = {}
         self._pending_server_scan_results: Dict[
             ServerConnectivityInfo, Dict[ScanCommandEnum, Union[ScanCommandResult, ScanCommandError]]
         ] = {}
 
+        # Setup default values
+        if per_server_concurrent_connections_limit is None:
+            final_per_server_concurrent_connections_limit = 5
+        else:
+            final_per_server_concurrent_connections_limit = per_server_concurrent_connections_limit
+        if concurrent_server_scans_limit is None:
+            final_concurrent_server_scans_limit = 10
+        else:
+            final_concurrent_server_scans_limit = concurrent_server_scans_limit
+
         # Rate-limit how many connections the scanner will open
         # Total number of concurrent connections = server_scans_limit * per_server_connections_limit
         self._all_thread_pools = [
-            ThreadPoolExecutor(max_workers=per_server_concurrent_connections_limit)
-            for _ in range(concurrent_server_scans_limit)
+            ThreadPoolExecutor(max_workers=final_per_server_concurrent_connections_limit)
+            for _ in range(final_concurrent_server_scans_limit)
         ]
         self._server_to_thread_pool: Dict[ServerConnectivityInfo, ThreadPoolExecutor] = {}
 

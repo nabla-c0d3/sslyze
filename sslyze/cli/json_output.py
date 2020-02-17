@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Any, TextIO, Type, Set, Union, List
+from typing import Dict, Any, TextIO, Union
 
 from cryptography.hazmat.backends.openssl import x509
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
@@ -8,13 +8,12 @@ from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509.oid import ObjectIdentifier
 from enum import Enum
 from sslyze import PROJECT_URL, __version__
-from sslyze.cli import CompletedServerScan
-from sslyze.cli.command_line_parser import InvalidServerStringError
+from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
-from sslyze.plugins.plugin_base import Plugin
+from sslyze.connection_helpers.errors import ConnectionToServerFailed
 from sslyze.plugins.utils.certificate_utils import CertificateUtils
-from sslyze.server_connectivity_info import ServerConnectivityInfo
-from sslyze.server_connectivity import ServerConnectivityError
+from sslyze.scanner import ServerScanResult
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 class JsonOutputGenerator(OutputGenerator):
@@ -22,18 +21,13 @@ class JsonOutputGenerator(OutputGenerator):
         super().__init__(file_to)
         self._json_dict: Dict[str, Any] = {"sslyze_version": __version__, "sslyze_url": PROJECT_URL}
 
-    def command_line_parsed(
-        self,
-        available_plugins: Set[Type[Plugin]],
-        args_command_list: Any,
-        malformed_servers: List[InvalidServerStringError],
-    ) -> None:
+    def command_line_parsed(self, parsed_command_line: ParsedCommandLine) -> None:
         self._json_dict.update({"invalid_targets": [], "accepted_targets": []})
 
         for bad_server_str in malformed_servers:
             self._json_dict["invalid_targets"].append({bad_server_str.server_string: bad_server_str.error_message})
 
-    def server_connectivity_test_failed(self, connectivity_error: ServerConnectivityError) -> None:
+    def server_connectivity_test_failed(self, connectivity_error: ConnectionToServerFailed) -> None:
         server_info = connectivity_error.server_info
         self._json_dict["invalid_targets"].append(
             {"{}:{}".format(server_info.hostname, server_info.port): connectivity_error.error_message}
@@ -45,9 +39,10 @@ class JsonOutputGenerator(OutputGenerator):
     def scans_started(self) -> None:
         pass
 
-    def server_scan_completed(self, server_scan_result: CompletedServerScan) -> None:
+    def server_scan_completed(self, server_scan_result: ServerScanResult) -> None:
         server_scan_dict = {"server_info": server_scan_result.server_info.__dict__.copy()}
 
+        # TODO
         dict_command_result: Dict[str, Dict[str, Any]] = {}
         for plugin_result in server_scan_result.plugin_result_list:
             dict_result = plugin_result.__dict__.copy()
@@ -70,6 +65,7 @@ class JsonOutputGenerator(OutputGenerator):
         self._file_to.write(json_out)
 
 
+# TODO(AD) Remove and move to plugins
 class _CustomJsonEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Union[bool, int, float, str, Dict[str, Any]]:
         result: Union[bool, int, float, str, Dict[str, Any]]

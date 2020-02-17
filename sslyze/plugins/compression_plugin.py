@@ -7,7 +7,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandExtraArguments,
     ScanCommandWrongUsageError,
-)
+    ScanCommandCliConnector)
 from typing import List, Optional
 
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -25,9 +25,26 @@ class CompressionScanResult(ScanCommandResult):
     supports_compression: bool
 
 
+class CompressionCliConnector(ScanCommandCliConnector):
+
+    _cli_option = "compression"
+    _cli_description = "Test a server for TLS compression support, which can be leveraged to perform a CRIME attack."
+
+    @classmethod
+    def result_to_console_output(cls, result: CompressionScanResult) -> List[str]:
+        txt_result = [cls._format_title("Deflate Compression")]
+        if result.supports_compression:
+            txt_result.append(cls._format_field("", "VULNERABLE - Server supports Deflate compression"))
+        else:
+            txt_result.append(cls._format_field("", "OK - Compression disabled"))
+        return txt_result
+
+
 class CompressionImplementation(ScanCommandImplementation):
     """Test a server for TLS compression support, which can be leveraged to perform a CRIME attack.
     """
+
+    cli_connector_cls = CompressionCliConnector
 
     @classmethod
     def scan_jobs_for_scan_command(
@@ -78,14 +95,3 @@ def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
         ssl_connection.close()
 
     return True if compression_name else False
-
-
-# TODO
-class CliConnector:
-    def as_text(self) -> List[str]:
-        txt_result = [self._format_title(self.scan_command.get_title())]
-        if self.compression_name:
-            txt_result.append(self._format_field("", "VULNERABLE - Server supports Deflate compression"))
-        else:
-            txt_result.append(self._format_field("", "OK - Compression disabled"))
-        return txt_result

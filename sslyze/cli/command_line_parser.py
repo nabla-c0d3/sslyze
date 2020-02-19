@@ -1,4 +1,6 @@
 from optparse import OptionParser, OptionGroup
+from libnmap.parser import NmapParser
+from libnmap.parser import NmapParserException
 
 import socket
 
@@ -185,7 +187,9 @@ class CommandLineParser:
         # Handle the --targets_in command line and fill args_target_list
         if args_command_list.targets_in:
             if args_target_list:
-                raise CommandLineParsingError("Cannot use --targets_list and specify targets within the command line.")
+                raise CommandLineParsingError("Cannot use --targets_in and specify targets within the command line.")
+            if args_command_list.nmapxml_in:
+                raise CommandLineParsingError("Cannot use --targets_in and --nmapxml_in at the same time.")
 
             try:  # Read targets from a file
                 with open(args_command_list.targets_in) as f:
@@ -196,6 +200,29 @@ class CommandLineParser:
             except IOError:
                 raise CommandLineParsingError(
                     "Can't read targets from input file '{}.".format(args_command_list.targets_in)
+                )
+
+        if args_command_list.nmapxml_in:
+            if args_target_list:
+                raise CommandLineParsingError("Cannot use --targets_in and specify targets within the command line.")
+            if args_command_list.targets_in:
+                raise CommandLineParsingError("Cannot use --targets_in and --nmapxml_in at the same time.")
+
+            try:  # Read targets from a file
+                nmap_report = NmapParser.parse_fromfile(args_command_list.nmapxml_in)
+                for host in nmap_report.hosts:
+                    for svc in host.services:
+                        if svc.state == 'open':
+                            if svc.tunnel == 'ssl':
+                                args_target_list.append("%s:%s" % (host.address, svc.port))
+
+            except IOError:
+                raise CommandLineParsingError(
+                    "Can't read targets from input file '{}.".format(args_command_list.nmapxml_in)
+                )
+            except NmapParserException:
+                raise CommandLineParsingError(
+                    "Unexpected data structure in file FILE '{}.".format(args_command_list.nmapxml_in)
                 )
 
         if not args_target_list:
@@ -373,6 +400,14 @@ class CommandLineParser:
             help="Read the list of targets to scan from the file TARGETS_IN. It should contain one host:port per "
             "line.",
             dest="targets_in",
+            default=None,
+        )
+        # Read targets from nmap XML input file
+        output_group.add_option(
+            "--nmapxml_in",
+            help="Read the list of targets to scan from the file NMAPXML_IN. It will look for any SSL/TLS exposed "
+            "service.",
+            dest="nmapxml_in",
             default=None,
         )
         # No text output

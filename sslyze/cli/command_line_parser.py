@@ -215,6 +215,8 @@ class CommandLineParser:
                         if svc.state == 'open':
                             if svc.tunnel == 'ssl':
                                 args_target_list.append("%s:%s" % (host.address, svc.port))
+                    for hostname in host.hostnames:
+                        args_target_list.append("%s:%s" % (hostname, svc.port))
 
             except IOError:
                 raise CommandLineParsingError(

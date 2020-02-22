@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, unique
 from typing import Tuple
 
 import nassl
@@ -9,6 +9,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 
 
+@unique
 class TslSessionTicketSupportEnum(Enum):
     SUCCEEDED = 1
     FAILED_TICKET_NOT_ASSIGNED = 2

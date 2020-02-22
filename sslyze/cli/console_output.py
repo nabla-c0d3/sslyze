@@ -9,21 +9,9 @@ from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, Serv
 
 class ConsoleOutputGenerator(OutputGenerator):
 
-    TITLE_FORMAT = " {title}\n {underline}\n"
-
-    SERVER_OK_FORMAT = "   {host}:{port:<25} => {network_route} {client_auth_msg}\n"
-
-    # The server string (host:port) supplied via teh command line was malformed
-    SERVER_STR_INVALID_FORMAT = "   {server_string:<35} => WARNING: {error_msg}; discarding corresponding tasks.\n"
-
-    # Connectivity testing with this server failed
-    SERVER_ERROR_FORMAT = "   {host}:{port:<25} => WARNING: {error_msg}; discarding corresponding tasks.\n"
-
-    SCAN_FORMAT = "Scan Results For {0}:{1} - {2}"
-
     @classmethod
     def _format_title(cls, title: str) -> str:
-        return cls.TITLE_FORMAT.format(title=title.upper(), underline="-" * len(title))
+        return f" {title.upper()}\n {'-' * len(title)}\n"
 
     def command_line_parsed(self, parsed_command_line: ParsedCommandLine) -> None:
         self._file_to.write("\n")
@@ -32,18 +20,15 @@ class ConsoleOutputGenerator(OutputGenerator):
 
         for bad_server_str in parsed_command_line.invalid_servers:
             self._file_to.write(
-                self.SERVER_STR_INVALID_FORMAT.format(
-                    server_string=bad_server_str.server_string, error_msg=bad_server_str.error_message
-                )
+                f"   {bad_server_str.server_string:<35} => WARNING: {bad_server_str.error_message};"
+                f" discarding corresponding tasks.\n"
             )
 
     def server_connectivity_test_failed(self, connectivity_error: ConnectionToServerFailed) -> None:
+        print(connectivity_error)
         self._file_to.write(
-            self.SERVER_ERROR_FORMAT.format(
-                host=connectivity_error.server_location.hostname,
-                port=connectivity_error.server_location.port,
-                error_msg=connectivity_error.error_message,
-            )
+            f"   {connectivity_error.server_location.hostname}:{connectivity_error.server_location.port:<25}"
+            f" => WARNING: {connectivity_error.error_message}; discarding corresponding tasks.\n"
         )
 
     def server_connectivity_test_succeeded(self, server_connectivity_info: ServerConnectivityInfo) -> None:
@@ -67,12 +52,7 @@ class ConsoleOutputGenerator(OutputGenerator):
             raise ValueError("Should never happen")
 
         self._file_to.write(
-            self.SERVER_OK_FORMAT.format(
-                host=server_location.hostname,
-                port=server_location.port,
-                network_route=network_route,
-                client_auth_msg=client_auth_msg,
-            )
+            f"   {server_location.hostname}:{server_location.port:<25} => {network_route} {client_auth_msg}\n"
         )
 
     def scans_started(self) -> None:
@@ -99,9 +79,7 @@ class ConsoleOutputGenerator(OutputGenerator):
         else:
             raise ValueError("Should never happen")
 
-        scan_txt = self.SCAN_FORMAT.format(
-            server_location.hostname, str(server_location.port), network_route
-        )
+        scan_txt = f"Scan Results For {server_location.hostname}:{server_location.port} - {network_route}"
         self._file_to.write(self._format_title(scan_txt) + target_result_str + "\n\n")
 
     def scans_completed(self, total_scan_time: float) -> None:

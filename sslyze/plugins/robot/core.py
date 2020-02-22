@@ -8,7 +8,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArguments,
     ScanJob,
     ScanCommandWrongUsageError,
-)
+    ScanCommandCliConnector)
 
 from sslyze.plugins.robot.robot_tester import (
     RobotScanResultEnum,
@@ -25,13 +25,40 @@ class RobotScanResult(ScanCommandResult):
     """The result of testing a server for the ROBOT vulnerability.
 
     Attributes:
-        robot_result_enum: An Enum providing the result of the ROBOT scan.
+        result: An Enum providing the result of the ROBOT scan.
     """
 
-    result: RobotScanResultEnum
+    robot_result: RobotScanResultEnum
+
+
+class _RobotCliConnector(ScanCommandCliConnector):
+
+    _cli_option = "robot"
+    _cli_description = "Test a server for the ROBOT vulnerability."
+
+    @classmethod
+    def result_to_console_output(cls, result: RobotScanResult) -> List[str]:
+        result_as_txt = [cls._format_title("ROBOT Attack")]
+
+        if result.robot_result == RobotScanResultEnum.VULNERABLE_STRONG_ORACLE:
+            robot_txt = "VULNERABLE - Strong oracle, a real attack is possible."
+        elif result.robot_result == RobotScanResultEnum.VULNERABLE_WEAK_ORACLE:
+            robot_txt = "VULNERABLE - Weak oracle, the attack would take too long."
+        elif result.robot_result == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE:
+            robot_txt = "OK - Not vulnerable."
+        elif result.robot_result == RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED:
+            robot_txt = "OK - Not vulnerable, RSA cipher suites not supported."
+        elif result.robot_result == RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS:
+            robot_txt = "UNKNOWN - Received inconsistent results."
+        else:
+            raise ValueError("Should never happen")
+        result_as_txt.append(cls._format_field("", robot_txt))
+        return result_as_txt
 
 
 class RobotImplementation(ScanCommandImplementation):
+
+    cli_connector_cls = _RobotCliConnector
 
     _TEST_ATTEMPTS_NB = 3
 
@@ -63,26 +90,7 @@ class RobotImplementation(ScanCommandImplementation):
                 for payload_enum, server_response in server_responses_per_robot_payloads.items():
                     combined_server_responses[payload_enum].append(server_response)
             except ServerDoesNotSupportRsa:
-                return RobotScanResult(result=RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED)
+                return RobotScanResult(robot_result=RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED)
 
         result = RobotServerResponsesAnalyzer(combined_server_responses, cls._TEST_ATTEMPTS_NB).compute_result_enum()
         return RobotScanResult(result)
-
-
-# TODO
-class CliConnector:
-    def as_text(self) -> List[str]:
-        if self.robot_result_enum == RobotScanResultEnum.VULNERABLE_STRONG_ORACLE:
-            robot_txt = "VULNERABLE - Strong oracle, a real attack is possible"
-        elif self.robot_result_enum == RobotScanResultEnum.VULNERABLE_WEAK_ORACLE:
-            robot_txt = "VULNERABLE - Weak oracle, the attack would take too long"
-        elif self.robot_result_enum == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE:
-            robot_txt = "OK - Not vulnerable"
-        elif self.robot_result_enum == RobotScanResultEnum.NOT_VULNERABLE_RSA_NOT_SUPPORTED:
-            robot_txt = "OK - Not vulnerable, RSA cipher suites not supported"
-        elif self.robot_result_enum == RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS:
-            robot_txt = "UNKNOWN - Received inconsistent results"
-        else:
-            raise ValueError("Should never happen")
-
-        return [self._format_title(self.scan_command.get_title()), self._format_field("", robot_txt)]

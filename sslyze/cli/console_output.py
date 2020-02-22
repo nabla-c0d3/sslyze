@@ -25,7 +25,6 @@ class ConsoleOutputGenerator(OutputGenerator):
             )
 
     def server_connectivity_test_failed(self, connectivity_error: ConnectionToServerFailed) -> None:
-        print(connectivity_error)
         self._file_to.write(
             f"   {connectivity_error.server_location.hostname}:{connectivity_error.server_location.port:<25}"
             f" => WARNING: {connectivity_error.error_message}; discarding corresponding tasks.\n"

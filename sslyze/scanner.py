@@ -147,6 +147,8 @@ class Scanner:
                     # Yes - store the result
                     server_info, scan_cmd_enum = server_and_scan_cmd
                     implementation_cls = scan_cmd_enum._get_implementation_cls()
+
+                    result: Union[ScanCommandResult, ScanCommandError]
                     try:
                         result = implementation_cls.result_for_completed_scan_jobs(
                             server_info, server_and_scan_cmd_to_completed_futures[server_and_scan_cmd]

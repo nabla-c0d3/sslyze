@@ -62,6 +62,7 @@ class ServerConnectivityInfo:
         Used by all plugins to connect to the server and run scans.
         """
         final_ssl_version = self.tls_probing_result.highest_tls_version_supported
+        final_openssl_cipher_string: Optional[str]
         final_openssl_cipher_string = self.tls_probing_result.cipher_suite_supported
         if override_tls_version is not None:
             # Caller wants to override the TLS version to use for this connection

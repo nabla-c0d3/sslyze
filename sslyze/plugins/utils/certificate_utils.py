@@ -10,9 +10,25 @@ from base64 import b64encode
 from hashlib import sha256
 
 
+# TODO(AD): Move the content of this package
 class CertificateUtils:
     """Various utility methods for handling X509 certificates as parsed by the cryptography module.
     """
+
+    @classmethod
+    def certificate_matches_hostname(cls, certificate: cryptography.x509.Certificate, hostname: str) -> None:
+        """Verify that the certificate was issued for the given hostname.
+
+        Raises:
+            CertificateError: If the certificate was not issued for the supplied hostname.
+        """
+        # Extract the names from the certificate to create the properly-formatted dictionary
+        certificate_names = {
+            "subject": (tuple([("commonName", name) for name in cls.get_common_names(certificate.subject)]),),
+            "subjectAltName": tuple([("DNS", name) for name in cls.get_dns_subject_alternative_names(certificate)]),
+        }
+        # CertificateError is raised on failure
+        ssl.match_hostname(certificate_names, hostname)  # type: ignore
 
     @staticmethod
     def get_common_names(name_field: cryptography.x509.Name) -> List[str]:

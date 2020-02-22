@@ -226,7 +226,7 @@ class SslConnection:
         # Pass the connected socket to the SSL client
         self.ssl_client.set_underlying_socket(sock)
 
-    def connect(self, should_retry_connection=True) -> None:
+    def connect(self, should_retry_connection: bool = True) -> None:
         max_attempts_nb = self._network_configuration.network_max_retries if should_retry_connection else 1
         connection_attempts_nb = 0
         delay_for_next_attempt = 0

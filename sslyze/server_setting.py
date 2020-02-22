@@ -63,7 +63,7 @@ class ServerNetworkLocationViaDirectConnection(ServerNetworkLocation):
     ip_address: str
 
     @classmethod
-    def with_ip_address_lookup(cls, hostname, port):
+    def with_ip_address_lookup(cls, hostname: str, port: int) -> "ServerNetworkLocationViaDirectConnection":
         return cls(hostname=hostname, port=port, ip_address=_do_dns_lookup(hostname, port))
 
 
@@ -132,7 +132,7 @@ class ClientAuthenticationCredentials:
     key_password: str = ""
     key_type: OpenSslFileTypeEnum = OpenSslFileTypeEnum.PEM
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Try to load the cert and key in OpenSSL; will raise an exception if something is wrong
         SslClient(
             client_certchain_file=str(self.certificate_chain_path),
@@ -176,7 +176,7 @@ class ServerNetworkConfiguration:
     network_timeout: int = 5
     network_max_retries: int = 3
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.tls_opportunistic_encryption in [
             ProtocolWithOpportunisticTlsEnum.XMPP,
             ProtocolWithOpportunisticTlsEnum.XMPP_SERVER,

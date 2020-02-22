@@ -4,7 +4,8 @@ from sslyze.cli.output_generator import OutputGenerator
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
 from sslyze.scanner import ServerScanResult, ScanCommandErrorReasonEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthRequirementEnum
-from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkLocationViaHttpProxy
+from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkLocationViaHttpProxy, \
+    ServerNetworkLocation
 
 
 class ConsoleOutputGenerator(OutputGenerator):
@@ -39,17 +40,7 @@ class ConsoleOutputGenerator(OutputGenerator):
             client_auth_msg = "  WARNING: Server requested optional client authentication"
 
         server_location = server_connectivity_info.server_location
-        if isinstance(server_location , ServerNetworkLocationViaDirectConnection):
-            network_route = server_location.ip_address
-        elif isinstance(server_location , ServerNetworkLocationViaHttpProxy):
-            # We do not know the server's IP address if going through a proxy
-            network_route = "HTTP proxy at {}:{}".format(
-                server_location.http_proxy_settings.hostname,
-                server_location.http_proxy_settings.port,
-            )
-        else:
-            raise ValueError("Should never happen")
-
+        network_route = _server_location_to_network_route(server_location)
         self._file_to.write(
             f"   {server_location.hostname}:{server_location.port:<25} => {network_route} {client_auth_msg}\n"
         )
@@ -62,16 +53,7 @@ class ConsoleOutputGenerator(OutputGenerator):
 
         # Display the server that was scanned
         server_location = server_scan_result.server_info.server_location
-        if isinstance(server_location , ServerNetworkLocationViaDirectConnection):
-            network_route = server_location.ip_address
-        elif isinstance(server_location , ServerNetworkLocationViaHttpProxy):
-            # We do not know the server's IP address if going through a proxy
-            network_route = "HTTP proxy at {}:{}".format(
-                server_location.http_proxy_settings.hostname,
-                server_location.http_proxy_settings.port,
-            )
-        else:
-            raise ValueError("Should never happen")
+        network_route = _server_location_to_network_route(server_location)
 
         # Display result for scan commands that were run successfully
         for scan_command, scan_command_result in server_scan_result.scan_commands_results.items():
@@ -112,3 +94,18 @@ class ConsoleOutputGenerator(OutputGenerator):
 
     def scans_completed(self, total_scan_time: float) -> None:
         self._file_to.write(self._format_title("Scan Completed in {0:.2f} s".format(total_scan_time)))
+
+
+def _server_location_to_network_route(server_location: ServerNetworkLocation) -> str:
+    if isinstance(server_location, ServerNetworkLocationViaDirectConnection):
+        network_route = server_location.ip_address
+    elif isinstance(server_location, ServerNetworkLocationViaHttpProxy):
+        # We do not know the server's IP address if going through a proxy
+        network_route = "HTTP proxy at {}:{}".format(
+            server_location.http_proxy_settings.hostname,
+            server_location.http_proxy_settings.port,
+        )
+    else:
+        raise ValueError("Should never happen")
+    return network_route
+

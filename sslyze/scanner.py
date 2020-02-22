@@ -95,7 +95,7 @@ class Scanner:
 
         # Convert each scan command within the server scan request into jobs
         for scan_cmd_enum in server_scan.scan_commands:
-            implementation_cls = scan_cmd_enum._get_implementation_cls()
+            implementation_cls = scan_cmd_enum.get_implementation_cls()
             scan_cmd_extra_args = server_scan.scan_commands_extra_arguments.get(scan_cmd_enum)
 
             jobs_to_run = []
@@ -146,7 +146,7 @@ class Scanner:
                 if server_and_scan_cmd not in self._queued_future_to_server_and_scan_cmd.values():
                     # Yes - store the result
                     server_info, scan_cmd_enum = server_and_scan_cmd
-                    implementation_cls = scan_cmd_enum._get_implementation_cls()
+                    implementation_cls = scan_cmd_enum.get_implementation_cls()
 
                     result: Union[ScanCommandResult, ScanCommandError]
                     try:

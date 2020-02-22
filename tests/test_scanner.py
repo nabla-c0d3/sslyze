@@ -14,7 +14,7 @@ class TestScanCommands:
 
     def test_all_commands_are_implemented(self):
         for scan_command in ScanCommandEnum:
-            assert scan_command._get_implementation_cls
+            assert scan_command.get_implementation_cls
 
 
 class TestServerScanRequest:

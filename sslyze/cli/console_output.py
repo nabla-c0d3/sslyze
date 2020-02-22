@@ -2,7 +2,7 @@ from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
-from sslyze.scanner import ServerScanResult
+from sslyze.scanner import ServerScanResult, ScanCommandErrorReasonEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthRequirementEnum
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkLocationViaHttpProxy
 
@@ -59,13 +59,8 @@ class ConsoleOutputGenerator(OutputGenerator):
 
     def server_scan_completed(self, server_scan_result: ServerScanResult) -> None:
         target_result_str = ""
-        for scan_command, scan_command_result in server_scan_result.scan_commands_results.items():
-            cli_connector_cls = scan_command._get_implementation_cls().cli_connector_cls
-            # Print the result of each separate command
-            target_result_str += "\n"
-            for line in cli_connector_cls.result_to_console_output(scan_command_result):
-                target_result_str += line + "\n"
 
+        # Display the server that was scanned
         server_location = server_scan_result.server_info.server_location
         if isinstance(server_location , ServerNetworkLocationViaDirectConnection):
             network_route = server_location.ip_address
@@ -77,6 +72,40 @@ class ConsoleOutputGenerator(OutputGenerator):
             )
         else:
             raise ValueError("Should never happen")
+
+        # Display result for scan commands that were run successfully
+        for scan_command, scan_command_result in server_scan_result.scan_commands_results.items():
+            target_result_str += "\n"
+            cli_connector_cls = scan_command.get_implementation_cls().cli_connector_cls
+            for line in cli_connector_cls.result_to_console_output(scan_command_result):
+                target_result_str += line + "\n"
+
+        # Display scan commands that failed
+        for scan_command, scan_command_error in server_scan_result.scan_commands_errors.items():
+            target_result_str += "\n"
+            cli_connector_cls = scan_command.get_implementation_cls().cli_connector_cls
+
+            if scan_command_error.reason == ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED:
+                target_result_str += cli_connector_cls._format_title(
+                    f"Client certificated required for --{cli_connector_cls._cli_option}"
+                )
+                target_result_str += " use --cert and --key to provide one.\n"
+
+            elif scan_command_error.reason in [
+                ScanCommandErrorReasonEnum.BUG_IN_SSLYZE, ScanCommandErrorReasonEnum.WRONG_USAGE
+            ]:
+                target_result_str += cli_connector_cls._format_title(
+                    f"Error when running --{cli_connector_cls._cli_option}"
+                )
+                target_result_str += "\n"
+                target_result_str += "       You can open an issue at https://github.com/nabla-c0d3/sslyze/issues" \
+                                     " with the following information:\n\n"
+                target_result_str += f"       * Server: {server_location.hostname}:{server_location.port} - {network_route}\n"
+                target_result_str += f"       * Scan command: {scan_command.name}\n\n"
+                for line in scan_command_error.exception_trace.format(chain=False):
+                    target_result_str += f"       {line}"
+            else:
+                raise ValueError("Should never happen")
 
         scan_txt = f"Scan Results For {server_location.hostname}:{server_location.port} - {network_route}"
         self._file_to.write(self._format_title(scan_txt) + target_result_str + "\n\n")

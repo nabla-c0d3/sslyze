@@ -57,8 +57,7 @@ class ScanCommandEnum(Enum):
 
     HTTP_HEADERS = auto()
 
-    # TODO(AD): Make public
-    def _get_implementation_cls(self) -> Type["ScanCommandImplementation"]:
+    def get_implementation_cls(self) -> Type["ScanCommandImplementation"]:
         return _IMPLEMENTATION_CLASSES[self]
 
 

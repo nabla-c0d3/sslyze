@@ -21,6 +21,32 @@ class ProtocolWithOpportunisticTlsEnum(Enum):
     RDP = auto()
     POSTGRES = auto()
 
+    @classmethod
+    def from_default_port(cls, port: int) -> Optional["ProtocolWithOpportunisticTlsEnum"]:
+        """Given a port number, return the protocol that uses this port number by default.
+        """
+        try:
+            return _DEFAULT_PORTS[port]
+        except KeyError:
+            return None
+
+
+_DEFAULT_PORTS = {
+    587: ProtocolWithOpportunisticTlsEnum.SMTP,
+    25: ProtocolWithOpportunisticTlsEnum.SMTP,
+    5222: ProtocolWithOpportunisticTlsEnum.XMPP,
+    5269: ProtocolWithOpportunisticTlsEnum.XMPP_SERVER,
+    109: ProtocolWithOpportunisticTlsEnum.POP3,
+    110: ProtocolWithOpportunisticTlsEnum.POP3,
+    143: ProtocolWithOpportunisticTlsEnum.IMAP,
+    220: ProtocolWithOpportunisticTlsEnum.IMAP,
+    21: ProtocolWithOpportunisticTlsEnum.FTP,
+    3268: ProtocolWithOpportunisticTlsEnum.LDAP,
+    389: ProtocolWithOpportunisticTlsEnum.LDAP,
+    3389: ProtocolWithOpportunisticTlsEnum.RDP,
+    5432: ProtocolWithOpportunisticTlsEnum.POSTGRES,
+}
+
 
 class OpportunisticTlsError(Exception):
     pass

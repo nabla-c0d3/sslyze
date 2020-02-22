@@ -59,6 +59,19 @@ class ParsedCommandLine:
     concurrent_server_scans_limit: Optional[int]
 
 
+_STARTTLS_PROTOCOL_DICT = {
+    "smtp": ProtocolWithOpportunisticTlsEnum.SMTP,
+    "xmpp": ProtocolWithOpportunisticTlsEnum.XMPP,
+    "xmpp_server": ProtocolWithOpportunisticTlsEnum.XMPP_SERVER,
+    "pop3": ProtocolWithOpportunisticTlsEnum.POP3,
+    "imap": ProtocolWithOpportunisticTlsEnum.IMAP,
+    "ftp": ProtocolWithOpportunisticTlsEnum.FTP,
+    "ldap": ProtocolWithOpportunisticTlsEnum.LDAP,
+    "rdp": ProtocolWithOpportunisticTlsEnum.RDP,
+    "postgres": ProtocolWithOpportunisticTlsEnum.POSTGRES,
+}
+
+
 class CommandLineParser:
     # Defines what --regular means
     REGULAR_CMD = [
@@ -78,43 +91,14 @@ class CommandLineParser:
         "fallback",
         "robot",
     ]
+
     SSLYZE_USAGE = "usage: %prog [options] target1.com target2.com:443 target3.com:443{ip} etc..."
 
-    # StartTLS options
-    START_TLS_PROTOCOLS = ["smtp", "xmpp", "xmpp_server", "pop3", "ftp", "imap", "ldap", "rdp", "postgres", "auto"]
-
     START_TLS_USAGE = (
-        "StartTLS should be one of: {}. The 'auto' option will cause SSLyze to deduce the protocol "
+        "StartTLS should be one of: auto, {}. The 'auto' option will cause SSLyze to deduce the protocol "
         "(ftp, imap, etc.) from the supplied port number, "
-        "for each target servers.".format(" , ".join(START_TLS_PROTOCOLS))
+        "for each target servers.".format(", ".join(_STARTTLS_PROTOCOL_DICT.keys()))
     )
-
-    # TODO
-    # Mapping of StartTls protocols and ports; useful for starttls=auto
-    STARTTLS_PROTOCOL_DICT = {
-        "smtp": ProtocolWithOpportunisticTlsEnum.SMTP,
-        587: ProtocolWithOpportunisticTlsEnum.SMTP,
-        25: ProtocolWithOpportunisticTlsEnum.SMTP,
-        "xmpp": ProtocolWithOpportunisticTlsEnum.XMPP,
-        5222: ProtocolWithOpportunisticTlsEnum.XMPP,
-        "xmpp_server": ProtocolWithOpportunisticTlsEnum.XMPP_SERVER,
-        5269: ProtocolWithOpportunisticTlsEnum.XMPP_SERVER,
-        "pop3": ProtocolWithOpportunisticTlsEnum.POP3,
-        109: ProtocolWithOpportunisticTlsEnum.POP3,
-        110: ProtocolWithOpportunisticTlsEnum.POP3,
-        "imap": ProtocolWithOpportunisticTlsEnum.IMAP,
-        143: ProtocolWithOpportunisticTlsEnum.IMAP,
-        220: ProtocolWithOpportunisticTlsEnum.IMAP,
-        "ftp": ProtocolWithOpportunisticTlsEnum.FTP,
-        21: ProtocolWithOpportunisticTlsEnum.FTP,
-        "ldap": ProtocolWithOpportunisticTlsEnum.LDAP,
-        3268: ProtocolWithOpportunisticTlsEnum.LDAP,
-        389: ProtocolWithOpportunisticTlsEnum.LDAP,
-        "rdp": ProtocolWithOpportunisticTlsEnum.RDP,
-        3389: ProtocolWithOpportunisticTlsEnum.RDP,
-        "postgres": ProtocolWithOpportunisticTlsEnum.POSTGRES,
-        5432: ProtocolWithOpportunisticTlsEnum.POSTGRES,
-    }
 
     def __init__(self, sslyze_version: str) -> None:
         """Generate SSLyze's command line parser.
@@ -210,17 +194,6 @@ class CommandLineParser:
             except ValueError as e:
                 raise CommandLineParsingError("Invalid proxy URL for --https_tunnel: {}.".format(e.args[0]))
 
-        # STARTTLS
-        opportunistic_tls: Optional[ProtocolWithOpportunisticTlsEnum] = None
-        if args_command_list.starttls:
-            if args_command_list.starttls not in self.START_TLS_PROTOCOLS:
-                raise CommandLineParsingError(self.START_TLS_USAGE)
-            else:
-                # StartTLS was specified
-                if args_command_list.starttls in self.STARTTLS_PROTOCOL_DICT.keys():
-                    # Protocol was given in the command line
-                    opportunistic_tls = self.STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
-
         # Create the server location objects for each specified servers
         good_servers: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]] = []
         invalid_server_strings: List[InvalidServerStringError] = []
@@ -233,37 +206,48 @@ class CommandLineParser:
                 invalid_server_strings.append(e)
                 continue
 
+            # If not port number was supplied, assume 443
+            final_port = port if port else 443
+
             # Figure out how we're going to connect to the server
             server_location: ServerNetworkLocation
             if http_proxy_settings:
                 # Connect to the server via an HTTP proxy
                 # A limitation when using the CLI is that only one http_proxy_settings can be specified for all servers
                 server_location = ServerNetworkLocationViaHttpProxy(
-                    hostname=hostname, port=port, http_proxy_settings=http_proxy_settings
+                    hostname=hostname, port=final_port, http_proxy_settings=http_proxy_settings
                 )
             else:
                 # Connect to the server directly
                 if ip_address:
                     server_location = ServerNetworkLocationViaDirectConnection(
-                        hostname=hostname, port=port, ip_address=ip_address
+                        hostname=hostname, port=final_port, ip_address=ip_address
                     )
                 else:
                     # No IP address supplied - do a DNS lookup
                     try:
                         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-                            hostname=hostname, port=port
+                            hostname=hostname, port=final_port
                         )
                     except ServerHostnameCouldNotBeResolved:
                         invalid_server_strings.append(
-                            InvalidServerStringError(f"{hostname}:{port}", f"Could not resolve hostname {hostname}")
+                            InvalidServerStringError(
+                                f"{hostname}:{final_port}", f"Could not resolve hostname {hostname}"
+                            )
                         )
                         continue
 
             # Figure out extra network config for this server
-            # Handle --starttls=auto to auto-detect the protocol via the port number now that the port has been parsed
-            if args_command_list.starttls == "auto":
-                if port in self.STARTTLS_PROTOCOL_DICT.keys():
-                    opportunistic_tls = self.STARTTLS_PROTOCOL_DICT[port]
+            # Opportunistic TLS
+            opportunistic_tls: Optional[ProtocolWithOpportunisticTlsEnum] = None
+            if args_command_list.starttls:
+                if args_command_list.starttls == "auto":
+                    # Special value to auto-derive the protocol from the port number
+                    opportunistic_tls = ProtocolWithOpportunisticTlsEnum.from_default_port(final_port)
+                elif args_command_list.starttls in _STARTTLS_PROTOCOL_DICT:
+                    opportunistic_tls = _STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
+                else:
+                    raise CommandLineParsingError(self.START_TLS_USAGE)
 
             try:
                 sni_hostname = args_command_list.sni if args_command_list.sni else hostname

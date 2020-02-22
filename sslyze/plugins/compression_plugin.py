@@ -25,26 +25,26 @@ class CompressionScanResult(ScanCommandResult):
     supports_compression: bool
 
 
-class CompressionCliConnector(ScanCommandCliConnector):
+class _CompressionCliConnector(ScanCommandCliConnector):
 
     _cli_option = "compression"
     _cli_description = "Test a server for TLS compression support, which can be leveraged to perform a CRIME attack."
 
     @classmethod
     def result_to_console_output(cls, result: CompressionScanResult) -> List[str]:
-        txt_result = [cls._format_title("Deflate Compression")]
+        result_as_txt = [cls._format_title("Deflate Compression")]
         if result.supports_compression:
-            txt_result.append(cls._format_field("", "VULNERABLE - Server supports Deflate compression"))
+            result_as_txt.append(cls._format_field("", "VULNERABLE - Server supports Deflate compression"))
         else:
-            txt_result.append(cls._format_field("", "OK - Compression disabled"))
-        return txt_result
+            result_as_txt.append(cls._format_field("", "OK - Compression disabled"))
+        return result_as_txt
 
 
 class CompressionImplementation(ScanCommandImplementation):
     """Test a server for TLS compression support, which can be leveraged to perform a CRIME attack.
     """
 
-    cli_connector_cls = CompressionCliConnector
+    cli_connector_cls = _CompressionCliConnector
 
     @classmethod
     def scan_jobs_for_scan_command(

@@ -96,6 +96,7 @@ class CertificateInfoScanResult(ScanCommandResult):
         return None
 
 
+# TODO(AD): Use the new nassl function to check certificate
 class CertificateInfoImplementation(ScanCommandImplementation):
     """Verify the validity of the server(s) certificate(s) against various trust stores (Mozilla, Apple, etc.).
     """

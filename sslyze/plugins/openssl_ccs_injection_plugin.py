@@ -13,7 +13,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArguments,
     ScanJob,
     ScanCommandWrongUsageError,
-)
+    ScanCommandCliConnector)
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.application_data_protocol import TlsApplicationDataRecord
 from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
@@ -36,7 +36,27 @@ class OpenSslCcsInjectionScanResult(ScanCommandResult):
     is_vulnerable_to_ccs_injection: bool
 
 
+class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector):
+
+    _cli_option = "openssl_ccs"
+    _cli_description = "Test a server for the OpenSSL CCS Injection vulnerability (CVE-2014-0224)."
+
+    @classmethod
+    def result_to_console_output(cls, result: OpenSslCcsInjectionScanResult) -> List[str]:
+        result_txt = [cls._format_title("OpenSSL CCS Injection")]
+        ccs_text = (
+            "VULNERABLE - Server is vulnerable to OpenSSL CCS injection"
+            if result.is_vulnerable_to_ccs_injection
+            else "OK - Not vulnerable to OpenSSL CCS injection"
+        )
+        result_txt.append(cls._format_field("", ccs_text))
+        return result_txt
+
+
 class OpenSslCcsInjectionImplementation(ScanCommandImplementation):
+
+    cli_connector_cls = _OpenSslCcsInjectionCliConnector
+
     @classmethod
     def scan_jobs_for_scan_command(
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
@@ -187,17 +207,3 @@ def _do_handshake_with_ccs_injection(self):  # type: ignore
                 break
 
         raise _NotVulnerableToCcsInjection()
-
-
-# TODO
-class CliConnector:
-    def as_text(self) -> List[str]:
-        result_txt = [self._format_title(self.scan_command.get_title())]
-
-        ccs_text = (
-            "VULNERABLE - Server is vulnerable to OpenSSL CCS injection"
-            if self.is_vulnerable_to_ccs_injection
-            else "OK - Not vulnerable to OpenSSL CCS injection"
-        )
-        result_txt.append(self._format_field("", ccs_text))
-        return result_txt

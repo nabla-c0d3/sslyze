@@ -11,7 +11,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArguments,
     ScanJob,
     ScanCommandWrongUsageError,
-)
+    ScanCommandCliConnector)
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
@@ -28,11 +28,28 @@ class EarlyDataScanResult(ScanCommandResult):
     supports_early_data: bool
 
 
+class _EarlyDataCliConnector(ScanCommandCliConnector):
+
+    _cli_option = "early_data"
+    _cli_description = "Test a server for TLS 1.3 early data support."
+
+    @classmethod
+    def result_to_console_output(cls, result: EarlyDataScanResult) -> List[str]:
+        result_as_txt = [cls._format_title("TLS 1.3 Early Data")]
+        if result.supports_early_data:
+            result_as_txt.append(cls._format_field("", "Suppported - Server accepted early data"))
+        else:
+            result_as_txt.append(cls._format_field("", "Not Supported"))
+        return result_as_txt
+
+
 class EarlyDataImplementation(ScanCommandImplementation):
     """Test the server(s) for TLS 1.3 early data support.
 
     This will only work for HTTPS servers; other TLS servers (SMTP, POP3, etc.) are not supported.
     """
+
+    cli_connector_cls = _EarlyDataCliConnector
 
     @classmethod
     def scan_jobs_for_scan_command(
@@ -98,14 +115,3 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
             ssl_connection2.close()
 
     return is_early_data_supported
-
-
-# TODO
-class CliConnector:
-    def as_text(self) -> List[str]:
-        txt_result = [self._format_title(self.scan_command.get_title())]
-        if self.is_early_data_supported:
-            txt_result.append(self._format_field("", "Suppported - Server accepted early data"))
-        else:
-            txt_result.append(self._format_field("", "Not Supported"))
-        return txt_result

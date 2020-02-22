@@ -9,7 +9,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArguments,
     ScanJob,
     ScanCommandWrongUsageError,
-)
+    ScanCommandCliConnector)
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 
@@ -25,7 +25,25 @@ class FallbackScsvScanResult(ScanCommandResult):
     supports_fallback_scsv: bool
 
 
+class _FallbackScsvCliConnector(ScanCommandCliConnector):
+
+    _cli_option = "fallback"
+    _cli_description = "Test a server for the TLS_FALLBACK_SCSV mechanism to prevent downgrade attacks."
+
+    @classmethod
+    def result_to_console_output(cls, result: FallbackScsvScanResult) -> List[str]:
+        result_as_txt = [cls._format_title("Downgrade Attacks")]
+        downgrade_txt = (
+            "OK - Supported" if result.supports_fallback_scsv else "VULNERABLE - Signaling cipher suite not supported"
+        )
+        result_as_txt.append(cls._format_field("TLS_FALLBACK_SCSV:", downgrade_txt))
+        return result_as_txt
+
+
 class FallbackScsvImplementation(ScanCommandImplementation):
+
+    cli_connector_cls = _FallbackScsvCliConnector
+
     @classmethod
     def scan_jobs_for_scan_command(
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
@@ -79,14 +97,3 @@ def _test_scsv(server_info: ServerConnectivityInfo) -> bool:
         ssl_connection.close()
 
     return supports_fallback_scsv
-
-
-# TODO
-class CliConnector:
-    def as_text(self) -> List[str]:
-        result_txt = [self._format_title(self.scan_command.get_title())]
-        downgrade_txt = (
-            "OK - Supported" if self.supports_fallback_scsv else "VULNERABLE - Signaling cipher suite not supported"
-        )
-        result_txt.append(self._format_field("TLS_FALLBACK_SCSV:", downgrade_txt))
-        return result_txt

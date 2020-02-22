@@ -13,7 +13,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandExtraArguments,
     ScanCommandWrongUsageError,
-)
+    ScanCommandCliConnector)
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte
@@ -26,7 +26,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 
 @dataclass(frozen=True)
 class HeartbleedScanResult(ScanCommandResult):
-    """The result of testing a server for the Heartbleed vulnerability.
+    """The result of testing a server for the OpenSSL Heartbleed vulnerability.
 
     Attributes:
         is_vulnerable_to_heartbleed: True if the server is vulnerable to the Heartbleed attack.
@@ -35,7 +35,27 @@ class HeartbleedScanResult(ScanCommandResult):
     is_vulnerable_to_heartbleed: bool
 
 
+class _HeartbleedCliConnector(ScanCommandCliConnector):
+
+    _cli_option = "heartbleed"
+    _cli_description = "Test a server for the OpenSSL Heartbleed vulnerability."
+
+    @classmethod
+    def result_to_console_output(cls, result: HeartbleedScanResult) -> List[str]:
+        result_as_txt = [cls._format_title("OpenSSL Heartbleed")]
+        heartbleed_txt = (
+            "VULNERABLE - Server is vulnerable to Heartbleed"
+            if result.is_vulnerable_to_heartbleed
+            else "OK - Not vulnerable to Heartbleed"
+        )
+        result_as_txt.append(cls._format_field("", heartbleed_txt))
+        return result_as_txt
+
+
 class HeartbleedImplementation(ScanCommandImplementation):
+
+    cli_connector_cls = _HeartbleedCliConnector
+
     @classmethod
     def scan_jobs_for_scan_command(
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
@@ -178,15 +198,3 @@ def _do_handshake_with_heartbleed(self):  # type: ignore
         raise _VulnerableToHeartbleed()
     else:
         raise _NotVulnerableToHeartbleed()
-
-
-# TODO
-class CliConnector:
-    def as_text(self) -> List[str]:
-        heartbleed_txt = (
-            "VULNERABLE - Server is vulnerable to Heartbleed"
-            if self.is_vulnerable_to_heartbleed
-            else "OK - Not vulnerable to Heartbleed"
-        )
-
-        return [self._format_title(self.scan_command.get_title()), self._format_field("", heartbleed_txt)]

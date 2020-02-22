@@ -9,8 +9,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandResult,
     ScanCommandWrongUsageError,
-)
-from sslyze.plugins.utils.certificate_utils import CertificateUtils
+    ScanCommandCliConnector)
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
 from sslyze.connection_helpers.http_response_parser import HttpResponseParser
@@ -19,7 +18,7 @@ from typing import List, Type, Optional, TypeVar
 
 @dataclass(frozen=True)
 class HttpHeadersScanResult(ScanCommandResult):
-    """The result of testing a server for HTTP headers related to security.
+    """The result of testing a server for the presence of security-related HTTP headers.
 
     Each HTTP header described below will be None if the server did not return it.
 
@@ -38,9 +37,57 @@ class HttpHeadersScanResult(ScanCommandResult):
     expect_ct_header: Optional["ExpectCtHeader"]
 
 
+class _HttpHeadersCliConnector(ScanCommandCliConnector):
+
+    _cli_option = "http_headers"
+    _cli_description = "Test a server for the presence of security-related HTTP headers."
+
+    @classmethod
+    def result_to_console_output(cls, result: HttpHeadersScanResult) -> List[str]:
+        result_as_txt = [cls._format_title("HTTP Security Headers")]
+
+        # HSTS
+        result_as_txt.append(cls._format_subtitle("Strict-Transport-Security Header"))
+        if not result.strict_transport_security_header:
+            result_as_txt.append(cls._format_field("NOT SUPPORTED - Server did not return the header", ""))
+        else:
+            result_as_txt.append(cls._format_field("Max Age:", str(result.strict_transport_security_header.max_age)))
+            result_as_txt.append(
+                cls._format_field("Include Subdomains:", str(result.strict_transport_security_header.include_subdomains))
+            )
+            result_as_txt.append(cls._format_field("Preload:", str(result.strict_transport_security_header.preload)))
+
+        # HPKP
+        for header, subtitle in [
+            (result.public_key_pins_header, "Public-Key-Pins Header"),
+            (result.public_key_pins_report_only_header, "Public-Key-Pins-Report-Only Header"),
+        ]:
+            result_as_txt.extend(["", cls._format_subtitle(subtitle)])
+            if not header:
+                result_as_txt.append(cls._format_field("NOT SUPPORTED - Server did not return the header", ""))
+            else:
+                result_as_txt.append(cls._format_field("Max Age:", str(header.max_age)))
+                result_as_txt.append(cls._format_field("Include Subdomains:", str(header.include_subdomains)))
+                result_as_txt.append(cls._format_field("Report URI:", str(header.report_uri)))
+                result_as_txt.append(cls._format_field("SHA-256 Pin List:", ", ".join(header.pin_sha256_list)))
+
+        # Expect-CT
+        result_as_txt.extend(["", cls._format_subtitle("Expect-CT Header")])
+        if not result.expect_ct_header:
+            result_as_txt.append(cls._format_field("NOT SUPPORTED - Server did not return the header", ""))
+        else:
+            result_as_txt.append(cls._format_field("Max Age:", str(result.expect_ct_header.max_age)))
+            result_as_txt.append(cls._format_field("Report- URI:", str(result.expect_ct_header.report_uri)))
+            result_as_txt.append(cls._format_field("Enforce:", str(result.expect_ct_header.enforce)))
+
+        return result_as_txt
+
+
 class HttpHeadersImplementation(ScanCommandImplementation):
     """Test a server for HTTP headers related to security, including HSTS and HPKP.
     """
+
+    cli_connector_cls = _HttpHeadersCliConnector
 
     @classmethod
     def scan_jobs_for_scan_command(
@@ -269,77 +316,3 @@ class ExpectCtHeader:
                 raise ValueError(f"Unexpected value in Expect-CT header: {repr(expect_ct_directive)}")
 
         return cls(max_age, report_uri, enforce)
-
-
-# TODO
-class CliConnector:
-
-    _PIN_TXT_FORMAT = "      {0:<50}{1}".format
-    _HEADER_NOT_SENT_TXT = "NOT SUPPORTED - Server did not return the header"
-
-    def as_text(self) -> List[str]:
-        txt_result = [self._format_title(self.scan_command.get_title()), ""]
-
-        txt_result.append(self._format_subtitle("Computed HPKP Pins for Server Certificate Chain"))
-        if self.verified_certificate_chain:
-            for index, cert in enumerate(self.verified_certificate_chain, start=0):
-                final_subject = CertificateUtils.get_name_as_short_text(cert.subject)
-                if len(final_subject) > 40:
-                    # Make the CN shorter when displaying it
-                    final_subject = "{}...".format(final_subject[:40])
-                txt_result.append(
-                    self._PIN_TXT_FORMAT(("{} - {}".format(index, final_subject)), CertificateUtils.get_hpkp_pin(cert))
-                )
-                txt_result.append("")
-        else:
-            txt_result.append(self._format_field("ERROR - Could not build verified chain (certificate untrusted?)", ""))
-            txt_result.append("")
-
-        txt_result.append(self._format_subtitle("Strict-Transport-Security Header"))
-        if self.strict_transport_security_header:
-            txt_result.append(self._format_field("Max Age:", str(self.strict_transport_security_header.max_age)))
-            txt_result.append(
-                self._format_field("Include Subdomains:", str(self.strict_transport_security_header.include_subdomains))
-            )
-            txt_result.append(self._format_field("Preload:", str(self.strict_transport_security_header.preload)))
-        else:
-            txt_result.append(self._format_field(self._HEADER_NOT_SENT_TXT, ""))
-
-        for header, subtitle in [
-            (self.public_key_pins_header, "Public-Key-Pins Header"),
-            (self.public_key_pins_report_only_header, "Public-Key-Pins-Report-Only Header"),
-        ]:
-            txt_result.extend(["", self._format_subtitle(subtitle)])
-            if header:
-                txt_result.append(self._format_field("Max Age:", str(header.max_age)))
-                txt_result.append(self._format_field("Include Subdomains:", str(header.include_subdomains)))
-                txt_result.append(self._format_field("Report URI:", str(header.report_uri)))
-                txt_result.append(self._format_field("SHA-256 Pin List:", ", ".join(header.pin_sha256_list)))
-
-                if self.verified_certificate_chain:
-                    pin_validation_txt = (
-                        "OK - One of the configured pins was found in the certificate chain"
-                        if self.is_valid_pin_configured
-                        else "FAILED - Could NOT find any of the configured pins in the certificate chain!"
-                    )
-                    txt_result.append(self._format_field("Valid Pin:", pin_validation_txt))
-
-                    backup_txt = (
-                        "OK - Backup pin found in the configured pins"
-                        if self.is_backup_pin_configured
-                        else "FAILED - No backup pin found: all the configured pins are in the certificate chain!"
-                    )
-                    txt_result.append(self._format_field("Backup Pin:", backup_txt))
-
-            else:
-                txt_result.append(self._format_field(self._HEADER_NOT_SENT_TXT, ""))
-
-        txt_result.extend(["", self._format_subtitle("Expect-CT Header")])
-        if self.expect_ct_header:
-            txt_result.append(self._format_field("Max Age:", str(self.expect_ct_header.max_age)))
-            txt_result.append(self._format_field("Report- URI:", str(self.expect_ct_header.report_uri)))
-            txt_result.append(self._format_field("Enforce:", str(self.expect_ct_header.enforce)))
-        else:
-            txt_result.append(self._format_field(self._HEADER_NOT_SENT_TXT, ""))
-
-        return txt_result

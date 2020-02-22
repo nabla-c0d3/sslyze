@@ -13,7 +13,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandResult,
     ScanCommandWrongUsageError,
-)
+    ScanCommandCliConnector)
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -35,9 +35,39 @@ class _ScanJobResultEnum(Enum):
     SUPPORTS_SECURE_RENEG = 2
 
 
+class _SessionRenegotiationCliConnector(ScanCommandCliConnector):
+
+    _cli_option = "reneg"
+    _cli_description = "Test a server for for insecure TLS renegotiation and client-initiated renegotiation."
+
+    @classmethod
+    def result_to_console_output(cls, result: SessionRenegotiationScanResult) -> List[str]:
+        result_txt = [cls._format_title("Session Renegotiation")]
+
+        # Client-initiated reneg
+        client_reneg_txt = (
+            "VULNERABLE - Server honors client-initiated renegotiations"
+            if result.accepts_client_renegotiation
+            else "OK - Rejected"
+        )
+        result_txt.append(cls._format_field("Client-initiated Renegotiation:", client_reneg_txt))
+
+        # Secure reneg
+        secure_txt = (
+            "OK - Supported"
+            if result.supports_secure_renegotiation
+            else "VULNERABLE - Secure renegotiation not supported"
+        )
+        result_txt.append(cls._format_field("Secure Renegotiation:", secure_txt))
+
+        return result_txt
+
+
 class SessionRenegotiationImplementation(ScanCommandImplementation):
     """Test a server for insecure TLS renegotiation and client-initiated renegotiation.
     """
+
+    cli_connector_cls = _SessionRenegotiationCliConnector
 
     @classmethod
     def scan_jobs_for_scan_command(
@@ -144,27 +174,3 @@ def _test_client_renegotiation(
         ssl_connection.close()
 
     return _ScanJobResultEnum.ACCEPTS_CLIENT_RENEG, accepts_client_renegotiation
-
-
-# TODO
-class CliConnector:
-    def as_text(self) -> List[str]:
-        result_txt = [self._format_title(self.scan_command.get_title())]
-
-        # Client-initiated reneg
-        client_reneg_txt = (
-            "VULNERABLE - Server honors client-initiated renegotiations"
-            if self.accepts_client_renegotiation
-            else "OK - Rejected"
-        )
-        result_txt.append(self._format_field("Client-initiated Renegotiation:", client_reneg_txt))
-
-        # Secure reneg
-        secure_txt = (
-            "OK - Supported"
-            if self.supports_secure_renegotiation
-            else "VULNERABLE - Secure renegotiation not supported"
-        )
-        result_txt.append(self._format_field("Secure Renegotiation:", secure_txt))
-
-        return result_txt

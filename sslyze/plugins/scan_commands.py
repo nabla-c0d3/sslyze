@@ -2,7 +2,7 @@ from enum import Enum, unique, auto
 from typing import Dict, Type, TYPE_CHECKING
 
 from sslyze.plugins.certificate_info.core import CertificateInfoImplementation
-from sslyze.plugins.compression_plugin import CompressionImplementation, CompressionCliConnector
+from sslyze.plugins.compression_plugin import CompressionImplementation
 from sslyze.plugins.early_data_plugin import EarlyDataImplementation
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvImplementation
 from sslyze.plugins.heartbleed_plugin import HeartbleedImplementation

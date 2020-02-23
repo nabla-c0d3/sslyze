@@ -74,7 +74,7 @@ class ScanCommandImplementation(ABC):
         This is useful for the test suite to run commands without using the Scanner class. It should NOT be used to
         actually run scans as this will be very slow (no multi-threading); use the Scanner class instead.
         """
-        thread_pool = ThreadPoolExecutor(max_workers=1)
+        thread_pool = ThreadPoolExecutor(max_workers=5)
 
         all_jobs = cls.scan_jobs_for_scan_command(server_info, extra_arguments)
         all_futures = []

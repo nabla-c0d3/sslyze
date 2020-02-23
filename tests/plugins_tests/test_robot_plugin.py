@@ -20,7 +20,7 @@ class TestRobotPluginPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         result: RobotScanResult = RobotImplementation.perform(server_info)
-        assert result.result == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE
+        assert result.robot_result == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE
 
     @pytest.mark.skip('Not implemented; TODO: Find a vulnerable server.')
     def test_robot_attack_bad(self):

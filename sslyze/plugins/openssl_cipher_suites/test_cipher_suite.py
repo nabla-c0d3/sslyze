@@ -25,7 +25,7 @@ class CipherSuiteRejectedByServer:
     error_message: str
 
 
-def test_cipher_suite(
+def connect_with_cipher_suite(
     server_connectivity_info: ServerConnectivityInfo, tls_version: OpenSslVersionEnum, cipher_openssl_name: str
 ) -> Union[CipherSuiteAcceptedByServer, CipherSuiteRejectedByServer]:
     """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.

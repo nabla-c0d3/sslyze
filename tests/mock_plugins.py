@@ -18,7 +18,7 @@ class ScanCommandEnumForTests(Enum):
     MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS = "mock3"
     MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS = "mock4"
 
-    def _get_implementation_cls(self):
+    def get_implementation_cls(self):
         return _IMPLEMENTATION_CLASSES[self]
 
 

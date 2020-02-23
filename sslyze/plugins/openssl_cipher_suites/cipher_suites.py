@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict
 
 from dataclasses import dataclass
 from nassl.ssl_client import OpenSslVersionEnum

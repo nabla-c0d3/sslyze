@@ -1,4 +1,3 @@
-import ssl
 from dataclasses import dataclass
 from ssl import CertificateError
 from typing import Optional, List

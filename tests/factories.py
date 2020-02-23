@@ -1,5 +1,5 @@
 from traceback import TracebackException
-from typing import Set, Optional, Dict
+from typing import Optional, Dict
 
 from faker import Faker
 from faker.providers import internet
@@ -11,7 +11,7 @@ from sslyze.connection_helpers.errors import ConnectionToServerFailed
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.plugin_base import ScanCommandResult
 from sslyze.plugins.scan_commands import ScanCommandEnum
-from sslyze.scanner import ServerScanResult, ServerScanRequest, ScanCommandError
+from sslyze.scanner import ServerScanResult, ScanCommandError
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerTlsProbingResult, \
     ClientAuthRequirementEnum
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkConfiguration, \
@@ -111,6 +111,7 @@ class ConnectionToServerFailedFactory:
             network_configuration=ServerNetworkConfiguration(tls_server_name_indication="a.com"),
             error_message="This is ân éè error"
         )
+
 
 class ServerScanResultFactory:
 

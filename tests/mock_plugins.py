@@ -110,6 +110,6 @@ class _MockPluginExceptionWhenProcessingJobsImplementation(_MockPluginImplementa
 _IMPLEMENTATION_CLASSES: Dict[ScanCommandEnumForTests, Type["ScanCommandImplementation"]] = {
     ScanCommandEnumForTests.MOCK_COMMAND_1: MockPlugin1Implementation,
     ScanCommandEnumForTests.MOCK_COMMAND_2: MockPlugin2Implementation,
-    ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS: _MockPluginExceptionWhenSchedulingJobsImplementation,
-    ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS: _MockPluginExceptionWhenProcessingJobsImplementation,
+    ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS: _MockPluginExceptionWhenSchedulingJobsImplementation,  # noqa: E501
+    ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS: _MockPluginExceptionWhenProcessingJobsImplementation,  # noqa: E501
 }

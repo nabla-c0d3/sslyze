@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.connection_helpers.tls_connection import NoCiphersAvailableBugInSSlyze
-from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite
 from sslyze.plugins.openssl_cipher_suites.cli_connector import _CipherSuitesCliConnector
 from sslyze.plugins.openssl_cipher_suites.test_cipher_suite import (
     test_cipher_suite,

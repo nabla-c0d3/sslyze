@@ -1,6 +1,7 @@
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationImplementation, SessionRenegotiationScanResult
+from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationImplementation, \
+    SessionRenegotiationScanResult
 from sslyze.server_connectivity import ServerConnectivityTester
 
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ClientAuthenticationCredentials, \

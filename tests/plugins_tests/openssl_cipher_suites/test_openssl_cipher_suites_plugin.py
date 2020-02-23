@@ -112,7 +112,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.2 is not supported
-        #assert result.cipher_suite_preferred_by_server
+        # assert result.cipher_suite_preferred_by_server
         expected_ciphers = {
             'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384', 'TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA',
             'TLS_RSA_WITH_AES_256_GCM_SHA384', 'TLS_RSA_WITH_AES_256_CBC_SHA',
@@ -248,7 +248,6 @@ class TestCipherSuitesPluginWithLocalServer:
         } == {accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites}
         assert not result.rejected_cipher_suites
 
-
     def test_sslv3_enabled(self):
         # Given a server to scan that supports SSL 3.0
         with LegacyOpenSslServer() as server:
@@ -315,7 +314,6 @@ class TestCipherSuitesPluginWithLocalServer:
                 port=server.port
             )
             server_info = ServerConnectivityTester().perform(server_location)
-
 
             # When scanning for cipher suites, it succeeds
             result: CipherSuitesScanResult = Tlsv13ScanImplementation.perform(server_info)

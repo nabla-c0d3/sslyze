@@ -5,8 +5,8 @@ from sslyze.cli.json_output import JsonOutputGenerator
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.scanner import ScanCommandError, ScanCommandErrorReasonEnum
-from tests.factories import ParsedCommandLineFactory, ConnectionToServerFailedFactory, ServerConnectivityInfoFactory, \
-    ServerScanResultFactory, TracebackExceptionFactory
+from tests.factories import ParsedCommandLineFactory, ConnectionToServerFailedFactory, ServerScanResultFactory, \
+    TracebackExceptionFactory
 
 
 class TestJsonOutputGenerator:

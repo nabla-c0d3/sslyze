@@ -7,6 +7,7 @@ from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.connection_helpers.tls_connection import NoCiphersAvailableBugInSSlyze
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite
+from sslyze.plugins.openssl_cipher_suites.cli_connector import _CipherSuitesCliConnector
 from sslyze.plugins.openssl_cipher_suites.test_cipher_suite import (
     test_cipher_suite,
     CipherSuiteRejectedByServer,
@@ -56,6 +57,48 @@ class CipherSuitesScanResult(ScanCommandResult):
         """Did the server the pick the cipher suite preferred by the client?
         """
         return True if self.cipher_suite_preferred_by_server is None else False
+
+
+class _Sslv20CliConnector(_CipherSuitesCliConnector):
+
+    _cli_option = "sslv2"
+    _cli_description = "Test a server for SSL 2.0 support."
+    _title_in_output = "SSL 2.0 Cipher suites"
+
+
+class _Sslv30CliConnector(_CipherSuitesCliConnector):
+
+    _cli_option = "sslv3"
+    _cli_description = "Test a server for SSL 3.0 support."
+    _title_in_output = "SSL 3.0 Cipher suites"
+
+
+class _Tlsv10CliConnector(_CipherSuitesCliConnector):
+
+    _cli_option = "tlsv1"
+    _cli_description = "Test a server for TLS 1.0 support."
+    _title_in_output = "TLS 1.0 Cipher suites"
+
+
+class _Tlsv11CliConnector(_CipherSuitesCliConnector):
+
+    _cli_option = "tlsv1_1"
+    _cli_description = "Test a server for TLS 1.1 support."
+    _title_in_output = "TLS 1.1 Cipher suites"
+
+
+class _Tlsv12CliConnector(_CipherSuitesCliConnector):
+
+    _cli_option = "tlsv1_2"
+    _cli_description = "Test a server for TLS 1.2 support."
+    _title_in_output = "TLS 1.2 Cipher suites"
+
+
+class _Tlsv13CliConnector(_CipherSuitesCliConnector):
+
+    _cli_option = "tlsv1_3"
+    _cli_description = "Test a server for TLS 1.3 support."
+    _title_in_output = "TLS 1.3 Cipher suites"
 
 
 class _CipherSuitesScanImplementation(ScanCommandImplementation):
@@ -133,26 +176,31 @@ class _SimpleCipherSuitesScanImplementation(_CipherSuitesScanImplementation):
 
 
 class Sslv20ScanImplementation(_SimpleCipherSuitesScanImplementation):
+    cli_connector_cls = _Sslv20CliConnector
     _tls_version = OpenSslVersionEnum.SSLV2
 
 
 class Sslv30ScanImplementation(_SimpleCipherSuitesScanImplementation):
+    cli_connector_cls = _Sslv30CliConnector
     _tls_version = OpenSslVersionEnum.SSLV3
 
 
 class Tlsv10ScanImplementation(_SimpleCipherSuitesScanImplementation):
+    cli_connector_cls = _Tlsv10CliConnector
     _tls_version = OpenSslVersionEnum.TLSV1
 
 
 class Tlsv11ScanImplementation(_SimpleCipherSuitesScanImplementation):
+    cli_connector_cls = _Tlsv11CliConnector
     _tls_version = OpenSslVersionEnum.TLSV1_1
 
 
 class Tlsv12ScanImplementation(_CipherSuitesScanImplementation):
     """The implementation for TLS 1.2 is customized because some ciphers are supported by different versions of OpenSSL.
     """
-
+    cli_connector_cls = _Tlsv12CliConnector
     _tls_version = OpenSslVersionEnum.TLSV1_2
+
 
     @classmethod
     def _cipher_suites_to_scan_for(cls, server_info: ServerConnectivityInfo) -> Set[str]:
@@ -179,6 +227,7 @@ class Tlsv12ScanImplementation(_CipherSuitesScanImplementation):
 
 
 class Tlsv13ScanImplementation(_CipherSuitesScanImplementation):
+    cli_connector_cls = _Tlsv13CliConnector
     _tls_version = OpenSslVersionEnum.TLSV1_3
 
     @classmethod

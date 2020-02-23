@@ -143,5 +143,5 @@ class ScanCommandCliConnector(ABC):
         return "     {0}".format(subtitle)
 
     @staticmethod
-    def _format_field(title: str, value: str) -> str:
+    def _format_field(title: str, value: str = "") -> str:
         return "       {0:<35}{1}".format(title, value)

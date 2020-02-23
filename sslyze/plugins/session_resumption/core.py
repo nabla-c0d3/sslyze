@@ -10,7 +10,8 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArguments,
     ScanJob,
     ScanCommandWrongUsageError,
-    ScanCommandCliConnector)
+    ScanCommandCliConnector,
+)
 from sslyze.plugins.session_resumption.resumption_with_id import resume_with_session_id, _ScanJobResultEnum
 from sslyze.plugins.session_resumption.resumption_with_ticket import resume_with_tls_ticket, TslSessionTicketSupportEnum
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -61,8 +62,7 @@ class SessionResumptionRateScanResult(ScanCommandResult):
 
 
 def _resumption_with_session_ids_result_to_console_output(
-    successful_session_id_resumptions_count: int,
-    attempted_session_id_resumptions_count: int
+    successful_session_id_resumptions_count: int, attempted_session_id_resumptions_count: int
 ) -> str:
     if successful_session_id_resumptions_count == attempted_session_id_resumptions_count:
         resumption_support_txt = "OK - Supported"
@@ -71,8 +71,10 @@ def _resumption_with_session_ids_result_to_console_output(
     else:
         resumption_support_txt = "NOT SUPPORTED"
 
-    resum_rate_txt = f"{resumption_support_txt} ({successful_session_id_resumptions_count} successful resumptions" \
-                     f" out of {attempted_session_id_resumptions_count} attempts)."
+    resum_rate_txt = (
+        f"{resumption_support_txt} ({successful_session_id_resumptions_count} successful resumptions"
+        f" out of {attempted_session_id_resumptions_count} attempts)."
+    )
 
     return f"      With Session IDs: {resum_rate_txt}"
 
@@ -87,10 +89,11 @@ class _SessionResumptionSupportCliConnector(ScanCommandCliConnector):
         result_as_txt = [cls._format_title("TLS 1.2 Session Resumption Support")]
 
         # Resumption with session IDs
-        result_as_txt.append(_resumption_with_session_ids_result_to_console_output(
-            result.successful_session_id_resumptions_count,
-            result.attempted_session_id_resumptions_count
-        ))
+        result_as_txt.append(
+            _resumption_with_session_ids_result_to_console_output(
+                result.successful_session_id_resumptions_count, result.attempted_session_id_resumptions_count
+            )
+        )
 
         # Resumption with TLS tickets
         if result.tls_ticket_resumption_result == TslSessionTicketSupportEnum.SUCCEEDED:
@@ -116,10 +119,11 @@ class _SessionResumptionRateSupportCliConnector(ScanCommandCliConnector):
     @classmethod
     def result_to_console_output(cls, result: SessionResumptionSupportScanResult) -> List[str]:
         result_as_txt = [cls._format_title("TLS 1.2 Session Resumption Rate")]
-        result_as_txt.append(_resumption_with_session_ids_result_to_console_output(
-            result.successful_session_id_resumptions_count,
-            result.attempted_session_id_resumptions_count
-        ))
+        result_as_txt.append(
+            _resumption_with_session_ids_result_to_console_output(
+                result.successful_session_id_resumptions_count, result.attempted_session_id_resumptions_count
+            )
+        )
         return result_as_txt
 
 
@@ -176,6 +180,7 @@ class SessionResumptionRateImplementation(ScanCommandImplementation):
 class SessionResumptionSupportImplementation(ScanCommandImplementation):
     """Test a server for session resumption support using session IDs and TLS tickets.
     """
+
     cli_connector_cls = _SessionResumptionSupportCliConnector
 
     _SESSION_ID_RESUMPTION_ATTEMPTS_NB = 5

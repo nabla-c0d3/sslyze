@@ -96,7 +96,7 @@ class ScanCommandCliConnector(ABC):
     """Contains all the logic for making a scan command available via the CLI.
     """
 
-    _cli_option : ClassVar[str]
+    _cli_option: ClassVar[str]
     _cli_description: ClassVar[str]
 
     @classmethod
@@ -105,15 +105,11 @@ class ScanCommandCliConnector(ABC):
         """
         # Subclasses can add command line options for extra arguments here; by default scan commands don't have
         # extra arguments
-        return [OptParseCliOption(
-            option=cls._cli_option,
-            help=cls._cli_description,
-        )]
+        return [OptParseCliOption(option=cls._cli_option, help=cls._cli_description)]
 
     @classmethod
     def find_cli_options_in_command_line(
-        cls,
-        parsed_command_line: Dict[str, Union[None, bool, str]]
+        cls, parsed_command_line: Dict[str, Union[None, bool, str]]
     ) -> Tuple[bool, Optional[ScanCommandExtraArguments]]:
         """Check a parsed command line to see if the CLI option for the scan command was enabled.
         """

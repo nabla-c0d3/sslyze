@@ -13,7 +13,8 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandExtraArguments,
     ScanCommandWrongUsageError,
-    ScanCommandCliConnector)
+    ScanCommandCliConnector,
+)
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte

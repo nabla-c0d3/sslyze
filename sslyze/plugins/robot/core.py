@@ -8,7 +8,8 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArguments,
     ScanJob,
     ScanCommandWrongUsageError,
-    ScanCommandCliConnector)
+    ScanCommandCliConnector,
+)
 
 from sslyze.plugins.robot.robot_tester import (
     RobotScanResultEnum,

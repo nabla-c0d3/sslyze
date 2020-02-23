@@ -13,7 +13,8 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandResult,
     ScanCommandWrongUsageError,
-    ScanCommandCliConnector)
+    ScanCommandCliConnector,
+)
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 

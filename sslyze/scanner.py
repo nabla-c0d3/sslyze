@@ -54,7 +54,11 @@ class ServerScanResult:
 
 
 class Scanner:
-    def __init__(self, per_server_concurrent_connections_limit: Optional[int] = None, concurrent_server_scans_limit: Optional[int] = None):
+    def __init__(
+        self,
+        per_server_concurrent_connections_limit: Optional[int] = None,
+        concurrent_server_scans_limit: Optional[int] = None,
+    ):
         self._queued_server_scans: List[ServerScanRequest] = []
         self._queued_future_to_server_and_scan_cmd: Dict[Future, Tuple[ServerConnectivityInfo, ScanCommandEnum]] = {}
         self._pending_server_scan_results: Dict[

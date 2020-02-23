@@ -32,7 +32,7 @@ class CertificateInfoExtraArguments(ScanCommandExtraArguments):
 
 @dataclass(frozen=True)
 class CertificateInfoScanResult(ScanCommandResult):
-    """The result of running a CertificateInfoScanCommand on a specific server.
+    """The result of retrieving and analyzing a  certificate(s) to verify its validity.
 
     Any certificate available as an attribute is parsed using the cryptography module; documentation is available at
     https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object
@@ -98,7 +98,7 @@ class CertificateInfoScanResult(ScanCommandResult):
 
 # TODO(AD): Use the new nassl function to check certificate
 class CertificateInfoImplementation(ScanCommandImplementation):
-    """Verify the validity of the server(s) certificate(s) against various trust stores (Mozilla, Apple, etc.).
+    """Retrieve and analyze a server's certificate(s) to verify its validity.
     """
 
     @classmethod

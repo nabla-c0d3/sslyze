@@ -4,12 +4,14 @@ from sslyze.cli.output_generator import OutputGenerator
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
 from sslyze.scanner import ServerScanResult, ScanCommandErrorReasonEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthRequirementEnum
-from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkLocationViaHttpProxy, \
-    ServerNetworkLocation
+from sslyze.server_setting import (
+    ServerNetworkLocationViaDirectConnection,
+    ServerNetworkLocationViaHttpProxy,
+    ServerNetworkLocation,
+)
 
 
 class ConsoleOutputGenerator(OutputGenerator):
-
     @classmethod
     def _format_title(cls, title: str) -> str:
         return f" {title.upper()}\n {'-' * len(title)}\n"
@@ -74,15 +76,20 @@ class ConsoleOutputGenerator(OutputGenerator):
                 target_result_str += " use --cert and --key to provide one.\n"
 
             elif scan_command_error.reason in [
-                ScanCommandErrorReasonEnum.BUG_IN_SSLYZE, ScanCommandErrorReasonEnum.WRONG_USAGE
+                ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
+                ScanCommandErrorReasonEnum.WRONG_USAGE,
             ]:
                 target_result_str += cli_connector_cls._format_title(
                     f"Error when running --{cli_connector_cls._cli_option}"
                 )
                 target_result_str += "\n"
-                target_result_str += "       You can open an issue at https://github.com/nabla-c0d3/sslyze/issues" \
-                                     " with the following information:\n\n"
-                target_result_str += f"       * Server: {server_location.hostname}:{server_location.port} - {network_route}\n"
+                target_result_str += (
+                    "       You can open an issue at https://github.com/nabla-c0d3/sslyze/issues"
+                    " with the following information:\n\n"
+                )
+                target_result_str += (
+                    f"       * Server: {server_location.hostname}:{server_location.port} - {network_route}\n"
+                )
                 target_result_str += f"       * Scan command: {scan_command.name}\n\n"
                 for line in scan_command_error.exception_trace.format(chain=False):
                     target_result_str += f"       {line}"
@@ -102,10 +109,8 @@ def _server_location_to_network_route(server_location: ServerNetworkLocation) ->
     elif isinstance(server_location, ServerNetworkLocationViaHttpProxy):
         # We do not know the server's IP address if going through a proxy
         network_route = "HTTP proxy at {}:{}".format(
-            server_location.http_proxy_settings.hostname,
-            server_location.http_proxy_settings.port,
+            server_location.http_proxy_settings.hostname, server_location.http_proxy_settings.port
         )
     else:
         raise ValueError("Should never happen")
     return network_route
-

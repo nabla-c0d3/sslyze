@@ -47,7 +47,7 @@ def main() -> None:
 
     global_scanner = Scanner(
         per_server_concurrent_connections_limit=parsed_command_line.per_server_concurrent_connections_limit,
-        concurrent_server_scans_limit=parsed_command_line.concurrent_server_scans_limit
+        concurrent_server_scans_limit=parsed_command_line.concurrent_server_scans_limit,
     )
 
     # Figure out which hosts are up and fill the task queue with work to do

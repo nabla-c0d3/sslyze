@@ -9,7 +9,8 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandResult,
     ScanCommandWrongUsageError,
-    ScanCommandCliConnector)
+    ScanCommandCliConnector,
+)
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
 from sslyze.connection_helpers.http_response_parser import HttpResponseParser
@@ -53,7 +54,9 @@ class _HttpHeadersCliConnector(ScanCommandCliConnector):
         else:
             result_as_txt.append(cls._format_field("Max Age:", str(result.strict_transport_security_header.max_age)))
             result_as_txt.append(
-                cls._format_field("Include Subdomains:", str(result.strict_transport_security_header.include_subdomains))
+                cls._format_field(
+                    "Include Subdomains:", str(result.strict_transport_security_header.include_subdomains)
+                )
             )
             result_as_txt.append(cls._format_field("Preload:", str(result.strict_transport_security_header.preload)))
 

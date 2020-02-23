@@ -7,7 +7,8 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandExtraArguments,
     ScanCommandWrongUsageError,
-    ScanCommandCliConnector)
+    ScanCommandCliConnector,
+)
 from typing import List, Optional
 
 from sslyze.server_connectivity import ServerConnectivityInfo

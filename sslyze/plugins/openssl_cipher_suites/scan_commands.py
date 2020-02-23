@@ -198,9 +198,9 @@ class Tlsv11ScanImplementation(_SimpleCipherSuitesScanImplementation):
 class Tlsv12ScanImplementation(_CipherSuitesScanImplementation):
     """The implementation for TLS 1.2 is customized because some ciphers are supported by different versions of OpenSSL.
     """
+
     cli_connector_cls = _Tlsv12CliConnector
     _tls_version = OpenSslVersionEnum.TLSV1_2
-
 
     @classmethod
     def _cipher_suites_to_scan_for(cls, server_info: ServerConnectivityInfo) -> Set[str]:

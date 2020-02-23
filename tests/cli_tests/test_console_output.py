@@ -3,7 +3,6 @@ from io import StringIO
 from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.cli.console_output import ConsoleOutputGenerator
-from sslyze.connection_helpers.errors import ConnectionToServerFailed
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.scanner import ScanCommandError, ScanCommandErrorReasonEnum
@@ -32,6 +31,7 @@ class TestConsoleOutputGenerator:
         assert final_output
         for bad_server in parsed_cmd_line.invalid_servers:
             assert bad_server.server_string in final_output
+            assert bad_server.error_message in final_output
 
     def test_server_connectivity_test_failed(self):
         # Given a server to scan to which sslyze could not connect

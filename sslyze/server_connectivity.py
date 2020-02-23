@@ -29,6 +29,7 @@ class ServerTlsProbingResult:
     """Additional details about the server, detected via connectivity testing.
     """
 
+    # TODO: Does not JSON-serialize correctly; have a special SSLyze enum?
     highest_tls_version_supported: OpenSslVersionEnum
     cipher_suite_supported: str  # The OpenSSL name of a cipher suite supported by the server
     client_auth_requirement: ClientAuthRequirementEnum

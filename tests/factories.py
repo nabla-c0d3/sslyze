@@ -40,7 +40,7 @@ class ServerNetworkLocationViaHttpProxyFactory:
                 hostname="ûnicôdé." + fake.hostname(),
                 port=123,
                 http_proxy_settings=HttpProxySettings(
-                    hostname="ûnicôdé." + fake.hostname(),
+                    hostname="prôxy." + fake.hostname(),
                     port=456,
                 )
             )
@@ -81,7 +81,7 @@ class ParsedCommandLineFactory:
     @staticmethod
     def create():
         cmd_line = ParsedCommandLine(
-            invalid_servers=[InvalidServerStringError(server_string="abc.com", error_message="error")],
+            invalid_servers=[InvalidServerStringError(server_string="www.badpãrsing.com", error_message="Pãrsing err")],
             servers_to_scans=[
                 (
                     ServerNetworkLocationViaDirectConnectionFactory.create(),
@@ -109,7 +109,7 @@ class ConnectionToServerFailedFactory:
         return ConnectionToServerFailed(
             server_location=ServerNetworkLocationViaDirectConnectionFactory.create(),
             network_configuration=ServerNetworkConfiguration(tls_server_name_indication="a.com"),
-            error_message="This is an error"
+            error_message="This is ân éè error"
         )
 
 class ServerScanResultFactory:

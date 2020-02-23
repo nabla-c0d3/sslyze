@@ -90,6 +90,7 @@ class ScanCommandImplementation(ABC):
 class OptParseCliOption:
     option: str
     help: str
+    action: str = "store_true"
 
 
 class ScanCommandCliConnector(ABC):

@@ -7,6 +7,7 @@ from cryptography.x509 import Certificate
 from nassl.ocsp_response import OcspResponseStatusEnum
 
 from sslyze.plugins.certificate_info.cert_chain_analyzer import CertificateChainDeploymentAnalyzer
+from sslyze.plugins.certificate_info.cli_connector import _CertificateInfoCliConnector
 from sslyze.plugins.certificate_info.get_cert_chain import get_and_verify_certificate_chain, PathValidationResult
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
@@ -25,7 +26,7 @@ class CertificateInfoExtraArguments(ScanCommandExtraArguments):
 
     custom_ca_file: Path
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.custom_ca_file.is_file():
             raise ValueError(f'Could not open supplied CA file at "{self.custom_ca_file}"')
 
@@ -38,6 +39,7 @@ class CertificateInfoScanResult(ScanCommandResult):
     https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object
 
     Attributes:
+        hostname_used_for_server_name_indication: The hostname sent by sslyze as the Server Name Indication extension.
         received_certificate_chain: The certificate chain sent by the server; index 0 is the leaf certificate.
         verified_certificate_chain: The verified certificate chain returned by OpenSSL for one of the trust stores
             packaged within SSLyze. Will be None if the validation failed with all of the available trust stores
@@ -70,6 +72,7 @@ class CertificateInfoScanResult(ScanCommandResult):
 
     """
 
+    hostname_used_for_server_name_indication: str
     received_certificate_chain: List[Certificate]
     path_validation_results: List[PathValidationResult]
 
@@ -100,6 +103,8 @@ class CertificateInfoScanResult(ScanCommandResult):
 class CertificateInfoImplementation(ScanCommandImplementation):
     """Retrieve and analyze a server's certificate(s) to verify its validity.
     """
+
+    cli_connector_cls = _CertificateInfoCliConnector
 
     @classmethod
     def scan_jobs_for_scan_command(
@@ -160,6 +165,7 @@ class CertificateInfoImplementation(ScanCommandImplementation):
         analysis_result = analyzer.perform()
 
         return CertificateInfoScanResult(
+            hostname_used_for_server_name_indication=server_info.network_configuration.tls_server_name_indication,
             received_certificate_chain=received_chain,
             path_validation_results=path_validation_results,
             ocsp_response=ocsp_response.as_dict() if ocsp_response else None,

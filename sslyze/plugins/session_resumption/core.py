@@ -127,7 +127,9 @@ class _SessionResumptionRateSupportCliConnector(ScanCommandCliConnector):
         return result_as_txt
 
 
-def _create_resume_with_session_id_scan_jobs(server_info, resumption_attempts_nb: int) -> List[ScanJob]:
+def _create_resume_with_session_id_scan_jobs(
+    server_info: ServerConnectivityInfo, resumption_attempts_nb: int
+) -> List[ScanJob]:
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as session resumption is different with TLS 1.3
     if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
         tls_version_to_use = OpenSslVersionEnum.TLSV1_2

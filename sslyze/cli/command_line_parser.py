@@ -411,8 +411,6 @@ class CommandLineParser:
         for scan_command in ScanCommandEnum:
             cli_connector_cls = scan_command.get_implementation_cls().cli_connector_cls
             for option in cli_connector_cls.get_cli_options():
-                scan_commands_group.add_option(
-                    f"--{option.option}", help=option.help, dest=option.option, action="store_true"
-                )
+                scan_commands_group.add_option(f"--{option.option}", help=option.help, action=option.action)
 
         self._parser.add_option_group(scan_commands_group)

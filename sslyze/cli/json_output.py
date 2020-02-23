@@ -22,7 +22,10 @@ class JsonOutputGenerator(OutputGenerator):
         super().__init__(file_to)
         self._json_dict: Dict[str, Any] = {
             # TODO: validate names server_scan_results?
-            "sslyze_version": __version__, "sslyze_url": PROJECT_URL, "invalid_servers": [], "accepted_servers": []
+            "sslyze_version": __version__,
+            "sslyze_url": PROJECT_URL,
+            "invalid_servers": [],
+            "accepted_servers": [],
         }
 
     def command_line_parsed(self, parsed_command_line: ParsedCommandLine) -> None:
@@ -56,8 +59,8 @@ class JsonOutputGenerator(OutputGenerator):
         # Fix that by converting enum keys into their enum names
         for dict_field in ["scan_commands_results", "scan_commands_extra_arguments"]:
             final_dict[dict_field] = {
-                scan_command.name: asdict(value) for scan_command, value in
-                getattr(server_scan_result, dict_field).items()
+                scan_command.name: asdict(value)
+                for scan_command, value in getattr(server_scan_result, dict_field).items()
             }
 
         # Copy the other fields
@@ -72,7 +75,6 @@ class JsonOutputGenerator(OutputGenerator):
 
 # TODO(AD) Remove and move to plugins
 class _CustomJsonEncoder(json.JSONEncoder):
-
     def default(self, obj: Any) -> Union[bool, int, float, str, Dict[str, Any]]:
         result: Union[bool, int, float, str, Dict[str, Any]]
 

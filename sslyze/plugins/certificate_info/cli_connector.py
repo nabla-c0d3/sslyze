@@ -9,7 +9,7 @@ from nassl.ocsp_response import OcspResponseStatusEnum
 
 from sslyze.plugins.certificate_info.symantec import SymantecDistrustTimelineEnum
 from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption, ScanCommandExtraArguments
-from sslyze.plugins.utils.certificate_utils import CertificateUtils
+from sslyze.plugins.certificate_info.certificate_utils import CertificateUtils
 
 if TYPE_CHECKING:
     from sslyze.plugins.certificate_info.core import CertificateInfoScanResult

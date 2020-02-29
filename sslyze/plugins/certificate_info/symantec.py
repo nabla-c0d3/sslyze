@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from cryptography.x509 import Certificate
 
-from sslyze.plugins.utils.certificate_utils import CertificateUtils
+from sslyze.plugins.certificate_info.certificate_utils import CertificateUtils
 
 
 class SymantecDistrustTimelineEnum(Enum):

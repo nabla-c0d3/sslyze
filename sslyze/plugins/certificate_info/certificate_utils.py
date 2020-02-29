@@ -10,7 +10,6 @@ from base64 import b64encode
 from hashlib import sha256
 
 
-# TODO(AD): Move the content of this package
 class CertificateUtils:
     """Various utility methods for handling X509 certificates as parsed by the cryptography module.
     """
@@ -61,7 +60,7 @@ class CertificateUtils:
 
     @classmethod
     def get_name_as_text(cls, name_field: cryptography.x509.Name) -> str:
-        return ", ".join(["{}={}".format(attr.oid._name, attr.value) for attr in name_field])
+        return ", ".join([f"{attr.oid._name}={attr.value}" for attr in name_field])
 
     @staticmethod
     def get_public_key_sha256(certificate: cryptography.x509.Certificate) -> bytes:

@@ -36,7 +36,7 @@ class HeartbleedScanResult(ScanCommandResult):
     is_vulnerable_to_heartbleed: bool
 
 
-class _HeartbleedCliConnector(ScanCommandCliConnector):
+class _HeartbleedCliConnector(ScanCommandCliConnector[HeartbleedScanResult, None]):
 
     _cli_option = "heartbleed"
     _cli_description = "Test a server for the OpenSSL Heartbleed vulnerability."
@@ -53,7 +53,7 @@ class _HeartbleedCliConnector(ScanCommandCliConnector):
         return result_as_txt
 
 
-class HeartbleedImplementation(ScanCommandImplementation):
+class HeartbleedImplementation(ScanCommandImplementation[HeartbleedScanResult, None]):
 
     cli_connector_cls = _HeartbleedCliConnector
 
@@ -69,7 +69,7 @@ class HeartbleedImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> HeartbleedScanResult:
         if len(completed_scan_jobs) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 

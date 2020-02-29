@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from sslyze.plugins.openssl_cipher_suites.scan_commands import CipherSuitesScanResult
 
 
-class _CipherSuitesCliConnector(ScanCommandCliConnector):
+class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult", None]):
 
     _title_in_output: ClassVar[str]
 

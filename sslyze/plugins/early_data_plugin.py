@@ -29,7 +29,7 @@ class EarlyDataScanResult(ScanCommandResult):
     supports_early_data: bool
 
 
-class _EarlyDataCliConnector(ScanCommandCliConnector):
+class _EarlyDataCliConnector(ScanCommandCliConnector[EarlyDataScanResult, None]):
 
     _cli_option = "early_data"
     _cli_description = "Test a server for TLS 1.3 early data support."
@@ -44,7 +44,7 @@ class _EarlyDataCliConnector(ScanCommandCliConnector):
         return result_as_txt
 
 
-class EarlyDataImplementation(ScanCommandImplementation):
+class EarlyDataImplementation(ScanCommandImplementation[EarlyDataScanResult, None]):
     """Test the server(s) for TLS 1.3 early data support.
 
     This will only work for HTTPS servers; other TLS servers (SMTP, POP3, etc.) are not supported.
@@ -64,7 +64,7 @@ class EarlyDataImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> EarlyDataScanResult:
         if len(completed_scan_jobs) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 

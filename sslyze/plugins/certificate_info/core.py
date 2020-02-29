@@ -100,7 +100,7 @@ class CertificateInfoScanResult(ScanCommandResult):
 
 
 # TODO(AD): Use the new nassl function to check certificate
-class CertificateInfoImplementation(ScanCommandImplementation):
+class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoScanResult, None]):
     """Retrieve and analyze a server's certificate(s) to verify its validity.
     """
 
@@ -124,7 +124,7 @@ class CertificateInfoImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> CertificateInfoScanResult:
         # Store the results as they come
         path_validation_results = []
         ocsp_response = None

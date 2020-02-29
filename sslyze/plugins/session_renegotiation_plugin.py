@@ -36,7 +36,7 @@ class _ScanJobResultEnum(Enum):
     SUPPORTS_SECURE_RENEG = 2
 
 
-class _SessionRenegotiationCliConnector(ScanCommandCliConnector):
+class _SessionRenegotiationCliConnector(ScanCommandCliConnector[SessionRenegotiationScanResult, None]):
 
     _cli_option = "reneg"
     _cli_description = "Test a server for for insecure TLS renegotiation and client-initiated renegotiation."
@@ -64,7 +64,7 @@ class _SessionRenegotiationCliConnector(ScanCommandCliConnector):
         return result_txt
 
 
-class SessionRenegotiationImplementation(ScanCommandImplementation):
+class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenegotiationScanResult, None]):
     """Test a server for insecure TLS renegotiation and client-initiated renegotiation.
     """
 
@@ -91,7 +91,7 @@ class SessionRenegotiationImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> SessionRenegotiationScanResult:
         if len(completed_scan_jobs) != 2:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 

@@ -6,7 +6,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 
 from dataclasses import dataclass
 
-from typing import List, Callable, Any, Optional, TYPE_CHECKING, Tuple, ClassVar, Dict, Type, Union
+from typing import List, Callable, Any, Optional, TYPE_CHECKING, Tuple, ClassVar, Dict, Type, Union, TypeVar, Generic
 
 if TYPE_CHECKING:
     from sslyze.server_connectivity import ServerConnectivityInfo
@@ -23,7 +23,6 @@ class ScanCommandExtraArguments(ABC):
 class ScanCommandWrongUsageError(Exception):
     """Raised when the configuration or arguments passed to complete a scan command are wrong.
     """
-
     pass
 
 
@@ -38,7 +37,11 @@ class ScanJob:
     function_arguments: Any
 
 
-class ScanCommandImplementation(ABC):
+_ScanCommandResultTypeVar = TypeVar("_ScanCommandResultTypeVar", bound=ScanCommandResult)
+_ScanCommandExtraArgumentsTypeVar = TypeVar("_ScanCommandExtraArgumentsTypeVar", bound=Optional[ScanCommandExtraArguments])
+
+
+class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentsTypeVar]):
 
     # Contains all the logic for making the scan command available via the CLI
     cli_connector_cls: ClassVar[Type["ScanCommandCliConnector"]]
@@ -46,7 +49,7 @@ class ScanCommandImplementation(ABC):
     @classmethod
     @abstractmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[_ScanCommandExtraArgumentsTypeVar] = None
     ) -> List[ScanJob]:
         """Transform a scan command to run into smaller scan jobs to be run concurrently.
 
@@ -59,7 +62,7 @@ class ScanCommandImplementation(ABC):
     @abstractmethod
     def result_for_completed_scan_jobs(
         cls, server_info: "ServerConnectivityInfo", completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> _ScanCommandResultTypeVar:
         """Transform the completed scan jobs for a given scan command into a result.
         """
         pass
@@ -67,8 +70,8 @@ class ScanCommandImplementation(ABC):
     # TODO: Better name
     @classmethod
     def perform(
-        cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[ScanCommandExtraArguments] = None
-    ) -> ScanCommandResult:
+        cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[_ScanCommandExtraArgumentsTypeVar] = None
+    ) -> _ScanCommandResultTypeVar:
         """Utility method to run a scan command directly.
 
         This is useful for the test suite to run commands without using the Scanner class. It should NOT be used to
@@ -93,7 +96,7 @@ class OptParseCliOption:
     action: str = "store_true"
 
 
-class ScanCommandCliConnector(ABC):
+class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentsTypeVar]):
     """Contains all the logic for making a scan command available via the CLI.
     """
 
@@ -111,7 +114,7 @@ class ScanCommandCliConnector(ABC):
     @classmethod
     def find_cli_options_in_command_line(
         cls, parsed_command_line: Dict[str, Union[None, bool, str]]
-    ) -> Tuple[bool, Optional[ScanCommandExtraArguments]]:
+    ) -> Tuple[bool, Optional[_ScanCommandExtraArgumentsTypeVar]]:
         """Check a parsed command line to see if the CLI option for the scan command was enabled.
         """
         try:
@@ -125,7 +128,7 @@ class ScanCommandCliConnector(ABC):
 
     @classmethod
     @abstractmethod
-    def result_to_console_output(cls, result: ScanCommandResult) -> List[str]:
+    def result_to_console_output(cls, result: _ScanCommandResultTypeVar) -> List[str]:
         """Transform the result of the scan command into lines of text to be printed by the CLI.
         """
         pass

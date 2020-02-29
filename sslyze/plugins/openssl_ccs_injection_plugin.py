@@ -37,7 +37,7 @@ class OpenSslCcsInjectionScanResult(ScanCommandResult):
     is_vulnerable_to_ccs_injection: bool
 
 
-class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector):
+class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector[OpenSslCcsInjectionScanResult, None]):
 
     _cli_option = "openssl_ccs"
     _cli_description = "Test a server for the OpenSSL CCS Injection vulnerability (CVE-2014-0224)."
@@ -54,7 +54,7 @@ class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector):
         return result_txt
 
 
-class OpenSslCcsInjectionImplementation(ScanCommandImplementation):
+class OpenSslCcsInjectionImplementation(ScanCommandImplementation[OpenSslCcsInjectionScanResult, None]):
 
     cli_connector_cls = _OpenSslCcsInjectionCliConnector
 
@@ -70,7 +70,7 @@ class OpenSslCcsInjectionImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> OpenSslCcsInjectionScanResult:
         if len(completed_scan_jobs) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 

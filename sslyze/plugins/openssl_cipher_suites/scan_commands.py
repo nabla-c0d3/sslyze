@@ -100,7 +100,7 @@ class _Tlsv13CliConnector(_CipherSuitesCliConnector):
     _title_in_output = "TLS 1.3 Cipher suites"
 
 
-class _CipherSuitesScanImplementation(ScanCommandImplementation):
+class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScanResult, None]):
 
     # The SSL version corresponding to the scan command
     _tls_version: ClassVar[OpenSslVersionEnum]
@@ -130,7 +130,7 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> CipherSuitesScanResult:
         # Store the results as they come
         accepted_cipher_suites = []
         rejected_cipher_suites = []

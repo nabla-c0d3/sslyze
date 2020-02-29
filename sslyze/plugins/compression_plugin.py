@@ -26,7 +26,7 @@ class CompressionScanResult(ScanCommandResult):
     supports_compression: bool
 
 
-class _CompressionCliConnector(ScanCommandCliConnector):
+class _CompressionCliConnector(ScanCommandCliConnector[CompressionScanResult, None]):
 
     _cli_option = "compression"
     _cli_description = "Test a server for TLS compression support, which can be leveraged to perform a CRIME attack."
@@ -41,7 +41,7 @@ class _CompressionCliConnector(ScanCommandCliConnector):
         return result_as_txt
 
 
-class CompressionImplementation(ScanCommandImplementation):
+class CompressionImplementation(ScanCommandImplementation[CompressionScanResult, None]):
     """Test a server for TLS compression support, which can be leveraged to perform a CRIME attack.
     """
 
@@ -59,7 +59,7 @@ class CompressionImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> CompressionScanResult:
         if len(completed_scan_jobs) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 

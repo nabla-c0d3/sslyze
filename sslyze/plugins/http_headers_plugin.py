@@ -38,7 +38,7 @@ class HttpHeadersScanResult(ScanCommandResult):
     expect_ct_header: Optional["ExpectCtHeader"]
 
 
-class _HttpHeadersCliConnector(ScanCommandCliConnector):
+class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, None]):
 
     _cli_option = "http_headers"
     _cli_description = "Test a server for the presence of security-related HTTP headers."
@@ -72,7 +72,7 @@ class _HttpHeadersCliConnector(ScanCommandCliConnector):
                 result_as_txt.append(cls._format_field("Max Age:", str(header.max_age)))
                 result_as_txt.append(cls._format_field("Include Subdomains:", str(header.include_subdomains)))
                 result_as_txt.append(cls._format_field("Report URI:", str(header.report_uri)))
-                result_as_txt.append(cls._format_field("SHA-256 Pin List:", ", ".join(header.pin_sha256_list)))
+                result_as_txt.append(cls._format_field("SHA-256 Pin List:", ", ".join(header.sha256_pins)))
 
         # Expect-CT
         result_as_txt.extend(["", cls._format_subtitle("Expect-CT Header")])
@@ -86,7 +86,7 @@ class _HttpHeadersCliConnector(ScanCommandCliConnector):
         return result_as_txt
 
 
-class HttpHeadersImplementation(ScanCommandImplementation):
+class HttpHeadersImplementation(ScanCommandImplementation[HttpHeadersScanResult, None]):
     """Test a server for HTTP headers related to security, including HSTS and HPKP.
     """
 
@@ -107,7 +107,7 @@ class HttpHeadersImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> HttpHeadersScanResult:
         if len(completed_scan_jobs) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 

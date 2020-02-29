@@ -26,7 +26,7 @@ class FallbackScsvScanResult(ScanCommandResult):
     supports_fallback_scsv: bool
 
 
-class _FallbackScsvCliConnector(ScanCommandCliConnector):
+class _FallbackScsvCliConnector(ScanCommandCliConnector[FallbackScsvScanResult, None]):
 
     _cli_option = "fallback"
     _cli_description = "Test a server for the TLS_FALLBACK_SCSV mechanism to prevent downgrade attacks."
@@ -41,7 +41,7 @@ class _FallbackScsvCliConnector(ScanCommandCliConnector):
         return result_as_txt
 
 
-class FallbackScsvImplementation(ScanCommandImplementation):
+class FallbackScsvImplementation(ScanCommandImplementation[FallbackScsvScanResult, None]):
 
     cli_connector_cls = _FallbackScsvCliConnector
 
@@ -57,7 +57,7 @@ class FallbackScsvImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> FallbackScsvScanResult:
         if len(completed_scan_jobs) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 

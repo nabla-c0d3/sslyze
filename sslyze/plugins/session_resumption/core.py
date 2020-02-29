@@ -79,7 +79,7 @@ def _resumption_with_session_ids_result_to_console_output(
     return f"      With Session IDs: {resum_rate_txt}"
 
 
-class _SessionResumptionSupportCliConnector(ScanCommandCliConnector):
+class _SessionResumptionSupportCliConnector(ScanCommandCliConnector[SessionResumptionSupportScanResult, None]):
 
     _cli_option = "resum"
     _cli_description = "Test a server for session resumption support using session IDs and TLS tickets."
@@ -111,13 +111,13 @@ class _SessionResumptionSupportCliConnector(ScanCommandCliConnector):
         return result_as_txt
 
 
-class _SessionResumptionRateSupportCliConnector(ScanCommandCliConnector):
+class _SessionResumptionRateSupportCliConnector(ScanCommandCliConnector[SessionResumptionRateScanResult, None]):
 
     _cli_option = "resum_rate"
     _cli_description = "Measure a server's session resumption rate when attempting 100 resumptions using session IDs."
 
     @classmethod
-    def result_to_console_output(cls, result: SessionResumptionSupportScanResult) -> List[str]:
+    def result_to_console_output(cls, result: SessionResumptionRateScanResult) -> List[str]:
         result_as_txt = [cls._format_title("TLS 1.2 Session Resumption Rate")]
         result_as_txt.append(
             _resumption_with_session_ids_result_to_console_output(
@@ -143,7 +143,7 @@ def _create_resume_with_session_id_scan_jobs(
     return scan_jobs
 
 
-class SessionResumptionRateImplementation(ScanCommandImplementation):
+class SessionResumptionRateImplementation(ScanCommandImplementation[SessionResumptionRateScanResult, None]):
     """Measure a server's session resumption rate when using session IDs by attempting 100 resumptions.
     """
 
@@ -163,7 +163,7 @@ class SessionResumptionRateImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> SessionResumptionRateScanResult:
         if len(completed_scan_jobs) != cls._SESSION_ID_RESUMPTION_ATTEMPTS_NB:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 
@@ -179,7 +179,7 @@ class SessionResumptionRateImplementation(ScanCommandImplementation):
         )
 
 
-class SessionResumptionSupportImplementation(ScanCommandImplementation):
+class SessionResumptionSupportImplementation(ScanCommandImplementation[SessionResumptionSupportScanResult, None]):
     """Test a server for session resumption support using session IDs and TLS tickets.
     """
 
@@ -215,7 +215,7 @@ class SessionResumptionSupportImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> SessionResumptionSupportScanResult:
         total_scan_jobs_count = cls._SESSION_ID_RESUMPTION_ATTEMPTS_NB + 1  # Session ID jobs + 1 TLS ticket job
         if len(completed_scan_jobs) != total_scan_jobs_count:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")

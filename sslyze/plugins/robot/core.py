@@ -32,7 +32,7 @@ class RobotScanResult(ScanCommandResult):
     robot_result: RobotScanResultEnum
 
 
-class _RobotCliConnector(ScanCommandCliConnector):
+class _RobotCliConnector(ScanCommandCliConnector[RobotScanResult, None]):
 
     _cli_option = "robot"
     _cli_description = "Test a server for the ROBOT vulnerability."
@@ -57,7 +57,7 @@ class _RobotCliConnector(ScanCommandCliConnector):
         return result_as_txt
 
 
-class RobotImplementation(ScanCommandImplementation):
+class RobotImplementation(ScanCommandImplementation[RobotScanResult, None]):
 
     cli_connector_cls = _RobotCliConnector
 
@@ -78,7 +78,7 @@ class RobotImplementation(ScanCommandImplementation):
     @classmethod
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
+    ) -> RobotScanResult:
         if len(completed_scan_jobs) != cls._TEST_ATTEMPTS_NB:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 

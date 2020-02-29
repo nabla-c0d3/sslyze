@@ -6,6 +6,7 @@ from typing import Optional, Tuple, List, Dict
 import binascii
 import math
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.x509 import load_pem_x509_certificate
 from nassl._nassl import WantReadError
 from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
@@ -236,9 +237,9 @@ def _get_rsa_parameters(server_info: ServerConnectivityInfo, openssl_cipher_stri
         ssl_connection.close()
 
     if parsed_cert:
-        try:
+        if isinstance(parsed_cert, RSAPublicKey):
             return parsed_cert.public_key().public_numbers().n, parsed_cert.public_key().public_numbers().e
-        except AttributeError:
+        else:
             return None
     else:
         return None

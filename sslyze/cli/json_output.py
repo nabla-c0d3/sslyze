@@ -1,33 +1,18 @@
 import copyreg
 import json
 from dataclasses import asdict
+from functools import singledispatch
 from pathlib import Path
 from traceback import TracebackException
-from typing import Dict, Any, TextIO, Union, Set
+from typing import Dict, Any, TextIO, Union, List
 
-from cryptography.hazmat.backends.openssl import x509
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
-from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509.oid import ObjectIdentifier
 from enum import Enum
 from sslyze import PROJECT_URL, __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
-from sslyze.plugins.utils.certificate_utils import CertificateUtils
 from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
-
-
-# Make TracebackException pickable for dataclasses.asdict() to work on ScanCommandError
-def _traceback_to_str(traceback: TracebackException) -> str:
-    exception_trace_as_str = ""
-    for line in traceback.format(chain=False):
-        exception_trace_as_str += line
-    return exception_trace_as_str
-
-
-copyreg.pickle(TracebackException, _traceback_to_str)
 
 
 # TODO: Crashes with certinfo
@@ -78,57 +63,57 @@ class JsonOutputGenerator(OutputGenerator):
         self._file_to.write(json_out)
 
 
-# TODO(AD) Remove and move to plugins
+# Make TracebackException pickable for dataclasses.asdict() to work on ScanCommandError
+def _traceback_to_str(traceback: TracebackException) -> str:
+    exception_trace_as_str = ""
+    for line in traceback.format(chain=False):
+        exception_trace_as_str += line
+    return exception_trace_as_str
+
+
+copyreg.pickle(TracebackException, _traceback_to_str)
+
+
+# Setup our custom JSON serializer
+JsonType = Union[bool, int, float, str, List[Any], Dict[str, Any]]
+
+
 class _CustomJsonEncoder(json.JSONEncoder):
 
-    def default(self, obj: Any) -> Union[bool, int, float, str, Dict[str, Any]]:
-        result: Union[bool, int, float, str, Dict[str, Any]]
+    def default(self, obj: Any) -> JsonType:
+        return object_to_json(obj)
 
-        if isinstance(obj, Enum):
-            result = obj.name
 
-        elif isinstance(obj, Set):
-            result = [self.default(value) for value in obj]
+_default_json_encoder = json.JSONEncoder()
 
-        elif isinstance(obj, Path):
-            result = str(obj)
 
-        elif isinstance(obj, TracebackException):
-            result = _traceback_to_str(obj)
+# Using singledispatch allows plugins that return custom objects to extend the JSON serializing logic
+@singledispatch
+def object_to_json(obj: Any) -> JsonType:
+    return _default_json_encoder.default(obj)
 
-        elif isinstance(obj, ObjectIdentifier):
-            result = obj.dotted_string
 
-        elif isinstance(obj, x509._Certificate):
-            certificate = obj
-            result = {
-                # Add general info
-                "as_pem": obj.public_bytes(Encoding.PEM).decode("ascii"),
-                "hpkp_pin": CertificateUtils.get_hpkp_pin(obj),
-                # Add some of the fields of the cert
-                "subject": CertificateUtils.get_name_as_text(certificate.subject),
-                "issuer": CertificateUtils.get_name_as_text(certificate.issuer),
-                "serialNumber": str(certificate.serial_number),
-                "notBefore": certificate.not_valid_before.strftime("%Y-%m-%d %H:%M:%S"),
-                "notAfter": certificate.not_valid_after.strftime("%Y-%m-%d %H:%M:%S"),
-                "signatureAlgorithm": certificate.signature_hash_algorithm.name,
-                "publicKey": {"algorithm": CertificateUtils.get_public_key_type(certificate)},
-            }
+# Add the functions for serializing basic types
+@object_to_json.register
+def _(obj: Enum) -> JsonType:
+    return obj.name
 
-            dns_alt_names = CertificateUtils.get_dns_subject_alternative_names(certificate)
-            if dns_alt_names:
-                result["subjectAlternativeName"] = {"DNS": dns_alt_names}  # type: ignore
 
-            # Add some info about the public key
-            public_key = certificate.public_key()
-            if isinstance(public_key, EllipticCurvePublicKey):
-                result["publicKey"]["size"] = str(public_key.curve.key_size)  # type: ignore
-                result["publicKey"]["curve"] = public_key.curve.name  # type: ignore
-            else:
-                result["publicKey"]["size"] = str(public_key.key_size)
-                result["publicKey"]["exponent"] = str(public_key.public_numbers().e)
+@object_to_json.register
+def _(obj: set) -> JsonType:
+    return [object_to_json(value) for value in obj]
 
-        else:
-            result = super().default(obj)
 
-        return result
+@object_to_json.register
+def _(obj: Path) -> JsonType:
+    return str(obj)
+
+
+@object_to_json.register
+def _(obj: TracebackException) -> JsonType:
+    return _traceback_to_str(obj)
+
+
+@object_to_json.register
+def _(obj: TracebackException) -> JsonType:
+    return _traceback_to_str(obj)

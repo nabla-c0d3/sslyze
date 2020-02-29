@@ -91,25 +91,20 @@ def object_to_json(obj: Any) -> JsonType:
 
 # Add the functions for serializing basic types
 @object_to_json.register
-def _(obj: Enum) -> JsonType:
+def _enum(obj: Enum) -> JsonType:
     return obj.name
 
 
 @object_to_json.register
-def _(obj: set) -> JsonType:
+def _set(obj: set) -> JsonType:
     return [object_to_json(value) for value in obj]
 
 
 @object_to_json.register
-def _(obj: Path) -> JsonType:
+def _path(obj: Path) -> JsonType:
     return str(obj)
 
 
 @object_to_json.register
-def _(obj: TracebackException) -> JsonType:
-    return _traceback_to_str(obj)
-
-
-@object_to_json.register
-def _(obj: TracebackException) -> JsonType:
+def _traceback(obj: TracebackException) -> JsonType:
     return _traceback_to_str(obj)

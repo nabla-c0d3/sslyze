@@ -39,7 +39,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
     def _connect_to(self, netloc, soc):
         i = netloc.find(":")
         if i >= 0:
-            host_port = netloc[:i], int(netloc[i + 1 :])
+            host_port = netloc[:i], int(netloc[i + 1 :])  # noqa: E203
         else:
             host_port = netloc, 80
         logging.warning("Connecting to {}".format(host_port))

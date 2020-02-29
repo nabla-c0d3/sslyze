@@ -11,12 +11,12 @@ from sslyze.plugins.certificate_info.certificate_utils import CertificateUtils
 
 
 @json_output.object_to_json.register
-def _(obj: ObjectIdentifier) -> json_output.JsonType:
+def _oid(obj: ObjectIdentifier) -> json_output.JsonType:
     return obj.dotted_string
 
 
 @json_output.object_to_json.register
-def _(obj: x509._Certificate) -> json_output.JsonType:
+def _cert(obj: x509._Certificate) -> json_output.JsonType:
     certificate = obj
     result = {
         # Add general info

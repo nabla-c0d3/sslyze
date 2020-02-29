@@ -92,14 +92,14 @@ class HttpProxySettings:
         return cls(parsed_url.hostname, port, parsed_url.username, parsed_url.password)
 
     @property
-    def proxy_authorization_header(self) -> Optional[bytes]:
-        if self.basic_auth_user and self.basic_auth_password:
-            basic_auth_token = b64encode(
-                f"{quote(self.basic_auth_user)}:{quote(self.basic_auth_password)}".encode("utf-8")
-            )
-            return basic_auth_token
-        else:
-            return None
+    def proxy_authorization_header(self) -> str:
+        if not self.basic_auth_user:
+            raise ValueError("No username configured")
+        if not self.basic_auth_password:
+            raise ValueError("No password configured")
+
+        basic_auth_token = b64encode(f"{quote(self.basic_auth_user)}:{quote(self.basic_auth_password)}".encode("utf-8"))
+        return basic_auth_token.decode("utf-8")
 
 
 @dataclass(frozen=True)

@@ -66,8 +66,10 @@ def _open_socket_for_connection_via_http_proxy(
             sock.send(f"CONNECT {server_location.hostname}:{server_location.port} HTTP/1.1\r\n\r\n".encode("utf-8"))
         else:
             sock.send(
-                f"CONNECT {server_location.hostname}:{server_location.port} HTTP/1.1\r\n"
-                f"Proxy-Authorization: Basic {proxy_authorization_header}\r\n\r\n".encode("utf-8")
+                (
+                    f"CONNECT {server_location.hostname}:{server_location.port} HTTP/1.1\r\n"
+                    f"Proxy-Authorization: Basic {proxy_authorization_header}\r\n\r\n"
+                ).encode("utf-8")
             )
         http_response = HttpResponseParser.parse_from_socket(sock)
     except socket.timeout as e:

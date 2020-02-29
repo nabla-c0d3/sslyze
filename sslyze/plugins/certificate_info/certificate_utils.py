@@ -1,5 +1,5 @@
 import ssl
-from typing import List
+from typing import List, cast
 
 import cryptography
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, rsa
@@ -40,7 +40,8 @@ class CertificateUtils:
         subj_alt_names: List[str] = []
         try:
             san_ext = certificate.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
-            subj_alt_names = san_ext.value.get_values_for_type(DNSName)
+            san_ext_value = cast(cryptography.x509.SubjectAlternativeName, san_ext.value)
+            subj_alt_names = san_ext_value.get_values_for_type(DNSName)
         except ExtensionNotFound:
             pass
         return subj_alt_names
@@ -56,11 +57,7 @@ class CertificateUtils:
             return common_names[0]
         else:
             # Otherwise show the whole field
-            return cls.get_name_as_text(name_field)
-
-    @classmethod
-    def get_name_as_text(cls, name_field: cryptography.x509.Name) -> str:
-        return ", ".join([f"{attr.oid._name}={attr.value}" for attr in name_field])
+            return name_field.rfc4514_string()
 
     @staticmethod
     def get_public_key_sha256(certificate: cryptography.x509.Certificate) -> bytes:

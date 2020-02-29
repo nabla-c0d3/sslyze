@@ -23,8 +23,8 @@ def _cert(obj: x509._Certificate) -> json_output.JsonType:
         "as_pem": obj.public_bytes(Encoding.PEM).decode("ascii"),
         "hpkp_pin": CertificateUtils.get_hpkp_pin(obj),
         # Add some of the fields of the cert
-        "subject": CertificateUtils.get_name_as_text(certificate.subject),
-        "issuer": CertificateUtils.get_name_as_text(certificate.issuer),
+        "subject": certificate.subject.rfc4514_string(),
+        "issuer": certificate.issuer.rfc4514_string(),
         "serialNumber": str(certificate.serial_number),
         "notBefore": certificate.not_valid_before.strftime("%Y-%m-%d %H:%M:%S"),
         "notAfter": certificate.not_valid_after.strftime("%Y-%m-%d %H:%M:%S"),

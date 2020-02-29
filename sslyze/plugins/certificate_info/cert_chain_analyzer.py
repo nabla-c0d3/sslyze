@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from ssl import CertificateError
-from typing import Optional, List
+from typing import Optional, List, cast
 
 import cryptography
 from cryptography.hazmat.primitives import hashes
@@ -56,7 +56,9 @@ class CertificateChainDeploymentAnalyzer:
         # OCSP Must-Staple
         has_ocsp_must_staple = False
         try:
-            tls_feature_ext = leaf_cert.extensions.get_extension_for_oid(ExtensionOID.TLS_FEATURE)
+            tls_feature_ext = cast(
+                cryptography.x509.TLSFeature, leaf_cert.extensions.get_extension_for_oid(ExtensionOID.TLS_FEATURE)
+            )
             for feature_type in tls_feature_ext.value:
                 if feature_type == cryptography.x509.TLSFeatureType.status_request:
                     has_ocsp_must_staple = True

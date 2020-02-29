@@ -32,12 +32,5 @@ class TestCertificateUtils:
             CertificateUtils.get_name_as_short_text(certificate.issuer) == "DigiCert SHA2 Extended Validation Server CA"
         )
 
-    def test_get_name_as_text(self):
-        assert CertificateUtils.get_name_as_text(certificate.issuer) == (
-            "countryName=US, organizationName=DigiCert Inc, "
-            "organizationalUnitName=www.digicert.com, commonName=DigiCert SHA2 Extended "
-            "Validation Server CA"
-        )
-
     def test_get_hpkp_pin(self):
         assert CertificateUtils.get_hpkp_pin(certificate) == "pL1+qb9HTMRZJmuC/bB/ZI9d302BYrrqiVuRyW+DGrU="

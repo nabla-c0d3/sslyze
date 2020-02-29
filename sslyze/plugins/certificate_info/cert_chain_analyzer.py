@@ -81,7 +81,7 @@ class CertificateChainDeploymentAnalyzer:
                 previous_issuer = cert.issuer
             except KeyError:
                 # Missing issuer; this is okay if this is the last cert
-                previous_issuer = "missing issuer {}".format(index)
+                previous_issuer = None
 
         # Check if it is EV - we only have the EV OIDs for Mozilla
         is_leaf_certificate_ev = (
@@ -95,13 +95,13 @@ class CertificateChainDeploymentAnalyzer:
         try:
             # Look for the x509 extension
             sct_ext = leaf_cert.extensions.get_extension_for_oid(ExtensionOID.PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS)
-
             if isinstance(sct_ext.value, cryptography.x509.UnrecognizedExtension):
                 # The version of OpenSSL on the system is too old and can't parse the SCT extension
                 number_of_scts = None
 
             # Count the number of entries in the extension
-            number_of_scts = len(sct_ext.value)
+            sct_ext_value = cast(cryptography.x509.PrecertificateSignedCertificateTimestamps, sct_ext.value)
+            number_of_scts = len(sct_ext_value)
         except ExtensionNotFound:
             pass
 

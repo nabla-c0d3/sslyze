@@ -1,6 +1,8 @@
+import copyreg
 import json
 from dataclasses import asdict
 from pathlib import Path
+from traceback import TracebackException
 from typing import Dict, Any, TextIO, Union, Set
 
 from cryptography.hazmat.backends.openssl import x509
@@ -17,6 +19,18 @@ from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
+# Make TracebackException pickable for dataclasses.asdict() to work on ScanCommandError
+def _traceback_to_str(traceback: TracebackException) -> str:
+    exception_trace_as_str = ""
+    for line in traceback.format(chain=False):
+        exception_trace_as_str += line
+    return exception_trace_as_str
+
+
+copyreg.pickle(TracebackException, _traceback_to_str)
+
+
+# TODO: Crashes with certinfo
 class JsonOutputGenerator(OutputGenerator):
     def __init__(self, file_to: TextIO) -> None:
         super().__init__(file_to)
@@ -44,28 +58,19 @@ class JsonOutputGenerator(OutputGenerator):
         pass
 
     def server_scan_completed(self, server_scan_result: ServerScanResult) -> None:
-        final_dict = {}
-
-        # The asdict() function does not like TracebackException objects; fix that by converting them to strings
-        final_errors_dict = {}
-        for scan_command, error in server_scan_result.scan_commands_errors.items():
-            exception_trace_as_str = ""
-            for line in error.exception_trace.format(chain=False):
-                exception_trace_as_str += line
-            final_errors_dict[scan_command.name] = {"reason": error.reason, "exception_trace": exception_trace_as_str}
-        final_dict["scan_commands_errors"] = final_errors_dict
+        result_as_dict = asdict(server_scan_result)
 
         # The JSON encoder does not like dictionaries with enums as keys
         # Fix that by converting enum keys into their enum names
-        for dict_field in ["scan_commands_results", "scan_commands_extra_arguments"]:
-            final_dict[dict_field] = {
-                scan_command.name: asdict(value)
-                for scan_command, value in getattr(server_scan_result, dict_field).items()
+        for dict_field in [
+            "scan_commands_results", "scan_commands_extra_arguments", "scan_commands_errors"
+        ]:
+            result_as_dict[dict_field] = {
+                scan_command.name: value
+                for scan_command, value in result_as_dict[dict_field].items()
             }
 
-        # Copy the other fields
-        final_dict["server_info"] = asdict(server_scan_result.server_info)
-        self._json_dict["accepted_servers"].append(final_dict)
+        self._json_dict["accepted_servers"].append(result_as_dict)
 
     def scans_completed(self, total_scan_time: float) -> None:
         self._json_dict["total_scan_time"] = str(total_scan_time)
@@ -75,6 +80,7 @@ class JsonOutputGenerator(OutputGenerator):
 
 # TODO(AD) Remove and move to plugins
 class _CustomJsonEncoder(json.JSONEncoder):
+
     def default(self, obj: Any) -> Union[bool, int, float, str, Dict[str, Any]]:
         result: Union[bool, int, float, str, Dict[str, Any]]
 
@@ -86,6 +92,9 @@ class _CustomJsonEncoder(json.JSONEncoder):
 
         elif isinstance(obj, Path):
             result = str(obj)
+
+        elif isinstance(obj, TracebackException):
+            result = _traceback_to_str(obj)
 
         elif isinstance(obj, ObjectIdentifier):
             result = obj.dotted_string
@@ -120,6 +129,6 @@ class _CustomJsonEncoder(json.JSONEncoder):
                 result["publicKey"]["exponent"] = str(public_key.public_numbers().e)
 
         else:
-            result = json.JSONEncoder.default(self, obj)
+            result = super().default(obj)
 
         return result

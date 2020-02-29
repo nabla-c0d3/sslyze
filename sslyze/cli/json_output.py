@@ -47,12 +47,9 @@ class JsonOutputGenerator(OutputGenerator):
 
         # The JSON encoder does not like dictionaries with enums as keys
         # Fix that by converting enum keys into their enum names
-        for dict_field in [
-            "scan_commands_results", "scan_commands_extra_arguments", "scan_commands_errors"
-        ]:
+        for dict_field in ["scan_commands_results", "scan_commands_extra_arguments", "scan_commands_errors"]:
             result_as_dict[dict_field] = {
-                scan_command.name: value
-                for scan_command, value in result_as_dict[dict_field].items()
+                scan_command.name: value for scan_command, value in result_as_dict[dict_field].items()
             }
 
         self._json_dict["accepted_servers"].append(result_as_dict)
@@ -79,7 +76,6 @@ JsonType = Union[bool, int, float, str, List[Any], Dict[str, Any]]
 
 
 class _CustomJsonEncoder(json.JSONEncoder):
-
     def default(self, obj: Any) -> JsonType:
         return object_to_json(obj)
 

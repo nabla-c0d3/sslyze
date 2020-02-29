@@ -6,8 +6,7 @@ from dataclasses import dataclass
 from enum import unique, Enum
 from typing import Optional, List, ClassVar, Type, Dict
 
-from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, \
-    ScanCommandExtraArguments
+from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -51,17 +50,11 @@ class _MockPluginImplementation(ScanCommandImplementation):
 
     @classmethod
     def scan_jobs_for_scan_command(
-            cls,
-            server_info: ServerConnectivityInfo,
-            extra_arguments: Optional[MockPlugin1ExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[MockPlugin1ExtraArguments] = None
     ) -> List[ScanJob]:
         # Create a bunch of "do nothing" jobs to imitate a real plugin
         scan_jobs = [
-            ScanJob(
-                function_to_call=_do_nothing,
-                function_arguments=["test", 12],
-            )
-            for _ in range(cls._scan_jobs_count)
+            ScanJob(function_to_call=_do_nothing, function_arguments=["test", 12]) for _ in range(cls._scan_jobs_count)
         ]
         return scan_jobs
 
@@ -72,9 +65,7 @@ class _MockPluginImplementation(ScanCommandImplementation):
         if len(completed_scan_jobs) != cls._scan_jobs_count:
             raise AssertionError("Did not receive all the scan jobs that needed to be completed")
 
-        return cls.result_cls(
-            results_field=[future.result() for future in completed_scan_jobs],
-        )
+        return cls.result_cls(results_field=[future.result() for future in completed_scan_jobs])
 
 
 class MockPlugin1Implementation(_MockPluginImplementation):
@@ -90,9 +81,7 @@ class _MockPluginExceptionWhenSchedulingJobsImplementation(_MockPluginImplementa
 
     @classmethod
     def scan_jobs_for_scan_command(
-            cls,
-            server_info: ServerConnectivityInfo,
-            extra_arguments: Optional[MockPlugin1ExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[MockPlugin1ExtraArguments] = None
     ) -> List[ScanJob]:
         raise RuntimeError("Ran into a problem when creating the scan jobs")
 

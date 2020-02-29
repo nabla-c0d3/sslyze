@@ -5,12 +5,15 @@ from sslyze.cli.json_output import JsonOutputGenerator
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.scanner import ScanCommandError, ScanCommandErrorReasonEnum
-from tests.factories import ParsedCommandLineFactory, ConnectionToServerFailedFactory, ServerScanResultFactory, \
-    TracebackExceptionFactory
+from tests.factories import (
+    ParsedCommandLineFactory,
+    ConnectionToServerFailedFactory,
+    ServerScanResultFactory,
+    TracebackExceptionFactory,
+)
 
 
 class TestJsonOutputGenerator:
-
     def test_command_line_parsed(self):
         # Given a command line used to run sslyze
         parsed_cmd_line = ParsedCommandLineFactory.create()
@@ -53,9 +56,7 @@ class TestJsonOutputGenerator:
 
     def test_server_scan_completed(self):
         # Given a completed scan for a server
-        scan_results = {
-            ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)
-        }
+        scan_results = {ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
         scan_result = ServerScanResultFactory.create(scan_commands_results=scan_results)
 
         # When generating the console output for this server scan
@@ -76,8 +77,7 @@ class TestJsonOutputGenerator:
         error_trace = TracebackExceptionFactory.create()
         scan_errors = {
             ScanCommandEnum.TLS_COMPRESSION: ScanCommandError(
-                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
-                exception_trace=error_trace,
+                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE, exception_trace=error_trace
             )
         }
         scan_result = ServerScanResultFactory.create(scan_commands_errors=scan_errors)

@@ -7,12 +7,10 @@ from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, Lega
 
 
 class TestClientAuthentication:
-
     def test_optional_client_authentication(self):
         # Given a server that requires a client certificate
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            hostname='client.badssl.com',
-            port=443,
+            hostname="client.badssl.com", port=443
         )
 
         # When testing connectivity against it
@@ -33,9 +31,7 @@ class TestClientAuthenticationWithLocalServer:
         # Given a server that supports optional client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.OPTIONAL) as server:
             server_location = ServerNetworkLocationViaDirectConnection(
-                hostname=server.hostname,
-                port=server.port,
-                ip_address=server.ip_address,
+                hostname=server.hostname, port=server.port, ip_address=server.ip_address
             )
             server_info = ServerConnectivityTester().perform(server_location)
 
@@ -46,9 +42,7 @@ class TestClientAuthenticationWithLocalServer:
         # Given a TLS 1.2 server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             server_location = ServerNetworkLocationViaDirectConnection(
-                hostname=server.hostname,
-                port=server.port,
-                ip_address=server.ip_address,
+                hostname=server.hostname, port=server.port, ip_address=server.ip_address
             )
 
             server_info = ServerConnectivityTester().perform(server_location)
@@ -61,9 +55,7 @@ class TestClientAuthenticationWithLocalServer:
         # Given a TLS 1.3 server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             server_location = ServerNetworkLocationViaDirectConnection(
-                hostname=server.hostname,
-                port=server.port,
-                ip_address=server.ip_address,
+                hostname=server.hostname, port=server.port, ip_address=server.ip_address
             )
 
             server_info = ServerConnectivityTester().perform(server_location)

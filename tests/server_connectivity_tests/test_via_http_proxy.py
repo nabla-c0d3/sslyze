@@ -3,15 +3,16 @@ import threading
 import pytest
 
 from sslyze.server_connectivity import ServerConnectivityTester
-from sslyze.server_setting import ServerNetworkLocationViaHttpProxy, \
-    HttpProxySettings
-from sslyze.connection_helpers.errors import ConnectionToHttpProxyTimedOut, \
-    ConnectionToHttpProxyFailed, HttpProxyRejectedConnection
+from sslyze.server_setting import ServerNetworkLocationViaHttpProxy, HttpProxySettings
+from sslyze.connection_helpers.errors import (
+    ConnectionToHttpProxyTimedOut,
+    ConnectionToHttpProxyFailed,
+    HttpProxyRejectedConnection,
+)
 from tests.server_connectivity_tests.tiny_proxy import ThreadingHTTPServer, ProxyHandler
 
 
 class TestServerConnectivityTesterWithProxy:
-
     def test_via_http_proxy(self):
         # Given an HTTP proxy
         proxy_port = 8123
@@ -24,7 +25,7 @@ class TestServerConnectivityTesterWithProxy:
             hostname="www.google.com",
             port=443,
             # Configured with this proxy
-            http_proxy_settings=HttpProxySettings("localhost", proxy_port)
+            http_proxy_settings=HttpProxySettings("localhost", proxy_port),
         )
 
         # When testing connectivity
@@ -45,7 +46,7 @@ class TestServerConnectivityTesterWithProxy:
             hostname="www.google.com",
             port=443,
             # Configured with a proxy that cannot be looked up via DNS
-            http_proxy_settings=HttpProxySettings("notarealdomain.not.real.notreal.not", 443)
+            http_proxy_settings=HttpProxySettings("notarealdomain.not.real.notreal.not", 443),
         )
 
         # When testing connectivity, it fails with the right error
@@ -58,7 +59,7 @@ class TestServerConnectivityTesterWithProxy:
             hostname="www.google.com",
             port=443,
             # Configured with a proxy that will time out
-            http_proxy_settings=HttpProxySettings("www.hotmail.com", 1234)
+            http_proxy_settings=HttpProxySettings("www.hotmail.com", 1234),
         )
 
         # When testing connectivity, it fails with the right error
@@ -71,7 +72,7 @@ class TestServerConnectivityTesterWithProxy:
             hostname="www.google.com",
             port=443,
             # Configured with a proxy that's offline
-            http_proxy_settings=HttpProxySettings("localhost", 1234)
+            http_proxy_settings=HttpProxySettings("localhost", 1234),
         )
 
         # When testing connectivity, it fails with the right error
@@ -84,7 +85,7 @@ class TestServerConnectivityTesterWithProxy:
             hostname="www.google.com",
             port=443,
             # Configured with a proxy that is going to reject the HTTP CONNECT request
-            http_proxy_settings=HttpProxySettings("www.hotmail.com", 443)
+            http_proxy_settings=HttpProxySettings("www.hotmail.com", 443),
         )
 
         # When testing connectivity, it fails with the right error

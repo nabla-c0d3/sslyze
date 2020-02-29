@@ -1,15 +1,21 @@
-from sslyze.plugins.session_resumption.core import SessionResumptionSupportImplementation, \
-    SessionResumptionSupportScanResult, SessionResumptionRateImplementation, SessionResumptionRateScanResult
+from sslyze.plugins.session_resumption.core import (
+    SessionResumptionSupportImplementation,
+    SessionResumptionSupportScanResult,
+    SessionResumptionRateImplementation,
+    SessionResumptionRateScanResult,
+)
 from sslyze.server_connectivity import ServerConnectivityTester
 
-from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkConfiguration, \
-    ClientAuthenticationCredentials
+from sslyze.server_setting import (
+    ServerNetworkLocationViaDirectConnection,
+    ServerNetworkConfiguration,
+    ClientAuthenticationCredentials,
+)
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
 
 
 class TestSessionResumptionSupport:
-
     def test(self):
         # Given a server that supports session resumption with both TLS tickets and session IDs
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.facebook.com", 443)
@@ -32,9 +38,7 @@ class TestSessionResumptionSupport:
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate
             server_location = ServerNetworkLocationViaDirectConnection(
-                hostname=server.hostname,
-                ip_address=server.ip_address,
-                port=server.port
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
             server_info = ServerConnectivityTester().perform(server_location)
 
@@ -47,16 +51,13 @@ class TestSessionResumptionSupport:
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             server_location = ServerNetworkLocationViaDirectConnection(
-                hostname=server.hostname,
-                ip_address=server.ip_address,
-                port=server.port
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
             # And sslyze provides a client certificate
             network_config = ServerNetworkConfiguration(
                 tls_server_name_indication=server.hostname,
                 tls_client_auth_credentials=ClientAuthenticationCredentials(
-                    certificate_chain_path=server.get_client_certificate_path(),
-                    key_path=server.get_client_key_path(),
+                    certificate_chain_path=server.get_client_certificate_path(), key_path=server.get_client_key_path()
                 ),
             )
             server_info = ServerConnectivityTester().perform(server_location, network_config)
@@ -69,7 +70,6 @@ class TestSessionResumptionSupport:
 
 
 class TestSessionResumptionRate:
-
     def test(self):
         # Given a server that supports session resumption
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)

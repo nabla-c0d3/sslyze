@@ -2,7 +2,6 @@ from sslyze.cli.command_line.server_string_parser import CommandLineServerString
 
 
 class TestCommandLineServerStringParser:
-
     def test(self):
         server_string = "www.google.com"
         hostname, ip_address, port = CommandLineServerStringParser.parse_server_string(server_string)

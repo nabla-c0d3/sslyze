@@ -6,19 +6,21 @@ import pytest
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.scanner import Scanner, ScanCommandErrorReasonEnum, ServerScanRequest
 from tests.factories import ServerConnectivityInfoFactory
-from tests.mock_plugins import MockPlugin1ScanResult, MockPlugin2ScanResult, MockPlugin1ExtraArguments, \
-    ScanCommandEnumForTests
+from tests.mock_plugins import (
+    MockPlugin1ScanResult,
+    MockPlugin2ScanResult,
+    MockPlugin1ExtraArguments,
+    ScanCommandEnumForTests,
+)
 
 
 class TestScanCommands:
-
     def test_all_commands_are_implemented(self):
         for scan_command in ScanCommandEnum:
             assert scan_command.get_implementation_cls
 
 
 class TestServerScanRequest:
-
     def test_with_extra_arguments_but_no_corresponding_scan_command(self):
         # When trying to queue a scan for a server
         with pytest.raises(ValueError):
@@ -35,7 +37,6 @@ class TestServerScanRequest:
 
 
 class TestScanner:
-
     def test(self):
         # Given a server to scan
         server_scan = ServerScanRequest(
@@ -69,12 +70,10 @@ class TestScanner:
 
         # When trying to queue two scans for this server
         server_scan1 = ServerScanRequest(
-            server_info=server_info,
-            scan_commands={ScanCommandEnumForTests.MOCK_COMMAND_1},
+            server_info=server_info, scan_commands={ScanCommandEnumForTests.MOCK_COMMAND_1}
         )
         server_scan2 = ServerScanRequest(
-            server_info=server_info,
-            scan_commands={ScanCommandEnumForTests.MOCK_COMMAND_2},
+            server_info=server_info, scan_commands={ScanCommandEnumForTests.MOCK_COMMAND_2}
         )
         scanner = Scanner()
         scanner.queue_scan(server_scan1)
@@ -91,7 +90,7 @@ class TestScanner:
             # With an extra argument for one command
             scan_commands_extra_arguments={
                 ScanCommandEnumForTests.MOCK_COMMAND_1: MockPlugin1ExtraArguments(extra_field="test")
-            }
+            },
         )
 
         # When queuing the scan
@@ -114,9 +113,8 @@ class TestScanner:
             server_info=ServerConnectivityInfoFactory.create(),
             scan_commands={
                 ScanCommandEnumForTests.MOCK_COMMAND_1,
-
                 # And one of the scan commands will trigger an exception when scheduling scan jobs
-                ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS
+                ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS,
             },
         )
 
@@ -148,9 +146,8 @@ class TestScanner:
             server_info=ServerConnectivityInfoFactory.create(),
             scan_commands={
                 ScanCommandEnumForTests.MOCK_COMMAND_1,
-
                 # And one of the scan commands will trigger an exception when processing the completed scan jobs
-                ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS
+                ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS,
             },
         )
 
@@ -178,14 +175,16 @@ class TestScanner:
 
 
 class TestScannerInternals:
-
     def test(self):
         # Given a lot of servers to scan
         total_server_scans_count = 100
-        server_scans = [ServerScanRequest(
-            server_info=ServerConnectivityInfoFactory.create(),
-            scan_commands={ScanCommandEnumForTests.MOCK_COMMAND_1, ScanCommandEnumForTests.MOCK_COMMAND_2},
-        ) for _ in range(total_server_scans_count)]
+        server_scans = [
+            ServerScanRequest(
+                server_info=ServerConnectivityInfoFactory.create(),
+                scan_commands={ScanCommandEnumForTests.MOCK_COMMAND_1, ScanCommandEnumForTests.MOCK_COMMAND_2},
+            )
+            for _ in range(total_server_scans_count)
+        ]
 
         # And a scanner with specifically chosen network settings
         per_server_concurrent_connections_limit = 4
@@ -214,10 +213,13 @@ class TestScannerInternals:
     def test_emergency_shutdown(self):
         # Given a lot of servers to scan
         total_server_scans_count = 100
-        server_scans = [ServerScanRequest(
-            server_info=ServerConnectivityInfoFactory.create(),
-            scan_commands={ScanCommandEnumForTests.MOCK_COMMAND_1, ScanCommandEnumForTests.MOCK_COMMAND_2},
-        ) for _ in range(total_server_scans_count)]
+        server_scans = [
+            ServerScanRequest(
+                server_info=ServerConnectivityInfoFactory.create(),
+                scan_commands={ScanCommandEnumForTests.MOCK_COMMAND_1, ScanCommandEnumForTests.MOCK_COMMAND_2},
+            )
+            for _ in range(total_server_scans_count)
+        ]
 
         # And the scans get queued
         scanner = Scanner()

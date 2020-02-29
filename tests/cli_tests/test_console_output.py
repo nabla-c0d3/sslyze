@@ -7,12 +7,17 @@ from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.scanner import ScanCommandError, ScanCommandErrorReasonEnum
 from sslyze.server_connectivity import ServerTlsProbingResult, ClientAuthRequirementEnum
-from tests.factories import ServerScanResultFactory, TracebackExceptionFactory, ServerConnectivityInfoFactory, \
-    ServerNetworkLocationViaHttpProxyFactory, ParsedCommandLineFactory, ConnectionToServerFailedFactory
+from tests.factories import (
+    ServerScanResultFactory,
+    TracebackExceptionFactory,
+    ServerConnectivityInfoFactory,
+    ServerNetworkLocationViaHttpProxyFactory,
+    ParsedCommandLineFactory,
+    ConnectionToServerFailedFactory,
+)
 
 
 class TestConsoleOutputGenerator:
-
     def test_command_line_parsed(self):
         # Given a command line used to run sslyze
         parsed_cmd_line = ParsedCommandLineFactory.create()
@@ -68,7 +73,7 @@ class TestConsoleOutputGenerator:
                 highest_tls_version_supported=OpenSslVersionEnum.TLSV1_2,
                 cipher_suite_supported="AES",
                 # And the server requires client authentication
-                client_auth_requirement=ClientAuthRequirementEnum.REQUIRED
+                client_auth_requirement=ClientAuthRequirementEnum.REQUIRED,
             )
         )
 
@@ -80,7 +85,7 @@ class TestConsoleOutputGenerator:
 
         # It succeeds and the fact that the server requires client auth was displayed
         assert final_output
-        assert 'Server REQUIRED client authentication' in final_output
+        assert "Server REQUIRED client authentication" in final_output
 
     def test_server_connectivity_test_succeeded_with_http_tunneling(self):
         # Given a server to scan to which sslyze was able to connect
@@ -97,7 +102,7 @@ class TestConsoleOutputGenerator:
 
         # It succeeds and the fact that an HTTP proxy was used was displayed
         assert final_output
-        assert 'proxy' in final_output
+        assert "proxy" in final_output
 
     def test_scans_started(self):
         with StringIO() as file_out:
@@ -108,9 +113,7 @@ class TestConsoleOutputGenerator:
 
     def test_server_scan_completed(self):
         # Given a completed scan for a server
-        scan_results = {
-            ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)
-        }
+        scan_results = {ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
         scan_result = ServerScanResultFactory.create(scan_commands_results=scan_results)
 
         # When generating the console output for this server scan
@@ -129,9 +132,7 @@ class TestConsoleOutputGenerator:
             # And sslyze connected to the server via an HTTP proxy
             server_location=ServerNetworkLocationViaHttpProxyFactory.create()
         )
-        scan_results = {
-            ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)
-        }
+        scan_results = {ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
         scan_result = ServerScanResultFactory.create(server_info=server_info, scan_commands_results=scan_results)
 
         # When generating the console output for this server scan
@@ -150,8 +151,7 @@ class TestConsoleOutputGenerator:
         error_trace = TracebackExceptionFactory.create()
         scan_errors = {
             ScanCommandEnum.TLS_COMPRESSION: ScanCommandError(
-                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
-                exception_trace=error_trace,
+                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE, exception_trace=error_trace
             )
         }
         scan_result = ServerScanResultFactory.create(scan_commands_errors=scan_errors)

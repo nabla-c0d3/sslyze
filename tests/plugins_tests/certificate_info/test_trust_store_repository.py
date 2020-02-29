@@ -2,7 +2,6 @@ from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import 
 
 
 class TestTrustStoresRepository:
-
     def test_get_default(self):
         repo = TrustStoresRepository.get_default()
         assert repo.get_main_store()

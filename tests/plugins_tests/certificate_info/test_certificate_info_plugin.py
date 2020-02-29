@@ -14,7 +14,6 @@ import pytest
 
 
 class TestCertificateInfoPlugin:
-
     def test_ca_file_bad_file(self):
         # Given a server to scan
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
@@ -22,9 +21,9 @@ class TestCertificateInfoPlugin:
 
         # When trying to enable a custom CA file but the path is wrong, it fails
         with pytest.raises(ValueError):
-            CertificateInfoImplementation.perform(server_info, CertificateInfoExtraArguments(
-                custom_ca_file=Path("doesntexist")
-            ))
+            CertificateInfoImplementation.perform(
+                server_info, CertificateInfoExtraArguments(custom_ca_file=Path("doesntexist"))
+            )
 
     def test_ca_file(self):
         # Given a server to scan
@@ -32,12 +31,12 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # And a valid path to a custom CA file
-        ca_file_path = Path(__file__).parent / '..' / '..' / 'certificates' / 'wildcard-self-signed.pem'
+        ca_file_path = Path(__file__).parent / ".." / ".." / "certificates" / "wildcard-self-signed.pem"
 
         # When running the scan with the custom CA file enabled
-        plugin_result = CertificateInfoImplementation.perform(server_info, CertificateInfoExtraArguments(
-            custom_ca_file=ca_file_path
-        ))
+        plugin_result = CertificateInfoImplementation.perform(
+            server_info, CertificateInfoExtraArguments(custom_ca_file=ca_file_path)
+        )
 
         # It succeeds
         assert len(plugin_result.path_validation_results) >= 6
@@ -133,9 +132,7 @@ class TestCertificateInfoPlugin:
 
     def test_sha256_chain(self):
         # Given a server to scan that has a SHA256-signed certificate
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            "sha256.badssl.com", 443
-        )
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("sha256.badssl.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan
@@ -146,9 +143,7 @@ class TestCertificateInfoPlugin:
 
     def test_ecdsa_certificate(self):
         # Given a server to scan that has an ECDSA certificate
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            "www.cloudflare.com", 443
-        )
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.cloudflare.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
@@ -156,9 +151,7 @@ class TestCertificateInfoPlugin:
 
     def test_chain_with_anchor(self):
         # Given a server to scan that has its anchor certificate returned in its chain
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            "www.verizon.com", 443
-        )
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.verizon.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
@@ -180,7 +173,7 @@ class TestCertificateInfoPlugin:
         # And the chain was correctly identified as valid with the Microsoft store
         found_microsoft_store = False
         for validation_result in plugin_result.path_validation_results:
-            if validation_result.trust_store.name == 'Windows':
+            if validation_result.trust_store.name == "Windows":
                 found_microsoft_store = True
                 assert validation_result.was_validation_successful
                 break
@@ -200,9 +193,7 @@ class TestCertificateInfoPlugin:
 
     def test_certificate_with_no_subject(self):
         # Given a server to scan that has a certificate with no Subject
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            "no-subject.badssl.com", 443
-        )
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("no-subject.badssl.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
@@ -212,9 +203,7 @@ class TestCertificateInfoPlugin:
 
     def test_certificate_with_scts(self):
         # Given a server to scan that has a certificate with SCTS
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            "www.apple.com", 443
-        )
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.apple.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
@@ -229,9 +218,7 @@ class TestCertificateInfoPlugin:
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
             server_location = ServerNetworkLocationViaDirectConnection(
-                hostname=server.hostname,
-                port=server.port,
-                ip_address=server.ip_address,
+                hostname=server.hostname, port=server.port, ip_address=server.ip_address
             )
             server_info = ServerConnectivityTester().perform(server_location)
 
@@ -241,7 +228,6 @@ class TestCertificateInfoPlugin:
 
 
 class SymantecDistructTestCase:
-
     def test_good(self):
         # Given a certificate chain unaffected by the Symantec deprecation
         cert_chain = [
@@ -271,8 +257,10 @@ t0IQ6jGEq2FeTREHAqcP0vRah5+GBwRDrUURBZOhE0AOuzuNhIANAd6STqRJdg3w
 R7vu2UObYzI35CU=
 -----END CERTIFICATE-----
 
-                """.encode(encoding='ascii'),
-                default_backend()
+                """.encode(
+                    encoding="ascii"
+                ),
+                default_backend(),
             ),
             # Google Internet Authority G3
             load_pem_x509_certificate(
@@ -302,8 +290,10 @@ FIwsIONGl1p3A8CgxkqI/UAih3JaGOqcpcdaCIzkBaR9uYQ1X4k2Vg5APRLouzVy
 7a8IVk6wuy6pm+T7HT4LY8ibS5FEZlfAFLSW8NwsVz9SBK2Vqn1N0PIMn5xA6NZV
 c7o835DLAFshEWfC7TIe3g==
 -----END CERTIFICATE-----
-                """.encode(encoding='ascii'),
-                default_backend()
+                """.encode(
+                    encoding="ascii"
+                ),
+                default_backend(),
             ),
             # GlobalSign Root CA
             load_pem_x509_certificate(
@@ -329,8 +319,10 @@ ot+3i9DAgBkcRcAtjOj4LaR0VknFBbVPFd5uRHg5h6h+u/N5GJG79G+dwfCMNYxd
 AfvDbbnvRG15RjF+Cv6pgsH/76tuIMRQyV+dTZsXjAzlAcmgQWpzU/qlULRuJQ/7
 TBj0/VLZjmmx6BEP3ojY+x1J96relc8geMJgEtslQIxq/H5COEBkEveegeGTLg==
 -----END CERTIFICATE-----
-                """.encode(encoding='ascii'),
-                default_backend()
+                """.encode(
+                    encoding="ascii"
+                ),
+                default_backend(),
             ),
         ]
 
@@ -398,8 +390,10 @@ EyCN38LY+4mzkddqNV4hm6+ON/7q9WG2zVoxFzDX8Kv/FogP4ivspFJUWtF5xZ2X
 QzQuVEXo8FVfMP9wqDEQe1IeOePcYMFEBt4/evEneUvEX2MNLc+wMt8qf44pxryp
 8NIYplnoidK7+W1YRQcFUhx/3xbyoBB2fEHCsvyYGw==
 -----END CERTIFICATE-----
-                """.encode(encoding='ascii'),
-                default_backend()
+                """.encode(
+                    encoding="ascii"
+                ),
+                default_backend(),
             ),
             # GeoTrust DV SSL
             load_pem_x509_certificate(
@@ -428,16 +422,17 @@ BXqgMgkTThCBKB+cA2K89AG1KYNGB7nnuF3I6dHdrTv4NNvB0ZWpkRjtPCw3EU3M
 SGGFixD0wYi/f1+KwtfNK5RcHzRKCK/rromoSHVVlR27wJoBufQDIj7U5lIwDWe5
 wJH9LUwwjr2MpQSRu6Srfw/Yb/BmAMmjXPWwj4PmnFrmtrnFvL7kAg==
 -----END CERTIFICATE-----
-                """.encode(encoding='ascii'),
-                default_backend()
+                """.encode(
+                    encoding="ascii"
+                ),
+                default_backend(),
             ),
             # GeoTrust Global CA
-            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding='ascii'),  default_backend()),
+            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding="ascii"), default_backend()),
         ]
 
         # The class to check for Symantec CAs returns the right result
-        assert SymantecDistructTester.get_distrust_timeline(cert_chain) == \
-            SymantecDistrustTimelineEnum.MARCH_2018
+        assert SymantecDistructTester.get_distrust_timeline(cert_chain) == SymantecDistrustTimelineEnum.MARCH_2018
 
     def test_september_2018(self):
         # Given a certificate chain issued by a Symantec CA that will be distrusted in September 2018
@@ -474,8 +469,10 @@ zmYtNpRMMQqbQvvrXftAohq/W90rK42Ss8kYIf8FsVTa5VaqXW7lIh/3JmBNLZ1D
 Aw5rmaztWlYO64YS7z4am5d9h2rrF1rfgv9Mc3caxAUO3sJZDRyhYaj+7BUgv8HR
 otJHkjr2ASPp31Yf
 -----END CERTIFICATE-----
-                """.encode(encoding='ascii'),
-                default_backend()
+                """.encode(
+                    encoding="ascii"
+                ),
+                default_backend(),
             ),
             # RapidSSL SHA 256
             load_pem_x509_certificate(
@@ -505,13 +502,14 @@ BBZqAOv5jUOB8FChH6bKOvMoPF9RrNcKRXdLDlJiG9g4UaCSLT+Qbsh+QJ8gRhVd
 Px8G8k/Ll6BKWcZ40egDuYVtLLrhX7atKz4lecWLVtXjCYDqwSfC2Q7sRwrp0Mr8
 2A==
 -----END CERTIFICATE-----
-                """.encode(encoding='ascii'),
-                default_backend()
+                """.encode(
+                    encoding="ascii"
+                ),
+                default_backend(),
             ),
             # GeoTrust Global CA
-            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding='ascii'), default_backend()),
+            load_pem_x509_certificate(self._GEOTRUST_GLOBAL_CA_CERT.encode(encoding="ascii"), default_backend()),
         ]
 
         # The class to check for Symantec CAs returns the right result
-        assert SymantecDistructTester.get_distrust_timeline(cert_chain) == \
-            SymantecDistrustTimelineEnum.SEPTEMBER_2018
+        assert SymantecDistructTester.get_distrust_timeline(cert_chain) == SymantecDistrustTimelineEnum.SEPTEMBER_2018

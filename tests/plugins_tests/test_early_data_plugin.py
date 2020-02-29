@@ -6,15 +6,12 @@ from tests.openssl_server import ModernOpenSslServer, LegacyOpenSslServer
 
 
 class TestEarlyDataPlugin:
-
     @can_only_run_on_linux_64
     def test_early_data_enabled(self):
         # Given a server to scan that supports early data
         with ModernOpenSslServer(max_early_data=256) as server:
             server_location = ServerNetworkLocationViaDirectConnection(
-                hostname=server.hostname,
-                ip_address=server.ip_address,
-                port=server.port
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
             server_info = ServerConnectivityTester().perform(server_location)
 
@@ -29,9 +26,7 @@ class TestEarlyDataPlugin:
         # Given a server to scan that does NOT support early data because it does not support TLS 1.3
         with LegacyOpenSslServer() as server:
             server_location = ServerNetworkLocationViaDirectConnection(
-                hostname=server.hostname,
-                ip_address=server.ip_address,
-                port=server.port
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
             server_info = ServerConnectivityTester().perform(server_location)
 
@@ -46,9 +41,7 @@ class TestEarlyDataPlugin:
         # Given a server to scan that does NOT support early data because it it is disabled
         with ModernOpenSslServer(max_early_data=None) as server:
             server_location = ServerNetworkLocationViaDirectConnection(
-                hostname=server.hostname,
-                ip_address=server.ip_address,
-                port=server.port
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
             server_info = ServerConnectivityTester().perform(server_location)
 

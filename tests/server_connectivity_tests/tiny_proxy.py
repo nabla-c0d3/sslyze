@@ -25,11 +25,11 @@ class ProxyHandler(BaseHTTPRequestHandler):
     __base_handle = __base.handle
 
     server_version = "TinyHTTPProxy/" + __version__
-    rbufsize = 0                        # self.rfile Be unbuffered
+    rbufsize = 0  # self.rfile Be unbuffered
 
     def handle(self):
         (ip, port) = self.client_address
-        if hasattr(self, 'allowed_clients') and ip not in self.allowed_clients:
+        if hasattr(self, "allowed_clients") and ip not in self.allowed_clients:
             self.raw_requestline = self.rfile.readline()
             if self.parse_request():
                 self.send_error(403)
@@ -37,12 +37,12 @@ class ProxyHandler(BaseHTTPRequestHandler):
             self.__base_handle()
 
     def _connect_to(self, netloc, soc):
-        i = netloc.find(':')
+        i = netloc.find(":")
         if i >= 0:
-            host_port = netloc[:i], int(netloc[i+1:])
+            host_port = netloc[:i], int(netloc[i + 1 :])
         else:
             host_port = netloc, 80
-        logging.warning('Connecting to {}'.format(host_port))
+        logging.warning("Connecting to {}".format(host_port))
         try:
             soc.connect(host_port)
         except socket.error as arg:
@@ -54,7 +54,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
             return 0
         return 1
 
-    RESPONSE_FORMAT = '{protocol} 200 Connection established\r\nProxy-agent: {version}\r\n\r\n'
+    RESPONSE_FORMAT = "{protocol} 200 Connection established\r\nProxy-agent: {version}\r\n\r\n"
 
     def do_CONNECT(self):
         soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -62,35 +62,33 @@ class ProxyHandler(BaseHTTPRequestHandler):
             if self._connect_to(self.path, soc):
                 self.log_request(200)
                 response = self.RESPONSE_FORMAT.format(protocol=self.protocol_version, version=self.version_string())
-                self.wfile.write(response.encode('ascii'))
+                self.wfile.write(response.encode("ascii"))
                 self._read_write(soc, 300)
         finally:
-            logging.warning('Finished do_CONNECT()')
+            logging.warning("Finished do_CONNECT()")
             soc.close()
             self.connection.close()
 
     def do_GET(self):
-        (scm, netloc, path, params, query, fragment) = urlparse(
-            self.path, 'http')
-        if scm != 'http' or fragment or not netloc:
+        (scm, netloc, path, params, query, fragment) = urlparse(self.path, "http")
+        if scm != "http" or fragment or not netloc:
             self.send_error(400, "bad url %s" % self.path)
             return
         soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             if self._connect_to(netloc, soc):
                 self.log_request()
-                soc.send("%s %s %s\r\n" % (
-                    self.command,
-                    urlunparse(('', '', path, params, query, '')),
-                    self.request_version))
-                self.headers['Connection'] = 'close'
-                del self.headers['Proxy-Connection']
+                soc.send(
+                    "%s %s %s\r\n" % (self.command, urlunparse(("", "", path, params, query, "")), self.request_version)
+                )
+                self.headers["Connection"] = "close"
+                del self.headers["Proxy-Connection"]
                 for key_val in self.headers.items():
                     soc.send("%s: %s\r\n" % key_val)
                 soc.send("\r\n")
                 self._read_write(soc)
         finally:
-            logging.warning('Finished do_GET()')
+            logging.warning("Finished do_GET()")
             soc.close()
             self.connection.close()
 
@@ -114,7 +112,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                         out.send(data)
                         count = 0
             else:
-                logging.warning('Idle')
+                logging.warning("Idle")
             if count == max_idling:
                 break
 
@@ -128,9 +126,10 @@ class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from sys import argv
-    if argv[1:] and argv[1] in ('-h', '--help'):
+
+    if argv[1:] and argv[1] in ("-h", "--help"):
         print(argv[0], "[port [allowed_client_name ...]]")
     else:
         if argv[2:]:
@@ -138,9 +137,9 @@ if __name__ == '__main__':
             for name in argv[2:]:
                 client = socket.gethostbyname(name)
                 allowed.append(client)
-                logging.warning('Accepted: {} ({})'.format(client, name))
+                logging.warning("Accepted: {} ({})".format(client, name))
             ProxyHandler.allowed_clients = allowed
             del argv[2:]
         else:
-            logging.warning('Waiting for clients')
+            logging.warning("Waiting for clients")
         test(ProxyHandler, ThreadingHTTPServer)

@@ -1,7 +1,7 @@
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.plugins.robot.core import RobotImplementation, RobotScanResult
-from sslyze.plugins.robot.robot_tester import RobotScanResultEnum
+from sslyze.plugins.robot.implementation import RobotImplementation, RobotScanResult
+from sslyze.plugins.robot._robot_tester import RobotScanResultEnum
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64

@@ -8,8 +8,8 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate
 from nassl.ocsp_response import OcspResponseStatusEnum, OcspResponseNotTrustedError, OcspResponse
 
-from sslyze.plugins.certificate_info.certificate_utils import extract_dns_subject_alternative_names, get_common_names
-from sslyze.plugins.certificate_info.symantec import SymantecDistructTester
+from sslyze.plugins.certificate_info._certificate_utils import extract_dns_subject_alternative_names, get_common_names
+from sslyze.plugins.certificate_info._symantec import SymantecDistructTester
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 

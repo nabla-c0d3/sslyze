@@ -1,14 +1,14 @@
 from enum import Enum, unique, auto
 from typing import Dict, Type, TYPE_CHECKING
 
-from sslyze.plugins.certificate_info.core import CertificateInfoImplementation
+from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 from sslyze.plugins.compression_plugin import CompressionImplementation
 from sslyze.plugins.early_data_plugin import EarlyDataImplementation
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvImplementation
 from sslyze.plugins.heartbleed_plugin import HeartbleedImplementation
 from sslyze.plugins.http_headers_plugin import HttpHeadersImplementation
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionImplementation
-from sslyze.plugins.openssl_cipher_suites.scan_commands import (
+from sslyze.plugins.openssl_cipher_suites.implementation import (
     Sslv20ScanImplementation,
     Sslv30ScanImplementation,
     Tlsv10ScanImplementation,
@@ -16,9 +16,9 @@ from sslyze.plugins.openssl_cipher_suites.scan_commands import (
     Tlsv12ScanImplementation,
     Tlsv11ScanImplementation,
 )
-from sslyze.plugins.robot.core import RobotImplementation
+from sslyze.plugins.robot.implementation import RobotImplementation
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationImplementation
-from sslyze.plugins.session_resumption.core import (
+from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionRateImplementation,
     SessionResumptionSupportImplementation,
 )

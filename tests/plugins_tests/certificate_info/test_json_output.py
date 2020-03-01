@@ -1,7 +1,7 @@
 from io import StringIO
 
 from sslyze.cli.json_output import JsonOutputGenerator
-from sslyze.plugins.certificate_info.core import CertificateInfoImplementation
+from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection

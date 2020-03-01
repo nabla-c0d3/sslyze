@@ -5,7 +5,7 @@ from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins.plugin_base import ScanCommandCliConnector
 
 if TYPE_CHECKING:
-    from sslyze.plugins.openssl_cipher_suites.scan_commands import CipherSuitesScanResult
+    from sslyze.plugins.openssl_cipher_suites.implementation import CipherSuitesScanResult
 
 
 class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult", None]):

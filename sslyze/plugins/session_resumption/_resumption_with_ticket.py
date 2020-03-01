@@ -4,7 +4,7 @@ from typing import Tuple
 import nassl
 from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.plugins.session_resumption.resumption_with_id import resume_tls_session, _ScanJobResultEnum
+from sslyze.plugins.session_resumption._resumption_with_id import resume_tls_session, _ScanJobResultEnum
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 

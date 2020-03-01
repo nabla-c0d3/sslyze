@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509.oid import ObjectIdentifier
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 
-from sslyze.plugins.certificate_info.certificate_utils import (
+from sslyze.plugins.certificate_info._certificate_utils import (
     get_public_key_sha256,
     extract_dns_subject_alternative_names,
 )
@@ -50,7 +50,7 @@ def _certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
         "notBefore": certificate.not_valid_before.strftime("%Y-%m-%d %H:%M:%S"),
         "notAfter": certificate.not_valid_after.strftime("%Y-%m-%d %H:%M:%S"),
         "signatureAlgorithm": certificate.signature_hash_algorithm.name,
-        "subjectAlternativeName": {"DNS": extract_dns_subject_alternative_names(certificate)}
+        "subjectAlternativeName": {"DNS": extract_dns_subject_alternative_names(certificate)},
     }
 
     # Add some info about the public key

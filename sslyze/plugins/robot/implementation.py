@@ -11,7 +11,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandCliConnector,
 )
 
-from sslyze.plugins.robot.robot_tester import (
+from sslyze.plugins.robot._robot_tester import (
     RobotScanResultEnum,
     test_robot,
     ServerDoesNotSupportRsa,

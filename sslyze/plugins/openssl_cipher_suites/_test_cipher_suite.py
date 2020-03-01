@@ -10,7 +10,7 @@ from sslyze.connection_helpers.errors import (
 )
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite
 from sslyze.server_connectivity import ServerConnectivityInfo
-from sslyze.plugins.openssl_cipher_suites.tls12_workaround import WorkaroundForTls12ForCipherSuites
+from sslyze.plugins.openssl_cipher_suites._tls12_workaround import WorkaroundForTls12ForCipherSuites
 
 
 @dataclass(frozen=True)

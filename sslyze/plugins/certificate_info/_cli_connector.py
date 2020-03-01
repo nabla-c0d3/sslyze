@@ -8,14 +8,14 @@ from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from nassl.ocsp_response import OcspResponseStatusEnum
 
-from sslyze.plugins.certificate_info.certificate_utils import get_common_names, extract_dns_subject_alternative_names
-from sslyze.plugins.certificate_info.json_output import register_json_serializer_functions
-from sslyze.plugins.certificate_info.symantec import SymantecDistrustTimelineEnum
+from sslyze.plugins.certificate_info._certificate_utils import get_common_names, extract_dns_subject_alternative_names
+from sslyze.plugins.certificate_info._json_output import register_json_serializer_functions
+from sslyze.plugins.certificate_info._symantec import SymantecDistrustTimelineEnum
 from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption
 
 if TYPE_CHECKING:
-    from sslyze.plugins.certificate_info.core import CertificateInfoScanResult
-    from sslyze.plugins.certificate_info.core import CertificateInfoExtraArguments  # noqa: F401
+    from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult
+    from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArguments  # noqa: F401
 
 
 class _CertificateInfoCliConnector(
@@ -43,7 +43,7 @@ class _CertificateInfoCliConnector(
         cls, parsed_command_line: Dict[str, Union[None, bool, str]]
     ) -> Tuple[bool, Optional["CertificateInfoExtraArguments"]]:
         # Avoid circular imports
-        from sslyze.plugins.certificate_info.core import CertificateInfoExtraArguments  # noqa: F811
+        from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArguments  # noqa: F811
 
         # Check if --certinfo was used
         is_scan_cmd_enabled, _ = super().find_cli_options_in_command_line(parsed_command_line)

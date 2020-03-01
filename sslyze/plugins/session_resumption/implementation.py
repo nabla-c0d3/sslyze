@@ -12,8 +12,11 @@ from sslyze.plugins.plugin_base import (
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
 )
-from sslyze.plugins.session_resumption.resumption_with_id import resume_with_session_id, _ScanJobResultEnum
-from sslyze.plugins.session_resumption.resumption_with_ticket import resume_with_tls_ticket, TslSessionTicketSupportEnum
+from sslyze.plugins.session_resumption._resumption_with_id import resume_with_session_id, _ScanJobResultEnum
+from sslyze.plugins.session_resumption._resumption_with_ticket import (
+    resume_with_tls_ticket,
+    TslSessionTicketSupportEnum,
+)
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 

@@ -3,13 +3,13 @@ from pathlib import Path
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 
-from sslyze.plugins.certificate_info.cert_chain_analyzer import _certificate_matches_hostname
-from sslyze.plugins.certificate_info.certificate_utils import (
+from sslyze.plugins.certificate_info._cert_chain_analyzer import _certificate_matches_hostname
+from sslyze.plugins.certificate_info._certificate_utils import (
     get_common_names,
     extract_dns_subject_alternative_names,
     get_public_key_sha256,
 )
-from sslyze.plugins.certificate_info.cli_connector import _get_name_as_short_text
+from sslyze.plugins.certificate_info._cli_connector import _get_name_as_short_text
 
 leaf_path = Path(__file__).absolute().parent / ".." / ".." / "certificates" / "github.com.pem"
 leaf_pem = leaf_path.read_bytes()

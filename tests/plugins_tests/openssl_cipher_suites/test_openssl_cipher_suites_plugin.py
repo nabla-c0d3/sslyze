@@ -1,5 +1,5 @@
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
-from sslyze.plugins.openssl_cipher_suites.scan_commands import (
+from sslyze.plugins.openssl_cipher_suites.implementation import (
     Sslv20ScanImplementation,
     CipherSuitesScanResult,
     Sslv30ScanImplementation,

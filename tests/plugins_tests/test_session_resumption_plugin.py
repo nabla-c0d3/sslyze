@@ -1,4 +1,4 @@
-from sslyze.plugins.session_resumption.core import (
+from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportImplementation,
     SessionResumptionSupportScanResult,
     SessionResumptionRateImplementation,

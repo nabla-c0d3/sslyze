@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from cryptography.x509 import Certificate
 
-from sslyze.plugins.certificate_info.certificate_utils import CertificateUtils
+from sslyze.plugins.certificate_info.certificate_utils import get_public_key_sha256
 
 
 class SymantecDistrustTimelineEnum(Enum):
@@ -107,7 +107,7 @@ class SymantecDistructTester:
 
         # Is there a Symantec root certificate in the chain?
         for certificate in verified_certificate_chain:
-            key_hash = binascii.hexlify(CertificateUtils.get_public_key_sha256(certificate)).decode("ascii")
+            key_hash = binascii.hexlify(get_public_key_sha256(certificate)).decode("ascii")
             if key_hash in cls._CA_KEYS_BLACKLIST:
                 has_blacklisted_cert = True
             if key_hash in cls._CA_KEYS_WHITELIST:

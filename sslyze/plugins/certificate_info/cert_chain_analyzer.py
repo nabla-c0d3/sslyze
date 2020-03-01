@@ -1,3 +1,4 @@
+import ssl
 from dataclasses import dataclass
 from ssl import CertificateError
 from typing import Optional, List, cast
@@ -7,10 +8,26 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate
 from nassl.ocsp_response import OcspResponseStatusEnum, OcspResponseNotTrustedError, OcspResponse
 
+from sslyze.plugins.certificate_info.certificate_utils import extract_dns_subject_alternative_names, get_common_names
 from sslyze.plugins.certificate_info.symantec import SymantecDistructTester
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
-from sslyze.plugins.certificate_info.certificate_utils import CertificateUtils
+
+
+def _certificate_matches_hostname(certificate: Certificate, server_hostname: str) -> bool:
+    """Verify that the certificate was issued for the given hostname.
+    """
+    # Extract the names from the certificate to create the properly-formatted dictionary
+    certificate_names = {
+        "subject": (tuple([("commonName", name) for name in get_common_names(certificate.subject)]),),
+        "subjectAltName": tuple([("DNS", name) for name in extract_dns_subject_alternative_names(certificate)]),
+    }
+    # CertificateError is raised on failure
+    try:
+        ssl.match_hostname(certificate_names, server_hostname)
+        return True
+    except CertificateError:
+        return False
 
 
 @dataclass(frozen=True)
@@ -110,13 +127,6 @@ class CertificateChainDeploymentAnalyzer:
         if self.verified_certificate_chain:
             has_anchor_in_certificate_chain = self.verified_certificate_chain[-1] in self.received_certificate_chain
 
-        # Check hostname validation
-        try:
-            CertificateUtils.certificate_matches_hostname(leaf_cert, self.server_hostname)
-            certificate_matches_hostname = True
-        except CertificateError:
-            certificate_matches_hostname = False
-
         # Check if a SHA1-signed certificate is in the chain
         # Root certificates can still be signed with SHA1 so we only check leaf and intermediate certificates
         has_sha1_in_certificate_chain = None
@@ -149,7 +159,7 @@ class CertificateChainDeploymentAnalyzer:
                     is_ocsp_response_trusted = False
 
         return CertificateChainDeploymentAnalysisResult(
-            leaf_certificate_subject_matches_hostname=certificate_matches_hostname,
+            leaf_certificate_subject_matches_hostname=_certificate_matches_hostname(leaf_cert, self.server_hostname),
             leaf_certificate_has_must_staple_extension=has_ocsp_must_staple,
             leaf_certificate_is_ev=is_leaf_certificate_ev,
             leaf_certificate_signed_certificate_timestamps_count=number_of_scts,

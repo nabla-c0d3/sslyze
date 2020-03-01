@@ -59,7 +59,7 @@ class TestJsonOutputGenerator:
         scan_results = {ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
         scan_result = ServerScanResultFactory.create(scan_commands_results=scan_results)
 
-        # When generating the console output for this server scan
+        # When generating the JSON output for this server scan
         with StringIO() as file_out:
             json_generator = JsonOutputGenerator(file_to=file_out)
             json_generator.server_scan_completed(scan_result)
@@ -82,7 +82,7 @@ class TestJsonOutputGenerator:
         }
         scan_result = ServerScanResultFactory.create(scan_commands_errors=scan_errors)
 
-        # When generating the console output for this server scan
+        # When generating the JSON output for this server scan
         with StringIO() as file_out:
             json_generator = JsonOutputGenerator(file_to=file_out)
             json_generator.server_scan_completed(scan_result)

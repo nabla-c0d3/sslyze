@@ -130,6 +130,14 @@ class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExt
         return is_scan_cmd_enabled, extra_arguments
 
     @classmethod
+    def register_json_serializer_functions(cls):
+        """To be overridden if the scan command returns objects that require customer logic to be JSON-serialized.
+
+        See certificate_info for an example.
+        """
+        pass
+
+    @classmethod
     @abstractmethod
     def result_to_console_output(cls, result: _ScanCommandResultTypeVar) -> List[str]:
         """Transform the result of the scan command into lines of text to be printed by the CLI.

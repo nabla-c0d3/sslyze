@@ -2,14 +2,16 @@ import binascii
 from pathlib import Path
 from typing import List, Union, Dict, Optional, Tuple, TYPE_CHECKING
 
+from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from nassl.ocsp_response import OcspResponseStatusEnum
 
+from sslyze.plugins.certificate_info.certificate_utils import get_common_names, extract_dns_subject_alternative_names
+from sslyze.plugins.certificate_info.json_output import register_json_serializer_functions
 from sslyze.plugins.certificate_info.symantec import SymantecDistrustTimelineEnum
 from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption
-from sslyze.plugins.certificate_info.certificate_utils import CertificateUtils
 
 if TYPE_CHECKING:
     from sslyze.plugins.certificate_info.core import CertificateInfoScanResult
@@ -58,6 +60,10 @@ class _CertificateInfoCliConnector(
             pass
 
         return is_scan_cmd_enabled, extra_arguments
+
+    @classmethod
+    def register_json_serializer_functions(cls):
+        register_json_serializer_functions()
 
     TRUST_FORMAT = "{store_name} CA Store ({store_version}):"
     NO_VERIFIED_CHAIN_ERROR_TXT = "ERROR - Could not build verified chain (certificate untrusted?)"
@@ -116,15 +122,13 @@ class _CertificateInfoCliConnector(
         result_as_txt.append(cls._format_field("Symantec 2018 Deprecation:", symantec_str))
 
         # Print the Common Names within the certificate chain
-        cns_in_certificate_chain = [
-            CertificateUtils.get_name_as_short_text(cert.subject) for cert in result.received_certificate_chain
-        ]
+        cns_in_certificate_chain = [_get_name_as_short_text(cert.subject) for cert in result.received_certificate_chain]
         result_as_txt.append(cls._format_field("Received Chain:", " --> ".join(cns_in_certificate_chain)))
 
         # Print the Common Names within the verified certificate chain if validation was successful
         if result.verified_certificate_chain:
             cns_in_certificate_chain = [
-                CertificateUtils.get_name_as_short_text(cert.subject) for cert in result.verified_certificate_chain
+                _get_name_as_short_text(cert.subject) for cert in result.verified_certificate_chain
             ]
             verified_chain_txt = " --> ".join(cns_in_certificate_chain)
         else:
@@ -231,16 +235,16 @@ class _CertificateInfoCliConnector(
             cls._format_field(
                 "SHA1 Fingerprint:", binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode("ascii")
             ),
-            cls._format_field("Common Name:", CertificateUtils.get_name_as_short_text(certificate.subject)),
-            cls._format_field("Issuer:", CertificateUtils.get_name_as_short_text(certificate.issuer)),
+            cls._format_field("Common Name:", _get_name_as_short_text(certificate.subject)),
+            cls._format_field("Issuer:", _get_name_as_short_text(certificate.issuer)),
             cls._format_field("Serial Number:", str(certificate.serial_number)),
             cls._format_field("Not Before:", certificate.not_valid_before.date().isoformat()),
             cls._format_field("Not After:", certificate.not_valid_after.date().isoformat()),
             cls._format_field("Signature Algorithm:", certificate.signature_hash_algorithm.name),
-            cls._format_field("Public Key Algorithm:", CertificateUtils.get_public_key_type(certificate)),
+            cls._format_field("Public Key Algorithm:", certificate.public_key().__class__.__name__),
         ]
 
-        public_key = result.received_certificate_chain[0].public_key()
+        public_key = certificate.public_key()
         if isinstance(public_key, EllipticCurvePublicKey):
             text_output.append(cls._format_field("Key Size:", str(public_key.curve.key_size)))
             text_output.append(cls._format_field("Curve:", str(public_key.curve.name)))
@@ -255,11 +259,23 @@ class _CertificateInfoCliConnector(
             # Print the SAN extension if there's one
             text_output.append(
                 cls._format_field(
-                    "DNS Subject Alternative Names:",
-                    str(CertificateUtils.get_dns_subject_alternative_names(certificate)),
+                    "DNS Subject Alternative Names:", str(extract_dns_subject_alternative_names(certificate))
                 )
             )
         except KeyError:
             pass
 
         return text_output
+
+
+def _get_name_as_short_text(name_field: x509.Name) -> str:
+    """Convert a name field returned by the cryptography module to a string suitable for displaying it to the user.
+    """
+    # Name_field is supposed to be a Subject or an Issuer; print the CN if there is one
+    common_names = get_common_names(name_field)
+    if common_names:
+        # We don't support certs with multiple CNs
+        return common_names[0]
+    else:
+        # Otherwise show the whole field
+        return name_field.rfc4514_string()

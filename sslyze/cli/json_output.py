@@ -11,6 +11,7 @@ from sslyze import PROJECT_URL, __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
+from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -26,6 +27,10 @@ class JsonOutputGenerator(OutputGenerator):
             "invalid_servers": [],
             "accepted_servers": [],
         }
+
+        # Register all JSON serializer functions defined in plugins
+        for scan_command in ScanCommandEnum:
+            scan_command.get_implementation_cls().cli_connector_cls.register_json_serializer_functions()
 
     def command_line_parsed(self, parsed_command_line: ParsedCommandLine) -> None:
         for bad_server_str in parsed_command_line.invalid_servers:
@@ -61,6 +66,7 @@ class JsonOutputGenerator(OutputGenerator):
 
 
 # Make TracebackException pickable for dataclasses.asdict() to work on ScanCommandError
+# It's hacky and not the right way to use copyreg, but works for our use case
 def _traceback_to_str(traceback: TracebackException) -> str:
     exception_trace_as_str = ""
     for line in traceback.format(chain=False):

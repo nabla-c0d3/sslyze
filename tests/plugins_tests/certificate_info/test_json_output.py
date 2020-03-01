@@ -1,10 +1,6 @@
-from dataclasses import dataclass, asdict
 from io import StringIO
 
-import cryptography
-
 from sslyze.cli.json_output import JsonOutputGenerator
-from sslyze.plugins.certificate_info.cli_connector import _CertificateInfoCliConnector
 from sslyze.plugins.certificate_info.core import CertificateInfoImplementation
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.server_connectivity import ServerConnectivityTester
@@ -14,16 +10,10 @@ from tests.factories import ServerScanResultFactory
 
 class TestJsonOutput:
     def test_json_serializer_functions(self):
-        _CertificateInfoCliConnector.register_json_serializer_functions()
-
-        # Given a server to scan
+        # Given a completed scan for a server with the CERTIFICATE_INFO scan command
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
-
-        # When running the scan with the custom CA file enabled
         plugin_result = CertificateInfoImplementation.perform(server_info)
-
-        # Given a completed scan for a server
         scan_results = {ScanCommandEnum.CERTIFICATE_INFO: plugin_result}
         scan_result = ServerScanResultFactory.create(scan_commands_results=scan_results)
 
@@ -38,4 +28,8 @@ class TestJsonOutput:
 
         # It succeeds
         assert final_output
+
+        # And complex object like certificates were properly serialized
         assert "notBefore" in final_output
+        assert "issuer" in final_output
+        assert "subject" in final_output

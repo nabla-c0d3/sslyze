@@ -12,7 +12,8 @@ from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOptio
 from sslyze.plugins.certificate_info.certificate_utils import CertificateUtils
 
 if TYPE_CHECKING:
-    from sslyze.plugins.certificate_info.core import CertificateInfoScanResult, CertificateInfoExtraArguments
+    from sslyze.plugins.certificate_info.core import CertificateInfoScanResult
+    from sslyze.plugins.certificate_info.core import CertificateInfoExtraArguments  # noqa: F401
 
 
 class _CertificateInfoCliConnector(
@@ -39,7 +40,8 @@ class _CertificateInfoCliConnector(
     def find_cli_options_in_command_line(
         cls, parsed_command_line: Dict[str, Union[None, bool, str]]
     ) -> Tuple[bool, Optional["CertificateInfoExtraArguments"]]:
-        from sslyze.plugins.certificate_info.core import CertificateInfoExtraArguments  # Avoid circular imports
+        # Avoid circular imports
+        from sslyze.plugins.certificate_info.core import CertificateInfoExtraArguments  # noqa: F811
 
         # Check if --certinfo was used
         is_scan_cmd_enabled, _ = super().find_cli_options_in_command_line(parsed_command_line)

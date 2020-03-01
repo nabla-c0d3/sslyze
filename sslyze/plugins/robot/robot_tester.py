@@ -1,7 +1,7 @@
 import socket
 import types
 from enum import Enum
-from typing import Optional, Tuple, List, Dict
+from typing import Optional, List, Dict
 
 import binascii
 import math

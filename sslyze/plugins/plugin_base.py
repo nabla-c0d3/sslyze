@@ -23,6 +23,7 @@ class ScanCommandExtraArguments(ABC):
 class ScanCommandWrongUsageError(Exception):
     """Raised when the configuration or arguments passed to complete a scan command are wrong.
     """
+
     pass
 
 
@@ -38,7 +39,9 @@ class ScanJob:
 
 
 _ScanCommandResultTypeVar = TypeVar("_ScanCommandResultTypeVar", bound=ScanCommandResult)
-_ScanCommandExtraArgumentsTypeVar = TypeVar("_ScanCommandExtraArgumentsTypeVar", bound=Optional[ScanCommandExtraArguments])
+_ScanCommandExtraArgumentsTypeVar = TypeVar(
+    "_ScanCommandExtraArgumentsTypeVar", bound=Optional[ScanCommandExtraArguments]
+)
 
 
 class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentsTypeVar]):

@@ -6,7 +6,7 @@ from typing import Optional, Tuple, List, Dict
 import binascii
 import math
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey, RSAPublicNumbers
 from cryptography.x509 import load_pem_x509_certificate
 from nassl._nassl import WantReadError
 from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
@@ -170,7 +170,8 @@ def test_robot(server_info: ServerConnectivityInfo) -> Dict[RobotPmsPaddingPaylo
         # Could not connect to the server using RSA - not vulnerable
         raise ServerDoesNotSupportRsa()
 
-    rsa_modulus, rsa_exponent = rsa_params
+    rsa_modulus = rsa_params.n  # type: ignore  # mypy bug?
+    rsa_exponent = rsa_params.e  # type: ignore  # mypy bug?
 
     # On the first attempt, finish the TLS handshake after sending the Robot payload
     robot_should_complete_handshake = True
@@ -215,7 +216,7 @@ def _run_oracle_detection(
     return server_responses_per_robot_payloads
 
 
-def _get_rsa_parameters(server_info: ServerConnectivityInfo, openssl_cipher_string: str) -> Optional[Tuple[int, int]]:
+def _get_rsa_parameters(server_info: ServerConnectivityInfo, openssl_cipher_string: str) -> Optional[RSAPublicNumbers]:
     ssl_connection = server_info.get_preconfigured_tls_connection()
     ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
     parsed_cert = None
@@ -237,8 +238,9 @@ def _get_rsa_parameters(server_info: ServerConnectivityInfo, openssl_cipher_stri
         ssl_connection.close()
 
     if parsed_cert:
-        if isinstance(parsed_cert, RSAPublicKey):
-            return parsed_cert.public_key().public_numbers().n, parsed_cert.public_key().public_numbers().e
+        public_key = parsed_cert.public_key()
+        if isinstance(public_key, RSAPublicKey):
+            return public_key.public_numbers()
         else:
             return None
     else:

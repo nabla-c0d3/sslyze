@@ -68,7 +68,7 @@ def _traceback_to_str(traceback: TracebackException) -> str:
     return exception_trace_as_str
 
 
-copyreg.pickle(TracebackException, _traceback_to_str)
+copyreg.pickle(TracebackException, _traceback_to_str)  # type: ignore
 
 
 # Setup our custom JSON serializer

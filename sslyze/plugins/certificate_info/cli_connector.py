@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from nassl.ocsp_response import OcspResponseStatusEnum
 
 from sslyze.plugins.certificate_info.symantec import SymantecDistrustTimelineEnum
-from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption, ScanCommandExtraArguments
+from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption
 from sslyze.plugins.certificate_info.certificate_utils import CertificateUtils
 
 if TYPE_CHECKING:
@@ -49,6 +49,8 @@ class _CertificateInfoCliConnector(
         try:
             certinfo_ca_file = parsed_command_line["certinfo_ca_file"]
             if certinfo_ca_file:
+                if not isinstance(certinfo_ca_file, str):
+                    raise TypeError(f"Expected a str for certinfo_ca_file but received {certinfo_ca_file}")
                 extra_arguments = CertificateInfoExtraArguments(custom_ca_file=Path(certinfo_ca_file))
         except KeyError:
             pass
@@ -221,28 +223,28 @@ class _CertificateInfoCliConnector(
         return result_as_txt
 
     @classmethod
-    def _get_basic_certificate_text(cls, result) -> List[str]:
+    def _get_basic_certificate_text(cls, result: "CertificateInfoScanResult") -> List[str]:
         certificate = result.received_certificate_chain[0]
-        public_key = result.received_certificate_chain[0].public_key()
         text_output = [
             cls._format_field(
                 "SHA1 Fingerprint:", binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode("ascii")
             ),
             cls._format_field("Common Name:", CertificateUtils.get_name_as_short_text(certificate.subject)),
             cls._format_field("Issuer:", CertificateUtils.get_name_as_short_text(certificate.issuer)),
-            cls._format_field("Serial Number:", certificate.serial_number),
-            cls._format_field("Not Before:", certificate.not_valid_before),
-            cls._format_field("Not After:", certificate.not_valid_after),
+            cls._format_field("Serial Number:", str(certificate.serial_number)),
+            cls._format_field("Not Before:", certificate.not_valid_before.date().isoformat()),
+            cls._format_field("Not After:", certificate.not_valid_after.date().isoformat()),
             cls._format_field("Signature Algorithm:", certificate.signature_hash_algorithm.name),
             cls._format_field("Public Key Algorithm:", CertificateUtils.get_public_key_type(certificate)),
         ]
 
+        public_key = result.received_certificate_chain[0].public_key()
         if isinstance(public_key, EllipticCurvePublicKey):
-            text_output.append(cls._format_field("Key Size:", public_key.curve.key_size))
-            text_output.append(cls._format_field("Curve:", public_key.curve.name))
+            text_output.append(cls._format_field("Key Size:", str(public_key.curve.key_size)))
+            text_output.append(cls._format_field("Curve:", str(public_key.curve.name)))
         elif isinstance(public_key, RSAPublicKey):
-            text_output.append(cls._format_field("Key Size:", public_key.key_size))
-            text_output.append(cls._format_field("Exponent:", "{0} (0x{0:x})".format(public_key.public_numbers().e)))
+            text_output.append(cls._format_field("Key Size:", str(public_key.key_size)))
+            text_output.append(cls._format_field("Exponent:", str(public_key.public_numbers().e)))  # type: ignore
         else:
             # DSA Key? https://github.com/nabla-c0d3/sslyze/issues/314
             pass

@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.x509 import ExtensionOID, DNSName, ExtensionNotFound, NameOID
 
 
-def extract_dns_subject_alternative_names(certificate: x509.Certificate):
+def extract_dns_subject_alternative_names(certificate: x509.Certificate) -> List[str]:
     """Retrieve all the DNS entries of the Subject Alternative Name extension.
     """
     subj_alt_names: List[str] = []

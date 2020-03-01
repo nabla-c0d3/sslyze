@@ -16,7 +16,7 @@ from sslyze.plugins.certificate_info.certificate_utils import (
 )
 
 
-def register_json_serializer_functions():
+def register_json_serializer_functions() -> None:
     # Avoid circular imports
     from sslyze.cli.json_output import object_to_json
 
@@ -28,7 +28,7 @@ def register_json_serializer_functions():
     # that contains a _Certificate, asdict() succeeds. Without this, generating JSON for the certinfo scan command
     # will crash because the asdict() function uses deepcopy(), but certificates returned by cryptography.x509
     # don't support it so SSLyze would crash. This class is a workaround to fix JSON output.
-    def _deepcopy_method_for_x509_certificate(inner_self, memo: str) -> x509.Certificate:
+    def _deepcopy_method_for_x509_certificate(inner_self: _Certificate, memo: str) -> x509.Certificate:
         return x509.load_pem_x509_certificate(inner_self.public_bytes(Encoding.PEM), backend=default_backend())
 
     _Certificate.__deepcopy__ = _deepcopy_method_for_x509_certificate
@@ -50,19 +50,17 @@ def _certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
         "notBefore": certificate.not_valid_before.strftime("%Y-%m-%d %H:%M:%S"),
         "notAfter": certificate.not_valid_after.strftime("%Y-%m-%d %H:%M:%S"),
         "signatureAlgorithm": certificate.signature_hash_algorithm.name,
-        "publicKey": {"algorithm": certificate.public_key().__class__.__name__},
+        "subjectAlternativeName": {"DNS": extract_dns_subject_alternative_names(certificate)}
     }
-
-    dns_alt_names = extract_dns_subject_alternative_names(certificate)
-    if dns_alt_names:
-        result["subjectAlternativeName"] = {"DNS": dns_alt_names}
 
     # Add some info about the public key
     public_key = certificate.public_key()
+    public_key_dict = {"algorithm": public_key.__class__.__name__}
     if isinstance(public_key, EllipticCurvePublicKey):
-        result["publicKey"]["size"] = str(public_key.curve.key_size)
-        result["publicKey"]["curve"] = public_key.curve.name
+        public_key_dict["size"] = str(public_key.curve.key_size)
+        public_key_dict["curve"] = public_key.curve.name
     else:
-        result["publicKey"]["size"] = str(public_key.key_size)
-        result["publicKey"]["exponent"] = str(public_key.public_numbers().e)
+        public_key_dict["size"] = str(public_key.key_size)
+        public_key_dict["exponent"] = str(public_key.public_numbers().e)
+    result["publicKey"] = public_key_dict
     return result

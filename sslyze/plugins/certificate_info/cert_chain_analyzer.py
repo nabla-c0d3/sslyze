@@ -24,7 +24,7 @@ def _certificate_matches_hostname(certificate: Certificate, server_hostname: str
     }
     # CertificateError is raised on failure
     try:
-        ssl.match_hostname(certificate_names, server_hostname)
+        ssl.match_hostname(certificate_names, server_hostname)  # type: ignore
         return True
     except CertificateError:
         return False

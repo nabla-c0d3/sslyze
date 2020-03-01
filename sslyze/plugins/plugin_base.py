@@ -130,7 +130,7 @@ class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExt
         return is_scan_cmd_enabled, extra_arguments
 
     @classmethod
-    def register_json_serializer_functions(cls):
+    def register_json_serializer_functions(cls) -> None:
         """To be overridden if the scan command returns objects that require customer logic to be JSON-serialized.
 
         See certificate_info for an example.

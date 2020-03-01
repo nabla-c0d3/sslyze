@@ -62,7 +62,7 @@ class _CertificateInfoCliConnector(
         return is_scan_cmd_enabled, extra_arguments
 
     @classmethod
-    def register_json_serializer_functions(cls):
+    def register_json_serializer_functions(cls) -> None:
         register_json_serializer_functions()
 
     TRUST_FORMAT = "{store_name} CA Store ({store_version}):"

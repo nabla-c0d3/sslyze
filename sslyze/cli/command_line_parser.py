@@ -1,6 +1,5 @@
 from optparse import OptionParser, OptionGroup
-from libnmap.parser import NmapParser
-from libnmap.parser import NmapParserException
+import lxml.etree
 
 import socket
 
@@ -209,22 +208,24 @@ class CommandLineParser:
                 raise CommandLineParsingError("Cannot use --targets_in and --nmapxml_in at the same time.")
 
             try:  # Read targets from a file
-                nmap_report = NmapParser.parse_fromfile(args_command_list.nmapxml_in)
-                for host in nmap_report.hosts:
-                    for svc in host.services:
-                        if svc.state == 'open':
-                            if svc.tunnel == 'ssl':
-                                args_target_list.append("%s:%s" % (host.address, svc.port))
-                    for hostname in host.hostnames:
-                        args_target_list.append("%s:%s" % (hostname, svc.port))
+                docroot = lxml.etree.parse(args_command_list.nmapxml_in)
+                if docroot.xpath("//nmaprun"):
+                    # use a set to avoid duplicates
+                    ssl_endpoints = set()
+                    # tuned XPath query from https://github.com/ernw/nmap-parse-output/blob/master/nmap-parse-output-xslt/tls-ports.xslt
+                    ssl_ports = docroot.xpath("//nmaprun/host/ports/port[state/@state='open' and (service/@tunnel='ssl' or script[@id='ssl-cert'] or script[@id='ssl-date'] or service/@name='https')]")
+                    for ssl_port in ssl_ports:
+                        for address in ssl_port.getparent().getparent().xpath("address/@addr"):
+                            ssl_endpoints.add("%s:%s" % (address, ssl_port.get("portid")))
+                    args_target_list.extend(list(ssl_endpoints))
+                else:
+                    raise CommandLineParsingError(
+                        "Can't find an nmap report in '{}.".format(args_command_list.targets_in)
+                    )
 
             except IOError:
                 raise CommandLineParsingError(
                     "Can't read targets from input file '{}.".format(args_command_list.nmapxml_in)
-                )
-            except NmapParserException:
-                raise CommandLineParsingError(
-                    "Unexpected data structure in file FILE '{}.".format(args_command_list.nmapxml_in)
                 )
 
         if not args_target_list:

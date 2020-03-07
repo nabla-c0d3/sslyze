@@ -1,32 +1,83 @@
-from typing import Dict
+from typing import Dict, Set
 
 from dataclasses import dataclass
-from nassl.ssl_client import OpenSslVersionEnum
+
+from nassl.legacy_ssl_client import LegacySslClient
+from nassl.ssl_client import OpenSslVersionEnum, SslClient
 
 
 @dataclass(frozen=True)
 class CipherSuite:
     name: str
     openssl_name: str  # OpenSSL uses a different naming convention than the corresponding RFCs.
-
-    @property
-    def is_anonymous(self) -> bool:
-        return True if "anon" in self.name else False
-
-    @property
-    def key_size(self) -> int:
-        return _RFC_NAME_TO_KEY_SIZE_MAPPING[self.name]
+    is_anonymous: bool
+    key_size: int
 
     @classmethod
     def from_openssl(cls, cipher_suite_openssl_name: str, tls_version: OpenSslVersionEnum) -> "CipherSuite":
         if tls_version == OpenSslVersionEnum.TLSV1_3:
             # For TLS 1.3 OpenSSL started using the official names
-            return cls(name=cipher_suite_openssl_name, openssl_name=cipher_suite_openssl_name)
-        else:
             return cls(
-                name=_OPENSSL_TO_RFC_NAMES_MAPPING[tls_version][cipher_suite_openssl_name],
+                name=cipher_suite_openssl_name,
                 openssl_name=cipher_suite_openssl_name,
+                is_anonymous=False,
+                key_size=_RFC_NAME_TO_KEY_SIZE_MAPPING[cipher_suite_openssl_name],
             )
+        else:
+            rfc_name = _OPENSSL_TO_RFC_NAMES_MAPPING[tls_version][cipher_suite_openssl_name]
+            return cls(
+                name=rfc_name,
+                openssl_name=cipher_suite_openssl_name,
+                is_anonymous=True if "anon" in rfc_name else False,
+                key_size=_RFC_NAME_TO_KEY_SIZE_MAPPING[rfc_name],
+            )
+
+
+class CipherSuitesRepository:
+    @classmethod
+    def _get_all_cipher_suites_with_legacy_openssl(cls, tls_version: OpenSslVersionEnum) -> Set[str]:
+        ssl_client = LegacySslClient(ssl_version=tls_version)
+        # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
+        ssl_client.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
+        return set(ssl_client.get_cipher_list())
+
+    @classmethod
+    def get_all_cipher_suites(cls, tls_version: OpenSslVersionEnum) -> Set[CipherSuite]:
+        """Get the list of cipher suites supported by OpenSSL for the given SSL/TLS version.
+        """
+        if tls_version in [
+            OpenSslVersionEnum.SSLV2,
+            OpenSslVersionEnum.SSLV3,
+            OpenSslVersionEnum.TLSV1,
+            OpenSslVersionEnum.TLSV1_1,
+        ]:
+            openssl_cipher_strings = cls._get_all_cipher_suites_with_legacy_openssl(tls_version)
+
+        elif tls_version == OpenSslVersionEnum.TLSV1_2:
+            # For TLS 1.2, we have to use both the legacy and modern OpenSSL to cover all cipher suites
+            cipher_suites_from_legacy_openssl = cls._get_all_cipher_suites_with_legacy_openssl(tls_version)
+
+            ssl_client_modern = SslClient(ssl_version=tls_version)
+            ssl_client_modern.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
+            ssl_client_modern.set_ciphersuites("")  # Disable TLS 1.3 cipher suites
+            cipher_suites_from_modern_openssl = set(ssl_client_modern.get_cipher_list())
+
+            # Combine the two sets of cipher suites
+            openssl_cipher_strings = cipher_suites_from_legacy_openssl.union(cipher_suites_from_modern_openssl)
+
+        elif tls_version == OpenSslVersionEnum.TLSV1_3:
+            ssl_client_modern = SslClient(ssl_version=tls_version)
+            ssl_client_modern.set_cipher_list("")  # Disable NON-TLS-1.3 cipher suites
+            ssl_client_modern.set_ciphersuites(
+                "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:"
+                "TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256"
+            )  # Enable all TLS 1.3 cipher suites
+            openssl_cipher_strings = set(ssl_client_modern.get_cipher_list())
+
+        else:
+            raise ValueError("Should never happen")
+
+        return {CipherSuite.from_openssl(cipher_str, tls_version) for cipher_str in openssl_cipher_strings}
 
 
 # Cipher suite name mappings so we can return the RFC names, instead of the OpenSSL names
@@ -236,31 +287,90 @@ _TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
     "DHE-RSA-CHACHA20-POLY1305-OLD": "OLD_TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
     "DHE-RSA-DES-CBC3-SHA": "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
     "DHE-DSS-DES-CBC3-SHA": "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
-    "AES128-CCM": "RSA_WITH_AES_128_CCM",
-    "AES256-CCM": "RSA_WITH_AES_256_CCM",
-    "DHE-RSA-AES128-CCM": "DHE_RSA_WITH_AES_128_CCM",
+    "AES128-CCM": "TLS_RSA_WITH_AES_128_CCM",
+    "AES256-CCM": "TLS_RSA_WITH_AES_256_CCM",
+    "DHE-RSA-AES128-CCM": "TLS_DHE_RSA_WITH_AES_128_CCM",
     "DHE-RSA-AES256-CCM": "TLS_DHE_RSA_WITH_AES_256_CCM",
-    "AES128-CCM8": "RSA_WITH_AES_128_CCM_8",
-    "AES256-CCM8": "RSA_WITH_AES_256_CCM_8",
-    "DHE-RSA-AES128-CCM8": "DHE_RSA_WITH_AES_128_CCM_8",
-    "DHE-RSA-AES256-CCM8": "DHE_RSA_WITH_AES_256_CCM_8",
-    "ECDHE-ECDSA-AES128-CCM": "ECDHE_ECDSA_WITH_AES_128_CCM",
-    "ECDHE-ECDSA-AES256-CCM": "ECDHE_ECDSA_WITH_AES_256_CCM",
-    "ECDHE-ECDSA-AES128-CCM8": "ECDHE_ECDSA_WITH_AES_128_CCM_8",
-    "ECDHE-ECDSA-AES256-CCM8": "ECDHE_ECDSA_WITH_AES_256_CCM_8",
-    "TLS_AES_256_GCM_SHA384": "TLS_AES_256_GCM_SHA384",
-    "TLS_CHACHA20_POLY1305_SHA256": "TLS_CHACHA20_POLY1305_SHA256",
-    "TLS_AES_128_GCM_SHA256": "TLS_AES_128_GCM_SHA256",
-    "ECDHE-ECDSA-ARIA256-GCM-SHA384": "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384",
-    "ECDHE-ARIA256-GCM-SHA384": "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384",
-    "DHE-DSS-ARIA256-GCM-SHA384": "TLS_DHE_DSS_WITH_ARIA_256_GCM_SHA384",
-    "DHE-RSA-ARIA256-GCM-SHA384": "TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384",
-    "ECDHE-ECDSA-ARIA128-GCM-SHA256": "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256",
-    "ECDHE-ARIA128-GCM-SHA256": "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256",
-    "DHE-DSS-ARIA128-GCM-SHA256": "TLS_DHE_DSS_WITH_ARIA_128_GCM_SHA256",
-    "DHE-RSA-ARIA128-GCM-SHA256": "TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256",
-    "ARIA256-GCM-SHA384": "TLS_RSA_WITH_ARIA_256_GCM_SHA384",
+    "AES128-CCM8": "TLS_RSA_WITH_AES_128_CCM_8",
+    "AES256-CCM8": "TLS_RSA_WITH_AES_256_CCM_8",
+    "DHE-RSA-AES128-CCM8": "TLS_DHE_RSA_WITH_AES_128_CCM_8",
+    "DHE-RSA-AES256-CCM8": "TLS_DHE_RSA_WITH_AES_256_CCM_8",
+    "ECDHE-ECDSA-AES128-CCM": "TLS_ECDHE_ECDSA_WITH_AES_128_CCM",
+    "ECDHE-ECDSA-AES256-CCM": "TLS_ECDHE_ECDSA_WITH_AES_256_CCM",
+    "ECDHE-ECDSA-AES128-CCM8": "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8",
+    "ECDHE-ECDSA-AES256-CCM8": "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8",
     "ARIA128-GCM-SHA256": "TLS_RSA_WITH_ARIA_128_GCM_SHA256",
+    "ARIA256-GCM-SHA384": "TLS_RSA_WITH_ARIA_256_GCM_SHA384",
+    "DHE-DSS-ARIA128-GCM-SHA256": "TLS_DHE_DSS_WITH_ARIA_128_GCM_SHA256",
+    "DHE-DSS-ARIA256-GCM-SHA384": "TLS_DHE_DSS_WITH_ARIA_256_GCM_SHA384",
+    "DHE-PSK-3DES-EDE-CBC-SHA": "TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA",
+    "DHE-PSK-AES128-CBC-SHA": "TLS_DHE_PSK_WITH_AES_128_CBC_SHA",
+    "DHE-PSK-AES128-CBC-SHA256": "TLS_DHE_PSK_WITH_AES_128_CBC_SHA256",
+    "DHE-PSK-AES128-CCM": "TLS_DHE_PSK_WITH_AES_128_CCM",
+    "DHE-PSK-AES128-CCM8": "TLS_PSK_DHE_WITH_AES_128_CCM_8",
+    "DHE-PSK-AES128-GCM-SHA256": "TLS_DHE_PSK_WITH_AES_128_GCM_SHA256",
+    "DHE-PSK-AES256-CBC-SHA": "TLS_DHE_PSK_WITH_AES_256_CBC_SHA",
+    "DHE-PSK-AES256-CBC-SHA384": "TLS_DHE_PSK_WITH_AES_256_CBC_SHA384",
+    "DHE-PSK-AES256-CCM": "TLS_DHE_PSK_WITH_AES_256_CCM",
+    "DHE-PSK-AES256-CCM8": "TLS_PSK_DHE_WITH_AES_256_CCM_8",
+    "DHE-PSK-AES256-GCM-SHA384": "TLS_DHE_PSK_WITH_AES_256_GCM_SHA384",
+    "DHE-PSK-ARIA128-GCM-SHA256": "TLS_DHE_PSK_WITH_ARIA_128_GCM_SHA256",
+    "DHE-PSK-ARIA256-GCM-SHA384": "TLS_DHE_PSK_WITH_ARIA_256_GCM_SHA384",
+    "DHE-PSK-CAMELLIA128-SHA256": "TLS_DHE_PSK_WITH_CAMELLIA_128_CBC_SHA256",
+    "DHE-PSK-CAMELLIA256-SHA384": "TLS_DHE_PSK_WITH_CAMELLIA_256_CBC_SHA384",
+    "DHE-PSK-CHACHA20-POLY1305": "TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256",
+    "DHE-PSK-NULL-SHA": "TLS_DHE_PSK_WITH_NULL_SHA",
+    "DHE-PSK-NULL-SHA256": "TLS_DHE_PSK_WITH_NULL_SHA256",
+    "DHE-PSK-NULL-SHA384": "TLS_DHE_PSK_WITH_NULL_SHA384",
+    "DHE-PSK-RC4-SHA": "TLS_DHE_PSK_WITH_RC4_128_SHA",
+    "DHE-RSA-ARIA128-GCM-SHA256": "TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256",
+    "DHE-RSA-ARIA256-GCM-SHA384": "TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384",
+    "ECDHE-ARIA128-GCM-SHA256": "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256",
+    "ECDHE-ARIA256-GCM-SHA384": "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384",
+    "ECDHE-ECDSA-ARIA128-GCM-SHA256": "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256",
+    "ECDHE-ECDSA-ARIA256-GCM-SHA384": "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384",
+    "ECDHE-PSK-3DES-EDE-CBC-SHA": "TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA",
+    "ECDHE-PSK-AES128-CBC-SHA": "TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA",
+    "ECDHE-PSK-AES128-CBC-SHA256": "TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256",
+    "ECDHE-PSK-AES256-CBC-SHA": "TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA",
+    "ECDHE-PSK-AES256-CBC-SHA384": "TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA384",
+    "ECDHE-PSK-CAMELLIA128-SHA256": "TLS_ECDHE_PSK_WITH_CAMELLIA_128_CBC_SHA256",
+    "ECDHE-PSK-CAMELLIA256-SHA384": "TLS_ECDHE_PSK_WITH_CAMELLIA_256_CBC_SHA384",
+    "ECDHE-PSK-CHACHA20-POLY1305": "TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256",
+    "ECDHE-PSK-NULL-SHA": "TLS_ECDHE_PSK_WITH_NULL_SHA",
+    "ECDHE-PSK-NULL-SHA256": "TLS_ECDHE_PSK_WITH_NULL_SHA256",
+    "ECDHE-PSK-NULL-SHA384": "TLS_ECDHE_PSK_WITH_NULL_SHA384",
+    "ECDHE-PSK-RC4-SHA": "TLS_ECDHE_PSK_WITH_RC4_128_SHA",
+    "GOST2001-NULL-GOST94": "TLS_GOSTR341001_WITH_NULL_GOSTR3411",
+    "GOST94-NULL-GOST94": "TLS_GOSTR341094_WITH_NULL_GOSTR3411",
+    "PSK-AES128-CBC-SHA256": "TLS_PSK_WITH_AES_128_CBC_SHA256",
+    "PSK-AES128-CCM": "TLS_PSK_WITH_AES_128_CCM",
+    "PSK-AES128-CCM8": "TLS_PSK_WITH_AES_128_CCM_8",
+    "PSK-AES128-GCM-SHA256": "TLS_PSK_WITH_AES_128_GCM_SHA256",
+    "PSK-AES256-CBC-SHA384": "TLS_PSK_WITH_AES_256_CBC_SHA384",
+    "PSK-AES256-CCM": "TLS_PSK_WITH_AES_256_CCM",
+    "PSK-AES256-CCM8": "TLS_PSK_WITH_AES_256_CCM_8",
+    "PSK-AES256-GCM-SHA384": "TLS_PSK_WITH_AES_256_GCM_SHA384",
+    "PSK-ARIA128-GCM-SHA256": "TLS_PSK_WITH_ARIA_128_GCM_SHA256",
+    "PSK-ARIA256-GCM-SHA384": "TLS_PSK_WITH_ARIA_256_GCM_SHA384",
+    "PSK-CAMELLIA128-SHA256": "TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256",
+    "PSK-CAMELLIA256-SHA384": "TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384",
+    "PSK-CHACHA20-POLY1305": "TLS_PSK_WITH_CHACHA20_POLY1305_SHA256",
+    "PSK-NULL-SHA": "TLS_PSK_WITH_NULL_SHA",
+    "PSK-NULL-SHA256": "TLS_PSK_WITH_NULL_SHA256",
+    "PSK-NULL-SHA384": "TLS_PSK_WITH_NULL_SHA384",
+    "RSA-PSK-AES128-CBC-SHA256": "TLS_RSA_PSK_WITH_AES_128_CBC_SHA256",
+    "RSA-PSK-AES128-GCM-SHA256": "TLS_RSA_PSK_WITH_AES_128_GCM_SHA256",
+    "RSA-PSK-AES256-CBC-SHA384": "TLS_RSA_PSK_WITH_AES_256_CBC_SHA384",
+    "RSA-PSK-AES256-GCM-SHA384": "TLS_RSA_PSK_WITH_AES_256_GCM_SHA384",
+    "RSA-PSK-ARIA128-GCM-SHA256": "TLS_RSA_PSK_WITH_ARIA_128_GCM_SHA256",
+    "RSA-PSK-ARIA256-GCM-SHA384": "TLS_RSA_PSK_WITH_ARIA_256_GCM_SHA384",
+    "RSA-PSK-CAMELLIA128-SHA256": "TLS_RSA_PSK_WITH_CAMELLIA_128_CBC_SHA256",
+    "RSA-PSK-CAMELLIA256-SHA384": "TLS_RSA_PSK_WITH_CAMELLIA_256_CBC_SHA384",
+    "RSA-PSK-CHACHA20-POLY1305": "TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256",
+    "RSA-PSK-NULL-SHA": "TLS_RSA_PSK_WITH_NULL_SHA",
+    "RSA-PSK-NULL-SHA256": "TLS_RSA_PSK_WITH_NULL_SHA256",
+    "RSA-PSK-NULL-SHA384": "TLS_RSA_PSK_WITH_NULL_SHA384",
 }
 
 
@@ -489,6 +599,19 @@ _RFC_NAME_TO_KEY_SIZE_MAPPING: Dict[str, int] = {
     "TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256": 256,
     "TLS_RSA_WITH_ARIA_256_GCM_SHA384": 256,
     "TLS_RSA_WITH_ARIA_128_GCM_SHA256": 128,
+    "TLS_RSA_WITH_AES_256_CCM": 256,
+    "TLS_ECDHE_ECDSA_WITH_AES_128_CCM": 128,
+    "TLS_DHE_RSA_WITH_AES_128_CCM": 128,
+    "TLS_RSA_WITH_AES_128_CCM": 128,
+    "TLS_RSA_WITH_AES_256_CCM_8": 128,
+    "TLS_ECDHE_ECDSA_WITH_AES_256_CCM": 256,
+    "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8": 256,
+    "TLS_DHE_RSA_WITH_AES_128_CCM_8": 128,
+    "TLS_DHE_RSA_WITH_AES_256_CCM_8": 256,
+    "TLS_RSA_WITH_AES_128_CCM_8": 128,
+    "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8": 128,
+    "TLS_AES_128_CCM_8_SHA256": 128,
+    "TLS_AES_128_CCM_SHA256": 128,
     "SSL_CK_RC4_128_WITH_MD5": 128,
     "SSL_CK_RC4_128_EXPORT40_WITH_MD5": 40,
     "SSL_CK_RC2_128_CBC_WITH_MD5": 128,

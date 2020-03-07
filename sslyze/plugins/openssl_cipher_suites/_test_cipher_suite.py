@@ -26,14 +26,14 @@ class CipherSuiteRejectedByServer:
 
 
 def connect_with_cipher_suite(
-    server_connectivity_info: ServerConnectivityInfo, tls_version: OpenSslVersionEnum, cipher_openssl_name: str
+    server_connectivity_info: ServerConnectivityInfo, tls_version: OpenSslVersionEnum, cipher_suite: CipherSuite
 ) -> Union[CipherSuiteAcceptedByServer, CipherSuiteRejectedByServer]:
     """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
     """
     requires_legacy_openssl = True
     if tls_version == OpenSslVersionEnum.TLSV1_2:
         # For TLS 1.2, we need to pick the right version of OpenSSL depending on which cipher suite
-        requires_legacy_openssl = WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_openssl_name)
+        requires_legacy_openssl = WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_suite.openssl_name)
     elif tls_version == OpenSslVersionEnum.TLSV1_3:
         requires_legacy_openssl = False
 
@@ -47,21 +47,20 @@ def connect_with_cipher_suite(
         # Disable the default, non-TLS 1.3 cipher suites
         ssl_connection.ssl_client.set_cipher_list("")
         # Enable the one TLS 1.3 cipher suite we want to test
-        ssl_connection.ssl_client.set_ciphersuites(cipher_openssl_name)
+        ssl_connection.ssl_client.set_ciphersuites(cipher_suite.openssl_name)
     else:
         if not requires_legacy_openssl:
             # Disable the TLS 1.3 cipher suites if we are using the modern client
             ssl_connection.ssl_client.set_ciphersuites("")
 
-        ssl_connection.ssl_client.set_cipher_list(cipher_openssl_name)
+        ssl_connection.ssl_client.set_cipher_list(cipher_suite.openssl_name)
 
     if len(ssl_connection.ssl_client.get_cipher_list()) != 1:
         raise ValueError(
-            f'Passed an OpenSSL string for multiple cipher suites: "{cipher_openssl_name}": '
+            f'Passed an OpenSSL string for multiple cipher suites: "{cipher_suite.openssl_name}": '
             f"{str(ssl_connection.ssl_client.get_cipher_list())}"
         )
 
-    cipher_suite = CipherSuite.from_openssl(cipher_suite_openssl_name=cipher_openssl_name, tls_version=tls_version)
     try:
         # Perform the SSL handshake
         ssl_connection.connect()

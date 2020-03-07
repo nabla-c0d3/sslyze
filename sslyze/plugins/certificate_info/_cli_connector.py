@@ -10,7 +10,6 @@ from nassl.ocsp_response import OcspResponseStatusEnum
 
 from sslyze.plugins.certificate_info._certificate_utils import get_common_names, extract_dns_subject_alternative_names
 from sslyze.plugins.certificate_info._json_output import register_json_serializer_functions
-from sslyze.plugins.certificate_info._symantec import SymantecDistrustTimelineEnum
 from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption
 
 if TYPE_CHECKING:
@@ -83,9 +82,9 @@ class _CertificateInfoCliConnector(
         result_as_txt.append(cls._format_field("Hostname used for SNI:", server_name_indication))
 
         hostname_validation_text = (
-            "OK - Certificate matches {hostname}".format(hostname=server_name_indication)
+            f"OK - Certificate matches {server_name_indication}"
             if result.leaf_certificate_subject_matches_hostname
-            else "FAILED - Certificate does NOT match {hostname}".format(hostname=server_name_indication)
+            else f"FAILED - Certificate does NOT match {server_name_indication}"
         )
         result_as_txt.append(cls._format_field("Hostname Validation:", hostname_validation_text))
 
@@ -96,10 +95,10 @@ class _CertificateInfoCliConnector(
                 ev_txt = ""
                 if result.leaf_certificate_is_ev and path_result.trust_store.ev_oids:
                     ev_txt = ", Extended Validation"
-                path_txt = "OK - Certificate is trusted{}".format(ev_txt)
+                path_txt = f"OK - Certificate is trusted{ev_txt}"
 
             else:
-                path_txt = "FAILED - Certificate is NOT Trusted: {}".format(path_result.openssL_verify_string)
+                path_txt = f"FAILED - Certificate is NOT Trusted: {path_result.openssL_verify_string}"
 
             result_as_txt.append(
                 cls._format_field(
@@ -110,15 +109,14 @@ class _CertificateInfoCliConnector(
                 )
             )
 
-        if result.verified_chain_has_legacy_symantec_anchor:
-            timeline_str = (
-                "March 2018"
-                if result.verified_chain_has_legacy_symantec_anchor == SymantecDistrustTimelineEnum.MARCH_2018
-                else "September 2018"
-            )
-            symantec_str = "WARNING: Certificate distrusted by Google and Mozilla on {}".format(timeline_str)
-        else:
+        if result.verified_chain_has_legacy_symantec_anchor is None:
+            symantec_str = cls.NO_VERIFIED_CHAIN_ERROR_TXT
+        elif result.verified_chain_has_legacy_symantec_anchor is True:
+            symantec_str = "WARNING: Certificate distrusted by Google and Mozilla since 2018"
+        elif result.verified_chain_has_legacy_symantec_anchor is False:
             symantec_str = "OK - Not a Symantec-issued certificate"
+        else:
+            raise RuntimeError("Should never happen")
         result_as_txt.append(cls._format_field("Symantec 2018 Deprecation:", symantec_str))
 
         # Print the Common Names within the certificate chain

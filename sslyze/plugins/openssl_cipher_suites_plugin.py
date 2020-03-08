@@ -5,6 +5,7 @@ from xml.etree.ElementTree import Element
 
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 from nassl.temp_key_info import TempKeyInfo, OpenSslEvpPkeyEnum
+from nassl._nassl import OpenSSLError
 from sslyze.plugins.plugin_base import Plugin, PluginScanCommand
 from sslyze.plugins.plugin_base import PluginScanResult
 from sslyze.server_connectivity_info import ServerConnectivityInfo
@@ -14,6 +15,8 @@ from sslyze.utils.thread_pool import ThreadPool
 from typing import Dict, Type
 from typing import List
 from typing import Optional
+from typing import Callable
+from functools import cmp_to_key
 
 from sslyze.utils.tls12_workaround import WorkaroundForTls12ForCipherSuites
 
@@ -211,8 +214,15 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
         thread_pool.join()
 
-        # Test for the cipher suite preference
-        preferred_cipher = self._get_preferred_cipher_suite(server_connectivity_info, ssl_version, accepted_cipher_list)
+        # Test for cipher suite preference
+        preferred_cipher = None
+        preferred_cipher_list = self._get_preferred_cipher_suite(
+            server_connectivity_info, ssl_version, accepted_cipher_list
+        )
+
+        if preferred_cipher_list is not None and len(preferred_cipher_list) > 0:
+            preferred_cipher = preferred_cipher_list[0]
+            accepted_cipher_list = preferred_cipher_list
 
         # Generate the results
         plugin_result = CipherSuiteScanResult(
@@ -288,13 +298,51 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
         return cipher_result
 
+    # Outer function to pass options through to _get_selected_cipher_suite()
+    @staticmethod
+    def _compare_cipher_suites(
+        _get_selected_cipher_suite: Callable,
+        server_connectivity_info: ServerConnectivityInfo,
+        ssl_version: OpenSslVersionEnum,
+        should_use_legacy_openssl: Optional[bool],
+    ) -> Callable[["AcceptedCipherSuite", "AcceptedCipherSuite"], int]:
+        # Inner function is in the format required by sorted()
+        def _do_cipher_comparison(first_cipher: "AcceptedCipherSuite", second_cipher: "AcceptedCipherSuite") -> int:
+            if first_cipher.openssl_name == second_cipher.openssl_name:
+                return 0
+
+            # Build a client cipher suite list of the two we want to compare
+            cipher_str = first_cipher.openssl_name + ":" + second_cipher.openssl_name
+
+            use_legacy_ssl = should_use_legacy_openssl
+
+            # Workaround for CHACHA20 ciphers, which require the modern OpenSSL for comparison to work
+            if "CHACHA20" in cipher_str:
+                use_legacy_ssl = False
+
+            # Ask the server which it prefers
+            chosen_cipher = _get_selected_cipher_suite(
+                server_connectivity_info, ssl_version, cipher_str, use_legacy_ssl
+            )
+
+            # Return values sorted() requires based on which cipher the server chose
+            if chosen_cipher.openssl_name == first_cipher.openssl_name:
+                return -1
+            elif chosen_cipher.openssl_name == second_cipher.openssl_name:
+                return 1
+
+            return 0
+
+        # Return inner function
+        return _do_cipher_comparison
+
     @classmethod
     def _get_preferred_cipher_suite(
         cls,
         server_connectivity_info: ServerConnectivityInfo,
         ssl_version: OpenSslVersionEnum,
         accepted_cipher_list: List["AcceptedCipherSuite"],
-    ) -> Optional["AcceptedCipherSuite"]:
+    ) -> Optional[List["AcceptedCipherSuite"]]:
         """Try to detect the server's preferred cipher suite among all cipher suites supported by SSLyze.
         """
         if len(accepted_cipher_list) < 2:
@@ -310,6 +358,10 @@ class OpenSslCipherSuitesPlugin(Plugin):
             for cipher_name in accepted_cipher_names:
                 modern_supported_cipher_count = 0
                 if not WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_name):
+                    modern_supported_cipher_count += 1
+
+                # Workaround for CHACHA20 ciphers, which require the modern OpenSSL for comparison to work
+                if "CHACHA20" in cipher_name:
                     modern_supported_cipher_count += 1
 
                 if modern_supported_cipher_count > 1:
@@ -333,7 +385,20 @@ class OpenSslCipherSuitesPlugin(Plugin):
 
         if first_cipher.name == second_cipher.name:
             # The server has its own preference for picking a cipher suite
-            return first_cipher
+            try:
+                return sorted(
+                    accepted_cipher_list,
+                    key=cmp_to_key(
+                        cls._compare_cipher_suites(
+                            cls._get_selected_cipher_suite,
+                            server_connectivity_info,
+                            ssl_version,
+                            should_use_legacy_openssl,
+                        )
+                    ),
+                )
+            except Exception:
+                return None
         else:
             # The server has no preferred cipher suite as it follows the client's preference for picking a cipher suite
             return None
@@ -351,7 +416,14 @@ class OpenSslCipherSuitesPlugin(Plugin):
         ssl_connection = server_connectivity.get_preconfigured_ssl_connection(
             override_ssl_version=ssl_version, should_use_legacy_openssl=should_use_legacy_openssl
         )
-        ssl_connection.ssl_client.set_cipher_list(openssl_cipher_str)
+
+        try:
+            ssl_connection.ssl_client.set_cipher_list(openssl_cipher_str)
+        except (OpenSSLError):
+            ssl_connection = server_connectivity.get_preconfigured_ssl_connection(
+                override_ssl_version=ssl_version, should_use_legacy_openssl=False
+            )
+            ssl_connection.ssl_client.set_cipher_list(openssl_cipher_str)
 
         # Perform the SSL handshake
         try:
@@ -480,7 +552,11 @@ class CipherSuiteScanResult(PluginScanResult):
 
         # Sort all the lists
         self.accepted_cipher_list = accepted_cipher_list
-        self.accepted_cipher_list.sort(key=attrgetter("name"), reverse=True)
+        if preferred_cipher is None:
+            self.server_cipher_preference = False
+            self.accepted_cipher_list.sort(key=attrgetter("name"), reverse=True)
+        else:
+            self.server_cipher_preference = True
 
         self.rejected_cipher_list = rejected_cipher_list
         self.rejected_cipher_list.sort(key=attrgetter("name"), reverse=True)
@@ -503,7 +579,9 @@ class CipherSuiteScanResult(PluginScanResult):
         result_xml.append(preferred_xml)
 
         # Output all the accepted ciphers if any
-        accepted_xml = Element("acceptedCipherSuites")
+        accepted_xml = Element(
+            "acceptedCipherSuites", attrib={"serverPreferenceOrder": str(self.preferred_cipher is not None)}
+        )
         if len(self.accepted_cipher_list) > 0:
             for accepted_cipher in self.accepted_cipher_list:
                 accepted_xml.append(self._format_accepted_cipher_xml(accepted_cipher))
@@ -592,23 +670,25 @@ class CipherSuiteScanResult(PluginScanResult):
             result_txt.append(
                 self._format_field("RC4", "INSECURE - Supported" if supports_rc4 else "OK - Not Supported")
             )
+            result_txt.append(
+                self._format_field(
+                    "Server Cipher Preference",
+                    "OK - Server chose its preferred cipher"
+                    if self.preferred_cipher is not None
+                    else "INSECURE - Server followed client cipher suite preference",
+                )
+            )
+
             result_txt.append("")
 
         # Output all the accepted ciphers if any
         if len(self.accepted_cipher_list) > 0:
-            # Start with the preferred cipher
-            result_txt.append(self._format_subtitle("Preferred:"))
-            if self.preferred_cipher:
-                result_txt.append(self._format_accepted_cipher_txt(self.preferred_cipher))
+            if self.preferred_cipher is None:
+                result_txt.append(self._format_subtitle("Accepted:"))
             else:
-                result_txt.append(
-                    self.REJECTED_CIPHER_LINE_FORMAT.format(
-                        cipher_name="None - Server followed client cipher suite preference.", error_message=""
-                    )
-                )
+                result_txt.append(self._format_subtitle("Accepted (In Server Preferred Order):"))
 
             # Then display all ciphers that were accepted
-            result_txt.append(self._format_subtitle("Accepted:"))
             for accepted_cipher in self.accepted_cipher_list:
                 result_txt.append(self._format_accepted_cipher_txt(accepted_cipher))
         elif self.scan_command.hide_rejected_ciphers:  # type: ignore
@@ -863,18 +943,90 @@ TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
     "DHE-RSA-CHACHA20-POLY1305-OLD": "OLD_TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
     "DHE-RSA-DES-CBC3-SHA": "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
     "DHE-DSS-DES-CBC3-SHA": "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
-    "AES128-CCM": "RSA_WITH_AES_128_CCM",
-    "AES256-CCM": "RSA_WITH_AES_256_CCM",
-    "DHE-RSA-AES128-CCM": "DHE_RSA_WITH_AES_128_CCM",
+    "AES128-CCM": "TLS_RSA_WITH_AES_128_CCM",
+    "AES256-CCM": "TLS_RSA_WITH_AES_256_CCM",
+    "DHE-RSA-AES128-CCM": "TLS_DHE_RSA_WITH_AES_128_CCM",
     "DHE-RSA-AES256-CCM": "TLS_DHE_RSA_WITH_AES_256_CCM",
-    "AES128-CCM8": "RSA_WITH_AES_128_CCM_8",
-    "AES256-CCM8": "RSA_WITH_AES_256_CCM_8",
-    "DHE-RSA-AES128-CCM8": "DHE_RSA_WITH_AES_128_CCM_8",
-    "DHE-RSA-AES256-CCM8": "DHE_RSA_WITH_AES_256_CCM_8",
-    "ECDHE-ECDSA-AES128-CCM": "ECDHE_ECDSA_WITH_AES_128_CCM",
-    "ECDHE-ECDSA-AES256-CCM": "ECDHE_ECDSA_WITH_AES_256_CCM",
-    "ECDHE-ECDSA-AES128-CCM8": "ECDHE_ECDSA_WITH_AES_128_CCM_8",
-    "ECDHE-ECDSA-AES256-CCM8": "ECDHE_ECDSA_WITH_AES_256_CCM_8",
+    "AES128-CCM8": "TLS_RSA_WITH_AES_128_CCM_8",
+    "AES256-CCM8": "TLS_RSA_WITH_AES_256_CCM_8",
+    "DHE-RSA-AES128-CCM8": "TLS_DHE_RSA_WITH_AES_128_CCM_8",
+    "DHE-RSA-AES256-CCM8": "TLS_DHE_RSA_WITH_AES_256_CCM_8",
+    "ECDHE-ECDSA-AES128-CCM": "TLS_ECDHE_ECDSA_WITH_AES_128_CCM",
+    "ECDHE-ECDSA-AES256-CCM": "TLS_ECDHE_ECDSA_WITH_AES_256_CCM",
+    "ECDHE-ECDSA-AES128-CCM8": "TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8",
+    "ECDHE-ECDSA-AES256-CCM8": "TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8",
+    "ARIA128-GCM-SHA256": "TLS_RSA_WITH_ARIA_128_GCM_SHA256",
+    "ARIA256-GCM-SHA384": "TLS_RSA_WITH_ARIA_256_GCM_SHA384",
+    "DHE-DSS-ARIA128-GCM-SHA256": "TLS_DHE_DSS_WITH_ARIA_128_GCM_SHA256",
+    "DHE-DSS-ARIA256-GCM-SHA384": "TLS_DHE_DSS_WITH_ARIA_256_GCM_SHA384",
+    "DHE-PSK-3DES-EDE-CBC-SHA": "TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA",
+    "DHE-PSK-AES128-CBC-SHA": "TLS_DHE_PSK_WITH_AES_128_CBC_SHA",
+    "DHE-PSK-AES128-CBC-SHA256": "TLS_DHE_PSK_WITH_AES_128_CBC_SHA256",
+    "DHE-PSK-AES128-CCM": "TLS_DHE_PSK_WITH_AES_128_CCM",
+    "DHE-PSK-AES128-CCM8": "TLS_PSK_DHE_WITH_AES_128_CCM_8",
+    "DHE-PSK-AES128-GCM-SHA256": "TLS_DHE_PSK_WITH_AES_128_GCM_SHA256",
+    "DHE-PSK-AES256-CBC-SHA": "TLS_DHE_PSK_WITH_AES_256_CBC_SHA",
+    "DHE-PSK-AES256-CBC-SHA384": "TLS_DHE_PSK_WITH_AES_256_CBC_SHA384",
+    "DHE-PSK-AES256-CCM": "TLS_DHE_PSK_WITH_AES_256_CCM",
+    "DHE-PSK-AES256-CCM8": "TLS_PSK_DHE_WITH_AES_256_CCM_8",
+    "DHE-PSK-AES256-GCM-SHA384": "TLS_DHE_PSK_WITH_AES_256_GCM_SHA384",
+    "DHE-PSK-ARIA128-GCM-SHA256": "TLS_DHE_PSK_WITH_ARIA_128_GCM_SHA256",
+    "DHE-PSK-ARIA256-GCM-SHA384": "TLS_DHE_PSK_WITH_ARIA_256_GCM_SHA384",
+    "DHE-PSK-CAMELLIA128-SHA256": "TLS_DHE_PSK_WITH_CAMELLIA_128_CBC_SHA256",
+    "DHE-PSK-CAMELLIA256-SHA384": "TLS_DHE_PSK_WITH_CAMELLIA_256_CBC_SHA384",
+    "DHE-PSK-CHACHA20-POLY1305": "TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256",
+    "DHE-PSK-NULL-SHA": "TLS_DHE_PSK_WITH_NULL_SHA",
+    "DHE-PSK-NULL-SHA256": "TLS_DHE_PSK_WITH_NULL_SHA256",
+    "DHE-PSK-NULL-SHA384": "TLS_DHE_PSK_WITH_NULL_SHA384",
+    "DHE-PSK-RC4-SHA": "TLS_DHE_PSK_WITH_RC4_128_SHA",
+    "DHE-RSA-ARIA128-GCM-SHA256": "TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256",
+    "DHE-RSA-ARIA256-GCM-SHA384": "TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384",
+    "ECDHE-ARIA128-GCM-SHA256": "TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256",
+    "ECDHE-ARIA256-GCM-SHA384": "TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384",
+    "ECDHE-ECDSA-ARIA128-GCM-SHA256": "TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256",
+    "ECDHE-ECDSA-ARIA256-GCM-SHA384": "TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384",
+    "ECDHE-PSK-3DES-EDE-CBC-SHA": "TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA",
+    "ECDHE-PSK-AES128-CBC-SHA": "TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA",
+    "ECDHE-PSK-AES128-CBC-SHA256": "TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256",
+    "ECDHE-PSK-AES256-CBC-SHA": "TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA",
+    "ECDHE-PSK-AES256-CBC-SHA384": "TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA384",
+    "ECDHE-PSK-CAMELLIA128-SHA256": "TLS_ECDHE_PSK_WITH_CAMELLIA_128_CBC_SHA256",
+    "ECDHE-PSK-CAMELLIA256-SHA384": "TLS_ECDHE_PSK_WITH_CAMELLIA_256_CBC_SHA384",
+    "ECDHE-PSK-CHACHA20-POLY1305": "TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256",
+    "ECDHE-PSK-NULL-SHA": "TLS_ECDHE_PSK_WITH_NULL_SHA",
+    "ECDHE-PSK-NULL-SHA256": "TLS_ECDHE_PSK_WITH_NULL_SHA256",
+    "ECDHE-PSK-NULL-SHA384": "TLS_ECDHE_PSK_WITH_NULL_SHA384",
+    "ECDHE-PSK-RC4-SHA": "TLS_ECDHE_PSK_WITH_RC4_128_SHA",
+    "GOST2001-NULL-GOST94": "TLS_GOSTR341001_WITH_NULL_GOSTR3411",
+    "GOST94-NULL-GOST94": "TLS_GOSTR341094_WITH_NULL_GOSTR3411",
+    "PSK-AES128-CBC-SHA256": "TLS_PSK_WITH_AES_128_CBC_SHA256",
+    "PSK-AES128-CCM": "TLS_PSK_WITH_AES_128_CCM",
+    "PSK-AES128-CCM8": "TLS_PSK_WITH_AES_128_CCM_8",
+    "PSK-AES128-GCM-SHA256": "TLS_PSK_WITH_AES_128_GCM_SHA256",
+    "PSK-AES256-CBC-SHA384": "TLS_PSK_WITH_AES_256_CBC_SHA384",
+    "PSK-AES256-CCM": "TLS_PSK_WITH_AES_256_CCM",
+    "PSK-AES256-CCM8": "TLS_PSK_WITH_AES_256_CCM_8",
+    "PSK-AES256-GCM-SHA384": "TLS_PSK_WITH_AES_256_GCM_SHA384",
+    "PSK-ARIA128-GCM-SHA256": "TLS_PSK_WITH_ARIA_128_GCM_SHA256",
+    "PSK-ARIA256-GCM-SHA384": "TLS_PSK_WITH_ARIA_256_GCM_SHA384",
+    "PSK-CAMELLIA128-SHA256": "TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256",
+    "PSK-CAMELLIA256-SHA384": "TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384",
+    "PSK-CHACHA20-POLY1305": "TLS_PSK_WITH_CHACHA20_POLY1305_SHA256",
+    "PSK-NULL-SHA": "TLS_PSK_WITH_NULL_SHA",
+    "PSK-NULL-SHA256": "TLS_PSK_WITH_NULL_SHA256",
+    "PSK-NULL-SHA384": "TLS_PSK_WITH_NULL_SHA384",
+    "RSA-PSK-AES128-CBC-SHA256": "TLS_RSA_PSK_WITH_AES_128_CBC_SHA256",
+    "RSA-PSK-AES128-GCM-SHA256": "TLS_RSA_PSK_WITH_AES_128_GCM_SHA256",
+    "RSA-PSK-AES256-CBC-SHA384": "TLS_RSA_PSK_WITH_AES_256_CBC_SHA384",
+    "RSA-PSK-AES256-GCM-SHA384": "TLS_RSA_PSK_WITH_AES_256_GCM_SHA384",
+    "RSA-PSK-ARIA128-GCM-SHA256": "TLS_RSA_PSK_WITH_ARIA_128_GCM_SHA256",
+    "RSA-PSK-ARIA256-GCM-SHA384": "TLS_RSA_PSK_WITH_ARIA_256_GCM_SHA384",
+    "RSA-PSK-CAMELLIA128-SHA256": "TLS_RSA_PSK_WITH_CAMELLIA_128_CBC_SHA256",
+    "RSA-PSK-CAMELLIA256-SHA384": "TLS_RSA_PSK_WITH_CAMELLIA_256_CBC_SHA384",
+    "RSA-PSK-CHACHA20-POLY1305": "TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256",
+    "RSA-PSK-NULL-SHA": "TLS_RSA_PSK_WITH_NULL_SHA",
+    "RSA-PSK-NULL-SHA256": "TLS_RSA_PSK_WITH_NULL_SHA256",
+    "RSA-PSK-NULL-SHA384": "TLS_RSA_PSK_WITH_NULL_SHA384",
 }
 
 

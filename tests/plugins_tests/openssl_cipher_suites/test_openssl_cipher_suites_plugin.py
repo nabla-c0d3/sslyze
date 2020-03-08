@@ -181,7 +181,7 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_follows_client_cipher_suite_preference(self):
         # Given a server to scan that follows client cipher suite preference
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.sogou.com", 443)
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds

@@ -10,7 +10,7 @@ from sys import platform
 import logging
 import time
 from threading import Thread
-from typing import Optional
+from typing import Optional, List
 
 
 class NotOnLinux64Error(EnvironmentError):
@@ -81,7 +81,7 @@ class _OpenSslServer(ABC):
 
     _S_SERVER_CMD = (
         "{openssl} s_server -cert {server_cert} -key {server_key} -accept {port}"
-        ' -cipher "ALL:COMPLEMENTOFALL" {verify_arg} {extra_args}'
+        ' -cipher "{cipher}" {verify_arg} {extra_args}'
     )
 
     # Client authentication - files generated using https://gist.github.com/nabla-c0d3/c2c5799a84a4867e5cbae42a5c43f89a
@@ -117,10 +117,18 @@ class _OpenSslServer(ABC):
         return True
 
     def __init__(
-        self, client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED, extra_openssl_args: str = ""
+        self,
+        client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
+        extra_openssl_args: Optional[List[str]] = None,
+        openssl_cipher_string: Optional[str] = None,
+        should_enable_server_cipher_preference: bool = False,
     ) -> None:
         if not self.is_platform_supported():
             raise NotOnLinux64Error()
+
+        final_extra_args = [] if extra_openssl_args is None else extra_openssl_args
+        if should_enable_server_cipher_preference:
+            final_extra_args.append("-serverpref")
 
         self.hostname = "localhost"
         self.ip_address = "127.0.0.1"
@@ -136,7 +144,8 @@ class _OpenSslServer(ABC):
             server_cert=self._SERVER_CERT_PATH,
             port=self.port,
             verify_arg=self.get_verify_argument(client_auth_config),
-            extra_args=extra_openssl_args,
+            extra_args=" ".join(final_extra_args) if extra_openssl_args else "",
+            cipher=openssl_cipher_string if openssl_cipher_string else "ALL:COMPLEMENTOFALL",
         )
 
     def __enter__(self):
@@ -183,6 +192,18 @@ class LegacyOpenSslServer(_OpenSslServer):
     """A wrapper around the OpenSSL 1.0.0e s_server binary.
     """
 
+    def __init__(
+        self,
+        client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
+        openssl_cipher_string: Optional[str] = None,
+        should_enable_server_cipher_preference: bool = False,
+    ) -> None:
+        super().__init__(
+            client_auth_config=client_auth_config,
+            openssl_cipher_string=openssl_cipher_string,
+            should_enable_server_cipher_preference=should_enable_server_cipher_preference,
+        )
+
     @classmethod
     def get_openssl_path(cls) -> Path:
         return Path(__file__).parent.absolute() / "openssl-1-0-0e-linux64"
@@ -218,9 +239,21 @@ class ModernOpenSslServer(_OpenSslServer):
         self,
         client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
         max_early_data: Optional[int] = None,
+        openssl_cipher_string: Optional[str] = None,
+        should_enable_server_cipher_preference: bool = False,
+        groups: Optional[str] = None,
     ) -> None:
-        extra_args = ""
+        extra_args = []
+        if groups:
+            extra_args.append(f"-groups {groups}")
+
         if max_early_data is not None:
             # Enable TLS 1.3 early data on the server
-            extra_args = f"-early_data -max_early_data {max_early_data}"
-        super().__init__(client_auth_config, extra_args)
+            extra_args += ["-early_data", f"-max_early_data {max_early_data}"]
+
+        super().__init__(
+            client_auth_config=client_auth_config,
+            openssl_cipher_string=openssl_cipher_string,
+            extra_openssl_args=extra_args,
+            should_enable_server_cipher_preference=should_enable_server_cipher_preference,
+        )

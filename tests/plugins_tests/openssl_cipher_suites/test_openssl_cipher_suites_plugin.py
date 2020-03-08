@@ -1,3 +1,5 @@
+from random import random
+
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.plugins.openssl_cipher_suites.implementation import (
     Sslv20ScanImplementation,
@@ -37,7 +39,6 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Sslv30ScanImplementation.perform(server_info)
 
         # And the result confirms that SSL 3.0 is not supported
-        assert result.cipher_suite_preferred_by_server is None
         assert not result.accepted_cipher_suites
         assert result.rejected_cipher_suites
 
@@ -50,7 +51,6 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv10ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.0 is supported
-        # assert result.cipher_suite_preferred_by_server
         expected_ciphers = {
             "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
             "TLS_RSA_WITH_AES_256_CBC_SHA",
@@ -86,7 +86,6 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv11ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.1 is not supported
-        # assert result.cipher_suite_preferred_by_server
         expected_ciphers = {
             "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
             "TLS_RSA_WITH_AES_256_CBC_SHA",
@@ -109,7 +108,6 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
 
         # And the result confirms that TLS 1.2 is not supported
-        # assert result.cipher_suite_preferred_by_server
         expected_ciphers = {
             "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
             "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
@@ -179,7 +177,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
 
         # And the server is detected as not following the client's preference
-        assert not result.follows_cipher_suite_preference_from_client
+        assert result.cipher_suite_preferred_by_server is None
 
     def test_follows_client_cipher_suite_preference(self):
         # Given a server to scan that follows client cipher suite preference
@@ -190,7 +188,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
 
         # And the server is detected as following the client's preference
-        assert result.follows_cipher_suite_preference_from_client
+        assert result.cipher_suite_preferred_by_server
 
     def test_smtp(self):
         # Given an SMTP server to scan
@@ -232,8 +230,7 @@ class TestCipherSuitesPluginWithLocalServer:
             # When scanning for cipher suites, it succeeds
             result: CipherSuitesScanResult = Sslv20ScanImplementation.perform(server_info)
 
-        # The embedded server does not have a preference
-        assert not result.cipher_suite_preferred_by_server
+        # The right cipher suites were detected
         assert {
             "SSL_CK_RC4_128_EXPORT40_WITH_MD5",
             "SSL_CK_IDEA_128_CBC_WITH_MD5",
@@ -246,6 +243,9 @@ class TestCipherSuitesPluginWithLocalServer:
         } == {accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites}
         assert not result.rejected_cipher_suites
 
+        # And the embedded server does not have a preference by default
+        assert not result.cipher_suite_preferred_by_server
+
     def test_sslv3_enabled(self):
         # Given a server to scan that supports SSL 3.0
         with LegacyOpenSslServer() as server:
@@ -257,8 +257,7 @@ class TestCipherSuitesPluginWithLocalServer:
             # When scanning for cipher suites, it succeeds
             result: CipherSuitesScanResult = Sslv30ScanImplementation.perform(server_info)
 
-        # The embedded server does not have a preference
-        assert not result.preferred_cipher
+        # The right cipher suites were detected
         expected_ciphers = {
             "TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
             "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
@@ -301,6 +300,9 @@ class TestCipherSuitesPluginWithLocalServer:
             accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
         }
 
+        # And the embedded server does not have a preference by default
+        assert not result.cipher_suite_preferred_by_server
+
     def test_succeeds_when_client_auth_failed_tls_1_2(self):
         # Given a TLS 1.2 server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
@@ -328,3 +330,39 @@ class TestCipherSuitesPluginWithLocalServer:
             result: CipherSuitesScanResult = Tlsv13ScanImplementation.perform(server_info)
 
         assert result.accepted_cipher_suites
+
+    def test_cipher_suite_preferred_by_server(self):
+        # Given an ordered list of cipher suites
+        configured_cipher_suites = [
+            "ECDHE-RSA-CHACHA20-POLY1305",
+            "ECDHE-RSA-AES128-GCM-SHA256",
+            "ECDHE-RSA-AES256-GCM-SHA384",
+            "ECDHE-RSA-AES128-SHA256",
+            "ECDHE-RSA-AES256-SHA384",
+            "ECDHE-RSA-AES128-SHA",
+            "ECDHE-RSA-AES256-SHA",
+            "AES128-GCM-SHA256",
+            "AES256-GCM-SHA384",
+            "AES128-SHA256",
+            "AES256-SHA256",
+            "AES128-SHA",
+            "AES256-SHA",
+        ]
+        random.shuffle(configured_cipher_suites)
+        cipher_string = ":".join(configured_cipher_suites)
+
+        # And a server that is configured with this list as its prefered cipher suites
+        with ModernOpenSslServer(
+            openssl_cipher_string=cipher_string, should_enable_server_cipher_preference=True
+        ) as server:
+            server_location = ServerNetworkLocationViaDirectConnection(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = ServerConnectivityTester().perform(server_location)
+
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+
+        # And the server's cipher suite preference was detected
+        assert result.cipher_suite_preferred_by_server
+        assert configured_cipher_suites[0] == result.cipher_suite_preferred_by_server.openssl_name

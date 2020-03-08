@@ -85,15 +85,11 @@ class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult"
                     cls._format_subtitle("The server is configured to prefer the following cipher suite:")
                 )
                 result_as_txt.append(
-                    f"        {result.cipher_suite_preferred_by_server.cipher_suite.name:<50}"
-                    f"{result.cipher_suite_preferred_by_server.cipher_suite.key_size:<10}"
+                    f"        {result.cipher_suite_preferred_by_server.name:<50}"
+                    f"{result.cipher_suite_preferred_by_server.key_size:<10}"
                 )
             else:
-                result_as_txt.append(
-                    cls._format_subtitle(
-                        "The server has no preferred cipher suite and will follow the client's preference."
-                    )
-                )
+                result_as_txt.append(cls._format_subtitle("The server has no preferred cipher suite."))
             result_as_txt.append("")
 
         return result_as_txt

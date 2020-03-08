@@ -8,7 +8,7 @@ from sslyze.connection_helpers.errors import (
     ServerTlsConfigurationNotSupported,
     ConnectionToServerFailed,
 )
-from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite
+from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite, CipherSuitesRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.openssl_cipher_suites._tls12_workaround import WorkaroundForTls12ForCipherSuites
 
@@ -82,68 +82,58 @@ def connect_with_cipher_suite(
     return CipherSuiteAcceptedByServer(cipher_suite=cipher_suite)
 
 
+@dataclass(frozen=True)
+class PreferredCipherSuite:
+    cipher_suite: Optional[CipherSuite]
+
+
 def get_preferred_cipher_suite(
-    cls, server_connectivity_info: ServerConnectivityInfo, tls_version: OpenSslVersionEnum, cipher_suites_to_enable: str
-) -> Optional[CipherSuite]:
+    server_connectivity_info: ServerConnectivityInfo, tls_version: OpenSslVersionEnum
+) -> PreferredCipherSuite:
     """Try to detect the server's preferred cipher suite among all cipher suites supported by SSLyze.
     """
-    should_use_legacy_openssl = None
-    # For TLS 1.2, we need to figure whether the modern or legacy OpenSSL should be used to connect
-    if tls_version == OpenSslVersionEnum.TLSV1_2:
-        should_use_legacy_openssl = True
-        # If there are more than two modern-supported cipher suites, use the modern OpenSSL
-        for cipher_name in accepted_cipher_names:
-            modern_supported_cipher_count = 0
-            if not WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_name):
-                modern_supported_cipher_count += 1
+    all_cipher_suites = [
+        cipher_suite.openssl_name for cipher_suite in CipherSuitesRepository.get_all_cipher_suites(tls_version)
+    ]
+    ordered_cipher_suites = sorted(all_cipher_suites, reverse=False)
+    reverse_ordered_cipher_suites = sorted(all_cipher_suites, reverse=True)
 
-            if modern_supported_cipher_count > 1:
-                should_use_legacy_openssl = False
-                break
-
-    first_cipher_str = ", ".join(accepted_cipher_names)
-    # Swap the first two ciphers in the list to see if the server always picks the client's first cipher
-    second_cipher_str = ", ".join([accepted_cipher_names[1], accepted_cipher_names[0]] + accepted_cipher_names[2:])
+    ordered_cipher_suites_string = ":".join(ordered_cipher_suites)
+    reverse_ordered_cipher_suites_string = ":".join(reverse_ordered_cipher_suites)
 
     try:
-        first_cipher = cls._get_selected_cipher_suite(
-            server_connectivity_info, tls_version, first_cipher_str, should_use_legacy_openssl
+        cipher_suite_used_with_order = _get_selected_cipher_suite(
+            server_connectivity_info, tls_version, ordered_cipher_suites_string
         )
-        second_cipher = cls._get_selected_cipher_suite(
-            server_connectivity_info, tls_version, second_cipher_str, should_use_legacy_openssl
+        cipher_suite_used_with_reverse_order = _get_selected_cipher_suite(
+            server_connectivity_info, tls_version, reverse_ordered_cipher_suites_string
         )
-    except (ConnectionToServerFailed):
+    except ConnectionToServerFailed:
         # Could not complete a handshake
-        return None
+        return PreferredCipherSuite(None)
 
-    if first_cipher.name == second_cipher.name:
+    if cipher_suite_used_with_order == cipher_suite_used_with_reverse_order:
         # The server has its own preference for picking a cipher suite
-        return first_cipher
+        return PreferredCipherSuite(
+            CipherSuite.from_openssl(cipher_suite_openssl_name=cipher_suite_used_with_order, tls_version=tls_version)
+        )
     else:
         # The server has no preferred cipher suite as it follows the client's preference for picking a cipher suite
-        return None
+        return PreferredCipherSuite(None)
 
 
 def _get_selected_cipher_suite(
-    server_connectivity: ServerConnectivityInfo,
-    ssl_version: OpenSslVersionEnum,
-    openssl_cipher_str: str,
-    should_use_legacy_openssl: Optional[bool],
-) -> "AcceptedCipherSuite":
-    """Given an OpenSSL cipher string (which may specify multiple cipher suites), return the cipher suite that was
-    selected by the server during the SSL handshake.
-    """
-    ssl_connection = server_connectivity.get_preconfigured_tls_connection(
-        override_tls_version=ssl_version, should_use_legacy_openssl=should_use_legacy_openssl
-    )
-    ssl_connection.ssl_client.set_cipher_list(openssl_cipher_str)
+    server_connectivity: ServerConnectivityInfo, tls_version: OpenSslVersionEnum, openssl_cipher_string: str
+) -> str:
+    ssl_connection = server_connectivity.get_preconfigured_tls_connection(override_tls_version=tls_version)
+    ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
 
     # Perform the SSL handshake
     try:
         ssl_connection.connect()
-        selected_cipher = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
+        return ssl_connection.ssl_client.get_current_cipher_name()
     except ClientCertificateRequested:
-        selected_cipher = AcceptedCipherSuite.from_ongoing_ssl_connection(ssl_connection, ssl_version)
+        # TODO(AD): Sometimes get_current_cipher_name() called in from_ongoing_ssl_connection() will return None
+        return ssl_connection.ssl_client.get_current_cipher_name()
     finally:
         ssl_connection.close()
-    return selected_cipher

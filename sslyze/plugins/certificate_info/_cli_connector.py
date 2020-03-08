@@ -214,9 +214,7 @@ class _CertificateInfoCliConnector(
                     ocsp_resp_txt.extend(
                         [
                             cls._format_field("Cert Status:", result.ocsp_response.certificate_status),
-                            cls._format_field(
-                                "Cert Serial Number:", result.ocsp_response.serial_number
-                            ),
+                            cls._format_field("Cert Serial Number:", result.ocsp_response.serial_number),
                             cls._format_field("This Update:", result.ocsp_response.this_update.date().isoformat()),
                             cls._format_field("Next Update:", result.ocsp_response.next_update.date().isoformat()),
                         ]

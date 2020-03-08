@@ -1,5 +1,7 @@
 from random import random
 
+from nassl.key_exchange_info import EcDhKeyExchangeInfo, DhKeyExchangeInfo
+
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.plugins.openssl_cipher_suites.implementation import (
     Sslv20ScanImplementation,
@@ -215,6 +217,27 @@ class TestCipherSuitesPluginWithOnlineServer:
         assert {"TLS_CHACHA20_POLY1305_SHA256", "TLS_AES_256_GCM_SHA384", "TLS_AES_128_GCM_SHA256"} == {
             accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
         }
+
+    def test_ephemeral_key_info(self):
+        # Given a server to scan that supports DH and ECDH ephemeral keys
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
+
+        # When scanning for cipher suites, it succeeds
+        result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+        assert result.accepted_cipher_suites
+
+        # And the ephemeral keys were returned
+        found_dh_key = False
+        found_ecdh_key = False
+        for accepted_cipher_suite in result.accepted_cipher_suites:
+            if isinstance(accepted_cipher_suite.ephemeral_key, EcDhKeyExchangeInfo):
+                found_ecdh_key = True
+            elif isinstance(accepted_cipher_suite.ephemeral_key, DhKeyExchangeInfo):
+                found_dh_key = True
+
+        assert found_dh_key
+        assert found_ecdh_key
 
 
 @can_only_run_on_linux_64

@@ -1,5 +1,6 @@
 import copyreg
 import json
+from base64 import b64encode
 from dataclasses import asdict
 from datetime import datetime
 from functools import singledispatch
@@ -119,3 +120,8 @@ def _traceback(obj: TracebackException) -> JsonType:
 @object_to_json.register
 def _datetime(obj: datetime) -> JsonType:
     return obj.isoformat()
+
+
+@object_to_json.register
+def _bytearray(obj: bytearray) -> JsonType:
+    return b64encode(obj).decode("utf-8")

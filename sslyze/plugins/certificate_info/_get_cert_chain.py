@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -7,8 +6,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate, Certificate
 from nassl._nassl import X509
 from nassl.cert_chain_verifier import CertificateChainVerifier
-from nassl.ocsp_response import SignedCertificateTimestampsExtension, OcspResponseStatusEnum, OcspResponse
-from nassl.ssl_client import CertificateChainVerificationFailed, ClientCertificateRequested
+from nassl.ocsp_response import OcspResponse
+from nassl.ssl_client import CertificateChainVerificationFailed
 
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
@@ -97,7 +96,5 @@ def _verify_certificate_chain(server_certificate_chain: List[str], trust_store: 
         openssl_verify_str = e.openssl_error_string
 
     return PathValidationResult(
-        trust_store=trust_store,
-        verified_certificate_chain=verified_chain,
-        openssL_error_string=openssl_verify_str,
+        trust_store=trust_store, verified_certificate_chain=verified_chain, openssL_error_string=openssl_verify_str
     )

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Union
 
+from nassl.key_exchange_info import KeyExchangeInfo
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
 
 from sslyze.connection_helpers.errors import (
@@ -15,8 +16,13 @@ from sslyze.plugins.openssl_cipher_suites._tls12_workaround import WorkaroundFor
 
 @dataclass(frozen=True)
 class CipherSuiteAcceptedByServer:
+    """
+    ephemeral_key: The ephemeral key negotiated with the server when using (EC) DH cipher suites. None if the cipher
+        suite does not use ephemeral keys or if the ephemeral key could not be retrieved.
+    """
+
     cipher_suite: CipherSuite
-    # TODO: dh_info
+    ephemeral_key: Optional[KeyExchangeInfo]
 
 
 @dataclass(frozen=True)
@@ -61,30 +67,33 @@ def connect_with_cipher_suite(
             f"{str(ssl_connection.ssl_client.get_cipher_list())}"
         )
 
+    ephemeral_key = None
     try:
         # Perform the SSL handshake
         ssl_connection.connect()
+        ephemeral_key = ssl_connection.ssl_client.get_dh_info()
 
     except ServerTlsConfigurationNotSupported:
         # SSLyze rejected the handshake because the server's DH config was too insecure; this means the
         # cipher suite is actually supported
-        return CipherSuiteAcceptedByServer(cipher_suite=cipher_suite)
+        pass
 
     except ClientCertificateRequested:
         # When the handshake failed due to ClientCertificateRequested
-        return CipherSuiteAcceptedByServer(cipher_suite=cipher_suite)
+        ephemeral_key = ssl_connection.ssl_client.get_dh_info()
+        pass
 
     except ServerRejectedTlsHandshake as e:
         return CipherSuiteRejectedByServer(cipher_suite=cipher_suite, error_message=e.error_message)
     finally:
         ssl_connection.close()
 
-    return CipherSuiteAcceptedByServer(cipher_suite=cipher_suite)
+    return CipherSuiteAcceptedByServer(cipher_suite=cipher_suite, ephemeral_key=ephemeral_key)
 
 
 @dataclass(frozen=True)
 class PreferredCipherSuite:
-    cipher_suite: Optional[CipherSuite]
+    cipher_suite_openssl_name: Optional[str]
 
 
 def get_preferred_cipher_suite(
@@ -114,9 +123,7 @@ def get_preferred_cipher_suite(
 
     if cipher_suite_used_with_order == cipher_suite_used_with_reverse_order:
         # The server has its own preference for picking a cipher suite
-        return PreferredCipherSuite(
-            CipherSuite.from_openssl(cipher_suite_openssl_name=cipher_suite_used_with_order, tls_version=tls_version)
-        )
+        return PreferredCipherSuite(cipher_suite_openssl_name=cipher_suite_used_with_order)
     else:
         # The server has no preferred cipher suite as it follows the client's preference for picking a cipher suite
         return PreferredCipherSuite(None)

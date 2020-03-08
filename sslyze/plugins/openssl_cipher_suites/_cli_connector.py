@@ -1,7 +1,9 @@
 from typing import List, TYPE_CHECKING, ClassVar
 
+from nassl.key_exchange_info import EcDhKeyExchangeInfo, DhKeyExchangeInfo
 from nassl.ssl_client import OpenSslVersionEnum
 
+from sslyze.plugins.openssl_cipher_suites._test_cipher_suite import CipherSuiteAcceptedByServer
 from sslyze.plugins.plugin_base import ScanCommandCliConnector
 
 if TYPE_CHECKING:
@@ -25,8 +27,7 @@ class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult"
                 )
             )
         else:
-            # Display all ciphers that were accepted
-            # TODO: DH info
+            # Display all cipher suites that were accepted
             result_as_txt.append(
                 cls._format_subtitle(f"Attempted to connect using {cipher_suites_count} cipher suites.")
             )
@@ -37,9 +38,7 @@ class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult"
                 )
             )
             for accepted_cipher in result.accepted_cipher_suites:
-                result_as_txt.append(
-                    f"        {accepted_cipher.cipher_suite.name:<50}{accepted_cipher.cipher_suite.key_size:<10}"
-                )
+                result_as_txt.append(_format_accepted_cipher_suite(accepted_cipher))
             result_as_txt.append("")
 
             # Display some general comments about the cipher suite configuration
@@ -84,12 +83,21 @@ class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult"
                 result_as_txt.append(
                     cls._format_subtitle("The server is configured to prefer the following cipher suite:")
                 )
-                result_as_txt.append(
-                    f"        {result.cipher_suite_preferred_by_server.name:<50}"
-                    f"{result.cipher_suite_preferred_by_server.key_size:<10}"
-                )
+                result_as_txt.append(_format_accepted_cipher_suite(result.cipher_suite_preferred_by_server))
             else:
                 result_as_txt.append(cls._format_subtitle("The server has no preferred cipher suite."))
             result_as_txt.append("")
 
         return result_as_txt
+
+
+def _format_accepted_cipher_suite(accepted_cipher: CipherSuiteAcceptedByServer) -> str:
+    eph_key = accepted_cipher.ephemeral_key
+    if isinstance(eph_key, EcDhKeyExchangeInfo):
+        dh_info = f"ECDH: {eph_key.curve_name} ({eph_key.key_size} bits)"
+    elif isinstance(eph_key, DhKeyExchangeInfo):
+        dh_info = f"DH ({eph_key.key_size} bits)"
+    else:
+        dh_info = ""
+
+    return f"        {accepted_cipher.cipher_suite.name:<50}{accepted_cipher.cipher_suite.key_size:<10}{dh_info:<15}"

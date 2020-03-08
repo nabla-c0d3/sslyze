@@ -5,8 +5,11 @@ from pathlib import Path
 from typing import Optional, List
 
 from cryptography.x509 import Certificate
-from nassl.ocsp_response import OcspResponseStatusEnum, OcspResponseNotTrustedError, \
-    SignedCertificateTimestampsExtension
+from nassl.ocsp_response import (
+    OcspResponseStatusEnum,
+    OcspResponseNotTrustedError,
+    SignedCertificateTimestampsExtension,
+)
 
 from sslyze.plugins.certificate_info._cert_chain_analyzer import CertificateChainDeploymentAnalyzer
 from sslyze.plugins.certificate_info._cli_connector import _CertificateInfoCliConnector
@@ -180,10 +183,7 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
                 )
 
             # Check if the OCSP response is trusted
-            if (
-                trust_store_used_to_build_verified_chain
-                and ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL
-            ):
+            if trust_store_used_to_build_verified_chain and ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL:
                 try:
                     ocsp_response.verify(trust_store_used_to_build_verified_chain.path)
                     is_ocsp_response_trusted = True

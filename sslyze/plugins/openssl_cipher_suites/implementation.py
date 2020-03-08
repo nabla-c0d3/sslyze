@@ -14,7 +14,7 @@ from sslyze.plugins.openssl_cipher_suites._test_cipher_suite import (
     PreferredCipherSuite,
     get_preferred_cipher_suite,
 )
-from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuitesRepository, CipherSuite
+from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuitesRepository
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
     ScanCommandResult,
@@ -44,7 +44,7 @@ class CipherSuitesScanResult(ScanCommandResult):
 
     tls_version_used: OpenSslVersionEnum
 
-    cipher_suite_preferred_by_server: Optional[CipherSuite]
+    cipher_suite_preferred_by_server: Optional[CipherSuiteAcceptedByServer]
     accepted_cipher_suites: List[CipherSuiteAcceptedByServer]
     rejected_cipher_suites: List[CipherSuiteRejectedByServer]
 
@@ -132,6 +132,7 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
         if len(completed_scan_jobs) != expected_scan_jobs_count:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 
+        preferred_cipher_suite_openssl_name = None
         accepted_cipher_suites = []
         rejected_cipher_suites = []
         for completed_job in completed_scan_jobs:
@@ -148,13 +149,23 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
             elif isinstance(cipher_suite_result, CipherSuiteRejectedByServer):
                 rejected_cipher_suites.append(cipher_suite_result)
             elif isinstance(cipher_suite_result, PreferredCipherSuite):
-                preferred_cipher_suite = cipher_suite_result.cipher_suite
+                preferred_cipher_suite_openssl_name = cipher_suite_result.cipher_suite_openssl_name
             else:
                 raise ValueError("Should never happen")
 
         # Sort all the lists
         accepted_cipher_suites.sort(key=attrgetter("cipher_suite.name"), reverse=True)
         rejected_cipher_suites.sort(key=attrgetter("cipher_suite.name"), reverse=True)
+
+        # Find the preferred cipher suite among all the accepted cipher suites
+        if preferred_cipher_suite_openssl_name is None:
+            preferred_cipher_suite = None
+        else:
+            openssl_name_to_accepted_cipher_suite = {
+                acc_cipher_suite.cipher_suite.openssl_name: acc_cipher_suite
+                for acc_cipher_suite in accepted_cipher_suites
+            }
+            preferred_cipher_suite = openssl_name_to_accepted_cipher_suite[preferred_cipher_suite_openssl_name]
 
         # Generate the results
         return CipherSuitesScanResult(

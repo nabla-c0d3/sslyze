@@ -1,17 +1,17 @@
 from concurrent.futures import Future
 from dataclasses import dataclass, asdict
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
 
 from cryptography.x509 import Certificate
-from nassl.ocsp_response import OcspResponseStatusEnum
+from nassl.ocsp_response import OcspResponseStatusEnum, OcspResponseNotTrustedError, \
+    SignedCertificateTimestampsExtension
 
 from sslyze.plugins.certificate_info._cert_chain_analyzer import CertificateChainDeploymentAnalyzer
 from sslyze.plugins.certificate_info._cli_connector import _CertificateInfoCliConnector
 from sslyze.plugins.certificate_info._get_cert_chain import get_and_verify_certificate_chain, PathValidationResult
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
-from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
-from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -29,6 +29,26 @@ class CertificateInfoExtraArguments(ScanCommandExtraArguments):
     def __post_init__(self) -> None:
         if not self.custom_ca_file.is_file():
             raise ValueError(f'Could not open supplied CA file at "{self.custom_ca_file}"')
+
+
+@dataclass(frozen=True)
+class OcspResponse:
+    status: OcspResponseStatusEnum
+    type: str
+    version: int
+    responder_id: str
+    produced_at: datetime
+
+    certificate_status: str
+    this_update: datetime
+    next_update: datetime
+
+    hash_algorithm: str
+    issuer_name_hash: str
+    issuer_key_hash: str
+    serial_number: str
+
+    extensions: Optional[List[SignedCertificateTimestampsExtension]]  # Only SCT is supported at the moment
 
 
 @dataclass(frozen=True)
@@ -63,10 +83,7 @@ class CertificateInfoScanResult(ScanCommandResult):
         verified_chain_has_legacy_symantec_anchor: True if the certificate chain contains a distrusted Symantec anchor
             (https://blog.qualys.com/ssllabs/2017/09/26/google-and-mozilla-deprecating-existing-symantec-certificates).
             None if the verified chain could not be built.
-        ocsp_response (Optional[Dict[Text, Any]]): The OCSP response returned by the server. None if no response was
-            sent by the server.
-        ocsp_response_status: The status of the OCSP response returned by the server. None if no response was sent by
-            the server.
+        ocsp_response: The OCSP response returned by the server. None if no response was sent by the server.
         ocsp_response_is_trusted: True if the OCSP response is trusted using the Mozilla trust store.
             None if no OCSP response was sent by the server.
 
@@ -87,9 +104,8 @@ class CertificateInfoScanResult(ScanCommandResult):
     verified_chain_has_sha1_signature: Optional[bool]
     verified_chain_has_legacy_symantec_anchor: Optional[bool]
 
-    ocsp_response: str  # TODO
+    ocsp_response: Optional[OcspResponse]
     ocsp_response_is_trusted: Optional[bool]
-    ocsp_response_status: Optional[OcspResponseStatusEnum]
 
     @property
     def verified_certificate_chain(self) -> Optional[List[Certificate]]:
@@ -99,7 +115,6 @@ class CertificateInfoScanResult(ScanCommandResult):
         return None
 
 
-# TODO(AD): Use the new nassl function to check certificate
 class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoScanResult, None]):
     """Retrieve and analyze a server's certificate(s) to verify its validity.
     """
@@ -110,14 +125,9 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
     def scan_jobs_for_scan_command(
         cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[CertificateInfoExtraArguments] = None
     ) -> List[ScanJob]:
-        final_trust_store_list = TrustStoresRepository.get_default().get_all_stores()
-        if extra_arguments:
-            final_trust_store_list.append(TrustStore(extra_arguments.custom_ca_file, "Supplied CA file", "N/A"))
-
-        # Run one job per trust store to test for
+        custom_ca_file = extra_arguments.custom_ca_file if extra_arguments else None
         scan_jobs = [
-            ScanJob(function_to_call=get_and_verify_certificate_chain, function_arguments=[server_info, trust_store])
-            for trust_store in final_trust_store_list
+            ScanJob(function_to_call=get_and_verify_certificate_chain, function_arguments=[server_info, custom_ca_file])
         ]
         return scan_jobs
 
@@ -125,18 +135,10 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
     ) -> CertificateInfoScanResult:
-        # Store the results as they come
-        path_validation_results = []
-        ocsp_response = None
-        received_chain = None
-        for completed_job in completed_scan_jobs:
-            received_chain, validation_result, _ocsp_response = completed_job.result()
-            path_validation_results.append(validation_result)
+        if len(completed_scan_jobs) != 1:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 
-            # Keep the OCSP response if the validation was successful and a response was returned
-            if _ocsp_response:
-                ocsp_response = _ocsp_response
-
+        received_chain, all_validation_results, ocsp_response = completed_scan_jobs[0].result()
         if not received_chain:
             raise ValueError("Should never happen")
 
@@ -145,14 +147,48 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
         def sort_function(path_validation: PathValidationResult) -> str:
             return path_validation.trust_store.name.lower()
 
-        path_validation_results.sort(key=sort_function)
+        all_validation_results.sort(key=sort_function)
 
+        # Pick a verified certificate chain if there is one
         verified_certificate_chain = None
         trust_store_used_to_build_verified_chain = None
-        for path_result in path_validation_results:
+        for path_result in all_validation_results:
             if path_result.was_validation_successful:
                 verified_certificate_chain = path_result.verified_certificate_chain
                 trust_store_used_to_build_verified_chain = path_result.trust_store
+
+        # Check the OCSP response if there is one
+        is_ocsp_response_trusted = None
+        final_ocsp_response = None
+        if ocsp_response:
+            # Convert the OCSP response from the nassl class to the sslyze class to ensure API stability
+            if ocsp_response:
+                final_ocsp_response = OcspResponse(
+                    status=ocsp_response.status,
+                    type=ocsp_response.type,
+                    version=ocsp_response.version,
+                    responder_id=ocsp_response.responder_id,
+                    produced_at=ocsp_response.produced_at,
+                    certificate_status=ocsp_response.certificate_status,
+                    this_update=ocsp_response.this_update,
+                    next_update=ocsp_response.next_update,
+                    hash_algorithm=ocsp_response.hash_algorithm,
+                    issuer_name_hash=ocsp_response.issuer_name_hash,
+                    issuer_key_hash=ocsp_response.issuer_key_hash,
+                    serial_number=ocsp_response.serial_number,
+                    extensions=ocsp_response.extensions,
+                )
+
+            # Check if the OCSP response is trusted
+            if (
+                trust_store_used_to_build_verified_chain
+                and ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL
+            ):
+                try:
+                    ocsp_response.verify(trust_store_used_to_build_verified_chain.path)
+                    is_ocsp_response_trusted = True
+                except OcspResponseNotTrustedError:
+                    is_ocsp_response_trusted = False
 
         # Analyze the certificate chain deployment
         analyzer = CertificateChainDeploymentAnalyzer(
@@ -160,15 +196,15 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
             received_chain=received_chain,
             verified_chain=verified_certificate_chain,
             trust_store_used_to_build_verified_chain=trust_store_used_to_build_verified_chain,
-            received_ocsp_response=ocsp_response,
         )
         analysis_result = analyzer.perform()
 
         return CertificateInfoScanResult(
             hostname_used_for_server_name_indication=server_info.network_configuration.tls_server_name_indication,
             received_certificate_chain=received_chain,
-            path_validation_results=path_validation_results,
-            ocsp_response=ocsp_response.as_dict() if ocsp_response else None,
+            path_validation_results=all_validation_results,
+            ocsp_response=final_ocsp_response,
+            ocsp_response_is_trusted=is_ocsp_response_trusted,
             # The CertificateChainDeploymentAnalysisResult and the CertificateInfoScanResult have the same field names
             **asdict(analysis_result),
         )

@@ -47,8 +47,8 @@ def _certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
         "subject": certificate.subject.rfc4514_string(),
         "issuer": certificate.issuer.rfc4514_string(),
         "serialNumber": str(certificate.serial_number),
-        "notBefore": certificate.not_valid_before.strftime("%Y-%m-%d %H:%M:%S"),
-        "notAfter": certificate.not_valid_after.strftime("%Y-%m-%d %H:%M:%S"),
+        "notBefore": certificate.not_valid_before.isoformat(),
+        "notAfter": certificate.not_valid_after.isoformat(),
         "signatureAlgorithm": certificate.signature_hash_algorithm.name,
         "subjectAlternativeName": {"DNS": extract_dns_subject_alternative_names(certificate)},
     }

@@ -98,7 +98,7 @@ class _CertificateInfoCliConnector(
                 path_txt = f"OK - Certificate is trusted{ev_txt}"
 
             else:
-                path_txt = f"FAILED - Certificate is NOT Trusted: {path_result.openssL_verify_string}"
+                path_txt = f"FAILED - Certificate is NOT Trusted: {path_result.openssL_error_string}"
 
             result_as_txt.append(
                 cls._format_field(
@@ -190,11 +190,11 @@ class _CertificateInfoCliConnector(
             result_as_txt.append(cls._format_field("", "NOT SUPPORTED - Server did not send back an OCSP response"))
 
         else:
-            if result.ocsp_response_status != OcspResponseStatusEnum.SUCCESSFUL:
+            if result.ocsp_response.status != OcspResponseStatusEnum.SUCCESSFUL:
                 ocsp_resp_txt = [
                     cls._format_field(
                         "",
-                        "ERROR - OCSP response status is not successful: {}".format(result.ocsp_response_status.name),
+                        "ERROR - OCSP response status is not successful: {}".format(result.ocsp_response.status.name),
                     )
                 ]
             else:
@@ -205,20 +205,20 @@ class _CertificateInfoCliConnector(
                 )
 
                 ocsp_resp_txt = [
-                    cls._format_field("OCSP Response Status:", result.ocsp_response["responseStatus"]),
+                    cls._format_field("OCSP Response Status:", result.ocsp_response.status.name),
                     cls._format_field("Validation w/ Mozilla Store:", ocsp_trust_txt),
-                    cls._format_field("Responder Id:", result.ocsp_response["responderID"]),
+                    cls._format_field("Responder Id:", result.ocsp_response.responder_id),
                 ]
 
-                if "successful" in result.ocsp_response["responseStatus"]:
+                if result.ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL:
                     ocsp_resp_txt.extend(
                         [
-                            cls._format_field("Cert Status:", result.ocsp_response["responses"][0]["certStatus"]),
+                            cls._format_field("Cert Status:", result.ocsp_response.certificate_status),
                             cls._format_field(
-                                "Cert Serial Number:", result.ocsp_response["responses"][0]["certID"]["serialNumber"]
+                                "Cert Serial Number:", result.ocsp_response.serial_number
                             ),
-                            cls._format_field("This Update:", result.ocsp_response["responses"][0]["thisUpdate"]),
-                            cls._format_field("Next Update:", result.ocsp_response["responses"][0]["nextUpdate"]),
+                            cls._format_field("This Update:", result.ocsp_response.this_update.date().isoformat()),
+                            cls._format_field("Next Update:", result.ocsp_response.next_update.date().isoformat()),
                         ]
                     )
             result_as_txt.extend(ocsp_resp_txt)

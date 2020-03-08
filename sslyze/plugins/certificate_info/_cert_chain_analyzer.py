@@ -6,7 +6,6 @@ from typing import Optional, List, cast
 import cryptography
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate
-from nassl.ocsp_response import OcspResponseStatusEnum, OcspResponseNotTrustedError, OcspResponse
 
 from sslyze.plugins.certificate_info._certificate_utils import extract_dns_subject_alternative_names, get_common_names
 from sslyze.plugins.certificate_info._symantec import SymantecDistructTester
@@ -41,8 +40,6 @@ class CertificateChainDeploymentAnalysisResult:
     received_chain_has_valid_order: bool
     verified_chain_has_sha1_signature: Optional[bool]
     verified_chain_has_legacy_symantec_anchor: Optional[bool]
-    ocsp_response_is_trusted: Optional[bool]
-    ocsp_response_status: Optional[OcspResponseStatusEnum]
 
 
 class CertificateChainDeploymentAnalyzer:
@@ -57,13 +54,11 @@ class CertificateChainDeploymentAnalyzer:
         received_chain: List[Certificate],
         verified_chain: Optional[List[Certificate]],
         trust_store_used_to_build_verified_chain: Optional[TrustStore],
-        received_ocsp_response: Optional[OcspResponse],
     ) -> None:
         self.server_hostname = server_hostname
         self.received_certificate_chain = received_chain
         self.verified_certificate_chain = verified_chain
         self.trust_store_used_to_build_verified_chain = trust_store_used_to_build_verified_chain
-        self.received_ocsp_response = received_ocsp_response
 
     def perform(self) -> CertificateChainDeploymentAnalysisResult:
         """Run the analysis.
@@ -143,21 +138,6 @@ class CertificateChainDeploymentAnalyzer:
             symantec_distrust_timeline = SymantecDistructTester.get_distrust_timeline(self.verified_certificate_chain)
             verified_chain_has_legacy_symantec_anchor = True if symantec_distrust_timeline else False
 
-        # Check the OCSP response if there is one
-        is_ocsp_response_trusted = None
-        ocsp_response_status = None
-        if self.received_ocsp_response:
-            ocsp_response_status = self.received_ocsp_response.status
-            if (
-                self.trust_store_used_to_build_verified_chain
-                and ocsp_response_status == OcspResponseStatusEnum.SUCCESSFUL
-            ):
-                try:
-                    self.received_ocsp_response.verify(self.trust_store_used_to_build_verified_chain.path)
-                    is_ocsp_response_trusted = True
-                except OcspResponseNotTrustedError:
-                    is_ocsp_response_trusted = False
-
         return CertificateChainDeploymentAnalysisResult(
             leaf_certificate_subject_matches_hostname=_certificate_matches_hostname(leaf_cert, self.server_hostname),
             leaf_certificate_has_must_staple_extension=has_ocsp_must_staple,
@@ -167,6 +147,4 @@ class CertificateChainDeploymentAnalyzer:
             received_chain_has_valid_order=is_chain_order_valid,
             verified_chain_has_sha1_signature=has_sha1_in_certificate_chain,
             verified_chain_has_legacy_symantec_anchor=verified_chain_has_legacy_symantec_anchor,
-            ocsp_response_is_trusted=is_ocsp_response_trusted,
-            ocsp_response_status=ocsp_response_status,
         )

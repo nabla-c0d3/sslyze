@@ -1,6 +1,7 @@
 import copyreg
 import json
 from dataclasses import asdict
+from datetime import datetime
 from functools import singledispatch
 from pathlib import Path
 from traceback import TracebackException
@@ -16,7 +17,6 @@ from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-# TODO: Crashes with certinfo
 class JsonOutputGenerator(OutputGenerator):
     def __init__(self, file_to: TextIO) -> None:
         super().__init__(file_to)
@@ -114,3 +114,8 @@ def _path(obj: Path) -> JsonType:
 @object_to_json.register
 def _traceback(obj: TracebackException) -> JsonType:
     return _traceback_to_str(obj)
+
+
+@object_to_json.register
+def _datetime(obj: datetime) -> JsonType:
+    return obj.isoformat()

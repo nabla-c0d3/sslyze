@@ -162,9 +162,9 @@ class SslConnection:
             self.ssl_client = ssl_client_cls(
                 ssl_version=tls_version,
                 ssl_verify=OpenSslVerifyEnum.NONE,
-                ssl_verify_locations=str(ca_certificates_path) if ca_certificates_path else None,
-                client_certchain_file=str(network_configuration.tls_client_auth_credentials.certificate_chain_path),
-                client_key_file=str(network_configuration.tls_client_auth_credentials.key_path),
+                ssl_verify_locations=ca_certificates_path,
+                client_certchain_file=network_configuration.tls_client_auth_credentials.certificate_chain_path,
+                client_key_file=network_configuration.tls_client_auth_credentials.key_path,
                 client_key_type=network_configuration.tls_client_auth_credentials.key_type,
                 client_key_password=network_configuration.tls_client_auth_credentials.key_password,
                 ignore_client_authentication_requests=False,
@@ -174,7 +174,7 @@ class SslConnection:
             self.ssl_client = ssl_client_cls(
                 ssl_version=tls_version,
                 ssl_verify=OpenSslVerifyEnum.NONE,
-                ssl_verify_locations=str(ca_certificates_path) if ca_certificates_path else None,
+                ssl_verify_locations=ca_certificates_path,
                 ignore_client_authentication_requests=should_ignore_client_auth,
             )
 

@@ -51,8 +51,8 @@ class _X509NameAttributeAsJson:
 
 @dataclass(frozen=True)
 class _X509NameAsJson:
-    rfc4514_string: Optional[str]
-    attributes: Optional[List[_X509NameAttributeAsJson]]
+    rfc4514_string: Optional[str]  # None if parsing_error is set
+    attributes: Optional[List[_X509NameAttributeAsJson]]  # None if parsing_error is set
     parsing_error: Optional[str]
 
 

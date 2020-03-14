@@ -45,14 +45,24 @@ def _certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
         "as_pem": certificate.public_bytes(Encoding.PEM).decode("ascii"),
         "hpkp_pin": b64encode(get_public_key_sha256(certificate)).decode("utf-8"),  # RFC 7469
         # Add some of the fields of the cert
-        "subject": certificate.subject.rfc4514_string(),
-        "issuer": certificate.issuer.rfc4514_string(),
         "serialNumber": str(certificate.serial_number),
         "notBefore": certificate.not_valid_before.isoformat(),
         "notAfter": certificate.not_valid_after.isoformat(),
         "signatureAlgorithm": certificate.signature_hash_algorithm.name,
         "subjectAlternativeName": {"DNS": extract_dns_subject_alternative_names(certificate)},
     }
+
+    # We may get garbage/invalid certificates so we need to handle ValueErrors.
+    # See https://github.com/nabla-c0d3/sslyze/issues/403 for more information
+    try:
+        result["subject"] = certificate.subject.rfc4514_string()
+    except ValueError:
+        result["subject"] = "Error: Invalid Certificate"
+
+    try:
+        result["issuer"] = certificate.issuer.rfc4514_string()
+    except ValueError:
+        result["issuer"] = "Error: Invalid Certificate"
 
     # Add some info about the public key
     public_key = certificate.public_key()

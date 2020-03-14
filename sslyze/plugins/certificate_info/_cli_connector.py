@@ -6,6 +6,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
+from cryptography.x509 import Certificate
 from nassl.ocsp_response import OcspResponseStatusEnum
 
 from sslyze.plugins.certificate_info._certificate_utils import get_common_names, extract_dns_subject_alternative_names
@@ -71,7 +72,8 @@ class _CertificateInfoCliConnector(
     def result_to_console_output(cls, result: "CertificateInfoScanResult") -> List[str]:
         result_as_txt = [cls._format_title("Certificate Information")]
 
-        result_as_txt.extend(cls._get_basic_certificate_text(result))
+        leaf_certificate = result.received_certificate_chain[0]
+        result_as_txt.extend(cls._get_basic_certificate_text(leaf_certificate))
 
         # Trust section
         result_as_txt.append("")
@@ -119,9 +121,18 @@ class _CertificateInfoCliConnector(
             raise RuntimeError("Should never happen")
         result_as_txt.append(cls._format_field("Symantec 2018 Deprecation:", symantec_str))
 
-        # Print the Common Names within the certificate chain
-        cns_in_certificate_chain = [_get_name_as_short_text(cert.subject) for cert in result.received_certificate_chain]
-        result_as_txt.append(cls._format_field("Received Chain:", " --> ".join(cns_in_certificate_chain)))
+        # Print the Common Names within the received certificate chain
+        cns_in_received_chain: List[str] = []
+        for certificate in result.received_certificate_chain:
+            # Unlike the verified chain, this chain may contain garbage and invalid certificates so we need to handle
+            # ValueErrors. See https://github.com/nabla-c0d3/sslyze/issues/403 for more information
+            try:
+                subject_as_str = _get_name_as_short_text(certificate.subject)
+            except ValueError:
+                subject_as_str = "Error: Invalid Certificate"
+            cns_in_received_chain.append(subject_as_str)
+
+        result_as_txt.append(cls._format_field("Received Chain:", " --> ".join(cns_in_received_chain)))
 
         # Print the Common Names within the verified certificate chain if validation was successful
         if result.verified_certificate_chain:
@@ -225,8 +236,7 @@ class _CertificateInfoCliConnector(
         return result_as_txt
 
     @classmethod
-    def _get_basic_certificate_text(cls, result: "CertificateInfoScanResult") -> List[str]:
-        certificate = result.received_certificate_chain[0]
+    def _get_basic_certificate_text(cls, certificate: Certificate) -> List[str]:
         text_output = [
             cls._format_field(
                 "SHA1 Fingerprint:", binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode("ascii")

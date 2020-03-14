@@ -6,6 +6,7 @@ from typing import Dict, Any
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.backends.openssl.x509 import _Certificate
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509.oid import ObjectIdentifier
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
@@ -59,8 +60,12 @@ def _certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
     if isinstance(public_key, EllipticCurvePublicKey):
         public_key_dict["size"] = str(public_key.curve.key_size)
         public_key_dict["curve"] = public_key.curve.name
-    else:
+    elif isinstance(public_key, RSAPublicKey):
         public_key_dict["size"] = str(public_key.key_size)
-        public_key_dict["exponent"] = str(public_key.public_numbers().e)
+        public_key_dict["exponent"] = str(public_key.public_numbers().e)  # type: ignore
+    else:
+        # DSA Key? https://github.com/nabla-c0d3/sslyze/issues/402
+        pass
+
     result["publicKey"] = public_key_dict
     return result

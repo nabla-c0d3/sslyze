@@ -56,13 +56,13 @@ class TestCertificateInfoPlugin:
 
         # The result contains details about the server's OCSP config
         assert plugin_result.ocsp_response
-        assert plugin_result.ocsp_response_status == OcspResponseStatusEnum.SUCCESSFUL
+        assert plugin_result.ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL
         assert plugin_result.ocsp_response_is_trusted
         assert not plugin_result.leaf_certificate_has_must_staple_extension
 
     def test_valid_chain_with_ev_cert(self):
         # Given a server to scan that has an EV certificate
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.comodo.com", 443)
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.digicert.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan

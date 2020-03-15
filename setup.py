@@ -71,7 +71,10 @@ setup(
     },
     # Package info
     packages=find_packages(exclude=["docs", "tests"]),
-    package_data={"sslyze.plugins.certificate_info.trust_stores": ["pem_files/*.pem", "pem_files/*.yaml"]},
+    package_data={
+        "sslyze": ["py.typed"],
+        "sslyze.plugins.certificate_info.trust_stores": ["pem_files/*.pem", "pem_files/*.yaml"],
+    },
     entry_points={"console_scripts": ["sslyze = sslyze.__main__:main"]},
     # Dependencies
     install_requires=[

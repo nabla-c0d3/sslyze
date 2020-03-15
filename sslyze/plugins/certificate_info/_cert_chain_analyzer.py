@@ -8,6 +8,7 @@ import cryptography
 import nassl
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate, load_pem_x509_certificate
 from nassl._nassl import X509
 from nassl.cert_chain_verifier import CertificateChainVerifier, CertificateChainVerificationFailed
@@ -128,6 +129,16 @@ class CertificateChainDeploymentAnalysisResult:
             if path_result.was_validation_successful:
                 return path_result.verified_certificate_chain
         return None
+
+    @property
+    def verified_certificate_chain_as_pem(self) -> Optional[List[str]]:
+        if self.verified_certificate_chain is None:
+            return None
+
+        pem_certs = []
+        for certificate in self.verified_certificate_chain:
+            pem_certs.append(certificate.public_bytes(Encoding.PEM).decode("ascii"))
+        return pem_certs
 
 
 class CertificateChainDeploymentAnalyzer:

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from nassl.key_exchange_info import KeyExchangeInfo
+from nassl.ephemeral_key_info import EphemeralKeyInfo
 from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested, SslClient
 
@@ -23,7 +23,7 @@ class CipherSuiteAcceptedByServer:
     """
 
     cipher_suite: CipherSuite
-    ephemeral_key: Optional[KeyExchangeInfo]
+    ephemeral_key: Optional[EphemeralKeyInfo]
 
 
 @dataclass(frozen=True)

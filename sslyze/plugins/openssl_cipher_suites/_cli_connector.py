@@ -1,6 +1,6 @@
 from typing import List, TYPE_CHECKING, ClassVar
 
-from nassl.key_exchange_info import EcDhKeyExchangeInfo, DhKeyExchangeInfo
+from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo, DhEphemeralKeyInfo
 from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.openssl_cipher_suites._test_cipher_suite import CipherSuiteAcceptedByServer
@@ -93,10 +93,10 @@ class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult"
 
 def _format_accepted_cipher_suite(accepted_cipher: CipherSuiteAcceptedByServer) -> str:
     eph_key = accepted_cipher.ephemeral_key
-    if isinstance(eph_key, EcDhKeyExchangeInfo):
-        dh_info = f"ECDH: {eph_key.curve_name} ({eph_key.key_size} bits)"
-    elif isinstance(eph_key, DhKeyExchangeInfo):
-        dh_info = f"DH ({eph_key.key_size} bits)"
+    if isinstance(eph_key, EcDhEphemeralKeyInfo):
+        dh_info = f"ECDH: {eph_key.curve_name} ({eph_key.size} bits)"
+    elif isinstance(eph_key, DhEphemeralKeyInfo):
+        dh_info = f"DH ({eph_key.size} bits)"
     else:
         dh_info = ""
 

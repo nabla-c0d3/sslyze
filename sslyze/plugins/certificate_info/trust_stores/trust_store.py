@@ -13,8 +13,6 @@ from typing import Optional
 class TrustStore:
     """A set of root certificates to be used for certificate validation.
 
-    By default, SSLyze packages the following trust stores: Mozilla, Microsoft, Apple, Android and Java.
-
     Attributes:
         path: The path on the local system to the PEM-formatted file containing the root certificates.
         name: The human-readable name of the trust store (such as "Mozilla").

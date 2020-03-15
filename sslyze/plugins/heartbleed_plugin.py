@@ -84,7 +84,9 @@ def _test_heartbleed(server_info: ServerConnectivityInfo) -> bool:
     ssl_connection = server_info.get_preconfigured_tls_connection()
     # Replace nassl.sslClient.do_handshake() with a heartbleed checking SSL handshake so that all the SSLyze options
     # (startTLS, proxy, etc.) still work
-    ssl_connection.ssl_client.do_handshake = types.MethodType(_do_handshake_with_heartbleed, ssl_connection.ssl_client)
+    ssl_connection.ssl_client.do_handshake = types.MethodType(  # type: ignore
+        _do_handshake_with_heartbleed, ssl_connection.ssl_client
+    )
 
     is_vulnerable_to_heartbleed = False
     try:

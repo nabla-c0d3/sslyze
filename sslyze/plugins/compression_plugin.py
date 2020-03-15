@@ -1,5 +1,7 @@
 from concurrent.futures._base import Future
 from dataclasses import dataclass
+
+from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
@@ -76,6 +78,8 @@ def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=ssl_version_to_use, should_use_legacy_openssl=True
     )
+    if not isinstance(ssl_connection.ssl_client, LegacySslClient):
+        raise RuntimeError("Should never happen")
 
     # Make sure OpenSSL was built with support for compression to avoid false negatives
     if "zlib compression" not in ssl_connection.ssl_client.get_available_compression_methods():

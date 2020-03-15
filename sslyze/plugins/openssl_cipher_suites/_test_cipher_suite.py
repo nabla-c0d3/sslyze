@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from typing import Optional, Union
 
 from nassl.key_exchange_info import KeyExchangeInfo
-from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
+from nassl.legacy_ssl_client import LegacySslClient
+from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested, SslClient
 
 from sslyze.connection_helpers.errors import (
     ServerRejectedTlsHandshake,
@@ -48,18 +49,22 @@ def connect_with_cipher_suite(
     )
 
     # Only enable the cipher suite to test; not trivial anymore since OpenSSL 1.1.1 and TLS 1.3
-    if tls_version == OpenSslVersionEnum.TLSV1_3:
-        # The function to control cipher suites is different for TLS 1.3
-        # Disable the default, non-TLS 1.3 cipher suites
-        ssl_connection.ssl_client.set_cipher_list("")
-        # Enable the one TLS 1.3 cipher suite we want to test
-        ssl_connection.ssl_client.set_ciphersuites(cipher_suite.openssl_name)
-    else:
-        if not requires_legacy_openssl:
-            # Disable the TLS 1.3 cipher suites if we are using the modern client
-            ssl_connection.ssl_client.set_ciphersuites("")
+    if isinstance(ssl_connection.ssl_client, SslClient):
+        # With the modern OpenSSL client we have to manage TLS 1.3-specific cipher functions
+        if tls_version == OpenSslVersionEnum.TLSV1_3:
+            legacy_openssl_cipher_string = ""
+            tls1_3_openssl_cipher_string = cipher_suite.openssl_name
+        else:
+            legacy_openssl_cipher_string = cipher_suite.openssl_name
+            tls1_3_openssl_cipher_string = ""
 
+        ssl_connection.ssl_client.set_ciphersuites(tls1_3_openssl_cipher_string)  # TLS 1.3 method
+        ssl_connection.ssl_client.set_cipher_list(legacy_openssl_cipher_string)  # Legacy method
+    elif isinstance(ssl_connection.ssl_client, LegacySslClient):
+        # With the legacy OpenSSL client, nothing special to do
         ssl_connection.ssl_client.set_cipher_list(cipher_suite.openssl_name)
+    else:
+        raise RuntimeError("Should never happen")
 
     if len(ssl_connection.ssl_client.get_cipher_list()) != 1:
         raise ValueError(
@@ -71,7 +76,7 @@ def connect_with_cipher_suite(
     try:
         # Perform the SSL handshake
         ssl_connection.connect()
-        ephemeral_key = ssl_connection.ssl_client.get_dh_info()
+        ephemeral_key = ssl_connection.ssl_client.get_ephemeral_key()
 
     except ServerTlsConfigurationNotSupported:
         # SSLyze rejected the handshake because the server's DH config was too insecure; this means the
@@ -80,7 +85,7 @@ def connect_with_cipher_suite(
 
     except ClientCertificateRequested:
         # When the handshake failed due to ClientCertificateRequested
-        ephemeral_key = ssl_connection.ssl_client.get_dh_info()
+        ephemeral_key = ssl_connection.ssl_client.get_ephemeral_key()
         pass
 
     except ServerRejectedTlsHandshake as e:

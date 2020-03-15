@@ -85,7 +85,7 @@ def _test_for_ccs_injection(server_info: ServerConnectivityInfo) -> bool:
     ssl_connection = server_info.get_preconfigured_tls_connection()
     # Replace nassl.sslClient.do_handshake() with a CCS checking SSL handshake so that all the SSLyze options
     # (startTLS, proxy, etc.) still work
-    ssl_connection.ssl_client.do_handshake = types.MethodType(
+    ssl_connection.ssl_client.do_handshake = types.MethodType(  # type: ignore
         _do_handshake_with_ccs_injection, ssl_connection.ssl_client
     )
 

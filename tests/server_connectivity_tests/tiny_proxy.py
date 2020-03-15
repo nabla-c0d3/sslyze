@@ -6,12 +6,13 @@ method is also implemented experimentally, but has not been
 tested yet.
 
 Any help will be greatly appreciated.		SUZUKI Hisao
+
+Ported to Python 3 and modified for sslyze by @nabla_c0d3.
 """
 
-# Ported to Python 3 by @nabla_c0d3
 __version__ = "0.3.0"
 
-from http.server import HTTPServer, BaseHTTPRequestHandler, test
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, urlunparse
 from socketserver import ThreadingMixIn
 
@@ -124,22 +125,3 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
 class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
     pass
-
-
-if __name__ == "__main__":
-    from sys import argv
-
-    if argv[1:] and argv[1] in ("-h", "--help"):
-        print(argv[0], "[port [allowed_client_name ...]]")
-    else:
-        if argv[2:]:
-            allowed = []
-            for name in argv[2:]:
-                client = socket.gethostbyname(name)
-                allowed.append(client)
-                logging.warning("Accepted: {} ({})".format(client, name))
-            ProxyHandler.allowed_clients = allowed
-            del argv[2:]
-        else:
-            logging.warning("Waiting for clients")
-        test(ProxyHandler, ThreadingHTTPServer)

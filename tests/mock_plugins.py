@@ -65,7 +65,7 @@ class _MockPluginImplementation(ScanCommandImplementation):
         if len(completed_scan_jobs) != cls._scan_jobs_count:
             raise AssertionError("Did not receive all the scan jobs that needed to be completed")
 
-        return cls.result_cls(results_field=[future.result() for future in completed_scan_jobs])
+        return cls.result_cls(results_field=[future.result() for future in completed_scan_jobs])  # type: ignore
 
 
 class MockPlugin1Implementation(_MockPluginImplementation):

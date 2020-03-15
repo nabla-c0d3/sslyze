@@ -261,7 +261,9 @@ def _send_robot_payload(
 
     # Replace nassl.sslClient.do_handshake() with a ROBOT checking SSL handshake so that all the SSLyze
     # options (startTLS, proxy, etc.) still work
-    ssl_connection.ssl_client.do_handshake = types.MethodType(do_handshake_with_robot, ssl_connection.ssl_client)
+    ssl_connection.ssl_client.do_handshake = types.MethodType(  # type: ignore
+        do_handshake_with_robot, ssl_connection.ssl_client
+    )
     ssl_connection.ssl_client.set_cipher_list(rsa_cipher_string)
 
     # Compute the  payload
@@ -270,8 +272,8 @@ def _send_robot_payload(
     )
 
     # H4ck: we need to pass some arguments to the handshake but there is no simple way to do it; we use an attribute
-    ssl_connection.ssl_client._robot_cke_record = cke_payload
-    ssl_connection.ssl_client._robot_should_finish_handshake = robot_should_finish_handshake
+    ssl_connection.ssl_client._robot_cke_record = cke_payload  # type: ignore
+    ssl_connection.ssl_client._robot_should_finish_handshake = robot_should_finish_handshake  # type: ignore
 
     server_response = ""
     try:

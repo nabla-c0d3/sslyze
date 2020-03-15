@@ -1,7 +1,7 @@
 from pathlib import Path
 from sys import platform
 
-from invoke import task
+from invoke import task, Context
 from sslyze import __version__
 
 root_path = Path(__file__).parent.absolute()
@@ -9,17 +9,19 @@ root_path = Path(__file__).parent.absolute()
 
 @task
 def test(ctx):
+    # type: (Context) -> None
     # Run the test suite
     ctx.run("pytest")
 
     # Run linters
     ctx.run("flake8 .")
-    ctx.run("mypy sslyze")
+    ctx.run("mypy .")
     ctx.run("black -l 120 sslyze tests api_sample.py tasks.py --check")
 
 
 @task
 def gen_doc(ctx):
+    # type: (Context) -> None
     docs_folder_path = root_path / "docs"
     dst_path = docs_folder_path / "documentation"
     ctx.run(f"python -m sphinx -v -b html {docs_folder_path} {dst_path}")
@@ -27,6 +29,7 @@ def gen_doc(ctx):
 
 @task
 def release(ctx):
+    # type: (Context) -> None
     response = input(f'Release version "{__version__}" ? y/n')
     if response.lower() != "y":
         print("Cancelled")
@@ -53,6 +56,7 @@ def release(ctx):
 
 @task
 def build_exe(ctx):
+    # type: (Context) -> None
     if platform != "win32":
         raise EnvironmentError("Can only be used on Windows")
     ctx.run("python setup.py build_exe")

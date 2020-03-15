@@ -135,8 +135,8 @@ class ClientAuthenticationCredentials:
     def __post_init__(self) -> None:
         # Try to load the cert and key in OpenSSL; will raise an exception if something is wrong
         SslClient(
-            client_certchain_file=str(self.certificate_chain_path),
-            client_key_file=str(self.key_path),
+            client_certificate_chain=self.certificate_chain_path,
+            client_key=self.key_path,
             client_key_type=self.key_type,
             client_key_password=self.key_password,
         )

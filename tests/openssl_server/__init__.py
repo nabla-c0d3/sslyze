@@ -226,6 +226,7 @@ class ModernOpenSslServer(_OpenSslServer):
     def get_openssl_path(cls) -> Path:
         return Path(__file__).parent.absolute() / "openssl-1-1-1-linux64"
 
+    @classmethod
     def get_verify_argument(cls, client_auth_config: ClientAuthConfigEnum) -> str:
         # The verify argument has subtly changed in OpenSSL 1.1.1
         options = {

@@ -1,5 +1,5 @@
 from traceback import TracebackException
-from typing import Optional, Dict
+from typing import Optional, Dict, Set
 
 from faker import Faker
 from faker.providers import internet
@@ -118,7 +118,7 @@ class ServerScanResultFactory:
             else {ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
         )
         final_errors = scan_commands_errors if scan_commands_errors else {}
-        scan_commands = set()
+        scan_commands: Set[ScanCommandEnum] = set()
         scan_commands.update(final_results.keys())
         scan_commands.update(final_errors.keys())
         return ServerScanResult(

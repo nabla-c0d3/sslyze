@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from nassl._nassl import OpenSSLError
-from nassl.ssl_client import OpenSslVersionEnum, OpenSslEarlyDataStatusEnum
+from nassl.ssl_client import OpenSslVersionEnum, OpenSslEarlyDataStatusEnum, SslClient
 
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
@@ -91,6 +91,9 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
     # Then try to re-use the session and send early data
     if session is not None:
         ssl_connection2 = server_info.get_preconfigured_tls_connection(override_tls_version=OpenSslVersionEnum.TLSV1_3)
+        if not isinstance(ssl_connection2.ssl_client, SslClient):
+            raise RuntimeError("Should never happen")
+
         ssl_connection2.ssl_client.set_session(session)
 
         try:

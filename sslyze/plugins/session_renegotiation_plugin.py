@@ -5,6 +5,7 @@ from enum import Enum
 from typing import List, Optional, Tuple
 
 from nassl._nassl import OpenSSLError
+from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.plugin_base import (
@@ -114,6 +115,8 @@ def _test_secure_renegotiation(
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version_to_use, should_use_legacy_openssl=True
     )
+    if not isinstance(ssl_connection.ssl_client, LegacySslClient):
+        raise RuntimeError("Should never happen")
 
     try:
         # Perform the SSL handshake
@@ -134,6 +137,8 @@ def _test_client_renegotiation(
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version_to_use, should_use_legacy_openssl=True
     )
+    if not isinstance(ssl_connection.ssl_client, LegacySslClient):
+        raise RuntimeError("Should never happen")
 
     try:
         # Perform the SSL handshake

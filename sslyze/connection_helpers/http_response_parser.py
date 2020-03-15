@@ -2,7 +2,7 @@ from io import BytesIO
 from socket import socket
 from typing import Callable
 from http.client import HTTPResponse
-from nassl.ssl_client import SslClient
+from nassl.ssl_client import BaseSslClient
 
 
 class _FakeSocket(BytesIO):
@@ -19,7 +19,7 @@ class HttpResponseParser:
         return cls._parse(sock.recv)
 
     @classmethod
-    def parse_from_ssl_connection(cls, ssl_conn: SslClient) -> HTTPResponse:
+    def parse_from_ssl_connection(cls, ssl_conn: BaseSslClient) -> HTTPResponse:
         return cls._parse(ssl_conn.read)
 
     @staticmethod

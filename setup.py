@@ -1,11 +1,13 @@
 import sys
 from os import path, listdir
+from pathlib import Path
+from typing import List, Tuple
 
 from setuptools import find_packages
 from sslyze import __author__, __email__, __version__, PROJECT_URL
 
 # Setup file based on https://github.com/pypa/sampleproject/blob/master/setup.py
-root_path = path.abspath(path.dirname(__file__))
+root_path = Path(__file__).parent.absolute()
 
 # For cx_freeze builds, we need a special setup() function
 if len(sys.argv) > 1 and sys.argv[1] == "build_exe":
@@ -15,24 +17,21 @@ else:
     from setuptools import setup
 
     # Create fake Executable that does nothing so the setup.py file can be used on Linux
-    class Executable:
-        def __init__(self, script, targetName):
+    class Executable:  # type: ignore
+        def __init__(self, script, targetName):  # type: ignore
             pass
 
 
-def get_long_description():
-    """Convert the README file into the long description.
-    """
-    with open(path.join(root_path, "README.md"), encoding="utf-8") as f:
-        long_description = f.read()
-    return long_description
+def get_long_description() -> str:
+    path_to_readme = root_path / "README.md"
+    return path_to_readme.read_text()
 
 
-def get_include_files():
+def get_include_files() -> List[Tuple[str, str]]:
     """"Get the list of trust stores so they properly packaged when doing a cx_freeze build.
     """
     plugin_data_files = []
-    trust_stores_pem_path = path.join(root_path, "sslyze", "plugins", "certificate_info", "trust_stores", "pem_files")
+    trust_stores_pem_path = root_path / "sslyze" / "plugins" / "certificate_info" / "trust_stores" / "pem_files"
     for file in listdir(trust_stores_pem_path):
         file = path.join(trust_stores_pem_path, file)
         if path.isfile(file):  # skip directories

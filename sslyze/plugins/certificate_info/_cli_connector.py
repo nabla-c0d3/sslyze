@@ -9,6 +9,7 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.x509 import Certificate
 from nassl.ocsp_response import OcspResponseStatusEnum
 
+from sslyze.plugins.certificate_info._cert_chain_analyzer import CertificateChainDeploymentAnalysisResult
 from sslyze.plugins.certificate_info._certificate_utils import get_common_names, extract_dns_subject_alternative_names
 from sslyze.plugins.certificate_info._json_output import register_json_serializer_functions
 from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption
@@ -70,39 +71,57 @@ class _CertificateInfoCliConnector(
 
     @classmethod
     def result_to_console_output(cls, result: "CertificateInfoScanResult") -> List[str]:
-        result_as_txt = [cls._format_title("Certificate Information")]
+        result_as_txt = [cls._format_title("Certificates Information")]
 
-        leaf_certificate = result.received_certificate_chain[0]
-        result_as_txt.extend(cls._get_basic_certificate_text(leaf_certificate))
+        # SNI
+        server_name_indication = result.hostname_used_for_server_name_indication
+        result_as_txt.append(cls._format_field("Hostname sent for SNI:", server_name_indication))
+
+        # Display each certificate deployment
+        result_as_txt.append(
+            cls._format_field("Number of certificates detected:", str(len(result.certificate_deployments)))
+        )
+        for index, cert_deployment in enumerate(result.certificate_deployments):
+            result_as_txt.append("\n")
+            result_as_txt.extend(cls._cert_deployment_to_console_output(index, cert_deployment))
+
+        return result_as_txt
+
+    @classmethod
+    def _cert_deployment_to_console_output(
+        cls, index: int, cert_deployment: CertificateChainDeploymentAnalysisResult
+    ) -> List[str]:
+        leaf_certificate = cert_deployment.received_certificate_chain[0]
+        deployment_as_txt = [
+            cls._format_subtitle(f"Certificate #{index} ( {leaf_certificate.public_key().__class__.__name__} )")
+        ]
+
+        deployment_as_txt.extend(cls._get_basic_certificate_text(leaf_certificate))
 
         # Trust section
-        result_as_txt.append("")
-        result_as_txt.append(cls._format_subtitle("Trust"))
-
-        # Hostname validation
-        server_name_indication = result.hostname_used_for_server_name_indication
-        result_as_txt.append(cls._format_field("Hostname used for SNI:", server_name_indication))
+        deployment_as_txt.append("")
+        deployment_as_txt.append(cls._format_subtitle(f"Certificate #{index} - Trust"))
 
         hostname_validation_text = (
-            f"OK - Certificate matches {server_name_indication}"
-            if result.leaf_certificate_subject_matches_hostname
-            else f"FAILED - Certificate does NOT match {server_name_indication}"
+            f"OK - Certificate matches server hostname"
+            if cert_deployment.leaf_certificate_subject_matches_hostname
+            else f"FAILED - Certificate does NOT match server hostname"
         )
-        result_as_txt.append(cls._format_field("Hostname Validation:", hostname_validation_text))
+        deployment_as_txt.append(cls._format_field("Hostname Validation:", hostname_validation_text))
 
         # Path validation that was successfully tested
-        for path_result in result.path_validation_results:
+        for path_result in cert_deployment.path_validation_results:
             if path_result.was_validation_successful:
                 # EV certs - Only Mozilla supported for now
                 ev_txt = ""
-                if result.leaf_certificate_is_ev and path_result.trust_store.ev_oids:
+                if cert_deployment.leaf_certificate_is_ev and path_result.trust_store.ev_oids:
                     ev_txt = ", Extended Validation"
                 path_txt = f"OK - Certificate is trusted{ev_txt}"
 
             else:
                 path_txt = f"FAILED - Certificate is NOT Trusted: {path_result.openssL_error_string}"
 
-            result_as_txt.append(
+            deployment_as_txt.append(
                 cls._format_field(
                     cls.TRUST_FORMAT.format(
                         store_name=path_result.trust_store.name, store_version=path_result.trust_store.version
@@ -111,19 +130,19 @@ class _CertificateInfoCliConnector(
                 )
             )
 
-        if result.verified_chain_has_legacy_symantec_anchor is None:
+        if cert_deployment.verified_chain_has_legacy_symantec_anchor is None:
             symantec_str = cls.NO_VERIFIED_CHAIN_ERROR_TXT
-        elif result.verified_chain_has_legacy_symantec_anchor is True:
+        elif cert_deployment.verified_chain_has_legacy_symantec_anchor is True:
             symantec_str = "WARNING: Certificate distrusted by Google and Mozilla since 2018"
-        elif result.verified_chain_has_legacy_symantec_anchor is False:
+        elif cert_deployment.verified_chain_has_legacy_symantec_anchor is False:
             symantec_str = "OK - Not a Symantec-issued certificate"
         else:
             raise RuntimeError("Should never happen")
-        result_as_txt.append(cls._format_field("Symantec 2018 Deprecation:", symantec_str))
+        deployment_as_txt.append(cls._format_field("Symantec 2018 Deprecation:", symantec_str))
 
         # Print the Common Names within the received certificate chain
         cns_in_received_chain: List[str] = []
-        for certificate in result.received_certificate_chain:
+        for certificate in cert_deployment.received_certificate_chain:
             # Unlike the verified chain, this chain may contain garbage and invalid certificates so we need to handle
             # ValueErrors. See https://github.com/nabla-c0d3/sslyze/issues/403 for more information
             try:
@@ -132,58 +151,58 @@ class _CertificateInfoCliConnector(
                 subject_as_str = "Error: Invalid Certificate"
             cns_in_received_chain.append(subject_as_str)
 
-        result_as_txt.append(cls._format_field("Received Chain:", " --> ".join(cns_in_received_chain)))
+        deployment_as_txt.append(cls._format_field("Received Chain:", " --> ".join(cns_in_received_chain)))
 
         # Print the Common Names within the verified certificate chain if validation was successful
-        if result.verified_certificate_chain:
+        if cert_deployment.verified_certificate_chain:
             cns_in_certificate_chain = [
-                _get_name_as_short_text(cert.subject) for cert in result.verified_certificate_chain
+                _get_name_as_short_text(cert.subject) for cert in cert_deployment.verified_certificate_chain
             ]
             verified_chain_txt = " --> ".join(cns_in_certificate_chain)
         else:
             verified_chain_txt = cls.NO_VERIFIED_CHAIN_ERROR_TXT
-        result_as_txt.append(cls._format_field("Verified Chain:", verified_chain_txt))
+        deployment_as_txt.append(cls._format_field("Verified Chain:", verified_chain_txt))
 
-        if result.verified_certificate_chain:
+        if cert_deployment.verified_certificate_chain:
             chain_with_anchor_txt = (
                 "OK - Anchor certificate not sent"
-                if not result.received_chain_contains_anchor_certificate
+                if not cert_deployment.received_chain_contains_anchor_certificate
                 else "WARNING - Received certificate chain contains the anchor certificate"
             )
         else:
             chain_with_anchor_txt = cls.NO_VERIFIED_CHAIN_ERROR_TXT
-        result_as_txt.append(cls._format_field("Received Chain Contains Anchor:", chain_with_anchor_txt))
+        deployment_as_txt.append(cls._format_field("Received Chain Contains Anchor:", chain_with_anchor_txt))
 
         chain_order_txt = (
             "OK - Order is valid"
-            if result.received_chain_has_valid_order
+            if cert_deployment.received_chain_has_valid_order
             else "FAILED - Certificate chain out of order!"
         )
-        result_as_txt.append(cls._format_field("Received Chain Order:", chain_order_txt))
+        deployment_as_txt.append(cls._format_field("Received Chain Order:", chain_order_txt))
 
-        if result.verified_certificate_chain:
+        if cert_deployment.verified_certificate_chain:
             sha1_text = (
                 "OK - No SHA1-signed certificate in the verified certificate chain"
-                if not result.verified_chain_has_sha1_signature
+                if not cert_deployment.verified_chain_has_sha1_signature
                 else "INSECURE - SHA1-signed certificate in the verified certificate chain"
             )
         else:
             sha1_text = cls.NO_VERIFIED_CHAIN_ERROR_TXT
-        result_as_txt.append(cls._format_field("Verified Chain contains SHA1:", sha1_text))
+        deployment_as_txt.append(cls._format_field("Verified Chain contains SHA1:", sha1_text))
 
         # Extensions section
-        result_as_txt.extend(["", cls._format_subtitle("Extensions")])
+        deployment_as_txt.extend(["", cls._format_subtitle(f"Certificate #{index} - Extensions")])
 
         # OCSP must-staple
         must_staple_txt = (
             "OK - Extension present"
-            if result.leaf_certificate_has_must_staple_extension
+            if cert_deployment.leaf_certificate_has_must_staple_extension
             else "NOT SUPPORTED - Extension not found"
         )
-        result_as_txt.append(cls._format_field("OCSP Must-Staple:", must_staple_txt))
+        deployment_as_txt.append(cls._format_field("OCSP Must-Staple:", must_staple_txt))
 
         # Look for SCT extension
-        scts_count = result.leaf_certificate_signed_certificate_timestamps_count
+        scts_count = cert_deployment.leaf_certificate_signed_certificate_timestamps_count
         if scts_count is None:
             sct_txt = "OK - Extension present"
         elif scts_count == 0:
@@ -192,48 +211,54 @@ class _CertificateInfoCliConnector(
             sct_txt = "WARNING - Only {} SCTs included but Google recommends 3 or more".format(str(scts_count))
         else:
             sct_txt = "OK - {} SCTs included".format(str(scts_count))
-        result_as_txt.append(cls._format_field("Certificate Transparency:", sct_txt))
+        deployment_as_txt.append(cls._format_field("Certificate Transparency:", sct_txt))
 
         # OCSP stapling
-        result_as_txt.extend(["", cls._format_subtitle("OCSP Stapling")])
+        deployment_as_txt.extend(["", cls._format_subtitle(f"Certificate #{index} - OCSP Stapling")])
 
-        if result.ocsp_response is None:
-            result_as_txt.append(cls._format_field("", "NOT SUPPORTED - Server did not send back an OCSP response"))
+        if cert_deployment.ocsp_response is None:
+            deployment_as_txt.append(cls._format_field("", "NOT SUPPORTED - Server did not send back an OCSP response"))
 
         else:
-            if result.ocsp_response.status != OcspResponseStatusEnum.SUCCESSFUL:
+            if cert_deployment.ocsp_response.status != OcspResponseStatusEnum.SUCCESSFUL:
                 ocsp_resp_txt = [
                     cls._format_field(
                         "",
-                        "ERROR - OCSP response status is not successful: {}".format(result.ocsp_response.status.name),
+                        "ERROR - OCSP response status is not successful: {}".format(
+                            cert_deployment.ocsp_response.status.name
+                        ),
                     )
                 ]
             else:
                 ocsp_trust_txt = (
                     "OK - Response is trusted"
-                    if result.ocsp_response_is_trusted
+                    if cert_deployment.ocsp_response_is_trusted
                     else "FAILED - Response is NOT trusted"
                 )
 
                 ocsp_resp_txt = [
-                    cls._format_field("OCSP Response Status:", result.ocsp_response.status.name),
+                    cls._format_field("OCSP Response Status:", cert_deployment.ocsp_response.status.name),
                     cls._format_field("Validation w/ Mozilla Store:", ocsp_trust_txt),
-                    cls._format_field("Responder Id:", result.ocsp_response.responder_id),
+                    cls._format_field("Responder Id:", cert_deployment.ocsp_response.responder_id),
                 ]
 
-                if result.ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL:
+                if cert_deployment.ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL:
                     ocsp_resp_txt.extend(
                         [
-                            cls._format_field("Cert Status:", result.ocsp_response.certificate_status),
-                            cls._format_field("Cert Serial Number:", result.ocsp_response.serial_number),
-                            cls._format_field("This Update:", result.ocsp_response.this_update.date().isoformat()),
-                            cls._format_field("Next Update:", result.ocsp_response.next_update.date().isoformat()),
+                            cls._format_field("Cert Status:", cert_deployment.ocsp_response.certificate_status),
+                            cls._format_field("Cert Serial Number:", cert_deployment.ocsp_response.serial_number),
+                            cls._format_field(
+                                "This Update:", cert_deployment.ocsp_response.this_update.date().isoformat()
+                            ),
+                            cls._format_field(
+                                "Next Update:", cert_deployment.ocsp_response.next_update.date().isoformat()
+                            ),
                         ]
                     )
-            result_as_txt.extend(ocsp_resp_txt)
+            deployment_as_txt.extend(ocsp_resp_txt)
 
         # All done
-        return result_as_txt
+        return deployment_as_txt
 
     @classmethod
     def _get_basic_certificate_text(cls, certificate: Certificate) -> List[str]:

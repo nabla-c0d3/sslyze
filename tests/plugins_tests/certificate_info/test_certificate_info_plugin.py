@@ -3,6 +3,7 @@ from pathlib import Path
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 from nassl.ocsp_response import OcspResponseStatusEnum
+from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation, CertificateInfoExtraArguments
 from sslyze.plugins.certificate_info._symantec import SymantecDistructTester, SymantecDistrustTimelineEnum
@@ -39,8 +40,8 @@ class TestCertificateInfoPlugin:
         )
 
         # It succeeds
-        assert len(plugin_result.path_validation_results) >= 6
-        for path_validation_result in plugin_result.path_validation_results:
+        assert len(plugin_result.certificate_deployments[0].path_validation_results) >= 6
+        for path_validation_result in plugin_result.certificate_deployments[0].path_validation_results:
             if path_validation_result.trust_store.path == ca_file_path:
                 assert not path_validation_result.was_validation_successful
             else:
@@ -55,10 +56,10 @@ class TestCertificateInfoPlugin:
         plugin_result = CertificateInfoImplementation.perform(server_info)
 
         # The result contains details about the server's OCSP config
-        assert plugin_result.ocsp_response
-        assert plugin_result.ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL
-        assert plugin_result.ocsp_response_is_trusted
-        assert not plugin_result.leaf_certificate_has_must_staple_extension
+        assert plugin_result.certificate_deployments[0].ocsp_response
+        assert plugin_result.certificate_deployments[0].ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL
+        assert plugin_result.certificate_deployments[0].ocsp_response_is_trusted
+        assert not plugin_result.certificate_deployments[0].leaf_certificate_has_must_staple_extension
 
     def test_valid_chain_with_ev_cert(self):
         # Given a server to scan that has an EV certificate
@@ -69,19 +70,19 @@ class TestCertificateInfoPlugin:
         plugin_result = CertificateInfoImplementation.perform(server_info)
 
         # The result returns that the certificate is EV
-        assert plugin_result.leaf_certificate_is_ev
+        assert plugin_result.certificate_deployments[0].leaf_certificate_is_ev
 
         # And the result has other details about the certificate chain
-        assert len(plugin_result.received_certificate_chain) >= 3
-        assert len(plugin_result.verified_certificate_chain) >= 3
-        assert not plugin_result.received_chain_contains_anchor_certificate
+        assert len(plugin_result.certificate_deployments[0].received_certificate_chain)
+        assert len(plugin_result.certificate_deployments[0].verified_certificate_chain)
+        assert not plugin_result.certificate_deployments[0].received_chain_contains_anchor_certificate
 
-        assert len(plugin_result.path_validation_results) == 5
-        for path_validation_result in plugin_result.path_validation_results:
+        assert len(plugin_result.certificate_deployments[0].path_validation_results) == 5
+        for path_validation_result in plugin_result.certificate_deployments[0].path_validation_results:
             assert path_validation_result.was_validation_successful
 
-        assert plugin_result.leaf_certificate_subject_matches_hostname
-        assert plugin_result.received_chain_has_valid_order
+        assert plugin_result.certificate_deployments[0].leaf_certificate_subject_matches_hostname
+        assert plugin_result.certificate_deployments[0].received_chain_has_valid_order
 
     def test_invalid_chain(self):
         # Given a server to scan that has a self-signed certificate
@@ -92,22 +93,22 @@ class TestCertificateInfoPlugin:
         plugin_result = CertificateInfoImplementation.perform(server_info)
 
         # A verified chain cannot be built
-        assert not plugin_result.verified_certificate_chain
-        assert plugin_result.verified_chain_has_sha1_signature is None
+        assert not plugin_result.certificate_deployments[0].verified_certificate_chain
+        assert plugin_result.certificate_deployments[0].verified_chain_has_sha1_signature is None
 
         # And the result has other details about the certificate chain
-        assert plugin_result.ocsp_response is None
-        assert len(plugin_result.received_certificate_chain) == 1
+        assert plugin_result.certificate_deployments[0].ocsp_response is None
+        assert len(plugin_result.certificate_deployments[0].received_certificate_chain) == 1
 
-        assert len(plugin_result.path_validation_results) >= 5
-        for path_validation_result in plugin_result.path_validation_results:
+        assert len(plugin_result.certificate_deployments[0].path_validation_results) >= 5
+        for path_validation_result in plugin_result.certificate_deployments[0].path_validation_results:
             assert not path_validation_result.was_validation_successful
 
-        assert plugin_result.leaf_certificate_signed_certificate_timestamps_count == 0
+        assert plugin_result.certificate_deployments[0].leaf_certificate_signed_certificate_timestamps_count == 0
 
-        assert plugin_result.leaf_certificate_subject_matches_hostname
-        assert plugin_result.received_chain_has_valid_order
-        assert plugin_result.received_chain_contains_anchor_certificate is None
+        assert plugin_result.certificate_deployments[0].leaf_certificate_subject_matches_hostname
+        assert plugin_result.certificate_deployments[0].received_chain_has_valid_order
+        assert plugin_result.certificate_deployments[0].received_chain_contains_anchor_certificate is None
 
     def test_1000_sans_chain(self):
         # Given a server to scan that has a leaf cert with 1000 SANs
@@ -128,7 +129,7 @@ class TestCertificateInfoPlugin:
         plugin_result = CertificateInfoImplementation.perform(server_info)
 
         # The SHA1 signature is detected
-        assert plugin_result.verified_chain_has_sha1_signature
+        assert plugin_result.certificate_deployments[0].verified_chain_has_sha1_signature
 
     def test_sha256_chain(self):
         # Given a server to scan that has a SHA256-signed certificate
@@ -139,7 +140,7 @@ class TestCertificateInfoPlugin:
         plugin_result = CertificateInfoImplementation.perform(server_info)
 
         # No SHA1 signature is detected
-        assert not plugin_result.verified_chain_has_sha1_signature
+        assert not plugin_result.certificate_deployments[0].verified_chain_has_sha1_signature
 
     def test_ecdsa_certificate(self):
         # Given a server to scan that has an ECDSA certificate
@@ -158,7 +159,7 @@ class TestCertificateInfoPlugin:
         plugin_result = CertificateInfoImplementation.perform(server_info)
 
         # And the anchor certificate was detected
-        assert plugin_result.received_chain_contains_anchor_certificate
+        assert plugin_result.certificate_deployments[0].received_chain_contains_anchor_certificate
 
     def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
         # Given a server to scan that has a certificate chain valid for the Microsoft but not the Mozilla trust stores
@@ -172,7 +173,7 @@ class TestCertificateInfoPlugin:
 
         # And the chain was correctly identified as valid with the Microsoft store
         found_microsoft_store = False
-        for validation_result in plugin_result.path_validation_results:
+        for validation_result in plugin_result.certificate_deployments[0].path_validation_results:
             if validation_result.trust_store.name == "Windows":
                 found_microsoft_store = True
                 assert validation_result.was_validation_successful
@@ -189,7 +190,7 @@ class TestCertificateInfoPlugin:
         # When running the scan, it succeeds
         plugin_result = CertificateInfoImplementation.perform(server_info)
 
-        assert plugin_result.verified_certificate_chain
+        assert plugin_result.certificate_deployments[0].verified_certificate_chain
 
     def test_certificate_with_no_subject(self):
         # Given a server to scan that has a certificate with no Subject
@@ -199,7 +200,7 @@ class TestCertificateInfoPlugin:
         # When running the scan, it succeeds
         plugin_result = CertificateInfoImplementation.perform(server_info)
 
-        assert plugin_result.verified_certificate_chain
+        assert plugin_result.certificate_deployments[0].verified_certificate_chain
 
     def test_certificate_with_scts(self):
         # Given a server to scan that has a certificate with SCTS
@@ -210,7 +211,18 @@ class TestCertificateInfoPlugin:
         plugin_result = CertificateInfoImplementation.perform(server_info)
 
         # And the SCTS were detected
-        assert plugin_result.leaf_certificate_signed_certificate_timestamps_count > 1
+        assert plugin_result.certificate_deployments[0].leaf_certificate_signed_certificate_timestamps_count > 1
+
+    def test_multiple_certificates(self):
+        # Given a server to scan that exposes multiple certificates for maximum compatibility
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.facebook.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
+
+        # When running the scan, it succeeds
+        plugin_result = CertificateInfoImplementation.perform(server_info)
+
+        # And multiple certificates were detected
+        assert len(plugin_result.certificate_deployments) > 1
 
     @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):
@@ -224,7 +236,7 @@ class TestCertificateInfoPlugin:
 
             # When running the scan, it succeeds
             plugin_result = CertificateInfoImplementation.perform(server_info)
-            assert plugin_result.received_certificate_chain
+            assert plugin_result.certificate_deployments[0].received_certificate_chain
 
 
 class SymantecDistructTestCase:

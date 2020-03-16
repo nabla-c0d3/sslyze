@@ -4,7 +4,6 @@ from sslyze.connection_helpers.errors import ConnectionToServerFailed
 from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.openssl_cipher_suites.implementation import CipherSuitesScanResult
-from sslyze.plugins.plugin_base import ScanCommandResult
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.scanner import ServerScanRequest, Scanner
 from sslyze.server_connectivity import ServerConnectivityTester

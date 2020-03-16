@@ -1,9 +1,11 @@
 language: python
 python:
-  - "3.6"
+  - "3.7"
+  - "3.8"
 install:
   - pip install pipenv
   - pipenv install --dev
 script:
   - invoke test
+  - python api_sample.py
   - python setup.py sdist

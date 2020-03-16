@@ -132,7 +132,7 @@ The trust stores can be updated to the latest version, using either the CLI:
 or the Python API:
     
 ```python
-from sslyze.plugins.utils.trust_store.trust_store_repository import TrustStoresRepository
+from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 
 TrustStoresRepository.update_default()
 ```

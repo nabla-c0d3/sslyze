@@ -1,4 +1,4 @@
-from random import random
+import random
 
 from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo, DhEphemeralKeyInfo
 
@@ -244,7 +244,7 @@ class TestCipherSuitesPluginWithOnlineServer:
 class TestCipherSuitesPluginWithLocalServer:
     def test_sslv2_enabled(self):
         # Given a server to scan that supports SSL 2.0
-        with LegacyOpenSslServer() as server:
+        with LegacyOpenSslServer(openssl_cipher_string="ALL:COMPLEMENTOFALL") as server:
             server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
@@ -254,16 +254,7 @@ class TestCipherSuitesPluginWithLocalServer:
             result: CipherSuitesScanResult = Sslv20ScanImplementation.perform(server_info)
 
         # The right cipher suites were detected
-        assert {
-            "SSL_CK_RC4_128_EXPORT40_WITH_MD5",
-            "SSL_CK_IDEA_128_CBC_WITH_MD5",
-            "SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5",
-            "SSL_CK_DES_192_EDE3_CBC_WITH_MD5",
-            "SSL_CK_DES_192_EDE3_CBC_WITH_MD5",
-            "SSL_CK_RC4_128_WITH_MD5",
-            "SSL_CK_RC2_128_CBC_WITH_MD5",
-            "SSL_CK_DES_64_CBC_WITH_MD5",
-        } == {accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites}
+        assert len(result.accepted_cipher_suites) == 7
         assert not result.rejected_cipher_suites
 
         # And the embedded server does not have a preference by default
@@ -271,7 +262,7 @@ class TestCipherSuitesPluginWithLocalServer:
 
     def test_sslv3_enabled(self):
         # Given a server to scan that supports SSL 3.0
-        with LegacyOpenSslServer() as server:
+        with LegacyOpenSslServer(openssl_cipher_string="ALL:COMPLEMENTOFALL") as server:
             server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
@@ -281,47 +272,8 @@ class TestCipherSuitesPluginWithLocalServer:
             result: CipherSuitesScanResult = Sslv30ScanImplementation.perform(server_info)
 
         # The right cipher suites were detected
-        expected_ciphers = {
-            "TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA",
-            "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
-            "TLS_DH_anon_WITH_AES_128_CBC_SHA",
-            "TLS_ECDH_anon_WITH_AES_128_CBC_SHA",
-            "TLS_DH_anon_WITH_SEED_CBC_SHA",
-            "TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5",
-            "TLS_ECDHE_RSA_WITH_NULL_SHA",
-            "TLS_ECDHE_RSA_WITH_RC4_128_SHA",
-            "TLS_DH_anon_WITH_AES_256_CBC_SHA",
-            "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA",
-            "TLS_ECDH_anon_WITH_RC4_128_SHA",
-            "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA",
-            "TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA",
-            "TLS_DH_anon_EXPORT_WITH_RC4_40_MD5",
-            "TLS_RSA_EXPORT_WITH_DES40_CBC_SHA",
-            "TLS_ECDH_anon_WITH_NULL_SHA",
-            "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA",
-            "TLS_RSA_WITH_RC4_128_SHA",
-            "TLS_RSA_EXPORT_WITH_RC4_40_MD5",
-            "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
-            "TLS_RSA_WITH_NULL_MD5",
-            "TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
-            "TLS_DH_anon_WITH_DES_CBC_SHA",
-            "TLS_RSA_WITH_SEED_CBC_SHA",
-            "TLS_RSA_WITH_DES_CBC_SHA",
-            "TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
-            "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
-            "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA",
-            "TLS_RSA_WITH_AES_256_CBC_SHA",
-            "TLS_RSA_WITH_RC4_128_MD5",
-            "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA",
-            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
-            "TLS_RSA_WITH_NULL_SHA",
-            "TLS_RSA_WITH_IDEA_CBC_SHA",
-            "TLS_RSA_WITH_AES_128_CBC_SHA",
-            "TLS_DH_anon_WITH_RC4_128_MD5",
-        }
-        assert expected_ciphers == {
-            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
-        }
+        assert len(result.accepted_cipher_suites) == 43
+        assert not result.rejected_cipher_suites
 
         # And the embedded server does not have a preference by default
         assert not result.cipher_suite_preferred_by_server
@@ -388,4 +340,4 @@ class TestCipherSuitesPluginWithLocalServer:
 
         # And the server's cipher suite preference was detected
         assert result.cipher_suite_preferred_by_server
-        assert configured_cipher_suites[0] == result.cipher_suite_preferred_by_server.openssl_name
+        assert configured_cipher_suites[0] == result.cipher_suite_preferred_by_server.cipher_suite.openssl_name

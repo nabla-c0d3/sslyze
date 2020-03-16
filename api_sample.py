@@ -67,7 +67,7 @@ def main() -> None:
 
         # Scan commands that were run with errors
         for scan_command, error in server_scan_result.scan_commands_errors.items():
-            print(f"\nError when running {scan_command}:\n{error.exception_trace}" )
+            print(f"\nError when running {scan_command}:\n{error.exception_trace}")
 
 
 if __name__ == "__main__":

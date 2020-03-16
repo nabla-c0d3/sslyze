@@ -1,3 +1,6 @@
+import pytest
+from nassl.ssl_client import ClientCertificateRequested
+
 from sslyze.plugins.http_headers_plugin import HttpHeadersImplementation, HttpHeadersScanResult
 from sslyze.server_connectivity import ServerConnectivityTester
 
@@ -62,7 +65,8 @@ class TestHttpHeadersPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When scanning for HTTP headers, it fails
-            HttpHeadersImplementation.perform(server_info)
+            with pytest.raises(ClientCertificateRequested):
+                HttpHeadersImplementation.perform(server_info)
 
     @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):

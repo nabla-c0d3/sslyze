@@ -145,7 +145,7 @@ class _OpenSslServer(ABC):
             port=self.port,
             verify_arg=self.get_verify_argument(client_auth_config),
             extra_args=" ".join(final_extra_args) if extra_openssl_args else "",
-            cipher=openssl_cipher_string if openssl_cipher_string else "ALL:COMPLEMENTOFALL",
+            cipher=openssl_cipher_string if openssl_cipher_string else "DEFAULT",
         )
 
     def __enter__(self):

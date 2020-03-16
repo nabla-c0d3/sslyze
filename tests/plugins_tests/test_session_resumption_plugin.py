@@ -1,3 +1,6 @@
+import pytest
+from nassl.ssl_client import ClientCertificateRequested
+
 from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportImplementation,
     SessionResumptionSupportScanResult,
@@ -43,8 +46,8 @@ class TestSessionResumptionSupport:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for resumption, it fails
-            # TODO(AD): Fix this and overall client auth support for when it is required
-            SessionResumptionSupportImplementation.perform(server_info)
+            with pytest.raises(ClientCertificateRequested):
+                SessionResumptionSupportImplementation.perform(server_info)
 
     @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):

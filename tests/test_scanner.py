@@ -5,13 +5,17 @@ import pytest
 
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.scanner import Scanner, ScanCommandErrorReasonEnum, ServerScanRequest
+from sslyze.server_connectivity import ServerConnectivityTester
+from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.factories import ServerConnectivityInfoFactory
+from tests.markers import can_only_run_on_linux_64
 from tests.mock_plugins import (
     MockPlugin1ScanResult,
     MockPlugin2ScanResult,
     MockPlugin1ExtraArguments,
     ScanCommandEnumForTests,
 )
+from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
 
 class TestScanCommands:
@@ -172,6 +176,39 @@ class TestScanner:
             assert error.exception_trace
 
         assert len(all_results) == 1
+
+    @can_only_run_on_linux_64
+    def test_client_certificate_missing(self):
+        # Given a server that requires client authentication
+        with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
+            # And sslyze does NOT provide a client certificate
+            server_location = ServerNetworkLocationViaDirectConnection(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = ServerConnectivityTester().perform(server_location)
+
+            server_scan = ServerScanRequest(
+                server_info=server_info,
+                scan_commands={
+                    # And a scan command that cannot be completed without a client certificate
+                    ScanCommandEnum.HTTP_HEADERS,
+                },
+            )
+
+            # When queuing the scan
+            scanner = Scanner()
+            scanner.queue_scan(server_scan)
+
+            # It succeeds
+            all_results = []
+            for result in scanner.get_results():
+                all_results.append(result)
+
+            assert len(all_results) == 1
+
+            # And the error was properly returned
+            error = all_results[0].scan_commands_errors[ScanCommandEnum.HTTP_HEADERS]
+            assert error.reason == ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED
 
 
 class TestScannerInternals:

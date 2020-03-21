@@ -1,22 +1,18 @@
 import ssl
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from ssl import CertificateError
 from typing import Optional, List, cast
 
 import cryptography
-import nassl
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate, load_pem_x509_certificate
 from nassl._nassl import X509
 from nassl.cert_chain_verifier import CertificateChainVerifier, CertificateChainVerificationFailed
-from nassl.ocsp_response import (
-    OcspResponseStatusEnum,
-    SignedCertificateTimestampsExtension,
-    OcspResponseNotTrustedError,
-)
+import nassl.ocsp_response
 
 from sslyze.plugins.certificate_info._certificate_utils import extract_dns_subject_alternative_names, get_common_names
 from sslyze.plugins.certificate_info._symantec import SymantecDistructTester
@@ -48,6 +44,16 @@ class PathValidationResult:
         return True if self.verified_certificate_chain else False
 
 
+class OcspResponseStatusEnum(Enum):
+    # WARNING: The order must match nassl.ocsp_response.OcspResponseStatusEnum
+    SUCCESSFUL = 0
+    MALFORMED_REQUEST = 1
+    INTERNAL_ERROR = 2
+    TRY_LATER = 3
+    SIG_REQUIRED = 5
+    UNAUTHORIZED = 6
+
+
 @dataclass(frozen=True)
 class OcspResponse:
     status: OcspResponseStatusEnum
@@ -65,7 +71,8 @@ class OcspResponse:
     issuer_key_hash: str
     serial_number: str
 
-    extensions: Optional[List[SignedCertificateTimestampsExtension]]  # Only SCT is supported at the moment
+    # Only SCT is supported at the moment
+    extensions: Optional[List[nassl.ocsp_response.SignedCertificateTimestampsExtension]]
 
 
 @dataclass(frozen=True)
@@ -270,7 +277,7 @@ class CertificateDeploymentAnalyzer:
         if self.server_ocsp_response:
             # Convert the OCSP response from the nassl class to the sslyze class to ensure API stability
             final_ocsp_response = OcspResponse(
-                status=self.server_ocsp_response.status,
+                status=OcspResponseStatusEnum(self.server_ocsp_response.status.value),
                 type=self.server_ocsp_response.type,
                 version=self.server_ocsp_response.version,
                 responder_id=self.server_ocsp_response.responder_id,
@@ -288,12 +295,12 @@ class CertificateDeploymentAnalyzer:
             # Check if the OCSP response is trusted
             if (
                 trust_store_that_can_build_verified_chain
-                and self.server_ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL
+                and self.server_ocsp_response.status == nassl.ocsp_response.OcspResponseStatusEnum.SUCCESSFUL
             ):
                 try:
                     self.server_ocsp_response.verify(trust_store_that_can_build_verified_chain.path)
                     is_ocsp_response_trusted = True
-                except OcspResponseNotTrustedError:
+                except nassl.ocsp_response.OcspResponseNotTrustedError:
                     is_ocsp_response_trusted = False
 
         # All done

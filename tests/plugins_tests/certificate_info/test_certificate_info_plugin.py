@@ -48,7 +48,7 @@ class TestCertificateInfoPlugin:
 
     def test_valid_chain_with_ocsp_stapling(self):
         # Given a server to scan that supports OCSP stapling
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.digitalocean.com", 443)
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.apple.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan

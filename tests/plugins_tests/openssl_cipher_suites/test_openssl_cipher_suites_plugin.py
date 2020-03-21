@@ -273,7 +273,7 @@ class TestCipherSuitesPluginWithLocalServer:
 
         # The right cipher suites were detected
         assert len(result.accepted_cipher_suites) == 43
-        assert not result.rejected_cipher_suites
+        assert result.rejected_cipher_suites
 
         # And the embedded server does not have a preference by default
         assert not result.cipher_suite_preferred_by_server

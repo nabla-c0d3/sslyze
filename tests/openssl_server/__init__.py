@@ -164,17 +164,20 @@ class _OpenSslServer(ABC):
                     # s_server has terminated early
                     raise RuntimeError("Could not start s_server")
 
-        except Exception:
+        except Exception as e:
+            logging.warning(f"Error while starting s_server: {e}")
             self._terminate_process()
             raise
 
         return self
 
     def __exit__(self, *args):
+        logging.warning(f"Exiting s_server context")
         self._terminate_process()
         return False
 
     def _terminate_process(self) -> None:
+        logging.warning(f"Shutting down s_server")
         if self._server_io_manager:
             self._server_io_manager.close()
         self._server_io_manager = None

@@ -33,7 +33,7 @@ class TestSessionRenegotiationPlugin:
         assert SessionRenegotiationImplementation.cli_connector_cls.result_to_console_output(result)
 
     @can_only_run_on_linux_64
-    def test_fails_when_client_auth_failed_session(self):
+    def test_fails_when_client_auth_failed(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate
@@ -42,9 +42,9 @@ class TestSessionRenegotiationPlugin:
             )
             server_info = ServerConnectivityTester().perform(server_location)
 
-        # When testing for insecure reneg, it fails
-        with pytest.raises(ClientCertificateRequested):
-            SessionRenegotiationImplementation.scan_server(server_info)
+            # When testing for insecure reneg, it fails
+            with pytest.raises(ClientCertificateRequested):
+                SessionRenegotiationImplementation.scan_server(server_info)
 
     @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):

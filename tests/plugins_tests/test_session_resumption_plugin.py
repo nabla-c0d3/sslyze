@@ -15,7 +15,7 @@ from sslyze.server_setting import (
     ClientAuthenticationCredentials,
 )
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
+from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, LegacyOpenSslServer
 
 
 class TestSessionResumptionSupport:
@@ -39,9 +39,9 @@ class TestSessionResumptionSupport:
         assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)
 
     @can_only_run_on_linux_64
-    def test_fails_when_client_auth_failed_session(self):
+    def test_fails_when_client_auth_failed(self):
         # Given a server that requires client authentication
-        with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
+        with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate
             server_location = ServerNetworkLocationViaDirectConnection(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port

@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.x509 import Certificate
 from nassl.ocsp_response import OcspResponseStatusEnum
 
-from sslyze.plugins.certificate_info._cert_chain_analyzer import CertificateChainDeploymentAnalysisResult
+from sslyze.plugins.certificate_info._cert_chain_analyzer import CertificateDeploymentAnalysisResult
 from sslyze.plugins.certificate_info._certificate_utils import get_common_names, extract_dns_subject_alternative_names
 from sslyze.plugins.certificate_info._json_output import register_json_serializer_functions
 from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption
@@ -89,7 +89,7 @@ class _CertificateInfoCliConnector(
 
     @classmethod
     def _cert_deployment_to_console_output(
-        cls, index: int, cert_deployment: CertificateChainDeploymentAnalysisResult
+        cls, index: int, cert_deployment: CertificateDeploymentAnalysisResult
     ) -> List[str]:
         leaf_certificate = cert_deployment.received_certificate_chain[0]
         deployment_as_txt = [

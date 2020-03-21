@@ -8,8 +8,8 @@ from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.connection_helpers.errors import TlsHandshakeFailed
 from sslyze.plugins.certificate_info._cert_chain_analyzer import (
-    CertificateChainDeploymentAnalyzer,
-    CertificateChainDeploymentAnalysisResult,
+    CertificateDeploymentAnalyzer,
+    CertificateDeploymentAnalysisResult,
 )
 from sslyze.plugins.certificate_info._cli_connector import _CertificateInfoCliConnector
 from sslyze.plugins.certificate_info._get_cert_chain import get_certificate_chain, ArgumentsToGetCertificateChain
@@ -41,10 +41,13 @@ class CertificateInfoScanResult(ScanCommandResult):
 
     Attributes:
         hostname_used_for_server_name_indication: The hostname sent by sslyze as the Server Name Indication extension.
+        certificate_deployments: A list of results, one per leaf certificate detected by SSLyze. Most servers only
+            deploy one leaf certificate, but some websites (such as Facebook) return different leaf certificates
+            depending on the client, as a way to maximize compatibility with older clients/devices.
     """
 
     hostname_used_for_server_name_indication: str
-    certificate_deployments: List[CertificateChainDeploymentAnalysisResult]
+    certificate_deployments: List[CertificateDeploymentAnalysisResult]
 
 
 class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoScanResult, None]):
@@ -116,7 +119,7 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
         analyzed_deployments = []
         name_to_use_for_hostname_validation = server_info.network_configuration.tls_server_name_indication
         for received_chain_as_pem, ocsp_response in all_configured_certificate_chains.values():
-            deployment_analyzer = CertificateChainDeploymentAnalyzer(
+            deployment_analyzer = CertificateDeploymentAnalyzer(
                 server_hostname=name_to_use_for_hostname_validation,
                 server_certificate_chain_as_pem=received_chain_as_pem,
                 server_ocsp_response=ocsp_response,

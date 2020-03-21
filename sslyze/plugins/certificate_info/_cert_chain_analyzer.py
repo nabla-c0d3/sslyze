@@ -69,8 +69,8 @@ class OcspResponse:
 
 
 @dataclass(frozen=True)
-class CertificateChainDeploymentAnalysisResult:
-    """The result of analyzing a server's certificate(s) to verify its validity.
+class CertificateDeploymentAnalysisResult:
+    """The result of analyzing a server's certificate to verify its validity.
 
     Any certificate available as an attribute is parsed using the cryptography module; documentation is available at
     https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object
@@ -141,7 +141,7 @@ class CertificateChainDeploymentAnalysisResult:
         return pem_certs
 
 
-class CertificateChainDeploymentAnalyzer:
+class CertificateDeploymentAnalyzer:
     """Utility class for analyzing a certificate chain as deployed on a specific server.
 
     Useful for checking a server's certificate chain without having to use the CertificateInfoPlugin.
@@ -159,7 +159,7 @@ class CertificateChainDeploymentAnalyzer:
         self.server_ocsp_response = server_ocsp_response
         self.trust_stores_for_validation = trust_stores_for_validation
 
-    def perform(self) -> CertificateChainDeploymentAnalysisResult:
+    def perform(self) -> CertificateDeploymentAnalysisResult:
         received_certificate_chain = [
             load_pem_x509_certificate(pem_cert.encode("ascii"), backend=default_backend())
             for pem_cert in self.server_certificate_chain_as_pem
@@ -297,7 +297,7 @@ class CertificateChainDeploymentAnalyzer:
                     is_ocsp_response_trusted = False
 
         # All done
-        return CertificateChainDeploymentAnalysisResult(
+        return CertificateDeploymentAnalysisResult(
             received_certificate_chain=received_certificate_chain,
             leaf_certificate_subject_matches_hostname=_certificate_matches_hostname(leaf_cert, self.server_hostname),
             leaf_certificate_has_must_staple_extension=has_ocsp_must_staple,

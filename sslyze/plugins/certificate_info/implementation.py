@@ -37,7 +37,7 @@ class CertificateInfoExtraArguments(ScanCommandExtraArguments):
 
 @dataclass(frozen=True)
 class CertificateInfoScanResult(ScanCommandResult):
-    """The result of retrieving and analyzing a server's certificate(s) to verify its validity.
+    """The result of retrieving and analyzing a server's certificates to verify their validity.
 
     Attributes:
         hostname_used_for_server_name_indication: The hostname sent by sslyze as the Server Name Indication extension.

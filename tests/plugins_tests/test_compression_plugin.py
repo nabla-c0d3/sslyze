@@ -14,7 +14,7 @@ class TestCompressionPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When testing for compression support, it succeeds
-        result: CompressionScanResult = CompressionImplementation.perform(server_info)
+        result: CompressionScanResult = CompressionImplementation.scan_server(server_info)
 
         # And the right result is returned
         assert not result.supports_compression
@@ -38,6 +38,6 @@ class TestCompressionPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for compression support, it succeeds
-            result: CompressionScanResult = CompressionImplementation.perform(server_info)
+            result: CompressionScanResult = CompressionImplementation.scan_server(server_info)
 
         assert not result.supports_compression

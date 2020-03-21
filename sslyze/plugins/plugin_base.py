@@ -45,6 +45,8 @@ _ScanCommandExtraArgumentsTypeVar = TypeVar(
 
 
 class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentsTypeVar]):
+    """Describes everything needed to run a specific scan command.
+    """
 
     # Contains all the logic for making the scan command available via the CLI
     cli_connector_cls: ClassVar[Type["ScanCommandCliConnector"]]
@@ -70,9 +72,8 @@ class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandE
         """
         pass
 
-    # TODO: Better name
     @classmethod
-    def perform(
+    def scan_server(
         cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[_ScanCommandExtraArgumentsTypeVar] = None
     ) -> _ScanCommandResultTypeVar:
         """Utility method to run a scan command directly.

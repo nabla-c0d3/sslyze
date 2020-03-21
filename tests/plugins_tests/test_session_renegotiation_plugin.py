@@ -23,7 +23,7 @@ class TestSessionRenegotiationPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When testing for insecure reneg, it succeeds
-        result: SessionRenegotiationScanResult = SessionRenegotiationImplementation.perform(server_info)
+        result: SessionRenegotiationScanResult = SessionRenegotiationImplementation.scan_server(server_info)
 
         # And the server is reported as not vulnerable
         assert result.supports_secure_renegotiation
@@ -44,7 +44,7 @@ class TestSessionRenegotiationPlugin:
 
         # When testing for insecure reneg, it fails
         with pytest.raises(ClientCertificateRequested):
-            SessionRenegotiationImplementation.perform(server_info)
+            SessionRenegotiationImplementation.scan_server(server_info)
 
     @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):
@@ -63,7 +63,7 @@ class TestSessionRenegotiationPlugin:
             server_info = ServerConnectivityTester().perform(server_location, network_config)
 
             # When testing for insecure reneg, it succeeds
-            result: SessionRenegotiationScanResult = SessionRenegotiationImplementation.perform(server_info)
+            result: SessionRenegotiationScanResult = SessionRenegotiationImplementation.scan_server(server_info)
 
             # And the server is reported as not vulnerable
             assert result.supports_secure_renegotiation

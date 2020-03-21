@@ -25,7 +25,7 @@ class TestSessionResumptionSupport:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When testing for resumption, it succeeds
-        result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.perform(server_info)
+        result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(server_info)
 
         # And it confirms that both session IDs and TLS tickets are supported
         assert result.attempted_session_id_resumptions_count
@@ -50,7 +50,7 @@ class TestSessionResumptionSupport:
 
             # When testing for resumption, it fails
             with pytest.raises(ClientCertificateRequested):
-                SessionResumptionSupportImplementation.perform(server_info)
+                SessionResumptionSupportImplementation.scan_server(server_info)
 
     @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):
@@ -69,7 +69,7 @@ class TestSessionResumptionSupport:
             server_info = ServerConnectivityTester().perform(server_location, network_config)
 
             # When testing for resumption, it succeeds
-            result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.perform(server_info)
+            result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(server_info)
 
         assert result.successful_session_id_resumptions_count
         assert result.is_session_id_resumption_supported
@@ -82,7 +82,7 @@ class TestSessionResumptionRate:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When testing for resumption rate, it succeeds
-        result: SessionResumptionRateScanResult = SessionResumptionRateImplementation.perform(server_info)
+        result: SessionResumptionRateScanResult = SessionResumptionRateImplementation.scan_server(server_info)
 
         # And session ID resumption was performed
         assert result.attempted_session_id_resumptions_count

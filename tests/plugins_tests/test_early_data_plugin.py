@@ -16,7 +16,7 @@ class TestEarlyDataPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for early data support, it succeeds
-            result: EarlyDataScanResult = EarlyDataImplementation.perform(server_info)
+            result: EarlyDataScanResult = EarlyDataImplementation.scan_server(server_info)
 
         # And the right result is returned
         assert result.supports_early_data
@@ -34,7 +34,7 @@ class TestEarlyDataPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for early data support, it succeeds
-            result: EarlyDataScanResult = EarlyDataImplementation.perform(server_info)
+            result: EarlyDataScanResult = EarlyDataImplementation.scan_server(server_info)
 
         # And the right result is returned
         assert not result.supports_early_data
@@ -49,7 +49,7 @@ class TestEarlyDataPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for early data support, it succeeds
-            result: EarlyDataScanResult = EarlyDataImplementation.perform(server_info)
+            result: EarlyDataScanResult = EarlyDataImplementation.scan_server(server_info)
 
             # And the right result is returned
         assert not result.supports_early_data

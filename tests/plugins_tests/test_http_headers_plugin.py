@@ -20,7 +20,7 @@ class TestHttpHeadersPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for HTTP headers, it succeeds
-        result: HttpHeadersScanResult = HttpHeadersImplementation.perform(server_info)
+        result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
 
         # And only HSTS is detected
         assert result.strict_transport_security_header
@@ -37,7 +37,7 @@ class TestHttpHeadersPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for HTTP headers, it succeeds
-        result: HttpHeadersScanResult = HttpHeadersImplementation.perform(server_info)
+        result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
 
         # And no headers are detected
         assert not result.strict_transport_security_header
@@ -54,7 +54,7 @@ class TestHttpHeadersPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for HTTP headers, it succeeds
-        result: HttpHeadersScanResult = HttpHeadersImplementation.perform(server_info)
+        result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
 
         # And the Expect-CT header was detected
         assert result.expect_ct_header
@@ -75,7 +75,7 @@ class TestHttpHeadersPlugin:
 
             # When scanning for HTTP headers, it fails
             with pytest.raises(ClientCertificateRequested):
-                HttpHeadersImplementation.perform(server_info)
+                HttpHeadersImplementation.scan_server(server_info)
 
     @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):
@@ -94,7 +94,7 @@ class TestHttpHeadersPlugin:
             server_info = ServerConnectivityTester().perform(server_location, network_config)
 
             # When scanning for HTTP headers, it succeeds
-            result: HttpHeadersScanResult = HttpHeadersImplementation.perform(server_info)
+            result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
 
             assert not result.strict_transport_security_header
             assert not result.public_key_pins_header

@@ -16,7 +16,7 @@ class TestRobotPluginPlugin:
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("guide.duo.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
 
-        result: RobotScanResult = RobotImplementation.perform(server_info)
+        result: RobotScanResult = RobotImplementation.scan_server(server_info)
         assert result.robot_result == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE
 
         # And a CLI output can be generated
@@ -38,4 +38,4 @@ class TestRobotPluginPlugin:
 
             # The plugin fails
             with pytest.raises(ClientCertificateRequested):
-                RobotImplementation.perform(server_info)
+                RobotImplementation.scan_server(server_info)

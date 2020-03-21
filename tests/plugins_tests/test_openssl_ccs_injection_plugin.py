@@ -12,7 +12,7 @@ class TestOpenSslCcsInjectionPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When testing for CCS injection, it succeeds
-        result: OpenSslCcsInjectionScanResult = OpenSslCcsInjectionImplementation.perform(server_info)
+        result: OpenSslCcsInjectionScanResult = OpenSslCcsInjectionImplementation.scan_server(server_info)
 
         # And the server is reported as not vulnerable
         assert not result.is_vulnerable_to_ccs_injection
@@ -30,7 +30,7 @@ class TestOpenSslCcsInjectionPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for CCS injection, it succeeds
-            result: OpenSslCcsInjectionScanResult = OpenSslCcsInjectionImplementation.perform(server_info)
+            result: OpenSslCcsInjectionScanResult = OpenSslCcsInjectionImplementation.scan_server(server_info)
 
         # And the server is reported as vulnerable
         assert result.is_vulnerable_to_ccs_injection
@@ -49,7 +49,7 @@ class TestOpenSslCcsInjectionPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for CCS injection, it succeeds
-            result: OpenSslCcsInjectionScanResult = OpenSslCcsInjectionImplementation.perform(server_info)
+            result: OpenSslCcsInjectionScanResult = OpenSslCcsInjectionImplementation.scan_server(server_info)
 
         # And the server is reported as vulnerable
         assert result.is_vulnerable_to_ccs_injection

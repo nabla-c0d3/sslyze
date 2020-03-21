@@ -21,7 +21,7 @@ class TestCertificateInfoPlugin:
 
         # When trying to enable a custom CA file but the path is wrong, it fails
         with pytest.raises(ValueError):
-            CertificateInfoImplementation.perform(
+            CertificateInfoImplementation.scan_server(
                 server_info, CertificateInfoExtraArguments(custom_ca_file=Path("doesntexist"))
             )
 
@@ -34,7 +34,7 @@ class TestCertificateInfoPlugin:
         ca_file_path = Path(__file__).parent / ".." / ".." / "certificates" / "wildcard-self-signed.pem"
 
         # When running the scan with the custom CA file enabled
-        plugin_result = CertificateInfoImplementation.perform(
+        plugin_result = CertificateInfoImplementation.scan_server(
             server_info, CertificateInfoExtraArguments(custom_ca_file=ca_file_path)
         )
 
@@ -52,7 +52,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # The result contains details about the server's OCSP config
         assert plugin_result.certificate_deployments[0].ocsp_response
@@ -66,7 +66,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # The result returns that the certificate is EV
         assert plugin_result.certificate_deployments[0].leaf_certificate_is_ev
@@ -89,7 +89,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # A verified chain cannot be built
         assert not plugin_result.certificate_deployments[0].verified_certificate_chain
@@ -115,7 +115,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
-        CertificateInfoImplementation.perform(server_info)
+        CertificateInfoImplementation.scan_server(server_info)
 
     def test_sha1_chain(self):
         # Given a server to scan that has a SHA1-signed certificate
@@ -125,7 +125,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # The SHA1 signature is detected
         assert plugin_result.certificate_deployments[0].verified_chain_has_sha1_signature
@@ -136,7 +136,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # No SHA1 signature is detected
         assert not plugin_result.certificate_deployments[0].verified_chain_has_sha1_signature
@@ -147,7 +147,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
-        CertificateInfoImplementation.perform(server_info)
+        CertificateInfoImplementation.scan_server(server_info)
 
     def test_chain_with_anchor(self):
         # Given a server to scan that has its anchor certificate returned in its chain
@@ -155,7 +155,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # And the anchor certificate was detected
         assert plugin_result.certificate_deployments[0].received_chain_contains_anchor_certificate
@@ -168,7 +168,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # And the chain was correctly identified as valid with the Microsoft store
         found_microsoft_store = False
@@ -187,7 +187,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         assert plugin_result.certificate_deployments[0].verified_certificate_chain
 
@@ -197,7 +197,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         assert plugin_result.certificate_deployments[0].verified_certificate_chain
 
@@ -207,7 +207,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # And the SCTS were detected
         assert plugin_result.certificate_deployments[0].leaf_certificate_signed_certificate_timestamps_count > 1
@@ -218,7 +218,7 @@ class TestCertificateInfoPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When running the scan, it succeeds
-        plugin_result = CertificateInfoImplementation.perform(server_info)
+        plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # And multiple certificates were detected
         assert len(plugin_result.certificate_deployments) > 1
@@ -234,7 +234,7 @@ class TestCertificateInfoPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When running the scan, it succeeds
-            plugin_result = CertificateInfoImplementation.perform(server_info)
+            plugin_result = CertificateInfoImplementation.scan_server(server_info)
             assert plugin_result.certificate_deployments[0].received_certificate_chain
 
 

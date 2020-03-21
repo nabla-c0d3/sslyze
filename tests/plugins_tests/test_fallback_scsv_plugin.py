@@ -20,7 +20,7 @@ class TestFallbackScsvPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When testing for SCSV, it succeeds
-        result: FallbackScsvScanResult = FallbackScsvImplementation.perform(server_info)
+        result: FallbackScsvScanResult = FallbackScsvImplementation.scan_server(server_info)
 
         # And the server is reported as supporting SCSV
         assert result.supports_fallback_scsv
@@ -38,7 +38,7 @@ class TestFallbackScsvPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for SCSV, it succeeds
-            result: FallbackScsvScanResult = FallbackScsvImplementation.perform(server_info)
+            result: FallbackScsvScanResult = FallbackScsvImplementation.scan_server(server_info)
 
         # And the server is reported as NOT supporting SCSV
         assert not result.supports_fallback_scsv
@@ -55,7 +55,7 @@ class TestFallbackScsvPlugin:
 
             # When testing for SCSV, it fails as a client cert was not supplied
             with pytest.raises(ClientCertificateRequested):
-                FallbackScsvImplementation.perform(server_info)
+                FallbackScsvImplementation.scan_server(server_info)
 
     @can_only_run_on_linux_64
     def test_works_when_client_auth_succeeded(self):
@@ -74,7 +74,7 @@ class TestFallbackScsvPlugin:
             server_info = ServerConnectivityTester().perform(server_location, network_config)
 
             # When testing for SCSV, it succeeds
-            result: FallbackScsvScanResult = FallbackScsvImplementation.perform(server_info)
+            result: FallbackScsvScanResult = FallbackScsvImplementation.scan_server(server_info)
 
         # And the server is reported as NOT supporting SCSV
         assert not result.supports_fallback_scsv

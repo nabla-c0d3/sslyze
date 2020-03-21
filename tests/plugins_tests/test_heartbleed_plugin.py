@@ -13,7 +13,7 @@ class TestHeartbleedPlugin:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When testing for Heartbleed, it succeeds
-        result: HeartbleedScanResult = HeartbleedImplementation.perform(server_info)
+        result: HeartbleedScanResult = HeartbleedImplementation.scan_server(server_info)
 
         # And the server is reported as not vulnerable
         assert not result.is_vulnerable_to_heartbleed
@@ -31,7 +31,7 @@ class TestHeartbleedPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for Heartbleed, it succeeds
-            result: HeartbleedScanResult = HeartbleedImplementation.perform(server_info)
+            result: HeartbleedScanResult = HeartbleedImplementation.scan_server(server_info)
 
         # And the server is reported as vulnerable
         assert result.is_vulnerable_to_heartbleed
@@ -50,7 +50,7 @@ class TestHeartbleedPlugin:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When testing for Heartbleed, it succeeds
-            result: HeartbleedScanResult = HeartbleedImplementation.perform(server_info)
+            result: HeartbleedScanResult = HeartbleedImplementation.scan_server(server_info)
 
         # And the server is reported as vulnerable
         assert result.is_vulnerable_to_heartbleed

@@ -25,7 +25,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Sslv20ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Sslv20ScanImplementation.scan_server(server_info)
 
         # And the result confirms that SSL 2.0 is not supported
         assert result.cipher_suite_preferred_by_server is None
@@ -38,7 +38,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Sslv30ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Sslv30ScanImplementation.scan_server(server_info)
 
         # And the result confirms that SSL 3.0 is not supported
         assert not result.accepted_cipher_suites
@@ -50,7 +50,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv10ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv10ScanImplementation.scan_server(server_info)
 
         # And the result confirms that TLS 1.0 is supported
         expected_ciphers = {
@@ -72,7 +72,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv10ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv10ScanImplementation.scan_server(server_info)
 
         # And the result confirms that TLS 1.0 is not supported
         assert result.cipher_suite_preferred_by_server is None
@@ -85,7 +85,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv11ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv11ScanImplementation.scan_server(server_info)
 
         # And the result confirms that TLS 1.1 is not supported
         expected_ciphers = {
@@ -107,7 +107,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
 
         # And the result confirms that TLS 1.2 is not supported
         expected_ciphers = {
@@ -133,7 +133,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
 
         # And the NULL/Anon cipher suites were detected
         expected_ciphers = {
@@ -163,7 +163,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
 
         # And the RC4 cipher suites were detected
         assert {"TLS_ECDHE_RSA_WITH_RC4_128_SHA", "TLS_RSA_WITH_RC4_128_SHA"} == {
@@ -176,7 +176,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
 
         # And the server is detected as not following the client's preference
         assert result.cipher_suite_preferred_by_server is None
@@ -187,7 +187,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
 
         # And the server is detected as following the client's preference
         assert result.cipher_suite_preferred_by_server
@@ -202,7 +202,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location, network_configuration)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
         assert result.accepted_cipher_suites
 
     def test_tls_1_3_cipher_suites(self):
@@ -211,7 +211,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv13ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv13ScanImplementation.scan_server(server_info)
         assert result.accepted_cipher_suites
 
         assert {"TLS_CHACHA20_POLY1305_SHA256", "TLS_AES_256_GCM_SHA384", "TLS_AES_128_GCM_SHA256"} == {
@@ -224,7 +224,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
         assert result.accepted_cipher_suites
 
         # And the ephemeral keys were returned
@@ -251,7 +251,7 @@ class TestCipherSuitesPluginWithLocalServer:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When scanning for cipher suites, it succeeds
-            result: CipherSuitesScanResult = Sslv20ScanImplementation.perform(server_info)
+            result: CipherSuitesScanResult = Sslv20ScanImplementation.scan_server(server_info)
 
         # The right cipher suites were detected
         assert len(result.accepted_cipher_suites) == 7
@@ -269,7 +269,7 @@ class TestCipherSuitesPluginWithLocalServer:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When scanning for cipher suites, it succeeds
-            result: CipherSuitesScanResult = Sslv30ScanImplementation.perform(server_info)
+            result: CipherSuitesScanResult = Sslv30ScanImplementation.scan_server(server_info)
 
         # The right cipher suites were detected
         assert len(result.accepted_cipher_suites) == 43
@@ -288,7 +288,7 @@ class TestCipherSuitesPluginWithLocalServer:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When scanning for cipher suites, it succeeds
-            result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+            result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
 
         assert result.accepted_cipher_suites
 
@@ -302,7 +302,7 @@ class TestCipherSuitesPluginWithLocalServer:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When scanning for cipher suites, it succeeds
-            result: CipherSuitesScanResult = Tlsv13ScanImplementation.perform(server_info)
+            result: CipherSuitesScanResult = Tlsv13ScanImplementation.scan_server(server_info)
 
         assert result.accepted_cipher_suites
 
@@ -336,7 +336,7 @@ class TestCipherSuitesPluginWithLocalServer:
             server_info = ServerConnectivityTester().perform(server_location)
 
             # When scanning for cipher suites, it succeeds
-            result: CipherSuitesScanResult = Tlsv12ScanImplementation.perform(server_info)
+            result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
 
         # And the server's cipher suite preference was detected
         assert result.cipher_suite_preferred_by_server

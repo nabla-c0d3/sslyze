@@ -34,7 +34,7 @@ class CommandLineParsingError(Exception):
         return self.PARSING_ERROR_FORMAT.format(self)
 
 
-# TODO(AD): Somewhat hacky as this is not actually an error - need to refactor the command line parsing
+# Not actually an error but makes handling trust store updates a lot easier
 class TrustStoresUpdateCompleted(CommandLineParsingError):
     def get_error_msg(self) -> str:
         return "Trust stores successfully updated."

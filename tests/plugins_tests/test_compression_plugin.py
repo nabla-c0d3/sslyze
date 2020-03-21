@@ -19,6 +19,9 @@ class TestCompressionPlugin:
         # And the right result is returned
         assert not result.supports_compression
 
+        # And a CLI output can be generated
+        assert CompressionImplementation.cli_connector_cls.result_to_console_output(result)
+
     @pytest.mark.skip("Not implemented; find a server vulnerable to TLS compression")
     def test_compression_enabled(self):
         # TODO

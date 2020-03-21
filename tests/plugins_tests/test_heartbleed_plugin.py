@@ -18,6 +18,9 @@ class TestHeartbleedPlugin:
         # And the server is reported as not vulnerable
         assert not result.is_vulnerable_to_heartbleed
 
+        # And a CLI output can be generated
+        assert HeartbleedImplementation.cli_connector_cls.result_to_console_output(result)
+
     @can_only_run_on_linux_64
     def test_heartbleed_bad(self):
         # Given a server that is vulnerable to Heartbleed
@@ -32,6 +35,9 @@ class TestHeartbleedPlugin:
 
         # And the server is reported as vulnerable
         assert result.is_vulnerable_to_heartbleed
+
+        # And a CLI output can be generated
+        assert HeartbleedImplementation.cli_connector_cls.result_to_console_output(result)
 
     @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):

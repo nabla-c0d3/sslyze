@@ -11,7 +11,7 @@ root_path = Path(__file__).parent.absolute()
 def test(ctx):
     # type: (Context) -> None
     # Run the test suite
-    ctx.run("pytest")
+    ctx.run("pytest --cov=sslyze --cov-fail-under 80")
 
     # Run linters
     ctx.run("flake8 .")

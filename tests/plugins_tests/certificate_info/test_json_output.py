@@ -11,7 +11,7 @@ from tests.factories import ServerScanResultFactory
 class TestJsonOutput:
     def test_json_serializer_functions(self):
         # Given a completed scan for a server with the CERTIFICATE_INFO scan command
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.facebook.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
         plugin_result = CertificateInfoImplementation.perform(server_info)
         scan_results = {ScanCommandEnum.CERTIFICATE_INFO: plugin_result}

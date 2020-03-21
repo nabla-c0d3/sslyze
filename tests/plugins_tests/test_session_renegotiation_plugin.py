@@ -29,6 +29,9 @@ class TestSessionRenegotiationPlugin:
         assert result.supports_secure_renegotiation
         assert not result.accepts_client_renegotiation
 
+        # And a CLI output can be generated
+        assert SessionRenegotiationImplementation.cli_connector_cls.result_to_console_output(result)
+
     @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed_session(self):
         # Given a server that requires client authentication

@@ -21,6 +21,9 @@ class TestEarlyDataPlugin:
         # And the right result is returned
         assert result.supports_early_data
 
+        # And a CLI output can be generated
+        assert EarlyDataImplementation.cli_connector_cls.result_to_console_output(result)
+
     @can_only_run_on_linux_64
     def test_early_data_disabled_no_tls_1_3(self):
         # Given a server to scan that does NOT support early data because it does not support TLS 1.3

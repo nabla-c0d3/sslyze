@@ -25,6 +25,9 @@ class TestFallbackScsvPlugin:
         # And the server is reported as supporting SCSV
         assert result.supports_fallback_scsv
 
+        # And a CLI output can be generated
+        assert FallbackScsvImplementation.cli_connector_cls.result_to_console_output(result)
+
     @can_only_run_on_linux_64
     def test_fallback_bad(self):
         # Given a server that does NOT support SCSV

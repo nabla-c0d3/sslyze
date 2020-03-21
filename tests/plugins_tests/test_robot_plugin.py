@@ -19,6 +19,9 @@ class TestRobotPluginPlugin:
         result: RobotScanResult = RobotImplementation.perform(server_info)
         assert result.robot_result == RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE
 
+        # And a CLI output can be generated
+        assert RobotImplementation.cli_connector_cls.result_to_console_output(result)
+
     @pytest.mark.skip("Not implemented; TODO: Find a vulnerable server.")
     def test_robot_attack_bad(self):
         pass

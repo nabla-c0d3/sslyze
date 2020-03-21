@@ -17,6 +17,9 @@ class TestOpenSslCcsInjectionPlugin:
         # And the server is reported as not vulnerable
         assert not result.is_vulnerable_to_ccs_injection
 
+        # And a CLI output can be generated
+        assert OpenSslCcsInjectionImplementation.cli_connector_cls.result_to_console_output(result)
+
     @can_only_run_on_linux_64
     def test_ccs_injection_bad(self):
         # Given a server that is vulnerable to CCS injection
@@ -31,6 +34,9 @@ class TestOpenSslCcsInjectionPlugin:
 
         # And the server is reported as vulnerable
         assert result.is_vulnerable_to_ccs_injection
+
+        # And a CLI output can be generated
+        assert OpenSslCcsInjectionImplementation.cli_connector_cls.result_to_console_output(result)
 
     @can_only_run_on_linux_64
     def test_succeeds_when_client_auth_failed(self):

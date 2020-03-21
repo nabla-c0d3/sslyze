@@ -28,6 +28,9 @@ class TestHttpHeadersPlugin:
         assert not result.public_key_pins_report_only_header
         assert not result.expect_ct_header
 
+        # And a CLI output can be generated
+        assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
+
     def test_hsts_and_hpkp_disabled(self):
         # Given a server to scan that does not have security headers
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("expired.badssl.com", 443)
@@ -42,6 +45,9 @@ class TestHttpHeadersPlugin:
         assert not result.public_key_pins_report_only_header
         assert not result.expect_ct_header
 
+        # And a CLI output can be generated
+        assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
+
     def test_expect_ct_enabled(self):
         # Given a server to scan that has Expect-CT enabled
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("github.com", 443)
@@ -53,6 +59,9 @@ class TestHttpHeadersPlugin:
         # And the Expect-CT header was detected
         assert result.expect_ct_header
         assert result.expect_ct_header.max_age >= 0
+
+        # And a CLI output can be generated
+        assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
 
     @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed(self):

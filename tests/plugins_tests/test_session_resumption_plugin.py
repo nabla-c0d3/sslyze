@@ -35,6 +35,9 @@ class TestSessionResumptionSupport:
         assert result.tls_ticket_resumption_result
         assert result.is_tls_ticket_resumption_supported
 
+        # And a CLI output can be generated
+        assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)
+
     @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed_session(self):
         # Given a server that requires client authentication

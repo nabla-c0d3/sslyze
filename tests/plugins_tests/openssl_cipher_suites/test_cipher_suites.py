@@ -1,17 +1,16 @@
-from nassl.ssl_client import OpenSslVersionEnum
-
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuitesRepository
+from sslyze.server_connectivity import TlsVersionEnum
 
 
 class TestCipherSuiteMappings:
     def test_names_mapping_legacy_ssl_client(self):
         for tls_version, expected_cipher_suites_count in [
-            (OpenSslVersionEnum.SSLV2, 7),
-            (OpenSslVersionEnum.SSLV3, 121),
-            (OpenSslVersionEnum.TLSV1, 121),
-            (OpenSslVersionEnum.TLSV1_1, 121),
-            (OpenSslVersionEnum.TLSV1_2, 160),
-            (OpenSslVersionEnum.TLSV1_3, 5),
+            (TlsVersionEnum.SSL_2_0, 7),
+            (TlsVersionEnum.SSL_3_0, 121),
+            (TlsVersionEnum.TLS_1_0, 121),
+            (TlsVersionEnum.TLS_1_1, 121),
+            (TlsVersionEnum.TLS_1_2, 160),
+            (TlsVersionEnum.TLS_1_3, 5),
         ]:
             all_cipher_suites = CipherSuitesRepository.get_all_cipher_suites(tls_version)
             assert expected_cipher_suites_count == len(all_cipher_suites)

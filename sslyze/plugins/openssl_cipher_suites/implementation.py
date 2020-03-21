@@ -3,8 +3,6 @@ from operator import attrgetter
 
 from dataclasses import dataclass
 
-from nassl.ssl_client import OpenSslVersionEnum
-
 from sslyze.connection_helpers.tls_connection import NoCiphersAvailableBugInSSlyze
 from sslyze.plugins.openssl_cipher_suites._cli_connector import _CipherSuitesCliConnector
 from sslyze.plugins.openssl_cipher_suites._test_cipher_suite import (
@@ -25,7 +23,7 @@ from sslyze.plugins.plugin_base import (
 from typing import ClassVar, Optional
 from typing import List
 
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
 @dataclass(frozen=True)
@@ -42,7 +40,7 @@ class CipherSuitesScanResult(ScanCommandResult):
             the server.
     """
 
-    tls_version_used: OpenSslVersionEnum
+    tls_version_used: TlsVersionEnum
 
     cipher_suite_preferred_by_server: Optional[CipherSuiteAcceptedByServer]
     accepted_cipher_suites: List[CipherSuiteAcceptedByServer]
@@ -100,7 +98,7 @@ class _Tlsv13CliConnector(_CipherSuitesCliConnector):
 class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScanResult, None]):
 
     # The SSL version corresponding to the scan command
-    _tls_version: ClassVar[OpenSslVersionEnum]
+    _tls_version: ClassVar[TlsVersionEnum]
 
     @classmethod
     def scan_jobs_for_scan_command(
@@ -178,29 +176,29 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
 
 class Sslv20ScanImplementation(_CipherSuitesScanImplementation):
     cli_connector_cls = _Sslv20CliConnector
-    _tls_version = OpenSslVersionEnum.SSLV2
+    _tls_version = TlsVersionEnum.SSL_2_0
 
 
 class Sslv30ScanImplementation(_CipherSuitesScanImplementation):
     cli_connector_cls = _Sslv30CliConnector
-    _tls_version = OpenSslVersionEnum.SSLV3
+    _tls_version = TlsVersionEnum.SSL_3_0
 
 
 class Tlsv10ScanImplementation(_CipherSuitesScanImplementation):
     cli_connector_cls = _Tlsv10CliConnector
-    _tls_version = OpenSslVersionEnum.TLSV1
+    _tls_version = TlsVersionEnum.TLS_1_0
 
 
 class Tlsv11ScanImplementation(_CipherSuitesScanImplementation):
     cli_connector_cls = _Tlsv11CliConnector
-    _tls_version = OpenSslVersionEnum.TLSV1_1
+    _tls_version = TlsVersionEnum.TLS_1_1
 
 
 class Tlsv12ScanImplementation(_CipherSuitesScanImplementation):
     cli_connector_cls = _Tlsv12CliConnector
-    _tls_version = OpenSslVersionEnum.TLSV1_2
+    _tls_version = TlsVersionEnum.TLS_1_2
 
 
 class Tlsv13ScanImplementation(_CipherSuitesScanImplementation):
     cli_connector_cls = _Tlsv13CliConnector
-    _tls_version = OpenSslVersionEnum.TLSV1_3
+    _tls_version = TlsVersionEnum.TLS_1_3

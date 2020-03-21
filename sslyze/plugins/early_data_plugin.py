@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from nassl._nassl import OpenSSLError
-from nassl.ssl_client import OpenSslVersionEnum, OpenSslEarlyDataStatusEnum, SslClient
+from nassl.ssl_client import OpenSslEarlyDataStatusEnum, SslClient
 
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
@@ -13,7 +13,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
 )
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
 
@@ -74,7 +74,7 @@ class EarlyDataImplementation(ScanCommandImplementation[EarlyDataScanResult, Non
 def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
     session = None
     is_early_data_supported = False
-    ssl_connection = server_info.get_preconfigured_tls_connection(override_tls_version=OpenSslVersionEnum.TLSV1_3)
+    ssl_connection = server_info.get_preconfigured_tls_connection(override_tls_version=TlsVersionEnum.TLS_1_3)
     try:
         # Perform an SSL handshake and keep the session
         ssl_connection.connect()
@@ -90,7 +90,7 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
 
     # Then try to re-use the session and send early data
     if session is not None:
-        ssl_connection2 = server_info.get_preconfigured_tls_connection(override_tls_version=OpenSslVersionEnum.TLSV1_3)
+        ssl_connection2 = server_info.get_preconfigured_tls_connection(override_tls_version=TlsVersionEnum.TLS_1_3)
         if not isinstance(ssl_connection2.ssl_client, SslClient):
             raise RuntimeError("Should never happen")
 

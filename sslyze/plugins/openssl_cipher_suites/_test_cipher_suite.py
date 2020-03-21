@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 from nassl.ephemeral_key_info import EphemeralKeyInfo
 from nassl.legacy_ssl_client import LegacySslClient
-from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested, SslClient
+from nassl.ssl_client import ClientCertificateRequested, SslClient
 
 from sslyze.connection_helpers.errors import (
     ServerRejectedTlsHandshake,
@@ -11,7 +11,7 @@ from sslyze.connection_helpers.errors import (
     ConnectionToServerFailed,
 )
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite, CipherSuitesRepository
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.plugins.openssl_cipher_suites._tls12_workaround import WorkaroundForTls12ForCipherSuites
 
 
@@ -33,15 +33,15 @@ class CipherSuiteRejectedByServer:
 
 
 def connect_with_cipher_suite(
-    server_connectivity_info: ServerConnectivityInfo, tls_version: OpenSslVersionEnum, cipher_suite: CipherSuite
+    server_connectivity_info: ServerConnectivityInfo, tls_version: TlsVersionEnum, cipher_suite: CipherSuite
 ) -> Union[CipherSuiteAcceptedByServer, CipherSuiteRejectedByServer]:
     """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
     """
     requires_legacy_openssl = True
-    if tls_version == OpenSslVersionEnum.TLSV1_2:
+    if tls_version == TlsVersionEnum.TLS_1_2:
         # For TLS 1.2, we need to pick the right version of OpenSSL depending on which cipher suite
         requires_legacy_openssl = WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_suite.openssl_name)
-    elif tls_version == OpenSslVersionEnum.TLSV1_3:
+    elif tls_version == TlsVersionEnum.TLS_1_3:
         requires_legacy_openssl = False
 
     ssl_connection = server_connectivity_info.get_preconfigured_tls_connection(
@@ -51,7 +51,7 @@ def connect_with_cipher_suite(
     # Only enable the cipher suite to test; not trivial anymore since OpenSSL 1.1.1 and TLS 1.3
     if isinstance(ssl_connection.ssl_client, SslClient):
         # With the modern OpenSSL client we have to manage TLS 1.3-specific cipher functions
-        if tls_version == OpenSslVersionEnum.TLSV1_3:
+        if tls_version == TlsVersionEnum.TLS_1_3:
             legacy_openssl_cipher_string = ""
             tls1_3_openssl_cipher_string = cipher_suite.openssl_name
         else:
@@ -102,7 +102,7 @@ class PreferredCipherSuite:
 
 
 def get_preferred_cipher_suite(
-    server_connectivity_info: ServerConnectivityInfo, tls_version: OpenSslVersionEnum
+    server_connectivity_info: ServerConnectivityInfo, tls_version: TlsVersionEnum
 ) -> PreferredCipherSuite:
     """Try to detect the server's preferred cipher suite among all cipher suites supported by SSLyze.
     """
@@ -135,7 +135,7 @@ def get_preferred_cipher_suite(
 
 
 def _get_selected_cipher_suite(
-    server_connectivity: ServerConnectivityInfo, tls_version: OpenSslVersionEnum, openssl_cipher_string: str
+    server_connectivity: ServerConnectivityInfo, tls_version: TlsVersionEnum, openssl_cipher_string: str
 ) -> str:
     ssl_connection = server_connectivity.get_preconfigured_tls_connection(override_tls_version=tls_version)
     ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)

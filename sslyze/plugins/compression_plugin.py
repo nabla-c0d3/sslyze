@@ -2,7 +2,7 @@ from concurrent.futures._base import Future
 from dataclasses import dataclass
 
 from nassl.legacy_ssl_client import LegacySslClient
-from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
+from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
@@ -13,7 +13,7 @@ from sslyze.plugins.plugin_base import (
 )
 from typing import List, Optional
 
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 
 
@@ -70,8 +70,8 @@ class CompressionImplementation(ScanCommandImplementation[CompressionScanResult,
 
 def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no compression with TLS 1.3
-    if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
-        ssl_version_to_use = OpenSslVersionEnum.TLSV1_2
+    if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
+        ssl_version_to_use = TlsVersionEnum.TLS_1_2
     else:
         ssl_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
 

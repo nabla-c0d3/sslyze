@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import OpenSslVersionEnum, SslClient
 
+from sslyze.server_connectivity import TlsVersionEnum
+
 
 @dataclass(frozen=True)
 class CipherSuite:
@@ -14,8 +16,8 @@ class CipherSuite:
     key_size: int
 
     @classmethod
-    def from_openssl(cls, cipher_suite_openssl_name: str, tls_version: OpenSslVersionEnum) -> "CipherSuite":
-        if tls_version == OpenSslVersionEnum.TLSV1_3:
+    def from_openssl(cls, cipher_suite_openssl_name: str, tls_version: TlsVersionEnum) -> "CipherSuite":
+        if tls_version == TlsVersionEnum.TLS_1_3:
             # For TLS 1.3 OpenSSL started using the official names
             return cls(
                 name=cipher_suite_openssl_name,
@@ -35,29 +37,29 @@ class CipherSuite:
 
 class CipherSuitesRepository:
     @classmethod
-    def _get_all_cipher_suites_with_legacy_openssl(cls, tls_version: OpenSslVersionEnum) -> Set[str]:
-        ssl_client = LegacySslClient(ssl_version=tls_version)
+    def _get_all_cipher_suites_with_legacy_openssl(cls, tls_version: TlsVersionEnum) -> Set[str]:
+        ssl_client = LegacySslClient(ssl_version=OpenSslVersionEnum(tls_version.value))
         # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
         ssl_client.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
         return set(ssl_client.get_cipher_list())
 
     @classmethod
-    def get_all_cipher_suites(cls, tls_version: OpenSslVersionEnum) -> Set[CipherSuite]:
+    def get_all_cipher_suites(cls, tls_version: TlsVersionEnum) -> Set[CipherSuite]:
         """Get the list of cipher suites supported by OpenSSL for the given SSL/TLS version.
         """
         if tls_version in [
-            OpenSslVersionEnum.SSLV2,
-            OpenSslVersionEnum.SSLV3,
-            OpenSslVersionEnum.TLSV1,
-            OpenSslVersionEnum.TLSV1_1,
+            TlsVersionEnum.SSL_2_0,
+            TlsVersionEnum.SSL_3_0,
+            TlsVersionEnum.TLS_1_0,
+            TlsVersionEnum.TLS_1_1,
         ]:
             openssl_cipher_strings = cls._get_all_cipher_suites_with_legacy_openssl(tls_version)
 
-        elif tls_version == OpenSslVersionEnum.TLSV1_2:
+        elif tls_version == TlsVersionEnum.TLS_1_2:
             # For TLS 1.2, we have to use both the legacy and modern OpenSSL to cover all cipher suites
             cipher_suites_from_legacy_openssl = cls._get_all_cipher_suites_with_legacy_openssl(tls_version)
 
-            ssl_client_modern = SslClient(ssl_version=tls_version)
+            ssl_client_modern = SslClient(ssl_version=OpenSslVersionEnum(tls_version.value))
             ssl_client_modern.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
             ssl_client_modern.set_ciphersuites("")  # Disable TLS 1.3 cipher suites
             cipher_suites_from_modern_openssl = set(ssl_client_modern.get_cipher_list())
@@ -65,8 +67,8 @@ class CipherSuitesRepository:
             # Combine the two sets of cipher suites
             openssl_cipher_strings = cipher_suites_from_legacy_openssl.union(cipher_suites_from_modern_openssl)
 
-        elif tls_version == OpenSslVersionEnum.TLSV1_3:
-            ssl_client_modern = SslClient(ssl_version=tls_version)
+        elif tls_version == TlsVersionEnum.TLS_1_3:
+            ssl_client_modern = SslClient(ssl_version=OpenSslVersionEnum(tls_version.value))
             ssl_client_modern.set_cipher_list("")  # Disable NON-TLS-1.3 cipher suites
             ssl_client_modern.set_ciphersuites(
                 "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:"
@@ -374,13 +376,12 @@ _TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
 }
 
 
-_OPENSSL_TO_RFC_NAMES_MAPPING: Dict[OpenSslVersionEnum, Dict[str, str]] = {
-    OpenSslVersionEnum.SSLV2: _SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING,
-    OpenSslVersionEnum.SSLV3: _TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    OpenSslVersionEnum.TLSV1: _TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    OpenSslVersionEnum.TLSV1_1: _TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    OpenSslVersionEnum.TLSV1_2: _TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    OpenSslVersionEnum.TLSV1_3: _TLS_OPENSSL_TO_RFC_NAMES_MAPPING,  # For TLS 1.3, OpenSSL directly uses the RFC names
+_OPENSSL_TO_RFC_NAMES_MAPPING: Dict[TlsVersionEnum, Dict[str, str]] = {
+    TlsVersionEnum.SSL_2_0: _SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING,
+    TlsVersionEnum.SSL_3_0: _TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    TlsVersionEnum.TLS_1_0: _TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    TlsVersionEnum.TLS_1_1: _TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
+    TlsVersionEnum.TLS_1_2: _TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
 }
 
 

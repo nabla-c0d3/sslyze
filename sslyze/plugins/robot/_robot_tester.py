@@ -9,7 +9,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey, RSAPublicNumbers
 from cryptography.x509 import load_pem_x509_certificate
 from nassl._nassl import WantReadError
-from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
+from nassl.ssl_client import ClientCertificateRequested
 from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
 
 from tls_parser.alert_protocol import TlsAlertRecord
@@ -17,10 +17,11 @@ from tls_parser.record_protocol import TlsRecordTlsVersionBytes
 from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte, TlsRsaClientKeyExchangeRecord
 from tls_parser.parser import TlsRecordParser
-from tls_parser.tls_version import TlsVersionEnum
+
+import tls_parser.tls_version
 
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
 class RobotScanResultEnum(Enum):
@@ -60,7 +61,11 @@ class _RobotTlsRecordPayloads:
 
     @classmethod
     def get_client_key_exchange_record(
-        cls, robot_payload_enum: RobotPmsPaddingPayloadEnum, tls_version: TlsVersionEnum, modulus: int, exponent: int
+        cls,
+        robot_payload_enum: RobotPmsPaddingPayloadEnum,
+        tls_version: tls_parser.tls_version.TlsVersionEnum,
+        modulus: int,
+        exponent: int,
     ) -> TlsRsaClientKeyExchangeRecord:
         """A client key exchange record with a hardcoded pre_master_secret, and a valid or invalid padding.
         """
@@ -93,7 +98,7 @@ class _RobotTlsRecordPayloads:
     )
 
     @classmethod
-    def get_finished_record_bytes(cls, tls_version: TlsVersionEnum) -> bytes:
+    def get_finished_record_bytes(cls, tls_version: tls_parser.tls_version.TlsVersionEnum) -> bytes:
         """The Finished TLS record corresponding to the hardcoded PMS used in the Client Key Exchange record.
         """
         # TODO(AD): The ROBOT poc script uses the same Finished record for all possible client hello (default, GCM,
@@ -150,14 +155,14 @@ class ServerDoesNotSupportRsa(Exception):
 
 def test_robot(server_info: ServerConnectivityInfo) -> Dict[RobotPmsPaddingPayloadEnum, str]:
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher
-    if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
-        ssl_version_to_use = OpenSslVersionEnum.TLSV1_2
+    if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
+        ssl_version_to_use = TlsVersionEnum.TLS_1_2
     else:
         ssl_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
 
     rsa_params = None
     # With TLS 1.2 some servers are only vulnerable when using the GCM cipher suites - try them first
-    if ssl_version_to_use == OpenSslVersionEnum.TLSV1_2:
+    if ssl_version_to_use == TlsVersionEnum.TLS_1_2:
         cipher_string = "AES128-GCM-SHA256:AES256-GCM-SHA384"
         rsa_params = _get_rsa_parameters(server_info, cipher_string)
 
@@ -194,7 +199,7 @@ def test_robot(server_info: ServerConnectivityInfo) -> Dict[RobotPmsPaddingPaylo
 
 def _run_oracle_detection(
     server_info: ServerConnectivityInfo,
-    tls_version_to_use: OpenSslVersionEnum,
+    tls_version_to_use: TlsVersionEnum,
     cipher_string: str,
     rsa_modulus: int,
     rsa_exponent: int,
@@ -249,7 +254,7 @@ def _get_rsa_parameters(server_info: ServerConnectivityInfo, openssl_cipher_stri
 
 def _send_robot_payload(
     server_info: ServerConnectivityInfo,
-    tls_version_to_use: OpenSslVersionEnum,
+    tls_version_to_use: TlsVersionEnum,
     rsa_cipher_string: str,
     robot_payload_enum: RobotPmsPaddingPayloadEnum,
     robot_should_finish_handshake: bool,
@@ -267,8 +272,20 @@ def _send_robot_payload(
     ssl_connection.ssl_client.set_cipher_list(rsa_cipher_string)
 
     # Compute the  payload
+    tls_parser_tls_version: tls_parser.tls_version.TlsVersionEnum
+    if tls_version_to_use == TlsVersionEnum.SSL_3_0:
+        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.SSLV3
+    elif tls_version_to_use == TlsVersionEnum.TLS_1_0:
+        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.TLSV1
+    elif tls_version_to_use == TlsVersionEnum.TLS_1_1:
+        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.TLSV1_1
+    elif tls_version_to_use == TlsVersionEnum.TLS_1_2:
+        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.TLSV1_2
+    else:
+        raise ValueError("Should never happen")
+
     cke_payload = _RobotTlsRecordPayloads.get_client_key_exchange_record(
-        robot_payload_enum, TlsVersionEnum[tls_version_to_use.name], rsa_modulus, rsa_exponent
+        robot_payload_enum, tls_parser_tls_version, rsa_modulus, rsa_exponent
     )
 
     # H4ck: we need to pass some arguments to the handshake but there is no simple way to do it; we use an attribute
@@ -351,7 +368,9 @@ def do_handshake_with_robot(self):  # type: ignore
 
         if self._robot_should_finish_handshake:
             # Then send a CCS record
-            ccs_record = TlsChangeCipherSpecRecord.from_parameters(tls_version=TlsVersionEnum[self._ssl_version.name])
+            ccs_record = TlsChangeCipherSpecRecord.from_parameters(
+                tls_version=tls_parser.tls_version.TlsVersionEnum[self._ssl_version.name]
+            )
             self._sock.send(ccs_record.to_bytes())
 
             # Lastly send a Finished record

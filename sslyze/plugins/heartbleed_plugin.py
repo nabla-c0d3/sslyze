@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from nassl._nassl import WantReadError
-from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
@@ -20,9 +19,9 @@ from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte
 from tls_parser.heartbeat_protocol import TlsHeartbeatRequestRecord
 from tls_parser.parser import TlsRecordParser
-from tls_parser.record_protocol import TlsVersionEnum
+import tls_parser.record_protocol
 
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
 @dataclass(frozen=True)
@@ -77,7 +76,7 @@ class HeartbleedImplementation(ScanCommandImplementation[HeartbleedScanResult, N
 
 
 def _test_heartbleed(server_info: ServerConnectivityInfo) -> bool:
-    if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
+    if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
         # The server uses a recent version of OpenSSL and it cannot be vulnerable to Heartbleed
         return False
 
@@ -133,11 +132,11 @@ def _do_handshake_with_heartbleed(self):  # type: ignore
     # Build the heartbleed payload - based on
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
     payload = TlsHeartbeatRequestRecord.from_parameters(
-        tls_version=TlsVersionEnum[self._ssl_version.name], heartbeat_data=b"\x01" * 16381
+        tls_version=tls_parser.record_protocol.TlsVersionEnum[self._ssl_version.name], heartbeat_data=b"\x01" * 16381
     ).to_bytes()
 
     payload += TlsHeartbeatRequestRecord.from_parameters(
-        TlsVersionEnum[self._ssl_version.name], heartbeat_data=b"\x01\x00\x00"
+        tls_parser.record_protocol.TlsVersionEnum[self._ssl_version.name], heartbeat_data=b"\x01\x00\x00"
     ).to_bytes()
 
     # Send the payload

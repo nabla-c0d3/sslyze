@@ -1,10 +1,10 @@
 from typing import List, TYPE_CHECKING, ClassVar
 
 from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo, DhEphemeralKeyInfo
-from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.openssl_cipher_suites._test_cipher_suite import CipherSuiteAcceptedByServer
 from sslyze.plugins.plugin_base import ScanCommandCliConnector
+from sslyze.server_connectivity import TlsVersionEnum
 
 if TYPE_CHECKING:
     from sslyze.plugins.openssl_cipher_suites.implementation import CipherSuitesScanResult
@@ -50,7 +50,7 @@ class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult"
 
             # Forward secrecy
             supports_forward_secrecy = False
-            if result.tls_version_used == OpenSslVersionEnum.TLSV1_3:
+            if result.tls_version_used == TlsVersionEnum.TLS_1_3:
                 # All TLS 1.3 cipher suites support forward secrecy
                 supports_forward_secrecy = True
             else:

@@ -2,20 +2,17 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 import nassl
-from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
-
-ArgumentsToGetCertificateChain = Tuple[
-    ServerConnectivityInfo, Optional[Path], Optional[OpenSslVersionEnum], Optional[str]
-]
+ArgumentsToGetCertificateChain = Tuple[ServerConnectivityInfo, Optional[Path], Optional[TlsVersionEnum], Optional[str]]
 
 
 def get_certificate_chain(
     server_info: ServerConnectivityInfo,
     custom_ca_file: Optional[Path],
-    tls_version: Optional[OpenSslVersionEnum],
+    tls_version: Optional[TlsVersionEnum],
     openssl_cipher_string: Optional[str],
 ) -> Tuple[List[str], Optional[nassl.ocsp_response.OcspResponse], Optional[Path]]:
     ssl_connection = server_info.get_preconfigured_tls_connection(override_tls_version=tls_version)

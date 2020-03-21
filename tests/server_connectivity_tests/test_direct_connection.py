@@ -1,9 +1,8 @@
 import socket
 
 import pytest
-from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.server_connectivity import ServerConnectivityTester
+from sslyze.server_connectivity import ServerConnectivityTester, TlsVersionEnum
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from sslyze.connection_helpers.errors import (
     ConnectionToServerTimedOut,
@@ -84,7 +83,7 @@ class TestServerConnectivityTester:
         assert server_info.tls_probing_result.cipher_suite_supported
 
         # And it detected that only TLS 1.0 is supported
-        assert server_info.tls_probing_result.highest_tls_version_supported == OpenSslVersionEnum.TLSV1
+        assert server_info.tls_probing_result.highest_tls_version_supported == TlsVersionEnum.TLS_1_0
 
     @pytest.mark.skipif(not _is_ipv6_available(), reason="IPv6 not available")
     def test_ipv6(self):

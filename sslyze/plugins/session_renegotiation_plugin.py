@@ -6,7 +6,6 @@ from typing import List, Optional, Tuple
 
 from nassl._nassl import OpenSSLError
 from nassl.legacy_ssl_client import LegacySslClient
-from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
@@ -16,7 +15,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
 )
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
 @dataclass(frozen=True)
@@ -79,8 +78,8 @@ class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenego
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
-        if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
-            tls_version_to_use = OpenSslVersionEnum.TLSV1_2
+        if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
+            tls_version_to_use = TlsVersionEnum.TLS_1_2
         else:
             tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
 
@@ -108,7 +107,7 @@ class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenego
 
 
 def _test_secure_renegotiation(
-    server_info: ServerConnectivityInfo, tls_version_to_use: OpenSslVersionEnum
+    server_info: ServerConnectivityInfo, tls_version_to_use: TlsVersionEnum
 ) -> Tuple[_ScanJobResultEnum, bool]:
     """Check whether the server supports secure renegotiation.
     """
@@ -130,7 +129,7 @@ def _test_secure_renegotiation(
 
 
 def _test_client_renegotiation(
-    server_info: ServerConnectivityInfo, tls_version_to_use: OpenSslVersionEnum
+    server_info: ServerConnectivityInfo, tls_version_to_use: TlsVersionEnum
 ) -> Tuple[_ScanJobResultEnum, bool]:
     """Check whether the server honors session renegotiation requests.
     """

@@ -2,9 +2,8 @@ from enum import Enum
 from typing import Optional, Tuple
 
 import nassl
-from nassl.ssl_client import OpenSslVersionEnum
 
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
 class _ScanJobResultEnum(Enum):
@@ -14,7 +13,7 @@ class _ScanJobResultEnum(Enum):
 
 def resume_tls_session(
     server_info: ServerConnectivityInfo,
-    tls_version_to_use: OpenSslVersionEnum,
+    tls_version_to_use: TlsVersionEnum,
     tls_session: Optional[nassl._nassl.SSL_SESSION] = None,
     should_enable_tls_ticket: bool = False,
 ) -> nassl._nassl.SSL_SESSION:
@@ -50,7 +49,7 @@ def _extract_session_id(ssl_session: nassl._nassl.SSL_SESSION) -> str:
 
 
 def resume_with_session_id(
-    server_info: ServerConnectivityInfo, tls_version_to_use: OpenSslVersionEnum
+    server_info: ServerConnectivityInfo, tls_version_to_use: TlsVersionEnum
 ) -> Tuple[_ScanJobResultEnum, bool]:
     """Perform one session resumption using Session IDs.
     """

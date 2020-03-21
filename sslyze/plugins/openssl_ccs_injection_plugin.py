@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from nassl._nassl import WantReadError
-from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
@@ -21,9 +20,9 @@ from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
 from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte
 from tls_parser.parser import TlsRecordParser
-from tls_parser.tls_version import TlsVersionEnum
+import tls_parser.tls_version
 
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
 @dataclass(frozen=True)
@@ -78,7 +77,7 @@ class OpenSslCcsInjectionImplementation(ScanCommandImplementation[OpenSslCcsInje
 
 
 def _test_for_ccs_injection(server_info: ServerConnectivityInfo) -> bool:
-    if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
+    if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
         # The server uses a recent version of OpenSSL and it cannot be vulnerable to CCS Injection
         return False
 
@@ -166,13 +165,13 @@ def _do_handshake_with_ccs_injection(self):  # type: ignore
     if did_receive_hello_done:
         # Send an early CCS record - this should be rejected by the server
         payload = TlsChangeCipherSpecRecord.from_parameters(
-            tls_version=TlsVersionEnum[self._ssl_version.name]
+            tls_version=tls_parser.tls_version.TlsVersionEnum[self._ssl_version.name]
         ).to_bytes()
         self._sock.send(payload)
 
         # Send an early application data record which should be ignored by the server
         app_data_record = TlsApplicationDataRecord.from_parameters(
-            tls_version=TlsVersionEnum[self._ssl_version.name], application_data=b"\x00\x00"
+            tls_version=tls_parser.tls_version.TlsVersionEnum[self._ssl_version.name], application_data=b"\x00\x00"
         )
         self._sock.send(app_data_record.to_bytes())
 

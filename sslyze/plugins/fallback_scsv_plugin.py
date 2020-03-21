@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from typing import List, Optional
 from nassl import _nassl
 from nassl.legacy_ssl_client import LegacySslClient
-from nassl.ssl_client import OpenSslVersionEnum
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
@@ -12,7 +11,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
 )
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 
 
@@ -67,13 +66,13 @@ class FallbackScsvImplementation(ScanCommandImplementation[FallbackScsvScanResul
 
 def _test_scsv(server_info: ServerConnectivityInfo) -> bool:
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no downgrade possible with TLS 1.3
-    if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
-        ssl_version_to_use = OpenSslVersionEnum.TLSV1_2
+    if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
+        ssl_version_to_use = TlsVersionEnum.TLS_1_2
     else:
         ssl_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
 
     # Try to connect using a lower TLS version with the fallback cipher suite enabled
-    ssl_version_downgrade = OpenSslVersionEnum(ssl_version_to_use.value - 1)  # type: ignore
+    ssl_version_downgrade = TlsVersionEnum(ssl_version_to_use.value - 1)
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=ssl_version_downgrade,
         # Only the legacy client has enable_fallback_scsv()

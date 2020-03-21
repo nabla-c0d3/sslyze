@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from dataclasses import dataclass
-from nassl.ssl_client import OpenSslVersionEnum, ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
 from sslyze.connection_helpers.errors import (
@@ -24,13 +24,23 @@ class ClientAuthRequirementEnum(Enum):
     REQUIRED = auto()
 
 
+@unique
+class TlsVersionEnum(Enum):
+    # WARNING: It has to be ordered and to match the values of nassl's OpenSslVersionEnum
+    SSL_2_0 = 1
+    SSL_3_0 = 2
+    TLS_1_0 = 3
+    TLS_1_1 = 4
+    TLS_1_2 = 5
+    TLS_1_3 = 6
+
+
 @dataclass(frozen=True)
 class ServerTlsProbingResult:
     """Additional details about the server, detected via connectivity testing.
     """
 
-    # TODO: Does not JSON-serialize correctly; have a special SSLyze enum?
-    highest_tls_version_supported: OpenSslVersionEnum
+    highest_tls_version_supported: TlsVersionEnum
     cipher_suite_supported: str  # The OpenSSL name of a cipher suite supported by the server
     client_auth_requirement: ClientAuthRequirementEnum
 
@@ -54,7 +64,7 @@ class ServerConnectivityInfo:
 
     def get_preconfigured_tls_connection(
         self,
-        override_tls_version: Optional[OpenSslVersionEnum] = None,
+        override_tls_version: Optional[TlsVersionEnum] = None,
         ca_certificates_path: Optional[Path] = None,
         should_use_legacy_openssl: Optional[bool] = None,
     ) -> SslConnection:
@@ -134,11 +144,11 @@ class ServerConnectivityTester:
 
         # TODO(AD): Switch to using the protocol discovery logic available in OpenSSL 1.1.0 with TLS_client_method()
         for tls_version in [
-            OpenSslVersionEnum.TLSV1_3,
-            OpenSslVersionEnum.TLSV1_2,
-            OpenSslVersionEnum.TLSV1_1,
-            OpenSslVersionEnum.TLSV1,
-            OpenSslVersionEnum.SSLV3,
+            TlsVersionEnum.TLS_1_3,
+            TlsVersionEnum.TLS_1_2,
+            TlsVersionEnum.TLS_1_1,
+            TlsVersionEnum.TLS_1_0,
+            TlsVersionEnum.SSL_3_0,
         ]:
             # First try the default cipher list, and then all ciphers
             for cipher_list in [None, "ALL:COMPLEMENTOFALL:-PSK:-SRP"]:
@@ -149,7 +159,7 @@ class ServerConnectivityTester:
                     should_ignore_client_auth=False,
                 )
                 if cipher_list:
-                    if tls_version == OpenSslVersionEnum.TLSV1_3:
+                    if tls_version == TlsVersionEnum.TLS_1_3:
                         # Skip the second attempt with all ciphers enabled as these ciphers don't exist in TLS 1.3
                         continue
 

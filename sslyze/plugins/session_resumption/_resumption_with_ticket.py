@@ -2,10 +2,9 @@ from enum import Enum, unique
 from typing import Tuple
 
 import nassl
-from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.plugins.session_resumption._resumption_with_id import resume_tls_session, _ScanJobResultEnum
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
 
 
@@ -18,7 +17,7 @@ class TslSessionTicketSupportEnum(Enum):
 
 
 def resume_with_tls_ticket(
-    server_info: ServerConnectivityInfo, tls_version_to_use: OpenSslVersionEnum
+    server_info: ServerConnectivityInfo, tls_version_to_use: TlsVersionEnum
 ) -> Tuple[_ScanJobResultEnum, TslSessionTicketSupportEnum]:
     """Perform one session resumption using TLS Session Tickets.
     """
@@ -26,7 +25,7 @@ def resume_with_tls_ticket(
     try:
         session1 = resume_tls_session(server_info, tls_version_to_use, should_enable_tls_ticket=True)
     except ServerRejectedTlsHandshake:
-        if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
+        if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
             return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TslSessionTicketSupportEnum.FAILED_ONLY_TLS_1_3_SUPPORTED
         else:
             raise

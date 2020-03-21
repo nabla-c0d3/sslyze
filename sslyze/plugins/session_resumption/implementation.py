@@ -2,8 +2,6 @@ from concurrent.futures._base import Future
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 
-from nassl.ssl_client import OpenSslVersionEnum
-
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
@@ -17,7 +15,7 @@ from sslyze.plugins.session_resumption._resumption_with_ticket import (
     resume_with_tls_ticket,
     TslSessionTicketSupportEnum,
 )
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
 @dataclass(frozen=True)
@@ -134,8 +132,8 @@ def _create_resume_with_session_id_scan_jobs(
     server_info: ServerConnectivityInfo, resumption_attempts_nb: int
 ) -> List[ScanJob]:
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as session resumption is different with TLS 1.3
-    if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
-        tls_version_to_use = OpenSslVersionEnum.TLSV1_2
+    if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
+        tls_version_to_use = TlsVersionEnum.TLS_1_2
     else:
         tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
 
@@ -204,8 +202,8 @@ class SessionResumptionSupportImplementation(ScanCommandImplementation[SessionRe
 
         # Test TLS tickets support
         # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as session resumption is different with TLS 1.3
-        if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
-            tls_version_to_use = OpenSslVersionEnum.TLSV1_2
+        if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
+            tls_version_to_use = TlsVersionEnum.TLS_1_2
         else:
             tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
 

@@ -1,6 +1,6 @@
 import socket
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from nassl.legacy_ssl_client import LegacySslClient
 
@@ -30,6 +30,9 @@ from nassl.ssl_client import SslClient, OpenSslVersionEnum, BaseSslClient, OpenS
 from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.connection_helpers.opportunistic_tls_helpers import get_opportunistic_tls_helper, OpportunisticTlsError
+
+if TYPE_CHECKING:
+    from sslyze.server_connectivity import TlsVersionEnum
 
 
 def _open_socket_for_direct_connection(
@@ -137,7 +140,7 @@ class SslConnection:
         self,
         server_location: ServerNetworkLocation,
         network_configuration: ServerNetworkConfiguration,
-        tls_version: OpenSslVersionEnum,
+        tls_version: "TlsVersionEnum",
         should_ignore_client_auth: bool,
         should_use_legacy_openssl: Optional[bool] = None,
         ca_certificates_path: Optional[Path] = None,
@@ -146,12 +149,13 @@ class SslConnection:
         self._network_configuration = network_configuration
 
         # Create the SSL client
+        nassl_tls_version = OpenSslVersionEnum(tls_version.value)
         self.ssl_client: BaseSslClient
         # For older versions of TLS/SSL, we have to use a legacy OpenSSL
         if should_use_legacy_openssl is None:
             # For older versions of TLS/SSL, we have to use a legacy OpenSSL
             final_should_use_legacy_openssl = (
-                False if tls_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_3] else True
+                False if nassl_tls_version in [OpenSslVersionEnum.TLSV1_2, OpenSslVersionEnum.TLSV1_3] else True
             )
         else:
             final_should_use_legacy_openssl = should_use_legacy_openssl
@@ -160,7 +164,7 @@ class SslConnection:
         if network_configuration.tls_client_auth_credentials:
             # A client certificate and private key were provided
             self.ssl_client = ssl_client_cls(
-                ssl_version=tls_version,
+                ssl_version=nassl_tls_version,
                 ssl_verify=OpenSslVerifyEnum.NONE,
                 ssl_verify_locations=ca_certificates_path,
                 client_certificate_chain=network_configuration.tls_client_auth_credentials.certificate_chain_path,
@@ -172,19 +176,19 @@ class SslConnection:
         else:
             # No client cert and key
             self.ssl_client = ssl_client_cls(
-                ssl_version=tls_version,
+                ssl_version=nassl_tls_version,
                 ssl_verify=OpenSslVerifyEnum.NONE,
                 ssl_verify_locations=ca_certificates_path,
                 ignore_client_authentication_requests=should_ignore_client_auth,
             )
 
         # Add Server Name Indication
-        if tls_version != OpenSslVersionEnum.SSLV2:
+        if nassl_tls_version != OpenSslVersionEnum.SSLV2:
             self.ssl_client.set_tlsext_host_name(network_configuration.tls_server_name_indication)
 
         # And a default cipher list to make the client hello smaller so we don't run into
         # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
-        if tls_version != OpenSslVersionEnum.TLSV1_3:
+        if nassl_tls_version != OpenSslVersionEnum.TLSV1_3:
             self.ssl_client.set_cipher_list("HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA")
 
     def _do_pre_handshake(self) -> None:

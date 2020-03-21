@@ -3,7 +3,6 @@ from typing import Optional, Dict, Set
 
 from faker import Faker
 from faker.providers import internet
-from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.cli.command_line.server_string_parser import InvalidServerStringError
 from sslyze.cli.command_line_parser import ParsedCommandLine
@@ -12,7 +11,12 @@ from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.plugin_base import ScanCommandResult
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.scanner import ServerScanResult, ScanCommandError
-from sslyze.server_connectivity import ServerConnectivityInfo, ServerTlsProbingResult, ClientAuthRequirementEnum
+from sslyze.server_connectivity import (
+    ServerConnectivityInfo,
+    ServerTlsProbingResult,
+    ClientAuthRequirementEnum,
+    TlsVersionEnum,
+)
 from sslyze.server_setting import (
     ServerNetworkLocationViaDirectConnection,
     ServerNetworkConfiguration,
@@ -58,7 +62,7 @@ class ServerConnectivityInfoFactory:
             final_tls_probing_result = tls_probing_result
         else:
             final_tls_probing_result = ServerTlsProbingResult(
-                highest_tls_version_supported=OpenSslVersionEnum.TLSV1_2,
+                highest_tls_version_supported=TlsVersionEnum.TLS_1_2,
                 cipher_suite_supported="AES",
                 client_auth_requirement=ClientAuthRequirementEnum.DISABLED,
             )

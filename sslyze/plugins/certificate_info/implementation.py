@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Optional, List, Dict, Tuple
 
 import nassl
-from nassl.ssl_client import OpenSslVersionEnum
 
 from sslyze.connection_helpers.errors import TlsHandshakeFailed
 from sslyze.plugins.certificate_info._cert_chain_analyzer import (
@@ -16,7 +15,7 @@ from sslyze.plugins.certificate_info._get_cert_chain import get_certificate_chai
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
-from sslyze.server_connectivity import ServerConnectivityInfo
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
 @dataclass(frozen=True)
@@ -65,13 +64,13 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
         # Try to retrieve different certificates from the server by having SSLyze's TLS handshake look like different
         # kinds of clients
         call_arguments: List[ArgumentsToGetCertificateChain] = []
-        if server_info.tls_probing_result.highest_tls_version_supported >= OpenSslVersionEnum.TLSV1_3:
+        if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
             # Get the default certificate chain sent to clients using TLS 1.3
-            call_arguments.append((server_info, custom_ca_file, OpenSslVersionEnum.TLSV1_3, None))
+            call_arguments.append((server_info, custom_ca_file, TlsVersionEnum.TLS_1_3, None))
 
             # Get the other certificate chains sent to clients using TLS 1.2 that support or don't support RSA
-            call_arguments.append((server_info, custom_ca_file, OpenSslVersionEnum.TLSV1_2, "RSA"))
-            call_arguments.append((server_info, custom_ca_file, OpenSslVersionEnum.TLSV1_2, "ALL:-RSA"))
+            call_arguments.append((server_info, custom_ca_file, TlsVersionEnum.TLS_1_2, "RSA"))
+            call_arguments.append((server_info, custom_ca_file, TlsVersionEnum.TLS_1_2, "ALL:-RSA"))
         else:
             # Get the certificate chains sent to clients that support or don't support RSA
             call_arguments.append((server_info, custom_ca_file, None, None))

@@ -5,14 +5,14 @@ from optparse import OptionParser, OptionGroup
 from pathlib import Path
 
 from nassl.ssl_client import OpenSslFileTypeEnum
-from typing import Set, List, Optional, Dict, TextIO
+from typing import Set, List, Optional, TextIO
 from typing import Tuple
 
 from sslyze.cli.command_line.server_string_parser import InvalidServerStringError, CommandLineServerStringParser
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
-from sslyze.plugins.plugin_base import ScanCommandExtraArguments
-from sslyze.plugins.scan_commands import ScanCommandEnum
+from sslyze.plugins.scan_commands import ScanCommandType, ScanCommand, ScanCommandsRepository
+from sslyze.scanner import ScanCommandExtraArgumentsDict
 
 from sslyze.server_setting import (
     HttpProxySettings,
@@ -49,8 +49,8 @@ class ParsedCommandLine:
 
     # Servers to scan
     servers_to_scans: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]]
-    scan_commands: Set["ScanCommandEnum"]
-    scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments]
+    scan_commands: Set["ScanCommandType"]
+    scan_commands_extra_arguments: ScanCommandExtraArgumentsDict
 
     # Output settings
     json_file_out: Optional[TextIO]
@@ -275,10 +275,10 @@ class CommandLineParser:
             per_server_concurrent_connections_limit = 2
 
         # Figure out the scan commands that enabled
-        scan_commands: Set["ScanCommandEnum"] = set()
-        scan_commands_extra_arguments: Dict["ScanCommandEnum", ScanCommandExtraArguments] = {}
-        for scan_command in ScanCommandEnum:
-            cli_connector_cls = scan_command.get_implementation_cls().cli_connector_cls
+        scan_commands: Set["ScanCommandType"] = set()
+        scan_commands_extra_arguments: ScanCommandExtraArgumentsDict = {}
+        for scan_command in ScanCommand.get_all():
+            cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
             is_scan_cmd_enabled, extra_args = cli_connector_cls.find_cli_options_in_command_line(
                 args_command_list.__dict__
             )
@@ -409,8 +409,8 @@ class CommandLineParser:
         line parser.
         """
         scan_commands_group = OptionGroup(self._parser, "Scan commands", "")
-        for scan_command in ScanCommandEnum:
-            cli_connector_cls = scan_command.get_implementation_cls().cli_connector_cls
+        for scan_command in ScanCommand.get_all():
+            cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
             for option in cli_connector_cls.get_cli_options():
                 scan_commands_group.add_option(f"--{option.option}", help=option.help, action=option.action)
 

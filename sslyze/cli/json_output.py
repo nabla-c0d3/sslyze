@@ -6,16 +6,15 @@ from datetime import datetime
 from functools import singledispatch
 from pathlib import Path
 from traceback import TracebackException
-from typing import Dict, Any, TextIO, Union, List, Set
+from typing import Dict, Any, TextIO, Union, List
 
 from enum import Enum
 from sslyze import PROJECT_URL, __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
-from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandExtraArguments
-from sslyze.plugins.scan_commands import ScanCommandEnum
-from sslyze.scanner import ServerScanResult, ScanCommandError
+from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
+from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
@@ -26,37 +25,8 @@ class _ServerConnectivityErrorAsJson:
 
 
 @dataclass(frozen=True)
-class _ServerScanResultAsJson:
-    scan_commands_results: Dict[str, ScanCommandResult]
-    scan_commands_errors: Dict[str, ScanCommandError]
-
-    # What was passed in the corresponding ServerScanRequest
-    server_info: "ServerConnectivityInfo"
-    scan_commands: Set["ScanCommandEnum"]
-    scan_commands_extra_arguments: Dict[str, ScanCommandExtraArguments]
-
-    @classmethod
-    def from_server_scan_result(cls, server_scan_result: ServerScanResult) -> "_ServerScanResultAsJson":
-        return cls(
-            server_info=server_scan_result.server_info,
-            scan_commands=server_scan_result.scan_commands,
-            # The JSON encoder does not like dictionaries with enums as keys
-            # Fix that by converting enum keys into their enum names
-            scan_commands_results={
-                scan_cmd.name: value for scan_cmd, value in server_scan_result.scan_commands_results.items()
-            },
-            scan_commands_errors={
-                scan_cmd.name: value for scan_cmd, value in server_scan_result.scan_commands_errors.items()
-            },
-            scan_commands_extra_arguments={
-                scan_cmd.name: value for scan_cmd, value in server_scan_result.scan_commands_extra_arguments.items()
-            },
-        )
-
-
-@dataclass(frozen=True)
 class _SslyzeOutputAsJson:
-    server_scan_results: List[_ServerScanResultAsJson]
+    server_scan_results: List[ServerScanResult]
     server_connectivity_errors: List[_ServerConnectivityErrorAsJson]
     total_scan_time: float
     sslyze_version: str = __version__
@@ -67,11 +37,13 @@ class JsonOutputGenerator(OutputGenerator):
     def __init__(self, file_to: TextIO) -> None:
         super().__init__(file_to)
         self._server_connectivity_errors: List[_ServerConnectivityErrorAsJson] = []
-        self._server_scan_results: List[_ServerScanResultAsJson] = []
+        self._server_scan_results: List[ServerScanResult] = []
 
         # Register all JSON serializer functions defined in plugins
-        for scan_command in ScanCommandEnum:
-            scan_command.get_implementation_cls().cli_connector_cls.register_json_serializer_functions()
+        for scan_command in ScanCommand.get_all():
+            ScanCommandsRepository.get_implementation_cls(
+                scan_command
+            ).cli_connector_cls.register_json_serializer_functions()
 
     def command_line_parsed(self, parsed_command_line: ParsedCommandLine) -> None:
         for bad_server_str in parsed_command_line.invalid_servers:
@@ -97,7 +69,7 @@ class JsonOutputGenerator(OutputGenerator):
         pass
 
     def server_scan_completed(self, server_scan_result: ServerScanResult) -> None:
-        self._server_scan_results.append(_ServerScanResultAsJson.from_server_scan_result(server_scan_result))
+        self._server_scan_results.append(server_scan_result)
 
     def scans_completed(self, total_scan_time: float) -> None:
         final_json_output = _SslyzeOutputAsJson(
@@ -139,7 +111,8 @@ _default_json_encoder = json.JSONEncoder()
 # Using singledispatch allows plugins that return custom objects to extend the JSON serializing logic
 @singledispatch
 def object_to_json(obj: Any) -> JsonType:
-    return _default_json_encoder.default(obj)
+    # Assume a default Python type if this function gets called instead of all the registered functions
+    return _default_json_encoder.encode(obj)
 
 
 # Add the functions for serializing basic types
@@ -150,7 +123,7 @@ def _enum(obj: Enum) -> JsonType:
 
 @object_to_json.register
 def _set(obj: set) -> JsonType:
-    return [object_to_json(value) for value in obj]
+    return list(obj)
 
 
 @object_to_json.register

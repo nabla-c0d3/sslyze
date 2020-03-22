@@ -1,5 +1,6 @@
-from enum import Enum, unique, auto
-from typing import Dict, Type, TYPE_CHECKING
+from typing import Dict, Type, TYPE_CHECKING, Set
+
+from typing_extensions import Literal
 
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 from sslyze.plugins.compression_plugin import CompressionImplementation
@@ -27,56 +28,106 @@ if TYPE_CHECKING:
     from sslyze.plugins.plugin_base import ScanCommandImplementation  # noqa: F401
 
 
-@unique
-class ScanCommandEnum(Enum):
-    CERTIFICATE_INFO = auto()
-
-    SSL_2_0_CIPHER_SUITES = auto()
-    SSL_3_0_CIPHER_SUITES = auto()
-    TLS_1_0_CIPHER_SUITES = auto()
-    TLS_1_1_CIPHER_SUITES = auto()
-    TLS_1_2_CIPHER_SUITES = auto()
-    TLS_1_3_CIPHER_SUITES = auto()
-
-    TLS_COMPRESSION = auto()
-
-    TLS_1_3_EARLY_DATA = auto()
-
-    OPENSSL_CCS_INJECTION = auto()
-
-    TLS_FALLBACK_SCSV = auto()
-
-    HEARTBLEED = auto()
-
-    ROBOT = auto()
-
-    SESSION_RENEGOTIATION = auto()
-
-    SESSION_RESUMPTION = auto()
-    SESSION_RESUMPTION_RATE = auto()
-
-    HTTP_HEADERS = auto()
-
-    def get_implementation_cls(self) -> Type["ScanCommandImplementation"]:
-        return _IMPLEMENTATION_CLASSES[self]
+# TODO: Use CLI options?
+# TODO: Test to match ScanCommand
+ScanCommandType = Literal[
+    "certificate_info",
+    "ssl_2_0_cipher_suites",
+    "ssl_3_0_cipher_suites",
+    "tls_1_0_cipher_suites",
+    "tls_1_1_cipher_suites",
+    "tls_1_1_cipher_suites",
+    "tls_1_2_cipher_suites",
+    "tls_1_3_cipher_suites",
+    "tls_compression",
+    "tls_1_3_early_data",
+    "openssl_ccs_injection",
+    "tls_fallback_scsv",
+    "heartbleed",
+    "robot",
+    "session_renegotiation",
+    "session_resumption",
+    "session_resumption_rate",
+    "http_headers",
+]
 
 
-_IMPLEMENTATION_CLASSES: Dict[ScanCommandEnum, Type["ScanCommandImplementation"]] = {
-    ScanCommandEnum.CERTIFICATE_INFO: CertificateInfoImplementation,
-    ScanCommandEnum.SSL_2_0_CIPHER_SUITES: Sslv20ScanImplementation,
-    ScanCommandEnum.SSL_3_0_CIPHER_SUITES: Sslv30ScanImplementation,
-    ScanCommandEnum.TLS_1_0_CIPHER_SUITES: Tlsv10ScanImplementation,
-    ScanCommandEnum.TLS_1_1_CIPHER_SUITES: Tlsv11ScanImplementation,
-    ScanCommandEnum.TLS_1_2_CIPHER_SUITES: Tlsv12ScanImplementation,
-    ScanCommandEnum.TLS_1_3_CIPHER_SUITES: Tlsv13ScanImplementation,
-    ScanCommandEnum.TLS_COMPRESSION: CompressionImplementation,
-    ScanCommandEnum.TLS_1_3_EARLY_DATA: EarlyDataImplementation,
-    ScanCommandEnum.OPENSSL_CCS_INJECTION: OpenSslCcsInjectionImplementation,
-    ScanCommandEnum.TLS_FALLBACK_SCSV: FallbackScsvImplementation,
-    ScanCommandEnum.HEARTBLEED: HeartbleedImplementation,
-    ScanCommandEnum.ROBOT: RobotImplementation,
-    ScanCommandEnum.SESSION_RENEGOTIATION: SessionRenegotiationImplementation,
-    ScanCommandEnum.SESSION_RESUMPTION: SessionResumptionSupportImplementation,
-    ScanCommandEnum.SESSION_RESUMPTION_RATE: SessionResumptionRateImplementation,
-    ScanCommandEnum.HTTP_HEADERS: HttpHeadersImplementation,
+# Almost like a re-implementation of an enum
+class ScanCommand:
+    CERTIFICATE_INFO: Literal["certificate_info"] = "certificate_info"
+
+    SSL_2_0_CIPHER_SUITES: Literal["ssl_2_0_cipher_suites"] = "ssl_2_0_cipher_suites"
+    SSL_3_0_CIPHER_SUITES: Literal["ssl_3_0_cipher_suites"] = "ssl_3_0_cipher_suites"
+    TLS_1_0_CIPHER_SUITES: Literal["tls_1_0_cipher_suites"] = "tls_1_0_cipher_suites"
+    TLS_1_1_CIPHER_SUITES: Literal["tls_1_1_cipher_suites"] = "tls_1_1_cipher_suites"
+    TLS_1_2_CIPHER_SUITES: Literal["tls_1_2_cipher_suites"] = "tls_1_2_cipher_suites"
+    TLS_1_3_CIPHER_SUITES: Literal["tls_1_3_cipher_suites"] = "tls_1_3_cipher_suites"
+
+    TLS_COMPRESSION: Literal["tls_compression"] = "tls_compression"
+
+    TLS_1_3_EARLY_DATA: Literal["tls_1_3_early_data"] = "tls_1_3_early_data"
+
+    OPENSSL_CCS_INJECTION: Literal["openssl_ccs_injection"] = "openssl_ccs_injection"
+
+    TLS_FALLBACK_SCSV: Literal["tls_fallback_scsv"] = "tls_fallback_scsv"
+
+    HEARTBLEED: Literal["heartbleed"] = "heartbleed"
+
+    ROBOT: Literal["robot"] = "robot"
+
+    SESSION_RENEGOTIATION: Literal["session_renegotiation"] = "session_renegotiation"
+
+    SESSION_RESUMPTION: Literal["session_resumption"] = "session_resumption"
+    SESSION_RESUMPTION_RATE: Literal["session_resumption_rate"] = "session_resumption_rate"
+
+    HTTP_HEADERS: Literal["http_headers"] = "http_headers"
+
+    # TODO: Move to repository? and combine in scan_cmd, scan_cmd_impl?
+    @classmethod
+    def get_all(cls) -> Set[ScanCommandType]:
+        return {
+            cls.CERTIFICATE_INFO,
+            cls.SSL_2_0_CIPHER_SUITES,
+            cls.SSL_3_0_CIPHER_SUITES,
+            cls.TLS_1_0_CIPHER_SUITES,
+            cls.TLS_1_1_CIPHER_SUITES,
+            cls.TLS_1_2_CIPHER_SUITES,
+            cls.TLS_1_3_CIPHER_SUITES,
+            cls.TLS_COMPRESSION,
+            cls.TLS_1_3_EARLY_DATA,
+            cls.OPENSSL_CCS_INJECTION,
+            cls.TLS_FALLBACK_SCSV,
+            cls.HEARTBLEED,
+            cls.ROBOT,
+            cls.SESSION_RENEGOTIATION,
+            cls.SESSION_RESUMPTION,
+            cls.SESSION_RESUMPTION_RATE,
+            cls.HTTP_HEADERS,
+        }
+
+
+class ScanCommandsRepository:
+    @staticmethod
+    def get_implementation_cls(scan_command: ScanCommandType) -> Type["ScanCommandImplementation"]:
+        return _IMPLEMENTATION_CLASSES[scan_command]
+
+
+_IMPLEMENTATION_CLASSES: Dict[ScanCommandType, Type["ScanCommandImplementation"]] = {
+    ScanCommand.CERTIFICATE_INFO: CertificateInfoImplementation,
+    ScanCommand.SSL_2_0_CIPHER_SUITES: Sslv20ScanImplementation,
+    ScanCommand.SSL_3_0_CIPHER_SUITES: Sslv30ScanImplementation,
+    ScanCommand.TLS_1_0_CIPHER_SUITES: Tlsv10ScanImplementation,
+    ScanCommand.TLS_1_1_CIPHER_SUITES: Tlsv11ScanImplementation,
+    ScanCommand.TLS_1_2_CIPHER_SUITES: Tlsv12ScanImplementation,
+    ScanCommand.TLS_1_3_CIPHER_SUITES: Tlsv13ScanImplementation,
+    ScanCommand.TLS_COMPRESSION: CompressionImplementation,
+    ScanCommand.TLS_1_3_EARLY_DATA: EarlyDataImplementation,
+    ScanCommand.OPENSSL_CCS_INJECTION: OpenSslCcsInjectionImplementation,
+    ScanCommand.TLS_FALLBACK_SCSV: FallbackScsvImplementation,
+    ScanCommand.HEARTBLEED: HeartbleedImplementation,
+    ScanCommand.ROBOT: RobotImplementation,
+    ScanCommand.SESSION_RENEGOTIATION: SessionRenegotiationImplementation,
+    ScanCommand.SESSION_RESUMPTION: SessionResumptionSupportImplementation,
+    ScanCommand.SESSION_RESUMPTION_RATE: SessionResumptionRateImplementation,
+    ScanCommand.HTTP_HEADERS: HttpHeadersImplementation,
 }

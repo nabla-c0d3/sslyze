@@ -2,6 +2,7 @@ from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
+from sslyze.plugins.scan_commands import ScanCommandsRepository
 from sslyze.scanner import ServerScanResult, ScanCommandErrorReasonEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthRequirementEnum
 from sslyze.server_setting import (
@@ -60,14 +61,14 @@ class ConsoleOutputGenerator(OutputGenerator):
         # Display result for scan commands that were run successfully
         for scan_command, scan_command_result in server_scan_result.scan_commands_results.items():
             target_result_str += "\n"
-            cli_connector_cls = scan_command.get_implementation_cls().cli_connector_cls
+            cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
             for line in cli_connector_cls.result_to_console_output(scan_command_result):
                 target_result_str += line + "\n"
 
         # Display scan commands that failed
         for scan_command, scan_command_error in server_scan_result.scan_commands_errors.items():
             target_result_str += "\n"
-            cli_connector_cls = scan_command.get_implementation_cls().cli_connector_cls
+            cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
 
             if scan_command_error.reason == ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED:
                 target_result_str += cli_connector_cls._format_title(
@@ -75,7 +76,7 @@ class ConsoleOutputGenerator(OutputGenerator):
                 )
                 target_result_str += " use --cert and --key to provide one.\n"
 
-            elif scan_command_error.reason == ScanCommandErrorReasonEnum.CONNECTION_TIMED_OUT:
+            elif scan_command_error.reason == ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE:
                 target_result_str += cli_connector_cls._format_title(
                     f"Connection timed out for --{cli_connector_cls._cli_option}"
                 )
@@ -96,7 +97,7 @@ class ConsoleOutputGenerator(OutputGenerator):
                 target_result_str += (
                     f"       * Server: {server_location.hostname}:{server_location.port} - {network_route}\n"
                 )
-                target_result_str += f"       * Scan command: {scan_command.name}\n\n"
+                target_result_str += f"       * Scan command: {scan_command}\n\n"
                 for line in scan_command_error.exception_trace.format(chain=False):
                     target_result_str += f"       {line}"
             else:

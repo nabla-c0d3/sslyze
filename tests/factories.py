@@ -1,5 +1,5 @@
 from traceback import TracebackException
-from typing import Optional, Dict, Set
+from typing import Optional, Set
 
 from faker import Faker
 from faker.providers import internet
@@ -8,9 +8,8 @@ from sslyze.cli.command_line.server_string_parser import InvalidServerStringErro
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
 from sslyze.plugins.compression_plugin import CompressionScanResult
-from sslyze.plugins.plugin_base import ScanCommandResult
-from sslyze.plugins.scan_commands import ScanCommandEnum
-from sslyze.scanner import ServerScanResult, ScanCommandError
+from sslyze.plugins.scan_commands import ScanCommand, ScanCommandType
+from sslyze.scanner import ServerScanResult, ScanCommandErrorsDict, ScanCommandResultsDict
 from sslyze.server_connectivity import (
     ServerConnectivityInfo,
     ServerTlsProbingResult,
@@ -89,7 +88,7 @@ class ParsedCommandLineFactory:
                     ServerNetworkConfiguration(tls_server_name_indication="a.com"),
                 ),
             ],
-            scan_commands={ScanCommandEnum.TLS_COMPRESSION, ScanCommandEnum.HTTP_HEADERS},
+            scan_commands={ScanCommand.TLS_COMPRESSION, ScanCommand.HTTP_HEADERS},
             scan_commands_extra_arguments={},
             json_file_out=None,
             should_disable_console_output=False,
@@ -113,18 +112,21 @@ class ServerScanResultFactory:
     @staticmethod
     def create(
         server_info: ServerConnectivityInfo = ServerConnectivityInfoFactory.create(),
-        scan_commands_results: Optional[Dict[ScanCommandEnum, ScanCommandResult]] = None,
-        scan_commands_errors: Optional[Dict[ScanCommandEnum, ScanCommandError]] = None,
+        scan_commands_results: Optional[ScanCommandResultsDict] = None,
+        scan_commands_errors: Optional[ScanCommandErrorsDict] = None,
     ) -> ServerScanResult:
-        final_results = (
+        final_results: ScanCommandResultsDict = (
             scan_commands_results
             if scan_commands_results
-            else {ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
+            else {ScanCommand.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
         )
-        final_errors = scan_commands_errors if scan_commands_errors else {}
-        scan_commands: Set[ScanCommandEnum] = set()
-        scan_commands.update(final_results.keys())
-        scan_commands.update(final_errors.keys())
+        final_errors: ScanCommandErrorsDict = scan_commands_errors if scan_commands_errors else {}
+        scan_commands: Set[ScanCommandType] = set()
+        for scan_cmd in final_results.keys():
+            scan_commands.add(scan_cmd)
+        for scan_cmd in final_errors.keys():
+            scan_commands.add(scan_cmd)
+
         return ServerScanResult(
             scan_commands_results=final_results,
             scan_commands_errors=final_errors,

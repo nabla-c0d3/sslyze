@@ -147,6 +147,13 @@ class CertificateDeploymentAnalysisResult:
             pem_certs.append(certificate.public_bytes(Encoding.PEM).decode("ascii"))
         return pem_certs
 
+    @property
+    def received_certificate_chain_as_pem(self) -> List[str]:
+        pem_certs = []
+        for certificate in self.received_certificate_chain:
+            pem_certs.append(certificate.public_bytes(Encoding.PEM).decode("ascii"))
+        return pem_certs
+
 
 class CertificateDeploymentAnalyzer:
     """Utility class for analyzing a certificate chain as deployed on a specific server.

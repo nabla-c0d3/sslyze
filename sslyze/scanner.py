@@ -54,6 +54,9 @@ class ServerScanResult:
 
 
 class Scanner:
+    """The main class to use in order to call and schedule SSLyze's scan commands from Python.
+    """
+
     def __init__(
         self,
         per_server_concurrent_connections_limit: Optional[int] = None,
@@ -84,6 +87,8 @@ class Scanner:
         self._server_to_thread_pool: Dict[ServerConnectivityInfo, ThreadPoolExecutor] = {}
 
     def queue_scan(self, server_scan: ServerScanRequest) -> None:
+        """Queue a server scan.
+        """
         # Only one scan per server can be submitted
         if server_scan.server_info in self._pending_server_scan_results:
             raise ValueError(f"Already submitted a scan for server {server_scan.server_info.server_location}")
@@ -126,6 +131,8 @@ class Scanner:
                 self._queued_future_to_server_and_scan_cmd[future] = (server_scan.server_info, scan_cmd_enum)
 
     def get_results(self) -> Iterable[ServerScanResult]:
+        """Wait for all server scans to complete and return them.
+        """
         server_and_scan_cmd_to_completed_futures: Dict[Tuple[ServerConnectivityInfo, ScanCommandEnum], List[Future]] = {
             server_and_scan_cmd: [] for server_and_scan_cmd in self._queued_future_to_server_and_scan_cmd.values()
         }
@@ -175,7 +182,7 @@ class Scanner:
                 del server_and_scan_cmd_to_completed_futures[server_and_scan_cmd]
 
             # Lastly, have all the scan commands for a given server completed?
-            for server_scan in self._queued_server_scans:
+            for index, server_scan in enumerate(self._queued_server_scans):
                 if len(server_scan.scan_commands) == len(self._pending_server_scan_results[server_scan.server_info]):
                     # Yes - return the fully completed server scan
                     # Triage actual results from errors
@@ -197,6 +204,7 @@ class Scanner:
                         scan_commands_extra_arguments=server_scan.scan_commands_extra_arguments,
                     )
                     del self._pending_server_scan_results[server_scan.server_info]
+                    del self._queued_server_scans[index]
 
         self._shutdown_thread_pools()
 

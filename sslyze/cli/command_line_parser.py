@@ -234,7 +234,8 @@ class CommandLineParser:
                     except ServerHostnameCouldNotBeResolved:
                         invalid_server_strings.append(
                             InvalidServerStringError(
-                                f"{hostname}:{final_port}", f"Could not resolve hostname {hostname}"
+                                server_string=f"{hostname}:{final_port}",
+                                error_message=f"Could not resolve hostname {hostname}",
                             )
                         )
                         continue

@@ -75,6 +75,12 @@ class ConsoleOutputGenerator(OutputGenerator):
                 )
                 target_result_str += " use --cert and --key to provide one.\n"
 
+            elif scan_command_error.reason == ScanCommandErrorReasonEnum.CONNECTION_TIMED_OUT:
+                target_result_str += cli_connector_cls._format_title(
+                    f"Connection timed out for --{cli_connector_cls._cli_option}"
+                )
+                target_result_str += " try using --slow_connection to reduce the impact on the server.\n"
+
             elif scan_command_error.reason in [
                 ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
                 ScanCommandErrorReasonEnum.WRONG_USAGE,

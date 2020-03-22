@@ -7,6 +7,7 @@ from typing import Dict, Iterable, List, Tuple, Set, Union, Optional
 
 from nassl.ssl_client import ClientCertificateRequested
 
+from sslyze.connection_helpers.errors import ConnectionToServerTimedOut
 from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandExtraArguments, ScanCommandWrongUsageError
 from sslyze.plugins.scan_commands import ScanCommandEnum
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -16,6 +17,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 class ScanCommandErrorReasonEnum(Enum):
     BUG_IN_SSLYZE = auto()
     CLIENT_CERTIFICATE_NEEDED = auto()
+    CONNECTION_TIMED_OUT = auto()
     WRONG_USAGE = auto()
 
 
@@ -168,6 +170,11 @@ class Scanner:
                     except ClientCertificateRequested as e:
                         result = ScanCommandError(
                             reason=ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED,
+                            exception_trace=TracebackException.from_exception(e),
+                        )
+                    except ConnectionToServerTimedOut as e:
+                        result = ScanCommandError(
+                            reason=ScanCommandErrorReasonEnum.CONNECTION_TIMED_OUT,
                             exception_trace=TracebackException.from_exception(e),
                         )
                     except Exception as e:

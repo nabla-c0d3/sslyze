@@ -18,7 +18,6 @@ class CommandLineServerStringParser:
     """
 
     SERVER_STRING_ERROR_BAD_PORT = "Not a valid host:port"
-    SERVER_STRING_ERROR_NO_IPV6 = "IPv6 is not supported on this platform"
 
     @classmethod
     def parse_server_string(cls, server_str: str) -> Tuple[str, Optional[str], Optional[int]]:
@@ -55,14 +54,16 @@ class CommandLineServerStringParser:
             try:
                 port = int((server_str.split(":"))[1])
             except ValueError:  # Port is not an int
-                raise InvalidServerStringError(server_str, cls.SERVER_STRING_ERROR_BAD_PORT)
+                raise InvalidServerStringError(server_string=server_str, error_message=cls.SERVER_STRING_ERROR_BAD_PORT)
 
         return host, port
 
     @classmethod
     def _parse_ipv6_server_string(cls, server_str: str) -> Tuple[str, Optional[int]]:
         if not socket.has_ipv6:
-            raise InvalidServerStringError(server_str, cls.SERVER_STRING_ERROR_NO_IPV6)
+            raise InvalidServerStringError(
+                server_string=server_str, error_message="IPv6 is not supported on this platform"
+            )
 
         port = None
         target_split = server_str.split("]")
@@ -71,5 +72,5 @@ class CommandLineServerStringParser:
             try:
                 port = int(target_split[1].rsplit(":")[1])
             except ValueError:  # Port is not an int
-                raise InvalidServerStringError(server_str, cls.SERVER_STRING_ERROR_BAD_PORT)
+                raise InvalidServerStringError(server_string=server_str, error_message=cls.SERVER_STRING_ERROR_BAD_PORT)
         return ipv6_addr, port

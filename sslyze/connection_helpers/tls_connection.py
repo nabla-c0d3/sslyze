@@ -75,16 +75,16 @@ def _open_socket_for_connection_via_http_proxy(
                 ).encode("utf-8")
             )
         http_response = HttpResponseParser.parse_from_socket(sock)
-    except socket.timeout as e:
-        raise _ConnectionToHttpProxyTimedOut(e.strerror)
-    except ConnectionError as e:
-        raise _HttpProxyRejectedConnection(e.strerror)
-    except socket.error as e:
-        raise _ConnectionToHttpProxyFailed(e.strerror)
+    except socket.timeout:
+        raise _ConnectionToHttpProxyTimedOut()
+    except ConnectionError:
+        raise _HttpProxyRejectedConnection("The HTTP proxy rejected the connection")
+    except socket.error:
+        raise _ConnectionToHttpProxyFailed()
 
     # Check if the proxy was able to connect to the host
     if http_response.status != 200:
-        raise _HttpProxyRejectedConnection("The proxy rejected the HTTP CONNECT request")
+        raise _HttpProxyRejectedConnection("The HTTP proxy rejected the CONNECT request")
 
     return sock
 
@@ -197,11 +197,11 @@ class SslConnection:
         try:
             sock = _open_socket(self._server_location, self._network_configuration.network_timeout)
         # Re-raise any proxy error with additional context/info
-        except _ConnectionToHttpProxyTimedOut as e:
+        except _ConnectionToHttpProxyTimedOut:
             raise ConnectionToHttpProxyTimedOut(
                 server_location=self._server_location,
                 network_configuration=self._network_configuration,
-                error_message=e.args[0],
+                error_message="Connection to HTTP Proxy timed out",
             )
         except _HttpProxyRejectedConnection as e:
             raise HttpProxyRejectedConnection(
@@ -209,11 +209,11 @@ class SslConnection:
                 network_configuration=self._network_configuration,
                 error_message=e.args[0],
             )
-        except _ConnectionToHttpProxyFailed as e:
+        except _ConnectionToHttpProxyFailed:
             raise ConnectionToHttpProxyFailed(
                 server_location=self._server_location,
                 network_configuration=self._network_configuration,
-                error_message=e.args[0],
+                error_message="Connection to the HTTP proxy failed",
             )
 
         # Do the Opportunistic/StartTLS negotiation if needed
@@ -252,7 +252,7 @@ class SslConnection:
                     raise ConnectionToServerTimedOut(
                         server_location=self._server_location,
                         network_configuration=self._network_configuration,
-                        error_message=e.strerror,
+                        error_message="Connection to the server timed out",
                     )
                 elif connection_attempts_nb == 1:
                     # Start with a 1 second delay
@@ -264,13 +264,13 @@ class SslConnection:
                 raise ServerRejectedConnection(
                     server_location=self._server_location,
                     network_configuration=self._network_configuration,
-                    error_message=e.strerror,
+                    error_message="Server rejected the connection",
                 )
             except socket.error as e:
                 raise ConnectionToServerFailed(
                     server_location=self._server_location,
                     network_configuration=self._network_configuration,
-                    error_message=e.strerror,
+                    error_message="Connection to the server failed",
                 )
 
             else:
@@ -289,7 +289,7 @@ class SslConnection:
             raise ConnectionToServerTimedOut(
                 server_location=self._server_location,
                 network_configuration=self._network_configuration,
-                error_message=e.strerror,
+                error_message="Connection to server timed out",
             )
         except socket.error as e:
             for error_msg in _HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():

@@ -26,14 +26,14 @@ class ConsoleOutputGenerator(OutputGenerator):
 
         for bad_server_str in parsed_command_line.invalid_servers:
             self._file_to.write(
-                f"   {bad_server_str.server_string:<35} => WARNING: {bad_server_str.error_message};"
-                f" discarding corresponding tasks.\n"
+                f"   {bad_server_str.server_string:<35} => ERROR: {bad_server_str.error_message};"
+                f" discarding scan.\n"
             )
 
     def server_connectivity_test_failed(self, connectivity_error: ConnectionToServerFailed) -> None:
         self._file_to.write(
             f"   {connectivity_error.server_location.hostname}:{connectivity_error.server_location.port:<25}"
-            f" => WARNING: {connectivity_error.error_message}; discarding corresponding tasks.\n"
+            f" => ERROR: {connectivity_error.error_message}; discarding scan.\n"
         )
 
     def server_connectivity_test_succeeded(self, server_connectivity_info: ServerConnectivityInfo) -> None:

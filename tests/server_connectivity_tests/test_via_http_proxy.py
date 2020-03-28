@@ -59,7 +59,7 @@ class TestServerConnectivityTesterWithProxy:
             hostname="www.google.com",
             port=443,
             # Configured with a proxy that will time out
-            http_proxy_settings=HttpProxySettings("www.google.com", 81),
+            http_proxy_settings=HttpProxySettings("1.2.3.4", 80),
         )
 
         # When testing connectivity, it fails with the right error

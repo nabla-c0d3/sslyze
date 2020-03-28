@@ -13,7 +13,7 @@ from sslyze import PROJECT_URL, __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
-from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
+from sslyze.plugins.scan_commands import ScanCommandsRepository
 from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -40,7 +40,7 @@ class JsonOutputGenerator(OutputGenerator):
         self._server_scan_results: List[ServerScanResult] = []
 
         # Register all JSON serializer functions defined in plugins
-        for scan_command in ScanCommand.get_all():
+        for scan_command in ScanCommandsRepository.get_all_scan_commands():
             ScanCommandsRepository.get_implementation_cls(
                 scan_command
             ).cli_connector_cls.register_json_serializer_functions()

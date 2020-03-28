@@ -58,6 +58,8 @@ class _RobotCliConnector(ScanCommandCliConnector[RobotScanResult, None]):
 
 
 class RobotImplementation(ScanCommandImplementation[RobotScanResult, None]):
+    """Test a server for the ROBOT vulnerability.
+    """
 
     cli_connector_cls = _RobotCliConnector
 

@@ -53,6 +53,8 @@ class _HeartbleedCliConnector(ScanCommandCliConnector[HeartbleedScanResult, None
 
 
 class HeartbleedImplementation(ScanCommandImplementation[HeartbleedScanResult, None]):
+    """Test a server for the OpenSSL Heartbleed vulnerability.
+    """
 
     cli_connector_cls = _HeartbleedCliConnector
 

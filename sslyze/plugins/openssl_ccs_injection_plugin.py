@@ -54,6 +54,8 @@ class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector[OpenSslCcsInjecti
 
 
 class OpenSslCcsInjectionImplementation(ScanCommandImplementation[OpenSslCcsInjectionScanResult, None]):
+    """Test a server for the OpenSSL CCS Injection vulnerability (CVE-2014-0224).
+    """
 
     cli_connector_cls = _OpenSslCcsInjectionCliConnector
 

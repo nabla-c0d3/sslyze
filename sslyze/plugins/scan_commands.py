@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from sslyze.plugins.plugin_base import ScanCommandImplementation  # noqa: F401
 
 
-# TODO: Use CLI options?
 # TODO: Test to match ScanCommand
 ScanCommandType = Literal[
     "certificate_info",
@@ -82,34 +81,15 @@ class ScanCommand:
 
     HTTP_HEADERS: Literal["http_headers"] = "http_headers"
 
-    # TODO: Move to repository? and combine in scan_cmd, scan_cmd_impl?
-    @classmethod
-    def get_all(cls) -> Set[ScanCommandType]:
-        return {
-            cls.CERTIFICATE_INFO,
-            cls.SSL_2_0_CIPHER_SUITES,
-            cls.SSL_3_0_CIPHER_SUITES,
-            cls.TLS_1_0_CIPHER_SUITES,
-            cls.TLS_1_1_CIPHER_SUITES,
-            cls.TLS_1_2_CIPHER_SUITES,
-            cls.TLS_1_3_CIPHER_SUITES,
-            cls.TLS_COMPRESSION,
-            cls.TLS_1_3_EARLY_DATA,
-            cls.OPENSSL_CCS_INJECTION,
-            cls.TLS_FALLBACK_SCSV,
-            cls.HEARTBLEED,
-            cls.ROBOT,
-            cls.SESSION_RENEGOTIATION,
-            cls.SESSION_RESUMPTION,
-            cls.SESSION_RESUMPTION_RATE,
-            cls.HTTP_HEADERS,
-        }
-
 
 class ScanCommandsRepository:
     @staticmethod
     def get_implementation_cls(scan_command: ScanCommandType) -> Type["ScanCommandImplementation"]:
         return _IMPLEMENTATION_CLASSES[scan_command]
+
+    @staticmethod
+    def get_all_scan_commands() -> Set[ScanCommandType]:
+        return set(_IMPLEMENTATION_CLASSES.keys())
 
 
 _IMPLEMENTATION_CLASSES: Dict[ScanCommandType, Type["ScanCommandImplementation"]] = {

@@ -11,7 +11,7 @@ from typing import Tuple
 from sslyze.cli.command_line.server_string_parser import InvalidServerStringError, CommandLineServerStringParser
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
-from sslyze.plugins.scan_commands import ScanCommandType, ScanCommand, ScanCommandsRepository
+from sslyze.plugins.scan_commands import ScanCommandType, ScanCommandsRepository
 from sslyze.scanner import ScanCommandExtraArgumentsDict
 
 from sslyze.server_setting import (
@@ -49,7 +49,7 @@ class ParsedCommandLine:
 
     # Servers to scan
     servers_to_scans: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]]
-    scan_commands: Set["ScanCommandType"]
+    scan_commands: Set[ScanCommandType]
     scan_commands_extra_arguments: ScanCommandExtraArgumentsDict
 
     # Output settings
@@ -274,10 +274,10 @@ class CommandLineParser:
             # Go easy on the servers; only open 2 concurrent connections against each server
             per_server_concurrent_connections_limit = 2
 
-        # Figure out the scan commands that enabled
-        scan_commands: Set["ScanCommandType"] = set()
+        # Figure out the scan commands that are enabled
+        scan_commands: Set[ScanCommandType] = set()
         scan_commands_extra_arguments: ScanCommandExtraArgumentsDict = {}
-        for scan_command in ScanCommand.get_all():
+        for scan_command in ScanCommandsRepository.get_all_scan_commands():
             cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
             is_scan_cmd_enabled, extra_args = cli_connector_cls.find_cli_options_in_command_line(
                 args_command_list.__dict__
@@ -409,7 +409,7 @@ class CommandLineParser:
         line parser.
         """
         scan_commands_group = OptionGroup(self._parser, "Scan commands", "")
-        for scan_command in ScanCommand.get_all():
+        for scan_command in ScanCommandsRepository.get_all_scan_commands():
             cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
             for option in cli_connector_cls.get_cli_options():
                 scan_commands_group.add_option(f"--{option.option}", help=option.help, action=option.action)

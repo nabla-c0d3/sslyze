@@ -285,7 +285,7 @@ class CommandLineParser:
             if is_scan_cmd_enabled:
                 scan_commands.add(scan_command)
                 if extra_args:
-                    scan_commands_extra_arguments[scan_command] = extra_args
+                    scan_commands_extra_arguments[scan_command] = extra_args  # type: ignore
 
         return ParsedCommandLine(
             invalid_servers=invalid_server_strings,

@@ -1,8 +1,10 @@
+from typing import cast
+
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
-from sslyze.plugins.scan_commands import ScanCommandsRepository
+from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommandType
 from sslyze.scanner import ServerScanResult, ScanCommandErrorReasonEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthRequirementEnum
 from sslyze.server_setting import (
@@ -60,8 +62,9 @@ class ConsoleOutputGenerator(OutputGenerator):
 
         # Display result for scan commands that were run successfully
         for scan_command, scan_command_result in server_scan_result.scan_commands_results.items():
+            typed_scan_command = cast(ScanCommandType, scan_command)
             target_result_str += "\n"
-            cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
+            cli_connector_cls = ScanCommandsRepository.get_implementation_cls(typed_scan_command).cli_connector_cls
             for line in cli_connector_cls.result_to_console_output(scan_command_result):
                 target_result_str += line + "\n"
 

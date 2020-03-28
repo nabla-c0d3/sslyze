@@ -1,5 +1,5 @@
 from traceback import TracebackException
-from typing import Optional, Set
+from typing import Optional, Set, cast
 
 from faker import Faker
 from faker.providers import internet
@@ -123,7 +123,8 @@ class ServerScanResultFactory:
         final_errors: ScanCommandErrorsDict = scan_commands_errors if scan_commands_errors else {}
         scan_commands: Set[ScanCommandType] = set()
         for scan_cmd in final_results.keys():
-            scan_commands.add(scan_cmd)
+            typed_scan_cmd = cast(ScanCommandType, scan_cmd)
+            scan_commands.add(typed_scan_cmd)
         for scan_cmd in final_errors.keys():
             scan_commands.add(scan_cmd)
 

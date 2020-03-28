@@ -67,7 +67,7 @@ class ServerScanRequest:
 
 # TypedDict for simpler/matching JSON output and makes fetching a field easier
 class ScanCommandResultsDict(TypedDict, total=False):
-    # Field is present if the corresponding scan command was scheduled abd was run successfully
+    # Field is present if the corresponding scan command was scheduled and was run successfully
     certificate_info: CertificateInfoScanResult
     ssl_2_0_cipher_suites: CipherSuitesScanResult
     ssl_3_0_cipher_suites: CipherSuitesScanResult
@@ -153,7 +153,7 @@ class Scanner:
         # Convert each scan command within the server scan request into jobs
         for scan_cmd in server_scan.scan_commands:
             implementation_cls = ScanCommandsRepository.get_implementation_cls(scan_cmd)
-            scan_cmd_extra_args = server_scan.scan_commands_extra_arguments.get(scan_cmd)
+            scan_cmd_extra_args = server_scan.scan_commands_extra_arguments.get(scan_cmd)  # type: ignore
 
             jobs_to_run = []
             try:

@@ -9,7 +9,7 @@ from traceback import TracebackException
 from typing import Dict, Any, TextIO, Union, List
 
 from enum import Enum
-from sslyze import PROJECT_URL, __version__
+from sslyze.__version__ import __url__, __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
@@ -30,7 +30,7 @@ class _SslyzeOutputAsJson:
     server_connectivity_errors: List[_ServerConnectivityErrorAsJson]
     total_scan_time: float
     sslyze_version: str = __version__
-    sslyze_url: str = PROJECT_URL
+    sslyze_url: str = __url__
 
 
 class JsonOutputGenerator(OutputGenerator):

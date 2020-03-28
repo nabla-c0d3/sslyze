@@ -1,10 +1,9 @@
 import sys
 from os import path, listdir
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from setuptools import find_packages
-from sslyze import __author__, __email__, __version__, PROJECT_URL
 
 # Setup file based on https://github.com/pypa/sampleproject/blob/master/setup.py
 root_path = Path(__file__).parent.absolute()
@@ -27,6 +26,13 @@ def get_long_description() -> str:
     return path_to_readme.read_text()
 
 
+def get_project_info() -> Dict[str, str]:
+    project_info: Dict[str, str] = {}
+    project_info_path = root_path / "sslyze" / "__version__.py"
+    exec(project_info_path.read_text(), project_info)
+    return project_info
+
+
 def get_include_files() -> List[Tuple[str, str]]:
     """"Get the list of trust stores so they properly packaged when doing a cx_freeze build.
     """
@@ -40,24 +46,29 @@ def get_include_files() -> List[Tuple[str, str]]:
     return plugin_data_files
 
 
+project_info = get_project_info()
+
+
 setup(
-    name="sslyze",
-    version=__version__,
-    description="Fast and powerful SSL/TLS server scanning library",
-    python_requires=">=3.6",
+    name=project_info["__title__"],
+    version=project_info["__version__"],
+    description=project_info["__description__"],
+    url=project_info["__url__"],
+    author=project_info["__author__"],
+    author_email=project_info["__author_email__"],
+    license=project_info["__license__"],
+    python_requires=">=3.7",
     # Pypi metadata
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
-    url=PROJECT_URL,
-    author=__author__,
-    author_email=__email__,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",
         "Natural Language :: French",
         "License :: OSI Approved :: GNU Affero General Public License v3",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Topic :: System :: Networking",
         "Topic :: System :: Monitoring",
         "Topic :: System :: Networking :: Monitoring",

@@ -4,7 +4,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Any, Optional
 
 from sslyze.cli.output_hub import OutputHub
-from sslyze import __version__
+from sslyze.__version__ import __version__
 from sslyze.cli.command_line_parser import CommandLineParsingError, CommandLineParser
 import signal
 from multiprocessing import freeze_support

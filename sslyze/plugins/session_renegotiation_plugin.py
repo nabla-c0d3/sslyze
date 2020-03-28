@@ -162,16 +162,20 @@ def _test_client_renegotiation(
             else:
                 raise
         except OpenSSLError as e:
-            if "handshake failure" in str(e.args):
+            if "handshake failure" in e.args[0]:
                 accepts_client_renegotiation = False
-            elif "no renegotiation" in str(e.args):
+            elif "no renegotiation" in e.args[0]:
                 accepts_client_renegotiation = False
-            elif "tlsv1 unrecognized name" in str(e.args):
+            elif "tlsv1 unrecognized name" in e.args[0]:
                 # Yahoo's very own way of rejecting a renegotiation
                 accepts_client_renegotiation = False
-            elif "tlsv1 alert internal error" in str(e.args):
+            elif "tlsv1 alert internal error" in e.args[0]:
                 # Jetty server: https://github.com/nabla-c0d3/sslyze/issues/290
                 accepts_client_renegotiation = False
+            elif "decryption failed or bad record mac" in e.args[0]:
+                # Some servers such as reddit.com
+                accepts_client_renegotiation = False
+
             else:
                 raise
 

@@ -2,7 +2,7 @@ from io import StringIO
 
 from sslyze.cli.json_output import JsonOutputGenerator
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
-from sslyze.plugins.scan_commands import ScanCommandEnum
+from sslyze.plugins.scan_commands import ScanCommand
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.factories import ServerScanResultFactory
@@ -14,7 +14,7 @@ class TestJsonOutput:
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.facebook.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
-        scan_results = {ScanCommandEnum.CERTIFICATE_INFO: plugin_result}
+        scan_results = {ScanCommand.CERTIFICATE_INFO: plugin_result}
         scan_result = ServerScanResultFactory.create(scan_commands_results=scan_results)
 
         # When generating the JSON output for this server scan

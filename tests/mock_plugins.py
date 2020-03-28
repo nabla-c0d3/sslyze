@@ -3,22 +3,36 @@
 
 from concurrent.futures import Future
 from dataclasses import dataclass
-from enum import unique, Enum
-from typing import Optional, List, ClassVar, Type, Dict
+from typing import Optional, List, ClassVar, Type, Dict, Set
 
+from typing_extensions import Literal
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-@unique
-class ScanCommandEnumForTests(Enum):
-    MOCK_COMMAND_1 = "mock1"
-    MOCK_COMMAND_2 = "mock2"
-    MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS = "mock3"
-    MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS = "mock4"
+ScanCommandForTestsType = Literal[
+    "mock1", "mock2", "mock3", "mock4",
+]
+
+
+class ScanCommandForTests:
+    MOCK_COMMAND_1: Literal["mock1"] = "mock1"
+    MOCK_COMMAND_2: Literal["mock2"] = "mock2"
+    MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS: Literal["mock3"] = "mock3"
+    MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS: Literal["mock4"] = "mock4"
 
     def get_implementation_cls(self):
         return _IMPLEMENTATION_CLASSES[self]
+
+
+class ScanCommandForTestsRepository:
+    @staticmethod
+    def get_implementation_cls(scan_command: ScanCommandForTestsType) -> Type["ScanCommandImplementation"]:
+        return _IMPLEMENTATION_CLASSES[scan_command]
+
+    @staticmethod
+    def get_all_scan_commands() -> Set[ScanCommandForTestsType]:
+        return set(_IMPLEMENTATION_CLASSES.keys())
 
 
 @dataclass(frozen=True)
@@ -96,9 +110,9 @@ class _MockPluginExceptionWhenProcessingJobsImplementation(_MockPluginImplementa
         raise RuntimeError("Ran into a problem when processing results")
 
 
-_IMPLEMENTATION_CLASSES: Dict[ScanCommandEnumForTests, Type["ScanCommandImplementation"]] = {
-    ScanCommandEnumForTests.MOCK_COMMAND_1: MockPlugin1Implementation,
-    ScanCommandEnumForTests.MOCK_COMMAND_2: MockPlugin2Implementation,
-    ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS: _MockPluginExceptionWhenSchedulingJobsImplementation,  # noqa: E501
-    ScanCommandEnumForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS: _MockPluginExceptionWhenProcessingJobsImplementation,  # noqa: E501
+_IMPLEMENTATION_CLASSES: Dict[ScanCommandForTestsType, Type["ScanCommandImplementation"]] = {
+    ScanCommandForTests.MOCK_COMMAND_1: MockPlugin1Implementation,
+    ScanCommandForTests.MOCK_COMMAND_2: MockPlugin2Implementation,
+    ScanCommandForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS: _MockPluginExceptionWhenSchedulingJobsImplementation,  # noqa: E501
+    ScanCommandForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS: _MockPluginExceptionWhenProcessingJobsImplementation,  # noqa: E501
 }

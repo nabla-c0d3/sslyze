@@ -65,9 +65,6 @@ class ServerScanRequest:
                 raise ValueError(f"Received an extra argument for a scan command that wasn't enabled: {scan_command}")
 
 
-# TODO: Test for the name and list
-# TODO: Move it to scan commands? Or somewhere else?
-# TODO: Fix the types
 # TypedDict for simpler/matching JSON output and makes fetching a field easier
 class ScanCommandResultsDict(TypedDict, total=False):
     # Field is present if the corresponding scan command was scheduled abd was run successfully

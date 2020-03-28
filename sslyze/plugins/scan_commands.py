@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from sslyze.plugins.plugin_base import ScanCommandImplementation  # noqa: F401
 
 
-# TODO: Test to match ScanCommand
 ScanCommandType = Literal[
     "certificate_info",
     "ssl_2_0_cipher_suites",

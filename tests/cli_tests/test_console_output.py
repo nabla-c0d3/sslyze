@@ -1,12 +1,10 @@
 from io import StringIO
 
-from nassl.ssl_client import OpenSslVersionEnum
-
 from sslyze.cli.console_output import ConsoleOutputGenerator
 from sslyze.plugins.compression_plugin import CompressionScanResult
-from sslyze.plugins.scan_commands import ScanCommandEnum
+from sslyze.plugins.scan_commands import ScanCommand
 from sslyze.scanner import ScanCommandError, ScanCommandErrorReasonEnum
-from sslyze.server_connectivity import ServerTlsProbingResult, ClientAuthRequirementEnum
+from sslyze.server_connectivity import ServerTlsProbingResult, ClientAuthRequirementEnum, TlsVersionEnum
 from tests.factories import (
     ServerScanResultFactory,
     TracebackExceptionFactory,
@@ -70,7 +68,7 @@ class TestConsoleOutputGenerator:
         # Given a server to scan to which sslyze was able to connect
         server_info = ServerConnectivityInfoFactory.create(
             tls_probing_result=ServerTlsProbingResult(
-                highest_tls_version_supported=OpenSslVersionEnum.TLSV1_2,
+                highest_tls_version_supported=TlsVersionEnum.TLS_1_2,
                 cipher_suite_supported="AES",
                 # And the server requires client authentication
                 client_auth_requirement=ClientAuthRequirementEnum.REQUIRED,
@@ -113,7 +111,7 @@ class TestConsoleOutputGenerator:
 
     def test_server_scan_completed(self):
         # Given a completed scan for a server
-        scan_results = {ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
+        scan_results = {ScanCommand.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
         scan_result = ServerScanResultFactory.create(scan_commands_results=scan_results)
 
         # When generating the console output for this server scan
@@ -132,7 +130,7 @@ class TestConsoleOutputGenerator:
             # And sslyze connected to the server via an HTTP proxy
             server_location=ServerNetworkLocationViaHttpProxyFactory.create()
         )
-        scan_results = {ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
+        scan_results = {ScanCommand.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
         scan_result = ServerScanResultFactory.create(server_info=server_info, scan_commands_results=scan_results)
 
         # When generating the console output for this server scan
@@ -150,7 +148,7 @@ class TestConsoleOutputGenerator:
         # Given a completed scan for a server that triggered an error
         error_trace = TracebackExceptionFactory.create()
         scan_errors = {
-            ScanCommandEnum.TLS_COMPRESSION: ScanCommandError(
+            ScanCommand.TLS_COMPRESSION: ScanCommandError(
                 reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE, exception_trace=error_trace
             )
         }

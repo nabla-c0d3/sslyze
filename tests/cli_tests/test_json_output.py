@@ -3,7 +3,7 @@ from io import StringIO
 
 from sslyze.cli.json_output import JsonOutputGenerator
 from sslyze.plugins.compression_plugin import CompressionScanResult
-from sslyze.plugins.scan_commands import ScanCommandEnum
+from sslyze.plugins.scan_commands import ScanCommand
 from sslyze.scanner import ScanCommandError, ScanCommandErrorReasonEnum
 from tests.factories import (
     ParsedCommandLineFactory,
@@ -56,7 +56,7 @@ class TestJsonOutputGenerator:
 
     def test_server_scan_completed(self):
         # Given a completed scan for a server
-        scan_results = {ScanCommandEnum.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
+        scan_results = {ScanCommand.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
         scan_result = ServerScanResultFactory.create(scan_commands_results=scan_results)
 
         # When generating the JSON output for this server scan
@@ -76,7 +76,7 @@ class TestJsonOutputGenerator:
         # Given a completed scan for a server that triggered an error
         error_trace = TracebackExceptionFactory.create()
         scan_errors = {
-            ScanCommandEnum.TLS_COMPRESSION: ScanCommandError(
+            ScanCommand.TLS_COMPRESSION: ScanCommandError(
                 reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE, exception_trace=error_trace
             )
         }

@@ -22,11 +22,7 @@ def main() -> None:
     # Then queue some scan commands for each server
     for server_info in servers_to_scan:
         server_scan_req = ServerScanRequest(
-            server_info=server_info,
-            scan_commands={
-                ScanCommand.CERTIFICATE_INFO,
-                ScanCommand.SSL_2_0_CIPHER_SUITES
-            },
+            server_info=server_info, scan_commands={ScanCommand.CERTIFICATE_INFO, ScanCommand.SSL_2_0_CIPHER_SUITES},
         )
         scanner.queue_scan(server_scan_req)
 

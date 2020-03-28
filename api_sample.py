@@ -1,10 +1,5 @@
-from typing import cast
-
 from sslyze.connection_helpers.errors import ConnectionToServerFailed
-from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult
-from sslyze.plugins.compression_plugin import CompressionScanResult
-from sslyze.plugins.openssl_cipher_suites.implementation import CipherSuitesScanResult
-from sslyze.plugins.scan_commands import ScanCommandEnum
+from sslyze.plugins.scan_commands import ScanCommand
 from sslyze.scanner import ServerScanRequest, Scanner
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
@@ -29,11 +24,8 @@ def main() -> None:
         server_scan_req = ServerScanRequest(
             server_info=server_info,
             scan_commands={
-                ScanCommandEnum.TLS_1_0_CIPHER_SUITES,
-                ScanCommandEnum.TLS_1_1_CIPHER_SUITES,
-                ScanCommandEnum.TLS_1_2_CIPHER_SUITES,
-                ScanCommandEnum.CERTIFICATE_INFO,
-                ScanCommandEnum.TLS_COMPRESSION,
+                ScanCommand.CERTIFICATE_INFO,
+                ScanCommand.SSL_2_0_CIPHER_SUITES
             },
         )
         scanner.queue_scan(server_scan_req)
@@ -43,26 +35,21 @@ def main() -> None:
         print(f"\nResults for {server_scan_result.server_info.server_location.hostname}:")
 
         # Scan commands that were run with no errors
-        for scan_command, result in server_scan_result.scan_commands_results.items():
-            if scan_command in [
-                ScanCommandEnum.TLS_1_0_CIPHER_SUITES,
-                ScanCommandEnum.TLS_1_1_CIPHER_SUITES,
-                ScanCommandEnum.TLS_1_2_CIPHER_SUITES,
-            ]:
-                typed_result = cast(CipherSuitesScanResult, result)
-                print(f"\nAccepted cipher suites for {scan_command.name}:")
-                for accepted_cipher_suite in typed_result.accepted_cipher_suites:
-                    print(f"* {accepted_cipher_suite.cipher_suite.name}")
+        try:
+            ssl2_result = server_scan_result.scan_commands_results[ScanCommand.SSL_2_0_CIPHER_SUITES]
+            print(f"\nAccepted cipher suites for SSL 2.0:")
+            for accepted_cipher_suite in ssl2_result.accepted_cipher_suites:
+                print(f"* {accepted_cipher_suite.cipher_suite.name}")
+        except KeyError:
+            pass
 
-            elif scan_command == ScanCommandEnum.CERTIFICATE_INFO:
-                typed_result = cast(CertificateInfoScanResult, result)
-                print("\nCertificate info:")
-                for cert_deployment in typed_result.certificate_deployments:
-                    print(f"Leaf certificate: \n{cert_deployment.verified_certificate_chain_as_pem[0]}")
-
-            elif scan_command == ScanCommandEnum.TLS_COMPRESSION:
-                typed_result = cast(CompressionScanResult, result)
-                print(f"\nCompression / CRIME: {typed_result.supports_compression}")
+        try:
+            certinfo_result = server_scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
+            print("\nCertificate info:")
+            for cert_deployment in certinfo_result.certificate_deployments:
+                print(f"Leaf certificate: \n{cert_deployment.received_certificate_chain_as_pem[0]}")
+        except KeyError:
+            pass
 
         # Scan commands that were run with errors
         for scan_command, error in server_scan_result.scan_commands_errors.items():

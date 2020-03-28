@@ -2,7 +2,7 @@ import pytest
 
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkConfiguration
-from sslyze.connection_helpers.errors import ServerRejectedOpportunisticTlsNegotiation
+from sslyze.errors import ServerRejectedOpportunisticTlsNegotiation
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 
 

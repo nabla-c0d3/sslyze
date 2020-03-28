@@ -5,7 +5,7 @@ from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.console_output import ConsoleOutputGenerator
 from sslyze.cli.json_output import JsonOutputGenerator
 from sslyze.cli.output_generator import OutputGenerator
-from sslyze.connection_helpers.errors import ConnectionToServerFailed
+from sslyze.errors import ConnectionToServerFailed
 from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 

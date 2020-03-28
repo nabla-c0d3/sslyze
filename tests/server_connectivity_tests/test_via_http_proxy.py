@@ -4,7 +4,7 @@ import pytest
 
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaHttpProxy, HttpProxySettings
-from sslyze.connection_helpers.errors import (
+from sslyze.errors import (
     ConnectionToHttpProxyTimedOut,
     ConnectionToHttpProxyFailed,
     HttpProxyRejectedConnection,

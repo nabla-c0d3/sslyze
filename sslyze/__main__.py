@@ -10,7 +10,7 @@ import signal
 from multiprocessing import freeze_support
 from time import time
 
-from sslyze.connection_helpers.errors import ConnectionToServerFailed
+from sslyze.errors import ConnectionToServerFailed
 from sslyze.scanner import Scanner, ServerScanRequest
 from sslyze.server_connectivity import ServerConnectivityTester
 

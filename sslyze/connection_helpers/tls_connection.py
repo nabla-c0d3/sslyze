@@ -10,7 +10,7 @@ from sslyze.server_setting import (
     ServerNetworkLocationViaHttpProxy,
     ServerNetworkConfiguration,
 )
-from sslyze.connection_helpers.errors import (
+from sslyze.errors import (
     ConnectionToServerTimedOut,
     ServerRejectedConnection,
     ConnectionToServerFailed,

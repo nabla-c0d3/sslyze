@@ -1,4 +1,4 @@
-from sslyze.connection_helpers.errors import ConnectionToServerFailed
+from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.scan_commands import ScanCommand
 from sslyze.scanner import ServerScanRequest, Scanner
 from sslyze.server_connectivity import ServerConnectivityTester

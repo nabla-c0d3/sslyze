@@ -6,7 +6,7 @@ from faker.providers import internet
 
 from sslyze.cli.command_line.server_string_parser import InvalidServerStringError
 from sslyze.cli.command_line_parser import ParsedCommandLine
-from sslyze.connection_helpers.errors import ConnectionToServerFailed
+from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.scan_commands import ScanCommand, ScanCommandType
 from sslyze.scanner import ServerScanResult, ScanCommandErrorsDict, ScanCommandResultsDict

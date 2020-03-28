@@ -20,7 +20,7 @@ from tls_parser.parser import TlsRecordParser
 
 import tls_parser.tls_version
 
-from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
+from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 

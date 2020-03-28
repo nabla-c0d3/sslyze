@@ -14,7 +14,7 @@ from sslyze.plugins.plugin_base import (
 from typing import List, Optional
 
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
-from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
+from sslyze.errors import ServerRejectedTlsHandshake
 
 
 @dataclass(frozen=True)

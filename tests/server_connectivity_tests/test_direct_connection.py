@@ -4,7 +4,7 @@ import pytest
 
 from sslyze.server_connectivity import ServerConnectivityTester, TlsVersionEnum
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
-from sslyze.connection_helpers.errors import (
+from sslyze.errors import (
     ConnectionToServerTimedOut,
     ServerRejectedConnection,
     ServerTlsConfigurationNotSupported,

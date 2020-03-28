@@ -3,7 +3,7 @@ from typing import cast
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 
-from sslyze.connection_helpers.errors import ConnectionToServerFailed
+from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommandType
 from sslyze.scanner import ServerScanResult, ScanCommandErrorReasonEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthRequirementEnum

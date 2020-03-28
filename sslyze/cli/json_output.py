@@ -12,7 +12,7 @@ from enum import Enum
 from sslyze.__version__ import __url__, __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
-from sslyze.connection_helpers.errors import ConnectionToServerFailed
+from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.scan_commands import ScanCommandsRepository
 from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo

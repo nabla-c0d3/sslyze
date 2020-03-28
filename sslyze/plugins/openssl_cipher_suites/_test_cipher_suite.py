@@ -5,7 +5,7 @@ from nassl.ephemeral_key_info import EphemeralKeyInfo
 from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import ClientCertificateRequested, SslClient
 
-from sslyze.connection_helpers.errors import (
+from sslyze.errors import (
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
     ConnectionToServerFailed,

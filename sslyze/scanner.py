@@ -8,7 +8,7 @@ from typing import Dict, Iterable, List, Tuple, Set, Optional
 from nassl.ssl_client import ClientCertificateRequested
 from typing_extensions import TypedDict
 
-from sslyze.connection_helpers.errors import ConnectionToServerTimedOut
+from sslyze.errors import ConnectionToServerTimedOut
 from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult, CertificateInfoExtraArguments
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.early_data_plugin import EarlyDataScanResult

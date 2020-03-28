@@ -5,7 +5,7 @@ from typing import Optional, List, Dict, Tuple
 
 import nassl
 
-from sslyze.connection_helpers.errors import TlsHandshakeFailed
+from sslyze.errors import TlsHandshakeFailed
 from sslyze.plugins.certificate_info._cert_chain_analyzer import (
     CertificateDeploymentAnalyzer,
     CertificateDeploymentAnalysisResult,

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
-from sslyze.connection_helpers.errors import (
+from sslyze.errors import (
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
     TlsHandshakeFailed,

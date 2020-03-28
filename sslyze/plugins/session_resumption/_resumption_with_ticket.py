@@ -5,7 +5,7 @@ import nassl
 
 from sslyze.plugins.session_resumption._resumption_with_id import resume_tls_session, _ScanJobResultEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
-from sslyze.connection_helpers.errors import ServerRejectedTlsHandshake
+from sslyze.errors import ServerRejectedTlsHandshake
 
 
 @unique

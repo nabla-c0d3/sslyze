@@ -122,6 +122,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "tlsv1 alert protocol version": "TLS alert: protocol version ",
     "tlsv1 alert decrypt error": "TLS alert: Decrypt error",
     "tlsv1 alert decode error": "TLS alert: Decode error",
+    "Connection was shut down by peer": "Server closed the connection during the TLS handshake",
 }
 
 

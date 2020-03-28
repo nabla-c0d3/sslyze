@@ -1,4 +1,4 @@
-import sslyze
+from sslyze import __version__
 
 
 class HttpRequestGenerator:
@@ -13,7 +13,7 @@ class HttpRequestGenerator:
 
     DEFAULT_USER_AGENT = (
         "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/52.0.2743.116 Safari/537.36 SSLyze/{0}".format(sslyze.__version__)
+        "Chrome/52.0.2743.116 Safari/537.36 SSLyze/{0}".format(__version__.__version__)
     )
 
     @classmethod

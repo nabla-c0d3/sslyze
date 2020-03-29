@@ -1,7 +1,9 @@
 from abc import ABC
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
+if TYPE_CHECKING:
+    from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
 
 
 class InvalidServerNetworkConfigurationError(Exception):
@@ -19,8 +21,8 @@ class ConnectionToServerFailed(Exception):
     """Parent class for all exceptions raised when a connecting to a server failed.
     """
 
-    server_location: ServerNetworkLocation
-    network_configuration: ServerNetworkConfiguration
+    server_location: "ServerNetworkLocation"
+    network_configuration: "ServerNetworkConfiguration"
     error_message: str
 
 

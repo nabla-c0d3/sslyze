@@ -18,9 +18,9 @@ sphinx-rtd-theme = "*"
 twine = "*"
 sphinx-autodoc-typehints = "*"
 black = "==19.10b0"
-cx-freeze = {git = "https://github.com/anthony-tuininga/cx_Freeze.git"}
 pytest-cov = "*"
 faker = "*"
+cx-freeze = "*"
 
 [requires]
 python_version = "3.7"

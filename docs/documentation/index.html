@@ -1,271 +1,195 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>SSLyze Python API &mdash; SSLyze 2.1.0 documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>SSLyze &#8212; SSLyze 3.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Step 1: Testing Connectivity to a Server" href="testing-connectivity.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-
+    <link rel="next" title="Installation of SSLyze" href="installation.html" />
    
-  <div class="wy-grid-for-nav">
-    
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="#" class="icon icon-home"> SSLyze
-          
-
-          
-          </a>
-
-          
-            
-            
-              <div class="version">
-                2.1.0
-              </div>
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="testing-connectivity.html">Step 1: Testing Connectivity to a Server</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running-scan-commands.html">Step 2: Running Scan Commands Against a Server</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Available Scan Commands</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="writing-a-plugin.html">Appendix: Writing Your Own Plugins</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">SSLyze</a>
-        
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="#">Docs</a> &raquo;</li>
-        
-      <li>SSLyze Python API</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
             
-  <div class="section" id="sslyze-python-api">
-<h1>SSLyze Python API<a class="headerlink" href="#sslyze-python-api" title="Permalink to this headline">¶</a></h1>
-<p>Release 2.1.0</p>
-<p>This is the documentation for using SSLyze as a Python module.</p>
-<div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>The Python API gives full access to SSLyze’s SSL/TLS scanning engine, which can analyze the SSL configuration of a
-server by connecting to it, and detect various issues (bad certificates, dangerous cipher suites, lack of session
-resumption, etc.).</p>
-<p>A simple example on how to run a scan follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">demo_synchronous_scanner</span><span class="p">():</span>
-    <span class="c1"># Run one scan command to list the server&#39;s TLS 1.0 cipher suites</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">server_tester</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">(</span>
-            <span class="n">hostname</span><span class="o">=</span><span class="s1">&#39;smtp.gmail.com&#39;</span><span class="p">,</span>
-            <span class="n">port</span><span class="o">=</span><span class="mi">587</span><span class="p">,</span>
-            <span class="n">tls_wrapped_protocol</span><span class="o">=</span><span class="n">TlsWrappedProtocolEnum</span><span class="o">.</span><span class="n">STARTTLS_SMTP</span>
-        <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Testing connectivity with </span><span class="si">{server_tester.hostname}</span><span class="s1">:</span><span class="si">{server_tester.port}</span><span class="s1">...&#39;</span><span class="p">)</span>
-        <span class="n">server_info</span> <span class="o">=</span> <span class="n">server_tester</span><span class="o">.</span><span class="n">perform</span><span class="p">()</span>
-    <span class="k">except</span> <span class="n">ServerConnectivityError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="c1"># Could not establish an SSL connection to the server</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Could not connect to </span><span class="si">{e.server_info.hostname}</span><span class="s1">: </span><span class="si">{e.error_message}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-    <span class="n">command</span> <span class="o">=</span> <span class="n">Tlsv10ScanCommand</span><span class="p">()</span>
-
-    <span class="n">synchronous_scanner</span> <span class="o">=</span> <span class="n">SynchronousScanner</span><span class="p">()</span>
-
-    <span class="n">scan_result</span> <span class="o">=</span> <span class="n">synchronous_scanner</span><span class="o">.</span><span class="n">run_scan_command</span><span class="p">(</span><span class="n">server_info</span><span class="p">,</span> <span class="n">command</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">cipher</span> <span class="ow">in</span> <span class="n">scan_result</span><span class="o">.</span><span class="n">accepted_cipher_list</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;    </span><span class="si">{cipher.name}</span><span class="s1">&#39;</span><span class="p">)</span>
+  <div class="section" id="sslyze">
+<h1><a class="toc-backref" href="#id1">SSLyze</a><a class="headerlink" href="#sslyze" title="Permalink to this headline">¶</a></h1>
+<p>Release 3.0.0</p>
+<a class="reference external image-reference" href="https://pepy.tech/project/sslyze"><img alt="https://pepy.tech/badge/sslyze" src="https://pepy.tech/badge/sslyze" /></a>
+<a class="reference external image-reference" href="https://pypi.org/project/sslyze/"><img alt="https://img.shields.io/pypi/l/sslyze.svg" src="https://img.shields.io/pypi/l/sslyze.svg" /></a>
+<a class="reference external image-reference" href="https://pypi.org/project/sslyze/"><img alt="https://img.shields.io/pypi/pyversions/sslyze.svg" src="https://img.shields.io/pypi/pyversions/sslyze.svg" /></a>
+<p>SSLyze is a fast and powerful SSL/TLS scanning library.</p>
+<p>It allows you to analyze the SSL/TLS configuration of a server by connecting to it, in order to detect various
+issues (bad certificate, weak cipher suites, Heartbleed, ROBOT, TLS 1.3 support, etc.).</p>
+<p>SSLyze can either be used as command line tool or as a Python library.</p>
+<div class="contents topic" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#sslyze" id="id1">SSLyze</a></p>
+<ul>
+<li><p><a class="reference internal" href="#key-features" id="id2">Key features</a></p></li>
+<li><p><a class="reference internal" href="#installation" id="id3">Installation</a></p></li>
+<li><p><a class="reference internal" href="#running-scans-with-the-cli" id="id4">Running scans with the CLI</a></p></li>
+<li><p><a class="reference internal" href="#runing-scans-with-the-python-api" id="id5">Runing scans with the Python API</a></p>
+<ul>
+<li><p><a class="reference internal" href="#basic-example" id="id6">Basic example</a></p></li>
+<li><p><a class="reference internal" href="#advanced-usage" id="id7">Advanced usage</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#indices-and-tables" id="id8">Indices and tables</a></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="key-features">
+<h2><a class="toc-backref" href="#id2">Key features</a><a class="headerlink" href="#key-features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Fully documented Python API in order to run scans and process the results directly from Python.</p></li>
+<li><p>Support for TLS 1.3 and early data (0-RTT) testing.</p></li>
+<li><p>Scans are automatically dispatched among multiple workers, making them very fast.</p></li>
+<li><p>Performance testing: session resumption and TLS tickets support.</p></li>
+<li><p>Security testing: weak cipher suites, insecure renegotiation, ROBOT, Heartbleed and more.</p></li>
+<li><p>Server certificate validation and revocation checking through OCSP stapling.</p></li>
+<li><p>Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP, PostGres and FTP.</p></li>
+<li><p>Scan results can be written to a JSON file for further processing.</p></li>
+<li><p>And much more!</p></li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h2><a class="toc-backref" href="#id3">Installation</a><a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>To install SSLyze, simply run this simple command in your terminal of choice:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install --upgrade setuptools
+$ pip install sslyze
 </pre></div>
 </div>
-<p>Using SSLyze as a Python module makes it easy to implement SSL/TLS scanning as part of continuous security
-testing platform, and detect any misconfiguration across a range of public and/or internal endpoints.</p>
+<p>For other options and more details, see:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation of SSLyze</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-pip">Using pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-the-source-code">Using the source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-the-windows-executable">Using the Windows executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-docker">Using Docker</a></li>
+</ul>
+</li>
+</ul>
 </div>
-<div class="section" id="users-guide">
-<h2>User’s Guide<a class="headerlink" href="#users-guide" title="Permalink to this headline">¶</a></h2>
-<p>At high-level, running SSL/TLS scans against a server is a two-step process, described in the following sections:</p>
+</div>
+<div class="section" id="running-scans-with-the-cli">
+<h2><a class="toc-backref" href="#id4">Running scans with the CLI</a><a class="headerlink" href="#running-scans-with-the-cli" title="Permalink to this headline">¶</a></h2>
+<p>The command line interface can be used to easily run server scans, and for example export results to JSON:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m sslyze --regular www.google.com --json_out=results.json
+</pre></div>
+</div>
+<p>A full description of the supported options is available via the help command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m sslyze -h
+</pre></div>
+</div>
+</div>
+<div class="section" id="runing-scans-with-the-python-api">
+<h2><a class="toc-backref" href="#id5">Runing scans with the Python API</a><a class="headerlink" href="#runing-scans-with-the-python-api" title="Permalink to this headline">¶</a></h2>
+<p>The Python API gives full access to SSLyze’s scanning engine in order to make it easy to implement SSL/TLS scanning as
+part of a continuous security testing platform, and detect any misconfiguration across a range of public and/or internal
+endpoints.</p>
+<div class="section" id="basic-example">
+<h3><a class="toc-backref" href="#id6">Basic example</a><a class="headerlink" href="#basic-example" title="Permalink to this headline">¶</a></h3>
+<p>A simple example on how to run a scan follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">basic_example</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Define the server that you want to scan</span>
+    <span class="n">server_location</span> <span class="o">=</span> <span class="n">ServerNetworkLocationViaDirectConnection</span><span class="o">.</span><span class="n">with_ip_address_lookup</span><span class="p">(</span><span class="s2">&quot;www.google.com&quot;</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
+
+    <span class="c1"># Do connectivity testing to ensure SSLyze is able to connect</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">server_info</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">()</span><span class="o">.</span><span class="n">perform</span><span class="p">(</span><span class="n">server_location</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ConnectionToServerFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Could not connect to the server; abort</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error connecting to </span><span class="si">{</span><span class="n">server_location</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Then queue some scan commands for the server</span>
+    <span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">()</span>
+    <span class="n">server_scan_req</span> <span class="o">=</span> <span class="n">ServerScanRequest</span><span class="p">(</span>
+        <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scan</span><span class="p">(</span><span class="n">server_scan_req</span><span class="p">)</span>
+
+    <span class="c1"># Then retrieve the results</span>
+    <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Results for </span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+
+        <span class="c1"># SSL 2.0 results</span>
+        <span class="n">ssl2_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">accepted_cipher_suite</span> <span class="ow">in</span> <span class="n">ssl2_result</span><span class="o">.</span><span class="n">accepted_cipher_suites</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* </span><span class="si">{</span><span class="n">accepted_cipher_suite</span><span class="o">.</span><span class="n">cipher_suite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Certificate info results</span>
+        <span class="n">certinfo_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Certificate info:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cert_deployment</span> <span class="ow">in</span> <span class="n">certinfo_result</span><span class="o">.</span><span class="n">certificate_deployments</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Leaf certificate: </span><span class="se">\n</span><span class="si">{</span><span class="n">cert_deployment</span><span class="o">.</span><span class="n">received_certificate_chain_as_pem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The list of all the scan comands SSLyze can run against a server is available in the following section:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Scan Commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#certificate-information">Certificate Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#cipher-suites">Cipher Suites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#robot">ROBOT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#session-resumption-support">Session Resumption Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#session-resumption-rate">Session Resumption Rate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#crime">CRIME</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#tls-1-3-early-data">TLS 1.3 Early Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#downgrade-prevention">Downgrade Prevention</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#heartbleed">Heartbleed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#http-security-headers">HTTP Security Headers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#openssl-ccs-injection">OpenSSL CCS Injection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#insecure-renegotiation">Insecure Renegotiation</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="advanced-usage">
+<h3><a class="toc-backref" href="#id7">Advanced usage</a><a class="headerlink" href="#advanced-usage" title="Permalink to this headline">¶</a></h3>
+<p>Using the Python API to scan a server is a two-step process, described in more details the following sections:</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="testing-connectivity.html">Step 1: Testing Connectivity to a Server</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="testing-connectivity.html#basic-example">Basic Example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testing-connectivity.html#advanced-usage">Advanced Usage</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="testing-connectivity.html#the-serverconnectivitytester-class">The ServerConnectivityTester class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="testing-connectivity.html#module-sslyze.ssl_settings">Enabling StartTLS and other supported protocols</a></li>
-<li class="toctree-l3"><a class="reference internal" href="testing-connectivity.html#running-scan-commands-through-a-proxy">Running scan commands through a proxy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="testing-connectivity.html#enabling-client-authentication">Enabling client authentication</a></li>
-<li class="toctree-l3"><a class="reference internal" href="testing-connectivity.html#module-sslyze.server_connectivity_info">The ServerConnectivityInfo class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="testing-connectivity.html#main-classes-for-connectivity-testing">Main classes for connectivity testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="testing-connectivity.html#additional-settings-starttls-sni-etc">Additional settings: StartTLS, SNI, etc.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="testing-connectivity.html#running-a-scan-through-a-proxy">Running a scan through a proxy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="testing-connectivity.html#enabling-ssl-tls-client-authentication">Enabling SSL/TLS client authentication</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="running-scan-commands.html">Step 2: Running Scan Commands Against a Server</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="running-scan-commands.html#running-commands-sequentially">Running Commands Sequentially</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="running-scan-commands.html#basic-example">Basic example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="running-scan-commands.html#module-sslyze.synchronous_scanner">The SynchronousScanner class</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="running-scan-commands.html#running-commands-concurrently">Running Commands Concurrently</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="running-scan-commands.html#id1">Basic example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="running-scan-commands.html#module-sslyze.concurrent_scanner">The ConcurrentScanner class</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
-<div class="section" id="available-scan-commands">
-<h2>Available Scan Commands<a class="headerlink" href="#available-scan-commands" title="Permalink to this headline">¶</a></h2>
-<p>The list of all the scan comands SSLyze can run against a server is available in the following section:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Available Scan Commands</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#shared-attributes">Shared Attributes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.certificate_info_plugin">CertificateInfoPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#additional-helper-classes">Additional helper classes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.utils.trust_store.trust_store_repository">Updating the trust stores</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.openssl_cipher_suites_plugin">OpenSslCipherSuitesPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#id1">Additional helper classes</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.compression_plugin">CompressionPlugin</a></li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.fallback_scsv_plugin">FallbackScsvPlugin</a></li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.heartbleed_plugin">HeartbleedPlugin</a></li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.http_headers_plugin">HttpHeadersScanPlugin</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="available-scan-commands.html#id2">Additional helper classes</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.openssl_ccs_injection_plugin">OpenSslCcsInjectionPlugin</a></li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.session_renegotiation_plugin">SessionRenegotiationPlugin</a></li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.session_resumption_plugin">SessionResumptionPlugin</a></li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.robot_plugin">RobotPlugin</a></li>
-<li class="toctree-l2"><a class="reference internal" href="available-scan-commands.html#module-sslyze.plugins.early_data_plugin">EarlyDataPlugin</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
-<div class="section" id="extending-sslyze">
-<h2>Extending SSLyze<a class="headerlink" href="#extending-sslyze" title="Permalink to this headline">¶</a></h2>
-<p>SSLyze is built using a plugin system, which makes it easy to add new capabilities to the tool:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="writing-a-plugin.html">Appendix: Writing Your Own Plugins</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="writing-a-plugin.html#high-level-overview">High Level Overview</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="writing-a-plugin.html#module-sslyze.plugins.plugin_base">Core parent classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running-scan-commands.html#basic-example">Basic Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running-scan-commands.html#advanced-usage">Advanced Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="running-scan-commands.html#related-classes">Related classes</a></li>
 </ul>
 </li>
 </ul>
@@ -275,59 +199,87 @@ testing platform, and detect any misconfiguration across a range of public and/o
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h2><a class="toc-backref" href="#id8">Indices and tables</a><a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
 </div>
+</div>
 
 
-           </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="testing-connectivity.html" class="btn btn-neutral float-right" title="Step 1: Testing Connectivity to a Server" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">SSLyze</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation of SSLyze</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Scan Commands</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="testing-connectivity.html">Step 1: Testing Connectivity to a Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running-scan-commands.html">Step 2: Running Scan Commands Against a Server</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="installation.html" title="next chapter">Installation of SSLyze</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
     </div>
-  
+</div>
+<script>$('#searchbox').show(0);</script>
 
-  <hr/>
 
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2019, SSLyze
 
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-</footer>
+
+
+
 
         </div>
       </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Copyright 2020 Alban Diquet.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
 
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
     
-   
 
-</body>
+    
+  </body>
 </html>

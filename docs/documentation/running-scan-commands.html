@@ -1,233 +1,64 @@
 
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Step 2: Running Scan Commands Against a Server &mdash; SSLyze 2.1.0 documentation</title>
-  
 
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Step 2: Running Scan Commands Against a Server &#8212; SSLyze 3.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Appendix: Available Scan Commands" href="available-scan-commands.html" />
-    <link rel="prev" title="Step 1: Testing Connectivity to a Server" href="testing-connectivity.html" /> 
-</head>
-
-<body class="wy-body-for-nav">
-
+    <link rel="prev" title="Step 1: Testing Connectivity to a Server" href="testing-connectivity.html" />
    
-  <div class="wy-grid-for-nav">
-    
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-          
-
-          
-            <a href="index.html" class="icon icon-home"> SSLyze
-          
-
-          
-          </a>
-
-          
-            
-            
-              <div class="version">
-                2.1.0
-              </div>
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="testing-connectivity.html">Step 1: Testing Connectivity to a Server</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Step 2: Running Scan Commands Against a Server</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#running-commands-sequentially">Running Commands Sequentially</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#basic-example">Basic example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-sslyze.synchronous_scanner">The SynchronousScanner class</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#running-commands-concurrently">Running Commands Concurrently</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">Basic example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-sslyze.concurrent_scanner">The ConcurrentScanner class</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Available Scan Commands</a></li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="writing-a-plugin.html">Appendix: Writing Your Own Plugins</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">SSLyze</a>
-        
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>Step 2: Running Scan Commands Against a Server</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/running-scan-commands.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
             
   <div class="section" id="step-2-running-scan-commands-against-a-server">
 <h1>Step 2: Running Scan Commands Against a Server<a class="headerlink" href="#step-2-running-scan-commands-against-a-server" title="Permalink to this headline">¶</a></h1>
-<p>Every type of scan that SSLyze can run against a server (supported cipher suites, session renegotiation, etc.) is
-represented by a <cite>ScanCommand</cite>.</p>
-<p>Once a <cite>ScanCommand</cite> is run against a server, it returns a <cite>ScanResult</cite> which is an object with attributes containing
-the results of the scan. The list of attributes and what they mean depends on what kind of scan was run (ie. which
-<cite>ScanCommand</cite>).</p>
-<p>All the available <cite>ScanCommands</cite> and corresponding <cite>ScanResults</cite> are described in <a class="reference internal" href="available-scan-commands.html"><span class="doc">Appendix: Available Scan Commands</span></a>.</p>
-<p>As explained in <a class="reference internal" href="testing-connectivity.html"><span class="doc">Step 1: Testing Connectivity to a Server</span></a>, a properly initialized <cite>ServerConnectivityInfo</cite> is needed before the
-corresponding server can be scanned. Then, SSLyze can run <cite>ScanCommands</cite> against this server either:</p>
-<ul class="simple">
-<li><p>Sequentially using the <cite>SynchronousScanner</cite> class.</p></li>
-<li><p>Concurrently using the <cite>ConcurrentScanner</cite> class; this class is slightly more complex to use, but is also a lot faster when running a several <cite>ScanCommand</cite> and/or scanning multiple servers.</p></li>
-</ul>
-<div class="section" id="running-commands-sequentially">
-<h2>Running Commands Sequentially<a class="headerlink" href="#running-commands-sequentially" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="basic-example">
-<h3>Basic example<a class="headerlink" href="#basic-example" title="Permalink to this headline">¶</a></h3>
-<p>The SynchronousScanner class can be used to run <cite>ScanCommands</cite> against a server:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">demo_synchronous_scanner</span><span class="p">():</span>
-    <span class="c1"># Run one scan command to list the server&#39;s TLS 1.0 cipher suites</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">server_tester</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">(</span>
-            <span class="n">hostname</span><span class="o">=</span><span class="s1">&#39;smtp.gmail.com&#39;</span><span class="p">,</span>
-            <span class="n">port</span><span class="o">=</span><span class="mi">587</span><span class="p">,</span>
-            <span class="n">tls_wrapped_protocol</span><span class="o">=</span><span class="n">TlsWrappedProtocolEnum</span><span class="o">.</span><span class="n">STARTTLS_SMTP</span>
-        <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Testing connectivity with </span><span class="si">{server_tester.hostname}</span><span class="s1">:</span><span class="si">{server_tester.port}</span><span class="s1">...&#39;</span><span class="p">)</span>
-        <span class="n">server_info</span> <span class="o">=</span> <span class="n">server_tester</span><span class="o">.</span><span class="n">perform</span><span class="p">()</span>
-    <span class="k">except</span> <span class="n">ServerConnectivityError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="c1"># Could not establish an SSL connection to the server</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Could not connect to </span><span class="si">{e.server_info.hostname}</span><span class="s1">: </span><span class="si">{e.error_message}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-    <span class="n">command</span> <span class="o">=</span> <span class="n">Tlsv10ScanCommand</span><span class="p">()</span>
-
-    <span class="n">synchronous_scanner</span> <span class="o">=</span> <span class="n">SynchronousScanner</span><span class="p">()</span>
-
-    <span class="n">scan_result</span> <span class="o">=</span> <span class="n">synchronous_scanner</span><span class="o">.</span><span class="n">run_scan_command</span><span class="p">(</span><span class="n">server_info</span><span class="p">,</span> <span class="n">command</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">cipher</span> <span class="ow">in</span> <span class="n">scan_result</span><span class="o">.</span><span class="n">accepted_cipher_list</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;    </span><span class="si">{cipher.name}</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="module-sslyze.synchronous_scanner">
-<span id="the-synchronousscanner-class"></span><h3>The SynchronousScanner class<a class="headerlink" href="#module-sslyze.synchronous_scanner" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="sslyze.synchronous_scanner.SynchronousScanner">
-<em class="property">class </em><code class="sig-prename descclassname">sslyze.synchronous_scanner.</code><code class="sig-name descname">SynchronousScanner</code><span class="sig-paren">(</span><em class="sig-param">network_retries=3</em>, <em class="sig-param">network_timeout=5</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.synchronous_scanner.SynchronousScanner" title="Permalink to this definition">¶</a></dt>
-<dd><p>An object to run SSL scanning commands synchronously against a server.</p>
-<dl class="method">
-<dt id="sslyze.synchronous_scanner.SynchronousScanner.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">network_retries=3</em>, <em class="sig-param">network_timeout=5</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.synchronous_scanner.SynchronousScanner.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a scanner for running scanning commands synchronously.</p>
+<p>Every type of scan that SSLyze can run against a server (supported cipher suites, Heartbleed, etc.) is
+represented by a <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code>. Once a <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code> is run against a server, it returns a “result” object with
+attributes containing the results of the scan command.</p>
+<p>All the available <code class="docutils literal notranslate"><span class="pre">ScanCommands</span></code> and corresponding results are described in <a class="reference internal" href="available-scan-commands.html"><span class="doc">Appendix: Scan Commands</span></a>.</p>
+<p>The main class for running these commands is the <code class="docutils literal notranslate"><span class="pre">Scanner</span></code> class, which uses a pool of workers to run
+<code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code> concurrently. It is very fast when scanning a large number of servers, and it has a rate-limiting
+mechanism to avoid DOS-ing a single server against which multiple <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code> are run at the same time.</p>
+<span class="target" id="module-sslyze"></span><dl class="class">
+<dt id="sslyze.Scanner">
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">Scanner</code><span class="sig-paren">(</span><em class="sig-param">per_server_concurrent_connections_limit=None</em>, <em class="sig-param">concurrent_server_scans_limit=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main class to use in order to call and schedule SSLyze’s scan commands from Python.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>network_retries</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – How many times SSLyze should retry a connection that timed out.</p></li>
-<li><p><strong>network_timeout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The time until an ongoing connection times out.</p></li>
+<li><p><strong>per_server_concurrent_connections_limit</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – </p></li>
+<li><p><strong>concurrent_server_scans_limit</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – </p></li>
 </ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="sslyze.Scanner.queue_scan">
+<code class="sig-name descname">queue_scan</code><span class="sig-paren">(</span><em class="sig-param">server_scan</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner.queue_scan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Queue a server scan.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>server_scan</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ServerScanRequest</span></code>) – </p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
@@ -236,211 +67,350 @@ corresponding server can be scanned. Then, SSLyze can run <cite>ScanCommands</ci
 </dd></dl>
 
 <dl class="method">
-<dt id="sslyze.synchronous_scanner.SynchronousScanner.run_scan_command">
-<code class="sig-name descname">run_scan_command</code><span class="sig-paren">(</span><em class="sig-param">server_info</em>, <em class="sig-param">scan_command</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.synchronous_scanner.SynchronousScanner.run_scan_command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a single scan command against a server; will block until the scan command has been completed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo" title="sslyze.server_connectivity_info.ServerConnectivityInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerConnectivityInfo</span></code></a>) – The server’s connectivity information. The test_connectivity_to_server() method must have been
-called first to ensure that the server is online and accessible.</p></li>
-<li><p><strong>scan_command</strong> (<a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">PluginScanCommand</span></code></a>) – The scan command to run against this server.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult" title="sslyze.plugins.plugin_base.PluginScanResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">PluginScanResult</span></code></a></p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The result of the scan command, which will be an instance of the scan command’s
-corresponding PluginScanResult subclass.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="running-commands-concurrently">
-<h2>Running Commands Concurrently<a class="headerlink" href="#running-commands-concurrently" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id1">
-<h3>Basic example<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<p>The <cite>ConcurrentScanner</cite> uses a pool of processes to run <cite>ScanCommands</cite> concurrently. It is very fast when scanning a
-large number of servers, and it has a dispatching mechanism to avoid DOS-ing a single server against which multiple
-<cite>ScanCommand</cite> are run at the same time.</p>
-<p>The commands can be queued using the <cite>queue_scan_command()</cite> method, and the results can later be retrieved using the
-<cite>get_results()</cite> method:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">demo_concurrent_scanner</span><span class="p">():</span>
-    <span class="c1"># Setup the server to scan and ensure it is online/reachable</span>
-    <span class="n">server_info</span> <span class="o">=</span> <span class="n">demo_server_connectivity_tester</span><span class="p">()</span>
-
-    <span class="c1"># Run multiple scan commands concurrently. It is much faster than the SynchronousScanner</span>
-    <span class="n">concurrent_scanner</span> <span class="o">=</span> <span class="n">ConcurrentScanner</span><span class="p">()</span>
-
-    <span class="c1"># Queue some scan commands</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Queuing some commands...&#39;</span><span class="p">)</span>
-    <span class="n">concurrent_scanner</span><span class="o">.</span><span class="n">queue_scan_command</span><span class="p">(</span><span class="n">server_info</span><span class="p">,</span> <span class="n">Tlsv12ScanCommand</span><span class="p">())</span>
-    <span class="n">concurrent_scanner</span><span class="o">.</span><span class="n">queue_scan_command</span><span class="p">(</span><span class="n">server_info</span><span class="p">,</span> <span class="n">CertificateInfoScanCommand</span><span class="p">())</span>
-
-    <span class="c1"># Process the results</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Processing results...&#39;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">scan_result</span> <span class="ow">in</span> <span class="n">concurrent_scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
-        <span class="c1"># All scan results have the corresponding scan_command and server_info as an attribute</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Received result for &quot;{scan_result.scan_command.get_title()}&quot; &#39;</span>
-              <span class="n">f</span><span class="s1">&#39;on </span><span class="si">{scan_result.server_info.hostname}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="c1"># A scan command can fail (as a bug); it is returned as a PluginRaisedExceptionResult</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scan_result</span><span class="p">,</span> <span class="n">PluginRaisedExceptionScanResult</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Scan command failed: {scan_result.scan_command.get_title()}&#39;</span><span class="p">)</span>
-
-        <span class="c1"># Each scan result has attributes with the information yo&#39;re looking for</span>
-        <span class="c1"># All these attributes are documented within each scan command&#39;s module</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scan_result</span><span class="o">.</span><span class="n">scan_command</span><span class="p">,</span> <span class="n">Tlsv12ScanCommand</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">cipher</span> <span class="ow">in</span> <span class="n">scan_result</span><span class="o">.</span><span class="n">accepted_cipher_list</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;    </span><span class="si">{cipher.name}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scan_result</span><span class="o">.</span><span class="n">scan_command</span><span class="p">,</span> <span class="n">CertificateInfoScanCommand</span><span class="p">):</span>
-            <span class="c1"># Print the Common Names within the verified certificate chain</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">scan_result</span><span class="o">.</span><span class="n">verified_certificate_chain</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error: certificate chain is not trusted!&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Certificate chain common names:&#39;</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">cert</span> <span class="ow">in</span> <span class="n">scan_result</span><span class="o">.</span><span class="n">verified_certificate_chain</span><span class="p">:</span>
-                    <span class="n">cert_common_names</span> <span class="o">=</span> <span class="n">cert</span><span class="o">.</span><span class="n">subject</span><span class="o">.</span><span class="n">get_attributes_for_oid</span><span class="p">(</span><span class="n">NameOID</span><span class="o">.</span><span class="n">COMMON_NAME</span><span class="p">)</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;   </span><span class="si">{cert_common_names[0].value}</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="module-sslyze.concurrent_scanner">
-<span id="the-concurrentscanner-class"></span><h3>The ConcurrentScanner class<a class="headerlink" href="#module-sslyze.concurrent_scanner" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="sslyze.concurrent_scanner.ConcurrentScanner">
-<em class="property">class </em><code class="sig-prename descclassname">sslyze.concurrent_scanner.</code><code class="sig-name descname">ConcurrentScanner</code><span class="sig-paren">(</span><em class="sig-param">network_retries=3</em>, <em class="sig-param">network_timeout=5</em>, <em class="sig-param">max_processes_nb=12</em>, <em class="sig-param">max_processes_per_hostname_nb=3</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.concurrent_scanner.ConcurrentScanner" title="Permalink to this definition">¶</a></dt>
-<dd><p>An object to run SSL scanning commands concurrently by dispatching them using a pool of processes.</p>
-<dl class="method">
-<dt id="sslyze.concurrent_scanner.ConcurrentScanner.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">network_retries=3</em>, <em class="sig-param">network_timeout=5</em>, <em class="sig-param">max_processes_nb=12</em>, <em class="sig-param">max_processes_per_hostname_nb=3</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.concurrent_scanner.ConcurrentScanner.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a scanner for running scanning commands concurrently using a pool of processes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>network_retries</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – How many times SSLyze should retry a connection that timed out.</p></li>
-<li><p><strong>network_timeout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The time until an ongoing connection times out.</p></li>
-<li><p><strong>max_processes_nb</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The maximum number of processes to spawn for running scans concurrently.</p></li>
-<li><p><strong>max_processes_per_hostname_nb</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – The maximum number of processes that can be used for running
-scans concurrently against a single server. A lower value will reduce the chances of DOS-ing the server.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sslyze.concurrent_scanner.ConcurrentScanner.queue_scan_command">
-<code class="sig-name descname">queue_scan_command</code><span class="sig-paren">(</span><em class="sig-param">server_info</em>, <em class="sig-param">scan_command</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.concurrent_scanner.ConcurrentScanner.queue_scan_command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Queue a scan command targeting a specific server.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>server_info</strong> (<a class="reference internal" href="testing-connectivity.html#sslyze.server_connectivity_info.ServerConnectivityInfo" title="sslyze.server_connectivity_info.ServerConnectivityInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerConnectivityInfo</span></code></a>) – The server’s connectivity information. The test_connectivity_to_server() method must have been
-called first to ensure that the server is online and accessible.</p></li>
-<li><p><strong>scan_command</strong> (<a class="reference internal" href="writing-a-plugin.html#sslyze.plugins.plugin_base.PluginScanCommand" title="sslyze.plugins.plugin_base.PluginScanCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">PluginScanCommand</span></code></a>) – The scan command to run against this server.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="sslyze.concurrent_scanner.ConcurrentScanner.get_results">
-<code class="sig-name descname">get_results</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.concurrent_scanner.ConcurrentScanner.get_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the result of previously queued scan commands; new commands cannot be queued once this is called.</p>
+<dt id="sslyze.Scanner.get_results">
+<code class="sig-name descname">get_results</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner.get_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return completed server scans.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<a class="reference internal" href="available-scan-commands.html#sslyze.plugins.plugin_base.PluginScanResult" title="sslyze.plugins.plugin_base.PluginScanResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">PluginScanResult</span></code></a>]</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The results of all the scan commands previously queued. Each result will be an instance of the scan
-corresponding command’s PluginScanResult subclass. If there was an unexpected error while running the scan
-command, it will be a ‘PluginRaisedExceptionScanResult’ instance instead.</p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ServerScanResult</span></code>]</p>
 </dd>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<p>The commands can be queued by passing a <code class="docutils literal notranslate"><span class="pre">ServerScanRequest</span></code> to the <code class="docutils literal notranslate"><span class="pre">Scanner.queue_scan()</span></code> method.</p>
+<dl class="class">
+<dt id="sslyze.ServerScanRequest">
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ServerScanRequest</code><span class="sig-paren">(</span><em class="sig-param">server_info</em>, <em class="sig-param">scan_commands</em>, <em class="sig-param">scan_commands_extra_arguments=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>A request to scan a specific server with the supplied scan commands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>server_info</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ServerConnectivityInfo</span></code>) – </p></li>
+<li><p><strong>scan_commands</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘certificate_info’, ‘ssl_2_0_cipher_suites’, ‘ssl_3_0_cipher_suites’, ‘tls_1_0_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_2_cipher_suites’, ‘tls_1_3_cipher_suites’, ‘tls_compression’, ‘tls_1_3_early_data’, ‘openssl_ccs_injection’, ‘tls_fallback_scsv’, ‘heartbleed’, ‘robot’, ‘session_renegotiation’, ‘session_resumption’, ‘session_resumption_rate’, ‘http_headers’]]) – </p></li>
+<li><p><strong>scan_commands_extra_arguments</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandExtraArgumentsDict</span></code>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>The results can later be retrieved using the <code class="docutils literal notranslate"><span class="pre">Scanner.get_results()</span></code> method, which returns an iterable of
+<code class="docutils literal notranslate"><span class="pre">ServerScanResult</span></code>. Each result is returned as soon as the server scan was completed.</p>
+<dl class="class">
+<dt id="sslyze.ServerScanResult">
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ServerScanResult</code><span class="sig-paren">(</span><em class="sig-param">scan_commands_results</em>, <em class="sig-param">scan_commands_errors</em>, <em class="sig-param">server_info</em>, <em class="sig-param">scan_commands</em>, <em class="sig-param">scan_commands_extra_arguments</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>The result of a ServerScanRequest that was completed by a Scanner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scan_commands_results</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandResultsDict</span></code>) – </p></li>
+<li><p><strong>scan_commands_errors</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘certificate_info’, ‘ssl_2_0_cipher_suites’, ‘ssl_3_0_cipher_suites’, ‘tls_1_0_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_2_cipher_suites’, ‘tls_1_3_cipher_suites’, ‘tls_compression’, ‘tls_1_3_early_data’, ‘openssl_ccs_injection’, ‘tls_fallback_scsv’, ‘heartbleed’, ‘robot’, ‘session_renegotiation’, ‘session_resumption’, ‘session_resumption_rate’, ‘http_headers’], <code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandError</span></code>]) – </p></li>
+<li><p><strong>server_info</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ServerConnectivityInfo</span></code>) – </p></li>
+<li><p><strong>scan_commands</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘certificate_info’, ‘ssl_2_0_cipher_suites’, ‘ssl_3_0_cipher_suites’, ‘tls_1_0_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_2_cipher_suites’, ‘tls_1_3_cipher_suites’, ‘tls_compression’, ‘tls_1_3_early_data’, ‘openssl_ccs_injection’, ‘tls_fallback_scsv’, ‘heartbleed’, ‘robot’, ‘session_renegotiation’, ‘session_resumption’, ‘session_resumption_rate’, ‘http_headers’]]) – </p></li>
+<li><p><strong>scan_commands_extra_arguments</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandExtraArgumentsDict</span></code>) – </p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="class">
-<dt id="sslyze.concurrent_scanner.PluginRaisedExceptionScanResult">
-<em class="property">class </em><code class="sig-prename descclassname">sslyze.concurrent_scanner.</code><code class="sig-name descname">PluginRaisedExceptionScanResult</code><span class="sig-paren">(</span><em class="sig-param">server_info</em>, <em class="sig-param">scan_command</em>, <em class="sig-param">exception</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.concurrent_scanner.PluginRaisedExceptionScanResult" title="Permalink to this definition">¶</a></dt>
-<dd><p>The result returned when a scan command threw an exception while being run by a ConcurrentScanner.</p>
+<dt id="sslyze.ScanCommandResultsDict">
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandResultsDict</code><a class="headerlink" href="#sslyze.ScanCommandResultsDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary of results for every scan command that was scheduled against a specific server.</p>
 <dl class="attribute">
-<dt id="sslyze.concurrent_scanner.PluginRaisedExceptionScanResult.error_message">
-<code class="sig-name descname">error_message</code><a class="headerlink" href="#sslyze.concurrent_scanner.PluginRaisedExceptionScanResult.error_message" title="Permalink to this definition">¶</a></dt>
-<dd><p>Text-formatted details about the exception that occurred.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
+<dt id="sslyze.ScanCommandResultsDict.certificate_info">
+<code class="sig-name descname">certificate_info</code><em class="property">: CertificateInfoScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.certificate_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.ssl_2_0_cipher_suites">
+<code class="sig-name descname">ssl_2_0_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.ssl_2_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.ssl_3_0_cipher_suites">
+<code class="sig-name descname">ssl_3_0_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.ssl_3_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.tls_1_0_cipher_suites">
+<code class="sig-name descname">tls_1_0_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.tls_1_1_cipher_suites">
+<code class="sig-name descname">tls_1_1_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_1_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.tls_1_2_cipher_suites">
+<code class="sig-name descname">tls_1_2_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_2_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.tls_1_3_cipher_suites">
+<code class="sig-name descname">tls_1_3_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_3_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.tls_compression">
+<code class="sig-name descname">tls_compression</code><em class="property">: CompressionScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_compression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.tls_1_3_early_data">
+<code class="sig-name descname">tls_1_3_early_data</code><em class="property">: EarlyDataScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_3_early_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.openssl_ccs_injection">
+<code class="sig-name descname">openssl_ccs_injection</code><em class="property">: OpenSslCcsInjectionScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.openssl_ccs_injection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.tls_fallback_scsv">
+<code class="sig-name descname">tls_fallback_scsv</code><em class="property">: FallbackScsvScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_fallback_scsv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.heartbleed">
+<code class="sig-name descname">heartbleed</code><em class="property">: HeartbleedScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.heartbleed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.robot">
+<code class="sig-name descname">robot</code><em class="property">: RobotScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.robot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.session_renegotiation">
+<code class="sig-name descname">session_renegotiation</code><em class="property">: SessionRenegotiationScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_renegotiation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.session_resumption">
+<code class="sig-name descname">session_resumption</code><em class="property">: SessionResumptionSupportScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_resumption" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.session_resumption_rate">
+<code class="sig-name descname">session_resumption_rate</code><em class="property">: SessionResumptionRateScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_resumption_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandResultsDict.http_headers">
+<code class="sig-name descname">http_headers</code><em class="property">: HttpHeadersScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.http_headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
+<div class="section" id="basic-example">
+<h2>Basic Example<a class="headerlink" href="#basic-example" title="Permalink to this headline">¶</a></h2>
+<p>A simple example on how to run some scan commands follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">basic_example</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Define the server that you want to scan</span>
+    <span class="n">server_location</span> <span class="o">=</span> <span class="n">ServerNetworkLocationViaDirectConnection</span><span class="o">.</span><span class="n">with_ip_address_lookup</span><span class="p">(</span><span class="s2">&quot;www.google.com&quot;</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
+
+    <span class="c1"># Do connectivity testing to ensure SSLyze is able to connect</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">server_info</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">()</span><span class="o">.</span><span class="n">perform</span><span class="p">(</span><span class="n">server_location</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ConnectionToServerFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Could not connect to the server; abort</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error connecting to </span><span class="si">{</span><span class="n">server_location</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Then queue some scan commands for the server</span>
+    <span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">()</span>
+    <span class="n">server_scan_req</span> <span class="o">=</span> <span class="n">ServerScanRequest</span><span class="p">(</span>
+        <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scan</span><span class="p">(</span><span class="n">server_scan_req</span><span class="p">)</span>
+
+    <span class="c1"># Then retrieve the results</span>
+    <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Results for </span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+
+        <span class="c1"># SSL 2.0 results</span>
+        <span class="n">ssl2_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">accepted_cipher_suite</span> <span class="ow">in</span> <span class="n">ssl2_result</span><span class="o">.</span><span class="n">accepted_cipher_suites</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* </span><span class="si">{</span><span class="n">accepted_cipher_suite</span><span class="o">.</span><span class="n">cipher_suite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Certificate info results</span>
+        <span class="n">certinfo_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Certificate info:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cert_deployment</span> <span class="ow">in</span> <span class="n">certinfo_result</span><span class="o">.</span><span class="n">certificate_deployments</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Leaf certificate: </span><span class="se">\n</span><span class="si">{</span><span class="n">cert_deployment</span><span class="o">.</span><span class="n">received_certificate_chain_as_pem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="advanced-usage">
+<h2>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Permalink to this headline">¶</a></h2>
+<p>The following script provides an example of running scan commands against multiple servers, and processing the results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># First validate that we can connect to the servers we want to scan</span>
+    <span class="n">servers_to_scan</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">hostname</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cloudflare.com&quot;</span><span class="p">,</span> <span class="s2">&quot;google.com&quot;</span><span class="p">]:</span>
+        <span class="n">server_location</span> <span class="o">=</span> <span class="n">ServerNetworkLocationViaDirectConnection</span><span class="o">.</span><span class="n">with_ip_address_lookup</span><span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">server_info</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">()</span><span class="o">.</span><span class="n">perform</span><span class="p">(</span><span class="n">server_location</span><span class="p">)</span>
+            <span class="n">servers_to_scan</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">server_info</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ConnectionToServerFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error connecting to </span><span class="si">{</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">server_location</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+    <span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">()</span>
+
+    <span class="c1"># Then queue some scan commands for each server</span>
+    <span class="k">for</span> <span class="n">server_info</span> <span class="ow">in</span> <span class="n">servers_to_scan</span><span class="p">:</span>
+        <span class="n">server_scan_req</span> <span class="o">=</span> <span class="n">ServerScanRequest</span><span class="p">(</span>
+            <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scan</span><span class="p">(</span><span class="n">server_scan_req</span><span class="p">)</span>
+
+    <span class="c1"># Then retrieve the result of the scan commands for each server</span>
+    <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Results for </span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Scan commands that were run with no errors</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ssl2_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">accepted_cipher_suite</span> <span class="ow">in</span> <span class="n">ssl2_result</span><span class="o">.</span><span class="n">accepted_cipher_suites</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* </span><span class="si">{</span><span class="n">accepted_cipher_suite</span><span class="o">.</span><span class="n">cipher_suite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">certinfo_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Certificate info:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cert_deployment</span> <span class="ow">in</span> <span class="n">certinfo_result</span><span class="o">.</span><span class="n">certificate_deployments</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Leaf certificate: </span><span class="se">\n</span><span class="si">{</span><span class="n">cert_deployment</span><span class="o">.</span><span class="n">received_certificate_chain_as_pem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Scan commands that were run with errors</span>
+        <span class="k">for</span> <span class="n">scan_command</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_errors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Error when running </span><span class="si">{</span><span class="n">scan_command</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">error</span><span class="o">.</span><span class="n">exception_trace</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="related-classes">
+<h3>Related classes<a class="headerlink" href="#related-classes" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="sslyze.ScanCommandErrorsDict">
+<code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandErrorsDict</code><a class="headerlink" href="#sslyze.ScanCommandErrorsDict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="sslyze.ScanCommandErrorReasonEnum">
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandErrorReasonEnum</code><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+<dl class="attribute">
+<dt id="sslyze.ScanCommandErrorReasonEnum.BUG_IN_SSLYZE">
+<code class="sig-name descname">BUG_IN_SSLYZE</code><em class="property"> = 1</em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.BUG_IN_SSLYZE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED">
+<code class="sig-name descname">CLIENT_CERTIFICATE_NEEDED</code><em class="property"> = 2</em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE">
+<code class="sig-name descname">CONNECTIVITY_ISSUE</code><em class="property"> = 3</em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sslyze.ScanCommandErrorReasonEnum.WRONG_USAGE">
+<code class="sig-name descname">WRONG_USAGE</code><em class="property"> = 4</em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.WRONG_USAGE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 </div>
 
 
-           </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="available-scan-commands.html" class="btn btn-neutral float-right" title="Appendix: Available Scan Commands" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="testing-connectivity.html" class="btn btn-neutral float-left" title="Step 1: Testing Connectivity to a Server" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SSLyze</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation of SSLyze</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Scan Commands</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="testing-connectivity.html">Step 1: Testing Connectivity to a Server</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Step 2: Running Scan Commands Against a Server</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-example">Basic Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-usage">Advanced Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#related-classes">Related classes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="testing-connectivity.html" title="previous chapter">Step 1: Testing Connectivity to a Server</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
     </div>
-  
+</div>
+<script>$('#searchbox').show(0);</script>
 
-  <hr/>
 
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2019, SSLyze
 
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-</footer>
+
+
+
 
         </div>
       </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Copyright 2020 Alban Diquet.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/running-scan-commands.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
 
-    </section>
-
-  </div>
-  
-
-
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
     
-   
 
-</body>
+    
+  </body>
 </html>

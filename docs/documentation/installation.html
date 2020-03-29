@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Installation of SSLyze &#8212; SSLyze 3.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Appendix: Scan Commands" href="available-scan-commands.html" />
+    <link rel="prev" title="SSLyze" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="installation-of-sslyze">
+<h1>Installation of SSLyze<a class="headerlink" href="#installation-of-sslyze" title="Permalink to this headline">¶</a></h1>
+<p>This part of the documentation covers the installation of SSLyze.</p>
+<p>SSLyze can be installed on the following platforms:</p>
+<ul class="simple">
+<li><p>Windows 10 (64 bits)</p></li>
+<li><p>macOS Catalina</p></li>
+<li><p>Linux (x86 and x86-64)</p></li>
+</ul>
+<p>Other platforms (such as ARM-based platforms) are not supported.</p>
+<div class="section" id="using-pip">
+<h2>Using pip<a class="headerlink" href="#using-pip" title="Permalink to this headline">¶</a></h2>
+<p>To install SSLyze, simply run this simple command in your terminal of choice:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install --upgrade setuptools
+$ pip install sslyze
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-the-source-code">
+<h2>Using the source code<a class="headerlink" href="#using-the-source-code" title="Permalink to this headline">¶</a></h2>
+<p>SSLyze is actively <a class="reference external" href="https://github.com/nabla-c0d3/sslyze">developed on GitHub</a>.</p>
+<p>You can clone the public repository:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone git://github.com/nabla-c0d3/sslyze.git
+</pre></div>
+</div>
+<p>Once you have a copy of the source, you can embed it in your own Python
+package, or install it into your site-packages easily:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd sslyze
+$ pip install .
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-the-windows-executable">
+<h2>Using the Windows executable<a class="headerlink" href="#using-the-windows-executable" title="Permalink to this headline">¶</a></h2>
+<p>A pre-compiled Windows executable is available in
+<a class="reference external" href="https://github.com/nabla-c0d3/sslyze/releases">the Releases page of the GitHub project</a>.</p>
+<p>This executable only gives access to the command line interface and does not allow using SSLyze’s Python API.</p>
+</div>
+<div class="section" id="using-docker">
+<h2>Using Docker<a class="headerlink" href="#using-docker" title="Permalink to this headline">¶</a></h2>
+<p><cite>Warning: Docker support is experimental.</cite></p>
+<p>By default, the Docker image runs SSLyze with the <cite>-h</cite> flag:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker run --rm -it nablac0d3/sslyze
+
+Usage: sslyze [options] target1.com target2.com:443 target3.com:443{ip} etc...
+ Options:
+  --version             show program&#39;s version number and exit
+  -h, --help            show this help message and exit
+</pre></div>
+</div>
+<p>The image is intended to be run as an executable like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ docker run --rm -it nablac0d3/sslyze --regular www.github.com:443
+</pre></div>
+</div>
+<p>You can create an alias for it by adding the following line to your shell’s rc file (e.g. ~/.bashrc):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ alias &#39;sslyze&#39;=&#39;docker run --rm -it nablac0d3/sslyze&#39;
+$ source ~/.bashrc
+$ sslyze
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SSLyze</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation of SSLyze</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#using-pip">Using pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-the-source-code">Using the source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-the-windows-executable">Using the Windows executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-docker">Using Docker</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Scan Commands</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="testing-connectivity.html">Step 1: Testing Connectivity to a Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running-scan-commands.html">Step 2: Running Scan Commands Against a Server</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">SSLyze</a></li>
+      <li>Next: <a href="available-scan-commands.html" title="next chapter">Appendix: Scan Commands</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Copyright 2020 Alban Diquet.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/installation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

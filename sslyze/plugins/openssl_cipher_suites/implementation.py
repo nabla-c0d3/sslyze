@@ -28,16 +28,15 @@ from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 @dataclass(frozen=True)
 class CipherSuitesScanResult(ScanCommandResult):
-    """The result of running a CipherSuiteScanCommand on a specific server.
+    """The result of testing a server for cipher suites with a specific version of SSL/TLS.
 
     Attributes:
+        tls_version_used: The SSL/TLS version used to connect to the server.
         accepted_ciphers: The list of cipher suites supported supported by both SSLyze and the server.
         rejected_ciphers: The list of cipher suites supported by SSLyze that were rejected by the server.
-        errored_ciphers: The list of cipher suites supported by SSLyze that triggered an unexpected error during the
-            TLS handshake with the server.
-        preferred_cipher: The server's preferred cipher suite among all the cipher suites supported by SSLyze.
-            `None` if the server follows the client's preference or if none of SSLyze's cipher suites are supported by
-            the server.
+        cipher_suite_preferred_by_server: The server's preferred cipher suite among all the cipher suites supported by
+            SSLyze. ``None`` if the server follows the client's preference or if none of SSLyze's cipher suites are
+            supported by the server.
     """
 
     tls_version_used: TlsVersionEnum

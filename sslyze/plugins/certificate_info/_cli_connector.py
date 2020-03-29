@@ -121,7 +121,7 @@ class _CertificateInfoCliConnector(
                 path_txt = f"OK - Certificate is trusted{ev_txt}"
 
             else:
-                path_txt = f"FAILED - Certificate is NOT Trusted: {path_result.openssL_error_string}"
+                path_txt = f"FAILED - Certificate is NOT Trusted: {path_result.openssl_error_string}"
 
             deployment_as_txt.append(
                 cls._format_field(

@@ -38,6 +38,8 @@ class ScanCommandErrorReasonEnum(Enum):
 
 @dataclass(frozen=True)
 class ScanCommandError:
+    """An error that prevented a specific scan command ran against a specific server from completing.
+    ."""
     reason: ScanCommandErrorReasonEnum
     exception_trace: TracebackException
 
@@ -50,8 +52,10 @@ class ScanCommandExtraArgumentsDict(TypedDict, total=False):
 
 @dataclass(frozen=True)
 class ServerScanRequest:
-    server_info: "ServerConnectivityInfo"
-    scan_commands: Set["ScanCommandType"]
+    """A request to scan a specific server with the supplied scan commands.
+    """
+    server_info: ServerConnectivityInfo
+    scan_commands: Set[ScanCommandType]
     scan_commands_extra_arguments: ScanCommandExtraArgumentsDict = field(default_factory=dict)  # type: ignore
 
     def __post_init__(self) -> None:
@@ -67,6 +71,8 @@ class ServerScanRequest:
 
 # TypedDict for simpler/matching JSON output and makes fetching a field easier
 class ScanCommandResultsDict(TypedDict, total=False):
+    """A dictionary of results for every scan command that was scheduled against a specific server.
+    """
     # Field is present if the corresponding scan command was scheduled and was run successfully
     certificate_info: CertificateInfoScanResult
     ssl_2_0_cipher_suites: CipherSuitesScanResult
@@ -92,12 +98,14 @@ ScanCommandErrorsDict = Dict[ScanCommandType, ScanCommandError]
 
 @dataclass(frozen=True)
 class ServerScanResult:
+    """The result of a ServerScanRequest that was completed by a Scanner.
+    """
     scan_commands_results: ScanCommandResultsDict
     scan_commands_errors: ScanCommandErrorsDict
 
     # What was passed in the corresponding ServerScanRequest
-    server_info: "ServerConnectivityInfo"
-    scan_commands: Set["ScanCommandType"]
+    server_info: ServerConnectivityInfo
+    scan_commands: Set[ScanCommandType]
     scan_commands_extra_arguments: ScanCommandExtraArgumentsDict
 
 
@@ -179,7 +187,7 @@ class Scanner:
                 self._queued_future_to_server_and_scan_cmd[future] = (server_scan.server_info, scan_cmd)
 
     def get_results(self) -> Iterable[ServerScanResult]:
-        """Wait for all server scans to complete and return them.
+        """Return completed server scans.
         """
         server_and_scan_cmd_to_completed_futures: Dict[Tuple[ServerConnectivityInfo, ScanCommandType], List[Future]] = {
             server_and_scan_cmd: [] for server_and_scan_cmd in self._queued_future_to_server_and_scan_cmd.values()

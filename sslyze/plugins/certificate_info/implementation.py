@@ -39,7 +39,7 @@ class CertificateInfoScanResult(ScanCommandResult):
     """The result of retrieving and analyzing a server's certificates to verify their validity.
 
     Attributes:
-        hostname_used_for_server_name_indication: The hostname sent by sslyze as the Server Name Indication extension.
+        hostname_used_for_server_name_indication: The hostname sent by SSLyze as the Server Name Indication extension.
         certificate_deployments: A list of leaf certificate detected by SSLyze and the corresponding analysis. Most
             servers only deploy one leaf certificate, but some websites (such as Facebook) return different leaf
             certificates depending on the client, as a way to maximize compatibility with older clients/devices.

@@ -61,7 +61,7 @@ class ServerNetworkLocationViaDirectConnection(ServerNetworkLocation):
 
     @classmethod
     def with_ip_address_lookup(cls, hostname: str, port: int) -> "ServerNetworkLocationViaDirectConnection":
-        """Helper method to automatically do a DNS lookup of the supplied hostname.
+        """Helper factory method to automatically do a DNS lookup of the supplied hostname.
         """
         return cls(hostname=hostname, port=port, ip_address=_do_dns_lookup(hostname, port))
 
@@ -143,7 +143,8 @@ class ClientAuthenticationCredentials:
 
 @dataclass(frozen=True)
 class ServerNetworkConfiguration:
-    """
+    """Additional network settings to provide fine-grained control on how to connect to a specific server.
+
     Attributes:
         tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension.
         tls_wrapped_protocol: The protocol wrapped in TLS that the server expects. It allows SSLyze to figure out

@@ -30,14 +30,14 @@ class PathValidationResult:
             Will be None if the validation failed or the verified chain could not be built.
             Each certificate is parsed using the cryptography module; documentation is available at
             https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
-        openssL_error_string: The result string returned by OpenSSL's validation function; None if validation was
+        openssl_error_string: The result string returned by OpenSSL's validation function; None if validation was
             successful.
         was_validation_successful: Whether the certificate chain is trusted when using supplied the trust_stores.
     """
 
     trust_store: TrustStore
     verified_certificate_chain: Optional[List[Certificate]]
-    openssL_error_string: Optional[str]
+    openssl_error_string: Optional[str]
 
     @property
     def was_validation_successful(self) -> bool:
@@ -83,33 +83,36 @@ class CertificateDeploymentAnalysisResult:
     https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object
 
     Attributes:
-        hostname_used_for_server_name_indication: The hostname sent by sslyze as the Server Name Indication extension.
         received_certificate_chain: The certificate chain sent by the server; index 0 is the leaf certificate.
         verified_certificate_chain: The verified certificate chain returned by OpenSSL for one of the trust stores
-            packaged within SSLyze. Will be None if the validation failed with all of the available trust stores
+            packaged within SSLyze. Will be ``None`` if the validation failed with all of the available trust stores
             (Apple, Mozilla, etc.). This is essentially a shortcut to
-            path_validation_result_list[0].verified_certificate_chain.
+            ``path_validation_result_list[0].verified_certificate_chain``.
         path_validation_results: The result of validating the server's
             certificate chain using each trust store that is packaged with SSLyze (Mozilla, Apple, etc.).
             If for a given trust store, the validation was successful, the verified certificate chain built by OpenSSL
-            can be retrieved from the PathValidationResult.
-        leaf_certificate_subject_matches_hostname
-        leaf_certificate_is_ev: True if the leaf certificate is Extended Validation according to Mozilla.
-        leaf_certificate_has_must_staple_extension
-        leaf_certificate_signed_certificate_timestamps_count (Optional[int]): The number of Signed Certificate
-            Timestamps (SCTs) for Certificate Transparency embedded in the leaf certificate. None if the version of
+            can be retrieved from the ``PathValidationResult``.
+        leaf_certificate_subject_matches_hostname: ``True`` if the leaf certificate's Common Name or Subject Alternative
+            Names match the server's hostname.
+        leaf_certificate_is_ev: ``True`` if the leaf certificate is Extended Validation, according to Mozilla.
+        leaf_certificate_has_must_staple_extension: ``True`` if the OCSP must-staple extension is present in the leaf
+            certificate.
+        leaf_certificate_signed_certificate_timestamps_count: The number of Signed Certificate
+            Timestamps (SCTs) for Certificate Transparency embedded in the leaf certificate. ``None`` if the version of
             OpenSSL installed on the system is too old to be able to parse the SCT extension.
-        received_chain_has_valid_order
-        received_chain_contains_anchor_certificate: True if the server included the anchor/root
-            certificate in the chain it sends back to clients. None if the verified chain could not be built.
-        verified_chain_has_sha1_signature (Optional[bool]): True if any of the leaf or intermediate certificates are
-            signed using the SHA-1 algorithm. None if the verified chain could not be built.
-        verified_chain_has_legacy_symantec_anchor: True if the certificate chain contains a distrusted Symantec anchor
+        received_chain_has_valid_order: ``True`` if the certificate chain returned by the server was sent in the right
+            order.
+        received_chain_contains_anchor_certificate: ``True`` if the server included the anchor/root
+            certificate in the chain it sends back to clients. ``None`` if the verified chain could not be built.
+        verified_chain_has_sha1_signature: ``True`` if any of the leaf or intermediate certificates are
+            signed using the SHA-1 algorithm. ``None`` if the verified chain could not be built.
+        verified_chain_has_legacy_symantec_anchor: ``True`` if the certificate chain contains a distrusted Symantec
+            anchor
             (https://blog.qualys.com/ssllabs/2017/09/26/google-and-mozilla-deprecating-existing-symantec-certificates).
-            None if the verified chain could not be built.
-        ocsp_response: The OCSP response returned by the server. None if no response was sent by the server.
-        ocsp_response_is_trusted: True if the OCSP response is trusted using the Mozilla trust store.
-            None if no OCSP response was sent by the server.
+            ``None`` if the verified chain could not be built.
+        ocsp_response: The OCSP response returned by the server. ``None`` if no response was sent by the server.
+        ocsp_response_is_trusted: ``True`` if the OCSP response is trusted using the Mozilla trust store.
+            ``None`` if no OCSP response was sent by the server.
 
     """
 
@@ -360,5 +363,5 @@ def _verify_certificate_chain(server_certificate_chain: List[str], trust_store: 
         openssl_verify_str = e.openssl_error_string
 
     return PathValidationResult(
-        trust_store=trust_store, verified_certificate_chain=verified_chain, openssL_error_string=openssl_verify_str
+        trust_store=trust_store, verified_certificate_chain=verified_chain, openssl_error_string=openssl_verify_str
     )

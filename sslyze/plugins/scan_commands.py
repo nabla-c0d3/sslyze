@@ -54,6 +54,7 @@ ScanCommandType = Literal[
 class ScanCommand:
     """The list of all scan commands supported by SSLyze.
     """
+
     CERTIFICATE_INFO: Literal["certificate_info"] = "certificate_info"
 
     SSL_2_0_CIPHER_SUITES: Literal["ssl_2_0_cipher_suites"] = "ssl_2_0_cipher_suites"

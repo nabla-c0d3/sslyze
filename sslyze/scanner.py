@@ -40,6 +40,7 @@ class ScanCommandErrorReasonEnum(Enum):
 class ScanCommandError:
     """An error that prevented a specific scan command ran against a specific server from completing.
     ."""
+
     reason: ScanCommandErrorReasonEnum
     exception_trace: TracebackException
 
@@ -54,6 +55,7 @@ class ScanCommandExtraArgumentsDict(TypedDict, total=False):
 class ServerScanRequest:
     """A request to scan a specific server with the supplied scan commands.
     """
+
     server_info: ServerConnectivityInfo
     scan_commands: Set[ScanCommandType]
     scan_commands_extra_arguments: ScanCommandExtraArgumentsDict = field(default_factory=dict)  # type: ignore
@@ -73,6 +75,7 @@ class ServerScanRequest:
 class ScanCommandResultsDict(TypedDict, total=False):
     """A dictionary of results for every scan command that was scheduled against a specific server.
     """
+
     # Field is present if the corresponding scan command was scheduled and was run successfully
     certificate_info: CertificateInfoScanResult
     ssl_2_0_cipher_suites: CipherSuitesScanResult
@@ -100,6 +103,7 @@ ScanCommandErrorsDict = Dict[ScanCommandType, ScanCommandError]
 class ServerScanResult:
     """The result of a ServerScanRequest that was completed by a Scanner.
     """
+
     scan_commands_results: ScanCommandResultsDict
     scan_commands_errors: ScanCommandErrorsDict
 

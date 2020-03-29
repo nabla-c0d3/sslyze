@@ -1,169 +1,172 @@
 
-Appendix: Available Scan Commands
-*********************************
+Appendix: Scan Commands
+#######################
 
-Every type of scan that SSLyze can run against a server (supported cippher suites, session renegotiation, etc.) is
-represented by a `ScanCommand`, which is implemented using a plugin system. Each `ScanCommand` will return a
-`ScanResult` when run against a server.
+Every type of scan that SSLyze can run against a server (supported cipher suites, session renegotiation, etc.) is
+represented by a ``ScanCommand``, which, when run against a server, will return a specific result.
 
-This page lists all the `ScanCommands` and corresponding `ScanResults` available in the current release of SSLyze.
+This page lists all the ``ScanCommand`` and their corresponding results available in the current release of SSLyze.
 
+For an example on how to run a ``ScanCommand``, see :doc:`/running-scan-commands`.
 
-Shared Attributes
-=================
+.. contents::
+   :depth: 2
 
-The `ScanResult` classes described in this section have specific attributes containing the result of a specific
-`ScanCommand`, but also share two attributes.
+The following scan commands are available in the current version of SSLyze:
 
-.. module:: sslyze.plugins.plugin_base
-.. autoclass:: PluginScanResult()
-
-
-CertificateInfoPlugin
-=====================
-
-.. automodule:: sslyze.plugins.certificate_info_plugin
-
-.. autoclass:: CertificateInfoScanCommand()
-   :members: __init__
-.. autoclass:: CertificateInfoScanResult()
-
-
-Additional helper classes
--------------------------
-
-.. autoclass:: PathValidationResult()
-.. autoclass:: PathValidationError()
-.. autoclass:: OcspResponseStatusEnum()
-   :members:
-   :undoc-members:
-.. autoclass:: SymantecDistrustTimelineEnum()
+.. module:: sslyze
+.. autoclass:: ScanCommand
    :members:
    :undoc-members:
 
-.. autoclass:: CertificateChainDeploymentAnalyzer()
-   :members: perform
-.. autoclass:: CertificateChainDeploymentAnalysisResult()
+The next sections describe the result class that corresponds to each scan command.
 
-.. automodule:: sslyze.plugins.utils.trust_store.trust_store
-.. autoclass:: TrustStore()
+Certificate Information
+***********************
 
-Updating the trust stores
--------------------------
+**ScanCommand.CERTIFICATE_INFO**: Retrieve and analyze a server's certificate(s) to verify its validity.
 
-.. automodule:: sslyze.plugins.utils.trust_store.trust_store_repository
-.. autoclass:: TrustStoresRepository()
-   :members: update_default
-
-OpenSslCipherSuitesPlugin
-=========================
-
-.. automodule:: sslyze.plugins.openssl_cipher_suites_plugin
-
-.. autoclass:: Sslv20ScanCommand()
-.. autoclass:: Sslv30ScanCommand()
-.. autoclass:: Tlsv10ScanCommand()
-.. autoclass:: Tlsv11ScanCommand()
-.. autoclass:: Tlsv12ScanCommand()
-.. autoclass:: Tlsv13ScanCommand()
-.. autoclass:: CipherSuiteScanResult()
-
-Additional helper classes
--------------------------
-
-.. autoclass:: AcceptedCipherSuite()
-.. autoclass:: RejectedCipherSuite()
-.. autoclass:: ErroredCipherSuite()
-
-
-CompressionPlugin
-=================
-
-.. automodule:: sslyze.plugins.compression_plugin
-
-.. autoclass:: CompressionScanCommand()
-.. autoclass:: CompressionScanResult()
-
-
-FallbackScsvPlugin
+Optional arguments
 ==================
 
-.. automodule:: sslyze.plugins.fallback_scsv_plugin
+.. autoclass:: CertificateInfoExtraArguments
 
-.. autoclass:: FallbackScsvScanCommand()
-.. autoclass:: FallbackScsvScanResult()
+Result class
+============
 
-
-HeartbleedPlugin
-================
-
-.. automodule:: sslyze.plugins.heartbleed_plugin
-
-.. autoclass:: HeartbleedScanCommand()
-.. autoclass:: HeartbleedScanResult()
-
-
-HttpHeadersScanPlugin
-=====================
-
-.. automodule:: sslyze.plugins.http_headers_plugin
-
-.. autoclass:: HttpHeadersScanCommand()
-.. autoclass:: HttpHeadersScanResult()
-
-Additional helper classes
--------------------------
-
-.. autoclass:: ParsedHstsHeader()
-.. autoclass:: ParsedHpkpHeader()
-.. autoclass:: ParsedExpectCtHeader()
-
-
-OpenSslCcsInjectionPlugin
-=========================
-
-.. automodule:: sslyze.plugins.openssl_ccs_injection_plugin
-
-.. autoclass:: OpenSslCcsInjectionScanCommand()
-.. autoclass:: OpenSslCcsInjectionScanResult()
-
-
-SessionRenegotiationPlugin
-==========================
-
-.. automodule:: sslyze.plugins.session_renegotiation_plugin
-
-.. autoclass:: SessionRenegotiationScanCommand()
-.. autoclass:: SessionRenegotiationScanResult()
-
-
-SessionResumptionPlugin
-=======================
-
-.. automodule:: sslyze.plugins.session_resumption_plugin
-
-.. autoclass:: SessionResumptionSupportScanCommand()
-.. autoclass:: SessionResumptionSupportScanResult()
-
-.. autoclass:: SessionResumptionRateScanCommand()
-.. autoclass:: SessionResumptionRateScanResult()
-
-RobotPlugin
-===========
-
-.. automodule:: sslyze.plugins.robot_plugin
-
-.. autoclass:: RobotScanCommand()
-.. autoclass:: RobotScanResultEnum()
+.. autoclass:: CertificateInfoScanResult
+.. autoclass:: CertificateDeploymentAnalysisResult
+.. autoclass:: PathValidationResult
+.. autoclass:: TrustStore
+.. autoclass:: OcspResponse
+.. autoclass:: OcspResponseStatusEnum
    :members:
    :undoc-members:
-.. autoclass:: RobotScanResult()
 
+Cipher Suites
+*************
 
-EarlyDataPlugin
-===============
+**ScanCommand.SSL_2_0_CIPHER_SUITES**: Test a server for SSL 2.0 support.
+**ScanCommand.SSL_3_0_CIPHER_SUITES**: Test a server for SSL 3.0 support.
+**ScanCommand.TLS_1_0_CIPHER_SUITES**: Test a server for TLS 1.0 support.
+**ScanCommand.TLS_1_1_CIPHER_SUITES**: Test a server for TLS 1.1 support.
+**ScanCommand.TLS_1_2_CIPHER_SUITES**: Test a server for TLS 1.2 support.
+**ScanCommand.TLS_1_3_CIPHER_SUITES**: Test a server for TLS 1.3 support.
 
-.. automodule:: sslyze.plugins.early_data_plugin
+Result class
+============
 
-.. autoclass:: EarlyDataScanCommand()
-.. autoclass:: EarlyDataScanResult()
+.. autoclass:: CipherSuitesScanResult
+.. autoclass:: CipherSuiteRejectedByServer
+.. autoclass:: CipherSuiteAcceptedByServer
+.. autoclass:: EphemeralKeyInfo
+.. autoclass:: CipherSuite
+.. autoclass:: TlsVersionEnum
+   :members:
+   :undoc-members:
+
+ROBOT
+*****
+
+**ScanCommand.ROBOT**: Test a server for the ROBOT vulnerability.
+
+Result class
+============
+
+.. autoclass:: RobotScanResult
+.. autoclass:: RobotScanResultEnum
+   :members:
+   :undoc-members:
+
+Session Resumption Support
+**************************
+
+**ScanCommand.SESSION_RESUMPTION**: Test a server for session resumption support using session IDs and TLS tickets.
+
+Result class
+============
+
+.. autoclass:: SessionResumptionSupportScanResult
+
+Session Resumption Rate
+***********************
+
+**ScanCommand.SESSION_RESUMPTION_RATE**: Measure a server's session resumption rate when attempting 100 resumptions using session IDs.
+
+Result class
+============
+
+.. autoclass:: SessionResumptionRateScanResult
+
+CRIME
+*****
+
+**ScanCommand.TLS_COMPRESSION**: Test a server for TLS compression support, which can be leveraged to perform a CRIME attack.
+
+Result class
+============
+
+.. autoclass:: CompressionScanResult
+
+TLS 1.3 Early Data
+******************
+
+**ScanCommand.TLS_1_3_EARLY_DATA**: Test the server(s) for TLS 1.3 early data support.
+
+Result class
+============
+
+.. autoclass:: EarlyDataScanResult
+
+Downgrade Prevention
+********************
+
+**ScanCommand.TLS_FALLBACK_SCSV**: Test a server for the TLS_FALLBACK_SCSV mechanism to prevent downgrade attacks.
+
+Result class
+============
+
+.. autoclass:: FallbackScsvScanResult
+
+Heartbleed
+**********
+
+**ScanCommand.HEARTBLEED**: Test a server for the OpenSSL Heartbleed vulnerability.
+
+Result class
+============
+
+.. autoclass:: HeartbleedScanResult
+
+HTTP Security Headers
+*********************
+
+**ScanCommand.HTTP_HEADERS**: Test a server for the presence of security-related HTTP headers.
+
+Result class
+============
+
+.. autoclass:: HttpHeadersScanResult
+.. autoclass:: StrictTransportSecurityHeader
+.. autoclass:: PublicKeyPinsHeader
+.. autoclass:: ExpectCtHeader
+
+OpenSSL CCS Injection
+*********************
+
+**ScanCommand.OPENSSL_CCS_INJECTION**: Test a server for the OpenSSL CCS Injection vulnerability (CVE-2014-0224).
+
+Result class
+============
+
+.. autoclass:: OpenSslCcsInjectionScanResult
+
+Insecure Renegotiation
+**********************
+
+**ScanCommand.SESSION_RENEGOTIATION**: Test a server for for insecure TLS renegotiation and client-initiated renegotiation.
+
+Result class
+============
+
+.. autoclass:: SessionRenegotiationScanResult

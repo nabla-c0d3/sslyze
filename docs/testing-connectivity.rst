@@ -1,72 +1,65 @@
 
 Step 1: Testing Connectivity to a Server
-****************************************
+########################################
 
-.. module:: sslyze.server_connectivity_tester
+.. module:: sslyze
+
+.. contents::
+   :depth: 3
 
 Basic Example
-=============
+*************
 
-Before a server can be scanned, SSLyze must ensure that it is able to reach the server. This is achieved using the
-`ServerConnectivityTester` class:
+Before a server can be scanned, SSLyze must validate that it is able to connect to the server. This is done using
+the ``ServerConnectivityTester`` class:
 
 .. literalinclude:: ../api_sample.py
-   :pyobject: demo_server_connectivity_tester
+    :pyobject: basic_example_connectivity_testing
 
-If the call to `ServerConnectivityTester.perform()` is successful, it returns a `ServerConnectivityInfo` object that
-can then be used for scanning the server. This is described in :doc:`running-scan-commands`.
+If the call to ``perform()`` is successful, it returns a ``ServerConnectivityInfo`` object that
+can then be used for scanning the server.
+
+This is described in :doc:`running-scan-commands`.
 
 Advanced Usage
-==============
+**************
 
-The `ServerConnectivityTester` classs provides fine-grained controls regarding how SSLyze should connect to a server. If
-only a hostname is supplied (like in the example above), default values will be used and SSLyze will assume that the
-server is an HTTPS server listening on port 443.
+When calling ``ServerConnectivityTester.perform()``, a ``ServerNetworkConfiguration`` can be optionally provided as the
+second argument, in order to have more control on how SSLyze should connect to the server. This configuration object
+allows for example to configure StarTLS or a client certificate SSL/TLS client authentication.
 
-Several additional settings can be supplied in order to be more specific about the protocol the SSL/TLS server uses
-(such as StartTLS) and how to connect to it (for example by supplying an IP address or a client certificate).
+Main classes for connectivity testing
+=====================================
 
-The ServerConnectivityTester class
-----------------------------------
+.. autoclass:: ServerNetworkLocationViaDirectConnection
+   :members: with_ip_address_lookup
 
-.. autoclass:: ServerConnectivityTester()
-   :members: __init__, perform
-.. autoclass:: ServerConnectivityError()
-.. autoclass:: ServerRejectedConnection()
-.. autoclass:: ConnectionToServerTimedOut()
-.. autoclass:: ServerHostnameCouldNotBeResolved()
-.. autoclass:: ServerTlsConfigurationNotSuportedError()
-.. autoclass:: ProxyConnectivityError()
+.. autoclass:: ServerConnectivityTester
+   :members: perform
 
-Enabling StartTLS and other supported protocols
------------------------------------------------
-
-.. module:: sslyze.ssl_settings
-.. autoclass:: TlsWrappedProtocolEnum
+.. autoclass:: ServerConnectivityInfo
    :undoc-members:
    :members:
 
-Running scan commands through a proxy
--------------------------------------
+Additional settings: StartTLS, SNI, etc.
+========================================
 
-.. autoclass:: HttpConnectTunnelingSettings()
-   :members: __init__, from_url
+.. autoclass:: ServerNetworkConfiguration
+.. autoclass:: ProtocolWithOpportunisticTlsEnum
+   :undoc-members:
+   :members:
 
-Enabling client authentication
-------------------------------
+Running a scan through a proxy
+==============================
 
-.. autoclass:: ClientAuthenticationCredentials()
-   :members: __init__
+.. autoclass:: ServerNetworkLocationViaHttpProxy
+.. autoclass:: HttpProxySettings
+   :members: from_url
 
-.. module:: nassl.ssl_client
+Enabling SSL/TLS client authentication
+======================================
+
+.. autoclass:: ClientAuthenticationCredentials
 .. autoclass:: OpenSslFileTypeEnum
-   :undoc-members:
-   :members:
-
-The ServerConnectivityInfo class
---------------------------------
-
-.. module:: sslyze.server_connectivity_info
-.. autoclass:: ServerConnectivityInfo()
    :undoc-members:
    :members:

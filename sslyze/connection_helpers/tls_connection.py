@@ -244,7 +244,7 @@ class SslConnection:
             time.sleep(delay_for_next_attempt)
             try:
                 self._do_pre_handshake()
-            except socket.timeout as e:
+            except socket.timeout:
                 # Attempt to retry connection if a network error occurred during connection or the handshake
                 connection_attempts_nb += 1
                 if connection_attempts_nb >= max_attempts_nb:
@@ -260,13 +260,13 @@ class SslConnection:
                 else:
                     # Exponential back off; cap maximum delay at 6 seconds
                     delay_for_next_attempt = min(6, 2 * delay_for_next_attempt)
-            except ConnectionError as e:
+            except ConnectionError:
                 raise ServerRejectedConnection(
                     server_location=self._server_location,
                     network_configuration=self._network_configuration,
                     error_message="Server rejected the connection",
                 )
-            except socket.error as e:
+            except socket.error:
                 raise ConnectionToServerFailed(
                     server_location=self._server_location,
                     network_configuration=self._network_configuration,
@@ -284,7 +284,7 @@ class SslConnection:
         except ClientCertificateRequested:
             # Server expected a client certificate and we didn't provide one
             raise
-        except socket.timeout as e:
+        except socket.timeout:
             # Network timeout, propagate the error
             raise ConnectionToServerTimedOut(
                 server_location=self._server_location,

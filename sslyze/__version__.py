@@ -1,4 +1,4 @@
-__title__ = "sslyze"
+__title__ = "SSLyze"
 __version__ = "3.0.0"
 __description__ = "Fast and powerful SSL/TLS scanning library."
 __author__ = "Alban Diquet"

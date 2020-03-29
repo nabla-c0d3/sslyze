@@ -4,8 +4,21 @@ from dataclasses import dataclass
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
 
 
+class InvalidServerNetworkConfigurationError(Exception):
+    """Raised when trying to create a ServerNetworkConfiguration with invalid settings.
+    """
+
+
+class ServerHostnameCouldNotBeResolved(Exception):
+    """Raised when trying to create a ServerNetworkLocationViaDirectConnection with a hostname whose DNS lookup failed.
+    """
+
+
 @dataclass(frozen=True)
 class ConnectionToServerFailed(Exception):
+    """Parent class for all exceptions raised when a connecting to a server failed.
+    """
+
     server_location: ServerNetworkLocation
     network_configuration: ServerNetworkConfiguration
     error_message: str

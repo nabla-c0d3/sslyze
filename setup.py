@@ -50,7 +50,7 @@ project_info = get_project_info()
 
 
 setup(
-    name=project_info["__title__"],
+    name=project_info["__title__"].lower(),
     version=project_info["__version__"],
     description=project_info["__description__"],
     url=project_info["__url__"],

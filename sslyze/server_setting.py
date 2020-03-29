@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 from nassl.ssl_client import OpenSslFileTypeEnum, SslClient
 
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
+from sslyze.errors import InvalidServerNetworkConfigurationError, ServerHostnameCouldNotBeResolved
 
 
 @dataclass(frozen=True)
@@ -24,10 +25,6 @@ class ServerNetworkLocation(ABC):
         # Store the hostname in ACE format in the case the domain name is unicode
         object.__setattr__(self, "hostname", hostname.encode("idna").decode("utf-8"))
         object.__setattr__(self, "port", port)
-
-
-class ServerHostnameCouldNotBeResolved(Exception):
-    pass
 
 
 def _do_dns_lookup(hostname: str, port: int) -> str:
@@ -64,6 +61,8 @@ class ServerNetworkLocationViaDirectConnection(ServerNetworkLocation):
 
     @classmethod
     def with_ip_address_lookup(cls, hostname: str, port: int) -> "ServerNetworkLocationViaDirectConnection":
+        """Helper method to automatically do a DNS lookup of the supplied hostname.
+        """
         return cls(hostname=hostname, port=port, ip_address=_do_dns_lookup(hostname, port))
 
 
@@ -140,10 +139,6 @@ class ClientAuthenticationCredentials:
             client_key_type=self.key_type,
             client_key_password=self.key_password,
         )
-
-
-class InvalidServerNetworkConfigurationError(Exception):
-    pass
 
 
 @dataclass(frozen=True)

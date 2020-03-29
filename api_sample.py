@@ -1,8 +1,11 @@
+from sslyze import (
+    ServerNetworkLocationViaDirectConnection,
+    ServerConnectivityTester,
+    Scanner,
+    ServerScanRequest,
+    ScanCommand,
+)
 from sslyze.errors import ConnectionToServerFailed
-from sslyze.plugins.scan_commands import ScanCommand
-from sslyze.scanner import ServerScanRequest, Scanner
-from sslyze.server_connectivity import ServerConnectivityTester
-from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 
 
 def main() -> None:

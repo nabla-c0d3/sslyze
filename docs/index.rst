@@ -20,14 +20,31 @@ issues (bad certificate, weak cipher suites, Heartbleed, ROBOT, TLS 1.3 support,
 
 SSLyze can either be used as command line tool or as a Python library.
 
-TODO: Cool features similar to rtequests
-scan through an HTTP proxy
-
 .. contents::
    :depth: 3
 
+Key features
+************
+
+* Fully documented Python API in order to run scans and process the results directly from Python.
+* Support for TLS 1.3 and early data (0-RTT) testing.
+* Scans are automatically dispatched among multiple workers, making them very fast.
+* Performance testing: session resumption and TLS tickets support.
+* Security testing: weak cipher suites, insecure renegotiation, ROBOT, Heartbleed and more.
+* Server certificate validation and revocation checking through OCSP stapling.
+* Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP, PostGres and FTP.
+* Scan results can be written to a JSON file for further processing.
+* And much more!
+
 Installation
 ************
+
+To install SSLyze, simply run this simple command in your terminal of choice::
+
+    $ pip install --upgrade setuptools
+    $ pip install sslyze
+
+For other options and more details, see:
 
 .. toctree::
    :maxdepth: 2

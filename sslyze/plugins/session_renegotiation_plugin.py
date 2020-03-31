@@ -175,6 +175,9 @@ def _test_client_renegotiation(
             elif "decryption failed or bad record mac" in e.args[0]:
                 # Some servers such as reddit.com
                 accepts_client_renegotiation = False
+            elif "sslv3 alert unexpected message" in e.args[0]:
+                # traefik https://github.com/nabla-c0d3/sslyze/issues/422
+                accepts_client_renegotiation = False
 
             else:
                 raise

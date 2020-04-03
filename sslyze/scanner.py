@@ -6,7 +6,13 @@ from traceback import TracebackException
 from typing import Dict, Iterable, List, Tuple, Set, Optional
 
 from nassl.ssl_client import ClientCertificateRequested
-from typing_extensions import TypedDict
+
+try:
+    # Python 3.7
+    from typing_extensions import TypedDict
+except ModuleNotFoundError:
+    # Python 3.8+
+    from typing import TypedDict
 
 from sslyze.errors import ConnectionToServerTimedOut
 from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult, CertificateInfoExtraArguments

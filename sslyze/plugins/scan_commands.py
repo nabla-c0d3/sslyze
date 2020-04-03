@@ -1,6 +1,11 @@
 from typing import Dict, Type, TYPE_CHECKING, Set
 
-from typing_extensions import Literal
+try:
+    # Python 3.7
+    from typing_extensions import Literal
+except ModuleNotFoundError:
+    # Python 3.8+
+    from typing import Literal
 
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 from sslyze.plugins.compression_plugin import CompressionImplementation

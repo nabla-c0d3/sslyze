@@ -217,6 +217,8 @@ class CommandLineParser:
                     for ssl_port in ssl_ports:
                         for address in ssl_port.getparent().getparent().xpath("address/@addr"):
                             ssl_endpoints.add("%s:%s" % (address, ssl_port.get("portid")))
+                        for hostname in ssl_port.getparent().getparent().xpath("hostnames/hostname/@name"):
+                            ssl_endpoints.add("%s:%s" % (hostname, ssl_port.get("portid")))
                     args_target_list.extend(list(ssl_endpoints))
                 else:
                     raise CommandLineParsingError(

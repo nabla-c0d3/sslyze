@@ -12,7 +12,7 @@ try:
     from typing_extensions import TypedDict
 except ModuleNotFoundError:
     # Python 3.8+
-    from typing import TypedDict
+    from typing import TypedDict  # type: ignore
 
 from sslyze.errors import ConnectionToServerTimedOut
 from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult, CertificateInfoExtraArguments

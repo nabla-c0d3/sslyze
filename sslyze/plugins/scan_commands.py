@@ -5,7 +5,7 @@ try:
     from typing_extensions import Literal
 except ModuleNotFoundError:
     # Python 3.8+
-    from typing import Literal
+    from typing import Literal  # type: ignore
 
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 from sslyze.plugins.compression_plugin import CompressionImplementation

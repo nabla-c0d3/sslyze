@@ -59,4 +59,5 @@ def build_exe(ctx):
     # type: (Context) -> None
     if platform != "win32":
         raise EnvironmentError("Can only be used on Windows")
+    # WARNING(AD): The resulting executable does not work (_ssl ImportError) if it was built using Python 3.7
     ctx.run("python setup.py build_exe")

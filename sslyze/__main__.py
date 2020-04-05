@@ -7,7 +7,6 @@ from sslyze.cli.output_hub import OutputHub
 from sslyze.__version__ import __version__
 from sslyze.cli.command_line_parser import CommandLineParsingError, CommandLineParser
 import signal
-from multiprocessing import freeze_support
 from time import time
 
 from sslyze.errors import ConnectionToServerFailed
@@ -26,9 +25,6 @@ def sigint_handler(signum: int, frame: Any) -> None:
 
 def main() -> None:
     global global_scanner
-
-    # For py2exe builds
-    freeze_support()
 
     # Handle SIGINT to terminate processes
     signal.signal(signal.SIGINT, sigint_handler)

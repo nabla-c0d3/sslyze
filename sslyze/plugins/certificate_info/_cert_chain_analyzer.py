@@ -1,8 +1,8 @@
-import ssl
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from ssl import CertificateError
+
+from ssl import CertificateError, match_hostname
 from typing import Optional, List, cast
 
 import cryptography
@@ -340,7 +340,7 @@ def _certificate_matches_hostname(certificate: Certificate, server_hostname: str
     }
     # CertificateError is raised on failure
     try:
-        ssl.match_hostname(certificate_names, server_hostname)  # type: ignore
+        match_hostname(certificate_names, server_hostname)  # type: ignore
         return True
     except CertificateError:
         return False

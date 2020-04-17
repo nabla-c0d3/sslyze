@@ -258,6 +258,7 @@ class Scanner:
                 del server_and_scan_cmd_to_completed_futures[server_and_scan_cmd]
 
             # Lastly, have all the scan commands for a given server completed?
+            completed_server_scan_indexes: List[int] = []
             for index, server_scan in enumerate(self._queued_server_scans):
                 scan_commands_processed_count = len(self._pending_server_scan_results[server_scan.server_info]) + len(
                     self._pending_server_scan_errors[server_scan.server_info]
@@ -273,7 +274,10 @@ class Scanner:
                     )
                     del self._pending_server_scan_results[server_scan.server_info]
                     del self._pending_server_scan_errors[server_scan.server_info]
-                    del self._queued_server_scans[index]
+                    completed_server_scan_indexes.append(index)
+
+            for index in completed_server_scan_indexes:
+                del self._queued_server_scans[index]
 
         self._shutdown_thread_pools()
 

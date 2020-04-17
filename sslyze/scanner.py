@@ -276,7 +276,9 @@ class Scanner:
                     del self._pending_server_scan_errors[server_scan.server_info]
                     completed_server_scan_indexes.append(index)
 
-            for index in completed_server_scan_indexes:
+            # Remove the completed server scans - highest to lowest indexes as otherwise indexes to delete would no
+            # longer be valid while the loop is running
+            for index in reversed(completed_server_scan_indexes):
                 del self._queued_server_scans[index]
 
         self._shutdown_thread_pools()

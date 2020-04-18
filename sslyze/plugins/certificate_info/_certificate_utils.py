@@ -4,6 +4,7 @@ from typing import List, cast
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.x509 import ExtensionOID, DNSName, ExtensionNotFound, NameOID
+from cryptography.x509.extensions import DuplicateExtension
 
 
 def extract_dns_subject_alternative_names(certificate: x509.Certificate) -> List[str]:
@@ -16,6 +17,12 @@ def extract_dns_subject_alternative_names(certificate: x509.Certificate) -> List
         subj_alt_names = san_ext_value.get_values_for_type(DNSName)
     except ExtensionNotFound:
         pass
+    except DuplicateExtension:
+        # Fix for https://github.com/nabla-c0d3/sslyze/issues/420
+        # Not sure how browsers behave in this case but having a duplicate extension makes the certificate invalid
+        # so we just return no SANs (likely to make hostname validation fail, which is fine)
+        pass
+
     return subj_alt_names
 
 

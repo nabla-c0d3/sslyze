@@ -110,7 +110,8 @@ class CertificateDeploymentAnalysisResult:
             anchor
             (https://blog.qualys.com/ssllabs/2017/09/26/google-and-mozilla-deprecating-existing-symantec-certificates).
             ``None`` if the verified chain could not be built.
-        ocsp_response: The OCSP response returned by the server. ``None`` if no response was sent by the server.
+        ocsp_response: The OCSP response returned by the server. ``None`` if no response was sent by the server or if
+            the scan was run through an HTTP proxy (the proxy will not forward the server's OCSP response).
         ocsp_response_is_trusted: ``True`` if the OCSP response is trusted using the Mozilla trust store.
             ``None`` if no OCSP response was sent by the server.
 

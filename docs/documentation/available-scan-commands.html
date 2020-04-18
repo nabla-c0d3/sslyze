@@ -297,7 +297,8 @@ anchor
 <dl class="attribute">
 <dt id="sslyze.CertificateDeploymentAnalysisResult.ocsp_response">
 <code class="sig-name descname">ocsp_response</code><a class="headerlink" href="#sslyze.CertificateDeploymentAnalysisResult.ocsp_response" title="Permalink to this definition">¶</a></dt>
-<dd><p>The OCSP response returned by the server. <code class="docutils literal notranslate"><span class="pre">None</span></code> if no response was sent by the server.</p>
+<dd><p>The OCSP response returned by the server. <code class="docutils literal notranslate"><span class="pre">None</span></code> if no response was sent by the server or if
+the scan was run through an HTTP proxy (the proxy will not forward the server’s OCSP response).</p>
 </dd></dl>
 
 <dl class="attribute">

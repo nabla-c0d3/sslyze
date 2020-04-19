@@ -2,6 +2,7 @@ from concurrent.futures._base import Future
 from http.client import HTTPResponse
 
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
@@ -165,27 +166,36 @@ class HttpHeadersImplementation(ScanCommandImplementation[HttpHeadersScanResult,
 
 
 def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> HttpHeadersScanResult:
-    # Perform the TLS handshake
-    ssl_connection = server_info.get_preconfigured_tls_connection()
-    try:
-        ssl_connection.connect()
+    # Send HTTP requests until we no longer received an HTTP redirection, but allow only 4 redirections max
+    redirections_count = 0
+    next_location_path: Optional[str] = "/"
+    while next_location_path and redirections_count < 4:
+        ssl_connection = server_info.get_preconfigured_tls_connection()
+        try:
+            # Perform the TLS handshake
+            ssl_connection.connect()
 
-        # Send an HTTP GET request to the server
-        ssl_connection.ssl_client.write(
-            HttpRequestGenerator.get_request(host=server_info.network_configuration.tls_server_name_indication)
+            # Send an HTTP GET request to the server
+            ssl_connection.ssl_client.write(
+                HttpRequestGenerator.get_request(
+                    host=server_info.network_configuration.tls_server_name_indication, path=next_location_path
+                )
+            )
+            http_response = HttpResponseParser.parse_from_ssl_connection(ssl_connection.ssl_client)
+        finally:
+            ssl_connection.close()
+
+        if http_response.version == 9:
+            # HTTP 0.9 => Probably not an HTTP response
+            raise ValueError("Server did not return an HTTP response")
+
+        # Handle redirection if there is one
+        next_location_path = _detect_http_redirection(
+            http_response=http_response,
+            server_host_name=server_info.network_configuration.tls_server_name_indication,
+            server_port=server_info.server_location.port,
         )
-
-        # We do not follow redirections because the security headers must be set on the first page according to
-        # https://hstspreload.appspot.com/:
-        # "If you are serving an additional redirect from your HTTPS site, that redirect must still have the HSTS
-        # header (rather than the page it redirects to)."
-        http_response = HttpResponseParser.parse_from_ssl_connection(ssl_connection.ssl_client)
-    finally:
-        ssl_connection.close()
-
-    if http_response.version == 9:
-        # HTTP 0.9 => Probably not an HTTP response
-        raise ValueError("Server did not return an HTTP response")
+        redirections_count += 1
 
     # Parse and return each header
     return HttpHeadersScanResult(
@@ -194,6 +204,31 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
         public_key_pins_report_only_header=_parse_hpkp_report_only_header_from_http_response(http_response),
         expect_ct_header=_parse_expect_ct_header_from_http_response(http_response),
     )
+
+
+def _detect_http_redirection(http_response: HTTPResponse, server_host_name: str, server_port: int) -> Optional[str]:
+    """If the HTTP response contains a redirection to the same server, return the path to the new location.
+    """
+    next_location_path = None
+    if 300 <= http_response.status < 400:
+        location_header = _extract_first_header_value(http_response, "Location")
+        if location_header:
+            parsed_location = urlsplit(location_header)
+            is_relative_url = False if parsed_location.hostname else True
+            if is_relative_url:
+                # Yes, to a relative URL; follow the redirection
+                next_location_path = location_header
+            else:
+                is_absolute_url_to_same_hostname = parsed_location.hostname == server_host_name
+                absolute_url_port = 443 if parsed_location.port is None else parsed_location.port
+                is_absolute_url_to_same_port = absolute_url_port == server_port
+                if is_absolute_url_to_same_hostname and is_absolute_url_to_same_port:
+                    # Yes, to an absolute URL to the same server; follow the redirection
+                    next_location_path = f"{parsed_location.path}"
+                    if parsed_location.query:
+                        next_location_path += f"?{parsed_location.query}"
+
+    return next_location_path
 
 
 def _extract_first_header_value(response: HTTPResponse, header_name: str) -> Optional[str]:

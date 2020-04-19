@@ -4,7 +4,7 @@ from sslyze import __version__
 class HttpRequestGenerator:
 
     HTTP_GET_FORMAT = (
-        "GET / HTTP/1.1\r\n"
+        "GET {path} HTTP/1.1\r\n"
         "Host: {host}\r\n"
         "User-Agent: {user_agent}\r\n"
         "Accept: */*\r\n"
@@ -17,8 +17,5 @@ class HttpRequestGenerator:
     )
 
     @classmethod
-    def get_request(cls, host: str, user_agent: str = None) -> bytes:
-        final_user_agent = user_agent
-        if final_user_agent is None:
-            final_user_agent = cls.DEFAULT_USER_AGENT
-        return cls.HTTP_GET_FORMAT.format(host=host, user_agent=final_user_agent).encode("utf-8")
+    def get_request(cls, host: str, path: str = "/") -> bytes:
+        return cls.HTTP_GET_FORMAT.format(host=host, path=path, user_agent=cls.DEFAULT_USER_AGENT).encode("utf-8")

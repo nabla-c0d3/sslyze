@@ -1,7 +1,14 @@
+from dataclasses import dataclass
+from typing import Dict
+
 import pytest
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.plugins.http_headers_plugin import HttpHeadersImplementation, HttpHeadersScanResult
+from sslyze.plugins.http_headers_plugin import (
+    HttpHeadersImplementation,
+    HttpHeadersScanResult,
+    _detect_http_redirection,
+)
 from sslyze.server_connectivity import ServerConnectivityTester
 
 from sslyze.server_setting import (
@@ -100,3 +107,76 @@ class TestHttpHeadersPlugin:
             assert not result.public_key_pins_header
             assert not result.public_key_pins_report_only_header
             assert not result.expect_ct_header
+
+
+@dataclass
+class _MockHttpResponse:
+    status: int
+    _headers: Dict[str, str]
+
+    def getheader(self, name: str, default=None):
+        """Replicate HTTPResponse's API.
+        """
+        return self._headers[name]
+
+
+class TestHttpRedirection:
+    def test_no_redirection(self):
+        # Given an HTTP response with no redirection
+        http_response = _MockHttpResponse(status=200, _headers={},)
+
+        # When it gets parsed
+        next_location_path = _detect_http_redirection(
+            http_response=http_response, server_host_name="lol.com", server_port=443
+        )
+
+        # No new location is returned
+        assert next_location_path is None
+
+    def test_redirection_relative_url(self):
+        # Given an HTTP response with a redirection to a relative URL
+        http_response = _MockHttpResponse(status=302, _headers={"Location": "/newpath"},)
+
+        # When it gets parsed
+        next_location_path = _detect_http_redirection(
+            http_response=http_response, server_host_name="lol.com", server_port=443
+        )
+
+        # The new location is returned
+        assert next_location_path == "/newpath"
+
+    def test_redirection_absolute_url_same_server(self):
+        # Given an HTTP response with a redirection to an absolute URL that points to the same server
+        http_response = _MockHttpResponse(status=302, _headers={"Location": "https://lol.com/newpath"},)
+
+        # When it gets parsed
+        next_location_path = _detect_http_redirection(
+            http_response=http_response, server_host_name="lol.com", server_port=443
+        )
+
+        # The new location is returned
+        assert next_location_path == "/newpath"
+
+    def test_redirection_absolute_url_different_hostname(self):
+        # Given an HTTP response with a redirection to an absolute URL that points to a different hostname
+        http_response = _MockHttpResponse(status=302, _headers={"Location": "https://otherdomain.com/newpath"},)
+
+        # When it gets parsed
+        next_location_path = _detect_http_redirection(
+            http_response=http_response, server_host_name="lol.com", server_port=443
+        )
+
+        # No new location is returned
+        assert next_location_path is None
+
+    def test_redirection_absolute_url_different_port(self):
+        # Given an HTTP response with a redirection to an absolute URL that points to a different port
+        http_response = _MockHttpResponse(status=302, _headers={"Location": "https://lol.com:444/newpath"},)
+
+        # When it gets parsed
+        next_location_path = _detect_http_redirection(
+            http_response=http_response, server_host_name="lol.com", server_port=443
+        )
+
+        # No new location is returned
+        assert next_location_path is None

@@ -7,5 +7,7 @@ install:
   - pipenv install --dev
 script:
   - invoke test
-  - python api_sample.py
-  - python setup.py sdist
+  # Install SSLyze as a module and run the sample script
+  - python setup.py install
+  - cd docs  # Switch folder to avoid conflicts between ./sslyze and the installed sslyze module
+  - python ../api_sample.py

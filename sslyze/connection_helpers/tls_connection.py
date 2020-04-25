@@ -183,10 +183,6 @@ class SslConnection:
                 ignore_client_authentication_requests=should_ignore_client_auth,
             )
 
-        # Add Server Name Indication
-        if nassl_tls_version != OpenSslVersionEnum.SSLV2:
-            self.ssl_client.set_tlsext_host_name(network_configuration.tls_server_name_indication)
-
         # And a default cipher list to make the client hello smaller so we don't run into
         # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
         if nassl_tls_version != OpenSslVersionEnum.TLSV1_3:

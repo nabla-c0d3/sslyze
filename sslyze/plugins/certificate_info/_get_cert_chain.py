@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 import nassl
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested, OpenSslVersionEnum
 
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
@@ -21,6 +21,14 @@ def get_certificate_chain(
 
     # Enable OCSP stapling
     ssl_connection.ssl_client.set_tlsext_status_ocsp()
+
+    # Enable Server Name Indication in order to get the right certificate
+    # We only enable SNI for the certificate_info check because SNI can make other checks miss issues
+    # See https://github.com/nabla-c0d3/sslyze/issues/202
+    if ssl_connection.ssl_client._ssl_version != OpenSslVersionEnum.SSLV2:
+        # SNI is not available with SSL 2.0
+        # TODO(AD): Modify set_tlsext_host_name() to return an exception so we dont need to look at _ssl_version
+        ssl_connection.ssl_client.set_tlsext_host_name(server_info.network_configuration.tls_server_name_indication)
 
     try:
         ssl_connection.connect()

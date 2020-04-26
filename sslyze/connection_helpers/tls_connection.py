@@ -123,6 +123,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "tlsv1 alert decrypt error": "TLS alert: Decrypt error",
     "tlsv1 alert decode error": "TLS alert: Decode error",
     "Connection was shut down by peer": "Server closed the connection during the TLS handshake",
+    "alert bad record mac": "TLS alert: bad record mac",
 }
 
 
@@ -170,6 +171,7 @@ class SslConnection:
             and not final_should_use_legacy_openssl
         ):
             raise ValueError("Cannot use modern OpenSSL with SSL 2.0 or 3.0")
+
         ssl_client_cls = LegacySslClient if final_should_use_legacy_openssl else SslClient
 
         if network_configuration.tls_client_auth_credentials:

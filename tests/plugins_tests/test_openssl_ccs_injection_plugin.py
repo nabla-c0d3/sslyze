@@ -1,4 +1,4 @@
-from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionImplementation, OpenSslCcsInjectionScanResult
+from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionImplementation
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64

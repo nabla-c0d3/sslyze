@@ -124,6 +124,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "tlsv1 alert decode error": "TLS alert: Decode error",
     "Connection was shut down by peer": "Server closed the connection during the TLS handshake",
     "alert bad record mac": "TLS alert: bad record mac",
+    "tlsv1 alert internal error": "TLS alert: Internal error",
 }
 
 

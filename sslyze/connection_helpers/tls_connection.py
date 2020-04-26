@@ -154,6 +154,7 @@ class SslConnection:
         nassl_tls_version = OpenSslVersionEnum(tls_version.value)
         self.ssl_client: BaseSslClient
         # For older versions of TLS/SSL, we have to use a legacy OpenSSL
+        final_should_use_legacy_openssl: bool
         if should_use_legacy_openssl is None:
             # For older versions of TLS/SSL, we have to use a legacy OpenSSL
             final_should_use_legacy_openssl = (
@@ -161,6 +162,14 @@ class SslConnection:
             )
         else:
             final_should_use_legacy_openssl = should_use_legacy_openssl
+
+        if nassl_tls_version == OpenSslVersionEnum.TLSV1_3 and final_should_use_legacy_openssl:
+            raise ValueError("Cannot use legacy OpenSSL with TLS 1.3")
+        elif (
+            nassl_tls_version in [OpenSslVersionEnum.SSLV2, OpenSslVersionEnum.SSLV3]
+            and not final_should_use_legacy_openssl
+        ):
+            raise ValueError("Cannot use modern OpenSSL with SSL 2.0 or 3.0")
         ssl_client_cls = LegacySslClient if final_should_use_legacy_openssl else SslClient
 
         if network_configuration.tls_client_auth_credentials:

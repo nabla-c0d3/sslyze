@@ -193,6 +193,7 @@ class SslConnection:
         if should_enable_server_name_indication and nassl_tls_version != OpenSslVersionEnum.SSLV2:
             # TODO(AD): Modify set_tlsext_host_name() to return an exception so we dont need to look at _ssl_version
             self.ssl_client.set_tlsext_host_name(network_configuration.tls_server_name_indication)
+
     def _do_pre_handshake(self) -> None:
         try:
             sock = _open_socket(self._server_location, self._network_configuration.network_timeout)

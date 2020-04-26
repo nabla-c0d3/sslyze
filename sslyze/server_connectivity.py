@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Optional
 
 from dataclasses import dataclass
+
+from nassl import _nassl
 from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
@@ -10,6 +12,7 @@ from sslyze.errors import (
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
     TlsHandshakeFailed,
+    ConnectionToServerFailed,
 )
 from sslyze.connection_helpers.tls_connection import SslConnection
 
@@ -206,6 +209,17 @@ class ServerConnectivityTester:
                 except TlsHandshakeFailed:
                     # This TLS version did not work; keep going
                     pass
+
+                except (OSError, _nassl.OpenSSLError) as e:
+                    # If these errors get propagated here, it means they're not part of the known/normal errors that
+                    # can happen when trying to connect to a server and defined in tls_connection.py
+                    # Hence we re-raise these as "unknown" connection errors; might be caused by bad connectivity to
+                    # the server (random disconnects, etc.) and the scan against this server should not be performed
+                    raise ConnectionToServerFailed(
+                        server_location=server_location,
+                        network_configuration=final_network_config,
+                        error_message=f'Unexpected connection error: "{e.args}"',
+                    )
 
                 finally:
                     ssl_connection.close()

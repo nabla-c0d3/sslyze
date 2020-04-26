@@ -1,6 +1,7 @@
 import socket
 
 import pytest
+from tests.openssl_server import LegacyOpenSslServer
 
 from sslyze.server_connectivity import ServerConnectivityTester, TlsVersionEnum
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
@@ -8,7 +9,9 @@ from sslyze.errors import (
     ConnectionToServerTimedOut,
     ServerRejectedConnection,
     ServerTlsConfigurationNotSupported,
+    ConnectionToServerFailed,
 )
+from tests.markers import can_only_run_on_linux_64
 
 
 def _is_ipv6_available() -> bool:
@@ -115,3 +118,25 @@ class TestServerConnectivityTester:
         assert server_info.tls_probing_result.client_auth_requirement
         assert server_info.tls_probing_result.highest_tls_version_supported
         assert server_info.tls_probing_result.cipher_suite_supported
+
+    @can_only_run_on_linux_64
+    def test_server_triggers_unexpected_connection_error(self):
+        # Test for https://github.com/nabla-c0d3/sslyze/issues/430
+        # Given a server that will trigger an unexpected / non-normal error during connectivity testing
+        with LegacyOpenSslServer(
+            # We test this behavior using the following error: the server requires the right SNI to be sent...
+            require_server_name_indication_value="server.com"
+        ) as server:
+            server_location = ServerNetworkLocationViaDirectConnection(
+                # ... but SSLyze will send a different value for SNI
+                hostname="not_the_right_value.com",
+                ip_address=server.ip_address,
+                port=server.port,
+            )
+
+            # When testing connectivity against it
+            # It fails and return the generic "connection failed" error, instead of crashing
+            with pytest.raises(ConnectionToServerFailed) as e:
+                ServerConnectivityTester().perform(server_location)
+                # And the actual error / root cause is mentioned in the message
+                assert "unrecognized name" in e.error_message

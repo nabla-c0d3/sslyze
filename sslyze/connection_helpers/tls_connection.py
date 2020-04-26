@@ -278,7 +278,9 @@ class SslConnection:
                     network_configuration=self._network_configuration,
                     error_message="Server rejected the connection",
                 )
-            except socket.error:
+            except OSError:
+                # OSError is the parent class of all socket (ie. non-TLS) connection errors such as socket.timeout or
+                # ConnectionError; hence this is the most generic error handler and should always be defined last
                 raise ConnectionToServerFailed(
                     server_location=self._server_location,
                     network_configuration=self._network_configuration,
@@ -303,7 +305,7 @@ class SslConnection:
                 network_configuration=self._network_configuration,
                 error_message="Connection to server timed out",
             )
-        except socket.error as e:
+        except OSError as e:
             for error_msg in _HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
                 if error_msg in str(e.args):
                     raise ServerRejectedTlsHandshake(

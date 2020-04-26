@@ -83,7 +83,10 @@ def _test_for_ccs_injection(server_info: ServerConnectivityInfo) -> bool:
         # The server uses a recent version of OpenSSL and it cannot be vulnerable to CCS Injection
         return False
 
-    ssl_connection = server_info.get_preconfigured_tls_connection()
+    # Disable SNI for this check because some legacy servers don't support sending the CCS payload and SNI
+    # See https://github.com/nabla-c0d3/sslyze/issues/202
+    ssl_connection = server_info.get_preconfigured_tls_connection(should_enable_server_name_indication=False)
+
     # Replace nassl.sslClient.do_handshake() with a CCS checking SSL handshake so that all the SSLyze options
     # (startTLS, proxy, etc.) still work
     ssl_connection.ssl_client.do_handshake = types.MethodType(  # type: ignore

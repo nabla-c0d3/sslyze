@@ -67,6 +67,7 @@ class ServerConnectivityInfo:
         override_tls_version: Optional[TlsVersionEnum] = None,
         ca_certificates_path: Optional[Path] = None,
         should_use_legacy_openssl: Optional[bool] = None,
+        should_enable_server_name_indication: bool = True,
     ) -> SslConnection:
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
 
@@ -102,6 +103,7 @@ class ServerConnectivityInfo:
             should_ignore_client_auth=should_ignore_client_auth,
             ca_certificates_path=ca_certificates_path,
             should_use_legacy_openssl=should_use_legacy_openssl,
+            should_enable_server_name_indication=should_enable_server_name_indication,
         )
         if final_openssl_cipher_string:
             ssl_connection.ssl_client.set_cipher_list(final_openssl_cipher_string)

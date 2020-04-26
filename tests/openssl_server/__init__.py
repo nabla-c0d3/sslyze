@@ -200,10 +200,22 @@ class LegacyOpenSslServer(_OpenSslServer):
         client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
         openssl_cipher_string: Optional[str] = None,
         should_enable_server_cipher_preference: bool = False,
+        require_server_name_indication_value: Optional[str] = None,
     ) -> None:
+        extra_args = []
+        if require_server_name_indication_value:
+            # Have the server trigger a TLS alert when the client provides an SNI field that is not the supplied name
+            extra_args = [
+                f"-servername {require_server_name_indication_value}",
+                "-servername_fatal",
+                f"-cert2 {self._SERVER_CERT_PATH}",
+                f"-key2 {self._SERVER_KEY_PATH}",
+            ]
+
         super().__init__(
             client_auth_config=client_auth_config,
             openssl_cipher_string=openssl_cipher_string,
+            extra_openssl_args=extra_args,
             should_enable_server_cipher_preference=should_enable_server_cipher_preference,
         )
 

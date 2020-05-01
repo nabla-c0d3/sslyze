@@ -98,15 +98,6 @@ def _open_socket(server_location: ServerNetworkLocation, network_timeout: int) -
         raise ValueError()
 
 
-# The following errors mean that the server explicitly rejected the handshake. The goal to differentiate rejected
-# handshakes from random network errors such as the server going offline, etc.
-_HANDSHAKE_REJECTED_SOCKET_ERRORS = {
-    "Nassl SSL handshake failed": "Server closed the connection: unexpected EOF",
-    "was forcibly closed": "Server closed the connection: received TCP FIN",
-    "reset by peer": "Server closed the connection: received TCP RST",
-}
-
-
 _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "excessive message size": "TLS error: excessive message size",
     "bad mac decode": "TLS error: bad mac decode",
@@ -306,16 +297,22 @@ class SslConnection:
                 network_configuration=self._network_configuration,
                 error_message="Connection to server timed out",
             )
+        except ConnectionError:
+            raise ServerRejectedTlsHandshake(
+                server_location=self._server_location,
+                network_configuration=self._network_configuration,
+                error_message="Server rejected the connection",
+            )
         except OSError as e:
-            for error_msg in _HANDSHAKE_REJECTED_SOCKET_ERRORS.keys():
-                if error_msg in str(e.args):
-                    raise ServerRejectedTlsHandshake(
-                        server_location=self._server_location,
-                        network_configuration=self._network_configuration,
-                        error_message=_HANDSHAKE_REJECTED_SOCKET_ERRORS[error_msg],
-                    )
-
-            # Unknown socket error
+            # OSError is the parent of all (non-TLS) socket/connection errors so it should be last
+            if "Nassl SSL handshake failed" in e.args[0]:
+                # Special error returned by nassl
+                raise ServerRejectedTlsHandshake(
+                    server_location=self._server_location,
+                    network_configuration=self._network_configuration,
+                    error_message="Server rejected the connection",
+                )
+            # Unknown connection error
             raise
         except _nassl.OpenSSLError as e:
             openssl_error_message = e.args[0]

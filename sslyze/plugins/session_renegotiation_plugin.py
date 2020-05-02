@@ -152,12 +152,12 @@ def _test_client_renegotiation(
         except socket.timeout:
             # This is how Netty rejects a renegotiation - https://github.com/nabla-c0d3/sslyze/issues/114
             accepts_client_renegotiation = False
-        except socket.error as e:
-            if "connection was forcibly closed" in str(e.args):
-                accepts_client_renegotiation = False
-            elif "reset by peer" in str(e.args):
-                accepts_client_renegotiation = False
-            elif "Nassl SSL handshake failed" in str(e.args):
+        except ConnectionError:
+            accepts_client_renegotiation = False
+        except OSError as e:
+            # OSError is the parent of all (non-TLS) socket/connection errors so it should be last
+            if "Nassl SSL handshake failed" in e.args[0]:
+                # Special error returned by nassl
                 accepts_client_renegotiation = False
             else:
                 raise

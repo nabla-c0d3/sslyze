@@ -18,11 +18,19 @@ class OutputHub:
         self._output_generator_list: List[OutputGenerator] = []
 
     def command_line_parsed(self, parsed_command_line: ParsedCommandLine) -> None:
+        # Setup console output if needed
         if not parsed_command_line.should_disable_console_output:
             self._output_generator_list.append(ConsoleOutputGenerator(sys.stdout))
 
-        if parsed_command_line.json_file_out:
-            self._output_generator_list.append(JsonOutputGenerator(parsed_command_line.json_file_out))
+        # Setup JSON output if needed
+        json_file_out = None
+        if parsed_command_line.should_print_json_to_console:
+            json_file_out = sys.stdout
+        elif parsed_command_line.json_path_out:
+            json_file_out = parsed_command_line.json_path_out.open("wt", encoding="utf-8")
+
+        if json_file_out:
+            self._output_generator_list.append(JsonOutputGenerator(json_file_out))
 
         # Forward the notification
         for out_generator in self._output_generator_list:

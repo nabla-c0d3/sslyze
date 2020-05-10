@@ -1,11 +1,10 @@
-import sys
 from dataclasses import dataclass
 from optparse import OptionParser, OptionGroup
 
 from pathlib import Path
 
 from nassl.ssl_client import OpenSslFileTypeEnum
-from typing import Set, List, Optional, TextIO
+from typing import Set, List, Optional
 from typing import Tuple
 
 from sslyze.cli.command_line.server_string_parser import InvalidServerStringError, CommandLineServerStringParser
@@ -53,7 +52,8 @@ class ParsedCommandLine:
     scan_commands_extra_arguments: ScanCommandExtraArgumentsDict
 
     # Output settings
-    json_file_out: Optional[TextIO]
+    json_path_out: Optional[Path]
+    should_print_json_to_console: bool
     should_disable_console_output: bool
 
     # Network settings
@@ -154,14 +154,15 @@ class CommandLineParser:
                     setattr(args_command_list, cmd, True)
 
         # Handle JSON settings
-        json_file_out = None
+        should_print_json_to_console = False
+        json_path_out: Optional[Path] = None
         if args_command_list.json_file:
             if args_command_list.json_file == "-":
-                json_file_out = sys.stdout
                 if args_command_list.quiet:
                     raise CommandLineParsingError("Cannot use --quiet with --json_out -.")
+                should_print_json_to_console = True
             else:
-                json_file_out = open(args_command_list.json_file, "wt", encoding="utf-8")
+                json_path_out = Path(args_command_list.json_file).absolute()
 
         # Sanity checks on the client cert options
         client_auth_creds = None
@@ -292,7 +293,8 @@ class CommandLineParser:
             servers_to_scans=good_servers,
             scan_commands=scan_commands,
             scan_commands_extra_arguments=scan_commands_extra_arguments,
-            json_file_out=json_file_out,
+            should_print_json_to_console=should_print_json_to_console,
+            json_path_out=json_path_out,
             should_disable_console_output=args_command_list.quiet or args_command_list.json_file == "-",
             concurrent_server_scans_limit=concurrent_server_scans_limit,
             per_server_concurrent_connections_limit=per_server_concurrent_connections_limit,

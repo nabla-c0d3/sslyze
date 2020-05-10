@@ -1,4 +1,5 @@
-from typing import cast
+from pathlib import Path
+from typing import cast, TextIO, Optional
 
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
@@ -15,6 +16,10 @@ from sslyze.server_setting import (
 
 
 class ConsoleOutputGenerator(OutputGenerator):
+    def __init__(self, file_to: TextIO) -> None:
+        super().__init__(file_to)
+        self._json_path_out: Optional[Path] = None  # Used to print the path where the JSON output was written
+
     @classmethod
     def _format_title(cls, title: str) -> str:
         return f" {title.upper()}\n {'-' * len(title)}\n"
@@ -29,6 +34,8 @@ class ConsoleOutputGenerator(OutputGenerator):
                 f"   {bad_server_str.server_string:<35} => ERROR: {bad_server_str.error_message};"
                 f" discarding scan.\n"
             )
+
+        self._json_path_out = parsed_command_line.json_path_out
 
     def server_connectivity_test_failed(self, connectivity_error: ConnectionToServerFailed) -> None:
         self._file_to.write(
@@ -111,6 +118,8 @@ class ConsoleOutputGenerator(OutputGenerator):
 
     def scans_completed(self, total_scan_time: float) -> None:
         self._file_to.write(self._format_title("Scan Completed in {0:.2f} s".format(total_scan_time)))
+        if self._json_path_out:
+            self._file_to.write(f'\n       Wrote JSON output to "{self._json_path_out}".\n')
 
 
 def _server_location_to_network_route(server_location: ServerNetworkLocation) -> str:

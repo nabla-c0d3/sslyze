@@ -36,6 +36,14 @@ SSLyze can be installed directly via pip:
     $ pip install --upgrade sslyze
     $ python -m sslyze --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
 
+Or using virtualenv:
+
+    $ virtualenv sslyze
+    $ source sslyze/bin/activate
+    $ pip install sslyze
+    $ python -m sslyze --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
+
+
 Documentation
 -------------
 

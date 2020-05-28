@@ -31,6 +31,7 @@ def register_json_serializer_functions() -> None:
     # that contains a _Certificate, asdict() succeeds. Without this, generating JSON for the certinfo scan command
     # will crash because the asdict() function uses deepcopy(), but certificates returned by cryptography.x509
     # don't support it so SSLyze would crash. This class is a workaround to fix JSON output.
+    # I opened an issue about it in the cryptography repo at https://github.com/pyca/cryptography/issues/5129
     def _deepcopy_method_for_x509_certificate(inner_self: _Certificate, memo: str) -> x509.Certificate:
         return x509.load_pem_x509_certificate(inner_self.public_bytes(Encoding.PEM), backend=default_backend())
 

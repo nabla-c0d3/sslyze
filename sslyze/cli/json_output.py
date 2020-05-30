@@ -1,19 +1,12 @@
-import copyreg
 import json
-from base64 import b64encode
 from dataclasses import asdict, dataclass
-from datetime import datetime
-from functools import singledispatch
-from pathlib import Path
-from traceback import TracebackException
-from typing import Dict, Any, TextIO, Union, List
+from typing import TextIO, List
 
-from enum import Enum
 from sslyze.__version__ import __url__, __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 from sslyze.errors import ConnectionToServerFailed
-from sslyze.plugins.scan_commands import ScanCommandsRepository
+from sslyze.json import JsonEncoder
 from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -26,6 +19,9 @@ class _ServerConnectivityErrorAsJson:
 
 @dataclass(frozen=True)
 class _SslyzeOutputAsJson:
+    """The "root" dictionary of the JSON output when using the --json command line option.
+    """
+
     server_scan_results: List[ServerScanResult]
     server_connectivity_errors: List[_ServerConnectivityErrorAsJson]
     total_scan_time: float
@@ -38,12 +34,6 @@ class JsonOutputGenerator(OutputGenerator):
         super().__init__(file_to)
         self._server_connectivity_errors: List[_ServerConnectivityErrorAsJson] = []
         self._server_scan_results: List[ServerScanResult] = []
-
-        # Register all JSON serializer functions defined in plugins
-        for scan_command in ScanCommandsRepository.get_all_scan_commands():
-            ScanCommandsRepository.get_implementation_cls(
-                scan_command
-            ).cli_connector_cls.register_json_serializer_functions()
 
     def command_line_parsed(self, parsed_command_line: ParsedCommandLine) -> None:
         for bad_server_str in parsed_command_line.invalid_servers:
@@ -78,69 +68,5 @@ class JsonOutputGenerator(OutputGenerator):
             total_scan_time=total_scan_time,
         )
         final_json_output_as_dict = asdict(final_json_output)
-        json_out = json.dumps(
-            final_json_output_as_dict, cls=_CustomJsonEncoder, sort_keys=True, indent=4, ensure_ascii=True
-        )
+        json_out = json.dumps(final_json_output_as_dict, cls=JsonEncoder, sort_keys=True, indent=4, ensure_ascii=True)
         self._file_to.write(json_out)
-
-
-# Make TracebackException pickable for dataclasses.asdict() to work on ScanCommandError
-# It's hacky and not the right way to use copyreg, but works for our use case
-def _traceback_to_str(traceback: TracebackException) -> str:
-    exception_trace_as_str = ""
-    for line in traceback.format(chain=False):
-        exception_trace_as_str += line
-    return exception_trace_as_str
-
-
-copyreg.pickle(TracebackException, _traceback_to_str)  # type: ignore
-
-
-# Setup our custom JSON serializer
-JsonType = Union[bool, int, float, str, List[Any], Dict[str, Any]]
-
-
-class _CustomJsonEncoder(json.JSONEncoder):
-    def default(self, obj: Any) -> JsonType:
-        return object_to_json(obj)
-
-
-_default_json_encoder = json.JSONEncoder()
-
-
-# Using singledispatch allows plugins that return custom objects to extend the JSON serializing logic
-@singledispatch
-def object_to_json(obj: Any) -> JsonType:
-    # Assume a default Python type if this function gets called instead of all the registered functions
-    return _default_json_encoder.encode(obj)
-
-
-# Add the functions for serializing basic types
-@object_to_json.register
-def _enum(obj: Enum) -> JsonType:
-    return obj.name
-
-
-@object_to_json.register
-def _set(obj: set) -> JsonType:
-    return list(obj)
-
-
-@object_to_json.register
-def _path(obj: Path) -> JsonType:
-    return str(obj)
-
-
-@object_to_json.register
-def _traceback(obj: TracebackException) -> JsonType:
-    return _traceback_to_str(obj)
-
-
-@object_to_json.register
-def _datetime(obj: datetime) -> JsonType:
-    return obj.isoformat()
-
-
-@object_to_json.register
-def _bytearray(obj: bytearray) -> JsonType:
-    return b64encode(obj).decode("utf-8")

@@ -18,15 +18,7 @@ from sslyze.plugins.certificate_info._certificate_utils import (
 )
 
 
-def register_json_serializer_functions() -> None:
-    # Avoid circular imports
-    from sslyze.cli.json_output import object_to_json
-
-    # Register special deserialization functions
-    object_to_json.register(_oid_to_json)
-    object_to_json.register(_x509_name_to_json)
-    object_to_json.register(_x509_certificate_to_json)
-
+def _monkeypatch_to_fix_certificate_asdict() -> None:
     # H4ck: monkeypatch the _Certificate class to add __deepcopy__() so that when we call asdict() on a dataclass
     # that contains a _Certificate, asdict() succeeds. Without this, generating JSON for the certinfo scan command
     # will crash because the asdict() function uses deepcopy(), but certificates returned by cryptography.x509
@@ -38,7 +30,11 @@ def register_json_serializer_functions() -> None:
     _Certificate.__deepcopy__ = _deepcopy_method_for_x509_certificate
 
 
-def _oid_to_json(obj: ObjectIdentifier) -> Dict[str, str]:
+# Call it on import... hacky but we don't have a choice
+_monkeypatch_to_fix_certificate_asdict()
+
+
+def oid_to_json(obj: ObjectIdentifier) -> Dict[str, str]:
     return {"name": obj._name, "dotted_string": obj.dotted_string}
 
 
@@ -57,7 +53,7 @@ class _X509NameAsJson:
     parsing_error: Optional[str]
 
 
-def _x509_name_to_json(name: x509.Name) -> Dict[str, Any]:
+def x509_name_to_json(name: x509.Name) -> Dict[str, Any]:
     attributes = []
     for attr in name:
         attributes.append(
@@ -68,7 +64,7 @@ def _x509_name_to_json(name: x509.Name) -> Dict[str, Any]:
     return asdict(x509name_as_json)
 
 
-def _x509_certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
+def x509_certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
     result = {
         # Add general info
         "as_pem": certificate.public_bytes(Encoding.PEM).decode("ascii"),

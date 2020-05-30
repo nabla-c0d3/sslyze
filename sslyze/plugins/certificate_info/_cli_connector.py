@@ -13,12 +13,17 @@ from sslyze.plugins.certificate_info._cert_chain_analyzer import (
     OcspResponseStatusEnum,
 )
 from sslyze.plugins.certificate_info._certificate_utils import get_common_names, extract_dns_subject_alternative_names
-from sslyze.plugins.certificate_info._json_output import register_json_serializer_functions
+from sslyze.plugins.certificate_info._json_output import (
+    oid_to_json,
+    x509_name_to_json,
+    x509_certificate_to_json,
+)
 from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption
 
 if TYPE_CHECKING:
     from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult
     from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArguments  # noqa: F401
+    from sslyze.json import JsonSerializerFunction  # noqa: F401
 
 
 class _CertificateInfoCliConnector(
@@ -65,8 +70,8 @@ class _CertificateInfoCliConnector(
         return is_scan_cmd_enabled, extra_arguments
 
     @classmethod
-    def register_json_serializer_functions(cls) -> None:
-        register_json_serializer_functions()
+    def get_json_serializer_functions(cls) -> List["JsonSerializerFunction"]:
+        return [oid_to_json, x509_name_to_json, x509_certificate_to_json]
 
     TRUST_FORMAT = "{store_name} CA Store ({store_version}):"
     NO_VERIFIED_CHAIN_ERROR_TXT = "ERROR - Could not build verified chain (certificate untrusted?)"

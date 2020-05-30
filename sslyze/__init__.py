@@ -25,6 +25,8 @@ from sslyze.server_connectivity import (
 from sslyze.plugins.scan_commands import ScanCommand, ScanCommandType
 from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArguments
 
+from sslyze.json import JsonEncoder
+
 # Classes for scanning the servers
 from sslyze.scanner import (
     ScanCommandError,

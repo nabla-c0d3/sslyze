@@ -8,8 +8,10 @@ from dataclasses import dataclass
 
 from typing import List, Callable, Any, Optional, TYPE_CHECKING, Tuple, ClassVar, Dict, Type, Union, TypeVar, Generic
 
+
 if TYPE_CHECKING:
     from sslyze.server_connectivity import ServerConnectivityInfo
+    from sslyze.json import JsonSerializerFunction  # noqa: F401
 
 
 class ScanCommandResult(ABC):
@@ -131,12 +133,12 @@ class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExt
         return is_scan_cmd_enabled, extra_arguments
 
     @classmethod
-    def register_json_serializer_functions(cls) -> None:
-        """To be overridden if the scan command returns objects that require customer logic to be JSON-serialized.
+    def get_json_serializer_functions(cls) -> List["JsonSerializerFunction"]:
+        """To be overridden if the scan command returns objects that require custom logic to be serialized to JSON.
 
         See certificate_info for an example.
         """
-        pass
+        return []
 
     @classmethod
     @abstractmethod

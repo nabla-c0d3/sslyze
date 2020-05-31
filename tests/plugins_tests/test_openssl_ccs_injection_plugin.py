@@ -6,7 +6,7 @@ from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
 
 class TestOpenSslCcsInjectionPlugin:
-    def test_ccs_injection_good(self):
+    def test_not_vulnerable(self):
         # Given a server that is NOT vulnerable to CCS injection
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
@@ -20,8 +20,24 @@ class TestOpenSslCcsInjectionPlugin:
         # And a CLI output can be generated
         assert OpenSslCcsInjectionImplementation.cli_connector_cls.result_to_console_output(result)
 
+    def test_not_vulnerable_and_server_has_cloudfront_bug(self):
+        # Test for https://github.com/nabla-c0d3/sslyze/issues/437
+        # Given a server that is NOT vulnerable to CCS injection and that is hosted on Cloudfront with the SNI bug
+        server_location = ServerNetworkLocationViaDirectConnection(
+            hostname="amazon.com",
+            port=443,
+            ip_address="13.35.126.17"
+        )
+        server_info = ServerConnectivityTester().perform(server_location)
+
+        # When testing for CCS injection, it succeeds
+        result = OpenSslCcsInjectionImplementation.scan_server(server_info)
+
+        # And the server is reported as not vulnerable
+        assert not result.is_vulnerable_to_ccs_injection
+
     @can_only_run_on_linux_64
-    def test_ccs_injection_bad(self):
+    def test_vulnerable(self):
         # Given a server that is vulnerable to CCS injection
         with LegacyOpenSslServer() as server:
             server_location = ServerNetworkLocationViaDirectConnection(
@@ -39,7 +55,7 @@ class TestOpenSslCcsInjectionPlugin:
         assert OpenSslCcsInjectionImplementation.cli_connector_cls.result_to_console_output(result)
 
     @can_only_run_on_linux_64
-    def test_ccs_injection_bad_and_server_has_sni_bug(self):
+    def test_vulnerable_and_server_has_sni_bug(self):
         # Test for https://github.com/nabla-c0d3/sslyze/issues/202
         # Given a server that is vulnerable to CCS injection and that requires the right SNI to be sent
         server_name_indication = "server.com"

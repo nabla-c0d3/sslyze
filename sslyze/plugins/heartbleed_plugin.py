@@ -15,7 +15,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandCliConnector,
 )
 from tls_parser.alert_protocol import TlsAlertRecord
-from tls_parser.exceptions import NotEnoughData
+from tls_parser.exceptions import NotEnoughData, UnknownTlsVersionByte
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte
 from tls_parser.heartbeat_protocol import TlsHeartbeatRequestRecord
 from tls_parser.parser import TlsRecordParser
@@ -156,6 +156,14 @@ def _do_handshake_with_heartbleed(self):  # type: ignore
         try:
             tls_record, len_consumed = TlsRecordParser.parse_bytes(remaining_bytes)
             remaining_bytes = remaining_bytes[len_consumed::]
+        except UnknownTlsVersionByte as e:
+            # Workaround for Amazon Cloudfront; see https://github.com/nabla-c0d3/sslyze/issues/437
+            if e.record_type == tls_parser.record_protocol.TlsRecordTypeByte.ALERT:
+                # Server returned a (badly-formatted) TLS alert because it requires SNI
+                # Hence the server uses a modern TLS stack and is not vulnerable
+                raise _NotVulnerableToHeartbleed()
+            else:
+                raise
         except NotEnoughData:
             # Try to get more data
             try:

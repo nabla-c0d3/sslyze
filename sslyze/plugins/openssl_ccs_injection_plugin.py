@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from nassl._nassl import WantReadError
+from tls_parser.record_protocol import TlsRecordTypeByte
 
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
@@ -17,7 +18,7 @@ from sslyze.plugins.plugin_base import (
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.application_data_protocol import TlsApplicationDataRecord
 from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
-from tls_parser.exceptions import NotEnoughData
+from tls_parser.exceptions import NotEnoughData, UnknownTlsVersionByte
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte
 from tls_parser.parser import TlsRecordParser
 import tls_parser.tls_version
@@ -144,6 +145,14 @@ def _do_handshake_with_ccs_injection(self):  # type: ignore
         try:
             tls_record, len_consumed = TlsRecordParser.parse_bytes(remaining_bytes)
             remaining_bytes = remaining_bytes[len_consumed::]
+        except UnknownTlsVersionByte as e:
+            # Workaround for Amazon Cloudfront; see https://github.com/nabla-c0d3/sslyze/issues/437
+            if e.record_type == tls_parser.record_protocol.TlsRecordTypeByte.ALERT:
+                # Server returned a (badly-formatted) TLS alert because it requires SNI
+                # Hence the server uses a modern TLS stack and is not vulnerable
+                raise _NotVulnerableToCcsInjection()
+            else:
+                raise
         except NotEnoughData:
             # Try to get more data
             raw_ssl_bytes = self._sock.recv(16381)

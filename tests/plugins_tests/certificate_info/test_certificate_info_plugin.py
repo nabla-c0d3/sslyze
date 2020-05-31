@@ -117,6 +117,7 @@ class TestCertificateInfoPlugin:
         # When running the scan, it succeeds
         CertificateInfoImplementation.scan_server(server_info)
 
+    @pytest.mark.skip("Can no longer build a verified because CA cert expired")
     def test_sha1_chain(self):
         # Given a server to scan that has a SHA1-signed certificate
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(

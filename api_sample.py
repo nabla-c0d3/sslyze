@@ -36,7 +36,7 @@ def main() -> None:
         # Scan commands that were run with no errors
         try:
             ssl2_result = server_scan_result.scan_commands_results[ScanCommand.SSL_2_0_CIPHER_SUITES]
-            print(f"\nAccepted cipher suites for SSL 2.0:")
+            print("\nAccepted cipher suites for SSL 2.0:")
             for accepted_cipher_suite in ssl2_result.accepted_cipher_suites:
                 print(f"* {accepted_cipher_suite.cipher_suite.name}")
         except KeyError:
@@ -98,7 +98,7 @@ def basic_example() -> None:
 
         # SSL 2.0 results
         ssl2_result = server_scan_result.scan_commands_results[ScanCommand.SSL_2_0_CIPHER_SUITES]
-        print(f"\nAccepted cipher suites for SSL 2.0:")
+        print("\nAccepted cipher suites for SSL 2.0:")
         for accepted_cipher_suite in ssl2_result.accepted_cipher_suites:
             print(f"* {accepted_cipher_suite.cipher_suite.name}")
 

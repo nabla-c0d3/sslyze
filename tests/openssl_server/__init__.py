@@ -172,12 +172,12 @@ class _OpenSslServer(ABC):
         return self
 
     def __exit__(self, *args):
-        logging.warning(f"Exiting s_server context")
+        logging.warning("Exiting s_server context")
         self._terminate_process()
         return False
 
     def _terminate_process(self) -> None:
-        logging.warning(f"Shutting down s_server")
+        logging.warning("Shutting down s_server")
         if self._server_io_manager:
             self._server_io_manager.close()
         self._server_io_manager = None

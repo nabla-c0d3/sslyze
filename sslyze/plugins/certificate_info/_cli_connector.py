@@ -110,9 +110,9 @@ class _CertificateInfoCliConnector(
         deployment_as_txt.append(cls._format_subtitle(f"Certificate #{index} - Trust"))
 
         hostname_validation_text = (
-            f"OK - Certificate matches server hostname"
+            "OK - Certificate matches server hostname"
             if cert_deployment.leaf_certificate_subject_matches_hostname
-            else f"FAILED - Certificate does NOT match server hostname"
+            else "FAILED - Certificate does NOT match server hostname"
         )
         deployment_as_txt.append(cls._format_field("Hostname Validation:", hostname_validation_text))
 

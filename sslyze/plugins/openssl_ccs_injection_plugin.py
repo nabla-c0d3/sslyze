@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from nassl._nassl import WantReadError
-from tls_parser.record_protocol import TlsRecordTypeByte
 
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,

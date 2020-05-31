@@ -25,9 +25,7 @@ class TestHeartbleedPlugin:
         # Test for https://github.com/nabla-c0d3/sslyze/issues/437
         # Given a server that is NOT vulnerable to CCS injection and that is hosted on Cloudfront with the SNI bug
         server_location = ServerNetworkLocationViaDirectConnection(
-            hostname="amazon.com",
-            port=443,
-            ip_address="13.35.126.17"
+            hostname="amazon.com", port=443, ip_address="13.35.126.17"
         )
         server_info = ServerConnectivityTester().perform(server_location)
 

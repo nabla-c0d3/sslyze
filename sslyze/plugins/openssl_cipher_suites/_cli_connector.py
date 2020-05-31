@@ -43,9 +43,7 @@ class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult"
 
             # Display some general comments about the cipher suite configuration
             result_as_txt.append(
-                cls._format_subtitle(
-                    "The group of cipher suites supported by the server has the following properties:"
-                )
+                cls._format_subtitle("The group of cipher suites supported by the server has the following properties:")
             )
 
             # Forward secrecy

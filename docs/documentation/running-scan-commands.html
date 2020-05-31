@@ -37,10 +37,106 @@
 represented by a <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code>. Once a <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code> is run against a server, it returns a “result” object with
 attributes containing the results of the scan command.</p>
 <p>All the available <code class="docutils literal notranslate"><span class="pre">ScanCommands</span></code> and corresponding results are described in <a class="reference internal" href="available-scan-commands.html"><span class="doc">Appendix: Scan Commands</span></a>.</p>
+<div class="section" id="basic-example">
+<h2>Basic Example<a class="headerlink" href="#basic-example" title="Permalink to this headline">¶</a></h2>
 <p>The main class for running these commands is the <code class="docutils literal notranslate"><span class="pre">Scanner</span></code> class, which uses a pool of workers to run
 <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code> concurrently. It is very fast when scanning a large number of servers, and it has a rate-limiting
 mechanism to avoid DOS-ing a single server against which multiple <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code> are run at the same time.</p>
-<span class="target" id="module-sslyze"></span><dl class="py class">
+<p>The commands can be queued by passing a <code class="docutils literal notranslate"><span class="pre">ServerScanRequest</span></code> to the <code class="docutils literal notranslate"><span class="pre">Scanner.queue_scan()</span></code> method.</p>
+<p>The results can later be retrieved using the <code class="docutils literal notranslate"><span class="pre">Scanner.get_results()</span></code> method, which returns an iterable of
+<code class="docutils literal notranslate"><span class="pre">ServerScanResult</span></code>. Each result is returned as soon as the server scan was completed.</p>
+<p>A simple example on how to run some scan commands follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">basic_example</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Define the server that you want to scan</span>
+    <span class="n">server_location</span> <span class="o">=</span> <span class="n">ServerNetworkLocationViaDirectConnection</span><span class="o">.</span><span class="n">with_ip_address_lookup</span><span class="p">(</span><span class="s2">&quot;www.google.com&quot;</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
+
+    <span class="c1"># Do connectivity testing to ensure SSLyze is able to connect</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">server_info</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">()</span><span class="o">.</span><span class="n">perform</span><span class="p">(</span><span class="n">server_location</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ConnectionToServerFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Could not connect to the server; abort</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error connecting to </span><span class="si">{</span><span class="n">server_location</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Then queue some scan commands for the server</span>
+    <span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">()</span>
+    <span class="n">server_scan_req</span> <span class="o">=</span> <span class="n">ServerScanRequest</span><span class="p">(</span>
+        <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scan</span><span class="p">(</span><span class="n">server_scan_req</span><span class="p">)</span>
+
+    <span class="c1"># Then retrieve the results</span>
+    <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Results for </span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+
+        <span class="c1"># SSL 2.0 results</span>
+        <span class="n">ssl2_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">accepted_cipher_suite</span> <span class="ow">in</span> <span class="n">ssl2_result</span><span class="o">.</span><span class="n">accepted_cipher_suites</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* </span><span class="si">{</span><span class="n">accepted_cipher_suite</span><span class="o">.</span><span class="n">cipher_suite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Certificate info results</span>
+        <span class="n">certinfo_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Certificate info:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cert_deployment</span> <span class="ow">in</span> <span class="n">certinfo_result</span><span class="o">.</span><span class="n">certificate_deployments</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Leaf certificate: </span><span class="se">\n</span><span class="si">{</span><span class="n">cert_deployment</span><span class="o">.</span><span class="n">received_certificate_chain_as_pem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="advanced-usage">
+<h2>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Permalink to this headline">¶</a></h2>
+<p>The following script provides an example of running scan commands against multiple servers, and processing the results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># First validate that we can connect to the servers we want to scan</span>
+    <span class="n">servers_to_scan</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">hostname</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cloudflare.com&quot;</span><span class="p">,</span> <span class="s2">&quot;google.com&quot;</span><span class="p">]:</span>
+        <span class="n">server_location</span> <span class="o">=</span> <span class="n">ServerNetworkLocationViaDirectConnection</span><span class="o">.</span><span class="n">with_ip_address_lookup</span><span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">server_info</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">()</span><span class="o">.</span><span class="n">perform</span><span class="p">(</span><span class="n">server_location</span><span class="p">)</span>
+            <span class="n">servers_to_scan</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">server_info</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ConnectionToServerFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error connecting to </span><span class="si">{</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">server_location</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+    <span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">()</span>
+
+    <span class="c1"># Then queue some scan commands for each server</span>
+    <span class="k">for</span> <span class="n">server_info</span> <span class="ow">in</span> <span class="n">servers_to_scan</span><span class="p">:</span>
+        <span class="n">server_scan_req</span> <span class="o">=</span> <span class="n">ServerScanRequest</span><span class="p">(</span>
+            <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scan</span><span class="p">(</span><span class="n">server_scan_req</span><span class="p">)</span>
+
+    <span class="c1"># Then retrieve the result of the scan commands for each server</span>
+    <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Results for </span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Scan commands that were run with no errors</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ssl2_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">accepted_cipher_suite</span> <span class="ow">in</span> <span class="n">ssl2_result</span><span class="o">.</span><span class="n">accepted_cipher_suites</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* </span><span class="si">{</span><span class="n">accepted_cipher_suite</span><span class="o">.</span><span class="n">cipher_suite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">certinfo_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Certificate info:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cert_deployment</span> <span class="ow">in</span> <span class="n">certinfo_result</span><span class="o">.</span><span class="n">certificate_deployments</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Leaf certificate: </span><span class="se">\n</span><span class="si">{</span><span class="n">cert_deployment</span><span class="o">.</span><span class="n">received_certificate_chain_as_pem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="c1"># Scan commands that were run with errors</span>
+        <span class="k">for</span> <span class="n">scan_command</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_errors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Error when running </span><span class="si">{</span><span class="n">scan_command</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">error</span><span class="o">.</span><span class="n">exception_trace</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="module-sslyze">
+<span id="related-classes"></span><h2>Related Classes<a class="headerlink" href="#module-sslyze" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
 <dt id="sslyze.Scanner">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">Scanner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">per_server_concurrent_connections_limit</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">concurrent_server_scans_limit</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner" title="Permalink to this definition">¶</a></dt>
 <dd><p>The main class to use in order to call and schedule SSLyze’s scan commands from Python.</p>
@@ -79,7 +175,6 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 
 </dd></dl>
 
-<p>The commands can be queued by passing a <code class="docutils literal notranslate"><span class="pre">ServerScanRequest</span></code> to the <code class="docutils literal notranslate"><span class="pre">Scanner.queue_scan()</span></code> method.</p>
 <dl class="py class">
 <dt id="sslyze.ServerScanRequest">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ServerScanRequest</code><span class="sig-paren">(</span><em class="sig-param">server_info</em>, <em class="sig-param">scan_commands</em>, <em class="sig-param">scan_commands_extra_arguments=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanRequest" title="Permalink to this definition">¶</a></dt>
@@ -95,8 +190,6 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 </dl>
 </dd></dl>
 
-<p>The results can later be retrieved using the <code class="docutils literal notranslate"><span class="pre">Scanner.get_results()</span></code> method, which returns an iterable of
-<code class="docutils literal notranslate"><span class="pre">ServerScanResult</span></code>. Each result is returned as soon as the server scan was completed.</p>
 <dl class="py class">
 <dt id="sslyze.ServerScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ServerScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">scan_commands_results</span></em>, <em class="sig-param"><span class="n">scan_commands_errors</span></em>, <em class="sig-param"><span class="n">server_info</span></em>, <em class="sig-param"><span class="n">scan_commands</span></em>, <em class="sig-param"><span class="n">scan_commands_extra_arguments</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanResult" title="Permalink to this definition">¶</a></dt>
@@ -205,98 +298,6 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 
 </dd></dl>
 
-<div class="section" id="basic-example">
-<h2>Basic Example<a class="headerlink" href="#basic-example" title="Permalink to this headline">¶</a></h2>
-<p>A simple example on how to run some scan commands follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">basic_example</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># Define the server that you want to scan</span>
-    <span class="n">server_location</span> <span class="o">=</span> <span class="n">ServerNetworkLocationViaDirectConnection</span><span class="o">.</span><span class="n">with_ip_address_lookup</span><span class="p">(</span><span class="s2">&quot;www.google.com&quot;</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
-
-    <span class="c1"># Do connectivity testing to ensure SSLyze is able to connect</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">server_info</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">()</span><span class="o">.</span><span class="n">perform</span><span class="p">(</span><span class="n">server_location</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">ConnectionToServerFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="c1"># Could not connect to the server; abort</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error connecting to </span><span class="si">{</span><span class="n">server_location</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span>
-
-    <span class="c1"># Then queue some scan commands for the server</span>
-    <span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">()</span>
-    <span class="n">server_scan_req</span> <span class="o">=</span> <span class="n">ServerScanRequest</span><span class="p">(</span>
-        <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">},</span>
-    <span class="p">)</span>
-    <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scan</span><span class="p">(</span><span class="n">server_scan_req</span><span class="p">)</span>
-
-    <span class="c1"># Then retrieve the results</span>
-    <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Results for </span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
-
-        <span class="c1"># SSL 2.0 results</span>
-        <span class="n">ssl2_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">accepted_cipher_suite</span> <span class="ow">in</span> <span class="n">ssl2_result</span><span class="o">.</span><span class="n">accepted_cipher_suites</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* </span><span class="si">{</span><span class="n">accepted_cipher_suite</span><span class="o">.</span><span class="n">cipher_suite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Certificate info results</span>
-        <span class="n">certinfo_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Certificate info:&quot;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">cert_deployment</span> <span class="ow">in</span> <span class="n">certinfo_result</span><span class="o">.</span><span class="n">certificate_deployments</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Leaf certificate: </span><span class="se">\n</span><span class="si">{</span><span class="n">cert_deployment</span><span class="o">.</span><span class="n">received_certificate_chain_as_pem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="advanced-usage">
-<h2>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Permalink to this headline">¶</a></h2>
-<p>The following script provides an example of running scan commands against multiple servers, and processing the results:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># First validate that we can connect to the servers we want to scan</span>
-    <span class="n">servers_to_scan</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">hostname</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cloudflare.com&quot;</span><span class="p">,</span> <span class="s2">&quot;google.com&quot;</span><span class="p">]:</span>
-        <span class="n">server_location</span> <span class="o">=</span> <span class="n">ServerNetworkLocationViaDirectConnection</span><span class="o">.</span><span class="n">with_ip_address_lookup</span><span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="mi">443</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">server_info</span> <span class="o">=</span> <span class="n">ServerConnectivityTester</span><span class="p">()</span><span class="o">.</span><span class="n">perform</span><span class="p">(</span><span class="n">server_location</span><span class="p">)</span>
-            <span class="n">servers_to_scan</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">server_info</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">ConnectionToServerFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error connecting to </span><span class="si">{</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">server_location</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">return</span>
-
-    <span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">()</span>
-
-    <span class="c1"># Then queue some scan commands for each server</span>
-    <span class="k">for</span> <span class="n">server_info</span> <span class="ow">in</span> <span class="n">servers_to_scan</span><span class="p">:</span>
-        <span class="n">server_scan_req</span> <span class="o">=</span> <span class="n">ServerScanRequest</span><span class="p">(</span>
-            <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">},</span>
-        <span class="p">)</span>
-        <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scan</span><span class="p">(</span><span class="n">server_scan_req</span><span class="p">)</span>
-
-    <span class="c1"># Then retrieve the result of the scan commands for each server</span>
-    <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Results for </span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Scan commands that were run with no errors</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">ssl2_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">]</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">accepted_cipher_suite</span> <span class="ow">in</span> <span class="n">ssl2_result</span><span class="o">.</span><span class="n">accepted_cipher_suites</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* </span><span class="si">{</span><span class="n">accepted_cipher_suite</span><span class="o">.</span><span class="n">cipher_suite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">pass</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">certinfo_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">]</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Certificate info:&quot;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">cert_deployment</span> <span class="ow">in</span> <span class="n">certinfo_result</span><span class="o">.</span><span class="n">certificate_deployments</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Leaf certificate: </span><span class="se">\n</span><span class="si">{</span><span class="n">cert_deployment</span><span class="o">.</span><span class="n">received_certificate_chain_as_pem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="k">pass</span>
-
-        <span class="c1"># Scan commands that were run with errors</span>
-        <span class="k">for</span> <span class="n">scan_command</span><span class="p">,</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_errors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Error when running </span><span class="si">{</span><span class="n">scan_command</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">error</span><span class="o">.</span><span class="n">exception_trace</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="section" id="related-classes">
-<h3>Related classes<a class="headerlink" href="#related-classes" title="Permalink to this headline">¶</a></h3>
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandErrorsDict">
 <code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandErrorsDict</code><a class="headerlink" href="#sslyze.ScanCommandErrorsDict" title="Permalink to this definition">¶</a></dt>
@@ -329,6 +330,26 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 </dd></dl>
 
 </div>
+<div class="section" id="exporting-to-json">
+<h2>Exporting to JSON<a class="headerlink" href="#exporting-to-json" title="Permalink to this headline">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">ServerScanResult</span></code> can be serialized to JSON using SSLyze’s special <code class="docutils literal notranslate"><span class="pre">JsonEncoder</span></code>.</p>
+<dl class="py class">
+<dt id="sslyze.JsonEncoder">
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">JsonEncoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">skipkeys</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ensure_ascii</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">check_circular</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">allow_nan</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">sort_keys</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">indent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">separators</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">default</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.JsonEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Special JSON encoder that can serialize any ServerScanResult returned by SSLyze.</p>
+<p>A ServerScanResult can be serialized to JSON using the following code:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sslyze</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scanner</span> <span class="o">=</span> <span class="n">sslyze</span><span class="o">.</span><span class="n">Scanner</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Queue some ServerScanRequest... and then retrieve the results...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">server_scan_result_as_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">asdict</span><span class="p">(</span><span class="n">server_scan_result</span><span class="p">),</span> <span class="bp">cls</span><span class="o">=</span><span class="n">sslyze</span><span class="o">.</span><span class="n">JsonEncoder</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </div>
 </div>
 
@@ -359,10 +380,9 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 <li class="toctree-l1"><a class="reference internal" href="testing-connectivity.html">Step 1: Testing Connectivity to a Server</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Step 2: Running Scan Commands Against a Server</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#basic-example">Basic Example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#advanced-usage">Advanced Usage</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#related-classes">Related classes</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-usage">Advanced Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-sslyze">Related Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#exporting-to-json">Exporting to JSON</a></li>
 </ul>
 </li>
 </ul>

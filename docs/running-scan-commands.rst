@@ -8,29 +8,18 @@ attributes containing the results of the scan command.
 
 All the available ``ScanCommands`` and corresponding results are described in :doc:`available-scan-commands`.
 
+
+Basic Example
+*************
+
 The main class for running these commands is the ``Scanner`` class, which uses a pool of workers to run
 ``ScanCommand`` concurrently. It is very fast when scanning a large number of servers, and it has a rate-limiting
 mechanism to avoid DOS-ing a single server against which multiple ``ScanCommand`` are run at the same time.
 
-
-.. automodule:: sslyze
-.. autoclass:: Scanner
-   :members:
-
 The commands can be queued by passing a ``ServerScanRequest`` to the ``Scanner.queue_scan()`` method.
-
-.. autoclass:: ServerScanRequest
 
 The results can later be retrieved using the ``Scanner.get_results()`` method, which returns an iterable of
 ``ServerScanResult``. Each result is returned as soon as the server scan was completed.
-
-.. autoclass:: ServerScanResult
-.. autoclass:: ScanCommandResultsDict
-   :undoc-members:
-   :members:
-
-Basic Example
-*************
 
 A simple example on how to run some scan commands follows:
 
@@ -47,10 +36,29 @@ The following script provides an example of running scan commands against multip
     :pyobject: main
 
 
-Related classes
-===============
+Related Classes
+***************
+
+.. automodule:: sslyze
+.. autoclass:: Scanner
+   :members:
+
+.. autoclass:: ServerScanRequest
+
+.. autoclass:: ServerScanResult
+.. autoclass:: ScanCommandResultsDict
+   :undoc-members:
+   :members:
 
 .. autoclass:: ScanCommandErrorsDict
 .. autoclass:: ScanCommandErrorReasonEnum
    :undoc-members:
    :members:
+
+
+Exporting to JSON
+*****************
+
+A ``ServerScanResult`` can be serialized to JSON using SSLyze's special ``JsonEncoder``.
+
+.. autoclass:: JsonEncoder

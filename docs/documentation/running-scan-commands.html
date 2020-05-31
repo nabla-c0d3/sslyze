@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>Step 2: Running Scan Commands Against a Server &#8212; SSLyze 3.0.1 documentation</title>
+    <title>Step 2: Running Scan Commands Against a Server &#8212; SSLyze 3.0.6 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -40,9 +40,9 @@ attributes containing the results of the scan command.</p>
 <p>The main class for running these commands is the <code class="docutils literal notranslate"><span class="pre">Scanner</span></code> class, which uses a pool of workers to run
 <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code> concurrently. It is very fast when scanning a large number of servers, and it has a rate-limiting
 mechanism to avoid DOS-ing a single server against which multiple <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code> are run at the same time.</p>
-<span class="target" id="module-sslyze"></span><dl class="class">
+<span class="target" id="module-sslyze"></span><dl class="py class">
 <dt id="sslyze.Scanner">
-<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">Scanner</code><span class="sig-paren">(</span><em class="sig-param">per_server_concurrent_connections_limit=None</em>, <em class="sig-param">concurrent_server_scans_limit=None</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">Scanner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">per_server_concurrent_connections_limit</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">concurrent_server_scans_limit</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner" title="Permalink to this definition">¶</a></dt>
 <dd><p>The main class to use in order to call and schedule SSLyze’s scan commands from Python.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -52,9 +52,9 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="sslyze.Scanner.queue_scan">
-<code class="sig-name descname">queue_scan</code><span class="sig-paren">(</span><em class="sig-param">server_scan</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner.queue_scan" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">queue_scan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">server_scan</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner.queue_scan" title="Permalink to this definition">¶</a></dt>
 <dd><p>Queue a server scan.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -66,7 +66,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="sslyze.Scanner.get_results">
 <code class="sig-name descname">get_results</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner.get_results" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return completed server scans.</p>
@@ -80,7 +80,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 </dd></dl>
 
 <p>The commands can be queued by passing a <code class="docutils literal notranslate"><span class="pre">ServerScanRequest</span></code> to the <code class="docutils literal notranslate"><span class="pre">Scanner.queue_scan()</span></code> method.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="sslyze.ServerScanRequest">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ServerScanRequest</code><span class="sig-paren">(</span><em class="sig-param">server_info</em>, <em class="sig-param">scan_commands</em>, <em class="sig-param">scan_commands_extra_arguments=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanRequest" title="Permalink to this definition">¶</a></dt>
 <dd><p>A request to scan a specific server with the supplied scan commands.</p>
@@ -97,9 +97,9 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 
 <p>The results can later be retrieved using the <code class="docutils literal notranslate"><span class="pre">Scanner.get_results()</span></code> method, which returns an iterable of
 <code class="docutils literal notranslate"><span class="pre">ServerScanResult</span></code>. Each result is returned as soon as the server scan was completed.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="sslyze.ServerScanResult">
-<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ServerScanResult</code><span class="sig-paren">(</span><em class="sig-param">scan_commands_results</em>, <em class="sig-param">scan_commands_errors</em>, <em class="sig-param">server_info</em>, <em class="sig-param">scan_commands</em>, <em class="sig-param">scan_commands_extra_arguments</em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ServerScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">scan_commands_results</span></em>, <em class="sig-param"><span class="n">scan_commands_errors</span></em>, <em class="sig-param"><span class="n">server_info</span></em>, <em class="sig-param"><span class="n">scan_commands</span></em>, <em class="sig-param"><span class="n">scan_commands_extra_arguments</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of a ServerScanRequest that was completed by a Scanner.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -114,91 +114,91 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="sslyze.ScanCommandResultsDict">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandResultsDict</code><a class="headerlink" href="#sslyze.ScanCommandResultsDict" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dictionary of results for every scan command that was scheduled against a specific server.</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.certificate_info">
 <code class="sig-name descname">certificate_info</code><em class="property">: CertificateInfoScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.certificate_info" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.ssl_2_0_cipher_suites">
 <code class="sig-name descname">ssl_2_0_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.ssl_2_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.ssl_3_0_cipher_suites">
 <code class="sig-name descname">ssl_3_0_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.ssl_3_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_1_0_cipher_suites">
 <code class="sig-name descname">tls_1_0_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_1_1_cipher_suites">
 <code class="sig-name descname">tls_1_1_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_1_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_1_2_cipher_suites">
 <code class="sig-name descname">tls_1_2_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_2_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_1_3_cipher_suites">
 <code class="sig-name descname">tls_1_3_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_3_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_compression">
 <code class="sig-name descname">tls_compression</code><em class="property">: CompressionScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_compression" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_1_3_early_data">
 <code class="sig-name descname">tls_1_3_early_data</code><em class="property">: EarlyDataScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_3_early_data" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.openssl_ccs_injection">
 <code class="sig-name descname">openssl_ccs_injection</code><em class="property">: OpenSslCcsInjectionScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.openssl_ccs_injection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_fallback_scsv">
 <code class="sig-name descname">tls_fallback_scsv</code><em class="property">: FallbackScsvScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_fallback_scsv" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.heartbleed">
 <code class="sig-name descname">heartbleed</code><em class="property">: HeartbleedScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.heartbleed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.robot">
 <code class="sig-name descname">robot</code><em class="property">: RobotScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.robot" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.session_renegotiation">
 <code class="sig-name descname">session_renegotiation</code><em class="property">: SessionRenegotiationScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_renegotiation" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.session_resumption">
 <code class="sig-name descname">session_resumption</code><em class="property">: SessionResumptionSupportScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_resumption" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.session_resumption_rate">
 <code class="sig-name descname">session_resumption_rate</code><em class="property">: SessionResumptionRateScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_resumption_rate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.http_headers">
 <code class="sig-name descname">http_headers</code><em class="property">: HttpHeadersScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.http_headers" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -233,7 +233,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 
         <span class="c1"># SSL 2.0 results</span>
         <span class="n">ssl2_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">accepted_cipher_suite</span> <span class="ow">in</span> <span class="n">ssl2_result</span><span class="o">.</span><span class="n">accepted_cipher_suites</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* </span><span class="si">{</span><span class="n">accepted_cipher_suite</span><span class="o">.</span><span class="n">cipher_suite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -276,7 +276,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
         <span class="c1"># Scan commands that were run with no errors</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">ssl2_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_commands_results</span><span class="p">[</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">]</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Accepted cipher suites for SSL 2.0:&quot;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">accepted_cipher_suite</span> <span class="ow">in</span> <span class="n">ssl2_result</span><span class="o">.</span><span class="n">accepted_cipher_suites</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* </span><span class="si">{</span><span class="n">accepted_cipher_suite</span><span class="o">.</span><span class="n">cipher_suite</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -297,31 +297,31 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 </div>
 <div class="section" id="related-classes">
 <h3>Related classes<a class="headerlink" href="#related-classes" title="Permalink to this headline">¶</a></h3>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandErrorsDict">
 <code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandErrorsDict</code><a class="headerlink" href="#sslyze.ScanCommandErrorsDict" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="sslyze.ScanCommandErrorReasonEnum">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandErrorReasonEnum</code><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandErrorReasonEnum.BUG_IN_SSLYZE">
 <code class="sig-name descname">BUG_IN_SSLYZE</code><em class="property"> = 1</em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.BUG_IN_SSLYZE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED">
 <code class="sig-name descname">CLIENT_CERTIFICATE_NEEDED</code><em class="property"> = 2</em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE">
 <code class="sig-name descname">CONNECTIVITY_ISSUE</code><em class="property"> = 3</em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="sslyze.ScanCommandErrorReasonEnum.WRONG_USAGE">
 <code class="sig-name descname">WRONG_USAGE</code><em class="property"> = 4</em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.WRONG_USAGE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -401,7 +401,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
       &copy;Copyright 2020 Alban Diquet.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

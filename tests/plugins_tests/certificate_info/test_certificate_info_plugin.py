@@ -1,11 +1,7 @@
 from pathlib import Path
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.x509 import load_pem_x509_certificate
-
 from sslyze.plugins.certificate_info._cert_chain_analyzer import OcspResponseStatusEnum
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation, CertificateInfoExtraArguments
-from sslyze.plugins.certificate_info._symantec import SymantecDistructTester, SymantecDistrustTimelineEnum
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64

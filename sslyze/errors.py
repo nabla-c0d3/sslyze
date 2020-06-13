@@ -80,4 +80,5 @@ class TlsHandshakeTimedOut(TlsHandshakeFailed):
 
     See https://github.com/nabla-c0d3/sslyze/issues/445 for more details.
     """
+
     pass

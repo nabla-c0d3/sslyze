@@ -8,7 +8,8 @@ from nassl.ssl_client import ClientCertificateRequested, SslClient
 from sslyze.errors import (
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
-    ConnectionToServerFailed, TlsHandshakeTimedOut,
+    ConnectionToServerFailed,
+    TlsHandshakeTimedOut,
 )
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite, CipherSuitesRepository
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum

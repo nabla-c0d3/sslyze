@@ -10,6 +10,7 @@ from typing import Tuple
 from sslyze.cli.command_line.server_string_parser import InvalidServerStringError, CommandLineServerStringParser
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
+from sslyze.plugins.plugin_base import OptParseCliOption
 from sslyze.plugins.scan_commands import ScanCommandType, ScanCommandsRepository
 from sslyze.scanner import ScanCommandExtraArgumentsDict
 
@@ -110,12 +111,19 @@ class CommandLineParser:
         # Add generic command line options to the parser
         self._add_default_options()
 
-        # Add plugin-specific options to the parser
-        self._add_plugin_scan_commands()
+        # Add plugin .ie scan command options to the parser
+        scan_commands_group = OptionGroup(self._parser, "Scan commands", "")
+        for option in self._get_plugin_scan_commands():
+            scan_commands_group.add_option(f"--{option.option}", help=option.help, action=option.action)
+        self._parser.add_option_group(scan_commands_group)
 
         # Add the --regular command line parameter as a shortcut if possible
-        regular_help = "Regular HTTPS scan; shortcut for --{}".format(" --".join(self.REGULAR_CMD))
-        self._parser.add_option("--regular", action="store_true", dest=None, help=regular_help)
+        self._parser.add_option(
+            "--regular",
+            action="store_true",
+            dest=None,
+            help=f"Regular HTTPS scan; shortcut for --{'--'.join(self.REGULAR_CMD)}",
+        )
 
     def parse_command_line(self) -> ParsedCommandLine:
         """Parses the command line used to launch SSLyze.
@@ -146,7 +154,17 @@ class CommandLineParser:
         if not args_target_list:
             raise CommandLineParsingError("No targets to scan.")
 
-        # Handle the --regular command line parameter as a shortcut
+        # Handle the case when no scan commands have been specified: run --regular by default
+        enabled_scan_commands = [
+            getattr(args_command_list, option.option)
+            for option in self._get_plugin_scan_commands()
+            if getattr(args_command_list, option.option)
+        ]
+        if not enabled_scan_commands:
+            if self._parser.has_option("--regular"):
+                setattr(args_command_list, "regular", True)
+
+        # Handle the --regular command line parameter as a shortcut to a bunch of commands
         if self._parser.has_option("--regular"):
             if getattr(args_command_list, "regular"):
                 setattr(args_command_list, "regular", False)
@@ -406,14 +424,12 @@ class CommandLineParser:
         )
         self._parser.add_option_group(connect_group)
 
-    def _add_plugin_scan_commands(self) -> None:
-        """Recovers the list of command line options implemented by the available plugins and adds them to the command
-        line parser.
+    @staticmethod
+    def _get_plugin_scan_commands() -> List[OptParseCliOption]:
+        """Retrieve the list of command line options implemented by the plugins currently available.
         """
-        scan_commands_group = OptionGroup(self._parser, "Scan commands", "")
+        scan_commands_options = []
         for scan_command in ScanCommandsRepository.get_all_scan_commands():
             cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
-            for option in cli_connector_cls.get_cli_options():
-                scan_commands_group.add_option(f"--{option.option}", help=option.help, action=option.action)
-
-        self._parser.add_option_group(scan_commands_group)
+            scan_commands_options.extend(cli_connector_cls.get_cli_options())
+        return scan_commands_options

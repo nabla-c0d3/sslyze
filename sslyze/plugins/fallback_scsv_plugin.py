@@ -12,7 +12,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandCliConnector,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
-from sslyze.errors import ServerRejectedTlsHandshake
+from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 
 
 @dataclass(frozen=True)
@@ -101,6 +101,11 @@ def _test_scsv(server_info: ServerConnectivityInfo) -> bool:
         # If the handshake is rejected, we assume downgrade attacks are prevented (this is how F5 balancers do it)
         # although it could also be because the server does not support this version of TLS
         # https://github.com/nabla-c0d3/sslyze/issues/119
+        supports_fallback_scsv = True
+
+    except TlsHandshakeTimedOut:
+        # Sometimes triggered by servers that don't support (at all) a specific version of TLS
+        # Amazon Cloudfront does that with TLS 1.3
         supports_fallback_scsv = True
 
     finally:

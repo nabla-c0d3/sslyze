@@ -8,7 +8,7 @@ from nassl.ssl_client import ClientCertificateRequested, SslClient
 from sslyze.errors import (
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
-    ConnectionToServerFailed,
+    ConnectionToServerFailed, TlsHandshakeTimedOut,
 )
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite, CipherSuitesRepository
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
@@ -90,6 +90,13 @@ def connect_with_cipher_suite(
 
     except ServerRejectedTlsHandshake as e:
         return CipherSuiteRejectedByServer(cipher_suite=cipher_suite, error_message=e.error_message)
+
+    except TlsHandshakeTimedOut as e:
+        # Sometimes triggered by servers that don't support (at all) a specific version of TLS
+        # Amazon Cloudfront does that with TLS 1.3
+        # There's no easy way to differentiate this error from a network glitch/timeout
+        return CipherSuiteRejectedByServer(cipher_suite=cipher_suite, error_message=e.error_message)
+
     finally:
         ssl_connection.close()
 

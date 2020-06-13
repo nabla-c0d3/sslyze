@@ -178,6 +178,9 @@ def _test_client_renegotiation(
             elif "sslv3 alert unexpected message" in e.args[0]:
                 # traefik https://github.com/nabla-c0d3/sslyze/issues/422
                 accepts_client_renegotiation = False
+            elif "shut down by peer" in e.args[0]:
+                # Cloudfront
+                accepts_client_renegotiation = False
 
             else:
                 raise

@@ -69,3 +69,15 @@ class ServerRejectedTlsHandshake(TlsHandshakeFailed):
 @dataclass(frozen=True)
 class ServerTlsConfigurationNotSupported(TlsHandshakeFailed):
     pass
+
+
+@dataclass(frozen=True)
+class TlsHandshakeTimedOut(TlsHandshakeFailed):
+    """Raised when the initial socket connection to the server succeeded, but the TLS handshake then timed out.
+
+    This means that the server is definitely reachable/online, but its TLS stack is buggy or it does not support the TLS
+    versions SSLyze enabled in the handshake.
+
+    See https://github.com/nabla-c0d3/sslyze/issues/445 for more details.
+    """
+    pass

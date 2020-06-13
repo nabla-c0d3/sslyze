@@ -20,6 +20,7 @@ from sslyze.errors import (
     ServerRejectedOpportunisticTlsNegotiation,
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
+    TlsHandshakeTimedOut,
 )
 from sslyze.connection_helpers.http_response_parser import HttpResponseParser
 
@@ -292,10 +293,10 @@ class SslConnection:
             raise
         except socket.timeout:
             # Network timeout, propagate the error
-            raise ConnectionToServerTimedOut(
+            raise TlsHandshakeTimedOut(
                 server_location=self._server_location,
                 network_configuration=self._network_configuration,
-                error_message="Connection to server timed out",
+                error_message="Connection to server timed out during the TLS handshake",
             )
         except ConnectionError:
             raise ServerRejectedTlsHandshake(

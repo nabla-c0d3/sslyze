@@ -14,7 +14,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandCliConnector,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
-from sslyze.errors import ServerRejectedTlsHandshake
+from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
 
 
@@ -84,6 +84,9 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
         session = ssl_connection.ssl_client.get_session()
     except ServerRejectedTlsHandshake:
         # TLS 1.3 not supported
+        is_early_data_supported = False
+    except TlsHandshakeTimedOut:
+        # Sometimes triggered by servers that don't support at all TLS 1.3 such as Amazon Cloudfront
         is_early_data_supported = False
     finally:
         ssl_connection.close()

@@ -278,9 +278,13 @@ class _CertificateInfoCliConnector(
             cls._format_field("Serial Number:", str(certificate.serial_number)),
             cls._format_field("Not Before:", certificate.not_valid_before.date().isoformat()),
             cls._format_field("Not After:", certificate.not_valid_after.date().isoformat()),
-            cls._format_field("Signature Algorithm:", certificate.signature_hash_algorithm.name),
             cls._format_field("Public Key Algorithm:", certificate.public_key().__class__.__name__),
         ]
+
+        if certificate.signature_hash_algorithm:
+            # The signature_hash_algorithm can be None if signature did not use separate hash (ED25519, ED448)
+            # https://cryptography.io/en/latest/x509/reference/#cryptography.x509.Certificate.signature_hash_algorithm
+            text_output.append(cls._format_field("Signature Algorithm:", certificate.signature_hash_algorithm.name))
 
         public_key = certificate.public_key()
         if isinstance(public_key, EllipticCurvePublicKey):

@@ -2,7 +2,7 @@
 """
 from base64 import b64encode
 from dataclasses import dataclass, asdict
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -65,7 +65,7 @@ def x509_name_to_json(name: x509.Name) -> Dict[str, Any]:
 
 
 def x509_certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
-    result = {
+    result: Dict[str, Union[None, str, Dict[str, Any]]] = {
         # Add general info
         "as_pem": certificate.public_bytes(Encoding.PEM).decode("ascii"),
         "hpkp_pin": b64encode(get_public_key_sha256(certificate)).decode("utf-8"),  # RFC 7469
@@ -73,9 +73,15 @@ def x509_certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
         "serialNumber": str(certificate.serial_number),
         "notBefore": certificate.not_valid_before.isoformat(),
         "notAfter": certificate.not_valid_after.isoformat(),
-        "signatureAlgorithm": certificate.signature_hash_algorithm.name,
         "subjectAlternativeName": {"DNS": extract_dns_subject_alternative_names(certificate)},
     }
+
+    if certificate.signature_hash_algorithm:
+        # The signature_hash_algorithm can be None if signature did not use separate hash (ED25519, ED448)
+        # https://cryptography.io/en/latest/x509/reference/#cryptography.x509.Certificate.signature_hash_algorithm
+        result["signatureAlgorithm"] = certificate.signature_hash_algorithm.name
+    else:
+        result["signatureAlgorithm"] = None
 
     # We may get garbage/invalid certificates so we need to handle ValueErrors.
     # See https://github.com/nabla-c0d3/sslyze/issues/403 for more information
@@ -88,13 +94,13 @@ def x509_certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
 
     # Add some info about the public key
     public_key = certificate.public_key()
-    public_key_dict = {"algorithm": public_key.__class__.__name__}
+    public_key_dict: Dict[str, Union[str, int]] = {"algorithm": public_key.__class__.__name__}
     if isinstance(public_key, EllipticCurvePublicKey):
-        public_key_dict["size"] = str(public_key.curve.key_size)
+        public_key_dict["size"] = public_key.curve.key_size
         public_key_dict["curve"] = public_key.curve.name
     elif isinstance(public_key, RSAPublicKey):
-        public_key_dict["size"] = str(public_key.key_size)
-        public_key_dict["exponent"] = str(public_key.public_numbers().e)  # type: ignore
+        public_key_dict["size"] = public_key.key_size
+        public_key_dict["exponent"] = public_key.public_numbers().e
     else:
         # DSA Key? https://github.com/nabla-c0d3/sslyze/issues/402
         pass

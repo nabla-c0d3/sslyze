@@ -70,12 +70,13 @@ class _OpenSslServerIOManager:
         # self.thread.join()
 
 
+_DEFAULT_SERVER_CERTIFICATE_PATH = Path(__file__).parent.absolute() / "server-rsa-cert.pem"
+_DEFAULT_SERVER_KEY_PATH = Path(__file__).parent.absolute() / "server-rsa-key.pem"
+
+
 class _OpenSslServer(ABC):
     """A wrapper around OpenSSL's s_server CLI.
     """
-
-    _SERVER_CERT_PATH = Path(__file__).parent.absolute() / "server-self-signed-cert.pem"
-    _SERVER_KEY_PATH = Path(__file__).parent.absolute() / "server-self-signed-key.pem"
 
     _AVAILABLE_LOCAL_PORTS = set(range(8110, 8150))
 
@@ -118,10 +119,13 @@ class _OpenSslServer(ABC):
 
     def __init__(
         self,
-        client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
+        *,
+        server_certificate_path: Path,
+        server_key_path: Path,
+        client_auth_config: ClientAuthConfigEnum,
+        should_enable_server_cipher_preference: bool,
+        openssl_cipher_string: Optional[str],
         extra_openssl_args: Optional[List[str]] = None,
-        openssl_cipher_string: Optional[str] = None,
-        should_enable_server_cipher_preference: bool = False,
     ) -> None:
         if not self.is_platform_supported():
             raise NotOnLinux64Error()
@@ -132,6 +136,8 @@ class _OpenSslServer(ABC):
 
         self.hostname = "localhost"
         self.ip_address = "127.0.0.1"
+        self._server_certificate_path = server_certificate_path
+        self._server_key_path = server_key_path
 
         # Retrieve one of the available local ports; set.pop() is thread safe
         self.port = self._AVAILABLE_LOCAL_PORTS.pop()
@@ -140,8 +146,8 @@ class _OpenSslServer(ABC):
 
         self._command_line = self._S_SERVER_CMD.format(
             openssl=self.get_openssl_path(),
-            server_key=self._SERVER_KEY_PATH,
-            server_cert=self._SERVER_CERT_PATH,
+            server_key=self._server_key_path,
+            server_cert=self._server_certificate_path,
             port=self.port,
             verify_arg=self.get_verify_argument(client_auth_config),
             extra_args=" ".join(final_extra_args) if extra_openssl_args else "",
@@ -197,9 +203,12 @@ class LegacyOpenSslServer(_OpenSslServer):
 
     def __init__(
         self,
+        *,
+        server_certificate_path: Path = _DEFAULT_SERVER_CERTIFICATE_PATH,
+        server_key_path: Path = _DEFAULT_SERVER_KEY_PATH,
         client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
-        openssl_cipher_string: Optional[str] = None,
         should_enable_server_cipher_preference: bool = False,
+        openssl_cipher_string: Optional[str] = None,
         require_server_name_indication_value: Optional[str] = None,
     ) -> None:
         extra_args = []
@@ -208,8 +217,8 @@ class LegacyOpenSslServer(_OpenSslServer):
             extra_args = [
                 f"-servername {require_server_name_indication_value}",
                 "-servername_fatal",
-                f"-cert2 {self._SERVER_CERT_PATH}",
-                f"-key2 {self._SERVER_KEY_PATH}",
+                f"-cert2 {server_certificate_path}",
+                f"-key2 {server_key_path}",
             ]
 
         super().__init__(
@@ -217,6 +226,8 @@ class LegacyOpenSslServer(_OpenSslServer):
             openssl_cipher_string=openssl_cipher_string,
             extra_openssl_args=extra_args,
             should_enable_server_cipher_preference=should_enable_server_cipher_preference,
+            server_certificate_path=server_certificate_path,
+            server_key_path=server_key_path,
         )
 
     @classmethod
@@ -253,10 +264,13 @@ class ModernOpenSslServer(_OpenSslServer):
 
     def __init__(
         self,
+        *,
+        server_certificate_path: Path = _DEFAULT_SERVER_CERTIFICATE_PATH,
+        server_key_path: Path = _DEFAULT_SERVER_KEY_PATH,
         client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
-        max_early_data: Optional[int] = None,
-        openssl_cipher_string: Optional[str] = None,
         should_enable_server_cipher_preference: bool = False,
+        openssl_cipher_string: Optional[str] = None,
+        max_early_data: Optional[int] = None,
         groups: Optional[str] = None,
     ) -> None:
         extra_args = []
@@ -272,4 +286,6 @@ class ModernOpenSslServer(_OpenSslServer):
             openssl_cipher_string=openssl_cipher_string,
             extra_openssl_args=extra_args,
             should_enable_server_cipher_preference=should_enable_server_cipher_preference,
+            server_certificate_path=server_certificate_path,
+            server_key_path=server_key_path,
         )

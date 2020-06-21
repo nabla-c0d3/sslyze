@@ -188,7 +188,7 @@ class TestCertificateInfoPlugin:
         # When running the scan, it succeeds
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
-        assert plugin_result.certificate_deployments[0].verified_certificate_chain
+        assert plugin_result.certificate_deployments[0].received_certificate_chain
 
     def test_certificate_with_scts(self):
         # Given a server to scan that has a certificate with SCTS

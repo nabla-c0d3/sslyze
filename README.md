@@ -1,7 +1,7 @@
 SSLyze
 ======
 
-[![Build Status](https://travis-ci.org/nabla-c0d3/sslyze.svg?branch=master)](https://travis-ci.org/nabla-c0d3/sslyze)
+![Run tests](https://github.com/nabla-c0d3/sslyze/workflows/Run%20tests/badge.svg)
 [![Downloads](https://pepy.tech/badge/sslyze)](https://pepy.tech/badge/sslyze)
 [![PyPI version](https://img.shields.io/pypi/v/sslyze.svg)](https://pypi.org/project/sslyze/)
 [![Python version](https://img.shields.io/pypi/pyversions/sslyze.svg)](https://pypi.org/project/sslyze/)

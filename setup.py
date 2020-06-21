@@ -81,7 +81,7 @@ setup(
         "Documentation": "https://nabla-c0d3.github.io/sslyze/documentation",
     },
     # Package info
-    packages=find_packages(exclude=["docs", "tests"]),
+    packages=find_packages(include=["sslyze", "sslyze.*"]),
     package_data={
         "sslyze": ["py.typed"],
         "sslyze.plugins.certificate_info.trust_stores": ["pem_files/*.pem", "pem_files/*.yaml"],

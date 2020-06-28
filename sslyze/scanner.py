@@ -1,9 +1,9 @@
-from concurrent.futures import Future, as_completed, TimeoutError
+from concurrent.futures import Future, wait
 from concurrent.futures.thread import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import unique, Enum, auto
 from traceback import TracebackException
-from typing import Dict, Iterable, List, Tuple, Set, Optional
+from typing import Dict, Iterable, List, Set, Optional
 
 from nassl.ssl_client import ClientCertificateRequested
 
@@ -119,6 +119,23 @@ class ServerScanResult:
     scan_commands_extra_arguments: ScanCommandExtraArgumentsDict
 
 
+@dataclass(frozen=True)
+class _QueuedServerScan:
+    server_scan_request: ServerScanRequest
+
+    queued_scan_jobs_per_scan_command: Dict[ScanCommandType, Set[Future]]
+    queued_on_thread_pool_at_index: int
+
+    scan_command_errors_during_queuing: ScanCommandErrorsDict
+
+    @property
+    def all_queued_scan_jobs(self) -> Set[Future]:
+        all_queued_scan_jobs = set()
+        for scan_jobs in self.queued_scan_jobs_per_scan_command.values():
+            all_queued_scan_jobs.update(scan_jobs)
+        return all_queued_scan_jobs
+
+
 class Scanner:
     """The main class to use in order to call and schedule SSLyze's scan commands from Python.
     """
@@ -128,47 +145,55 @@ class Scanner:
         per_server_concurrent_connections_limit: Optional[int] = None,
         concurrent_server_scans_limit: Optional[int] = None,
     ):
-        self._queued_server_scans: List[ServerScanRequest] = []
-        self._queued_future_to_server_and_scan_cmd: Dict[Future, Tuple[ServerConnectivityInfo, ScanCommandType]] = {}
-        self._pending_server_scan_results: Dict[ServerConnectivityInfo, ScanCommandResultsDict] = {}
-        self._pending_server_scan_errors: Dict[ServerConnectivityInfo, ScanCommandErrorsDict] = {}
-
         # Setup default values
         if per_server_concurrent_connections_limit is None:
             final_per_server_concurrent_connections_limit = 5
         else:
             final_per_server_concurrent_connections_limit = per_server_concurrent_connections_limit
+        self._concurrent_server_scans_count = final_per_server_concurrent_connections_limit
+
         if concurrent_server_scans_limit is None:
             final_concurrent_server_scans_limit = 10
         else:
             final_concurrent_server_scans_limit = concurrent_server_scans_limit
+        self._per_server_concurrent_connections_count = final_concurrent_server_scans_limit
 
-        # Rate-limit how many connections the scanner will open
-        # Total number of concurrent connections = server_scans_limit * per_server_connections_limit
-        self._all_thread_pools = [
-            ThreadPoolExecutor(max_workers=final_per_server_concurrent_connections_limit)
-            for _ in range(final_concurrent_server_scans_limit)
-        ]
-        self._server_to_thread_pool: Dict[ServerConnectivityInfo, ThreadPoolExecutor] = {}
+        self._all_thread_pools: List[ThreadPoolExecutor] = []
+        self._queued_server_scans: List[_QueuedServerScan] = []
+
+    def _get_assigned_thread_pool_index(self) -> int:
+        """Pick (and create if needed) a thread pool for an upcoming server scan.
+
+        This is used to maximize speed for scanning different servers concurrently.
+        """
+        currently_queued_scans_count = len(self._queued_server_scans)
+        allowed_thread_pools_count = self._concurrent_server_scans_count
+        assigned_thread_pool_index = currently_queued_scans_count % allowed_thread_pools_count
+
+        try:
+            self._all_thread_pools[assigned_thread_pool_index]
+        except IndexError:
+            self._all_thread_pools.append(ThreadPoolExecutor(max_workers=self._per_server_concurrent_connections_count))
+
+        return assigned_thread_pool_index
 
     def queue_scan(self, server_scan: ServerScanRequest) -> None:
         """Queue a server scan.
         """
+        already_queued_server_info = {
+            queued_scan.server_scan_request.server_info for queued_scan in self._queued_server_scans
+        }
         # Only one scan per server can be submitted
-        if server_scan.server_info in self._pending_server_scan_results:
+        if server_scan.server_info in already_queued_server_info:
             raise ValueError(f"Already submitted a scan for server {server_scan.server_info.server_location}")
-        self._queued_server_scans.append(server_scan)
-        self._pending_server_scan_results[server_scan.server_info] = {}
-        self._pending_server_scan_errors[server_scan.server_info] = {}
 
         # Assign the server to scan to a thread pool
-        server_scans_count = len(self._queued_server_scans)
-        thread_pools_count = len(self._all_thread_pools)
-        thread_pool_index_to_pick = server_scans_count % thread_pools_count
-        thread_pool_for_server = self._all_thread_pools[thread_pool_index_to_pick]
-        self._server_to_thread_pool[server_scan.server_info] = thread_pool_for_server
+        assigned_thread_pool_index = self._get_assigned_thread_pool_index()
+        assigned_thread_pool = self._all_thread_pools[assigned_thread_pool_index]
 
         # Convert each scan command within the server scan request into jobs
+        queued_futures_per_scan_command: Dict[ScanCommandType, Set[Future]] = {}
+        scan_command_errors_during_queuing = {}
         for scan_cmd in server_scan.scan_commands:
             implementation_cls = ScanCommandsRepository.get_implementation_cls(scan_cmd)
             scan_cmd_extra_args = server_scan.scan_commands_extra_arguments.get(scan_cmd)  # type: ignore
@@ -183,53 +208,59 @@ class Scanner:
                 error = ScanCommandError(
                     reason=ScanCommandErrorReasonEnum.WRONG_USAGE, exception_trace=TracebackException.from_exception(e)
                 )
-                self._pending_server_scan_errors[server_scan.server_info][scan_cmd] = error
+                scan_command_errors_during_queuing[scan_cmd] = error
             except Exception as e:
                 error = ScanCommandError(
                     reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
                     exception_trace=TracebackException.from_exception(e),
                 )
-                self._pending_server_scan_errors[server_scan.server_info][scan_cmd] = error
+                scan_command_errors_during_queuing[scan_cmd] = error
 
             # Schedule the jobs
+            queued_futures_per_scan_command[scan_cmd] = set()
             for job in jobs_to_run:
-                future = thread_pool_for_server.submit(job.function_to_call, *job.function_arguments)
-                self._queued_future_to_server_and_scan_cmd[future] = (server_scan.server_info, scan_cmd)
+                future = assigned_thread_pool.submit(job.function_to_call, *job.function_arguments)
+                queued_futures_per_scan_command[scan_cmd].add(future)
+
+        # Save everything as a queued scan
+        self._queued_server_scans.append(
+            _QueuedServerScan(
+                server_scan_request=server_scan,
+                queued_scan_jobs_per_scan_command=queued_futures_per_scan_command,
+                queued_on_thread_pool_at_index=assigned_thread_pool_index,
+                scan_command_errors_during_queuing=scan_command_errors_during_queuing,
+            )
+        )
 
     def get_results(self) -> Iterable[ServerScanResult]:
         """Return completed server scans.
         """
-        server_and_scan_cmd_to_completed_futures: Dict[Tuple[ServerConnectivityInfo, ScanCommandType], List[Future]] = {
-            server_and_scan_cmd: [] for server_and_scan_cmd in self._queued_future_to_server_and_scan_cmd.values()
-        }
+        ongoing_scan_jobs = set()
+        for queued_server_scan in self._queued_server_scans:
+            ongoing_scan_jobs.update(queued_server_scan.all_queued_scan_jobs)
 
-        jobs_completed_count = 0
-        jobs_total_count = len(self._queued_future_to_server_and_scan_cmd)
-        while jobs_completed_count < jobs_total_count:
-            # Every 1 seconds, process all the results
-            try:
-                for completed_future in as_completed(self._queued_future_to_server_and_scan_cmd.keys(), timeout=1):
-                    jobs_completed_count += 1
-                    # Move the future from "queued" to "completed"
-                    server_and_scan_cmd = self._queued_future_to_server_and_scan_cmd[completed_future]
-                    del self._queued_future_to_server_and_scan_cmd[completed_future]
-                    server_and_scan_cmd_to_completed_futures[server_and_scan_cmd].append(completed_future)
-            except TimeoutError:
-                pass
+        while ongoing_scan_jobs:
+            # Every 0.2 seconds, check for completed jobs
+            all_completed_scan_jobs, _ = wait(ongoing_scan_jobs, timeout=0.2)
 
-            # Have all the jobs of a given scan command completed?
-            scan_cmds_completed = []
-            for server_and_scan_cmd in server_and_scan_cmd_to_completed_futures:
-                if server_and_scan_cmd not in self._queued_future_to_server_and_scan_cmd.values():
-                    # Yes - store the result
-                    server_info, scan_cmd = server_and_scan_cmd
+            # Check if a server scan has been fully completed
+            for queued_server_scan in self._queued_server_scans:
+                if not queued_server_scan.all_queued_scan_jobs.issubset(all_completed_scan_jobs):
+                    # This server scan still has jobs ongoing; check the next one
+                    continue
+
+                # If we get here, all the jobs for a specific server scan have been completed
+                # Generate the result for each scan command
+                server_scan_results: ScanCommandResultsDict = {}
+                server_scan_errors: ScanCommandErrorsDict = {}
+                for scan_cmd, completed_scan_jobs in queued_server_scan.queued_scan_jobs_per_scan_command.items():
+                    server_info = queued_server_scan.server_scan_request.server_info
                     implementation_cls = ScanCommandsRepository.get_implementation_cls(scan_cmd)
-
                     try:
                         result = implementation_cls.result_for_completed_scan_jobs(
-                            server_info, server_and_scan_cmd_to_completed_futures[server_and_scan_cmd]
+                            server_info, list(completed_scan_jobs)
                         )
-                        self._pending_server_scan_results[server_info][scan_cmd] = result
+                        server_scan_results[scan_cmd] = result
 
                     # Process exceptions that may have been raised while the jobs were being completed
                     except ClientCertificateRequested as e:
@@ -237,57 +268,44 @@ class Scanner:
                             reason=ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED,
                             exception_trace=TracebackException.from_exception(e),
                         )
-                        self._pending_server_scan_errors[server_info][scan_cmd] = error
+                        server_scan_errors[scan_cmd] = error
                     except ConnectionToServerTimedOut as e:
                         error = ScanCommandError(
                             reason=ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE,
                             exception_trace=TracebackException.from_exception(e),
                         )
-                        self._pending_server_scan_errors[server_info][scan_cmd] = error
+                        server_scan_errors[scan_cmd] = error
                     except Exception as e:
                         error = ScanCommandError(
                             reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
                             exception_trace=TracebackException.from_exception(e),
                         )
-                        self._pending_server_scan_errors[server_info][scan_cmd] = error
+                        server_scan_errors[scan_cmd] = error
 
-                    finally:
-                        scan_cmds_completed.append(server_and_scan_cmd)
+                # Discard the corresponding jobs
+                ongoing_scan_jobs.difference_update(queued_server_scan.all_queued_scan_jobs)
 
-            for server_and_scan_cmd in scan_cmds_completed:
-                del server_and_scan_cmd_to_completed_futures[server_and_scan_cmd]
-
-            # Lastly, have all the scan commands for a given server completed?
-            completed_server_scan_indexes: List[int] = []
-            for index, server_scan in enumerate(self._queued_server_scans):
-                scan_commands_processed_count = len(self._pending_server_scan_results[server_scan.server_info]) + len(
-                    self._pending_server_scan_errors[server_scan.server_info]
+                # Lastly, return the fully completed server scan
+                server_scan_errors.update(queued_server_scan.scan_command_errors_during_queuing)
+                server_scan_result = ServerScanResult(
+                    scan_commands_results=server_scan_results,
+                    scan_commands_errors=server_scan_errors,
+                    server_info=queued_server_scan.server_scan_request.server_info,
+                    scan_commands=queued_server_scan.server_scan_request.scan_commands,
+                    scan_commands_extra_arguments=queued_server_scan.server_scan_request.scan_commands_extra_arguments,
                 )
-                if len(server_scan.scan_commands) == scan_commands_processed_count:
-                    # Yes - return the fully completed server scan
-                    yield ServerScanResult(
-                        scan_commands_results=self._pending_server_scan_results[server_scan.server_info],
-                        scan_commands_errors=self._pending_server_scan_errors[server_scan.server_info],
-                        server_info=server_scan.server_info,
-                        scan_commands=server_scan.scan_commands,
-                        scan_commands_extra_arguments=server_scan.scan_commands_extra_arguments,
-                    )
-                    del self._pending_server_scan_results[server_scan.server_info]
-                    del self._pending_server_scan_errors[server_scan.server_info]
-                    completed_server_scan_indexes.append(index)
-
-            # Remove the completed server scans - highest to lowest indexes as otherwise indexes to delete would no
-            # longer be valid while the loop is running
-            for index in reversed(completed_server_scan_indexes):
-                del self._queued_server_scans[index]
+                yield server_scan_result
 
         self._shutdown_thread_pools()
 
     def _shutdown_thread_pools(self) -> None:
+        self._queued_server_scans = []
         for thread_pool in self._all_thread_pools:
             thread_pool.shutdown(wait=True)
+        self._all_thread_pools = []
 
     def emergency_shutdown(self) -> None:
-        for future in self._queued_future_to_server_and_scan_cmd:
-            future.cancel()
+        for queued_server_scan in self._queued_server_scans:
+            for future in queued_server_scan.all_queued_scan_jobs:
+                future.cancel()
         self._shutdown_thread_pools()

@@ -1,7 +1,7 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2019-11-28
+date_fetched: 2020-06-21
 trusted_certificates_count: 138
 trusted_certificates:
 - subject_name: AAA Certificate Services
@@ -12,8 +12,6 @@ trusted_certificates:
   fingerprint: 9a6ec012e1a7da9dbe34194d478ad7c0db1822fb071df12981496ed104384113
 - subject_name: Actalis Authentication Root CA
   fingerprint: 55926084ec963a64b96e2abe01ce0ba86a64fbfebcc7aab5afc155b37fd76066
-- subject_name: AddTrust External CA Root
-  fingerprint: 687fa451382278fff0c8b11f8d43d576671c6eb2bceab413fb83d965d06d2ff2
 - subject_name: AffirmTrust Commercial
   fingerprint: 0376ab1d54c5f9803ce4b2e201a0ee7eef7b57b636e8a93c9b8d4860c96f5fa7
 - subject_name: AffirmTrust Networking
@@ -160,10 +158,12 @@ trusted_certificates:
   fingerprint: 30d0895a9a448a262091635522d1f52010b5867acae12c78ef958fd4f4389f2f
 - subject_name: Izenpe.com
   fingerprint: 2530cc8e98321502bad96f9b1fba1b099e2d299e0f4548bb914f363bc0d4531f
-- subject_name: LuxTrust Global Root 2
-  fingerprint: 54455f7129c20b1447c418f997168f24c58fc5023bf5da5be2eb6e1dd8902ed5
 - subject_name: Microsec e-Szigno Root CA 2009
   fingerprint: 3c5f81fea5fab82c64bfa2eaecafcde8e077fc8620a7cae537163df36edbf378
+- subject_name: Microsoft ECC Root Certificate Authority 2017
+  fingerprint: 358df39d764af9e1b766e9c972df352ee15cfac227af6ad1d70e8e4a6edcba02
+- subject_name: Microsoft RSA Root Certificate Authority 2017
+  fingerprint: c741f70f4b2a8d88bf2e71c14122ef53ef10eba0cfa5e64cfa20f418853073e0
 - subject_name: "NetLock Arany (Class Gold) F\u0151tan\xFAs\xEDtv\xE1ny"
   fingerprint: 6c61dac3a2def031506be036d2a6fe401994fbd13df9c8d466599274c446ec98
 - subject_name: Network Solutions Certificate Authority
@@ -210,8 +210,6 @@ trusted_certificates:
   fingerprint: 7908b40314c138100b518d0735807ffbfcf8518a0095337105ba386b153dd927
 - subject_name: Staat der Nederlanden EV Root CA
   fingerprint: 4d2491414cfe956746ec4cefa6cf6f72e28a1329432f9d8a907ac4cb5dadc15a
-- subject_name: Staat der Nederlanden Root CA - G2
-  fingerprint: 668c83947da63b724bece1743c31a0e6aed0db8ec5b31be377bb784f91b6716f
 - subject_name: Staat der Nederlanden Root CA - G3
   fingerprint: 3c4fb0b95ab8b30032f432b86f535fe172c185d0fd39865837cf36187fa6f428
 - subject_name: Starfield Class 2 Certification Authority
@@ -252,8 +250,6 @@ trusted_certificates:
   fingerprint: 4ff460d54b9c86dabfbcfc5712e0400d2bed3fbc4d4fbdaa86e06adcd2a9ad7a
 - subject_name: USERTrust RSA Certification Authority
   fingerprint: e793c9b02fd8aa13e21c31228accb08119643b749c898964b1746d46c3d4cbd2
-- subject_name: VeriSign Class 3 Public Primary Certification Authority - G3
-  fingerprint: eb04cf5eb1f39afa762f2bb120f296cba520c1b97db1589565b81cb9a17b7244
 - subject_name: VeriSign Class 3 Public Primary Certification Authority - G4
   fingerprint: 69ddd7ea90bb57c93e135dc85ea6fcd5480b603239bdc454fc758b2a26cf7f79
 - subject_name: VeriSign Class 3 Public Primary Certification Authority - G5
@@ -264,6 +260,10 @@ trusted_certificates:
   fingerprint: cecddc905099d8dadfc5b1d209b737cbe2c18cfb2c10c0ff0bcf0d3286fc1aa2
 - subject_name: certSIGN ROOT CA
   fingerprint: eaa962c4fa4a6bafebe415196d351ccd888d4f53f3fa8ae6d7c466a94e6042bb
+- subject_name: certSIGN ROOT CA G2
+  fingerprint: 657cfe2fa73faa38462571f332a2363a46fce7020951710702cdfbb6eeda3305
+- subject_name: e-Szigno Root CA 2017
+  fingerprint: beb00b30839b9bc32c32e4447905950641f26421b15ed089198b518ae2ea1b99
 - subject_name: ePKI Root Certification Authority
   fingerprint: c0a6f4dc63a24bfdcf54ef2a6a082a0a72de35803e2ff5ff527ae5d87206dfd5
 - subject_name: emSign ECC Root CA - C3
@@ -280,7 +280,7 @@ trusted_certificates:
   fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
 - subject_name: thawte Primary Root CA - G3
   fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 7
+blocked_certificates_count: 4
 blocked_certificates:
 - subject_name: '*.EGO.GOV.TR'
   fingerprint: 42187727be39faf667aeb92bf0cc4e268f6e2ead2cefbec575bdc90430024f69
@@ -288,11 +288,5 @@ blocked_certificates:
   fingerprint: fb6b5816d5067a1847e612ac9d5cb4ec6a18ea5bbdbf1e7b06ed72f8a9d96040
 - subject_name: DigiNotar Root CA
   fingerprint: 9187a8d3b4b711dd51f53c2fd29041cf7c7b9535329556bfc9c706f38db0f81a
-- subject_name: Egypt Trust Class 3 Managed PKI Enterprise Administrator CA
-  fingerprint: 1f17f2cbb109f01c885c94d9e74a48625ae9659665d6d7e7bc5a10332976370f
-- subject_name: Egypt Trust Class 3 Managed PKI Operational Administrator CA
-  fingerprint: 3e26492e20b52de79e15766e6cb4251a1d566b0dbfb225aa7d08dda1dcebbf0a
-- subject_name: Egypt Trust Class 3 Managed PKI SCO Administrator CA
-  fingerprint: 7abd72a323c9d179c722564f4e27a51dd4afd24006b38a40ce918b94960bcf18
 - subject_name: e-islem.kktcmerkezbankasi.org
   fingerprint: 372447c43185c38edd2ce0e9c853f9ac1576ddd1704c2f54d96076c089cb4227

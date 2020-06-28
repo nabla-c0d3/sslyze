@@ -1,3 +1,4 @@
+import gc
 from concurrent.futures import Future, wait
 from concurrent.futures.thread import ThreadPoolExecutor
 from dataclasses import dataclass, field
@@ -150,13 +151,13 @@ class Scanner:
             final_per_server_concurrent_connections_limit = 5
         else:
             final_per_server_concurrent_connections_limit = per_server_concurrent_connections_limit
-        self._concurrent_server_scans_count = final_per_server_concurrent_connections_limit
+        self._per_server_concurrent_connections_count = final_per_server_concurrent_connections_limit
 
         if concurrent_server_scans_limit is None:
             final_concurrent_server_scans_limit = 10
         else:
             final_concurrent_server_scans_limit = concurrent_server_scans_limit
-        self._per_server_concurrent_connections_count = final_concurrent_server_scans_limit
+        self._concurrent_server_scans_count = final_concurrent_server_scans_limit
 
         self._all_thread_pools: List[ThreadPoolExecutor] = []
         self._queued_server_scans: List[_QueuedServerScan] = []
@@ -164,7 +165,7 @@ class Scanner:
     def _get_assigned_thread_pool_index(self) -> int:
         """Pick (and create if needed) a thread pool for an upcoming server scan.
 
-        This is used to maximize speed for scanning different servers concurrently.
+        This is used to maximize speed by scanning different servers concurrently.
         """
         currently_queued_scans_count = len(self._queued_server_scans)
         allowed_thread_pools_count = self._concurrent_server_scans_count
@@ -240,8 +241,8 @@ class Scanner:
             ongoing_scan_jobs.update(queued_server_scan.all_queued_scan_jobs)
 
         while ongoing_scan_jobs:
-            # Every 0.2 seconds, check for completed jobs
-            all_completed_scan_jobs, _ = wait(ongoing_scan_jobs, timeout=0.2)
+            # Every 0.3 seconds, check for completed jobs
+            all_completed_scan_jobs, _ = wait(ongoing_scan_jobs, timeout=0.3)
 
             # Check if a server scan has been fully completed
             for queued_server_scan in self._queued_server_scans:
@@ -303,6 +304,16 @@ class Scanner:
         for thread_pool in self._all_thread_pools:
             thread_pool.shutdown(wait=True)
         self._all_thread_pools = []
+
+        # Force garbage collection because for some reason the Future objects created by ThreadPoolExecutor.submit()
+        # take a ton of memory (compared to what they do - holding a function to call and its arguments):
+        # https://stackoverflow.com/questions/45946274/rss-memory-usage-from-concurrent-futures
+        # https://stackoverflow.com/questions/53104082/using-threadpoolexecutor-with-reduced-memory-footprint
+        # https://stackoverflow.com/questions/34770169/using-concurrent-futures-without-running-out-of-ram
+        # We force garbage collection here to ensure memory usage does not balloon when running SSLyze in some kind
+        # of long-running app (such as a web app). Otherwise, the GC tends to not cleanup all the Future objects right
+        # away (although at this point, all the work has been completed) and memory usage goes up like crazy
+        gc.collect()
 
     def emergency_shutdown(self) -> None:
         for queued_server_scan in self._queued_server_scans:

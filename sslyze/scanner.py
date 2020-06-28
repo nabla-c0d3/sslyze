@@ -159,7 +159,7 @@ class Scanner:
             final_concurrent_server_scans_limit = concurrent_server_scans_limit
         self._concurrent_server_scans_count = final_concurrent_server_scans_limit
 
-        self._all_thread_pools: List[ThreadPoolExecutor] = []
+        self._thread_pools: List[ThreadPoolExecutor] = []
         self._queued_server_scans: List[_QueuedServerScan] = []
 
     def _get_assigned_thread_pool_index(self) -> int:
@@ -172,9 +172,9 @@ class Scanner:
         assigned_thread_pool_index = currently_queued_scans_count % allowed_thread_pools_count
 
         try:
-            self._all_thread_pools[assigned_thread_pool_index]
+            self._thread_pools[assigned_thread_pool_index]
         except IndexError:
-            self._all_thread_pools.append(ThreadPoolExecutor(max_workers=self._per_server_concurrent_connections_count))
+            self._thread_pools.append(ThreadPoolExecutor(max_workers=self._per_server_concurrent_connections_count))
 
         return assigned_thread_pool_index
 
@@ -190,7 +190,7 @@ class Scanner:
 
         # Assign the server to scan to a thread pool
         assigned_thread_pool_index = self._get_assigned_thread_pool_index()
-        assigned_thread_pool = self._all_thread_pools[assigned_thread_pool_index]
+        assigned_thread_pool = self._thread_pools[assigned_thread_pool_index]
 
         # Convert each scan command within the server scan request into jobs
         queued_futures_per_scan_command: Dict[ScanCommandType, Set[Future]] = {}
@@ -301,9 +301,9 @@ class Scanner:
 
     def _shutdown_thread_pools(self) -> None:
         self._queued_server_scans = []
-        for thread_pool in self._all_thread_pools:
+        for thread_pool in self._thread_pools:
             thread_pool.shutdown(wait=True)
-        self._all_thread_pools = []
+        self._thread_pools = []
 
         # Force garbage collection because for some reason the Future objects created by ThreadPoolExecutor.submit()
         # take a ton of memory (compared to what they do - holding a function to call and its arguments):

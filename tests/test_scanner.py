@@ -232,16 +232,16 @@ class TestScannerInternals:
 
         # And the right number of scans was performed
         assert total_server_scans_count == len(scanner._queued_server_scans)
-        assert total_server_scans_count == len(scanner._server_to_thread_pool)
 
         # And the chosen network settings were used
-        assert concurrent_server_scans_limit == len(scanner._all_thread_pools)
-        for pool in scanner._all_thread_pools:
+        assert concurrent_server_scans_limit == len(scanner._thread_pools)
+        for pool in scanner._thread_pools:
             assert per_server_concurrent_connections_limit == pool._max_workers
 
         # And the server scans were evenly distributed among the thread pools to maximize performance
         expected_server_scans_per_pool = int(total_server_scans_count / concurrent_server_scans_limit)
-        server_scans_per_pool_count = Counter(scanner._server_to_thread_pool.values())
+        thread_pools_used = [server_scan.queued_on_thread_pool_at_index for server_scan in scanner._queued_server_scans]
+        server_scans_per_pool_count = Counter(thread_pools_used)
         for pool_count in server_scans_per_pool_count.values():
             assert expected_server_scans_per_pool == pool_count
 
@@ -266,5 +266,8 @@ class TestScannerInternals:
         scanner.emergency_shutdown()
 
         # And all the queued jobs were done or cancelled
-        for completed_future in as_completed(scanner._queued_future_to_server_and_scan_cmd.keys()):
+        all_queued_futures = []
+        for server_scan in scanner._queued_server_scans:
+            all_queued_futures.extend(server_scan.all_queued_scan_jobs)
+        for completed_future in as_completed(all_queued_futures):
             assert completed_future.done()

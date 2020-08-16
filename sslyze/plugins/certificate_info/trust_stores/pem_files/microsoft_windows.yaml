@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
 version: null
 url: https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFT
-date_fetched: 2020-05-04
-trusted_certificates_count: 258
+date_fetched: 2020-07-16
+trusted_certificates_count: 255
 trusted_certificates:
 - subject_name: A-Trust-Root-07
   fingerprint: 8ac552ad577e37ad2c6808d72aa331d6a96b4b3febff34ce9bc0578e08055ec3
@@ -22,8 +22,6 @@ trusted_certificates:
   fingerprint: 97f654859cbde586fd90311e82ec7902c238cba0d6e529564c9c88f44895ec50
 - subject_name: ACCVRAIZ1
   fingerprint: 9a6ec012e1a7da9dbe34194d478ad7c0db1822fb071df12981496ed104384113
-- subject_name: ACEDICOM Root
-  fingerprint: 03950fb49a531f3e1991942398dfa9e0ea32d7ba1cdd9bc85db57ed9400b434a
 - subject_name: ANCERT Certificados CGN V2
   fingerprint: f4336bc2ac75950beccf1c1f2f9da6dddafd1f41161ca71f59c76889bd474033
 - subject_name: ANCERT Certificados Notariales V2
@@ -48,8 +46,6 @@ trusted_certificates:
   fingerprint: 18ce6cfe7bf14e60b2e347b8dfe868cb31d02ebb3ada271569f50343b46db3a4
 - subject_name: Amazon Root CA 4
   fingerprint: e35d28419ed02025cfa69038cd623962458da5c695fbdea3c22b0bfb25897092
-- subject_name: Application CA G4 Root
-  fingerprint: d1a0319098034e3aec729a0b5c3111229d9d26e3e623e8c5e6843fa06ee8e2e4
 - subject_name: Atos TrustedRoot 2011
   fingerprint: f356bea244b7a91eb35d53ca9ad7864ace018e2d35d5f8f96ddf68a6f41aa474
 - subject_name: Australian Defence Public Root CA
@@ -327,8 +323,6 @@ trusted_certificates:
   fingerprint: 6b9c08e86eb0f767cfad65cd98b62149e5494a67f5845e7bd1ed019f27b86bd6
 - subject_name: OISTE WISeKey Global Root GC CA
   fingerprint: 8560f91c3624daba9570b5fea0dbe36ff11a8323be9486854fb3f34a5571198d
-- subject_name: OpenTrust Root CA G1
-  fingerprint: 56c77128d98c18d91b4cfdffbc25ee9103d4758ea2abad826a90f3457d460eb4
 - subject_name: PostSignum Root QCA 2
   fingerprint: ad016f958050e0e7e46fae7dcc50197ed8e3ff0a4b262e5ddcdb3edddc7d6578
 - subject_name: PostSignum Root QCA 4
@@ -521,7 +515,7 @@ trusted_certificates:
   fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
 - subject_name: thawte Primary Root CA - G3
   fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 145
+blocked_certificates_count: 147
 blocked_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -535,6 +529,8 @@ blocked_certificates:
   fingerprint: 4d9ebb28825c9643ab15d54e5f9614f13cb3e95de3cf4eac971301f320f9226e
 - subject_name: "AC Ra\xEDz Certic\xE1mara S.A."
   fingerprint: a6c51e0da5ca0a9309d2e4c0e40c2af9107aae8203857fe198e3e769e343085c
+- subject_name: ACEDICOM Root
+  fingerprint: 03950fb49a531f3e1991942398dfa9e0ea32d7ba1cdd9bc85db57ed9400b434a
 - subject_name: ACNLB
   fingerprint: 894ce6ddb012cb3f736954668de63f436080e95f17b7a81bd924eb21bee9e440
 - subject_name: ADOCA02
@@ -565,6 +561,8 @@ blocked_certificates:
   fingerprint: 06db3af2db7baee00c03b9578288bbde541d906eb0069327413295ffb486008e
 - subject_name: Application CA G3 Root
   fingerprint: 54b4fc43d44aa4ca9fc03ca7e9949fbae267a064d02da21852412a381b5d1537
+- subject_name: Application CA G4 Root
+  fingerprint: d1a0319098034e3aec729a0b5c3111229d9d26e3e623e8c5e6843fa06ee8e2e4
 - subject_name: ApplicationCA
   fingerprint: 2d47437de17951215a12f3c58e51c729a58026ef1fcc0a5fb3d9dc012f600d19
 - subject_name: ApplicationCA2 Root

@@ -21,6 +21,3 @@ black = "==19.10b0"
 pytest-cov = "*"
 faker = "*"
 cx-freeze = "*"
-
-[requires]
-python_version = "3.7"

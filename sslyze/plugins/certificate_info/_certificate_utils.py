@@ -1,4 +1,4 @@
-from _sha256 import sha256
+from hashlib import sha256
 from typing import List, cast
 
 from cryptography import x509

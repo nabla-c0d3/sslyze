@@ -1,7 +1,7 @@
 platform: OPENJDK
-version: jdk-14.0.2
-url: https://download.java.net/java/GA/jdk14.0.2/205943a0976c4ed48cb16f1043c5c647/12/GPL/openjdk-14.0.2_linux-x64_bin.tar.gz
-date_fetched: 2020-07-16
+version: jdk-15
+url: https://download.java.net/java/GA/jdk15/779bf45e88a44cbd9ea6621d33e33db1/36/GPL/openjdk-15_linux-x64_bin.tar.gz
+date_fetched: 2020-09-17
 trusted_certificates_count: 91
 trusted_certificates:
 - subject_name: AAA Certificate Services

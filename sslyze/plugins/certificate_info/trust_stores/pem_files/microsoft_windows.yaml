@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
 version: null
 url: https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFT
-date_fetched: 2020-07-16
-trusted_certificates_count: 255
+date_fetched: 2020-10-01
+trusted_certificates_count: 253
 trusted_certificates:
 - subject_name: A-Trust-Root-07
   fingerprint: 8ac552ad577e37ad2c6808d72aa331d6a96b4b3febff34ce9bc0578e08055ec3
@@ -66,8 +66,6 @@ trusted_certificates:
   fingerprint: 9a114025197c5bb95d94e63d55cd43790847b646b23cdf11ada4a00eff15fb48
 - subject_name: Buypass Class 3 Root CA
   fingerprint: edf7ebbca27a2a384d387b7d4010c666e2edb4843e4c29b4ae1d5b9332e6b24d
-- subject_name: CA DATEV BT 02
-  fingerprint: 81c2568503eb3be5eec366653960e6d1be9448915e4605b793fbeb34ccb2470f
 - subject_name: CA DATEV BT 03
   fingerprint: 0c0b6b2bd1edd7b27fead157f8e846b335b784a39f06c47216c8746f64c5ceda
 - subject_name: CA DATEV INT 02
@@ -409,8 +407,6 @@ trusted_certificates:
   fingerprint: 53dfdfa4e297fcfe07594e8c62d5b8ab06b32c7549f38a163094fd6429d5da43
 - subject_name: Symantec Class 3 Public Primary Certification Authority - G6
   fingerprint: b32396746453442f353e616292bb20bbaa5d23b546450fdb9c54b8386167d529
-- subject_name: Symantec Enterprise Mobile Root for Microsoft
-  fingerprint: 8a5e4881d42f7475e8ec3726fcd5e51884aa04daa9fa7adac8cd26452cf885d4
 - subject_name: T-TeleSec GlobalRoot Class 2
   fingerprint: 91e2f5788d5810eba7ba58737de1548a8ecacd014598bc0b143e041b17052552
 - subject_name: T-TeleSec GlobalRoot Class 3
@@ -515,7 +511,7 @@ trusted_certificates:
   fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
 - subject_name: thawte Primary Root CA - G3
   fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 147
+blocked_certificates_count: 148
 blocked_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -773,6 +769,8 @@ blocked_certificates:
   fingerprint: f09b122c7114f4a09bd4ea4f4a99d558b46e4c25cd81140d29c05613914c3841
 - subject_name: Swisscom Root EV CA 2
   fingerprint: d95fea3ca4eedce74cd76e75fc6d1ff62c441f0fa8bc77f034b19e5db258015d
+- subject_name: Symantec Enterprise Mobile Root for Microsoft
+  fingerprint: 8a5e4881d42f7475e8ec3726fcd5e51884aa04daa9fa7adac8cd26452cf885d4
 - subject_name: TC TrustCenter Class 3 CA II
   fingerprint: 8da084fcf99ce07722f89b3205939806fa5cb811e1c813f6a108c7d336b3408e
 - subject_name: TM Applied Business Root Certificate

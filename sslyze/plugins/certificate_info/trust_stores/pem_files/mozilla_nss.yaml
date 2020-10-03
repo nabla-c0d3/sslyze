@@ -1,7 +1,7 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2020-06-21
+date_fetched: 2020-09-17
 trusted_certificates_count: 138
 trusted_certificates:
 - subject_name: AAA Certificate Services
@@ -86,8 +86,6 @@ trusted_certificates:
   fingerprint: b0bfd52bb0d7d9bd92bf5d4dc13da255c02c542f378365ea893911f55e55f23c
 - subject_name: EC-ACC
   fingerprint: 88497f01602f3154246ae28c4d5aef10f1d87ebb76626f4ae0b7f95ba7968799
-- subject_name: EE Certification Centre Root CA
-  fingerprint: 3e84ba4342908516e77573c0992f0979ca084e4685681ff195ccba8a229b8a76
 - subject_name: Entrust Root Certification Authority
   fingerprint: 73c176434f1bc6d5adf45b0e76e727287c8de57616c1e6e6141a2b2cbc7d8e4c
 - subject_name: Entrust Root Certification Authority - EC1
@@ -138,8 +136,6 @@ trusted_certificates:
   fingerprint: c3846bf24b9e93ca64274c0ec67c1ecc5e024ffcacd2d74019350e81fe546ae4
 - subject_name: Go Daddy Root Certificate Authority - G2
   fingerprint: 45140b3247eb9cc8c5b4f0d7b53091f73292089e6e5a63e2749dd3aca9198eda
-- subject_name: Government Root Certification Authority
-  fingerprint: 7600295eefe85b9e1fd624db76062aaaae59818a54d2774cd4c0b2c01131e1b3
 - subject_name: Hellenic Academic and Research Institutions ECC RootCA 2015
   fingerprint: 44b545aa8a25e65a73ca15dc27fc36d24c1cb9953a066539b11582dc487b4833
 - subject_name: Hellenic Academic and Research Institutions RootCA 2011
@@ -168,8 +164,6 @@ trusted_certificates:
   fingerprint: 6c61dac3a2def031506be036d2a6fe401994fbd13df9c8d466599274c446ec98
 - subject_name: Network Solutions Certificate Authority
   fingerprint: 15f0ba00a3ac7af3ac884c072b1011a077bd77c097f40164b2f8598abd83860c
-- subject_name: OISTE WISeKey Global Root GA CA
-  fingerprint: 41c923866ab4cad6b7ad578081582e020797a6cbdf4fff78ce8396b38937d7f5
 - subject_name: OISTE WISeKey Global Root GB CA
   fingerprint: 6b9c08e86eb0f767cfad65cd98b62149e5494a67f5845e7bd1ed019f27b86bd6
 - subject_name: OISTE WISeKey Global Root GC CA
@@ -242,6 +236,12 @@ trusted_certificates:
   fingerprint: 0753e940378c1bd5e3836e395daea5cb839e5046f1bd0eae1951cf10fec7c965
 - subject_name: Trustis FPS Root CA
   fingerprint: c1b48299aba5208fe9630ace55ca68a03eda5a519c8802a0d3a673be8f8e557d
+- subject_name: Trustwave Global Certification Authority
+  fingerprint: 97552015f5ddfc3c8788c006944555408894450084f100867086bc1a2bb58dc8
+- subject_name: Trustwave Global ECC P256 Certification Authority
+  fingerprint: 945bbc825ea554f489d1fd51a73ddf2ea624ac7019a05205225c22a78ccfa8b4
+- subject_name: Trustwave Global ECC P384 Certification Authority
+  fingerprint: 55903859c8c0c3ebb8759ece4e2557225ff5758bbd38ebd48276601e1bd58097
 - subject_name: UCA Extended Validation Root
   fingerprint: d43af9b35473755c9684fc06d7d8cb70ee5c28e773fb294eb41ee71722924d24
 - subject_name: UCA Global G2 Root

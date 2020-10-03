@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 nassl = "<3.1.0,>=3.0.0"
-cryptography = "<=2.9,>=2.6"
+cryptography = "<3.2,>=2.6"
 tls-parser = "==1.2.2"
 
 [dev-packages]

@@ -1,5 +1,7 @@
 from typing import Dict, Type, TYPE_CHECKING, Set
 
+from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesImplementation
+
 try:
     # Python 3.7
     from typing_extensions import Literal
@@ -52,6 +54,7 @@ ScanCommandType = Literal[
     "session_resumption",
     "session_resumption_rate",
     "http_headers",
+    "elliptic_curves",
 ]
 
 
@@ -87,6 +90,7 @@ class ScanCommand:
     SESSION_RESUMPTION_RATE: Literal["session_resumption_rate"] = "session_resumption_rate"
 
     HTTP_HEADERS: Literal["http_headers"] = "http_headers"
+    ELLIPTIC_CURVES: Literal["elliptic_curves"] = "elliptic_curves"
 
 
 class ScanCommandsRepository:
@@ -117,4 +121,5 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommandType, Type["ScanCommandImplementation"]
     ScanCommand.SESSION_RESUMPTION: SessionResumptionSupportImplementation,
     ScanCommand.SESSION_RESUMPTION_RATE: SessionResumptionRateImplementation,
     ScanCommand.HTTP_HEADERS: HttpHeadersImplementation,
+    ScanCommand.ELLIPTIC_CURVES: SupportedEllipticCurvesImplementation,
 }

@@ -5,7 +5,7 @@ from typing import Optional
 from dataclasses import dataclass
 
 from nassl import _nassl
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested, SslClient
 
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
 from sslyze.errors import (
@@ -46,6 +46,7 @@ class ServerTlsProbingResult:
     highest_tls_version_supported: TlsVersionEnum
     cipher_suite_supported: str  # The OpenSSL name of a cipher suite supported by the server
     client_auth_requirement: ClientAuthRequirementEnum
+    supports_ecdh_key_exchange: bool
 
 
 @dataclass(frozen=True)
@@ -234,10 +235,43 @@ class ServerConnectivityTester:
                 network_configuration=final_network_config,
                 error_message="Probing failed: could not find a TLS version and cipher suite supported by the server",
             )
+
+        # Check if ECDH key exchanges are supported
+        is_ecdh_key_exchange_supported = False
+        if "ECDH" in cipher_suite_supported:
+            is_ecdh_key_exchange_supported = True
+        else:
+            if highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_2.value:
+                ssl_connection = SslConnection(
+                    server_location=server_location,
+                    network_configuration=final_network_config,
+                    tls_version=highest_tls_version_supported,
+                    should_use_legacy_openssl=False,
+                    should_ignore_client_auth=True,
+                )
+                if not isinstance(ssl_connection.ssl_client, SslClient):
+                    raise RuntimeError(
+                        "Should never happen: specified should_use_legacy_openssl=False but didn't get the modern"
+                        " SSL client"
+                    )
+
+                # Set the right elliptic curve cipher suites
+                enable_ecdh_cipher_suites(highest_tls_version_supported, ssl_connection.ssl_client)
+                try:
+                    ssl_connection.connect(should_retry_connection=False)
+                    is_ecdh_key_exchange_supported = True
+                except ClientCertificateRequested:
+                    is_ecdh_key_exchange_supported = True
+                except ServerRejectedTlsHandshake:
+                    is_ecdh_key_exchange_supported = False
+                finally:
+                    ssl_connection.close()
+
         tls_probing_result = ServerTlsProbingResult(
             highest_tls_version_supported=highest_tls_version_supported,
             cipher_suite_supported=cipher_suite_supported,
             client_auth_requirement=client_auth_requirement,
+            supports_ecdh_key_exchange=is_ecdh_key_exchange_supported,
         )
 
         return ServerConnectivityInfo(
@@ -245,3 +279,17 @@ class ServerConnectivityTester:
             network_configuration=final_network_config,
             tls_probing_result=tls_probing_result,
         )
+
+
+def enable_ecdh_cipher_suites(tls_version: TlsVersionEnum, ssl_client: SslClient) -> None:
+    """Set the elliptic curve cipher suites.
+    """
+    if tls_version == TlsVersionEnum.TLS_1_3:
+        # Cipher suites source: https://tools.ietf.org/html/rfc8446#appendix-B.4
+        ssl_client.set_ciphersuites(
+            "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:"
+            "TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256"
+        )
+    else:
+        # TLSv1.2; cipher suite source: https://www.openssl.org/docs/man1.0.2/man1/ciphers.html
+        ssl_client.set_cipher_list("ECDH")

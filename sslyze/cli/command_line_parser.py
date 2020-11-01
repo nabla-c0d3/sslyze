@@ -93,6 +93,7 @@ class CommandLineParser:
         "openssl_ccs",
         "fallback",
         "robot",
+        "elliptic_curves",
     ]
 
     SSLYZE_USAGE = "usage: %prog [options] target1.com target2.com:443 target3.com:443{ip} etc..."

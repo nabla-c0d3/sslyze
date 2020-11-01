@@ -15,6 +15,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandWrongUsageError,
 )
+from sslyze.server_connectivity import enable_ecdh_cipher_suites
 
 
 @dataclass(frozen=True)
@@ -152,18 +153,8 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
             "Should never happen: specified should_use_legacy_openssl=False but didn't get the modern SSL client"
         )
 
-    # Set the right elliptic curve cipher suites
-    if tls_version == TlsVersionEnum.TLS_1_3:
-        # Cipher suites source: https://tools.ietf.org/html/rfc8446#appendix-B.4
-        ssl_connection.ssl_client.set_ciphersuites(
-            "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:"
-            "TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256"
-        )
-    else:
-        # TLSv1.2; cipher suite source: https://www.openssl.org/docs/man1.0.2/man1/ciphers.html
-        ssl_connection.ssl_client.set_cipher_list("ECDH")
-
-    # set curve to test whether it is supported by the server
+    # Set curve to test whether it is supported by the server
+    enable_ecdh_cipher_suites(tls_version, ssl_connection.ssl_client)
     ssl_connection.ssl_client.set_groups([curve_nid])
 
     try:

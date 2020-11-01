@@ -65,6 +65,17 @@ Result class
    :members:
    :undoc-members:
 
+Supported Elliptic Curves
+*************************
+
+**ScanCommand.ELLIPTIC_CURVES**: Test a server for supported elliptic curves.
+
+Result class
+============
+
+.. autoclass:: SupportedEllipticCurvesScanResult
+.. autoclass:: EllipticCurve
+
 ROBOT
 *****
 

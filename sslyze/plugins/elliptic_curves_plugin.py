@@ -5,7 +5,7 @@ from typing import List, Optional
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
 from nassl.ssl_client import ClientCertificateRequested, SslClient
 
-from sslyze import ServerConnectivityInfo, TlsVersionEnum
+from sslyze import ServerConnectivityInfo
 from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,

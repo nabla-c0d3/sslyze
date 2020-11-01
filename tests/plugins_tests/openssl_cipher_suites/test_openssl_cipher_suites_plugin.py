@@ -341,23 +341,3 @@ class TestCipherSuitesPluginWithLocalServer:
         # And the server's cipher suite preference was detected
         assert result.cipher_suite_preferred_by_server
         assert configured_cipher_suites[0] == result.cipher_suite_preferred_by_server.cipher_suite.openssl_name
-
-    # TODO: Fix me
-    @can_only_run_on_linux_64
-    def test_supported_curves(self):
-        with ModernOpenSslServer() as server:
-            server_test = ServerConnectivityTester(
-                hostname=server.hostname,
-                ip_address=server.ip_address,
-                port=server.port
-            )
-            server_info = server_test.perform()
-
-            plugin = OpenSslCipherSuitesPlugin()
-            plugin_result = plugin.process_task(server_info, Tlsv12ScanCommand())
-
-            reference = ['X25519', 'X448', 'prime256v1', 'secp384r1', 'secp521r1']
-
-            assert plugin_result.supported_curves == reference
-            assert plugin_result.as_text()
-            assert plugin_result.as_xml()

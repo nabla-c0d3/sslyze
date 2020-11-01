@@ -64,6 +64,7 @@ class ServerConnectivityInfoFactory:
                 highest_tls_version_supported=TlsVersionEnum.TLS_1_2,
                 cipher_suite_supported="AES",
                 client_auth_requirement=ClientAuthRequirementEnum.DISABLED,
+                supports_ecdh_key_exchange=True,
             )
 
         return ServerConnectivityInfo(

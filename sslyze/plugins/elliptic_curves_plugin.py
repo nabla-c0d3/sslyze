@@ -3,18 +3,31 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.ssl_client import ClientCertificateRequested, SslClient
 
 from sslyze import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
-from sslyze.plugins.plugin_base import ScanCommandResult, ScanCommandCliConnector, ScanCommandImplementation, \
-    ScanCommandExtraArguments, ScanJob, ScanCommandWrongUsageError
+from sslyze.plugins.plugin_base import (
+    ScanCommandResult,
+    ScanCommandCliConnector,
+    ScanCommandImplementation,
+    ScanCommandExtraArguments,
+    ScanJob,
+    ScanCommandWrongUsageError,
+)
 
 
 @dataclass(frozen=True)
 class EllipticCurve:
-    name: str  # The ANSI X9.62 name if available, otherwise the SECG name
-    openssl_nid: int  # OpenSSL NID_XXX value valid for OpenSslEvpPkeyEnum.EC (obj_mac.h)
+    """A specific elliptic curve.
+
+    Attributes:
+        name: The ANSI X9.62 name if available, otherwise the SECG name.
+        openssl_nid: The OpenSSL NID_XXX value valid for OpenSslEvpPkeyEnum.EC (obj_mac.h).
+    """
+
+    name: str
+    openssl_nid: int
 
 
 @dataclass(frozen=True)
@@ -23,9 +36,9 @@ class SupportedEllipticCurvesScanResult(ScanCommandResult):
 
     Attributes:
         supports_ecdh_key_exchange: True if the server supports at least one cipher suite with an ECDH key exchange.
-        supported_curves: A list of elliptic curves that were accepted by the server or `None` if the server does not
+        supported_curves: A list of `EllipticCurve` that were accepted by the server or `None` if the server does not
             support ECDH cipher suites.
-        rejected_curves: A list of elliptic curves that were rejected by the server or `None` if the server does not
+        rejected_curves: A list of `EllipticCurve` that were rejected by the server or `None` if the server does not
             support ECDH cipher suites.
     """
 
@@ -41,15 +54,22 @@ class _SupportedEllipticCurvesCliConnector(ScanCommandCliConnector[SupportedElli
 
     @classmethod
     def result_to_console_output(cls, result: SupportedEllipticCurvesScanResult) -> List[str]:
-        result_as_txt = [cls._format_title("Supported Elliptic Curves")]
+        result_as_txt = [cls._format_title("Elliptic Curve Key Exchange")]
 
         if not result.supports_ecdh_key_exchange:
             result_as_txt.append(
                 cls._format_subtitle("The server does not support cipher suites with ECDH key exchanges.")
             )
         else:
-            result_as_txt.append(cls._format_field("Supported curves", ", ".join(result.supported_curves)))
-            result_as_txt.append(cls._format_field("Rejected curves", ", ".join(result.rejected_curves)))
+            if result.supported_curves is None:
+                raise RuntimeError("Should never happen")
+            if result.rejected_curves is None:
+                raise RuntimeError("Should never happen")
+
+            supported_curves_names = [curve.name for curve in result.supported_curves]
+            rejected_curves_names = [curve.name for curve in result.rejected_curves]
+            result_as_txt.append(cls._format_field("Supported curves:", ", ".join(supported_curves_names)))
+            result_as_txt.append(cls._format_field("Rejected curves:", ", ".join(rejected_curves_names)))
         return result_as_txt
 
 
@@ -66,7 +86,7 @@ class SupportedEllipticCurvesImplementation(ScanCommandImplementation[SupportedE
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
-        if not server_info.tls_probing_result.is_ecdh_key_exchange_supported:
+        if not server_info.tls_probing_result.supports_ecdh_key_exchange:
             # Nothing to test: the server doesn't support EC key exchange
             return [ScanJob(function_to_call=_raise_elliptic_curve_not_supported, function_arguments=[])]
 
@@ -90,9 +110,7 @@ class SupportedEllipticCurvesImplementation(ScanCommandImplementation[SupportedE
                 raise RuntimeError("Should never happen")
             except _EllipticCurveNotSupported:
                 return SupportedEllipticCurvesScanResult(
-                    supports_ecdh_key_exchange=False,
-                    supported_curves=None,
-                    rejected_curves=None,
+                    supports_ecdh_key_exchange=False, supported_curves=None, rejected_curves=None,
                 )
         else:
             all_ecdh_results = [scan_job.result() for scan_job in completed_scan_jobs]
@@ -121,20 +139,21 @@ class _EllipticCurveResult:
     was_accepted_by_server: bool
 
 
-def _test_curve(
-        server_info: ServerConnectivityInfo,
-        curve_nid: OpenSslEcNidEnum
-) -> _EllipticCurveResult:
-    if not server_info.tls_probing_result.is_ecdh_key_exchange_supported:
+def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum) -> _EllipticCurveResult:
+    if not server_info.tls_probing_result.supports_ecdh_key_exchange:
         raise RuntimeError("Should never happen")
 
     tls_version = server_info.tls_probing_result.highest_tls_version_supported
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version, should_use_legacy_openssl=False
     )
+    if not isinstance(ssl_connection.ssl_client, SslClient):
+        raise RuntimeError(
+            "Should never happen: specified should_use_legacy_openssl=False but didn't get the modern SSL client"
+        )
 
     # Set the right elliptic curve cipher suites
-    if tls_version == TlsVersionEnum.TLSV1_3:
+    if tls_version == TlsVersionEnum.TLS_1_3:
         # Cipher suites source: https://tools.ietf.org/html/rfc8446#appendix-B.4
         ssl_connection.ssl_client.set_ciphersuites(
             "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:"
@@ -169,11 +188,9 @@ def _test_curve(
                 raise RuntimeError("Should never happen")
 
             return _EllipticCurveResult(
-                curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value),
-                was_accepted_by_server=True,
+                curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value), was_accepted_by_server=True,
             )
-    else:
-        return _EllipticCurveResult(
-            curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value),
-            was_accepted_by_server=False,
-        )
+
+    return _EllipticCurveResult(
+        curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value), was_accepted_by_server=False,
+    )

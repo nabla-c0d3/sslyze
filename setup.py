@@ -90,7 +90,7 @@ setup(
     # Dependencies
     install_requires=[
         "nassl>=3.0.0,<3.1.0",
-        "cryptography>=2.6,<3.2",
+        "cryptography>=2.6,<3.3",
         "tls-parser>=1.2.2,<1.3.0",
         "typing_extensions ; python_version<'3.8'",  # To remove when we drop support for Python 3.7
     ],

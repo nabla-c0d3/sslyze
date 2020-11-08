@@ -109,7 +109,7 @@ class TestCipherSuitesPluginWithOnlineServer:
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
 
-        # And the result confirms that TLS 1.2 is not supported
+        # And the result confirms that TLS 1.2 is supported
         expected_ciphers = {
             "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
             "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
@@ -167,6 +167,28 @@ class TestCipherSuitesPluginWithOnlineServer:
 
         # And the RC4 cipher suites were detected
         assert {"TLS_ECDHE_RSA_WITH_RC4_128_SHA", "TLS_RSA_WITH_RC4_128_SHA"} == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
+
+    def test_ecdsa_cipher_suites(self):
+        # Given a server to scan that supports ECDSA cipher suites
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("ecc256.badssl.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
+
+        # When scanning for cipher suites, it succeeds
+        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
+
+        # And the RC4 cipher suites were detected
+        expected_ciphers = {
+            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+        }
+        assert expected_ciphers == {
             accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
         }
 

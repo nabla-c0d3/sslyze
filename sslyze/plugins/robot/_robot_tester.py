@@ -156,33 +156,37 @@ class ServerDoesNotSupportRsa(Exception):
 def test_robot(server_info: ServerConnectivityInfo) -> Dict[RobotPmsPaddingPayloadEnum, str]:
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher
     if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
-        ssl_version_to_use = TlsVersionEnum.TLS_1_2
+        tls_version_to_use = TlsVersionEnum.TLS_1_2
     else:
-        ssl_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
+        tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
 
     rsa_params = None
     # With TLS 1.2 some servers are only vulnerable when using the GCM cipher suites - try them first
-    if ssl_version_to_use == TlsVersionEnum.TLS_1_2:
+    if tls_version_to_use == TlsVersionEnum.TLS_1_2:
         cipher_string = "AES128-GCM-SHA256:AES256-GCM-SHA384"
-        rsa_params = _get_rsa_parameters(server_info, cipher_string)
+        rsa_params = _get_rsa_parameters(server_info, tls_version_to_use, cipher_string)
 
     if rsa_params is None:
         # The attempts with GCM TLS 1.2 RSA cipher suites failed - try the normal RSA cipher suites
         cipher_string = "RSA"
-        rsa_params = _get_rsa_parameters(server_info, cipher_string)
+        rsa_params = _get_rsa_parameters(server_info, tls_version_to_use, cipher_string)
 
     if rsa_params is None:
         # Could not connect to the server using RSA - not vulnerable
         raise ServerDoesNotSupportRsa()
 
-    rsa_modulus = rsa_params.n  # type: ignore  # mypy bug?
-    rsa_exponent = rsa_params.e  # type: ignore  # mypy bug?
+    rsa_modulus = rsa_params.n
+    rsa_exponent = rsa_params.e
 
     # On the first attempt, finish the TLS handshake after sending the Robot payload
     robot_should_complete_handshake = True
     server_responses_per_robot_payloads = _run_oracle_detection(
-        server_info, ssl_version_to_use, cipher_string, rsa_modulus, rsa_exponent, robot_should_complete_handshake
+        server_info, tls_version_to_use, cipher_string, rsa_modulus, rsa_exponent, robot_should_complete_handshake
     )
+    return server_responses_per_robot_payloads
+
+    # TODO(AD): The following section was taken from the original ROBOT poc script but makes the scans really slow as it
+    # waits for server timeouts
     robot_result_enum = RobotServerResponsesAnalyzer(
         {payload_enum: [response] for payload_enum, response in server_responses_per_robot_payloads.items()}, 1
     ).compute_result_enum()
@@ -191,7 +195,7 @@ def test_robot(server_info: ServerConnectivityInfo) -> Dict[RobotPmsPaddingPaylo
         # Try again but this time do not finish the TLS handshake - for some servers it will reveal an oracle
         robot_should_complete_handshake = False
         server_responses_per_robot_payloads = _run_oracle_detection(
-            server_info, ssl_version_to_use, cipher_string, rsa_modulus, rsa_exponent, robot_should_complete_handshake
+            server_info, tls_version_to_use, cipher_string, rsa_modulus, rsa_exponent, robot_should_complete_handshake
         )
 
     return server_responses_per_robot_payloads
@@ -221,8 +225,15 @@ def _run_oracle_detection(
     return server_responses_per_robot_payloads
 
 
-def _get_rsa_parameters(server_info: ServerConnectivityInfo, openssl_cipher_string: str) -> Optional[RSAPublicNumbers]:
-    ssl_connection = server_info.get_preconfigured_tls_connection()
+def _get_rsa_parameters(
+        server_info: ServerConnectivityInfo,
+        tls_version: TlsVersionEnum,
+        openssl_cipher_string: str
+) -> Optional[RSAPublicNumbers]:
+    ssl_connection = server_info.get_preconfigured_tls_connection(
+        override_tls_version=tls_version,
+        should_use_legacy_openssl=True,
+    )
     ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
     parsed_cert = None
     try:

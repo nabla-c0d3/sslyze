@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 from nassl.ephemeral_key_info import EphemeralKeyInfo
 from nassl.legacy_ssl_client import LegacySslClient
-from nassl.ssl_client import ClientCertificateRequested, SslClient
+from nassl.ssl_client import ClientCertificateRequested, SslClient, BaseSslClient
 
 from sslyze.errors import (
     ServerRejectedTlsHandshake,
@@ -48,30 +48,7 @@ def connect_with_cipher_suite(
     ssl_connection = server_connectivity_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version, should_use_legacy_openssl=requires_legacy_openssl
     )
-
-    # Only enable the cipher suite to test; not trivial anymore since OpenSSL 1.1.1 and TLS 1.3
-    if isinstance(ssl_connection.ssl_client, SslClient):
-        # With the modern OpenSSL client we have to manage TLS 1.3-specific cipher functions
-        if tls_version == TlsVersionEnum.TLS_1_3:
-            legacy_openssl_cipher_string = ""
-            tls1_3_openssl_cipher_string = cipher_suite.openssl_name
-        else:
-            legacy_openssl_cipher_string = cipher_suite.openssl_name
-            tls1_3_openssl_cipher_string = ""
-
-        ssl_connection.ssl_client.set_ciphersuites(tls1_3_openssl_cipher_string)  # TLS 1.3 method
-        ssl_connection.ssl_client.set_cipher_list(legacy_openssl_cipher_string)  # Legacy method
-    elif isinstance(ssl_connection.ssl_client, LegacySslClient):
-        # With the legacy OpenSSL client, nothing special to do
-        ssl_connection.ssl_client.set_cipher_list(cipher_suite.openssl_name)
-    else:
-        raise RuntimeError("Should never happen")
-
-    if len(ssl_connection.ssl_client.get_cipher_list()) != 1:
-        raise ValueError(
-            f'Passed an OpenSSL string for multiple cipher suites: "{cipher_suite.openssl_name}": '
-            f"{str(ssl_connection.ssl_client.get_cipher_list())}"
-        )
+    _set_cipher_suite_string(tls_version, cipher_suite.openssl_name, ssl_connection.ssl_client)
 
     ephemeral_key = None
     try:
@@ -146,7 +123,7 @@ def _get_selected_cipher_suite(
     server_connectivity: ServerConnectivityInfo, tls_version: TlsVersionEnum, openssl_cipher_string: str
 ) -> str:
     ssl_connection = server_connectivity.get_preconfigured_tls_connection(override_tls_version=tls_version)
-    ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
+    _set_cipher_suite_string(tls_version, openssl_cipher_string, ssl_connection.ssl_client)
 
     # Perform the SSL handshake
     try:
@@ -157,3 +134,18 @@ def _get_selected_cipher_suite(
         return ssl_connection.ssl_client.get_current_cipher_name()
     finally:
         ssl_connection.close()
+
+
+def _set_cipher_suite_string(tls_version: TlsVersionEnum, cipher_suite_str: str, ssl_client: BaseSslClient) -> None:
+    # Only enable the cipher suite to test; not trivial anymore since OpenSSL 1.1.1 and TLS 1.3
+    if isinstance(ssl_client, SslClient):
+        # With the modern OpenSSL client we have to manage TLS 1.3-specific cipher functions
+        if tls_version == TlsVersionEnum.TLS_1_3:
+            ssl_client.set_ciphersuites(cipher_suite_str)  # TLS 1.3 method
+        else:
+            ssl_client.set_cipher_list(cipher_suite_str)  # Legacy method
+    elif isinstance(ssl_client, LegacySslClient):
+        # With the legacy OpenSSL client, nothing special to do
+        ssl_client.set_cipher_list(cipher_suite_str)
+    else:
+        raise RuntimeError("Should never happen")

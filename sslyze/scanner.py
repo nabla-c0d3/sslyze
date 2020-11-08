@@ -8,6 +8,8 @@ from typing import Dict, Iterable, List, Set, Optional
 
 from nassl.ssl_client import ClientCertificateRequested
 
+from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanResult
+
 try:
     # Python 3.7
     from typing_extensions import TypedDict
@@ -101,6 +103,7 @@ class ScanCommandResultsDict(TypedDict, total=False):
     session_resumption: SessionResumptionSupportScanResult
     session_resumption_rate: SessionResumptionRateScanResult
     http_headers: HttpHeadersScanResult
+    elliptic_curves: SupportedEllipticCurvesScanResult
 
 
 ScanCommandErrorsDict = Dict[ScanCommandType, ScanCommandError]

@@ -558,6 +558,16 @@ _RFC_NAME_TO_KEY_SIZE_MAPPING: Dict[str, int] = {
 }
 
 
+# TLS 1.3 cipher suites implemented in OpenSSL 1.1.1
+_TLS_1_3_CIPHER_SUITES = [
+    "TLS_AES_128_GCM_SHA256",
+    "TLS_AES_128_CCM_SHA256",
+    "TLS_AES_256_GCM_SHA384",
+    "TLS_AES_128_CCM_8_SHA256",
+    "TLS_CHACHA20_POLY1305_SHA256",
+]
+
+
 def _parse_all_cipher_suites_with_legacy_openssl(tls_version: TlsVersionEnum) -> Set[str]:
     ssl_client = LegacySslClient(ssl_version=OpenSslVersionEnum(tls_version.value))
     # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
@@ -592,13 +602,16 @@ def _parse_all_cipher_suites() -> Dict[TlsVersionEnum, Set[CipherSuite]]:
 
         ssl_client_modern = SslClient(ssl_version=OpenSslVersionEnum(TlsVersionEnum.TLS_1_2.value))
         ssl_client_modern.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
-        ssl_client_modern.set_ciphersuites("")  # Disable TLS 1.3 cipher suites
         cipher_suites_from_modern_openssl = set(ssl_client_modern.get_cipher_list())
 
         # Combine the two sets of cipher suites
         openssl_cipher_strings = cipher_suites_from_legacy_openssl.union(cipher_suites_from_modern_openssl)
         tls_version_to_cipher_suites[TlsVersionEnum.TLS_1_2] = set()
         for cipher_suite_openssl_name in openssl_cipher_strings:
+            # Ignore TLS 1.3 cipher suites
+            if cipher_suite_openssl_name in _TLS_1_3_CIPHER_SUITES:
+                continue
+
             cipher_suite_rfc_name = _OPENSSL_TO_RFC_NAMES_MAPPING[TlsVersionEnum.TLS_1_2][cipher_suite_openssl_name]
             tls_version_to_cipher_suites[TlsVersionEnum.TLS_1_2].add(
                 CipherSuite(
@@ -609,24 +622,16 @@ def _parse_all_cipher_suites() -> Dict[TlsVersionEnum, Set[CipherSuite]]:
                 )
             )
 
-        # TLS 1.3
-        ssl_client_modern = SslClient(ssl_version=OpenSslVersionEnum(TlsVersionEnum.TLS_1_3.value))
-        ssl_client_modern.set_cipher_list("")  # Disable NON-TLS-1.3 cipher suites
-        ssl_client_modern.set_ciphersuites(
-            "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:"
-            "TLS_AES_128_CCM_SHA256:TLS_AES_128_CCM_8_SHA256"
-        )  # Enable all TLS 1.3 cipher suites
-        openssl_cipher_strings = set(ssl_client_modern.get_cipher_list())
-
+        # TLS 1.3 - the list is just hardcoded
         tls_version_to_cipher_suites[TlsVersionEnum.TLS_1_3] = {
             CipherSuite(
                 # For TLS 1.3 OpenSSL started using the official names
-                name=cipher_suite_openssl_name,
-                openssl_name=cipher_suite_openssl_name,
+                name=cipher_suite_name,
+                openssl_name=cipher_suite_name,
                 is_anonymous=False,
-                key_size=_RFC_NAME_TO_KEY_SIZE_MAPPING[cipher_suite_openssl_name],
+                key_size=_RFC_NAME_TO_KEY_SIZE_MAPPING[cipher_suite_name],
             )
-            for cipher_suite_openssl_name in openssl_cipher_strings
+            for cipher_suite_name in _TLS_1_3_CIPHER_SUITES
         }
 
     return tls_version_to_cipher_suites

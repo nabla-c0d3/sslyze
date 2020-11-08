@@ -226,13 +226,10 @@ def _run_oracle_detection(
 
 
 def _get_rsa_parameters(
-        server_info: ServerConnectivityInfo,
-        tls_version: TlsVersionEnum,
-        openssl_cipher_string: str
+    server_info: ServerConnectivityInfo, tls_version: TlsVersionEnum, openssl_cipher_string: str
 ) -> Optional[RSAPublicNumbers]:
     ssl_connection = server_info.get_preconfigured_tls_connection(
-        override_tls_version=tls_version,
-        should_use_legacy_openssl=True,
+        override_tls_version=tls_version, should_use_legacy_openssl=True,
     )
     ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
     parsed_cert = None

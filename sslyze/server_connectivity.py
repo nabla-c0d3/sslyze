@@ -110,7 +110,11 @@ class ServerConnectivityInfo:
             should_enable_server_name_indication=should_enable_server_name_indication,
         )
         if final_openssl_cipher_string:
-            ssl_connection.ssl_client.set_cipher_list(final_openssl_cipher_string)
+            if final_ssl_version == TlsVersionEnum.TLS_1_3:
+                # OpenSSL uses a different API for TLS 1.3
+                ssl_connection.ssl_client.set_ciphersuites(final_openssl_cipher_string)
+            else:
+                ssl_connection.ssl_client.set_cipher_list(final_openssl_cipher_string)
 
         return ssl_connection
 

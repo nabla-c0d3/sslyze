@@ -70,6 +70,7 @@ class TestConsoleOutputGenerator:
             tls_probing_result=ServerTlsProbingResult(
                 highest_tls_version_supported=TlsVersionEnum.TLS_1_2,
                 cipher_suite_supported="AES",
+                supports_ecdh_key_exchange=True,
                 # And the server requires client authentication
                 client_auth_requirement=ClientAuthRequirementEnum.REQUIRED,
             )

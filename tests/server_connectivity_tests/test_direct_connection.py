@@ -39,6 +39,7 @@ class TestServerConnectivityTester:
         assert server_info.tls_probing_result.cipher_suite_supported
         assert server_info.tls_probing_result.highest_tls_version_supported
         assert server_info.tls_probing_result.client_auth_requirement
+        assert server_info.tls_probing_result.supports_ecdh_key_exchange
         assert server_info.get_preconfigured_tls_connection()
 
     def test_via_direct_connection_but_server_timed_out(self):

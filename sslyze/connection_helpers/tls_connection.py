@@ -117,6 +117,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "Connection was shut down by peer": "Server closed the connection during the TLS handshake",
     "alert bad record mac": "TLS alert: bad record mac",
     "tlsv1 alert internal error": "TLS alert: Internal error",
+    "illegal padding": "TLS alert: Illegal padding",
 }
 
 

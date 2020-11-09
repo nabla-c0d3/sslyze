@@ -1,8 +1,8 @@
 platform: OPENJDK
-version: jdk-15
-url: https://download.java.net/java/GA/jdk15/779bf45e88a44cbd9ea6621d33e33db1/36/GPL/openjdk-15_linux-x64_bin.tar.gz
-date_fetched: 2020-09-17
-trusted_certificates_count: 91
+version: jdk-15.0.1
+url: https://download.java.net/java/GA/jdk15.0.1/51f4f36ad4ef43e39d0dfdbaf6549e32/9/GPL/openjdk-15.0.1_linux-x64_bin.tar.gz
+date_fetched: 2020-10-22
+trusted_certificates_count: 95
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -80,6 +80,8 @@ trusted_certificates:
   fingerprint: 02ed0eb28c14da45165c566791700d6451d7fb56f0b2ab1d3b8eb070e56edff5
 - subject_name: Entrust Root Certification Authority - G2
   fingerprint: 43df5774b03e7fef5fe40d931a7bedf1bb2e6b42738c4e6d3841103d3aa7f339
+- subject_name: Entrust Root Certification Authority - G4
+  fingerprint: db3517d1f6732a2d5ab97c533ec70779ee3270a62fb4ac4238372460e6f01e88
 - subject_name: Entrust.net Certification Authority (2048)
   fingerprint: 6dc47172e01cbcb0bf62580d895fe2b8ac9ad4f873801e0c10b9c837d21eb177
 - subject_name: GeoTrust Global CA
@@ -132,6 +134,12 @@ trusted_certificates:
   fingerprint: 88ef81de202eb018452e43f864725cea5fbd1fc2d9d205730709c5d8b8690f46
 - subject_name: QuoVadis Root Certification Authority
   fingerprint: a45ede3bbbf09c8ae15c72efc07268d693a21c996fd51e67ca079460fd6d8873
+- subject_name: SSL.com EV Root Certification Authority RSA R2
+  fingerprint: 2e7bf16cc22485a7bbe2aa8696750761b0ae39be3b2fe9d0cc6d4ef73491425c
+- subject_name: SSL.com Root Certification Authority ECC
+  fingerprint: 3417bb06cc6007da1b961c920b8ab4ce3fad820e4aa30b9acbc4a74ebdcebc65
+- subject_name: SSL.com Root Certification Authority RSA
+  fingerprint: 85666a562ee0be5ce925c1d8890a6f76a87ec16d4d7d5f29ea7419cf20123b69
 - subject_name: SecureTrust CA
   fingerprint: f1c1b50ae5a20dd8030ec9f6bc24823dd367b5255759b4e71b61fce9f7375d73
 - subject_name: Security Communication RootCA1
@@ -186,8 +194,46 @@ trusted_certificates:
   fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
 - subject_name: thawte Primary Root CA - G3
   fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 19
+blocked_certificates_count: 38
 blocked_certificates:
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 03db9e5e79fe6117177f81c11595af598cb176af766290dbceb2c318b32e39a2
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 08c396c006a21055d00826a5781a5ccfce2c8d053ab3c197637a4a7a5bb9a650
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 1c5e6985acc09221dbd1a4b7bbc6d3a8c3f8540d19f20763a9537fdd42b4ffe7
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 1f6bf8a3f2399af7fd04516c2719c566cbad51f412738f66d0457e1e6bde6f2d
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 2a464e4113141352c7962fbd1706ed4b88533ef24d7bba6ccc5d797fd202f1c4
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 3e11cf90719f6fb44d94eac9a156b89bebe7b8598f28ec58913f2bfcaf91d0c0
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 423279423b9fc8cb06f1bb7c3b247522b948d5f18939f378ecc901126de40bfb
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 535d04dfce027c70bd5f8a9e0ad4f218e9afdcf5bbcf9b6de0d81e148e2e3172
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 568faf38d9f155f624838e2181b1ceb4d8459305ee652b0f810c97c3611bfe19
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 585cfe6b7436cbd4e732763a2137d7f49599ba9b1790e688fcec799c58eb84a6
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 71cb00749b9130fb2707a2664bff958d0fcc8e161d9674c7450ba0fc2beaf9d3
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: 9fadce80d62a959f9930d748488c1e22e821f4e1e4a43584b848c2fc11e04d77
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: a90132cea1d4f7185e4f688effd16f6ac14dfd78356a807599a5dabbeef3333e
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: c0d1f42b9f4bf7acc045b7bb5d4805e10737f67b6310ce505248d543d0d5fe07
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: d0156949f1381943442c6974e9b5b49ef441bb799ef20477b90a89c3f33620ce
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: d151962d954970501c60079258ebcfa38502e0a9f03cd640322b08c0a3117fe5
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: d6ceae5d9e047faf7d797858d229ac991ad44316d1e2a37a21926d763153593a
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: e0e740e4b0f8b3548181ff75b5372faf4c70b99ec995d694ed0fb91b03ff8d21
+- subject_name: ' CERTIFICATE NOT IN REPO: Blacklisted'
+  fingerprint: fbb12938abd86c125796edf4162d291028890a7d6c0c1cca75fd4b95ebfa7a1a
 - subject_name: BUSTER ASSISTENCIA TECNICA ELETRONICA LTDA - ME
   fingerprint: df21016b00fc54f9fe3bc8b039911bb216e9162fad2fd14d990ab96e951b49be
 - subject_name: Buster Paper Comercial Ltda

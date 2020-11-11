@@ -21,7 +21,7 @@ the results directly from Python.
 * Support for TLS 1.3 and early data (0-RTT) testing.
 * Scans are automatically dispatched among multiple workers, making them very fast.
 * Performance testing: session resumption and TLS tickets support.
-* Security testing: weak cipher suites, insecure renegotiation, ROBOT, Heartbleed and more.
+* Security testing: weak cipher suites, supported curves, ROBOT, Heartbleed and more.
 * Server certificate validation and revocation checking through OCSP stapling.
 * Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP, PostGres and FTP.
 * Scan results can be written to a JSON file for further processing.
@@ -34,7 +34,7 @@ SSLyze can be installed directly via pip:
 
     $ pip install --upgrade setuptools
     $ pip install --upgrade sslyze
-    $ python -m sslyze --regular www.yahoo.com:443 www.google.com "[2607:f8b0:400a:807::2004]:443"
+    $ python -m sslyze www.yahoo.com www.google.com "[2607:f8b0:400a:807::2004]:443"
 
 Documentation
 -------------

@@ -4,9 +4,10 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Step 2: Running Scan Commands Against a Server &#8212; SSLyze 3.0.8 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Step 2: Running Scan Commands Against a Server &#8212; SSLyze 3.1.0 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
@@ -157,7 +158,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 <dd class="field-odd"><p><strong>server_scan</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ServerScanRequest</span></code>) – </p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -183,7 +184,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>server_info</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ServerConnectivityInfo</span></code>) – </p></li>
-<li><p><strong>scan_commands</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘certificate_info’, ‘ssl_2_0_cipher_suites’, ‘ssl_3_0_cipher_suites’, ‘tls_1_0_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_2_cipher_suites’, ‘tls_1_3_cipher_suites’, ‘tls_compression’, ‘tls_1_3_early_data’, ‘openssl_ccs_injection’, ‘tls_fallback_scsv’, ‘heartbleed’, ‘robot’, ‘session_renegotiation’, ‘session_resumption’, ‘session_resumption_rate’, ‘http_headers’]]) – </p></li>
+<li><p><strong>scan_commands</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘certificate_info’, ‘ssl_2_0_cipher_suites’, ‘ssl_3_0_cipher_suites’, ‘tls_1_0_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_2_cipher_suites’, ‘tls_1_3_cipher_suites’, ‘tls_compression’, ‘tls_1_3_early_data’, ‘openssl_ccs_injection’, ‘tls_fallback_scsv’, ‘heartbleed’, ‘robot’, ‘session_renegotiation’, ‘session_resumption’, ‘session_resumption_rate’, ‘http_headers’, ‘elliptic_curves’]]) – </p></li>
 <li><p><strong>scan_commands_extra_arguments</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandExtraArgumentsDict</span></code>) – </p></li>
 </ul>
 </dd>
@@ -198,9 +199,9 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>scan_commands_results</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandResultsDict</span></code>) – </p></li>
-<li><p><strong>scan_commands_errors</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘certificate_info’, ‘ssl_2_0_cipher_suites’, ‘ssl_3_0_cipher_suites’, ‘tls_1_0_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_2_cipher_suites’, ‘tls_1_3_cipher_suites’, ‘tls_compression’, ‘tls_1_3_early_data’, ‘openssl_ccs_injection’, ‘tls_fallback_scsv’, ‘heartbleed’, ‘robot’, ‘session_renegotiation’, ‘session_resumption’, ‘session_resumption_rate’, ‘http_headers’], <code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandError</span></code>]) – </p></li>
+<li><p><strong>scan_commands_errors</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘certificate_info’, ‘ssl_2_0_cipher_suites’, ‘ssl_3_0_cipher_suites’, ‘tls_1_0_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_2_cipher_suites’, ‘tls_1_3_cipher_suites’, ‘tls_compression’, ‘tls_1_3_early_data’, ‘openssl_ccs_injection’, ‘tls_fallback_scsv’, ‘heartbleed’, ‘robot’, ‘session_renegotiation’, ‘session_resumption’, ‘session_resumption_rate’, ‘http_headers’, ‘elliptic_curves’], <code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandError</span></code>]) – </p></li>
 <li><p><strong>server_info</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ServerConnectivityInfo</span></code>) – </p></li>
-<li><p><strong>scan_commands</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘certificate_info’, ‘ssl_2_0_cipher_suites’, ‘ssl_3_0_cipher_suites’, ‘tls_1_0_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_2_cipher_suites’, ‘tls_1_3_cipher_suites’, ‘tls_compression’, ‘tls_1_3_early_data’, ‘openssl_ccs_injection’, ‘tls_fallback_scsv’, ‘heartbleed’, ‘robot’, ‘session_renegotiation’, ‘session_resumption’, ‘session_resumption_rate’, ‘http_headers’]]) – </p></li>
+<li><p><strong>scan_commands</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘certificate_info’, ‘ssl_2_0_cipher_suites’, ‘ssl_3_0_cipher_suites’, ‘tls_1_0_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_1_cipher_suites’, ‘tls_1_2_cipher_suites’, ‘tls_1_3_cipher_suites’, ‘tls_compression’, ‘tls_1_3_early_data’, ‘openssl_ccs_injection’, ‘tls_fallback_scsv’, ‘heartbleed’, ‘robot’, ‘session_renegotiation’, ‘session_resumption’, ‘session_resumption_rate’, ‘http_headers’, ‘elliptic_curves’]]) – </p></li>
 <li><p><strong>scan_commands_extra_arguments</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandExtraArgumentsDict</span></code>) – </p></li>
 </ul>
 </dd>
@@ -209,91 +210,96 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 
 <dl class="py class">
 <dt id="sslyze.ScanCommandResultsDict">
-<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandResultsDict</code><a class="headerlink" href="#sslyze.ScanCommandResultsDict" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandResultsDict</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ScanCommandResultsDict" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dictionary of results for every scan command that was scheduled against a specific server.</p>
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.certificate_info">
-<code class="sig-name descname">certificate_info</code><em class="property">: CertificateInfoScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.certificate_info" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">certificate_info</code><em class="property">: sslyze.plugins.certificate_info.implementation.CertificateInfoScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.certificate_info" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.ssl_2_0_cipher_suites">
-<code class="sig-name descname">ssl_2_0_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.ssl_2_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ssl_2_0_cipher_suites</code><em class="property">: sslyze.plugins.openssl_cipher_suites.implementation.CipherSuitesScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.ssl_2_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.ssl_3_0_cipher_suites">
-<code class="sig-name descname">ssl_3_0_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.ssl_3_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ssl_3_0_cipher_suites</code><em class="property">: sslyze.plugins.openssl_cipher_suites.implementation.CipherSuitesScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.ssl_3_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_1_0_cipher_suites">
-<code class="sig-name descname">tls_1_0_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tls_1_0_cipher_suites</code><em class="property">: sslyze.plugins.openssl_cipher_suites.implementation.CipherSuitesScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_0_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_1_1_cipher_suites">
-<code class="sig-name descname">tls_1_1_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_1_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tls_1_1_cipher_suites</code><em class="property">: sslyze.plugins.openssl_cipher_suites.implementation.CipherSuitesScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_1_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_1_2_cipher_suites">
-<code class="sig-name descname">tls_1_2_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_2_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tls_1_2_cipher_suites</code><em class="property">: sslyze.plugins.openssl_cipher_suites.implementation.CipherSuitesScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_2_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_1_3_cipher_suites">
-<code class="sig-name descname">tls_1_3_cipher_suites</code><em class="property">: CipherSuitesScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_3_cipher_suites" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tls_1_3_cipher_suites</code><em class="property">: sslyze.plugins.openssl_cipher_suites.implementation.CipherSuitesScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_3_cipher_suites" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_compression">
-<code class="sig-name descname">tls_compression</code><em class="property">: CompressionScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_compression" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tls_compression</code><em class="property">: sslyze.plugins.compression_plugin.CompressionScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_compression" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_1_3_early_data">
-<code class="sig-name descname">tls_1_3_early_data</code><em class="property">: EarlyDataScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_3_early_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tls_1_3_early_data</code><em class="property">: sslyze.plugins.early_data_plugin.EarlyDataScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_1_3_early_data" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.openssl_ccs_injection">
-<code class="sig-name descname">openssl_ccs_injection</code><em class="property">: OpenSslCcsInjectionScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.openssl_ccs_injection" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">openssl_ccs_injection</code><em class="property">: sslyze.plugins.openssl_ccs_injection_plugin.OpenSslCcsInjectionScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.openssl_ccs_injection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.tls_fallback_scsv">
-<code class="sig-name descname">tls_fallback_scsv</code><em class="property">: FallbackScsvScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_fallback_scsv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">tls_fallback_scsv</code><em class="property">: sslyze.plugins.fallback_scsv_plugin.FallbackScsvScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.tls_fallback_scsv" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.heartbleed">
-<code class="sig-name descname">heartbleed</code><em class="property">: HeartbleedScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.heartbleed" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">heartbleed</code><em class="property">: sslyze.plugins.heartbleed_plugin.HeartbleedScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.heartbleed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.robot">
-<code class="sig-name descname">robot</code><em class="property">: RobotScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.robot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">robot</code><em class="property">: sslyze.plugins.robot.implementation.RobotScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.robot" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.session_renegotiation">
-<code class="sig-name descname">session_renegotiation</code><em class="property">: SessionRenegotiationScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_renegotiation" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">session_renegotiation</code><em class="property">: sslyze.plugins.session_renegotiation_plugin.SessionRenegotiationScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_renegotiation" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.session_resumption">
-<code class="sig-name descname">session_resumption</code><em class="property">: SessionResumptionSupportScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_resumption" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">session_resumption</code><em class="property">: sslyze.plugins.session_resumption.implementation.SessionResumptionSupportScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_resumption" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.session_resumption_rate">
-<code class="sig-name descname">session_resumption_rate</code><em class="property">: SessionResumptionRateScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_resumption_rate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">session_resumption_rate</code><em class="property">: sslyze.plugins.session_resumption.implementation.SessionResumptionRateScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.session_resumption_rate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandResultsDict.http_headers">
-<code class="sig-name descname">http_headers</code><em class="property">: HttpHeadersScanResult</em><em class="property"> = None</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.http_headers" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">http_headers</code><em class="property">: sslyze.plugins.http_headers_plugin.HttpHeadersScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.http_headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="sslyze.ScanCommandResultsDict.elliptic_curves">
+<code class="sig-name descname">elliptic_curves</code><em class="property">: sslyze.plugins.elliptic_curves_plugin.SupportedEllipticCurvesScanResult</em><a class="headerlink" href="#sslyze.ScanCommandResultsDict.elliptic_curves" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -305,7 +311,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 
 <dl class="py class">
 <dt id="sslyze.ScanCommandErrorReasonEnum">
-<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandErrorReasonEnum</code><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">ScanCommandErrorReasonEnum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
 <dl class="py attribute">
 <dt id="sslyze.ScanCommandErrorReasonEnum.BUG_IN_SSLYZE">
@@ -421,7 +427,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
       &copy;Copyright 2020 Alban Diquet.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

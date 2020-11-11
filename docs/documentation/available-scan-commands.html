@@ -4,9 +4,10 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Appendix: Scan Commands &#8212; SSLyze 3.0.8 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Appendix: Scan Commands &#8212; SSLyze 3.1.0 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
@@ -33,7 +34,7 @@
           <div class="body" role="main">
             
   <div class="section" id="appendix-scan-commands">
-<h1><a class="toc-backref" href="#id12">Appendix: Scan Commands</a><a class="headerlink" href="#appendix-scan-commands" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id13">Appendix: Scan Commands</a><a class="headerlink" href="#appendix-scan-commands" title="Permalink to this headline">¶</a></h1>
 <p>Every type of scan that SSLyze can run against a server (supported cipher suites, session renegotiation, etc.) is
 represented by a <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code>, which, when run against a server, will return a specific result.</p>
 <p>This page lists all the <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code> and their corresponding results available in the current release of SSLyze.</p>
@@ -41,20 +42,21 @@ represented by a <code class="docutils literal notranslate"><span class="pre">Sc
 <div class="contents topic" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#appendix-scan-commands" id="id12">Appendix: Scan Commands</a></p>
+<li><p><a class="reference internal" href="#appendix-scan-commands" id="id13">Appendix: Scan Commands</a></p>
 <ul>
-<li><p><a class="reference internal" href="#certificate-information" id="id13">Certificate Information</a></p></li>
-<li><p><a class="reference internal" href="#cipher-suites" id="id14">Cipher Suites</a></p></li>
-<li><p><a class="reference internal" href="#robot" id="id15">ROBOT</a></p></li>
-<li><p><a class="reference internal" href="#session-resumption-support" id="id16">Session Resumption Support</a></p></li>
-<li><p><a class="reference internal" href="#session-resumption-rate" id="id17">Session Resumption Rate</a></p></li>
-<li><p><a class="reference internal" href="#crime" id="id18">CRIME</a></p></li>
-<li><p><a class="reference internal" href="#tls-1-3-early-data" id="id19">TLS 1.3 Early Data</a></p></li>
-<li><p><a class="reference internal" href="#downgrade-prevention" id="id20">Downgrade Prevention</a></p></li>
-<li><p><a class="reference internal" href="#heartbleed" id="id21">Heartbleed</a></p></li>
-<li><p><a class="reference internal" href="#http-security-headers" id="id22">HTTP Security Headers</a></p></li>
-<li><p><a class="reference internal" href="#openssl-ccs-injection" id="id23">OpenSSL CCS Injection</a></p></li>
-<li><p><a class="reference internal" href="#insecure-renegotiation" id="id24">Insecure Renegotiation</a></p></li>
+<li><p><a class="reference internal" href="#certificate-information" id="id14">Certificate Information</a></p></li>
+<li><p><a class="reference internal" href="#cipher-suites" id="id15">Cipher Suites</a></p></li>
+<li><p><a class="reference internal" href="#supported-elliptic-curves" id="id16">Supported Elliptic Curves</a></p></li>
+<li><p><a class="reference internal" href="#robot" id="id17">ROBOT</a></p></li>
+<li><p><a class="reference internal" href="#session-resumption-support" id="id18">Session Resumption Support</a></p></li>
+<li><p><a class="reference internal" href="#session-resumption-rate" id="id19">Session Resumption Rate</a></p></li>
+<li><p><a class="reference internal" href="#crime" id="id20">CRIME</a></p></li>
+<li><p><a class="reference internal" href="#tls-1-3-early-data" id="id21">TLS 1.3 Early Data</a></p></li>
+<li><p><a class="reference internal" href="#downgrade-prevention" id="id22">Downgrade Prevention</a></p></li>
+<li><p><a class="reference internal" href="#heartbleed" id="id23">Heartbleed</a></p></li>
+<li><p><a class="reference internal" href="#http-security-headers" id="id24">HTTP Security Headers</a></p></li>
+<li><p><a class="reference internal" href="#openssl-ccs-injection" id="id25">OpenSSL CCS Injection</a></p></li>
+<li><p><a class="reference internal" href="#insecure-renegotiation" id="id26">Insecure Renegotiation</a></p></li>
 </ul>
 </li>
 </ul>
@@ -66,94 +68,99 @@ represented by a <code class="docutils literal notranslate"><span class="pre">Sc
 <dd><p>The list of all scan commands supported by SSLyze.</p>
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.CERTIFICATE_INFO">
-<code class="sig-name descname">CERTIFICATE_INFO</code><em class="property">: typing_extensions.Literal[certificate_info]</em><em class="property"> = 'certificate_info'</em><a class="headerlink" href="#sslyze.ScanCommand.CERTIFICATE_INFO" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">CERTIFICATE_INFO</code><em class="property">: typing_extensions.Literal<span class="p">[</span>certificate_info<span class="p">]</span></em><em class="property"> = 'certificate_info'</em><a class="headerlink" href="#sslyze.ScanCommand.CERTIFICATE_INFO" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.SSL_2_0_CIPHER_SUITES">
-<code class="sig-name descname">SSL_2_0_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal[ssl_2_0_cipher_suites]</em><em class="property"> = 'ssl_2_0_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.SSL_2_0_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">SSL_2_0_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal<span class="p">[</span>ssl_2_0_cipher_suites<span class="p">]</span></em><em class="property"> = 'ssl_2_0_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.SSL_2_0_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.SSL_3_0_CIPHER_SUITES">
-<code class="sig-name descname">SSL_3_0_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal[ssl_3_0_cipher_suites]</em><em class="property"> = 'ssl_3_0_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.SSL_3_0_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">SSL_3_0_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal<span class="p">[</span>ssl_3_0_cipher_suites<span class="p">]</span></em><em class="property"> = 'ssl_3_0_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.SSL_3_0_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.TLS_1_0_CIPHER_SUITES">
-<code class="sig-name descname">TLS_1_0_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal[tls_1_0_cipher_suites]</em><em class="property"> = 'tls_1_0_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_0_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">TLS_1_0_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal<span class="p">[</span>tls_1_0_cipher_suites<span class="p">]</span></em><em class="property"> = 'tls_1_0_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_0_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.TLS_1_1_CIPHER_SUITES">
-<code class="sig-name descname">TLS_1_1_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal[tls_1_1_cipher_suites]</em><em class="property"> = 'tls_1_1_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_1_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">TLS_1_1_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal<span class="p">[</span>tls_1_1_cipher_suites<span class="p">]</span></em><em class="property"> = 'tls_1_1_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_1_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.TLS_1_2_CIPHER_SUITES">
-<code class="sig-name descname">TLS_1_2_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal[tls_1_2_cipher_suites]</em><em class="property"> = 'tls_1_2_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_2_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">TLS_1_2_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal<span class="p">[</span>tls_1_2_cipher_suites<span class="p">]</span></em><em class="property"> = 'tls_1_2_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_2_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.TLS_1_3_CIPHER_SUITES">
-<code class="sig-name descname">TLS_1_3_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal[tls_1_3_cipher_suites]</em><em class="property"> = 'tls_1_3_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_3_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">TLS_1_3_CIPHER_SUITES</code><em class="property">: typing_extensions.Literal<span class="p">[</span>tls_1_3_cipher_suites<span class="p">]</span></em><em class="property"> = 'tls_1_3_cipher_suites'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_3_CIPHER_SUITES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.TLS_COMPRESSION">
-<code class="sig-name descname">TLS_COMPRESSION</code><em class="property">: typing_extensions.Literal[tls_compression]</em><em class="property"> = 'tls_compression'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_COMPRESSION" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">TLS_COMPRESSION</code><em class="property">: typing_extensions.Literal<span class="p">[</span>tls_compression<span class="p">]</span></em><em class="property"> = 'tls_compression'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_COMPRESSION" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.TLS_1_3_EARLY_DATA">
-<code class="sig-name descname">TLS_1_3_EARLY_DATA</code><em class="property">: typing_extensions.Literal[tls_1_3_early_data]</em><em class="property"> = 'tls_1_3_early_data'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_3_EARLY_DATA" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">TLS_1_3_EARLY_DATA</code><em class="property">: typing_extensions.Literal<span class="p">[</span>tls_1_3_early_data<span class="p">]</span></em><em class="property"> = 'tls_1_3_early_data'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_3_EARLY_DATA" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.OPENSSL_CCS_INJECTION">
-<code class="sig-name descname">OPENSSL_CCS_INJECTION</code><em class="property">: typing_extensions.Literal[openssl_ccs_injection]</em><em class="property"> = 'openssl_ccs_injection'</em><a class="headerlink" href="#sslyze.ScanCommand.OPENSSL_CCS_INJECTION" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">OPENSSL_CCS_INJECTION</code><em class="property">: typing_extensions.Literal<span class="p">[</span>openssl_ccs_injection<span class="p">]</span></em><em class="property"> = 'openssl_ccs_injection'</em><a class="headerlink" href="#sslyze.ScanCommand.OPENSSL_CCS_INJECTION" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.TLS_FALLBACK_SCSV">
-<code class="sig-name descname">TLS_FALLBACK_SCSV</code><em class="property">: typing_extensions.Literal[tls_fallback_scsv]</em><em class="property"> = 'tls_fallback_scsv'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_FALLBACK_SCSV" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">TLS_FALLBACK_SCSV</code><em class="property">: typing_extensions.Literal<span class="p">[</span>tls_fallback_scsv<span class="p">]</span></em><em class="property"> = 'tls_fallback_scsv'</em><a class="headerlink" href="#sslyze.ScanCommand.TLS_FALLBACK_SCSV" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.HEARTBLEED">
-<code class="sig-name descname">HEARTBLEED</code><em class="property">: typing_extensions.Literal[heartbleed]</em><em class="property"> = 'heartbleed'</em><a class="headerlink" href="#sslyze.ScanCommand.HEARTBLEED" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">HEARTBLEED</code><em class="property">: typing_extensions.Literal<span class="p">[</span>heartbleed<span class="p">]</span></em><em class="property"> = 'heartbleed'</em><a class="headerlink" href="#sslyze.ScanCommand.HEARTBLEED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.ROBOT">
-<code class="sig-name descname">ROBOT</code><em class="property">: typing_extensions.Literal[robot]</em><em class="property"> = 'robot'</em><a class="headerlink" href="#sslyze.ScanCommand.ROBOT" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ROBOT</code><em class="property">: typing_extensions.Literal<span class="p">[</span>robot<span class="p">]</span></em><em class="property"> = 'robot'</em><a class="headerlink" href="#sslyze.ScanCommand.ROBOT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.SESSION_RENEGOTIATION">
-<code class="sig-name descname">SESSION_RENEGOTIATION</code><em class="property">: typing_extensions.Literal[session_renegotiation]</em><em class="property"> = 'session_renegotiation'</em><a class="headerlink" href="#sslyze.ScanCommand.SESSION_RENEGOTIATION" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">SESSION_RENEGOTIATION</code><em class="property">: typing_extensions.Literal<span class="p">[</span>session_renegotiation<span class="p">]</span></em><em class="property"> = 'session_renegotiation'</em><a class="headerlink" href="#sslyze.ScanCommand.SESSION_RENEGOTIATION" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.SESSION_RESUMPTION">
-<code class="sig-name descname">SESSION_RESUMPTION</code><em class="property">: typing_extensions.Literal[session_resumption]</em><em class="property"> = 'session_resumption'</em><a class="headerlink" href="#sslyze.ScanCommand.SESSION_RESUMPTION" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">SESSION_RESUMPTION</code><em class="property">: typing_extensions.Literal<span class="p">[</span>session_resumption<span class="p">]</span></em><em class="property"> = 'session_resumption'</em><a class="headerlink" href="#sslyze.ScanCommand.SESSION_RESUMPTION" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.SESSION_RESUMPTION_RATE">
-<code class="sig-name descname">SESSION_RESUMPTION_RATE</code><em class="property">: typing_extensions.Literal[session_resumption_rate]</em><em class="property"> = 'session_resumption_rate'</em><a class="headerlink" href="#sslyze.ScanCommand.SESSION_RESUMPTION_RATE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">SESSION_RESUMPTION_RATE</code><em class="property">: typing_extensions.Literal<span class="p">[</span>session_resumption_rate<span class="p">]</span></em><em class="property"> = 'session_resumption_rate'</em><a class="headerlink" href="#sslyze.ScanCommand.SESSION_RESUMPTION_RATE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="sslyze.ScanCommand.HTTP_HEADERS">
-<code class="sig-name descname">HTTP_HEADERS</code><em class="property">: typing_extensions.Literal[http_headers]</em><em class="property"> = 'http_headers'</em><a class="headerlink" href="#sslyze.ScanCommand.HTTP_HEADERS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">HTTP_HEADERS</code><em class="property">: typing_extensions.Literal<span class="p">[</span>http_headers<span class="p">]</span></em><em class="property"> = 'http_headers'</em><a class="headerlink" href="#sslyze.ScanCommand.HTTP_HEADERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="sslyze.ScanCommand.ELLIPTIC_CURVES">
+<code class="sig-name descname">ELLIPTIC_CURVES</code><em class="property">: typing_extensions.Literal<span class="p">[</span>elliptic_curves<span class="p">]</span></em><em class="property"> = 'elliptic_curves'</em><a class="headerlink" href="#sslyze.ScanCommand.ELLIPTIC_CURVES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <p>The next sections describe the result class that corresponds to each scan command.</p>
 <div class="section" id="certificate-information">
-<h2><a class="toc-backref" href="#id13">Certificate Information</a><a class="headerlink" href="#certificate-information" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id14">Certificate Information</a><a class="headerlink" href="#certificate-information" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.CERTIFICATE_INFO</strong>: Retrieve and analyze a server’s certificate(s) to verify its validity.</p>
 <div class="section" id="optional-arguments">
 <h3>Optional arguments<a class="headerlink" href="#optional-arguments" title="Permalink to this headline">¶</a></h3>
@@ -432,7 +439,7 @@ successful.</p>
 
 <dl class="py class">
 <dt id="sslyze.OcspResponseStatusEnum">
-<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">OcspResponseStatusEnum</code><a class="headerlink" href="#sslyze.OcspResponseStatusEnum" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">OcspResponseStatusEnum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.OcspResponseStatusEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
 <dl class="py attribute">
 <dt id="sslyze.OcspResponseStatusEnum.SUCCESSFUL">
@@ -469,7 +476,7 @@ successful.</p>
 </div>
 </div>
 <div class="section" id="cipher-suites">
-<h2><a class="toc-backref" href="#id14">Cipher Suites</a><a class="headerlink" href="#cipher-suites" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id15">Cipher Suites</a><a class="headerlink" href="#cipher-suites" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.SSL_2_0_CIPHER_SUITES</strong>: Test a server for SSL 2.0 support.
 <strong>ScanCommand.SSL_3_0_CIPHER_SUITES</strong>: Test a server for SSL 3.0 support.
 <strong>ScanCommand.TLS_1_0_CIPHER_SUITES</strong>: Test a server for TLS 1.0 support.
@@ -582,7 +589,7 @@ supported by the server.</p>
 
 <dl class="py class">
 <dt id="sslyze.TlsVersionEnum">
-<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">TlsVersionEnum</code><a class="headerlink" href="#sslyze.TlsVersionEnum" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">TlsVersionEnum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.TlsVersionEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
 <dl class="py attribute">
 <dt id="sslyze.TlsVersionEnum.SSL_2_0">
@@ -618,11 +625,79 @@ supported by the server.</p>
 
 </div>
 </div>
-<div class="section" id="robot">
-<h2><a class="toc-backref" href="#id15">ROBOT</a><a class="headerlink" href="#robot" title="Permalink to this headline">¶</a></h2>
-<p><strong>ScanCommand.ROBOT</strong>: Test a server for the ROBOT vulnerability.</p>
+<div class="section" id="supported-elliptic-curves">
+<h2><a class="toc-backref" href="#id16">Supported Elliptic Curves</a><a class="headerlink" href="#supported-elliptic-curves" title="Permalink to this headline">¶</a></h2>
+<p><strong>ScanCommand.ELLIPTIC_CURVES</strong>: Test a server for supported elliptic curves.</p>
 <div class="section" id="id2">
 <h3>Result class<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="sslyze.SupportedEllipticCurvesScanResult">
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">SupportedEllipticCurvesScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">supports_ecdh_key_exchange</span></em>, <em class="sig-param"><span class="n">supported_curves</span></em>, <em class="sig-param"><span class="n">rejected_curves</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SupportedEllipticCurvesScanResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>The result of testing a server for supported elliptic curves.</p>
+<dl class="py attribute">
+<dt id="sslyze.SupportedEllipticCurvesScanResult.supports_ecdh_key_exchange">
+<code class="sig-name descname">supports_ecdh_key_exchange</code><a class="headerlink" href="#sslyze.SupportedEllipticCurvesScanResult.supports_ecdh_key_exchange" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the server supports at least one cipher suite with an ECDH key exchange.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sslyze.SupportedEllipticCurvesScanResult.supported_curves">
+<code class="sig-name descname">supported_curves</code><a class="headerlink" href="#sslyze.SupportedEllipticCurvesScanResult.supported_curves" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of <cite>EllipticCurve</cite> that were accepted by the server or <cite>None</cite> if the server does not
+support ECDH cipher suites.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sslyze.SupportedEllipticCurvesScanResult.rejected_curves">
+<code class="sig-name descname">rejected_curves</code><a class="headerlink" href="#sslyze.SupportedEllipticCurvesScanResult.rejected_curves" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of <cite>EllipticCurve</cite> that were rejected by the server or <cite>None</cite> if the server does not
+support ECDH cipher suites.</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>supports_ecdh_key_exchange</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – </p></li>
+<li><p><strong>supported_curves</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">EllipticCurve</span></code>]]) – </p></li>
+<li><p><strong>rejected_curves</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">EllipticCurve</span></code>]]) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="sslyze.EllipticCurve">
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">EllipticCurve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">openssl_nid</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.EllipticCurve" title="Permalink to this definition">¶</a></dt>
+<dd><p>A specific elliptic curve.</p>
+<dl class="py attribute">
+<dt id="sslyze.EllipticCurve.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#sslyze.EllipticCurve.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The ANSI X9.62 name if available, otherwise the SECG name.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sslyze.EllipticCurve.openssl_nid">
+<code class="sig-name descname">openssl_nid</code><a class="headerlink" href="#sslyze.EllipticCurve.openssl_nid" title="Permalink to this definition">¶</a></dt>
+<dd><p>The OpenSSL NID_XXX value valid for OpenSslEvpPkeyEnum.EC (obj_mac.h).</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – </p></li>
+<li><p><strong>openssl_nid</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="robot">
+<h2><a class="toc-backref" href="#id17">ROBOT</a><a class="headerlink" href="#robot" title="Permalink to this headline">¶</a></h2>
+<p><strong>ScanCommand.ROBOT</strong>: Test a server for the ROBOT vulnerability.</p>
+<div class="section" id="id3">
+<h3>Result class<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.RobotScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">RobotScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">robot_result</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.RobotScanResult" title="Permalink to this definition">¶</a></dt>
@@ -642,7 +717,7 @@ supported by the server.</p>
 
 <dl class="py class">
 <dt id="sslyze.RobotScanResultEnum">
-<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">RobotScanResultEnum</code><a class="headerlink" href="#sslyze.RobotScanResultEnum" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">RobotScanResultEnum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.RobotScanResultEnum" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enum to provide the result of running a RobotScanCommand.</p>
 <dl class="py attribute">
 <dt id="sslyze.RobotScanResultEnum.VULNERABLE_WEAK_ORACLE">
@@ -679,10 +754,10 @@ supported by the server.</p>
 </div>
 </div>
 <div class="section" id="session-resumption-support">
-<h2><a class="toc-backref" href="#id16">Session Resumption Support</a><a class="headerlink" href="#session-resumption-support" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id18">Session Resumption Support</a><a class="headerlink" href="#session-resumption-support" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.SESSION_RESUMPTION</strong>: Test a server for session resumption support using session IDs and TLS tickets.</p>
-<div class="section" id="id3">
-<h3>Result class<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Result class<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.SessionResumptionSupportScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">SessionResumptionSupportScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attempted_session_id_resumptions_count</span></em>, <em class="sig-param"><span class="n">successful_session_id_resumptions_count</span></em>, <em class="sig-param"><span class="n">tls_ticket_resumption_result</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SessionResumptionSupportScanResult" title="Permalink to this definition">¶</a></dt>
@@ -729,10 +804,10 @@ supported by the server.</p>
 </div>
 </div>
 <div class="section" id="session-resumption-rate">
-<h2><a class="toc-backref" href="#id17">Session Resumption Rate</a><a class="headerlink" href="#session-resumption-rate" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id19">Session Resumption Rate</a><a class="headerlink" href="#session-resumption-rate" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.SESSION_RESUMPTION_RATE</strong>: Measure a server’s session resumption rate when attempting 100 resumptions using session IDs.</p>
-<div class="section" id="id4">
-<h3>Result class<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h3>Result class<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.SessionResumptionRateScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">SessionResumptionRateScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attempted_session_id_resumptions_count</span></em>, <em class="sig-param"><span class="n">successful_session_id_resumptions_count</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SessionResumptionRateScanResult" title="Permalink to this definition">¶</a></dt>
@@ -762,10 +837,10 @@ supported by the server.</p>
 </div>
 </div>
 <div class="section" id="crime">
-<h2><a class="toc-backref" href="#id18">CRIME</a><a class="headerlink" href="#crime" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id20">CRIME</a><a class="headerlink" href="#crime" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.TLS_COMPRESSION</strong>: Test a server for TLS compression support, which can be leveraged to perform a CRIME attack.</p>
-<div class="section" id="id5">
-<h3>Result class<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Result class<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.CompressionScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">CompressionScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">supports_compression</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CompressionScanResult" title="Permalink to this definition">¶</a></dt>
@@ -786,10 +861,10 @@ supported by the server.</p>
 </div>
 </div>
 <div class="section" id="tls-1-3-early-data">
-<h2><a class="toc-backref" href="#id19">TLS 1.3 Early Data</a><a class="headerlink" href="#tls-1-3-early-data" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id21">TLS 1.3 Early Data</a><a class="headerlink" href="#tls-1-3-early-data" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.TLS_1_3_EARLY_DATA</strong>: Test the server(s) for TLS 1.3 early data support.</p>
-<div class="section" id="id6">
-<h3>Result class<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Result class<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.EarlyDataScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">EarlyDataScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">supports_early_data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.EarlyDataScanResult" title="Permalink to this definition">¶</a></dt>
@@ -810,10 +885,10 @@ supported by the server.</p>
 </div>
 </div>
 <div class="section" id="downgrade-prevention">
-<h2><a class="toc-backref" href="#id20">Downgrade Prevention</a><a class="headerlink" href="#downgrade-prevention" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id22">Downgrade Prevention</a><a class="headerlink" href="#downgrade-prevention" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.TLS_FALLBACK_SCSV</strong>: Test a server for the TLS_FALLBACK_SCSV mechanism to prevent downgrade attacks.</p>
-<div class="section" id="id7">
-<h3>Result class<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h3>Result class<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.FallbackScsvScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">FallbackScsvScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">supports_fallback_scsv</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.FallbackScsvScanResult" title="Permalink to this definition">¶</a></dt>
@@ -834,10 +909,10 @@ supported by the server.</p>
 </div>
 </div>
 <div class="section" id="heartbleed">
-<h2><a class="toc-backref" href="#id21">Heartbleed</a><a class="headerlink" href="#heartbleed" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id23">Heartbleed</a><a class="headerlink" href="#heartbleed" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.HEARTBLEED</strong>: Test a server for the OpenSSL Heartbleed vulnerability.</p>
-<div class="section" id="id8">
-<h3>Result class<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id9">
+<h3>Result class<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.HeartbleedScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">HeartbleedScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">is_vulnerable_to_heartbleed</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.HeartbleedScanResult" title="Permalink to this definition">¶</a></dt>
@@ -858,10 +933,10 @@ supported by the server.</p>
 </div>
 </div>
 <div class="section" id="http-security-headers">
-<h2><a class="toc-backref" href="#id22">HTTP Security Headers</a><a class="headerlink" href="#http-security-headers" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id24">HTTP Security Headers</a><a class="headerlink" href="#http-security-headers" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.HTTP_HEADERS</strong>: Test a server for the presence of security-related HTTP headers.</p>
-<div class="section" id="id9">
-<h3>Result class<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id10">
+<h3>Result class<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.HttpHeadersScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">HttpHeadersScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">strict_transport_security_header</span></em>, <em class="sig-param"><span class="n">public_key_pins_header</span></em>, <em class="sig-param"><span class="n">public_key_pins_report_only_header</span></em>, <em class="sig-param"><span class="n">expect_ct_header</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.HttpHeadersScanResult" title="Permalink to this definition">¶</a></dt>
@@ -1020,10 +1095,10 @@ supported by the server.</p>
 </div>
 </div>
 <div class="section" id="openssl-ccs-injection">
-<h2><a class="toc-backref" href="#id23">OpenSSL CCS Injection</a><a class="headerlink" href="#openssl-ccs-injection" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id25">OpenSSL CCS Injection</a><a class="headerlink" href="#openssl-ccs-injection" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.OPENSSL_CCS_INJECTION</strong>: Test a server for the OpenSSL CCS Injection vulnerability (CVE-2014-0224).</p>
-<div class="section" id="id10">
-<h3>Result class<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id11">
+<h3>Result class<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.OpenSslCcsInjectionScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">OpenSslCcsInjectionScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">is_vulnerable_to_ccs_injection</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.OpenSslCcsInjectionScanResult" title="Permalink to this definition">¶</a></dt>
@@ -1044,10 +1119,10 @@ supported by the server.</p>
 </div>
 </div>
 <div class="section" id="insecure-renegotiation">
-<h2><a class="toc-backref" href="#id24">Insecure Renegotiation</a><a class="headerlink" href="#insecure-renegotiation" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id26">Insecure Renegotiation</a><a class="headerlink" href="#insecure-renegotiation" title="Permalink to this headline">¶</a></h2>
 <p><strong>ScanCommand.SESSION_RENEGOTIATION</strong>: Test a server for for insecure TLS renegotiation and client-initiated renegotiation.</p>
-<div class="section" id="id11">
-<h3>Result class<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id12">
+<h3>Result class<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.SessionRenegotiationScanResult">
 <em class="property">class </em><code class="sig-prename descclassname">sslyze.</code><code class="sig-name descname">SessionRenegotiationScanResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">accepts_client_renegotiation</span></em>, <em class="sig-param"><span class="n">supports_secure_renegotiation</span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SessionRenegotiationScanResult" title="Permalink to this definition">¶</a></dt>
@@ -1102,6 +1177,7 @@ supported by the server.</p>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Appendix: Scan Commands</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#certificate-information">Certificate Information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cipher-suites">Cipher Suites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-elliptic-curves">Supported Elliptic Curves</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#robot">ROBOT</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#session-resumption-support">Session Resumption Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#session-resumption-rate">Session Resumption Rate</a></li>
@@ -1155,7 +1231,7 @@ supported by the server.</p>
       &copy;Copyright 2020 Alban Diquet.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.4</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

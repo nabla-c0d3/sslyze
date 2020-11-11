@@ -86,8 +86,12 @@
         "nassl": {
             "hashes": [
                 "sha256:00a5e365ac37f9bf4760095d2057796fa3e42dbd0c76bfa9bae31a8db1d99387",
+                "sha256:185474c2fb172321baead0c2d18883c8ab312aaf16c6405edfcca141b671ce38",
                 "sha256:4d4ebae79fc87599d639c80d7ccf93203efb13ede6e14b5ea7cb0fb2d7804b6e",
                 "sha256:4e22d2e889a3460ccc88c2bd48c8958142df8e86c2d0b855a48e803e08a44577",
+                "sha256:93d2c9219e20bd7d1ad12ab6fdcd5b15199b922505b73c3a8c9b1efb7ff8b930",
+                "sha256:c59f2a6c4b8d0690495231f14fbec22e304b70a85227004d0c7490b5bf887a68",
+                "sha256:ca6ef634cab28aa0486b0ea891ff86a317347fd971137e808089be251d74fd05",
                 "sha256:d00aeb51f487fe438a8d7746e397e5be8ae0f5588f5ebf068e89357c620d54a6"
             ],
             "index": "pypi",
@@ -366,11 +370,11 @@
         },
         "jeepney": {
             "hashes": [
-                "sha256:3479b861cc2b6407de5188695fa1a8d57e5072d7059322469b62628869b8e36e",
-                "sha256:d6c6b49683446d2407d2fe3acb7a368a77ff063f9182fe427da15d622adc24cf"
+                "sha256:2531d17ccfb3485d4eaee03c1a19a75f28b3ac0fbb5a1b683b77b820e5b0f509",
+                "sha256:e0e057fe2069a54257de32eb26cf14aac5fa90f5836f49926009a5022fb1e31a"
             ],
             "markers": "sys_platform == 'linux'",
-            "version": "==0.4.3"
+            "version": "==0.5.0"
         },
         "jinja2": {
             "hashes": [

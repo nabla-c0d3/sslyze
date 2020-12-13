@@ -2,6 +2,7 @@ from concurrent.futures._base import Future
 from dataclasses import dataclass
 from typing import List, Optional
 
+from nassl._nassl import OpenSSLError
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
 from nassl.ssl_client import ClientCertificateRequested, SslClient
 
@@ -167,6 +168,14 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
 
     except (TlsHandshakeTimedOut, ServerRejectedTlsHandshake):
         negotiated_ephemeral_key = None
+
+    except OpenSSLError as e:
+        # This can be triggered by some servers when they don't support the specific curve enabled in the client
+        # Related to https://github.com/nabla-c0d3/sslyze/issues/466
+        if "ossl_statem_client_read_transition:unexpected message" in e.args[0]:
+            negotiated_ephemeral_key = None
+        else:
+            raise
 
     finally:
         ssl_connection.close()

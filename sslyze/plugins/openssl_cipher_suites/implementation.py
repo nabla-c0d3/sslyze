@@ -158,11 +158,9 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
         if preferred_cipher_suite_openssl_name is None:
             preferred_cipher_suite = None
         else:
-            openssl_name_to_accepted_cipher_suite = {
-                acc_cipher_suite.cipher_suite.openssl_name: acc_cipher_suite
-                for acc_cipher_suite in accepted_cipher_suites
-            }
-            preferred_cipher_suite = openssl_name_to_accepted_cipher_suite[preferred_cipher_suite_openssl_name]
+            preferred_cipher_suite = CipherSuitesRepository.get_cipher_suite_with_openssl_name(
+                tls_version=cls._tls_version, openssl_name=preferred_cipher_suite_openssl_name
+            )
 
         # Generate the results
         return CipherSuitesScanResult(

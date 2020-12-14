@@ -1,3 +1,4 @@
+from dataclasses import field
 from typing import Dict, Set
 
 from dataclasses import dataclass
@@ -11,9 +12,11 @@ from sslyze.server_connectivity import TlsVersionEnum
 @dataclass(frozen=True)
 class CipherSuite:
     name: str
-    openssl_name: str  # OpenSSL uses a different naming convention than the corresponding RFCs.
     is_anonymous: bool
     key_size: int
+    # OpenSSL uses a different naming convention than the corresponding RFCs, and also can have multiple names for
+    # the same cipher suites; to avoid duplicates we use compare=False
+    openssl_name: str = field(compare=False)
 
 
 # Cipher suite name mappings so we can return the RFC names, instead of the OpenSSL names
@@ -646,3 +649,10 @@ class CipherSuitesRepository:
         """Get the list of cipher suites supported by OpenSSL for the given SSL/TLS version.
         """
         return cls._ALL_CIPHER_SUITES[tls_version]
+
+    @classmethod
+    def get_cipher_suite_with_openssl_name(cls, tls_version: TlsVersionEnum, openssl_name: str) -> CipherSuite:
+        for cipher_suite in cls.get_all_cipher_suites(tls_version):
+            if cipher_suite.openssl_name == openssl_name:
+                return cipher_suite
+        raise ValueError(f"Could not find a cipher suite with the supplied name: {openssl_name}")

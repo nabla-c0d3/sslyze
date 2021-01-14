@@ -1,4 +1,4 @@
-#import socket
+import socket
 from concurrent.futures._base import Future
 from dataclasses import dataclass
 from enum import Enum
@@ -79,8 +79,8 @@ class _SessionRenegotiationCliConnector(ScanCommandCliConnector[SessionRenegotia
                 cir = int(cir)
                 if not is_scan_cmd_enabled:
                     raise ScanCommandWrongUsageError(f"Option --cir cannot be used without --reneg (or --regular)!")
-                #if not isinstance(cir, int):
-                #    raise TypeError(f"Expected an int for cir but received {cir}")
+                if cir < 0:
+                    raise TypeError(f"Expected positive int for cir but received {cir}")
                 extra_arguments = SessionRenegotiationExtraArguments(cir)
         except KeyError:
             pass

@@ -132,9 +132,15 @@ class _X509CertificateAsJson:
 
 def x509_certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
     public_key = certificate.public_key()
+
+    try:
+        public_key_size = public_key.key_size  # type: ignore
+    except AttributeError:
+        public_key_size = None
+
     public_key_json = _PublicKeyAsJson(
         algorithm=public_key.__class__.__name__,
-        key_size=public_key.key_size if getattr(public_key, "key_size") else None,  # type: ignore
+        key_size=public_key_size,
         # EC-only fields
         ec_curve_name=public_key.curve.name if isinstance(public_key, EllipticCurvePublicKey) else None,
         ec_x=public_key.public_numbers().x if isinstance(public_key, EllipticCurvePublicKey) else None,

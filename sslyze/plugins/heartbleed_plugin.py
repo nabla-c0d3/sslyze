@@ -196,7 +196,7 @@ def _do_handshake_with_heartbleed(self):  # type: ignore
     if did_receive_hello_done:
         expected_heartbleed_payload = b"\x01" * 10
         if expected_heartbleed_payload in remaining_bytes:
-            # Server replied with our hearbeat payload
+            # Server replied with our heartbeat payload
             is_vulnerable_to_heartbleed = True
         else:
             try:
@@ -206,7 +206,7 @@ def _do_handshake_with_heartbleed(self):  # type: ignore
                 raise _NotVulnerableToHeartbleed()
 
             if expected_heartbleed_payload in raw_ssl_bytes:
-                # Server replied with our hearbeat payload
+                # Server replied with our heartbeat payload
                 is_vulnerable_to_heartbleed = True
 
     if is_vulnerable_to_heartbleed:

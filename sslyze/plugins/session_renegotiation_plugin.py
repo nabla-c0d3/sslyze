@@ -27,8 +27,8 @@ class SessionRenegotiationScanResult(ScanCommandResult):
         supports_secure_renegotiation: True if the server supports secure renegotiation.
     """
 
-    accepts_client_renegotiation: bool
     supports_secure_renegotiation: bool
+    is_vulnerable_to_client_renegotiation_dos: bool
 
 
 class _ScanJobResultEnum(Enum):
@@ -48,10 +48,10 @@ class _SessionRenegotiationCliConnector(ScanCommandCliConnector[SessionRenegotia
         # Client-initiated reneg
         client_reneg_txt = (
             "VULNERABLE - Server honors client-initiated renegotiations"
-            if result.accepts_client_renegotiation
-            else "OK - Rejected"
+            if result.is_vulnerable_to_client_renegotiation_dos
+            else "OK - Not vulnerable"
         )
-        result_txt.append(cls._format_field("Client-initiated Renegotiation:", client_reneg_txt))
+        result_txt.append(cls._format_field("Client Renegotiation DoS Attack:", client_reneg_txt))
 
         # Secure reneg
         secure_txt = (
@@ -101,7 +101,7 @@ class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenego
             results_dict[result_enum] = value
 
         return SessionRenegotiationScanResult(
-            accepts_client_renegotiation=results_dict[_ScanJobResultEnum.ACCEPTS_CLIENT_RENEG],
+            is_vulnerable_to_client_renegotiation_dos=results_dict[_ScanJobResultEnum.ACCEPTS_CLIENT_RENEG],
             supports_secure_renegotiation=results_dict[_ScanJobResultEnum.SUPPORTS_SECURE_RENEG],
         )
 
@@ -145,7 +145,10 @@ def _test_client_renegotiation(
 
         try:
             # Let's try to renegotiate
-            ssl_connection.ssl_client.do_renegotiate()
+            # Do it 10 times in a row to be 100% sure that the server has no mitigations in place
+            # https://github.com/nabla-c0d3/sslyze/issues/473
+            for i in range(10):
+                ssl_connection.ssl_client.do_renegotiate()
             accepts_client_renegotiation = True
 
         # Errors caused by a server rejecting the renegotiation

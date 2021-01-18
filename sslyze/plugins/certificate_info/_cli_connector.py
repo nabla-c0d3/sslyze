@@ -245,8 +245,19 @@ class _CertificateInfoCliConnector(
                 ocsp_resp_txt = [
                     cls._format_field("OCSP Response Status:", cert_deployment.ocsp_response.response_status.name),
                     cls._format_field("Validation w/ Mozilla Store:", ocsp_trust_txt),
-                    cls._format_field("Responder Key Hash:", cert_deployment.ocsp_response.responder_key_hash),
                 ]
+
+                if cert_deployment.ocsp_response.responder_key_hash:
+                    ocsp_resp_txt.append(
+                        cls._format_field("Responder Key Hash:", cert_deployment.ocsp_response.responder_key_hash)
+                    )
+
+                if cert_deployment.ocsp_response.responder_name:
+                    ocsp_resp_txt.append(
+                        cls._format_field(
+                            "Responder Name:", cert_deployment.ocsp_response.responder_name.rfc4514_string()
+                        )
+                    )
 
                 if cert_deployment.ocsp_response.response_status == OCSPResponseStatus.SUCCESSFUL:
                     ocsp_resp_txt.extend(

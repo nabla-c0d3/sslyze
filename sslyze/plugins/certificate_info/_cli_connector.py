@@ -7,16 +7,15 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.x509 import Certificate
+from cryptography.x509.ocsp import OCSPResponseStatus
 
-from sslyze.plugins.certificate_info._cert_chain_analyzer import (
-    CertificateDeploymentAnalysisResult,
-    OcspResponseStatusEnum,
-)
+from sslyze.plugins.certificate_info._cert_chain_analyzer import CertificateDeploymentAnalysisResult
 from sslyze.plugins.certificate_info._certificate_utils import get_common_names, extract_dns_subject_alternative_names
 from sslyze.plugins.certificate_info._json_output import (
     oid_to_json,
     x509_name_to_json,
     x509_certificate_to_json,
+    ocsp_response_to_json,
 )
 from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption
 
@@ -71,7 +70,7 @@ class _CertificateInfoCliConnector(
 
     @classmethod
     def get_json_serializer_functions(cls) -> List["JsonSerializerFunction"]:
-        return [oid_to_json, x509_name_to_json, x509_certificate_to_json]
+        return [oid_to_json, x509_name_to_json, x509_certificate_to_json, ocsp_response_to_json]
 
     TRUST_FORMAT = "{store_name} CA Store ({store_version}):"
     NO_VERIFIED_CHAIN_ERROR_TXT = "ERROR - Could not build verified chain (certificate untrusted?)"
@@ -227,7 +226,7 @@ class _CertificateInfoCliConnector(
             deployment_as_txt.append(cls._format_field("", "NOT SUPPORTED - Server did not send back an OCSP response"))
 
         else:
-            if cert_deployment.ocsp_response.status != OcspResponseStatusEnum.SUCCESSFUL:
+            if cert_deployment.ocsp_response.response_status != OCSPResponseStatus.SUCCESSFUL:
                 ocsp_resp_txt = [
                     cls._format_field(
                         "",
@@ -244,15 +243,15 @@ class _CertificateInfoCliConnector(
                 )
 
                 ocsp_resp_txt = [
-                    cls._format_field("OCSP Response Status:", cert_deployment.ocsp_response.status.name),
+                    cls._format_field("OCSP Response Status:", cert_deployment.ocsp_response.response_status.name),
                     cls._format_field("Validation w/ Mozilla Store:", ocsp_trust_txt),
-                    cls._format_field("Responder Id:", cert_deployment.ocsp_response.responder_id),
+                    cls._format_field("Responder Key Hash:", cert_deployment.ocsp_response.responder_key_hash),
                 ]
 
-                if cert_deployment.ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL:
+                if cert_deployment.ocsp_response.response_status == OCSPResponseStatus.SUCCESSFUL:
                     ocsp_resp_txt.extend(
                         [
-                            cls._format_field("Cert Status:", cert_deployment.ocsp_response.certificate_status),
+                            cls._format_field("Cert Status:", cert_deployment.ocsp_response.certificate_status.name),
                             cls._format_field("Cert Serial Number:", cert_deployment.ocsp_response.serial_number),
                             cls._format_field(
                                 "This Update:", cert_deployment.ocsp_response.this_update.date().isoformat()

@@ -93,7 +93,7 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
 
         # Only keep certificate deployments that are different
         # Leaf certificate => certificate chain, OCSP response
-        all_configured_certificate_chains: Dict[str, Tuple[List[str], Optional[nassl.ocsp_response.OcspResponse]]] = {}
+        all_configured_certificate_chains: Dict[str, Tuple[List[str], Optional[nassl._nassl.OCSP_RESPONSE]]] = {}
         custom_ca_file = None
         for completed_job in completed_scan_jobs:
             try:

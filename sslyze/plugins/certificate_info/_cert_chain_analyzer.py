@@ -1,6 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
-from enum import Enum
 
 from ssl import CertificateError, match_hostname
 from typing import Optional, List, cast
@@ -10,6 +8,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate, load_pem_x509_certificate
+from cryptography.x509.ocsp import load_der_ocsp_response, OCSPResponseStatus, OCSPResponse
 from nassl._nassl import X509
 from nassl.cert_chain_verifier import CertificateChainVerifier, CertificateChainVerificationFailed
 import nassl.ocsp_response
@@ -42,37 +41,6 @@ class PathValidationResult:
     @property
     def was_validation_successful(self) -> bool:
         return True if self.verified_certificate_chain else False
-
-
-class OcspResponseStatusEnum(Enum):
-    # WARNING: The order must match nassl.ocsp_response.OcspResponseStatusEnum
-    SUCCESSFUL = 0
-    MALFORMED_REQUEST = 1
-    INTERNAL_ERROR = 2
-    TRY_LATER = 3
-    SIG_REQUIRED = 5
-    UNAUTHORIZED = 6
-
-
-@dataclass(frozen=True)
-class OcspResponse:
-    status: OcspResponseStatusEnum
-    type: str
-    version: int
-    responder_id: str
-    produced_at: datetime
-
-    certificate_status: str
-    this_update: datetime
-    next_update: datetime
-
-    hash_algorithm: str
-    issuer_name_hash: str
-    issuer_key_hash: str
-    serial_number: str
-
-    # Only SCT is supported at the moment
-    extensions: Optional[List[nassl.ocsp_response.SignedCertificateTimestampsExtension]]
 
 
 @dataclass(frozen=True)
@@ -129,7 +97,7 @@ class CertificateDeploymentAnalysisResult:
     verified_chain_has_sha1_signature: Optional[bool]
     verified_chain_has_legacy_symantec_anchor: Optional[bool]
 
-    ocsp_response: Optional[OcspResponse]
+    ocsp_response: Optional[OCSPResponse]
     ocsp_response_is_trusted: Optional[bool]
 
     @property
@@ -169,7 +137,7 @@ class CertificateDeploymentAnalyzer:
         self,
         server_hostname: str,
         server_certificate_chain_as_pem: List[str],
-        server_ocsp_response: Optional[nassl.ocsp_response.OcspResponse],
+        server_ocsp_response: Optional[nassl._nassl.OCSP_RESPONSE],
         trust_stores_for_validation: List[TrustStore],
     ) -> None:
         self.server_hostname = server_hostname
@@ -286,30 +254,18 @@ class CertificateDeploymentAnalyzer:
         is_ocsp_response_trusted = None
         final_ocsp_response = None
         if self.server_ocsp_response:
-            # Convert the OCSP response from the nassl class to the sslyze class to ensure API stability
-            final_ocsp_response = OcspResponse(
-                status=OcspResponseStatusEnum(self.server_ocsp_response.status.value),
-                type=self.server_ocsp_response.type,
-                version=self.server_ocsp_response.version,
-                responder_id=self.server_ocsp_response.responder_id,
-                produced_at=self.server_ocsp_response.produced_at,
-                certificate_status=self.server_ocsp_response.certificate_status,
-                this_update=self.server_ocsp_response.this_update,
-                next_update=self.server_ocsp_response.next_update,
-                hash_algorithm=self.server_ocsp_response.hash_algorithm,
-                issuer_name_hash=self.server_ocsp_response.issuer_name_hash,
-                issuer_key_hash=self.server_ocsp_response.issuer_key_hash,
-                serial_number=self.server_ocsp_response.serial_number,
-                extensions=self.server_ocsp_response.extensions,
-            )
+            # Parse the OCSP response returned by nassl
+            final_ocsp_response = load_der_ocsp_response(self.server_ocsp_response.as_der_bytes())
 
             # Check if the OCSP response is trusted
             if (
                 trust_store_that_can_build_verified_chain
-                and self.server_ocsp_response.status == nassl.ocsp_response.OcspResponseStatusEnum.SUCCESSFUL
+                and final_ocsp_response.response_status == OCSPResponseStatus.SUCCESSFUL
             ):
                 try:
-                    self.server_ocsp_response.verify(trust_store_that_can_build_verified_chain.path)
+                    nassl.ocsp_response.verify_ocsp_response(
+                        self.server_ocsp_response, trust_store_that_can_build_verified_chain.path
+                    )
                     is_ocsp_response_trusted = True
                 except nassl.ocsp_response.OcspResponseNotTrustedError:
                     is_ocsp_response_trusted = False

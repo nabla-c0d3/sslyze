@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from sslyze.plugins.certificate_info._cert_chain_analyzer import OcspResponseStatusEnum
+from cryptography.x509.ocsp import OCSPResponseStatus
+
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation, CertificateInfoExtraArguments
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
@@ -52,7 +53,7 @@ class TestCertificateInfoPlugin:
 
         # The result contains details about the server's OCSP config
         assert plugin_result.certificate_deployments[0].ocsp_response
-        assert plugin_result.certificate_deployments[0].ocsp_response.status == OcspResponseStatusEnum.SUCCESSFUL
+        assert plugin_result.certificate_deployments[0].ocsp_response.response_status == OCSPResponseStatus.SUCCESSFUL
         assert plugin_result.certificate_deployments[0].ocsp_response_is_trusted
         assert not plugin_result.certificate_deployments[0].leaf_certificate_has_must_staple_extension
 

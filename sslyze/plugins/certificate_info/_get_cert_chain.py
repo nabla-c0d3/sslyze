@@ -14,7 +14,7 @@ def get_certificate_chain(
     custom_ca_file: Optional[Path],
     tls_version: Optional[TlsVersionEnum],
     openssl_cipher_string: Optional[str],
-) -> Tuple[List[str], Optional[nassl.ocsp_response.OcspResponse], Optional[Path]]:
+) -> Tuple[List[str], Optional[nassl._nassl.OCSP_RESPONSE], Optional[Path]]:
     ssl_connection = server_info.get_preconfigured_tls_connection(override_tls_version=tls_version)
     if openssl_cipher_string:
         ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)

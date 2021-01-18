@@ -2,13 +2,16 @@
 """
 from base64 import b64encode
 from dataclasses import dataclass, asdict
+from datetime import datetime
 from typing import Dict, Any, List, Optional, Union
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.backends.openssl.ocsp import _OCSPResponse
 from cryptography.hazmat.backends.openssl.x509 import _Certificate
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.x509.ocsp import OCSPResponseStatus, load_der_ocsp_response
 from cryptography.x509.oid import ObjectIdentifier
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 
@@ -28,6 +31,12 @@ def _monkeypatch_to_fix_certificate_asdict() -> None:
         return x509.load_pem_x509_certificate(inner_self.public_bytes(Encoding.PEM), backend=default_backend())
 
     _Certificate.__deepcopy__ = _deepcopy_method_for_x509_certificate
+
+    # Same problem with OCSPResponse objects
+    def _deepcopy_method_for_ocsp_response(inner_self: _OCSPResponse, memo: str) -> _OCSPResponse:
+        return load_der_ocsp_response(inner_self.public_bytes(Encoding.DER))
+
+    _OCSPResponse.__deepcopy__ = _deepcopy_method_for_ocsp_response
 
 
 # Call it on import... hacky but we don't have a choice
@@ -107,3 +116,45 @@ def x509_certificate_to_json(certificate: x509.Certificate) -> Dict[str, Any]:
 
     result["publicKey"] = public_key_dict
     return result
+
+
+@dataclass(frozen=True)
+class _OcspResponseAsJson:
+    response_status: str
+
+    certificate_status: Optional[str]
+    revocation_time: Optional[datetime]
+
+    produced_at: Optional[datetime]
+    this_update: Optional[datetime]
+    next_update: Optional[datetime]
+
+    serial_number: Optional[str]
+
+
+def ocsp_response_to_json(ocsp_response: x509.ocsp.OCSPResponse) -> Dict[str, Any]:
+    response_status = ocsp_response.response_status.name
+    if ocsp_response.response_status != OCSPResponseStatus.SUCCESSFUL:
+        return asdict(
+            _OcspResponseAsJson(
+                response_status=response_status,
+                certificate_status=None,
+                revocation_time=None,
+                produced_at=None,
+                this_update=None,
+                next_update=None,
+                serial_number=None,
+            )
+        )
+    else:
+        return asdict(
+            _OcspResponseAsJson(
+                response_status=response_status,
+                certificate_status=ocsp_response.certificate_status.name,
+                revocation_time=ocsp_response.revocation_time,
+                produced_at=ocsp_response.produced_at,
+                this_update=ocsp_response.this_update,
+                next_update=ocsp_response.next_update,
+                serial_number=ocsp_response.serial_number,
+            )
+        )

@@ -46,11 +46,7 @@ from sslyze.plugins.certificate_info.implementation import (
     CertificateInfoScanResult,
     CertificateDeploymentAnalysisResult,
 )
-from sslyze.plugins.certificate_info._cert_chain_analyzer import (
-    PathValidationResult,
-    OcspResponse,
-    OcspResponseStatusEnum,
-)
+from sslyze.plugins.certificate_info._cert_chain_analyzer import PathValidationResult
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 
 # Cipher Suites

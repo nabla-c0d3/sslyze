@@ -9,7 +9,7 @@ class TestCipherSuiteMappings:
             (TlsVersionEnum.SSL_3_0, 121),
             (TlsVersionEnum.TLS_1_0, 121),
             (TlsVersionEnum.TLS_1_1, 121),
-            (TlsVersionEnum.TLS_1_2, 160),
+            (TlsVersionEnum.TLS_1_2, 158),
             (TlsVersionEnum.TLS_1_3, 5),
         ]:
             all_cipher_suites = CipherSuitesRepository.get_all_cipher_suites(tls_version)

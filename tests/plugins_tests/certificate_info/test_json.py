@@ -25,6 +25,5 @@ class TestJsonEncoder:
         assert result_as_json
 
         # And complex object like certificates were properly serialized
-        assert "notBefore" in result_as_json
         assert "issuer" in result_as_json
         assert "subject" in result_as_json

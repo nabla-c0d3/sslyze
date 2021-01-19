@@ -16,17 +16,26 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+
+    - name: Install pip
       run: |
         python -m pip install --upgrade pip pipenv setuptools
-    - name: Test module setup
+
+    - name: Test SSLyze module setup
       run: |
         python setup.py install
         cd docs  # Switch folder to avoid conflicts between ./sslyze and the installed sslyze module
         python ../api_sample.py
         cd ..
         pip uninstall -y sslyze
-    - name: Run tests and linters
-      run: |
-        pipenv install --dev
-        pipenv run invoke test
+
+    - name: Install dev dependencies
+      run: pipenv install --dev
+
+    - name: Run linters
+      # Only do linting once
+      if: matrix.python-version == "3.7"
+      run: pipenv run invoke lint
+
+    - name: Run tests
+      run: pipenv run invoke test

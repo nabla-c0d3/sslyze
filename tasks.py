@@ -10,10 +10,12 @@ root_path = Path(__file__).parent.absolute()
 @task
 def test(ctx):
     # type: (Context) -> None
-    # Run the test suite
-    ctx.run("pytest --cov=sslyze --cov-fail-under 80")
+    ctx.run("pytest --cov=sslyze --cov-fail-under 80 --durations 5")
 
-    # Run linters
+
+@task
+def lint(ctx):
+    # type: (Context) -> None
     ctx.run("flake8 .")
     ctx.run("mypy .")
     ctx.run("black -l 120 sslyze tests api_sample.py tasks.py --check")

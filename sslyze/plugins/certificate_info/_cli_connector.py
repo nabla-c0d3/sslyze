@@ -231,7 +231,7 @@ class _CertificateInfoCliConnector(
                     cls._format_field(
                         "",
                         "ERROR - OCSP response status is not successful: {}".format(
-                            cert_deployment.ocsp_response.status.name
+                            cert_deployment.ocsp_response.response_status.name
                         ),
                     )
                 ]

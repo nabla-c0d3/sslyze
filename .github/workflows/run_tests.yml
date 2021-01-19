@@ -1,4 +1,4 @@
-name: Run tests
+name: Run Tests
 
 on: push
 
@@ -34,7 +34,7 @@ jobs:
 
     - name: Run linters
       # Only do linting once
-      if: matrix.python-version == "3.7"
+      if: matrix.python-version == 3.7
       run: pipenv run invoke lint
 
     - name: Run tests

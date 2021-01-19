@@ -47,8 +47,9 @@ class PathValidationResult:
 class CertificateDeploymentAnalysisResult:
     """The result of analyzing a server's certificate to verify its validity.
 
-    Any certificate available as an attribute is parsed using the cryptography module; documentation is available at
-    https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object
+    Any certificate available within the fields that follow is parsed as a ``Certificate`` object using the cryptography
+    module; documentation is available at
+    https://cryptography.io/en/latest/x509/reference.html?highlight=Certificate#cryptography.x509.Certificate
 
     Attributes:
         received_certificate_chain: The certificate chain sent by the server; index 0 is the leaf certificate.
@@ -79,7 +80,10 @@ class CertificateDeploymentAnalysisResult:
             (https://blog.qualys.com/ssllabs/2017/09/26/google-and-mozilla-deprecating-existing-symantec-certificates).
             ``None`` if the verified chain could not be built.
         ocsp_response: The OCSP response returned by the server. ``None`` if no response was sent by the server or if
-            the scan was run through an HTTP proxy (the proxy will not forward the server's OCSP response).
+            the scan was run through an HTTP proxy (the proxy will not forward the server's OCSP response). If present,
+            the OCSP response is an ``OCSPResponse`` object parsed using the cryptography module; documentation is
+            available at
+            https://cryptography.io/en/latest/x509/ocsp.html?highlight=OCSPResponse#cryptography.x509.ocsp.OCSPResponse
         ocsp_response_is_trusted: ``True`` if the OCSP response is trusted using the Mozilla trust store.
             ``None`` if no OCSP response was sent by the server.
 

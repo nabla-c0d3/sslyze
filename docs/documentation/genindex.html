@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; SSLyze 3.1.0 documentation</title>
+    <title>Index &#8212; SSLyze 4.0.0 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -105,12 +105,10 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.CertificateInfoScanResult">CertificateInfoScanResult (class in sslyze)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.CipherSuitesScanResult.cipher_suite_preferred_by_server">cipher_suite_preferred_by_server (sslyze.CipherSuitesScanResult attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.CipherSuite">CipherSuite (class in sslyze)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.CipherSuite">CipherSuite (class in sslyze)</a>
-</li>
       <li><a href="available-scan-commands.html#sslyze.CipherSuiteAcceptedByServer">CipherSuiteAcceptedByServer (class in sslyze)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.CipherSuiteRejectedByServer">CipherSuiteRejectedByServer (class in sslyze)</a>
@@ -146,6 +144,8 @@
       <li><a href="available-scan-commands.html#sslyze.ExpectCtHeader.enforce">enforce (sslyze.ExpectCtHeader attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.EphemeralKeyInfo">EphemeralKeyInfo (class in sslyze)</a>
+</li>
+      <li><a href="available-scan-commands.html#sslyze.TrustStore.ev_oids">ev_oids (sslyze.TrustStore attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.HttpHeadersScanResult.expect_ct_header">expect_ct_header (sslyze.HttpHeadersScanResult attribute)</a>
 </li>
@@ -223,11 +223,11 @@
         <li><a href="available-scan-commands.html#sslyze.StrictTransportSecurityHeader.include_subdomains">(sslyze.StrictTransportSecurityHeader attribute)</a>
 </li>
       </ul></li>
-      <li><a href="available-scan-commands.html#sslyze.OcspResponseStatusEnum.INTERNAL_ERROR">INTERNAL_ERROR (sslyze.OcspResponseStatusEnum attribute)</a>
+      <li><a href="testing-connectivity.html#sslyze.ServerNetworkLocationViaDirectConnection.ip_address">ip_address (sslyze.ServerNetworkLocationViaDirectConnection attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="testing-connectivity.html#sslyze.ServerNetworkLocationViaDirectConnection.ip_address">ip_address (sslyze.ServerNetworkLocationViaDirectConnection attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.TrustStore.is_certificate_extended_validation">is_certificate_extended_validation() (sslyze.TrustStore method)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.SessionResumptionSupportScanResult.is_session_id_resumption_supported">is_session_id_resumption_supported (sslyze.SessionResumptionSupportScanResult attribute)</a>
 </li>
@@ -283,8 +283,6 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.OcspResponseStatusEnum.MALFORMED_REQUEST">MALFORMED_REQUEST (sslyze.OcspResponseStatusEnum attribute)</a>
-</li>
       <li><a href="available-scan-commands.html#sslyze.PublicKeyPinsHeader.max_age">max_age (sslyze.PublicKeyPinsHeader attribute)</a>
 
       <ul>
@@ -309,7 +307,7 @@
       <li><a href="available-scan-commands.html#sslyze.EllipticCurve.name">name (sslyze.EllipticCurve attribute)</a>
 
       <ul>
-        <li><a href="available-scan-commands.html#sslyze.TrustStore.name">(sslyze.TrustStore attribute)</a>
+        <li><a href="available-scan-commands.html#id1">(sslyze.TrustStore attribute)</a>, <a href="available-scan-commands.html#sslyze.TrustStore.name">[1]</a>
 </li>
       </ul></li>
       <li><a href="testing-connectivity.html#id1">network_configuration (sslyze.ServerConnectivityInfo attribute)</a>, <a href="testing-connectivity.html#sslyze.ServerConnectivityInfo.network_configuration">[1]</a>
@@ -334,16 +332,12 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.CertificateDeploymentAnalysisResult.ocsp_response_is_trusted">ocsp_response_is_trusted (sslyze.CertificateDeploymentAnalysisResult attribute)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.OcspResponse">OcspResponse (class in sslyze)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.OcspResponseStatusEnum">OcspResponseStatusEnum (class in sslyze)</a>
-</li>
       <li><a href="available-scan-commands.html#sslyze.ScanCommand.OPENSSL_CCS_INJECTION">OPENSSL_CCS_INJECTION (sslyze.ScanCommand attribute)</a>
+</li>
+      <li><a href="running-scan-commands.html#sslyze.ScanCommandResultsDict.openssl_ccs_injection">openssl_ccs_injection (sslyze.ScanCommandResultsDict attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="running-scan-commands.html#sslyze.ScanCommandResultsDict.openssl_ccs_injection">openssl_ccs_injection (sslyze.ScanCommandResultsDict attribute)</a>
-</li>
       <li><a href="available-scan-commands.html#sslyze.PathValidationResult.openssl_error_string">openssl_error_string (sslyze.PathValidationResult attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.EllipticCurve.openssl_nid">openssl_nid (sslyze.EllipticCurve attribute)</a>
@@ -358,7 +352,7 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.TrustStore.path">path (sslyze.TrustStore attribute)</a>
+      <li><a href="available-scan-commands.html#id0">path (sslyze.TrustStore attribute)</a>, <a href="available-scan-commands.html#sslyze.TrustStore.path">[1]</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.CertificateDeploymentAnalysisResult.path_validation_results">path_validation_results (sslyze.CertificateDeploymentAnalysisResult attribute)</a>
 </li>
@@ -480,13 +474,11 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.SessionResumptionRateScanResult">SessionResumptionRateScanResult (class in sslyze)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.SessionResumptionSupportScanResult">SessionResumptionSupportScanResult (class in sslyze)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.PublicKeyPinsHeader.sha256_pins">sha256_pins (sslyze.PublicKeyPinsHeader attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.SessionResumptionSupportScanResult">SessionResumptionSupportScanResult (class in sslyze)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.OcspResponseStatusEnum.SIG_REQUIRED">SIG_REQUIRED (sslyze.OcspResponseStatusEnum attribute)</a>
+      <li><a href="available-scan-commands.html#sslyze.PublicKeyPinsHeader.sha256_pins">sha256_pins (sslyze.PublicKeyPinsHeader attribute)</a>
 </li>
       <li><a href="testing-connectivity.html#sslyze.ProtocolWithOpportunisticTlsEnum.SMTP">SMTP (sslyze.ProtocolWithOpportunisticTlsEnum attribute)</a>
 </li>
@@ -512,8 +504,6 @@
       <li><a href="available-scan-commands.html#sslyze.HttpHeadersScanResult.strict_transport_security_header">strict_transport_security_header (sslyze.HttpHeadersScanResult attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.StrictTransportSecurityHeader">StrictTransportSecurityHeader (class in sslyze)</a>
-</li>
-      <li><a href="available-scan-commands.html#sslyze.OcspResponseStatusEnum.SUCCESSFUL">SUCCESSFUL (sslyze.OcspResponseStatusEnum attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.SessionResumptionRateScanResult.successful_session_id_resumptions_count">successful_session_id_resumptions_count (sslyze.SessionResumptionRateScanResult attribute)</a>
 
@@ -567,10 +557,10 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.ScanCommand.TLS_1_3_EARLY_DATA">TLS_1_3_EARLY_DATA (sslyze.ScanCommand attribute)</a>
 </li>
-      <li><a href="running-scan-commands.html#sslyze.ScanCommandResultsDict.tls_1_3_early_data">tls_1_3_early_data (sslyze.ScanCommandResultsDict attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="running-scan-commands.html#sslyze.ScanCommandResultsDict.tls_1_3_early_data">tls_1_3_early_data (sslyze.ScanCommandResultsDict attribute)</a>
+</li>
       <li><a href="testing-connectivity.html#sslyze.ServerNetworkConfiguration.tls_client_auth_credentials">tls_client_auth_credentials (sslyze.ServerNetworkConfiguration attribute)</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.ScanCommand.TLS_COMPRESSION">TLS_COMPRESSION (sslyze.ScanCommand attribute)</a>
@@ -597,17 +587,11 @@
 </li>
       <li><a href="available-scan-commands.html#sslyze.TrustStore">TrustStore (class in sslyze)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.OcspResponseStatusEnum.TRY_LATER">TRY_LATER (sslyze.OcspResponseStatusEnum attribute)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="available-scan-commands.html#sslyze.OcspResponseStatusEnum.UNAUTHORIZED">UNAUTHORIZED (sslyze.OcspResponseStatusEnum attribute)</a>
-</li>
-  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#sslyze.RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS">UNKNOWN_INCONSISTENT_RESULTS (sslyze.RobotScanResultEnum attribute)</a>
 </li>
@@ -629,7 +613,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="available-scan-commands.html#sslyze.CertificateDeploymentAnalysisResult.verified_chain_has_sha1_signature">verified_chain_has_sha1_signature (sslyze.CertificateDeploymentAnalysisResult attribute)</a>
 </li>
-      <li><a href="available-scan-commands.html#sslyze.TrustStore.version">version (sslyze.TrustStore attribute)</a>
+      <li><a href="available-scan-commands.html#id2">version (sslyze.TrustStore attribute)</a>, <a href="available-scan-commands.html#sslyze.TrustStore.version">[1]</a>
 </li>
       <li><a href="available-scan-commands.html#sslyze.RobotScanResultEnum.VULNERABLE_STRONG_ORACLE">VULNERABLE_STRONG_ORACLE (sslyze.RobotScanResultEnum attribute)</a>
 </li>

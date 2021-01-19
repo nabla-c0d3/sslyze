@@ -38,8 +38,6 @@ Result class
 .. autoclass:: CertificateDeploymentAnalysisResult
 .. autoclass:: PathValidationResult
 .. autoclass:: TrustStore
-.. autoclass:: OcspResponse
-.. autoclass:: OcspResponseStatusEnum
    :members:
    :undoc-members:
 

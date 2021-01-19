@@ -115,7 +115,7 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
     ) -> CipherSuitesScanResult:
-        expected_scan_jobs_count = len(CipherSuitesRepository.get_all_cipher_suites(cls._tls_version)) + 1
+        expected_scan_jobs_count = len(CipherSuitesRepository.get_all_cipher_suites(cls._tls_version))
         if len(completed_scan_jobs) != expected_scan_jobs_count:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 

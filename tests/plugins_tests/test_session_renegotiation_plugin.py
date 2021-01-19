@@ -32,6 +32,7 @@ class TestSessionRenegotiationPlugin:
         # And a CLI output can be generated
         assert SessionRenegotiationImplementation.cli_connector_cls.result_to_console_output(result)
 
+    @can_only_run_on_linux_64
     def test_renegotiation_is_vulnerable_to_client_renegotiation_dos(self):
         # Given a server that is vulnerable to client renegotiation DOS
         with LegacyOpenSslServer() as server:

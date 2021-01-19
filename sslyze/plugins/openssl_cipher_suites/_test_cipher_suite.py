@@ -8,10 +8,9 @@ from nassl.ssl_client import ClientCertificateRequested, SslClient, BaseSslClien
 from sslyze.errors import (
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
-    ConnectionToServerFailed,
     TlsHandshakeTimedOut,
 )
-from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite, CipherSuitesRepository
+from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.plugins.openssl_cipher_suites._tls12_workaround import WorkaroundForTls12ForCipherSuites
 
@@ -79,61 +78,6 @@ def connect_with_cipher_suite(
         ssl_connection.close()
 
     return CipherSuiteAcceptedByServer(cipher_suite=cipher_suite, ephemeral_key=ephemeral_key)
-
-
-@dataclass(frozen=True)
-class PreferredCipherSuite:
-    cipher_suite_openssl_name: Optional[str]
-
-
-def get_preferred_cipher_suite(
-    server_connectivity_info: ServerConnectivityInfo, tls_version: TlsVersionEnum
-) -> PreferredCipherSuite:
-    """Try to detect the server's preferred cipher suite among all cipher suites supported by SSLyze.
-    """
-    all_cipher_suites = [
-        cipher_suite.openssl_name for cipher_suite in CipherSuitesRepository.get_all_cipher_suites(tls_version)
-    ]
-    ordered_cipher_suites = sorted(all_cipher_suites, reverse=False)
-    reverse_ordered_cipher_suites = sorted(all_cipher_suites, reverse=True)
-
-    ordered_cipher_suites_string = ":".join(ordered_cipher_suites)
-    reverse_ordered_cipher_suites_string = ":".join(reverse_ordered_cipher_suites)
-
-    try:
-        cipher_suite_used_with_order = _get_selected_cipher_suite(
-            server_connectivity_info, tls_version, ordered_cipher_suites_string
-        )
-        cipher_suite_used_with_reverse_order = _get_selected_cipher_suite(
-            server_connectivity_info, tls_version, reverse_ordered_cipher_suites_string
-        )
-    except ConnectionToServerFailed:
-        # Could not complete a handshake
-        return PreferredCipherSuite(None)
-
-    if cipher_suite_used_with_order == cipher_suite_used_with_reverse_order:
-        # The server has its own preference for picking a cipher suite
-        return PreferredCipherSuite(cipher_suite_openssl_name=cipher_suite_used_with_order)
-    else:
-        # The server has no preferred cipher suite as it follows the client's preference for picking a cipher suite
-        return PreferredCipherSuite(None)
-
-
-def _get_selected_cipher_suite(
-    server_connectivity: ServerConnectivityInfo, tls_version: TlsVersionEnum, openssl_cipher_string: str
-) -> str:
-    ssl_connection = server_connectivity.get_preconfigured_tls_connection(override_tls_version=tls_version)
-    _set_cipher_suite_string(tls_version, openssl_cipher_string, ssl_connection.ssl_client)
-
-    # Perform the SSL handshake
-    try:
-        ssl_connection.connect()
-        return ssl_connection.ssl_client.get_current_cipher_name()
-    except ClientCertificateRequested:
-        # TODO(AD): Sometimes get_current_cipher_name() called in from_ongoing_ssl_connection() will return None
-        return ssl_connection.ssl_client.get_current_cipher_name()
-    finally:
-        ssl_connection.close()
 
 
 def _set_cipher_suite_string(tls_version: TlsVersionEnum, cipher_suite_str: str, ssl_client: BaseSslClient) -> None:

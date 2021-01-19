@@ -73,14 +73,6 @@ class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult"
         )
         result_as_txt.append("")
 
-        # Then display the preferred cipher
-        if result.cipher_suite_preferred_by_server:
-            result_as_txt.append(cls._format_subtitle("The server is configured to prefer the following cipher suite:"))
-            result_as_txt.append(_format_accepted_cipher_suite(result.cipher_suite_preferred_by_server))
-        else:
-            result_as_txt.append(cls._format_subtitle("The server has no preferred cipher suite."))
-
-        result_as_txt.append("")
         return result_as_txt
 
 

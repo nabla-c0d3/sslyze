@@ -9,8 +9,6 @@ from sslyze.plugins.openssl_cipher_suites._test_cipher_suite import (
     connect_with_cipher_suite,
     CipherSuiteRejectedByServer,
     CipherSuiteAcceptedByServer,
-    PreferredCipherSuite,
-    get_preferred_cipher_suite,
 )
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuitesRepository
 from sslyze.plugins.plugin_base import (
@@ -34,14 +32,10 @@ class CipherSuitesScanResult(ScanCommandResult):
         tls_version_used: The SSL/TLS version used to connect to the server.
         accepted_ciphers: The list of cipher suites supported supported by both SSLyze and the server.
         rejected_ciphers: The list of cipher suites supported by SSLyze that were rejected by the server.
-        cipher_suite_preferred_by_server: The server's preferred cipher suite among all the cipher suites supported by
-            SSLyze. ``None`` if the server follows the client's preference or if none of SSLyze's cipher suites are
-            supported by the server.
     """
 
     tls_version_used: TlsVersionEnum
 
-    cipher_suite_preferred_by_server: Optional[CipherSuiteAcceptedByServer]
     accepted_cipher_suites: List[CipherSuiteAcceptedByServer]
     rejected_cipher_suites: List[CipherSuiteRejectedByServer]
 
@@ -115,10 +109,6 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
             )
             for cipher_suite in all_cipher_suites_to_test
         ]
-        # Run an additional job to find the preferred cipher suite
-        scan_jobs.append(
-            ScanJob(function_to_call=get_preferred_cipher_suite, function_arguments=[server_info, cls._tls_version])
-        )
         return scan_jobs
 
     @classmethod
@@ -129,7 +119,6 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
         if len(completed_scan_jobs) != expected_scan_jobs_count:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 
-        preferred_cipher_suite_openssl_name = None
         accepted_cipher_suites = []
         rejected_cipher_suites = []
         for completed_job in completed_scan_jobs:
@@ -145,8 +134,6 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
                 accepted_cipher_suites.append(cipher_suite_result)
             elif isinstance(cipher_suite_result, CipherSuiteRejectedByServer):
                 rejected_cipher_suites.append(cipher_suite_result)
-            elif isinstance(cipher_suite_result, PreferredCipherSuite):
-                preferred_cipher_suite_openssl_name = cipher_suite_result.cipher_suite_openssl_name
             else:
                 raise ValueError("Should never happen")
 
@@ -154,18 +141,9 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
         accepted_cipher_suites.sort(key=attrgetter("cipher_suite.name"), reverse=True)
         rejected_cipher_suites.sort(key=attrgetter("cipher_suite.name"), reverse=True)
 
-        # Find the preferred cipher suite among all the accepted cipher suites
-        if preferred_cipher_suite_openssl_name is None:
-            preferred_cipher_suite = None
-        else:
-            preferred_cipher_suite = CipherSuitesRepository.get_cipher_suite_with_openssl_name(
-                tls_version=cls._tls_version, openssl_name=preferred_cipher_suite_openssl_name
-            )
-
         # Generate the results
         return CipherSuitesScanResult(
             tls_version_used=cls._tls_version,
-            cipher_suite_preferred_by_server=preferred_cipher_suite,
             accepted_cipher_suites=accepted_cipher_suites,
             rejected_cipher_suites=rejected_cipher_suites,
         )

@@ -5,9 +5,15 @@ from concurrent.futures import Future
 from dataclasses import dataclass
 from typing import Optional, List, ClassVar, Type, Dict, Set
 
-from typing_extensions import Literal
 from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
 from sslyze.server_connectivity import ServerConnectivityInfo
+
+try:
+    # Python 3.7
+    from typing_extensions import Literal
+except ModuleNotFoundError:
+    # Python 3.8+
+    from typing import Literal  # type: ignore
 
 
 ScanCommandForTestsType = Literal[

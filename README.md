@@ -1,7 +1,7 @@
 SSLyze
 ======
 
-![Run tests](https://github.com/nabla-c0d3/sslyze/workflows/Run%20tests/badge.svg)
+![Run Tests](https://github.com/nabla-c0d3/sslyze/workflows/Run%20Tests/badge.svg)
 [![Downloads](https://pepy.tech/badge/sslyze)](https://pepy.tech/badge/sslyze)
 [![PyPI version](https://img.shields.io/pypi/v/sslyze.svg)](https://pypi.org/project/sslyze/)
 [![Python version](https://img.shields.io/pypi/pyversions/sslyze.svg)](https://pypi.org/project/sslyze/)

@@ -1,0 +1,32 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [ release ]
+
+jobs:
+  build:
+
+    runs-on: windows-2016
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install pip and cx-freeze
+      run: python -m pip install --upgrade pip pipenv setuptools cx-freeze
+
+    - name: Install SSLyze dependencies
+      run: |
+        python -m pip install .
+        python -m pip uninstall sslyze -y
+
+    - name: Build Windows executable
+      run: python setup.py build_exe
+
+    - uses: actions/upload-artifact@v2
+      with:
+        path: ./build/*

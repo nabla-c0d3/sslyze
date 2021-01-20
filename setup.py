@@ -96,6 +96,6 @@ setup(
         "typing_extensions ; python_version<'3.8'",  # To remove when we drop support for Python 3.7
     ],
     # cx_freeze info for Windows builds with Python embedded
-    options={"build_exe": {"packages": ["cffi", "cryptography", "idna"], "include_files": get_include_files()}},
+    options={"build_exe": {"packages": ["cffi", "cryptography"], "include_files": get_include_files()}},
     executables=[Executable(path.join("sslyze", "__main__.py"), targetName="sslyze.exe")],
 )

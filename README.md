@@ -11,7 +11,7 @@ SSLyze is a fast and powerful SSL/TLS scanning library.
 It allows you to analyze the SSL/TLS configuration of a server by connecting to it, in order to detect various
 issues (bad certificate, weak cipher suites, Heartbleed, ROBOT, TLS 1.3 support, etc.).
 
-SSLyze can either be used as command line tool or as a Python library.
+SSLyze can either be used as a command line tool or as a Python library.
 
 Key features
 ------------

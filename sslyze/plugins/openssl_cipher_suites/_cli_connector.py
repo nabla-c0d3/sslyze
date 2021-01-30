@@ -41,37 +41,37 @@ class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult"
         result_as_txt.append("")
 
         # Display some general comments about the cipher suite configuration
-        result_as_txt.append(
-            cls._format_subtitle("The group of cipher suites supported by the server has the following properties:")
-        )
+        # These comments only apply to TLS versions below 1.3 because TLS 1.3 removed "bad" cipher suites
+        if result.tls_version_used.value < TlsVersionEnum.TLS_1_3.value:
+            result_as_txt.append(
+                cls._format_subtitle("The group of cipher suites supported by the server has the following properties:")
+            )
 
-        # Forward secrecy
-        supports_forward_secrecy = False
-        if result.tls_version_used == TlsVersionEnum.TLS_1_3:
-            # All TLS 1.3 cipher suites support forward secrecy
-            supports_forward_secrecy = True
-        else:
+            # Forward secrecy
+            supports_forward_secrecy = False
             for accepted_cipher in result.accepted_cipher_suites:
                 if "_DHE_" in accepted_cipher.cipher_suite.name or "_ECDHE_" in accepted_cipher.cipher_suite.name:
                     supports_forward_secrecy = True
                     break
 
-        result_as_txt.append(
-            cls._format_field(
-                "Forward Secrecy", "OK - Supported" if supports_forward_secrecy else "INSECURE - Not Supported"
+            result_as_txt.append(
+                cls._format_field(
+                    "Forward Secrecy", "OK - Supported" if supports_forward_secrecy else "INSECURE - Not Supported"
+                )
             )
-        )
 
-        # Insecure RC4 cipher suites
-        supports_rc4 = False
-        for accepted_cipher in result.accepted_cipher_suites:
-            if "_RC4_" in accepted_cipher.cipher_suite.name:
-                supports_rc4 = True
-                break
-        result_as_txt.append(
-            cls._format_field("Legacy RC4 Algorithm", "INSECURE - Supported" if supports_rc4 else "OK - Not Supported")
-        )
-        result_as_txt.append("")
+            # Insecure RC4 cipher suites
+            supports_rc4 = False
+            for accepted_cipher in result.accepted_cipher_suites:
+                if "_RC4_" in accepted_cipher.cipher_suite.name:
+                    supports_rc4 = True
+                    break
+            result_as_txt.append(
+                cls._format_field(
+                    "Legacy RC4 Algorithm", "INSECURE - Supported" if supports_rc4 else "OK - Not Supported"
+                )
+            )
+            result_as_txt.append("")
 
         return result_as_txt
 

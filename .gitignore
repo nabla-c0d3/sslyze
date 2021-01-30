@@ -36,11 +36,6 @@ pip-log.txt
 .tox
 nosetests.xml
 
-#Translations
-*.mo
-
-#Mr Developer
-.mr.developer.cfg
 
 # Pydev
 .project
@@ -55,14 +50,8 @@ nosetests.xml
 # Tests
 *.xml
 
-# Depedencies
-nassl/*
-
 .DS_Store
 
-# Certificates
-ca/*
-*.key
 
 # Sphynx
 docs/_build/*

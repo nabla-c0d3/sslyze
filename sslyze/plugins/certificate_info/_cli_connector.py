@@ -267,7 +267,8 @@ class _CertificateInfoCliConnector(
                             cls._format_field(
                                 "This Update:", cert_deployment.ocsp_response.this_update.date().isoformat()
                             ),
-                        ])
+                        ]
+                    )
 
                     # The Next Update field is optional: https://github.com/nabla-c0d3/sslyze/issues/481
                     if cert_deployment.ocsp_response.next_update is None:

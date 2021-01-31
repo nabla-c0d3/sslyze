@@ -14,7 +14,6 @@ from sslyze import (
     Scanner,
     ServerScanRequest,
     ClientAuthRequirementEnum,
-    CipherSuitesScanResult,
     ScanCommandErrorReasonEnum,
 )
 from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand

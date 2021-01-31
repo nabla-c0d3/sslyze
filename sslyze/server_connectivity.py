@@ -1,3 +1,4 @@
+import socket
 from enum import Enum, unique, auto
 from pathlib import Path
 from typing import Optional
@@ -44,7 +45,7 @@ class ServerTlsProbingResult:
     """
 
     highest_tls_version_supported: TlsVersionEnum
-    cipher_suite_supported: str  # The OpenSSL name of a cipher suite supported by the server
+    cipher_suite_supported: str  # The OpenSSL name/string of cipher suite(s) supported by the server
     client_auth_requirement: ClientAuthRequirementEnum
     supports_ecdh_key_exchange: bool
 
@@ -121,6 +122,220 @@ class ServerConnectivityInfo:
         return ssl_connection
 
 
+@dataclass(frozen=True)
+class _TlsVersionDetectionResult:
+    tls_version_supported: TlsVersionEnum
+    cipher_suite_supported: str
+    server_requested_client_cert: bool
+
+
+class _TlsVersionNotSupported(Exception):
+    pass
+
+
+def _detect_support_for_tls_1_3(
+    server_location: ServerNetworkLocation, network_config: ServerNetworkConfiguration,
+) -> _TlsVersionDetectionResult:
+    ssl_connection = SslConnection(
+        server_location=server_location,
+        network_configuration=network_config,
+        tls_version=TlsVersionEnum.TLS_1_3,
+        should_ignore_client_auth=False,
+    )
+
+    try:
+        ssl_connection.connect(should_retry_connection=False)
+        return _TlsVersionDetectionResult(
+            tls_version_supported=TlsVersionEnum.TLS_1_3,
+            server_requested_client_cert=False,
+            cipher_suite_supported=ssl_connection.ssl_client.get_current_cipher_name(),
+        )
+    except ClientCertificateRequested:
+        # Connection successful but the servers wants a client certificate which wasn't supplied to sslyze
+        return _TlsVersionDetectionResult(
+            tls_version_supported=TlsVersionEnum.TLS_1_3,
+            server_requested_client_cert=True,
+            cipher_suite_supported=ssl_connection.ssl_client.get_current_cipher_name(),
+        )
+
+    except TlsHandshakeFailed:
+        pass
+
+    except (OSError, _nassl.OpenSSLError) as e:
+        # If these errors get propagated here, it means they're not part of the known/normal errors that
+        # can happen when trying to connect to a server and defined in tls_connection.py
+        # Hence we re-raise these as "unknown" connection errors; might be caused by bad connectivity to
+        # the server (random disconnects, etc.) and the scan against this server should not be performed
+        raise ConnectionToServerFailed(
+            server_location=server_location,
+            network_configuration=network_config,
+            error_message=f'Unexpected connection error: "{e.args}"',
+        )
+
+    finally:
+        ssl_connection.close()
+
+    # If we get here, none of the handshakes were successful
+    raise _TlsVersionNotSupported()
+
+
+def _detect_support_for_tls_1_2_or_below(
+    server_location: ServerNetworkLocation, network_config: ServerNetworkConfiguration, tls_version: TlsVersionEnum,
+) -> _TlsVersionDetectionResult:
+    # First try the default cipher list, and then all ciphers; this is to work around F5 network devices
+    # that time out when the client hello is too long (ie. too many cipher suites enabled)
+    # https://support.f5.com/csp/article/K14758
+    for cipher_list in ["DEFAULT", "ALL:COMPLEMENTOFALL:-PSK:-SRP"]:
+        ssl_connection = SslConnection(
+            server_location=server_location,
+            network_configuration=network_config,
+            tls_version=tls_version,
+            should_ignore_client_auth=False,
+        )
+        ssl_connection.ssl_client.set_cipher_list(cipher_list)
+
+        try:
+            # Only do one attempt when testing connectivity
+            ssl_connection.connect(should_retry_connection=False)
+            return _TlsVersionDetectionResult(
+                tls_version_supported=tls_version,
+                server_requested_client_cert=False,
+                cipher_suite_supported=ssl_connection.ssl_client.get_current_cipher_name(),
+            )
+
+        except ClientCertificateRequested:
+            # Connection successful but the servers wants a client certificate which wasn't supplied to sslyze
+            return _TlsVersionDetectionResult(
+                tls_version_supported=tls_version,
+                server_requested_client_cert=True,
+                # Calling ssl_connection.ssl_client.get_current_cipher_name() will fail in this situation so we just
+                # store the whole cipher_list
+                cipher_suite_supported=cipher_list,
+            )
+
+        except TlsHandshakeFailed:
+            # Try the next cipher list
+            pass
+
+        except (OSError, _nassl.OpenSSLError) as e:
+            # If these errors get propagated here, it means they're not part of the known/normal errors that
+            # can happen when trying to connect to a server and defined in tls_connection.py
+            # Hence we re-raise these as "unknown" connection errors; might be caused by bad connectivity to
+            # the server (random disconnects, etc.) and the scan against this server should not be performed
+            raise ConnectionToServerFailed(
+                server_location=server_location,
+                network_configuration=network_config,
+                error_message=f'Unexpected connection error: "{e.args}"',
+            )
+
+        finally:
+            ssl_connection.close()
+
+    # If we get here, none of the handshakes were successful
+    raise _TlsVersionNotSupported()
+
+
+def _detect_client_auth_requirement_with_tls_1_3(
+    server_location: ServerNetworkLocation, network_config: ServerNetworkConfiguration,
+) -> ClientAuthRequirementEnum:
+    """Try to detect if client authentication is optional or required.
+    """
+    ssl_connection_auth = SslConnection(
+        server_location=server_location,
+        network_configuration=network_config,
+        tls_version=TlsVersionEnum.TLS_1_3,
+        should_ignore_client_auth=True,
+    )
+    try:
+        ssl_connection_auth.connect(should_retry_connection=False)
+
+        # With TLS 1.3 we need to send some data and then read the response
+        # to force a ClientCertificateRequested exception; not sure why
+        # https://github.com/nabla-c0d3/sslyze/issues/472
+        ssl_connection_auth.ssl_client.write(b"A")
+        ssl_connection_auth.ssl_client.read(1)
+
+        client_auth_requirement = ClientAuthRequirementEnum.OPTIONAL
+
+    except (ClientCertificateRequested, ServerRejectedTlsHandshake):
+        client_auth_requirement = ClientAuthRequirementEnum.REQUIRED
+
+    except socket.timeout:
+        # The timeout is triggered when calling read() because the server has client auth optional and is waiting for
+        # more data from us the client
+        client_auth_requirement = ClientAuthRequirementEnum.OPTIONAL
+
+    finally:
+        ssl_connection_auth.close()
+
+    return client_auth_requirement
+
+
+def _detect_client_auth_requirement_with_tls_1_2_or_below(
+    server_location: ServerNetworkLocation,
+    network_config: ServerNetworkConfiguration,
+    tls_version: TlsVersionEnum,
+    cipher_list: str,
+) -> ClientAuthRequirementEnum:
+    """Try to detect if client authentication is optional or required.
+    """
+    if tls_version.value >= TlsVersionEnum.TLS_1_3.value:
+        raise ValueError("Use _detect_client_auth_requirement_with_tls_1_3()")
+
+    ssl_connection_auth = SslConnection(
+        server_location=server_location,
+        network_configuration=network_config,
+        tls_version=tls_version,
+        should_ignore_client_auth=True,
+    )
+    ssl_connection_auth.ssl_client.set_cipher_list(cipher_list)
+
+    try:
+        ssl_connection_auth.connect(should_retry_connection=False)
+        client_auth_requirement = ClientAuthRequirementEnum.OPTIONAL
+    except (ClientCertificateRequested, ServerRejectedTlsHandshake):
+        client_auth_requirement = ClientAuthRequirementEnum.REQUIRED
+    finally:
+        ssl_connection_auth.close()
+
+    return client_auth_requirement
+
+
+def _detect_ecdh_support(
+    server_location: ServerNetworkLocation, network_config: ServerNetworkConfiguration, tls_version: TlsVersionEnum,
+) -> bool:
+    if tls_version.value < TlsVersionEnum.TLS_1_2.value:
+        # Retrieving ECDH information is only implemented in the modern nassl.SslClient, which is TLS 1.2+
+        return False
+
+    is_ecdh_key_exchange_supported = False
+    ssl_connection = SslConnection(
+        server_location=server_location,
+        network_configuration=network_config,
+        tls_version=tls_version,
+        should_use_legacy_openssl=False,
+        should_ignore_client_auth=True,
+    )
+    if not isinstance(ssl_connection.ssl_client, SslClient):
+        raise RuntimeError(
+            "Should never happen: specified should_use_legacy_openssl=False but didn't get the modern" " SSL client"
+        )
+
+    # Set the right elliptic curve cipher suites
+    enable_ecdh_cipher_suites(tls_version, ssl_connection.ssl_client)
+    try:
+        ssl_connection.connect(should_retry_connection=False)
+        is_ecdh_key_exchange_supported = True
+    except ClientCertificateRequested:
+        is_ecdh_key_exchange_supported = True
+    except ServerRejectedTlsHandshake:
+        is_ecdh_key_exchange_supported = False
+    finally:
+        ssl_connection.close()
+
+    return is_ecdh_key_exchange_supported
+
+
 class ServerConnectivityTester:
     """Utility class to ensure that SSLyze is able to connect to a server before scanning it.
     """
@@ -149,133 +364,71 @@ class ServerConnectivityTester:
         else:
             final_network_config = network_configuration
 
-        # Try to complete an SSL handshake to figure out the SSL version and cipher supported by the server
-        highest_tls_version_supported = None
-        cipher_suite_supported = None
-        client_auth_requirement = ClientAuthRequirementEnum.DISABLED
+        # Try to complete an SSL handshake to figure out the SSL/TLS version and cipher supported by the server
+        tls_detection_result: Optional[_TlsVersionDetectionResult] = None
 
-        # TODO(AD): Switch to using the protocol discovery logic available in OpenSSL 1.1.0 with TLS_client_method()
-        for tls_version in [
-            TlsVersionEnum.TLS_1_3,
-            TlsVersionEnum.TLS_1_2,
-            TlsVersionEnum.TLS_1_1,
-            TlsVersionEnum.TLS_1_0,
-            TlsVersionEnum.SSL_3_0,
-        ]:
-            # First try the default cipher list, and then all ciphers
-            for cipher_list in [None, "ALL:COMPLEMENTOFALL:-PSK:-SRP"]:
-                ssl_connection = SslConnection(
-                    server_location=server_location,
-                    network_configuration=final_network_config,
-                    tls_version=tls_version,
-                    should_ignore_client_auth=False,
-                )
-                if cipher_list:
-                    if tls_version == TlsVersionEnum.TLS_1_3:
-                        # Skip the second attempt with all ciphers enabled as these ciphers don't exist in TLS 1.3
-                        continue
+        # Fist try TLS 1.3
+        try:
+            tls_detection_result = _detect_support_for_tls_1_3(
+                server_location=server_location, network_config=final_network_config,
+            )
+        except _TlsVersionNotSupported:
+            pass
 
-                    ssl_connection.ssl_client.set_cipher_list(cipher_list)
-
+        # If TLS 1.3 is not supported, try lower versions of SSL/TLS
+        if tls_detection_result is None:
+            for tls_version in [
+                # Order is important here as we want to detect the highest version of TLS that's supported
+                TlsVersionEnum.TLS_1_2,
+                TlsVersionEnum.TLS_1_1,
+                TlsVersionEnum.TLS_1_0,
+                TlsVersionEnum.SSL_3_0,
+            ]:
                 try:
-                    # Only do one attempt when testing connectivity
-                    ssl_connection.connect(should_retry_connection=False)
-                    highest_tls_version_supported = tls_version
-                    cipher_suite_supported = ssl_connection.ssl_client.get_current_cipher_name()
-                except ClientCertificateRequested:
-                    # Connection successful but the servers wants a client certificate which wasn't supplied to sslyze
-                    # Store the SSL version and cipher list that is supported
-                    highest_tls_version_supported = tls_version
-                    cipher_suite_supported = cipher_list
-                    # Close the current connection and try again but ignore client authentication
-                    ssl_connection.close()
-
-                    # Try a new connection to see if client authentication is optional
-                    ssl_connection_auth = SslConnection(
-                        server_location=server_location,
-                        network_configuration=final_network_config,
-                        tls_version=tls_version,
-                        should_ignore_client_auth=True,
+                    tls_detection_result = _detect_support_for_tls_1_2_or_below(
+                        server_location=server_location, network_config=final_network_config, tls_version=tls_version,
                     )
-                    if cipher_list:
-                        ssl_connection_auth.ssl_client.set_cipher_list(cipher_list)
-                    try:
-                        ssl_connection_auth.connect(should_retry_connection=False)
-                        cipher_suite_supported = ssl_connection_auth.ssl_client.get_current_cipher_name()
-                        client_auth_requirement = ClientAuthRequirementEnum.OPTIONAL
-
-                    # If client authentication is required, we either get a ClientCertificateRequested
-                    except ClientCertificateRequested:
-                        client_auth_requirement = ClientAuthRequirementEnum.REQUIRED
-                    # Or a ServerRejectedTlsHandshake
-                    except ServerRejectedTlsHandshake:
-                        client_auth_requirement = ClientAuthRequirementEnum.REQUIRED
-                    finally:
-                        ssl_connection_auth.close()
-
-                except TlsHandshakeFailed:
-                    # This TLS version did not work; keep going
+                    break
+                except _TlsVersionNotSupported:
+                    # Try the next TLS version
                     pass
 
-                except (OSError, _nassl.OpenSSLError) as e:
-                    # If these errors get propagated here, it means they're not part of the known/normal errors that
-                    # can happen when trying to connect to a server and defined in tls_connection.py
-                    # Hence we re-raise these as "unknown" connection errors; might be caused by bad connectivity to
-                    # the server (random disconnects, etc.) and the scan against this server should not be performed
-                    raise ConnectionToServerFailed(
-                        server_location=server_location,
-                        network_configuration=final_network_config,
-                        error_message=f'Unexpected connection error: "{e.args}"',
-                    )
-
-                finally:
-                    ssl_connection.close()
-
-            if cipher_suite_supported:
-                # A handshake was successful
-                break
-
-        if highest_tls_version_supported is None or cipher_suite_supported is None:
+        if tls_detection_result is None:
             raise ServerTlsConfigurationNotSupported(
                 server_location=server_location,
                 network_configuration=final_network_config,
                 error_message="Probing failed: could not find a TLS version and cipher suite supported by the server",
             )
 
-        # Check if ECDH key exchanges are supported
-        is_ecdh_key_exchange_supported = False
-        if "ECDH" in cipher_suite_supported:
+        # If the server requested a client certificate, detect if the client cert is optional or required
+        client_auth_requirement = ClientAuthRequirementEnum.DISABLED
+        if tls_detection_result.server_requested_client_cert:
+            if tls_detection_result.tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
+                client_auth_requirement = _detect_client_auth_requirement_with_tls_1_3(
+                    server_location=server_location, network_config=final_network_config,
+                )
+            else:
+                client_auth_requirement = _detect_client_auth_requirement_with_tls_1_2_or_below(
+                    server_location=server_location,
+                    network_config=final_network_config,
+                    tls_version=tls_detection_result.tls_version_supported,
+                    cipher_list=tls_detection_result.cipher_suite_supported,
+                )
+
+        # Check if ECDH key exchanges are supported, for the elliptic curves plugin
+        if "ECDH" in tls_detection_result.cipher_suite_supported:
             is_ecdh_key_exchange_supported = True
         else:
-            if highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_2.value:
-                ssl_connection = SslConnection(
-                    server_location=server_location,
-                    network_configuration=final_network_config,
-                    tls_version=highest_tls_version_supported,
-                    should_use_legacy_openssl=False,
-                    should_ignore_client_auth=True,
-                )
-                if not isinstance(ssl_connection.ssl_client, SslClient):
-                    raise RuntimeError(
-                        "Should never happen: specified should_use_legacy_openssl=False but didn't get the modern"
-                        " SSL client"
-                    )
+            is_ecdh_key_exchange_supported = _detect_ecdh_support(
+                server_location=server_location,
+                network_config=final_network_config,
+                tls_version=tls_detection_result.tls_version_supported,
+            )
 
-                # Set the right elliptic curve cipher suites
-                enable_ecdh_cipher_suites(highest_tls_version_supported, ssl_connection.ssl_client)
-                try:
-                    ssl_connection.connect(should_retry_connection=False)
-                    is_ecdh_key_exchange_supported = True
-                except ClientCertificateRequested:
-                    is_ecdh_key_exchange_supported = True
-                except ServerRejectedTlsHandshake:
-                    is_ecdh_key_exchange_supported = False
-                finally:
-                    ssl_connection.close()
-
+        # All done with TLS probing
         tls_probing_result = ServerTlsProbingResult(
-            highest_tls_version_supported=highest_tls_version_supported,
-            cipher_suite_supported=cipher_suite_supported,
+            highest_tls_version_supported=tls_detection_result.tls_version_supported,
+            cipher_suite_supported=tls_detection_result.cipher_suite_supported,
             client_auth_requirement=client_auth_requirement,
             supports_ecdh_key_exchange=is_ecdh_key_exchange_supported,
         )

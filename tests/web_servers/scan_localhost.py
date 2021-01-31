@@ -89,7 +89,7 @@ def main() -> None:
         # Ensure TLS 1.2 and 1.3 were detected by SSLyze to be enabled
         # https://github.com/nabla-c0d3/sslyze/issues/472
         for ciphers_scan_cmd in [ScanCommand.TLS_1_3_CIPHER_SUITES, ScanCommand.TLS_1_2_CIPHER_SUITES]:
-            scan_cmd_result: CipherSuitesScanResult = server_scan_result.scan_commands_results[ciphers_scan_cmd]
+            scan_cmd_result = server_scan_result.scan_commands_results[ciphers_scan_cmd]  # type: ignore
             if not scan_cmd_result.accepted_cipher_suites:
                 raise RuntimeError(
                     f"SSLyze did not detect {scan_cmd_result.tls_version_used.name} to be enabled on the server."

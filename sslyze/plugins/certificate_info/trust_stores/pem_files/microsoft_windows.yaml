@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
 version: null
 url: https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFT
-date_fetched: 2020-10-01
-trusted_certificates_count: 253
+date_fetched: 2021-01-24
+trusted_certificates_count: 261
 trusted_certificates:
 - subject_name: A-Trust-Root-07
   fingerprint: 8ac552ad577e37ad2c6808d72aa331d6a96b4b3febff34ce9bc0578e08055ec3
@@ -54,6 +54,8 @@ trusted_certificates:
   fingerprint: 04048028bf1f2864d48f9ad4d83294366a828856553f3b14303f90147f5d40ef
 - subject_name: Autoridade Certificadora Raiz Brasileira v1
   fingerprint: cbd8ed38d4a2d677d453d70dd8890af4f6374cba6299943f1ab3a6936c6fd795
+- subject_name: Autoridade Certificadora Raiz Brasileira v10
+  fingerprint: 6e0bff069a26994c15de2c4888cc54af84882e5495b7fbf66be9ccffec7489f6
 - subject_name: Autoridade Certificadora Raiz Brasileira v2
   fingerprint: fb47d92a9909fd4fa9bec02737543e1f3514ced747407a8d9cfa397b0915067c
 - subject_name: Autoridade Certificadora Raiz Brasileira v5
@@ -86,8 +88,6 @@ trusted_certificates:
   fingerprint: c34c5df53080078ffe45b21a7f600469917204f4f0293f1d7209393e5265c04f
 - subject_name: CFCA EV ROOT
   fingerprint: 5cc3d78e4e1d5e45547a04e6873e64f90cf9536d1ccc2ef800f355c4c5fd70fd
-- subject_name: CFCA GT CA
-  fingerprint: 0771920c8cb874d5c5a4dc0d6a51a2d495d38c4de2cd5b83d2a06faa051935f6
 - subject_name: CFCA Identity CA
   fingerprint: ffb85c26308a961351249ea641f659d49f639e91daed9c92d046ccdcecc93d2f
 - subject_name: CHAMBERS OF COMMERCE ROOT - 2016
@@ -108,10 +108,14 @@ trusted_certificates:
   fingerprint: 2a99f5bc1174b73cbb1d620884e01c34e51ccb3978da125f0e33268883bf4158
 - subject_name: Certum CA
   fingerprint: d8e0febc1db2e38d00940f37d27d41344d993e734b99d5656d9778d4d8143624
+- subject_name: Certum EC-384 CA
+  fingerprint: 6b328085625318aa50d173c98d8bda09d57e27413d114cf787a0f5d06c030cf6
 - subject_name: Certum Trusted Network CA
   fingerprint: 5c58468d55f58e497e743982d2b50010b6d165374acf83a7d4a32db768c4408e
 - subject_name: Certum Trusted Network CA 2
   fingerprint: b676f2eddae8775cd36cb0f63cd1d4603961f49e6265ba013a2f0307b6d0b804
+- subject_name: Certum Trusted Root CA
+  fingerprint: fe7696573855773e37a95e7ad4d9cc96c30157c15d31765ba9b15704e1ae78fd
 - subject_name: Chambers of Commerce Root
   fingerprint: 0c258a12a5674aef25f28ba7dcfaeceea348e541e6f5cc4ee63b71b361606ac3
 - subject_name: Chambers of Commerce Root - 2008
@@ -187,6 +191,8 @@ trusted_certificates:
   fingerprint: 5e3571f33f45a7df1537a68b5ffb9e036af9d2f5bc4c9717130dc43d7175aac7
 - subject_name: GLOBALTRUST 2015
   fingerprint: 416b1f9e84e74c1d19b23d8d7191c6ad81246e641601f599132729f507beb3cc
+- subject_name: GLOBALTRUST 2020
+  fingerprint: 9a296a5182d1d451a2e37f439b74daafa267523329f90f9a0d2007c334e23c9a
 - subject_name: GPKIRootCA1
   fingerprint: 407c276bead2e4af0661ef6697341dec0a1f9434e4eafb2d3d32a90549d9de4a
 - subject_name: GTS Root R1
@@ -225,6 +231,14 @@ trusted_certificates:
   fingerprint: cbb522d7b7f127ad6a0113865bdf1cd4102e7d0759af635a7cf4720dc963c53b
 - subject_name: GlobalSign Root CA
   fingerprint: ebd41040e4bb3ec742c9e381d31ef2a41a48b6685c96e7cef3c1df6cd4331c99
+- subject_name: GlobalSign Root E46
+  fingerprint: cbb9c44d84b8043e1050ea31a69f514955d7bfd2e2c6b49301019ad61d9f5058
+- subject_name: GlobalSign Root R46
+  fingerprint: 4fa3126d8d3a11d1c4855a4f807cbad6cf919d3a5a88b03bea2c6372d93c40c9
+- subject_name: GlobalSign Secure Mail Root E45
+  fingerprint: 5cbf6fb81fd417ea4128cd6f8172a3c9402094f74ab2ed3a06b4405d04f30b19
+- subject_name: GlobalSign Secure Mail Root R45
+  fingerprint: 319af0a7729e6f89269c131ea6a3a16fcd86389fdcab3c47a4a675c161a3f974
 - subject_name: Go Daddy Class 2 Certification Authority
   fingerprint: c3846bf24b9e93ca64274c0ec67c1ecc5e024ffcacd2d74019350e81fe546ae4
 - subject_name: Go Daddy Root Certificate Authority - G2
@@ -251,6 +265,8 @@ trusted_certificates:
   fingerprint: 5a2fc03f0c83b090bbfa40604b0988446c7636183df9846e17101a447fb8efd6
 - subject_name: Hotspot 2.0 Trust Root CA - 03
   fingerprint: a3cc68595dfe7e86d8ad1772a8b5284add54ace3b8a798df47bccafb1fdb84df
+- subject_name: I.CA Root CA/ECC 12/2016
+  fingerprint: b8692148ff49c3799fa2347ae28bcc5289623512b67dc19170452ade24ba51d5
 - subject_name: I.CA Root CA/RSA
   fingerprint: d3d607a9ff24a19523b6da9d2c649446f8788cb96d9fd130972e120c13677730
 - subject_name: ISRG Root X1
@@ -589,6 +605,8 @@ blocked_certificates:
   fingerprint: d6f034bd94aa233f0297eca4245b283973e447aa590f310c77f48fdf83112254
 - subject_name: CCA India 2011
   fingerprint: 2d66a702ae81ba03af8cff55ab318afa919039d9f31b4d64388680f81311b65a
+- subject_name: CFCA GT CA
+  fingerprint: 0771920c8cb874d5c5a4dc0d6a51a2d495d38c4de2cd5b83d2a06faa051935f6
 - subject_name: CNNIC ROOT
   fingerprint: e28393773da845a679f2080cc7fb44a3b7a1c3792cb7eb7729fdcb6a8d99aea7
 - subject_name: Certeurope Root CA 2
@@ -653,8 +671,6 @@ blocked_certificates:
   fingerprint: 5f0b62eab5e353ea6521651658fbb65359f443280a4afbd104d77d10f9f04c07
 - subject_name: FNMT Clase 2 CA
   fingerprint: 62b9267266212832a8e22dab933d91c7011274acf71703f9cc97833751a6e94f
-- subject_name: GLOBALTRUST 2020
-  fingerprint: 9a296a5182d1d451a2e37f439b74daafa267523329f90f9a0d2007c334e23c9a
 - subject_name: GTE CyberTrust Global Root
   fingerprint: a53125188d2110aa964b02c7b7c6da3203170894e5fb71fffb6667d5e6810a36
 - subject_name: GeoTrust Global CA 2

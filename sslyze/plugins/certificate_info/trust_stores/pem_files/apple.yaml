@@ -1,8 +1,8 @@
 platform: APPLE
-version: iOS 13, iPadOS 13, macOS 10.15, watchOS 6, and tvOS 13
-url: https://support.apple.com/kb/HT210770
-date_fetched: 2019-11-28
-trusted_certificates_count: 178
+version: iOS 14, iPadOS 14, macOS 11, watchOS 7, and tvOS 14
+url: https://support.apple.com/kb/HT212140
+date_fetched: 2021-01-24
+trusted_certificates_count: 164
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -12,10 +12,6 @@ trusted_certificates:
   fingerprint: e3268f6106ba8b665a1a962ddea1459d2a46972f1f2440329b390b895749ad45
 - subject_name: Actalis Authentication Root CA
   fingerprint: 55926084ec963a64b96e2abe01ce0ba86a64fbfebcc7aab5afc155b37fd76066
-- subject_name: AddTrust Class 1 CA Root
-  fingerprint: 8c7209279ac04e275e16d07fd3b775e80154b5968046e31f52dd25766324e9a7
-- subject_name: AddTrust External CA Root
-  fingerprint: 687fa451382278fff0c8b11f8d43d576671c6eb2bceab413fb83d965d06d2ff2
 - subject_name: Admin-Root-CA
   fingerprint: a31f093053bd12c1f5c3c6efd498023fd2914d7758d05d698ce084b50626e0e5
 - subject_name: AffirmTrust Commercial
@@ -42,8 +38,6 @@ trusted_certificates:
   fingerprint: 63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179
 - subject_name: Apple Root Certificate Authority
   fingerprint: 0d83b611b648a1a75eb8558400795375cad92e264ed8e9d7a757c1f5ee2bb22d
-- subject_name: ApplicationCA2 Root
-  fingerprint: 126bf01c1094d2f0ca2e352380b3c724294546ccc65597bef7f12d8a171f1984
 - subject_name: Atos TrustedRoot 2011
   fingerprint: f356bea244b7a91eb35d53ca9ad7864ace018e2d35d5f8f96ddf68a6f41aa474
 - subject_name: Autoridad de Certificacion Firmaprofesional CIF A62634068
@@ -92,8 +86,6 @@ trusted_certificates:
   fingerprint: 063e4afac491dfd332f3089b8542e94617d893d7fe944e10a7937ee29d9693c0
 - subject_name: Cisco Root CA 2048
   fingerprint: 8327bc8c9d69947b3de3c27511537267f59c21b9fa7b613fafbccd53b7024000
-- subject_name: Class 2 Primary CA
-  fingerprint: 0f993c8aef97baaf5687140ed59ad1821bb4afacf0aa9a58b5d57a338a3afbcb
 - subject_name: ComSign CA
   fingerprint: ae4457b40d9eda96677b0d3c92d57b5177abd7ac1037958356d1e094518be5f2
 - subject_name: ComSign Global Root CA
@@ -108,10 +100,6 @@ trusted_certificates:
   fingerprint: eec5496b988ce98625b934092eec2908bed0b0f316c2d4730c84eaf1f3d34881
 - subject_name: DST Root CA X3
   fingerprint: 0687260331a72403d909f105e69bcf0d32e1bd2493ffc6d9206d11bcd6770739
-- subject_name: DST Root CA X4
-  fingerprint: 9a73929a500f1a0bf49dcb046e8039169696557345e9f813f10ff9380db22695
-- subject_name: Deutsche Telekom Root CA 2
-  fingerprint: b6191a50d0c3977f7da99bcdaac86a227daeb9679ec70ba3b0c9d92271c170d3
 - subject_name: DigiCert Assured ID Root CA
   fingerprint: 3e9099b5015e8f486c00bcea9d111ee721faba355a89bcf1df69561e3dc6325c
 - subject_name: DigiCert Assured ID Root G2
@@ -142,8 +130,6 @@ trusted_certificates:
   fingerprint: 43df5774b03e7fef5fe40d931a7bedf1bb2e6b42738c4e6d3841103d3aa7f339
 - subject_name: Entrust.net Certification Authority (2048)
   fingerprint: 6dc47172e01cbcb0bf62580d895fe2b8ac9ad4f873801e0c10b9c837d21eb177
-- subject_name: Entrust.net Certification Authority (2048)
-  fingerprint: d1c339ea2784eb870f934fc5634e4aa9ad5505016401f26465d37a574663359f
 - subject_name: GDCA TrustAUTH R5 ROOT
   fingerprint: bfff8fd04433487d6a8aa60c1a29767a9fc2bbb05e420f713a13b992891d3893
 - subject_name: GTS Root R1
@@ -190,8 +176,6 @@ trusted_certificates:
   fingerprint: a040929a02ce53b4acf4f2ffc6981ce4496f755e6d45fe0b2a692bcd52523f36
 - subject_name: Hongkong Post Root CA 1
   fingerprint: f9e67d336c51002ac054c632022d66dda2e7e3fff10ad061ed31d8bbb410cfb2
-- subject_name: I.CA - Qualified Certification Authority, 09/2009
-  fingerprint: c0c05a8d8da55eaf27aa9b910b0a6ef0d8bbded346928db872e182c2073e9802
 - subject_name: ISRG Root X1
   fingerprint: 96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6
 - subject_name: IdenTrust Commercial Root CA 1
@@ -214,6 +198,8 @@ trusted_certificates:
   fingerprint: 41c923866ab4cad6b7ad578081582e020797a6cbdf4fff78ce8396b38937d7f5
 - subject_name: OISTE WISeKey Global Root GB CA
   fingerprint: 6b9c08e86eb0f767cfad65cd98b62149e5494a67f5845e7bd1ed019f27b86bd6
+- subject_name: OISTE WISeKey Global Root GC CA
+  fingerprint: 8560f91c3624daba9570b5fea0dbe36ff11a8323be9486854fb3f34a5571198d
 - subject_name: OpenTrust Root CA G1
   fingerprint: 56c77128d98c18d91b4cfdffbc25ee9103d4758ea2abad826a90f3457d460eb4
 - subject_name: OpenTrust Root CA G2
@@ -274,16 +260,10 @@ trusted_certificates:
   fingerprint: c7ba6567de93a798ae1faa791e712d378fae1f93c4397fea441bb7cbe6fd5995
 - subject_name: SwissSign Gold CA - G2
   fingerprint: 62dd0be9b9f50a163ea0f8e75c053b1eca57ea55c8688f647c6881f2c8357b95
-- subject_name: SwissSign Gold Root CA - G3
-  fingerprint: 7af6ea9f753a1e709bd64d0beb867c11e8c295a56e24a6e0471459dccdaa1558
 - subject_name: SwissSign Platinum CA - G2
   fingerprint: 3b222e566711e992300dc0b15ab9473dafdef8c84d0cef7d3317b4c1821d1436
-- subject_name: SwissSign Platinum Root CA - G3
-  fingerprint: 59b3829f1ff443344958fae8bff621b684c848cfbf7ead6b63a6ca50f2794f89
 - subject_name: SwissSign Silver CA - G2
   fingerprint: be6c4da2bbb9ba59b6f3939768374246c3c005993fa98f020d1dedbed48a81d5
-- subject_name: SwissSign Silver Root CA - G3
-  fingerprint: 1e49ac5dc69e86d0565da2c1305c419330b0b781bfec50e54a1b35af7fddd501
 - subject_name: Swisscom Root CA 1
   fingerprint: 21db20123660bb2ed418205da11ee7a85a65e2bc6e55b5af7e7899c8a266d92e
 - subject_name: Swisscom Root CA 2
@@ -324,14 +304,6 @@ trusted_certificates:
   fingerprint: 4ff460d54b9c86dabfbcfc5712e0400d2bed3fbc4d4fbdaa86e06adcd2a9ad7a
 - subject_name: USERTrust RSA Certification Authority
   fingerprint: e793c9b02fd8aa13e21c31228accb08119643b749c898964b1746d46c3d4cbd2
-- subject_name: UTN - DATACorp SGC
-  fingerprint: 85fb2f91dd12275a0145b636534f84024ad68b69b8ee88684ff711375805b348
-- subject_name: UTN-USERFirst-Client Authentication and Email
-  fingerprint: 43f257412d440d627476974f877da8f1fc2444565a367ae60eddc27a412531ae
-- subject_name: UTN-USERFirst-Hardware
-  fingerprint: 6ea54741d004667eed1b4816634aa3a79e6e4b96950f8279dafc8d9bd8812137
-- subject_name: UTN-USERFirst-Object
-  fingerprint: 6fff78e400a70c11011cd85977c459fb5af96a3df0540820d0f4b8607875e58f
 - subject_name: VRK Gov. Root CA
   fingerprint: f008733ec500dc498763cc9264c6fcea40ec22000e927d053ce9c90bfa046cb2
 - subject_name: VeriSign Class 1 Public Primary Certification Authority - G3

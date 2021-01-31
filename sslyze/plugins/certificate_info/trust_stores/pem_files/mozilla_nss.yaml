@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2020-09-17
-trusted_certificates_count: 138
+date_fetched: 2021-01-24
+trusted_certificates_count: 129
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -106,18 +106,8 @@ trusted_certificates:
   fingerprint: 15d5b8774619ea7d54ce1ca6d0b0c403e037a917f131e8a04e1e6b7a71babce5
 - subject_name: GTS Root R4
   fingerprint: 71cca5391f9e794b04802530b363e121da8a3043bb26662fea4dca7fc951a4bd
-- subject_name: GeoTrust Global CA
-  fingerprint: ff856a2d251dcd88d36656f450126798cfabaade40799c722de4d2b5db36a73a
-- subject_name: GeoTrust Primary Certification Authority
-  fingerprint: 37d51006c512eaab626421f1ec8c92013fc5f82ae98ee533eb4619b8deb4d06c
 - subject_name: GeoTrust Primary Certification Authority - G2
   fingerprint: 5edb7ac43b82a06a8761e8d7be4979ebf2611f7dd79bf91c1c6b566a219ed766
-- subject_name: GeoTrust Primary Certification Authority - G3
-  fingerprint: b478b812250df878635c2aa7ec7d155eaa625ee82916e2cd294361886cd1fbd4
-- subject_name: GeoTrust Universal CA
-  fingerprint: a0459b9f63b22559f5fa5d4c6db3f9f72ff19342033578f073bf1d1b46cbb912
-- subject_name: GeoTrust Universal CA 2
-  fingerprint: a0234f3bc8527ca5628eec81ad5d69895da5680dc91d1cb8477f33f878b95b0b
 - subject_name: Global Chambersign Root - 2008
   fingerprint: 136335439334a7698016a0d324de72284e079d7b5220bb8fbd747816eebebaca
 - subject_name: GlobalSign
@@ -160,6 +150,8 @@ trusted_certificates:
   fingerprint: 358df39d764af9e1b766e9c972df352ee15cfac227af6ad1d70e8e4a6edcba02
 - subject_name: Microsoft RSA Root Certificate Authority 2017
   fingerprint: c741f70f4b2a8d88bf2e71c14122ef53ef10eba0cfa5e64cfa20f418853073e0
+- subject_name: NAVER Global Root Certification Authority
+  fingerprint: 88f438dcf8ffd1fa8f429115ffe5f82ae1e06e0c70c375faad717b34a49e7265
 - subject_name: "NetLock Arany (Class Gold) F\u0151tan\xFAs\xEDtv\xE1ny"
   fingerprint: 6c61dac3a2def031506be036d2a6fe401994fbd13df9c8d466599274c446ec98
 - subject_name: Network Solutions Certificate Authority
@@ -250,10 +242,6 @@ trusted_certificates:
   fingerprint: 4ff460d54b9c86dabfbcfc5712e0400d2bed3fbc4d4fbdaa86e06adcd2a9ad7a
 - subject_name: USERTrust RSA Certification Authority
   fingerprint: e793c9b02fd8aa13e21c31228accb08119643b749c898964b1746d46c3d4cbd2
-- subject_name: VeriSign Class 3 Public Primary Certification Authority - G4
-  fingerprint: 69ddd7ea90bb57c93e135dc85ea6fcd5480b603239bdc454fc758b2a26cf7f79
-- subject_name: VeriSign Class 3 Public Primary Certification Authority - G5
-  fingerprint: 9acfab7e43c8d880d06b262a94deeee4b4659989c3d0caf19baf6405e41ab7df
 - subject_name: VeriSign Universal Root Certification Authority
   fingerprint: 2399561127a57125de8cefea610ddf2fa078b5c8067f4e828290bfb860e84b3c
 - subject_name: XRamp Global Certification Authority
@@ -274,12 +262,6 @@ trusted_certificates:
   fingerprint: 125609aa301da0a249b97a8239cb6a34216f44dcac9f3954b14292f2e8c8608f
 - subject_name: emSign Root CA - G1
   fingerprint: 40f6af0346a99aa1cd1d555a4e9cce62c7f9634603ee406615833dc8c8d00367
-- subject_name: thawte Primary Root CA
-  fingerprint: 8d722f81a9c113c0791df136a2966db26c950a971db46b4199f4ea54b78bfb9f
-- subject_name: thawte Primary Root CA - G2
-  fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
-- subject_name: thawte Primary Root CA - G3
-  fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
 blocked_certificates_count: 4
 blocked_certificates:
 - subject_name: '*.EGO.GOV.TR'

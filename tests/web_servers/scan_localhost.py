@@ -5,8 +5,10 @@ with client authentication required.
 .
 See ./.github/workflows and https://github.com/nabla-c0d3/sslyze/issues/472 for more details.
 
-$ PYTHONPATH=. python tests/web_servers/scan_localhost.py
+$ PYTHONPATH=. python tests/web_servers/scan_localhost.py apache2
 """
+import sys
+from enum import Enum
 
 from sslyze import (
     ServerNetworkLocationViaDirectConnection,
@@ -19,16 +21,35 @@ from sslyze import (
 from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
 
 
-def main() -> None:
+class WebServerSoftwareEnum(str, Enum):
+    # There are small differences in the scan results of each supported server so the script needs to know
+    # which type of server is being scanned
+    APACHE2 = "apache2"
+    NGINX = "nginx"
+
+
+def main(server_running_on_localhost: WebServerSoftwareEnum) -> None:
     # Ensure the server is accessible on localhost
     server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("localhost", 443)
     server_info = ServerConnectivityTester().perform(server_location)
 
-    if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.REQUIRED:
-        raise RuntimeError(
-            f"SSLyze did not detect that client authentication was required by the server:"
-            f" {server_info.tls_probing_result.client_auth_requirement}."
-        )
+    if server_running_on_localhost == WebServerSoftwareEnum.APACHE2:
+        # Apache2 is configured to require a client cert, and returns an error at the TLS layer if it is missing
+        if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.REQUIRED:
+            raise RuntimeError(
+                f"SSLyze did not detect that client authentication was required by Apache2:"
+                f" {server_info.tls_probing_result.client_auth_requirement}."
+            )
+    elif server_running_on_localhost == WebServerSoftwareEnum.NGINX:
+        # Nginx is configured to require a client cert but implements this by returning an error at the HTTP layer,
+        # if the client cert is missing. This gets translated in SSLyze as "optionally" requiring a client cert
+        if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.OPTIONAL:
+            raise RuntimeError(
+                f"SSLyze did not detect that client authentication was required by Nginx:"
+                f" {server_info.tls_probing_result.client_auth_requirement}."
+            )
+    else:
+        raise ValueError(f"Unexpected value: {server_running_on_localhost}")
 
     # Queue all scan commands
     print("Starting scan.")
@@ -98,4 +119,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    server_argument = WebServerSoftwareEnum(sys.argv[1])
+    main(server_argument)

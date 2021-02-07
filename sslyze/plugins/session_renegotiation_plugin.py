@@ -147,7 +147,7 @@ def _test_client_renegotiation(
             # Let's try to renegotiate
             # Do it multiple times in a row to be 100% sure that the server has no mitigations in place
             # https://github.com/nabla-c0d3/sslyze/issues/473
-            for i in range(15):
+            for i in range(10):
                 ssl_connection.ssl_client.do_renegotiate()
             accepts_client_renegotiation = True
 

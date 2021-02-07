@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 from nassl._nassl import OpenSSLError
 from nassl.legacy_ssl_client import LegacySslClient
 
+from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
     ScanCommandExtraArguments,
@@ -32,7 +33,7 @@ class SessionRenegotiationScanResult(ScanCommandResult):
 
 
 class _ScanJobResultEnum(Enum):
-    ACCEPTS_CLIENT_RENEG = 1
+    IS_VULNERABLE_TO_CLIENT_RENEG_DOS = 1
     SUPPORTS_SECURE_RENEG = 2
 
 
@@ -77,15 +78,9 @@ class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenego
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
-        # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
-        if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
-            tls_version_to_use = TlsVersionEnum.TLS_1_2
-        else:
-            tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
-
         return [
-            ScanJob(function_to_call=_test_secure_renegotiation, function_arguments=[server_info, tls_version_to_use]),
-            ScanJob(function_to_call=_test_client_renegotiation, function_arguments=[server_info, tls_version_to_use]),
+            ScanJob(function_to_call=_test_secure_renegotiation, function_arguments=[server_info]),
+            ScanJob(function_to_call=_test_client_renegotiation, function_arguments=[server_info]),
         ]
 
     @classmethod
@@ -101,26 +96,42 @@ class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenego
             results_dict[result_enum] = value
 
         return SessionRenegotiationScanResult(
-            is_vulnerable_to_client_renegotiation_dos=results_dict[_ScanJobResultEnum.ACCEPTS_CLIENT_RENEG],
+            is_vulnerable_to_client_renegotiation_dos=results_dict[
+                _ScanJobResultEnum.IS_VULNERABLE_TO_CLIENT_RENEG_DOS
+            ],
             supports_secure_renegotiation=results_dict[_ScanJobResultEnum.SUPPORTS_SECURE_RENEG],
         )
 
 
-def _test_secure_renegotiation(
-    server_info: ServerConnectivityInfo, tls_version_to_use: TlsVersionEnum
-) -> Tuple[_ScanJobResultEnum, bool]:
+def _test_secure_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_ScanJobResultEnum, bool]:
     """Check whether the server supports secure renegotiation.
     """
+    # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
+    if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
+        tls_version_to_use = TlsVersionEnum.TLS_1_2
+        downgraded_from_tls_1_3 = True
+    else:
+        tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
+        downgraded_from_tls_1_3 = False
+
     ssl_connection = server_info.get_preconfigured_tls_connection(
-        override_tls_version=tls_version_to_use, should_use_legacy_openssl=True
+        override_tls_version=tls_version_to_use,
+        should_use_legacy_openssl=True,  # Only the legacy SSL client has methods to check for secure reneg
     )
     if not isinstance(ssl_connection.ssl_client, LegacySslClient):
         raise RuntimeError("Should never happen")
 
     try:
-        # Perform the SSL handshake
+        # Perform the TLS handshake
         ssl_connection.connect()
         supports_secure_renegotiation = ssl_connection.ssl_client.get_secure_renegotiation_support()
+
+    # Should only happen when the server only supports TLS 1.3
+    except ServerRejectedTlsHandshake:
+        if downgraded_from_tls_1_3:
+            supports_secure_renegotiation = True  # Technically TLS 1.3 has no renegotiation therefore it is secure
+        else:
+            raise
 
     finally:
         ssl_connection.close()
@@ -128,24 +139,39 @@ def _test_secure_renegotiation(
     return _ScanJobResultEnum.SUPPORTS_SECURE_RENEG, supports_secure_renegotiation
 
 
-def _test_client_renegotiation(
-    server_info: ServerConnectivityInfo, tls_version_to_use: TlsVersionEnum
-) -> Tuple[_ScanJobResultEnum, bool]:
+def _test_client_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_ScanJobResultEnum, bool]:
     """Check whether the server honors session renegotiation requests.
     """
+    # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
+    if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
+        tls_version_to_use = TlsVersionEnum.TLS_1_2
+        downgraded_from_tls_1_3 = True
+    else:
+        tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
+        downgraded_from_tls_1_3 = False
+
     ssl_connection = server_info.get_preconfigured_tls_connection(
-        override_tls_version=tls_version_to_use, should_use_legacy_openssl=True
+        override_tls_version=tls_version_to_use,
+        should_use_legacy_openssl=True,  # Only the legacy SSL client has methods to trigger a reneg
     )
     if not isinstance(ssl_connection.ssl_client, LegacySslClient):
         raise RuntimeError("Should never happen")
 
     try:
-        # Perform the SSL handshake
+        # Perform the TLS handshake
         ssl_connection.connect()
 
+    # Should only happen when the server only supports TLS 1.3
+    except ServerRejectedTlsHandshake:
+        if downgraded_from_tls_1_3:
+            accepts_client_renegotiation = False  # Technically TLS 1.3 has no renegotiation therefore it is secure
+        else:
+            raise
+
+    # The initial TLS handshake went well; let's try to do a renegotiation
+    else:
         try:
-            # Let's try to renegotiate
-            # Do it multiple times in a row to be 100% sure that the server has no mitigations in place
+            # Do a reneg multiple times in a row to be 100% sure that the server has no mitigations in place
             # https://github.com/nabla-c0d3/sslyze/issues/473
             for i in range(10):
                 ssl_connection.ssl_client.do_renegotiate()
@@ -191,4 +217,4 @@ def _test_client_renegotiation(
     finally:
         ssl_connection.close()
 
-    return _ScanJobResultEnum.ACCEPTS_CLIENT_RENEG, accepts_client_renegotiation
+    return _ScanJobResultEnum.IS_VULNERABLE_TO_CLIENT_RENEG_DOS, accepts_client_renegotiation

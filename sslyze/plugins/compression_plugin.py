@@ -71,12 +71,15 @@ class CompressionImplementation(ScanCommandImplementation[CompressionScanResult,
 def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no compression with TLS 1.3
     if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
-        ssl_version_to_use = TlsVersionEnum.TLS_1_2
+        tls_version_to_use = TlsVersionEnum.TLS_1_2
+        downgraded_from_tls_1_3 = True
     else:
-        ssl_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
+        tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
+        downgraded_from_tls_1_3 = False
 
     ssl_connection = server_info.get_preconfigured_tls_connection(
-        override_tls_version=ssl_version_to_use, should_use_legacy_openssl=True
+        override_tls_version=tls_version_to_use,
+        should_use_legacy_openssl=True,  # Only the legacy SSL client has methods to check for compression support
     )
     if not isinstance(ssl_connection.ssl_client, LegacySslClient):
         raise RuntimeError("Should never happen")
@@ -85,17 +88,22 @@ def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
     if "zlib compression" not in ssl_connection.ssl_client.get_available_compression_methods():
         raise RuntimeError("OpenSSL was not built with support for zlib / compression. Did you build nassl yourself ?")
 
-    compression_name: Optional[str] = None
+    compression_name: Optional[str]
     try:
-        # Perform the SSL handshake
+        # Perform the TLS handshake
         ssl_connection.connect()
         compression_name = ssl_connection.ssl_client.get_current_compression_method()
+
     except ClientCertificateRequested:
-        # The server asked for a client cert
         compression_name = ssl_connection.ssl_client.get_current_compression_method()
+
+    # Should only happen when the server only supports TLS 1.3, which does not support compression
     except ServerRejectedTlsHandshake:
-        # Should only happen when the server only supports TLS 1.3, which does not support compression
-        pass
+        if downgraded_from_tls_1_3:
+            compression_name = None
+        else:
+            raise
+
     finally:
         ssl_connection.close()
 

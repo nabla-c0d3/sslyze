@@ -1,9 +1,27 @@
-from enum import Enum
+from enum import Enum, unique
 from typing import Optional, Tuple
 
 import nassl
 
+from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
+
+
+@unique
+class TlsSessionIdSupportEnum(Enum):
+    """The result of attempting to resume TLS sessions with the server using Session IDs.
+
+    Attributes:
+        FULLY_SUPPORTED: All the session resumption attempts were successful.
+        PARTIALLY_SUPPORTED: Only some of the session resumption attempts were successful.
+        NOT_SUPPORTED: None of the session resumption attempts were successful.
+        SERVER_IS_TLS_1_3_ONLY: The server only supports TLS 1.3 which does not support Session IDs resumption.
+    """
+
+    FULLY_SUPPORTED = 1
+    PARTIALLY_SUPPORTED = 2
+    NOT_SUPPORTED = 3
+    SERVER_IS_TLS_1_3_ONLY = 4
 
 
 class _ScanJobResultEnum(Enum):
@@ -11,15 +29,30 @@ class _ScanJobResultEnum(Enum):
     SESSION_ID_RESUMPTION = 2
 
 
-def resume_tls_session(
+class ServerOnlySupportsTls13(Exception):
+    """If the server only supports TLS 1.3 or higher, it does not support session resumption with IDs or tickets.
+    """
+    pass
+
+
+def retrieve_tls_session(
     server_info: ServerConnectivityInfo,
-    tls_version_to_use: TlsVersionEnum,
-    tls_session: Optional[nassl._nassl.SSL_SESSION] = None,
+    session_to_resume: Optional[nassl._nassl.SSL_SESSION] = None,
     should_enable_tls_ticket: bool = False,
 ) -> nassl._nassl.SSL_SESSION:
     """Connect to the server and returns the session object that was assigned for that connection.
+
     If ssl_session is given, tries to resume that session.
     """
+    # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no session resumption (with IDs or
+    # tickets) with TLS 1.3
+    if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
+        tls_version_to_use = TlsVersionEnum.TLS_1_2
+        downgraded_from_tls_1_3 = True
+    else:
+        tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
+        downgraded_from_tls_1_3 = False
+
     ssl_connection = server_info.get_preconfigured_tls_connection(override_tls_version=tls_version_to_use)
     if not should_enable_tls_ticket:
         # Need to disable TLS tickets to test session IDs, according to rfc5077:
@@ -27,13 +60,20 @@ def resume_tls_session(
         # to use the Session ID in the ClientHello for stateful session resumption
         ssl_connection.ssl_client.disable_stateless_session_resumption()  # Turning off TLS tickets.
 
-    if tls_session:
-        ssl_connection.ssl_client.set_session(tls_session)
+    if session_to_resume:
+        ssl_connection.ssl_client.set_session(session_to_resume)
 
     try:
-        # Perform the SSL handshake
+        # Perform the TLS handshake
         ssl_connection.connect()
         new_session = ssl_connection.ssl_client.get_session()  # Get session data
+
+    except ServerRejectedTlsHandshake:
+        if downgraded_from_tls_1_3:
+            raise ServerOnlySupportsTls13()
+        else:
+            raise
+
     finally:
         ssl_connection.close()
 
@@ -48,12 +88,11 @@ def _extract_session_id(ssl_session: nassl._nassl.SSL_SESSION) -> str:
     return session_id
 
 
-def resume_with_session_id(
-    server_info: ServerConnectivityInfo, tls_version_to_use: TlsVersionEnum
-) -> Tuple[_ScanJobResultEnum, bool]:
+def resume_with_session_id(server_info: ServerConnectivityInfo) -> Tuple[_ScanJobResultEnum, bool]:
     """Perform one session resumption using Session IDs.
     """
-    session1 = resume_tls_session(server_info, tls_version_to_use)
+    # Create a new TLS session with the server
+    session1 = retrieve_tls_session(server_info)
     try:
         # Recover the session ID
         session1_id = _extract_session_id(session1)
@@ -65,8 +104,8 @@ def resume_with_session_id(
         # Session ID empty
         return _ScanJobResultEnum.SESSION_ID_RESUMPTION, False
 
-    # Try to resume that SSL session
-    session2 = resume_tls_session(server_info, tls_version_to_use, session1)
+    # Try to resume that TLS session
+    session2 = retrieve_tls_session(server_info, session_to_resume=session1)
     try:
         # Recover the session ID
         session2_id = _extract_session_id(session2)

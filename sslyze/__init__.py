@@ -63,6 +63,8 @@ from sslyze.plugins.robot.implementation import RobotScanResult, RobotScanResult
 from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportScanResult,
     SessionResumptionRateScanResult,
+    TlsSessionTicketSupportEnum,
+    TlsSessionIdSupportEnum,
 )
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.early_data_plugin import EarlyDataScanResult

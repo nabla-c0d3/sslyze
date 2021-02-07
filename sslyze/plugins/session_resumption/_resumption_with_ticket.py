@@ -3,52 +3,53 @@ from typing import Tuple
 
 import nassl
 
-from sslyze.plugins.session_resumption._resumption_with_id import resume_tls_session, _ScanJobResultEnum
-from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
-from sslyze.errors import ServerRejectedTlsHandshake
+from sslyze.plugins.session_resumption._resumption_with_id import retrieve_tls_session, _ScanJobResultEnum
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @unique
-class TslSessionTicketSupportEnum(Enum):
+class TlsSessionTicketSupportEnum(Enum):
+    """The result of attempting to resume a TLS session with the server using TLS Tickets.
+    """
+
     SUCCEEDED = 1
     FAILED_TICKET_NOT_ASSIGNED = 2
     FAILED_TICKED_IGNORED = 3
     FAILED_ONLY_TLS_1_3_SUPPORTED = 4
 
+    # TODO(AD): Switch to these names for v5.0.0 and leverage ServerOnlySupportsTls13() to simplify flow
+    # SUPPORTED = 1
+    # NOT_SUPPORTED_TICKET_NOT_ASSIGNED = 2
+    # NOT_SUPPORTED_TICKET_IGNORED = 3
+    # SERVER_IS_TLS_1_3_ONLY = 4
+
 
 def resume_with_tls_ticket(
-    server_info: ServerConnectivityInfo, tls_version_to_use: TlsVersionEnum
-) -> Tuple[_ScanJobResultEnum, TslSessionTicketSupportEnum]:
+    server_info: ServerConnectivityInfo,
+) -> Tuple[_ScanJobResultEnum, TlsSessionTicketSupportEnum]:
     """Perform one session resumption using TLS Session Tickets.
     """
-    # Connect to the server and keep the SSL session
-    try:
-        session1 = resume_tls_session(server_info, tls_version_to_use, should_enable_tls_ticket=True)
-    except ServerRejectedTlsHandshake:
-        if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
-            return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TslSessionTicketSupportEnum.FAILED_ONLY_TLS_1_3_SUPPORTED
-        else:
-            raise
-
+    # Connect to the server and keep the TLS session
+    session1 = retrieve_tls_session(server_info, should_enable_tls_ticket=True)
     try:
         # Recover the TLS ticket
         session1_tls_ticket = _extract_tls_session_ticket(session1)
     except IndexError:
-        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TslSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED
+        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TlsSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED
 
     # Try to resume that session using the TLS ticket
-    session2 = resume_tls_session(server_info, tls_version_to_use, session1, should_enable_tls_ticket=True)
+    session2 = retrieve_tls_session(server_info, session_to_resume=session1, should_enable_tls_ticket=True)
     try:
         # Recover the TLS ticket
         session2_tls_ticket = _extract_tls_session_ticket(session2)
     except IndexError:
-        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TslSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED
+        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TlsSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED
 
     # Finally, compare the two TLS Tickets
     if session1_tls_ticket != session2_tls_ticket:
-        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TslSessionTicketSupportEnum.FAILED_TICKED_IGNORED
+        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TlsSessionTicketSupportEnum.FAILED_TICKED_IGNORED
 
-    return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TslSessionTicketSupportEnum.SUCCEEDED
+    return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TlsSessionTicketSupportEnum.SUCCEEDED
 
 
 def _extract_tls_session_ticket(ssl_session: nassl._nassl.SSL_SESSION) -> str:

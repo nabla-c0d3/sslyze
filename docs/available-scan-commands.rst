@@ -90,11 +90,13 @@ Result class
 Session Resumption Support
 **************************
 
-**ScanCommand.SESSION_RESUMPTION**: Test a server for session resumption support using session IDs and TLS tickets.
+**ScanCommand.SESSION_RESUMPTION**: Test a server for TLS 1.2 session resumption support using session IDs and TLS tickets.
 
 Result class
 ============
 
+.. autoclass:: TlsSessionIdSupportEnum
+.. autoclass:: TlsSessionTicketSupportEnum
 .. autoclass:: SessionResumptionSupportScanResult
 
 Session Resumption Rate

@@ -10,43 +10,45 @@ from sslyze.plugins.plugin_base import (
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
 )
-from sslyze.plugins.session_resumption._resumption_with_id import resume_with_session_id, _ScanJobResultEnum
+from sslyze.plugins.session_resumption._resumption_with_id import (
+    resume_with_session_id,
+    _ScanJobResultEnum,
+    TlsSessionIdSupportEnum,
+    ServerOnlySupportsTls13,
+)
 from sslyze.plugins.session_resumption._resumption_with_ticket import (
     resume_with_tls_ticket,
-    TslSessionTicketSupportEnum,
+    TlsSessionTicketSupportEnum,
 )
-from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
+from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @dataclass(frozen=True)
 class SessionResumptionSupportScanResult(ScanCommandResult):
-    """The result of testing a server for session resumption support using session IDs and TLS tickets.
+    """The result of testing a server for TLS 1.2 session resumption support, using session IDs and TLS tickets.
 
     Attributes:
-        is_session_id_resumption_supported:
+        session_id_resumption_result:
         attempted_session_id_resumptions_count: The total number of session ID resumptions that were attempted.
         successful_session_id_resumptions_count: The number of session ID resumptions that were successful.
 
-        is_tls_ticket_resumption_supported: True if the server support TLS ticket resumption.
         tls_ticket_resumption_result:
     """
 
+    session_id_resumption_result: TlsSessionIdSupportEnum
     attempted_session_id_resumptions_count: int
     successful_session_id_resumptions_count: int
 
-    tls_ticket_resumption_result: TslSessionTicketSupportEnum
+    tls_ticket_resumption_result: TlsSessionTicketSupportEnum
 
+    # TODO(AD): Remove these properties for v5.0.0.
     @property
     def is_session_id_resumption_supported(self) -> bool:
-        return (
-            True
-            if self.attempted_session_id_resumptions_count == self.successful_session_id_resumptions_count
-            else False
-        )
+        return self.session_id_resumption_result == TlsSessionIdSupportEnum.FULLY_SUPPORTED
 
     @property
     def is_tls_ticket_resumption_supported(self) -> bool:
-        return self.tls_ticket_resumption_result == TslSessionTicketSupportEnum.SUCCEEDED
+        return self.tls_ticket_resumption_result == TlsSessionTicketSupportEnum.SUCCEEDED
 
 
 @dataclass(frozen=True)
@@ -54,30 +56,41 @@ class SessionResumptionRateScanResult(ScanCommandResult):
     """The result of measuring a server's session resumption rate when attempting 100 resumptions using session IDs.
 
     Attributes:
+        session_id_resumption_result:
         attempted_session_id_resumptions_count: The total number of session ID resumptions that were attempted.
         successful_session_id_resumptions_count: The number of session ID resumptions that were successful.
     """
 
+    session_id_resumption_result: TlsSessionIdSupportEnum
     attempted_session_id_resumptions_count: int
     successful_session_id_resumptions_count: int
 
 
 def _resumption_with_session_ids_result_to_console_output(
-    successful_session_id_resumptions_count: int, attempted_session_id_resumptions_count: int
+    session_id_resumption_result: TlsSessionIdSupportEnum,
+    successful_session_id_resumptions_count: int,
+    attempted_session_id_resumptions_count: int,
 ) -> str:
-    if successful_session_id_resumptions_count == attempted_session_id_resumptions_count:
+    if session_id_resumption_result == TlsSessionIdSupportEnum.FULLY_SUPPORTED:
         resumption_support_txt = "OK - Supported"
-    elif successful_session_id_resumptions_count > 0:
+    elif session_id_resumption_result == TlsSessionIdSupportEnum.PARTIALLY_SUPPORTED:
         resumption_support_txt = "PARTIALLY SUPPORTED"
-    else:
+    elif session_id_resumption_result == TlsSessionIdSupportEnum.NOT_SUPPORTED:
         resumption_support_txt = "NOT SUPPORTED"
+    elif session_id_resumption_result == TlsSessionIdSupportEnum.SERVER_IS_TLS_1_3_ONLY:
+        resumption_support_txt = "OK - Server only supports TLS 1.3 which doesn't support Session IDs"
+    else:
+        raise ValueError(f"Unexpected value: {session_id_resumption_result}")
 
-    resum_rate_txt = (
-        f"{resumption_support_txt} ({successful_session_id_resumptions_count} successful resumptions"
-        f" out of {attempted_session_id_resumptions_count} attempts)."
-    )
+    if session_id_resumption_result != TlsSessionIdSupportEnum.SERVER_IS_TLS_1_3_ONLY:
+        resum_rate_txt = (
+            f" ({successful_session_id_resumptions_count} successful resumptions"
+            f" out of {attempted_session_id_resumptions_count} attempts)"
+        )
+    else:
+        resum_rate_txt = ""
 
-    return f"      With Session IDs: {resum_rate_txt}"
+    return f"      With Session IDs: {resumption_support_txt}{resum_rate_txt}."
 
 
 class _SessionResumptionSupportCliConnector(ScanCommandCliConnector[SessionResumptionSupportScanResult, None]):
@@ -92,18 +105,20 @@ class _SessionResumptionSupportCliConnector(ScanCommandCliConnector[SessionResum
         # Resumption with session IDs
         result_as_txt.append(
             _resumption_with_session_ids_result_to_console_output(
-                result.successful_session_id_resumptions_count, result.attempted_session_id_resumptions_count
+                result.session_id_resumption_result,
+                result.successful_session_id_resumptions_count,
+                result.attempted_session_id_resumptions_count,
             )
         )
 
         # Resumption with TLS tickets
-        if result.tls_ticket_resumption_result == TslSessionTicketSupportEnum.SUCCEEDED:
+        if result.tls_ticket_resumption_result == TlsSessionTicketSupportEnum.SUCCEEDED:
             ticket_txt = "OK - Supported"
-        elif result.tls_ticket_resumption_result == TslSessionTicketSupportEnum.FAILED_ONLY_TLS_1_3_SUPPORTED:
+        elif result.tls_ticket_resumption_result == TlsSessionTicketSupportEnum.FAILED_ONLY_TLS_1_3_SUPPORTED:
             ticket_txt = "OK - Server only supports TLS 1.3 which doesn't support TLS tickets"
-        elif result.tls_ticket_resumption_result == TslSessionTicketSupportEnum.FAILED_TICKED_IGNORED:
+        elif result.tls_ticket_resumption_result == TlsSessionTicketSupportEnum.FAILED_TICKED_IGNORED:
             ticket_txt = "NOT SUPPORTED - Server returned a TLS ticket but then ignored it"
-        elif result.tls_ticket_resumption_result == TslSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED:
+        elif result.tls_ticket_resumption_result == TlsSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED:
             ticket_txt = "NOT SUPPORTED - Server did not return a TLS ticket"
         else:
             raise ValueError("Should never happen")
@@ -122,7 +137,9 @@ class _SessionResumptionRateSupportCliConnector(ScanCommandCliConnector[SessionR
         result_as_txt = [cls._format_title("TLS 1.2 Session Resumption Rate")]
         result_as_txt.append(
             _resumption_with_session_ids_result_to_console_output(
-                result.successful_session_id_resumptions_count, result.attempted_session_id_resumptions_count
+                result.session_id_resumption_result,
+                result.successful_session_id_resumptions_count,
+                result.attempted_session_id_resumptions_count,
             )
         )
         return result_as_txt
@@ -131,14 +148,8 @@ class _SessionResumptionRateSupportCliConnector(ScanCommandCliConnector[SessionR
 def _create_resume_with_session_id_scan_jobs(
     server_info: ServerConnectivityInfo, resumption_attempts_nb: int
 ) -> List[ScanJob]:
-    # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as session resumption is different with TLS 1.3
-    if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
-        tls_version_to_use = TlsVersionEnum.TLS_1_2
-    else:
-        tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
-
     scan_jobs = [
-        ScanJob(function_to_call=resume_with_session_id, function_arguments=[server_info, tls_version_to_use])
+        ScanJob(function_to_call=resume_with_session_id, function_arguments=[server_info])
         for _ in range(resumption_attempts_nb)
     ]
     return scan_jobs
@@ -170,11 +181,27 @@ class SessionResumptionRateImplementation(ScanCommandImplementation[SessionResum
 
         successful_resumptions_count = 0
         for job in completed_scan_jobs:
-            was_resumption_successful = job.result()
-            if was_resumption_successful:
-                successful_resumptions_count += 1
+            try:
+                was_resumption_successful = job.result()
+                if was_resumption_successful:
+                    successful_resumptions_count += 1
+            except ServerOnlySupportsTls13:
+                # If the server only supports TLS 1.3, Session ID resumption is not supported by the server
+                return SessionResumptionRateScanResult(
+                    session_id_resumption_result=TlsSessionIdSupportEnum.SERVER_IS_TLS_1_3_ONLY,
+                    attempted_session_id_resumptions_count=0,
+                    successful_session_id_resumptions_count=0,
+                )
+
+        if successful_resumptions_count == 0:
+            session_id_resumption_result = TlsSessionIdSupportEnum.NOT_SUPPORTED
+        elif successful_resumptions_count == cls._SESSION_ID_RESUMPTION_ATTEMPTS_NB:
+            session_id_resumption_result = TlsSessionIdSupportEnum.FULLY_SUPPORTED
+        else:
+            session_id_resumption_result = TlsSessionIdSupportEnum.PARTIALLY_SUPPORTED
 
         return SessionResumptionRateScanResult(
+            session_id_resumption_result=session_id_resumption_result,
             attempted_session_id_resumptions_count=cls._SESSION_ID_RESUMPTION_ATTEMPTS_NB,
             successful_session_id_resumptions_count=successful_resumptions_count,
         )
@@ -201,15 +228,7 @@ class SessionResumptionSupportImplementation(ScanCommandImplementation[SessionRe
         )
 
         # Test TLS tickets support
-        # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as session resumption is different with TLS 1.3
-        if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
-            tls_version_to_use = TlsVersionEnum.TLS_1_2
-        else:
-            tls_version_to_use = server_info.tls_probing_result.highest_tls_version_supported
-
-        tls_ticket_scan_jobs = [
-            ScanJob(function_to_call=resume_with_tls_ticket, function_arguments=[server_info, tls_version_to_use])
-        ]
+        tls_ticket_scan_jobs = [ScanJob(function_to_call=resume_with_tls_ticket, function_arguments=[server_info])]
 
         return session_id_scan_jobs + tls_ticket_scan_jobs
 
@@ -221,21 +240,41 @@ class SessionResumptionSupportImplementation(ScanCommandImplementation[SessionRe
         if len(completed_scan_jobs) != total_scan_jobs_count:
             raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
 
-        # Sort TLS ticket VS session ID result
+        # Sort TLS ticket VS session ID results
         results_dict: Dict[_ScanJobResultEnum, List[Any]] = {
             _ScanJobResultEnum.SESSION_ID_RESUMPTION: [],
             _ScanJobResultEnum.TLS_TICKET_RESUMPTION: [],
         }
         for job in completed_scan_jobs:
-            result_enum, value = job.result()
-            results_dict[result_enum].append(value)
+            try:
+                result_enum, value = job.result()
+                results_dict[result_enum].append(value)
+            except ServerOnlySupportsTls13:
+                # If the server only supports TLS 1.3, none of the resumption mechanisms in this plugin are supported
+                # by the server
+                return SessionResumptionSupportScanResult(
+                    session_id_resumption_result=TlsSessionIdSupportEnum.SERVER_IS_TLS_1_3_ONLY,
+                    attempted_session_id_resumptions_count=0,
+                    successful_session_id_resumptions_count=0,
+                    tls_ticket_resumption_result=TlsSessionTicketSupportEnum.FAILED_ONLY_TLS_1_3_SUPPORTED,
+                )
 
+        # Process session IDs resumption results
         successful_session_id_resumptions_count = 0
         for was_resumption_successful in results_dict[_ScanJobResultEnum.SESSION_ID_RESUMPTION]:
             if was_resumption_successful:
                 successful_session_id_resumptions_count += 1
 
+        if successful_session_id_resumptions_count == 0:
+            session_id_resumption_result = TlsSessionIdSupportEnum.NOT_SUPPORTED
+        elif successful_session_id_resumptions_count == cls._SESSION_ID_RESUMPTION_ATTEMPTS_NB:
+            session_id_resumption_result = TlsSessionIdSupportEnum.FULLY_SUPPORTED
+        else:
+            session_id_resumption_result = TlsSessionIdSupportEnum.PARTIALLY_SUPPORTED
+
+        # All done
         return SessionResumptionSupportScanResult(
+            session_id_resumption_result=session_id_resumption_result,
             attempted_session_id_resumptions_count=cls._SESSION_ID_RESUMPTION_ATTEMPTS_NB,
             successful_session_id_resumptions_count=successful_session_id_resumptions_count,
             tls_ticket_resumption_result=results_dict[_ScanJobResultEnum.TLS_TICKET_RESUMPTION][0],

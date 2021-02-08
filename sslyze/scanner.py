@@ -32,7 +32,7 @@ from sslyze.plugins.scan_commands import ScanCommandType, ScanCommandsRepository
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanResult
 from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportScanResult,
-    SessionResumptionRateScanResult,
+    SessionResumptionSupportExtraArguments,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -56,8 +56,8 @@ class ScanCommandError:
 
 class ScanCommandExtraArgumentsDict(TypedDict, total=False):
     # Field is present if extra arguments were provided for the corresponding scan command
-    # Right now only certificate_info supports extra arguments
     certificate_info: CertificateInfoExtraArguments
+    session_resumption: SessionResumptionSupportExtraArguments
 
 
 @dataclass(frozen=True)
@@ -101,7 +101,6 @@ class ScanCommandResultsDict(TypedDict, total=False):
     robot: RobotScanResult
     session_renegotiation: SessionRenegotiationScanResult
     session_resumption: SessionResumptionSupportScanResult
-    session_resumption_rate: SessionResumptionRateScanResult
     http_headers: HttpHeadersScanResult
     elliptic_curves: SupportedEllipticCurvesScanResult
 

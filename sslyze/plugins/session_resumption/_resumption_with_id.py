@@ -8,14 +8,15 @@ from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
 @unique
-class TlsSessionIdSupportEnum(Enum):
-    """The result of attempting to resume TLS sessions with the server using Session IDs.
+class TlsResumptionSupportEnum(Enum):
+    """The result of attempting to resume TLS sessions with the server.
 
     Attributes:
         FULLY_SUPPORTED: All the session resumption attempts were successful.
         PARTIALLY_SUPPORTED: Only some of the session resumption attempts were successful.
         NOT_SUPPORTED: None of the session resumption attempts were successful.
-        SERVER_IS_TLS_1_3_ONLY: The server only supports TLS 1.3 which does not support Session IDs resumption.
+        SERVER_IS_TLS_1_3_ONLY: The server only supports TLS 1.3, which does not support Session ID nor TLS Tickets
+            resumption.
     """
 
     FULLY_SUPPORTED = 1
@@ -32,6 +33,7 @@ class _ScanJobResultEnum(Enum):
 class ServerOnlySupportsTls13(Exception):
     """If the server only supports TLS 1.3 or higher, it does not support session resumption with IDs or tickets.
     """
+
     pass
 
 

@@ -1,11 +1,11 @@
 import pytest
 from nassl.ssl_client import ClientCertificateRequested
 
+from sslyze import TlsResumptionSupportEnum
 from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportImplementation,
     SessionResumptionSupportScanResult,
-    SessionResumptionRateImplementation,
-    SessionResumptionRateScanResult,
+    SessionResumptionSupportExtraArguments,
 )
 from sslyze.server_connectivity import ServerConnectivityTester
 
@@ -28,12 +28,33 @@ class TestSessionResumptionSupport:
         result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(server_info)
 
         # And it confirms that both session IDs and TLS tickets are supported
-        assert result.attempted_session_id_resumptions_count
-        assert result.successful_session_id_resumptions_count
-        assert result.is_session_id_resumption_supported
+        assert result.session_id_resumption_result == TlsResumptionSupportEnum.FULLY_SUPPORTED
+        assert result.session_id_attempted_resumptions_count
+        assert result.session_id_successful_resumptions_count
 
-        assert result.tls_ticket_resumption_result
-        assert result.is_tls_ticket_resumption_supported
+        assert result.tls_ticket_resumption_result == TlsResumptionSupportEnum.SUPPORTED
+        assert result.tls_ticket_attempted_resumptions_count
+        assert result.tls_ticket_successful_resumptions_count
+
+        # And a CLI output can be generated
+        assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)
+
+    def test_with_extra_argument(self):
+        # Given a server that supports session resumption with both TLS tickets and session IDs
+        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
+        server_info = ServerConnectivityTester().perform(server_location)
+
+        # And we customize how many session resumptions to perform
+        extra_arg = SessionResumptionSupportExtraArguments(number_of_resumptions_to_attempt=20)
+
+        # When testing for resumption, it succeeds
+        result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(
+            server_info, extra_arguments=extra_arg,
+        )
+
+        # And the expected number of resumptions was performed
+        assert result.session_id_attempted_resumptions_count == 20
+        assert result.tls_ticket_attempted_resumptions_count == 20
 
         # And a CLI output can be generated
         assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)
@@ -71,19 +92,5 @@ class TestSessionResumptionSupport:
             # When testing for resumption, it succeeds
             result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(server_info)
 
-        assert result.successful_session_id_resumptions_count
-        assert result.is_session_id_resumption_supported
-
-
-class TestSessionResumptionRate:
-    def test(self):
-        # Given a server that supports session resumption
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
-
-        # When testing for resumption rate, it succeeds
-        result: SessionResumptionRateScanResult = SessionResumptionRateImplementation.scan_server(server_info)
-
-        # And session ID resumption was performed
-        assert result.attempted_session_id_resumptions_count
-        assert result.successful_session_id_resumptions_count
+        assert result.session_id_successful_resumptions_count
+        assert result.session_id_resumption_result == TlsResumptionSupportEnum.FULLY_SUPPORTED

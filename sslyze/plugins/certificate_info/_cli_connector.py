@@ -38,8 +38,8 @@ class _CertificateInfoCliConnector(
         scan_command_option.append(
             OptParseCliOption(
                 option="certinfo_ca_file",
-                help="Path to a file containing root certificates in PEM format that will be used to verify the"
-                " validity of the server's certificate.",
+                help="To be used with --certinfo. Path to a file containing root certificates in PEM format that will"
+                " be used to verify the validity of the server's certificate.",
                 action="store",
             )
         )

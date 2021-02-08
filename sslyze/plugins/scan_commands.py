@@ -26,10 +26,7 @@ from sslyze.plugins.openssl_cipher_suites.implementation import (
 )
 from sslyze.plugins.robot.implementation import RobotImplementation
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationImplementation
-from sslyze.plugins.session_resumption.implementation import (
-    SessionResumptionRateImplementation,
-    SessionResumptionSupportImplementation,
-)
+from sslyze.plugins.session_resumption.implementation import SessionResumptionSupportImplementation
 
 if TYPE_CHECKING:
     from sslyze.plugins.plugin_base import ScanCommandImplementation  # noqa: F401
@@ -52,7 +49,6 @@ ScanCommandType = Literal[
     "robot",
     "session_renegotiation",
     "session_resumption",
-    "session_resumption_rate",
     "http_headers",
     "elliptic_curves",
 ]
@@ -87,7 +83,6 @@ class ScanCommand:
     SESSION_RENEGOTIATION: Literal["session_renegotiation"] = "session_renegotiation"
 
     SESSION_RESUMPTION: Literal["session_resumption"] = "session_resumption"
-    SESSION_RESUMPTION_RATE: Literal["session_resumption_rate"] = "session_resumption_rate"
 
     HTTP_HEADERS: Literal["http_headers"] = "http_headers"
     ELLIPTIC_CURVES: Literal["elliptic_curves"] = "elliptic_curves"
@@ -119,7 +114,6 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommandType, Type["ScanCommandImplementation"]
     ScanCommand.ROBOT: RobotImplementation,
     ScanCommand.SESSION_RENEGOTIATION: SessionRenegotiationImplementation,
     ScanCommand.SESSION_RESUMPTION: SessionResumptionSupportImplementation,
-    ScanCommand.SESSION_RESUMPTION_RATE: SessionResumptionRateImplementation,
     ScanCommand.HTTP_HEADERS: HttpHeadersImplementation,
     ScanCommand.ELLIPTIC_CURVES: SupportedEllipticCurvesImplementation,
 }

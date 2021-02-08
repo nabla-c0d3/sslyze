@@ -95,8 +95,8 @@ Session Resumption Support
 Result class
 ============
 
-.. autoclass:: TlsSessionIdSupportEnum
-.. autoclass:: TlsSessionTicketSupportEnum
+.. autoclass:: TlsResumptionSupportEnum
+.. autoclass:: SessionResumptionSupportExtraArguments
 .. autoclass:: SessionResumptionSupportScanResult
 
 Session Resumption Rate

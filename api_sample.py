@@ -35,7 +35,7 @@ def main() -> None:
 
         # Scan commands that were run with no errors
         try:
-            ssl2_result = server_scan_result.scan_commands_results[ScanCommand.SSL_2_0_CIPHER_SUITES]
+            ssl2_result = getattr(server_scan_result.scan_commands_results, ScanCommand.SSL_2_0_CIPHER_SUITES)
             print("\nAccepted cipher suites for SSL 2.0:")
             for accepted_cipher_suite in ssl2_result.accepted_cipher_suites:
                 print(f"* {accepted_cipher_suite.cipher_suite.name}")
@@ -43,7 +43,7 @@ def main() -> None:
             pass
 
         try:
-            certinfo_result = server_scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
+            certinfo_result = getattr(server_scan_result.scan_commands_results, ScanCommand.CERTIFICATE_INFO)
             print("\nCertificate info:")
             for cert_deployment in certinfo_result.certificate_deployments:
                 print(f"Leaf certificate: \n{cert_deployment.received_certificate_chain_as_pem[0]}")
@@ -97,13 +97,13 @@ def basic_example() -> None:
         print(f"\nResults for {server_scan_result.server_info.server_location.hostname}:")
 
         # SSL 2.0 results
-        ssl2_result = server_scan_result.scan_commands_results[ScanCommand.SSL_2_0_CIPHER_SUITES]
+        ssl2_result = getattr(server_scan_result.scan_commands_results, ScanCommand.SSL_2_0_CIPHER_SUITES)
         print("\nAccepted cipher suites for SSL 2.0:")
         for accepted_cipher_suite in ssl2_result.accepted_cipher_suites:
             print(f"* {accepted_cipher_suite.cipher_suite.name}")
 
         # Certificate info results
-        certinfo_result = server_scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
+        certinfo_result = getattr(server_scan_result.scan_commands_results, ScanCommand.CERTIFICATE_INFO)
         print("\nCertificate info:")
         for cert_deployment in certinfo_result.certificate_deployments:
             print(f"Leaf certificate: \n{cert_deployment.received_certificate_chain_as_pem[0]}")

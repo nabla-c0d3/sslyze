@@ -1,10 +1,10 @@
 import gc
 from concurrent.futures import Future, wait
 from concurrent.futures.thread import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, replace as dataclasses_replace
 from enum import unique, Enum, auto
 from traceback import TracebackException
-from typing import Dict, Iterable, List, Set, Optional
+from typing import Any, cast, Dict, Iterable, Iterator, List, Set, Tuple, Optional
 
 from nassl.ssl_client import ClientCertificateRequested
 
@@ -80,30 +80,43 @@ class ServerScanRequest:
                 raise ValueError(f"Received an extra argument for a scan command that wasn't enabled: {scan_command}")
 
 
-# TypedDict for simpler/matching JSON output and makes fetching a field easier
-class ScanCommandResultsDict(TypedDict, total=False):
+@dataclass(frozen=True)
+class ScanCommandResults:
     """A dictionary of results for every scan command that was scheduled against a specific server.
     """
 
     # Field is present if the corresponding scan command was scheduled and was run successfully
-    certificate_info: CertificateInfoScanResult
-    ssl_2_0_cipher_suites: CipherSuitesScanResult
-    ssl_3_0_cipher_suites: CipherSuitesScanResult
-    tls_1_0_cipher_suites: CipherSuitesScanResult
-    tls_1_1_cipher_suites: CipherSuitesScanResult
-    tls_1_2_cipher_suites: CipherSuitesScanResult
-    tls_1_3_cipher_suites: CipherSuitesScanResult
-    tls_compression: CompressionScanResult
-    tls_1_3_early_data: EarlyDataScanResult
-    openssl_ccs_injection: OpenSslCcsInjectionScanResult
-    tls_fallback_scsv: FallbackScsvScanResult
-    heartbleed: HeartbleedScanResult
-    robot: RobotScanResult
-    session_renegotiation: SessionRenegotiationScanResult
-    session_resumption: SessionResumptionSupportScanResult
-    session_resumption_rate: SessionResumptionRateScanResult
-    http_headers: HttpHeadersScanResult
-    elliptic_curves: SupportedEllipticCurvesScanResult
+    certificate_info: Optional[CertificateInfoScanResult] = None
+    ssl_2_0_cipher_suites: Optional[CipherSuitesScanResult] = None
+    ssl_3_0_cipher_suites: Optional[CipherSuitesScanResult] = None
+    tls_1_0_cipher_suites: Optional[CipherSuitesScanResult] = None
+    tls_1_1_cipher_suites: Optional[CipherSuitesScanResult] = None
+    tls_1_2_cipher_suites: Optional[CipherSuitesScanResult] = None
+    tls_1_3_cipher_suites: Optional[CipherSuitesScanResult] = None
+    tls_compression: Optional[CompressionScanResult] = None
+    tls_1_3_early_data: Optional[EarlyDataScanResult] = None
+    openssl_ccs_injection: Optional[OpenSslCcsInjectionScanResult] = None
+    tls_fallback_scsv: Optional[FallbackScsvScanResult] = None
+    heartbleed: Optional[HeartbleedScanResult] = None
+    robot: Optional[RobotScanResult] = None
+    session_renegotiation: Optional[SessionRenegotiationScanResult] = None
+    session_resumption: Optional[SessionResumptionSupportScanResult] = None
+    session_resumption_rate: Optional[SessionResumptionRateScanResult] = None
+    http_headers: Optional[HttpHeadersScanResult] = None
+    elliptic_curves: Optional[SupportedEllipticCurvesScanResult] = None
+
+    def keys(self) -> Iterator[str]:
+        for field_ in fields(self):
+            key = field_.name
+            if getattr(self, key) is not None:
+                yield key
+
+    def items(self) -> Iterator[Tuple[str, Any]]:
+        for key in self.keys():
+            yield key, getattr(self, key)
+
+    def __len__(self) -> int:
+        return len(list(self.keys()))
 
 
 ScanCommandErrorsDict = Dict[ScanCommandType, ScanCommandError]
@@ -114,7 +127,7 @@ class ServerScanResult:
     """The result of a ServerScanRequest that was completed by a Scanner.
     """
 
-    scan_commands_results: ScanCommandResultsDict
+    scan_commands_results: ScanCommandResults
     scan_commands_errors: ScanCommandErrorsDict
 
     # What was passed in the corresponding ServerScanRequest
@@ -255,7 +268,7 @@ class Scanner:
 
                 # If we get here, all the jobs for a specific server scan have been completed
                 # Generate the result for each scan command
-                server_scan_results: ScanCommandResultsDict = {}
+                server_scan_results = ScanCommandResults()
                 server_scan_errors: ScanCommandErrorsDict = {}
                 for scan_cmd, completed_scan_jobs in queued_server_scan.queued_scan_jobs_per_scan_command.items():
                     server_info = queued_server_scan.server_scan_request.server_info
@@ -264,7 +277,8 @@ class Scanner:
                         result = implementation_cls.result_for_completed_scan_jobs(
                             server_info, list(completed_scan_jobs)
                         )
-                        server_scan_results[scan_cmd] = result
+                        scan_cmd_str = cast(str, scan_cmd)
+                        server_scan_results = dataclasses_replace(server_scan_results, **{scan_cmd_str: result})
 
                     # Process exceptions that may have been raised while the jobs were being completed
                     except ClientCertificateRequested as e:

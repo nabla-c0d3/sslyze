@@ -32,7 +32,7 @@ from sslyze.scanner import (
     ScanCommandError,
     ScanCommandErrorReasonEnum,
     ScanCommandExtraArgumentsDict,
-    ScanCommandResultsDict,
+    ScanCommandResults,
     ScanCommandErrorsDict,
     ServerScanRequest,
     ServerScanResult,

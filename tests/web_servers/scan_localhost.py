@@ -132,7 +132,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         else:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
-        if server_scan_result.scan_commands_results.keys() != expected_scan_command_results:
+        if set(server_scan_result.scan_commands_results.keys()) != expected_scan_command_results:
             raise RuntimeError("SSLyze did not complete all the expected scan commands.")
         else:
             print("OK: Completed all the expected scan commands.")
@@ -140,7 +140,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         # Ensure TLS 1.2 and 1.3 were detected by SSLyze as enabled
         # https://github.com/nabla-c0d3/sslyze/issues/472
         for ciphers_scan_cmd in [ScanCommand.TLS_1_3_CIPHER_SUITES, ScanCommand.TLS_1_2_CIPHER_SUITES]:
-            scan_cmd_result = server_scan_result.scan_commands_results[ciphers_scan_cmd]  # type: ignore
+            scan_cmd_result = getattr(server_scan_result.scan_commands_results, ciphers_scan_cmd)
             if not scan_cmd_result.accepted_cipher_suites:
                 raise RuntimeError(
                     f"SSLyze did not detect {scan_cmd_result.tls_version_used.name} to be enabled on the server."
@@ -155,7 +155,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
             ScanCommand.SSL_3_0_CIPHER_SUITES,
             ScanCommand.SSL_2_0_CIPHER_SUITES,
         ]:
-            scan_cmd_result = server_scan_result.scan_commands_results[ciphers_scan_cmd]  # type: ignore
+            scan_cmd_result = getattr(server_scan_result.scan_commands_results, ciphers_scan_cmd)
             if scan_cmd_result.accepted_cipher_suites:
                 raise RuntimeError(
                     f"SSLyze did not detect {scan_cmd_result.tls_version_used.name} to be disabled on the server."

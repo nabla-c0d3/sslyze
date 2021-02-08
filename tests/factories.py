@@ -9,7 +9,7 @@ from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.scan_commands import ScanCommand, ScanCommandType
-from sslyze.scanner import ServerScanResult, ScanCommandErrorsDict, ScanCommandResultsDict
+from sslyze.scanner import ServerScanResult, ScanCommandErrorsDict, ScanCommandResults
 from sslyze.server_connectivity import (
     ServerConnectivityInfo,
     ServerTlsProbingResult,
@@ -114,13 +114,13 @@ class ServerScanResultFactory:
     @staticmethod
     def create(
         server_info: ServerConnectivityInfo = ServerConnectivityInfoFactory.create(),
-        scan_commands_results: Optional[ScanCommandResultsDict] = None,
+        scan_commands_results: Optional[ScanCommandResults] = None,
         scan_commands_errors: Optional[ScanCommandErrorsDict] = None,
     ) -> ServerScanResult:
-        final_results: ScanCommandResultsDict = (
+        final_results: ScanCommandResults = (
             scan_commands_results
             if scan_commands_results
-            else {ScanCommand.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
+            else ScanCommandResults(tls_compression=CompressionScanResult(supports_compression=True))
         )
         final_errors: ScanCommandErrorsDict = scan_commands_errors if scan_commands_errors else {}
         scan_commands: Set[ScanCommandType] = set()

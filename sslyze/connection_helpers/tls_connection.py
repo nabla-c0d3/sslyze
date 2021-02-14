@@ -315,7 +315,7 @@ class SslConnection:
                 raise ServerRejectedTlsHandshake(
                     server_location=self._server_location,
                     network_configuration=self._network_configuration,
-                    error_message="Server rejected the connection",
+                    error_message="Server interrupted the TLS handshake",
                 )
             # Unknown connection error
             raise

@@ -32,6 +32,7 @@ class _ScanJobResultEnum(Enum):
 class ServerOnlySupportsTls13(Exception):
     """If the server only supports TLS 1.3 or higher, it does not support session resumption with IDs or tickets.
     """
+
     pass
 
 

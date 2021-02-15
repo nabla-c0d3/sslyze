@@ -17,7 +17,7 @@ except ModuleNotFoundError:
     # Python 3.8+
     from typing import TypedDict  # type: ignore
 
-from sslyze.errors import ConnectionToServerTimedOut
+from sslyze.errors import ConnectionToServerTimedOut, TlsHandshakeTimedOut
 from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult, CertificateInfoExtraArguments
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.early_data_plugin import EarlyDataScanResult
@@ -273,7 +273,7 @@ class Scanner:
                             exception_trace=TracebackException.from_exception(e),
                         )
                         server_scan_errors[scan_cmd] = error
-                    except ConnectionToServerTimedOut as e:
+                    except (ConnectionToServerTimedOut, TlsHandshakeTimedOut) as e:
                         error = ScanCommandError(
                             reason=ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE,
                             exception_trace=TracebackException.from_exception(e),

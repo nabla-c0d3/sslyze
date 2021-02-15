@@ -26,7 +26,7 @@ jobs:
 
     - name: Run linters
       # Only do linting once
-      if: matrix.python-version == 3.7
+      if: matrix.python-version == 3.8
       run: pipenv run invoke lint
 
     - name: Run tests

@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
 version: null
 url: https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFT
-date_fetched: 2021-01-24
-trusted_certificates_count: 261
+date_fetched: 2021-02-08
+trusted_certificates_count: 263
 trusted_certificates:
 - subject_name: A-Trust-Root-07
   fingerprint: 8ac552ad577e37ad2c6808d72aa331d6a96b4b3febff34ce9bc0578e08055ec3
@@ -239,6 +239,8 @@ trusted_certificates:
   fingerprint: 5cbf6fb81fd417ea4128cd6f8172a3c9402094f74ab2ed3a06b4405d04f30b19
 - subject_name: GlobalSign Secure Mail Root R45
   fingerprint: 319af0a7729e6f89269c131ea6a3a16fcd86389fdcab3c47a4a675c161a3f974
+- subject_name: GlobalSign Timestamping Root R45
+  fingerprint: 2bcbbfd66282c680491c8cd7735fdbbab7a8079b127bec60c535976834399af7
 - subject_name: Go Daddy Class 2 Certification Authority
   fingerprint: c3846bf24b9e93ca64274c0ec67c1ecc5e024ffcacd2d74019350e81fe546ae4
 - subject_name: Go Daddy Root Certificate Authority - G2
@@ -435,6 +437,8 @@ trusted_certificates:
   fingerprint: 59769007f7685d0fcd50872f9f95d5755a5b2b457d81f3692b610a98672f0e1b
 - subject_name: TWCA Root Certification Authority
   fingerprint: bfd88fe1101c41ae3e801bf8be56350ee9bad1a6b9bd515edc5c6d5b8711ac44
+- subject_name: Telia Root CA v2
+  fingerprint: 242b69742fcb1e5b2abf98898b94572187544e5b4d9911786573621f6a74b82c
 - subject_name: TeliaSonera Root CA v1
   fingerprint: dd6936fe21f8f077c123a1a521c12224f72255b73e03a7260693e8a24b0fa389
 - subject_name: Thailand National Root Certification Authority - G1

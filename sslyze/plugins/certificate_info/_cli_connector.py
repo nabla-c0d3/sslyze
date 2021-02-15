@@ -147,22 +147,15 @@ class _CertificateInfoCliConnector(
         deployment_as_txt.append(cls._format_field("Symantec 2018 Deprecation:", symantec_str))
 
         # Print the Common Names within the received certificate chain
-        cns_in_received_chain: List[str] = []
-        for certificate in cert_deployment.received_certificate_chain:
-            # Unlike the verified chain, this chain may contain garbage and invalid certificates so we need to handle
-            # ValueErrors. See https://github.com/nabla-c0d3/sslyze/issues/403 for more information
-            try:
-                subject_as_str = _get_name_as_short_text(certificate.subject)
-            except ValueError:
-                subject_as_str = "Error: Invalid Certificate"
-            cns_in_received_chain.append(subject_as_str)
-
+        cns_in_received_chain: List[str] = [
+            _get_subject_as_short_text(cert) for cert in cert_deployment.received_certificate_chain
+        ]
         deployment_as_txt.append(cls._format_field("Received Chain:", " --> ".join(cns_in_received_chain)))
 
         # Print the Common Names within the verified certificate chain if validation was successful
         if cert_deployment.verified_certificate_chain:
             cns_in_certificate_chain = [
-                _get_name_as_short_text(cert.subject) for cert in cert_deployment.verified_certificate_chain
+                _get_subject_as_short_text(cert) for cert in cert_deployment.verified_certificate_chain
             ]
             verified_chain_txt = " --> ".join(cns_in_certificate_chain)
         else:
@@ -288,8 +281,8 @@ class _CertificateInfoCliConnector(
             cls._format_field(
                 "SHA1 Fingerprint:", binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode("ascii")
             ),
-            cls._format_field("Common Name:", _get_name_as_short_text(certificate.subject)),
-            cls._format_field("Issuer:", _get_name_as_short_text(certificate.issuer)),
+            cls._format_field("Common Name:", _get_subject_as_short_text(certificate)),
+            cls._format_field("Issuer:", _get_issuer_as_short_text(certificate)),
             cls._format_field("Serial Number:", str(certificate.serial_number)),
             cls._format_field("Not Before:", certificate.not_valid_before.date().isoformat()),
             cls._format_field("Not After:", certificate.not_valid_after.date().isoformat()),
@@ -323,6 +316,24 @@ class _CertificateInfoCliConnector(
             pass
 
         return text_output
+
+
+def _get_subject_as_short_text(certificate: Certificate) -> str:
+    try:
+        final_subject_field = _get_name_as_short_text(certificate.subject)
+    except ValueError:
+        # Cryptography could not parse the certificate https://github.com/nabla-c0d3/sslyze/issues/495
+        final_subject_field = "Invalid Cert: Subject could not be parsed"
+    return final_subject_field
+
+
+def _get_issuer_as_short_text(certificate: Certificate) -> str:
+    try:
+        final_issuer_field = _get_name_as_short_text(certificate.issuer)
+    except ValueError:
+        # Cryptography could not parse the certificate https://github.com/nabla-c0d3/sslyze/issues/495
+        final_issuer_field = "Invalid Cert: Issuer could not be parsed"
+    return final_issuer_field
 
 
 def _get_name_as_short_text(name_field: x509.Name) -> str:

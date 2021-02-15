@@ -7,7 +7,9 @@ See ./.github/workflows and https://github.com/nabla-c0d3/sslyze/issues/472 for 
 
 $ PYTHONPATH=. python tests/web_servers/scan_localhost.py apache2
 """
+import json
 import sys
+from dataclasses import asdict
 from enum import Enum
 
 from sslyze import (
@@ -17,7 +19,9 @@ from sslyze import (
     ServerScanRequest,
     ClientAuthRequirementEnum,
     ScanCommandErrorReasonEnum,
+    JsonEncoder,
 )
+from sslyze.cli.json_output import _SslyzeOutputAsJson
 from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
 
 
@@ -158,6 +162,14 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
                 )
             else:
                 print(f"OK: Scan command {ciphers_scan_cmd} did not detect cipher suites.")
+
+        # Ensure a JSON output can be generated from the results
+        json_output = _SslyzeOutputAsJson(
+            server_scan_results=[server_scan_result], server_connectivity_errors=[], total_scan_time=3,
+        )
+        json_output_as_dict = asdict(json_output)
+        json.dumps(json_output_as_dict, cls=JsonEncoder, sort_keys=True, indent=4, ensure_ascii=True)
+        print("OK: Was able to generate JSON output.")
 
 
 if __name__ == "__main__":

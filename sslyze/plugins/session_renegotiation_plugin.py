@@ -210,6 +210,9 @@ def _test_client_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_Sc
             elif "shut down by peer" in e.args[0]:
                 # Cloudfront
                 accepts_client_renegotiation = False
+            elif "unexpected record" in e.args[0]:
+                # Indy TCP Server with special RSA Token authentication https://github.com/nabla-c0d3/sslyze/issues/483
+                accepts_client_renegotiation = False
 
             else:
                 raise

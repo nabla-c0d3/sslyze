@@ -32,7 +32,7 @@ def _enum_to_json(obj: Enum) -> JsonType:
 
 
 def _set_to_json(obj: set) -> JsonType:
-    return list(obj)
+    return sorted(list(obj))
 
 
 def _path_to_json(obj: Path) -> JsonType:

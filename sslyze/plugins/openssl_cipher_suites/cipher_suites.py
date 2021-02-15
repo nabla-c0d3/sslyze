@@ -615,6 +615,10 @@ def _parse_all_cipher_suites() -> Dict[TlsVersionEnum, Set[CipherSuite]]:
         if cipher_suite_openssl_name in _TLS_1_3_CIPHER_SUITES:
             continue
 
+        # Ignore cipher suite that is defined twice in OpenSSLL DHE-RSA-DES-CBC3-SHA and EDH-RSA-DES-CBC3-SHA
+        if cipher_suite_openssl_name == "EDH-RSA-DES-CBC3-SHA":
+            continue
+
         cipher_suite_rfc_name = _OPENSSL_TO_RFC_NAMES_MAPPING[TlsVersionEnum.TLS_1_2][cipher_suite_openssl_name]
         tls_version_to_cipher_suites[TlsVersionEnum.TLS_1_2].add(
             CipherSuite(

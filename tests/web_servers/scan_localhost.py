@@ -7,7 +7,9 @@ See ./.github/workflows and https://github.com/nabla-c0d3/sslyze/issues/472 for 
 
 $ PYTHONPATH=. python tests/web_servers/scan_localhost.py apache2
 """
+import json
 import sys
+from dataclasses import asdict
 from enum import Enum
 
 from sslyze import (
@@ -17,7 +19,9 @@ from sslyze import (
     ServerScanRequest,
     ClientAuthRequirementEnum,
     ScanCommandErrorReasonEnum,
+    JsonEncoder,
 )
+from sslyze.cli.json_output import _SslyzeOutputAsJson
 from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
 
 
@@ -28,19 +32,19 @@ class WebServerSoftwareEnum(str, Enum):
     NGINX = "nginx"
 
 
-def main(server_running_on_localhost: WebServerSoftwareEnum) -> None:
+def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
     # Ensure the server is accessible on localhost
     server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("localhost", 443)
     server_info = ServerConnectivityTester().perform(server_location)
 
-    if server_running_on_localhost == WebServerSoftwareEnum.APACHE2:
+    if server_software_running_on_localhost == WebServerSoftwareEnum.APACHE2:
         # Apache2 is configured to require a client cert, and returns an error at the TLS layer if it is missing
         if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.REQUIRED:
             raise RuntimeError(
                 f"SSLyze did not detect that client authentication was required by Apache2:"
                 f" {server_info.tls_probing_result.client_auth_requirement}."
             )
-    elif server_running_on_localhost == WebServerSoftwareEnum.NGINX:
+    elif server_software_running_on_localhost == WebServerSoftwareEnum.NGINX:
         # Nginx is configured to require a client cert but implements this by returning an error at the HTTP layer,
         # if the client cert is missing. This gets translated in SSLyze as "optionally" requiring a client cert
         if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.OPTIONAL:
@@ -49,7 +53,7 @@ def main(server_running_on_localhost: WebServerSoftwareEnum) -> None:
                 f" {server_info.tls_probing_result.client_auth_requirement}."
             )
     else:
-        raise ValueError(f"Unexpected value: {server_running_on_localhost}")
+        raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
     # Queue all scan commands
     print("Starting scan.")
@@ -87,26 +91,53 @@ def main(server_running_on_localhost: WebServerSoftwareEnum) -> None:
 
         # Crash if SSLyze didn't complete the scan commands that are supposed to work even when we don't provide a
         # client certificate
-        expected_scan_command_results = {
-            ScanCommand.TLS_1_3_CIPHER_SUITES,
-            ScanCommand.TLS_1_2_CIPHER_SUITES,
-            ScanCommand.TLS_1_1_CIPHER_SUITES,
-            ScanCommand.TLS_1_0_CIPHER_SUITES,
-            ScanCommand.SSL_3_0_CIPHER_SUITES,
-            ScanCommand.SSL_2_0_CIPHER_SUITES,
-            ScanCommand.OPENSSL_CCS_INJECTION,
-            ScanCommand.HEARTBLEED,
-            ScanCommand.ELLIPTIC_CURVES,
-            ScanCommand.TLS_FALLBACK_SCSV,
-            ScanCommand.CERTIFICATE_INFO,
-            ScanCommand.TLS_COMPRESSION,
-        }
+        if server_software_running_on_localhost == WebServerSoftwareEnum.APACHE2:
+            expected_scan_command_results = {
+                ScanCommand.TLS_1_3_CIPHER_SUITES,
+                ScanCommand.TLS_1_2_CIPHER_SUITES,
+                ScanCommand.TLS_1_1_CIPHER_SUITES,
+                ScanCommand.TLS_1_0_CIPHER_SUITES,
+                ScanCommand.SSL_3_0_CIPHER_SUITES,
+                ScanCommand.SSL_2_0_CIPHER_SUITES,
+                ScanCommand.OPENSSL_CCS_INJECTION,
+                ScanCommand.HEARTBLEED,
+                ScanCommand.ELLIPTIC_CURVES,
+                ScanCommand.TLS_FALLBACK_SCSV,
+                ScanCommand.CERTIFICATE_INFO,
+                ScanCommand.TLS_COMPRESSION,
+            }
+        elif server_software_running_on_localhost == WebServerSoftwareEnum.NGINX:
+            # When configured to require client authentication, more scan commands work with nginx because unlike
+            # Apache2, it does complete a full TLS handshake even when a client cert was not provided. It then returns
+            # an error page at the HTTP layer.
+            expected_scan_command_results = {
+                ScanCommand.TLS_1_3_CIPHER_SUITES,
+                ScanCommand.TLS_1_2_CIPHER_SUITES,
+                ScanCommand.TLS_1_1_CIPHER_SUITES,
+                ScanCommand.TLS_1_0_CIPHER_SUITES,
+                ScanCommand.SSL_3_0_CIPHER_SUITES,
+                ScanCommand.SSL_2_0_CIPHER_SUITES,
+                ScanCommand.OPENSSL_CCS_INJECTION,
+                ScanCommand.HEARTBLEED,
+                ScanCommand.ELLIPTIC_CURVES,
+                ScanCommand.TLS_FALLBACK_SCSV,
+                ScanCommand.CERTIFICATE_INFO,
+                ScanCommand.TLS_COMPRESSION,
+                ScanCommand.SESSION_RESUMPTION,
+                ScanCommand.TLS_1_3_EARLY_DATA,
+                ScanCommand.HTTP_HEADERS,
+                ScanCommand.SESSION_RESUMPTION_RATE,
+                ScanCommand.SESSION_RENEGOTIATION,
+            }
+        else:
+            raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
+
         if server_scan_result.scan_commands_results.keys() != expected_scan_command_results:
             raise RuntimeError("SSLyze did not complete all the expected scan commands.")
         else:
             print("OK: Completed all the expected scan commands.")
 
-        # Ensure TLS 1.2 and 1.3 were detected by SSLyze to be enabled
+        # Ensure TLS 1.2 and 1.3 were detected by SSLyze as enabled
         # https://github.com/nabla-c0d3/sslyze/issues/472
         for ciphers_scan_cmd in [ScanCommand.TLS_1_3_CIPHER_SUITES, ScanCommand.TLS_1_2_CIPHER_SUITES]:
             scan_cmd_result = server_scan_result.scan_commands_results[ciphers_scan_cmd]  # type: ignore
@@ -116,6 +147,29 @@ def main(server_running_on_localhost: WebServerSoftwareEnum) -> None:
                 )
             else:
                 print(f"OK: Scan command {ciphers_scan_cmd} detected cipher suites.")
+
+        # Ensure all other versions of SSL/TLS were detected by SSLyze as disabled
+        for ciphers_scan_cmd in [
+            ScanCommand.TLS_1_1_CIPHER_SUITES,
+            ScanCommand.TLS_1_0_CIPHER_SUITES,
+            ScanCommand.SSL_3_0_CIPHER_SUITES,
+            ScanCommand.SSL_2_0_CIPHER_SUITES,
+        ]:
+            scan_cmd_result = server_scan_result.scan_commands_results[ciphers_scan_cmd]  # type: ignore
+            if scan_cmd_result.accepted_cipher_suites:
+                raise RuntimeError(
+                    f"SSLyze did not detect {scan_cmd_result.tls_version_used.name} to be disabled on the server."
+                )
+            else:
+                print(f"OK: Scan command {ciphers_scan_cmd} did not detect cipher suites.")
+
+        # Ensure a JSON output can be generated from the results
+        json_output = _SslyzeOutputAsJson(
+            server_scan_results=[server_scan_result], server_connectivity_errors=[], total_scan_time=3,
+        )
+        json_output_as_dict = asdict(json_output)
+        json.dumps(json_output_as_dict, cls=JsonEncoder, sort_keys=True, indent=4, ensure_ascii=True)
+        print("OK: Was able to generate JSON output.")
 
 
 if __name__ == "__main__":

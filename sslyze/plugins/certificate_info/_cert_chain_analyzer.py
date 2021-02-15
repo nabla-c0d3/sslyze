@@ -70,7 +70,7 @@ class CertificateDeploymentAnalysisResult:
             Timestamps (SCTs) for Certificate Transparency embedded in the leaf certificate. ``None`` if the version of
             OpenSSL installed on the system is too old to be able to parse the SCT extension.
         received_chain_has_valid_order: ``True`` if the certificate chain returned by the server was sent in the right
-            order.
+            order. `None`` if any of the certificates in the chain could not be parsed.
         received_chain_contains_anchor_certificate: ``True`` if the server included the anchor/root
             certificate in the chain it sends back to clients. ``None`` if the verified chain could not be built.
         verified_chain_has_sha1_signature: ``True`` if any of the leaf or intermediate certificates are
@@ -95,7 +95,7 @@ class CertificateDeploymentAnalysisResult:
     leaf_certificate_is_ev: bool
     leaf_certificate_signed_certificate_timestamps_count: Optional[int]
     received_chain_contains_anchor_certificate: Optional[bool]
-    received_chain_has_valid_order: bool
+    received_chain_has_valid_order: Optional[bool]
 
     path_validation_results: List[PathValidationResult]
     verified_chain_has_sha1_signature: Optional[bool]
@@ -170,10 +170,15 @@ class CertificateDeploymentAnalyzer:
             pass
 
         # Received chain order
-        is_chain_order_valid = True
+        is_chain_order_valid: Optional[bool] = True
         previous_issuer = None
         for index, cert in enumerate(received_certificate_chain):
-            current_subject = cert.subject
+            try:
+                current_subject = cert.subject
+            except ValueError:
+                # Cryptography could not parse the certificate https://github.com/nabla-c0d3/sslyze/issues/495
+                is_chain_order_valid = None
+                break
 
             if index > 0:
                 # Compare the current subject with the previous issuer in the chain
@@ -185,6 +190,10 @@ class CertificateDeploymentAnalyzer:
             except KeyError:
                 # Missing issuer; this is okay if this is the last cert
                 previous_issuer = None
+            except ValueError:
+                # Cryptography could not parse the certificate https://github.com/nabla-c0d3/sslyze/issues/495
+                is_chain_order_valid = None
+                break
 
         # Check if the leaf certificate is Extended Validation
         is_leaf_certificate_ev = False
@@ -295,8 +304,14 @@ def _certificate_matches_hostname(certificate: Certificate, server_hostname: str
     """Verify that the certificate was issued for the given hostname.
     """
     # Extract the names from the certificate to create the properly-formatted dictionary
+    try:
+        cert_subject = certificate.subject
+    except ValueError:
+        # Cryptography could not parse the certificate https://github.com/nabla-c0d3/sslyze/issues/495
+        return False
+
     certificate_names = {
-        "subject": (tuple([("commonName", name) for name in get_common_names(certificate.subject)]),),
+        "subject": (tuple([("commonName", name) for name in get_common_names(cert_subject)]),),
         "subjectAltName": tuple([("DNS", name) for name in extract_dns_subject_alternative_names(certificate)]),
     }
     # CertificateError is raised on failure

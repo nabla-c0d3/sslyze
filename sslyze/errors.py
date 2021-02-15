@@ -25,6 +25,9 @@ class ConnectionToServerFailed(Exception):
     network_configuration: "ServerNetworkConfiguration"
     error_message: str
 
+    def __str__(self) -> str:
+        return f'{self.server_location.hostname}:{self.server_location.port} -> "{self.error_message}".'
+
 
 @dataclass(frozen=True)
 class ConnectionToServerTimedOut(ConnectionToServerFailed):

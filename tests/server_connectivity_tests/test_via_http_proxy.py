@@ -89,5 +89,5 @@ class TestServerConnectivityTesterWithProxy:
         )
 
         # When testing connectivity, it fails with the right error
-        with pytest.raises(ConnectionToHttpProxyTimedOut):
+        with pytest.raises(HttpProxyRejectedConnection):
             ServerConnectivityTester().perform(server_location)

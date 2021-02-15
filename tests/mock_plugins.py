@@ -24,8 +24,6 @@ ScanCommandForTestsType = Literal[
 class ScanCommandForTests:
     MOCK_COMMAND_1: Literal["mock1"] = "mock1"
     MOCK_COMMAND_2: Literal["mock2"] = "mock2"
-    MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS: Literal["mock3"] = "mock3"
-    MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS: Literal["mock4"] = "mock4"
 
     def get_implementation_cls(self):
         return _IMPLEMENTATION_CLASSES[self]
@@ -59,10 +57,6 @@ class MockPlugin2ScanResult(_MockPluginScanResult):
     pass
 
 
-def _do_nothing(arg1: str, arg2: int) -> str:
-    return f"{arg1}-{arg2}-did nothing"
-
-
 class _MockPluginImplementation(ScanCommandImplementation):
 
     result_cls: ClassVar[Type[ScanCommandResult]]
@@ -74,7 +68,8 @@ class _MockPluginImplementation(ScanCommandImplementation):
     ) -> List[ScanJob]:
         # Create a bunch of "do nothing" jobs to imitate a real plugin
         scan_jobs = [
-            ScanJob(function_to_call=_do_nothing, function_arguments=["test", 12]) for _ in range(cls._scan_jobs_count)
+            ScanJob(function_to_call=cls._scan_job_work_function, function_arguments=["test", 12])
+            for _ in range(cls._scan_jobs_count)
         ]
         return scan_jobs
 
@@ -87,6 +82,10 @@ class _MockPluginImplementation(ScanCommandImplementation):
 
         return cls.result_cls(results_field=[future.result() for future in completed_scan_jobs])  # type: ignore
 
+    @staticmethod
+    def _scan_job_work_function(arg1: str, arg2: int) -> str:
+        return f"{arg1}-{arg2}-did nothing"
+
 
 class MockPlugin1Implementation(_MockPluginImplementation):
     result_cls = MockPlugin1ScanResult
@@ -96,29 +95,7 @@ class MockPlugin2Implementation(_MockPluginImplementation):
     result_cls = MockPlugin2ScanResult
 
 
-class _MockPluginExceptionWhenSchedulingJobsImplementation(_MockPluginImplementation):
-    result_cls = _MockPluginScanResult
-
-    @classmethod
-    def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[MockPlugin1ExtraArguments] = None
-    ) -> List[ScanJob]:
-        raise RuntimeError("Ran into a problem when creating the scan jobs")
-
-
-class _MockPluginExceptionWhenProcessingJobsImplementation(_MockPluginImplementation):
-    result_cls = _MockPluginScanResult
-
-    @classmethod
-    def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
-    ) -> ScanCommandResult:
-        raise RuntimeError("Ran into a problem when processing results")
-
-
 _IMPLEMENTATION_CLASSES: Dict[ScanCommandForTestsType, Type["ScanCommandImplementation"]] = {
     ScanCommandForTests.MOCK_COMMAND_1: MockPlugin1Implementation,
     ScanCommandForTests.MOCK_COMMAND_2: MockPlugin2Implementation,
-    ScanCommandForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS: _MockPluginExceptionWhenSchedulingJobsImplementation,  # noqa: E501
-    ScanCommandForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS: _MockPluginExceptionWhenProcessingJobsImplementation,  # noqa: E501
 }

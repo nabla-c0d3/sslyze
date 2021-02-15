@@ -13,7 +13,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509.ocsp import OCSPResponseStatus, load_der_ocsp_response
-from cryptography.x509.oid import ObjectIdentifier
+from cryptography.x509.oid import ObjectIdentifier  # type: ignore
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 
 from sslyze.plugins.certificate_info._certificate_utils import (

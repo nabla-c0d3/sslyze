@@ -1,5 +1,6 @@
 from concurrent.futures._base import Future
 from dataclasses import dataclass
+from operator import attrgetter
 from typing import List, Optional
 
 from nassl._nassl import OpenSSLError
@@ -47,6 +48,13 @@ class SupportedEllipticCurvesScanResult(ScanCommandResult):
     supports_ecdh_key_exchange: bool
     supported_curves: Optional[List[EllipticCurve]]
     rejected_curves: Optional[List[EllipticCurve]]
+
+    def __post_init__(self) -> None:
+        # Sort the curves by name
+        if self.supported_curves:
+            self.supported_curves.sort(key=attrgetter("name"))
+        if self.rejected_curves:
+            self.rejected_curves.sort(key=attrgetter("name"))
 
 
 class _SupportedEllipticCurvesCliConnector(ScanCommandCliConnector[SupportedEllipticCurvesScanResult, None]):

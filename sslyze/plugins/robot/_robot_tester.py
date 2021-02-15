@@ -21,7 +21,7 @@ from tls_parser.parser import TlsRecordParser
 import tls_parser.tls_version
 
 from sslyze.errors import ServerRejectedTlsHandshake
-from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
+from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum, ClientAuthRequirementEnum
 
 
 class RobotScanResultEnum(Enum):
@@ -310,6 +310,14 @@ def _send_robot_payload(
     except socket.timeout:
         # https://github.com/nabla-c0d3/sslyze/issues/361
         server_response = "Connection timed out"
+    except ServerRejectedTlsHandshake:
+        if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.DISABLED:
+            # This error happens when scanning an nginx server with client authentication required;
+            # If the server asks for a client cert, we cannot check for ROBOT as the check needs to complete full
+            # handshakes. https://github.com/nabla-c0d3/sslyze/issues/484
+            raise ClientCertificateRequested(ca_list=[])
+        else:
+            raise
     finally:
         ssl_connection.close()
 

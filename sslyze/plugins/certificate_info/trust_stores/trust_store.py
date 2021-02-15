@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cryptography.x509.base import Certificate
-from cryptography.x509.extensions import ExtensionNotFound
-from cryptography.x509.oid import ObjectIdentifier
+from cryptography.x509.extensions import ExtensionNotFound  # type: ignore
+from cryptography.x509.oid import ObjectIdentifier  # type: ignore
 from cryptography.x509.oid import ExtensionOID
 from typing import List
 from typing import Optional

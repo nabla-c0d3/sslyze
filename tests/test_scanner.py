@@ -4,6 +4,7 @@ from unittest import mock
 
 import pytest
 
+from sslyze.errors import TlsHandshakeTimedOut
 from sslyze.plugins.scan_commands import ScanCommand
 from sslyze.scanner import Scanner, ScanCommandErrorReasonEnum, ServerScanRequest
 from sslyze.server_connectivity import ServerConnectivityTester
@@ -16,8 +17,15 @@ from tests.mock_plugins import (
     MockPlugin1ExtraArguments,
     ScanCommandForTests,
     ScanCommandForTestsRepository,
+    MockPlugin1Implementation,
 )
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
+
+
+@pytest.fixture
+def mock_scan_commands():
+    with mock.patch("sslyze.scanner.ScanCommandsRepository", ScanCommandForTestsRepository):
+        yield
 
 
 class TestServerScanRequest:
@@ -37,8 +45,7 @@ class TestServerScanRequest:
 
 
 class TestScanner:
-    @mock.patch("sslyze.scanner.ScanCommandsRepository", ScanCommandForTestsRepository)
-    def test(self):
+    def test(self, mock_scan_commands):
         # Given a server to scan
         server_scan = ServerScanRequest(
             server_info=ServerConnectivityInfoFactory.create(),
@@ -65,8 +72,7 @@ class TestScanner:
 
         assert len(all_results) == 1
 
-    @mock.patch("sslyze.scanner.ScanCommandsRepository", ScanCommandForTestsRepository)
-    def test_duplicate_server(self):
+    def test_duplicate_server(self, mock_scan_commands):
         # Given a server to scan
         server_info = ServerConnectivityInfoFactory.create()
 
@@ -80,13 +86,12 @@ class TestScanner:
         with pytest.raises(ValueError):
             scanner.queue_scan(server_scan2)
 
-    @mock.patch("sslyze.scanner.ScanCommandsRepository", ScanCommandForTestsRepository)
-    def test_with_extra_arguments(self):
-        # Given a server to scan
+    def test_with_extra_arguments(self, mock_scan_commands):
+        # Given a server to scan with a scan command
         server_scan = ServerScanRequest(
             server_info=ServerConnectivityInfoFactory.create(),
             scan_commands={ScanCommandForTests.MOCK_COMMAND_1},
-            # With an extra argument for one command
+            # And the command takes an extra argument
             scan_commands_extra_arguments={
                 ScanCommandForTests.MOCK_COMMAND_1: MockPlugin1ExtraArguments(extra_field="test")
             },
@@ -106,76 +111,50 @@ class TestScanner:
 
         assert len(all_results) == 1
 
-    @mock.patch("sslyze.scanner.ScanCommandsRepository", ScanCommandForTestsRepository)
-    def test_exception_when_scheduling_jobs(self):
-        # Given a server to scan
+    def test_error_bug_in_sslyze_when_scheduling_jobs(self, mock_scan_commands):
+        # Given a server to scan with some scan commands
         server_scan = ServerScanRequest(
             server_info=ServerConnectivityInfoFactory.create(),
-            scan_commands={
-                ScanCommandForTests.MOCK_COMMAND_1,
-                # And one of the scan commands will trigger an exception when scheduling scan jobs
-                ScanCommandForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS,
-            },
+            scan_commands={ScanCommandForTests.MOCK_COMMAND_1, ScanCommandForTests.MOCK_COMMAND_2},
         )
 
-        # When queuing the scan
-        scanner = Scanner()
-        scanner.queue_scan(server_scan)
+        # And the first scan command will trigger an error when generating scan jobs
+        with mock.patch.object(MockPlugin1Implementation, "scan_jobs_for_scan_command", side_effect=RuntimeError):
+            # When queuing the scan
+            scanner = Scanner()
+            scanner.queue_scan(server_scan)
 
         # It succeeds
-        all_results = []
         for result in scanner.get_results():
-            all_results.append(result)
-
-            assert result.server_info == server_scan.server_info
-            assert result.scan_commands == server_scan.scan_commands
-            assert result.scan_commands_extra_arguments == server_scan.scan_commands_extra_arguments
-            assert len(result.scan_commands_results) == 1
-
             # And the exception was properly caught and returned
             assert len(result.scan_commands_errors) == 1
-            error = result.scan_commands_errors[ScanCommandForTests.MOCK_COMMAND_EXCEPTION_WHEN_SCHEDULING_JOBS]
+            error = result.scan_commands_errors[ScanCommandForTests.MOCK_COMMAND_1]
             assert ScanCommandErrorReasonEnum.BUG_IN_SSLYZE == error.reason
             assert error.exception_trace
 
-        assert len(all_results) == 1
-
-    @mock.patch("sslyze.scanner.ScanCommandsRepository", ScanCommandForTestsRepository)
-    def test_exception_when_processing_jobs(self):
-        # Given a server to scan
+    def test_error_bug_in_sslyze_when_processing_job_results(self, mock_scan_commands):
+        # Given a server to scan with some scan commands
         server_scan = ServerScanRequest(
             server_info=ServerConnectivityInfoFactory.create(),
-            scan_commands={
-                ScanCommandForTests.MOCK_COMMAND_1,
-                # And one of the scan commands will trigger an exception when processing the completed scan jobs
-                ScanCommandForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS,
-            },
+            scan_commands={ScanCommandForTests.MOCK_COMMAND_1, ScanCommandForTests.MOCK_COMMAND_2},
         )
 
-        # When queuing the scan
-        scanner = Scanner()
-        scanner.queue_scan(server_scan)
+        # And the first scan command will trigger an error when processing the completed scan jobs
+        with mock.patch.object(MockPlugin1Implementation, "_scan_job_work_function", side_effect=RuntimeError):
+            # When queuing the scan
+            scanner = Scanner()
+            scanner.queue_scan(server_scan)
 
         # It succeeds
-        all_results = []
         for result in scanner.get_results():
-            all_results.append(result)
-
-            assert result.server_info == server_scan.server_info
-            assert result.scan_commands == server_scan.scan_commands
-            assert result.scan_commands_extra_arguments == server_scan.scan_commands_extra_arguments
-            assert len(result.scan_commands_results) == 1
-
             # And the exception was properly caught and returned
             assert len(result.scan_commands_errors) == 1
-            error = result.scan_commands_errors[ScanCommandForTests.MOCK_COMMAND_EXCEPTION_WHEN_PROCESSING_JOBS]
+            error = result.scan_commands_errors[ScanCommandForTests.MOCK_COMMAND_1]
             assert ScanCommandErrorReasonEnum.BUG_IN_SSLYZE == error.reason
             assert error.exception_trace
-
-        assert len(all_results) == 1
 
     @can_only_run_on_linux_64
-    def test_client_certificate_missing(self):
+    def test_error_client_certificate_needed(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate
@@ -207,10 +186,38 @@ class TestScanner:
             error = all_results[0].scan_commands_errors[ScanCommand.HTTP_HEADERS]
             assert error.reason == ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED
 
+    def test_error_server_connectivity_issue_handshake_timeout(self, mock_scan_commands):
+        # Given a server to scan with some commands
+        server_scan = ServerScanRequest(
+            server_info=ServerConnectivityInfoFactory.create(),
+            scan_commands={ScanCommandForTests.MOCK_COMMAND_1, ScanCommandForTests.MOCK_COMMAND_2},
+        )
+
+        # And the first scan command will trigger a handshake timeout with the server
+        with mock.patch.object(
+            MockPlugin1Implementation,
+            "_scan_job_work_function",
+            side_effect=TlsHandshakeTimedOut(
+                server_location=server_scan.server_info.server_location,
+                network_configuration=server_scan.server_info.network_configuration,
+                error_message="error",
+            ),
+        ):
+            # When queuing the scan
+            scanner = Scanner()
+            scanner.queue_scan(server_scan)
+
+        # It succeeds
+        for result in scanner.get_results():
+            # And the error was properly caught and returned
+            assert len(result.scan_commands_errors) == 1
+            error = result.scan_commands_errors[ScanCommandForTests.MOCK_COMMAND_1]
+            assert ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE == error.reason
+            assert error.exception_trace
+
 
 class TestScannerInternals:
-    @mock.patch("sslyze.scanner.ScanCommandsRepository", ScanCommandForTestsRepository)
-    def test(self):
+    def test(self, mock_scan_commands):
         # Given a lot of servers to scan
         total_server_scans_count = 100
         server_scans = [
@@ -245,8 +252,7 @@ class TestScannerInternals:
         for pool_count in server_scans_per_pool_count.values():
             assert expected_server_scans_per_pool == pool_count
 
-    @mock.patch("sslyze.scanner.ScanCommandsRepository", ScanCommandForTestsRepository)
-    def test_emergency_shutdown(self):
+    def test_emergency_shutdown(self, mock_scan_commands):
         # Given a lot of servers to scan
         total_server_scans_count = 100
         server_scans = [

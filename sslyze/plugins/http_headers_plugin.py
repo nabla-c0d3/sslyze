@@ -1,3 +1,4 @@
+import logging
 from concurrent.futures._base import Future
 from http.client import HTTPResponse
 
@@ -16,6 +17,9 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
 from sslyze.connection_helpers.http_response_parser import HttpResponseParser
 from typing import List, Optional
+
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -167,9 +171,11 @@ class HttpHeadersImplementation(ScanCommandImplementation[HttpHeadersScanResult,
 
 def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> HttpHeadersScanResult:
     # Send HTTP requests until we no longer received an HTTP redirection, but allow only 4 redirections max
+    _logger.info(f"Retrieving HTTP headers from {server_info}")
     redirections_count = 0
     next_location_path: Optional[str] = "/"
     while next_location_path and redirections_count < 4:
+        _logger.info(f"Sending request to {next_location_path}")
         ssl_connection = server_info.get_preconfigured_tls_connection()
         try:
             # Perform the TLS handshake
@@ -264,7 +270,7 @@ def _parse_hsts_header_from_http_response(response: HTTPResponse) -> Optional[St
         elif "preload" in hsts_directive:
             preload = True
         else:
-            raise ValueError(f"Unexpected value in HSTS header: {repr(hsts_directive)}")
+            _logger.warning(f"Unexpected value in HSTS header: {repr(hsts_directive)}")
 
     return StrictTransportSecurityHeader(max_age, preload, include_subdomains)
 
@@ -308,7 +314,7 @@ def _parse_hpkp_from_header(raw_hpkp_header: str) -> PublicKeyPinsHeader:
             # Reporting API `report-to` group name; https://w3c.github.io/reporting/#examples
             report_to = hpkp_directive.split("report-to=")[1].strip(' "')
         else:
-            raise ValueError(f"Unexpected value in HPKP header: {repr(hpkp_directive)}")
+            _logger.warning(f"Unexpected value in HPKP header: {repr(hpkp_directive)}")
 
     return PublicKeyPinsHeader(max_age, pin_sha256_list, include_subdomains, report_uri, report_to)
 
@@ -334,6 +340,6 @@ def _parse_expect_ct_header_from_http_response(response: HTTPResponse) -> Option
         elif "enforce" in expect_ct_directive:
             enforce = True
         else:
-            raise ValueError(f"Unexpected value in Expect-CT header: {repr(expect_ct_directive)}")
+            _logger.warning(f"Unexpected value in Expect-CT header: {repr(expect_ct_directive)}")
 
     return ExpectCtHeader(max_age, report_uri, enforce)

@@ -1,10 +1,10 @@
 import gc
 from concurrent.futures import Future, wait
 from concurrent.futures.thread import ThreadPoolExecutor
-from dataclasses import dataclass, field, fields, replace as dataclasses_replace
+from dataclasses import dataclass, field, fields
 from enum import unique, Enum, auto
 from traceback import TracebackException
-from typing import Any, cast, Dict, Iterable, Iterator, List, Set, Tuple, Optional
+from typing import Any, Dict, Iterable, Iterator, List, Set, Tuple, Optional
 
 from nassl.ssl_client import ClientCertificateRequested
 
@@ -80,12 +80,12 @@ class ServerScanRequest:
                 raise ValueError(f"Received an extra argument for a scan command that wasn't enabled: {scan_command}")
 
 
-@dataclass(frozen=True)
+@dataclass
 class ScanCommandResults:
-    """A dictionary of results for every scan command that was scheduled against a specific server.
+    """A collection of results for every scan command that was scheduled against a specific server.
     """
 
-    # Field is present if the corresponding scan command was scheduled and was run successfully
+    # Field is None if the corresponding scan command was not scheduled or was not run successfully
     certificate_info: Optional[CertificateInfoScanResult] = None
     ssl_2_0_cipher_suites: Optional[CipherSuitesScanResult] = None
     ssl_3_0_cipher_suites: Optional[CipherSuitesScanResult] = None
@@ -277,8 +277,7 @@ class Scanner:
                         result = implementation_cls.result_for_completed_scan_jobs(
                             server_info, list(completed_scan_jobs)
                         )
-                        scan_cmd_str = cast(str, scan_cmd)
-                        server_scan_results = dataclasses_replace(server_scan_results, **{scan_cmd_str: result})
+                        setattr(server_scan_results, scan_cmd, result)
 
                     # Process exceptions that may have been raised while the jobs were being completed
                     except ClientCertificateRequested as e:

@@ -30,6 +30,7 @@ class WebServerSoftwareEnum(str, Enum):
     # which type of server is being scanned
     APACHE2 = "apache2"
     NGINX = "nginx"
+    IIS = "iis"
 
 
 def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
@@ -50,6 +51,13 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.OPTIONAL:
             raise RuntimeError(
                 f"SSLyze did not detect that client authentication was required by Nginx:"
+                f" {server_info.tls_probing_result.client_auth_requirement}."
+            )
+    elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:
+        # IIS is not configured to require a client cert for now because I don't know how to enable this
+        if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.DISABLED:
+            raise RuntimeError(
+                f"SSLyze detected that client authentication was enabled by IIS:"
                 f" {server_info.tls_probing_result.client_auth_requirement}."
             )
     else:
@@ -106,10 +114,11 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
                 ScanCommand.CERTIFICATE_INFO,
                 ScanCommand.TLS_COMPRESSION,
             }
-        elif server_software_running_on_localhost == WebServerSoftwareEnum.NGINX:
-            # When configured to require client authentication, more scan commands work with nginx because unlike
+        elif server_software_running_on_localhost in [WebServerSoftwareEnum.NGINX, WebServerSoftwareEnum.IIS]:
+            # With nginx, when configured to require client authentication, more scan commands work because unlike
             # Apache2, it does complete a full TLS handshake even when a client cert was not provided. It then returns
             # an error page at the HTTP layer.
+            # With IIS, client authentication is enabled so it returns the same same result
             expected_scan_command_results = {
                 ScanCommand.TLS_1_3_CIPHER_SUITES,
                 ScanCommand.TLS_1_2_CIPHER_SUITES,

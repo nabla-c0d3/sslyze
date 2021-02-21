@@ -141,8 +141,11 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         else:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
-        if server_scan_result.scan_commands_results.keys() != expected_scan_command_results:
-            raise RuntimeError("SSLyze did not complete all the expected scan commands.")
+        completed_scan_command_results = server_scan_result.scan_commands_results.keys()
+        if completed_scan_command_results != expected_scan_command_results:
+            raise RuntimeError(
+                f"SSLyze did not complete all the expected scan commands: {completed_scan_command_results}"
+            )
         else:
             print("OK: Completed all the expected scan commands.")
 

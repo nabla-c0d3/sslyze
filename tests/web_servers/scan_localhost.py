@@ -139,7 +139,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
             }
         elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:
             # With IIS, client authentication is not enabled so all scan commands should succeed
-            expected_scan_command_results = ScanCommandsRepository.get_all_scan_commands()
+            expected_scan_command_results = ScanCommandsRepository.get_all_scan_commands()  # type: ignore
         else:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 

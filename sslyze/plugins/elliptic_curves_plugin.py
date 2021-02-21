@@ -178,9 +178,16 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
         negotiated_ephemeral_key = None
 
     except OpenSSLError as e:
-        # This can be triggered by some servers when they don't support the specific curve enabled in the client
-        # Related to https://github.com/nabla-c0d3/sslyze/issues/466
+        # The following errors can be triggered by some servers when they don't support the specific curve enabled
+        # in the client
         if "ossl_statem_client_read_transition:unexpected message" in e.args[0]:
+            # Related to https://github.com/nabla-c0d3/sslyze/issues/466
+            negotiated_ephemeral_key = None
+        elif "tls_process_ske_ecdhe:wrong curve" in e.args[0]:
+            # https://github.com/nabla-c0d3/sslyze/issues/490
+            negotiated_ephemeral_key = None
+        elif "sslv3 alert unexpected message" in e.args[0]:
+            # https://github.com/nabla-c0d3/sslyze/issues/490
             negotiated_ephemeral_key = None
         else:
             raise

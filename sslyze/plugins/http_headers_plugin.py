@@ -1,8 +1,10 @@
 import logging
+import socket
 from concurrent.futures._base import Future
 from http.client import HTTPResponse
 
 from dataclasses import dataclass
+from traceback import TracebackException
 from urllib.parse import urlsplit
 
 from sslyze.plugins.plugin_base import (
@@ -15,7 +17,7 @@ from sslyze.plugins.plugin_base import (
 )
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
-from sslyze.connection_helpers.http_response_parser import HttpResponseParser
+from sslyze.connection_helpers.http_response_parser import HttpResponseParser, NotAValidHttpResponseError
 from typing import List, Optional
 
 
@@ -76,20 +78,27 @@ class StrictTransportSecurityHeader:
 class HttpHeadersScanResult(ScanCommandResult):
     """The result of testing a server for the presence of security-related HTTP headers.
 
-    Each HTTP header described below will be ``None`` if the server did not return it.
+    Each HTTP header described below will be ``None`` if the server did not return a valid HTTP response, or if the
+    server returned an HTTP response without the HTTP header.
 
     Attributes:
+        http_request_sent: The initial HTTP request sent to the server by SSLyze.
+        http_error_trace: An error the server returned after receiving the initial HTTP request. If this field is set,
+            all the subsequent fields will be ``None`` as SSLyze did not receive a valid HTTP response from the server.
+        http_path_redirected_to: The path SSLyze was eventually redirected to after sending the initial HTTP request.
         strict_transport_security_header: The Strict-Transport-Security header returned by the server.
         public_key_pins_header: The Public-Key-Pins header returned by the server.
         public_key_pins_report_only_header: The Public-Key-Pins-Report-Only header returned by the server.
         expect_ct_header: The Expect-CT header returned by the server.
     """
 
-    strict_transport_security_header: Optional[StrictTransportSecurityHeader]
+    http_request_sent: str
+    http_error_trace: Optional[TracebackException]
 
+    http_path_redirected_to: Optional[str]
+    strict_transport_security_header: Optional[StrictTransportSecurityHeader]
     public_key_pins_header: Optional[PublicKeyPinsHeader]
     public_key_pins_report_only_header: Optional[PublicKeyPinsHeader]
-
     expect_ct_header: Optional[ExpectCtHeader]
 
 
@@ -101,6 +110,16 @@ class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, No
     @classmethod
     def result_to_console_output(cls, result: HttpHeadersScanResult) -> List[str]:
         result_as_txt = [cls._format_title("HTTP Security Headers")]
+
+        # If an error occurred after sending the HTTP request, just display it
+        if result.http_error_trace:
+            result_as_txt.append(
+                cls._format_subtitle("Error - Server did not return a valid HTTP response. Is it an HTTP server?")
+            )
+            result_as_txt.append("")
+            for trace_line in result.http_error_trace.format(chain=False):
+                result_as_txt.append(f"       {trace_line.strip()}")
+            return result_as_txt
 
         # HSTS
         result_as_txt.append(cls._format_subtitle("Strict-Transport-Security Header"))
@@ -174,13 +193,17 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
     _logger.info(f"Retrieving HTTP headers from {server_info}")
     redirections_count = 0
     next_location_path: Optional[str] = "/"
-    while next_location_path and redirections_count < 4:
-        _logger.info(f"Sending request to {next_location_path}")
-        ssl_connection = server_info.get_preconfigured_tls_connection()
-        try:
-            # Perform the TLS handshake
-            ssl_connection.connect()
+    http_error_trace = None
 
+    while next_location_path and redirections_count < 4:
+        _logger.info(f"Sending HTTP request to {next_location_path}")
+        http_path_redirected_to = next_location_path
+
+        # Perform the TLS handshake
+        ssl_connection = server_info.get_preconfigured_tls_connection()
+        ssl_connection.connect()
+
+        try:
             # Send an HTTP GET request to the server
             ssl_connection.ssl_client.write(
                 HttpRequestGenerator.get_request(
@@ -188,12 +211,16 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
                 )
             )
             http_response = HttpResponseParser.parse_from_ssl_connection(ssl_connection.ssl_client)
+
+        except (socket.timeout, ConnectionError, NotAValidHttpResponseError) as e:
+            # The server didn't return a proper HTTP response
+            http_error_trace = TracebackException.from_exception(e)
+
         finally:
             ssl_connection.close()
 
-        if http_response.version == 9:
-            # HTTP 0.9 => Probably not an HTTP response
-            raise ValueError("Server did not return an HTTP response")
+        if http_error_trace:
+            break
 
         # Handle redirection if there is one
         next_location_path = _detect_http_redirection(
@@ -203,13 +230,33 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
         )
         redirections_count += 1
 
-    # Parse and return each header
-    return HttpHeadersScanResult(
-        strict_transport_security_header=_parse_hsts_header_from_http_response(http_response),
-        public_key_pins_header=_parse_hpkp_header_from_http_response(http_response),
-        public_key_pins_report_only_header=_parse_hpkp_report_only_header_from_http_response(http_response),
-        expect_ct_header=_parse_expect_ct_header_from_http_response(http_response),
-    )
+    # Prepare the results
+    initial_http_request = HttpRequestGenerator.get_request(
+        host=server_info.network_configuration.tls_server_name_indication, path="/"
+    ).decode("ascii")
+
+    if http_error_trace:
+        # If the server errored when receiving an HTTP request, return the error as the result
+        return HttpHeadersScanResult(
+            http_request_sent=initial_http_request,
+            http_error_trace=http_error_trace,
+            http_path_redirected_to=None,
+            strict_transport_security_header=None,
+            public_key_pins_header=None,
+            public_key_pins_report_only_header=None,
+            expect_ct_header=None,
+        )
+    else:
+        # If no HTTP error happened, parse and return each header
+        return HttpHeadersScanResult(
+            http_request_sent=initial_http_request,
+            http_path_redirected_to=http_path_redirected_to,
+            http_error_trace=None,
+            strict_transport_security_header=_parse_hsts_header_from_http_response(http_response),
+            public_key_pins_header=_parse_hpkp_header_from_http_response(http_response),
+            public_key_pins_report_only_header=_parse_hpkp_report_only_header_from_http_response(http_response),
+            expect_ct_header=_parse_expect_ct_header_from_http_response(http_response),
+        )
 
 
 def _detect_http_redirection(http_response: HTTPResponse, server_host_name: str, server_port: int) -> Optional[str]:

@@ -10,7 +10,7 @@ from sys import platform
 import logging
 import time
 from threading import Thread
-from typing import Optional, List
+from typing import Optional, List, IO
 
 
 class NotOnLinux64Error(EnvironmentError):
@@ -31,30 +31,34 @@ class _OpenSslServerIOManager:
     """Thread to log all output from s_server and reply to incoming connections.
     """
 
-    def __init__(self, s_server_stdout, s_server_stdin):
-        self.s_server_stdout = s_server_stdout
-        self.s_server_stdin = s_server_stdin
+    def __init__(
+        self, s_server_stdout: IO[bytes], s_server_stdin: IO[bytes], should_reply_to_http_requests: bool
+    ) -> None:
+        self._s_server_stdout = s_server_stdout
+        self._s_server_stdin = s_server_stdin
+        self._should_reply_to_http_requests = should_reply_to_http_requests
         self.is_server_ready = False
 
         def read_and_log_and_reply():
             while True:
-                s_server_out = self.s_server_stdout.readline()
+                s_server_out = self._s_server_stdout.readline()
                 if s_server_out:
                     logging.warning(f"s_server output: {s_server_out}")
 
                     if b"ACCEPT" in s_server_out:
-                        # S_server is ready to receive connections
+                        # The s_server process is ready to receive connections
                         self.is_server_ready = True
 
                     if _OpenSslServer.HELLO_MSG in s_server_out:
                         # When receiving the special message, we want s_server to reply
-                        self.s_server_stdin.write(b"Hey there")
-                        self.s_server_stdin.flush()
+                        self._s_server_stdin.write(b"Hey there")
+                        self._s_server_stdin.flush()
 
-                    if b"Connection: close\r\n" in s_server_out:
-                        # We "Connection: close" to detect an HTTP request being sent and we return an HTTP response
-                        self.s_server_stdin.write(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
-                        self.s_server_stdin.flush()
+                    if self._should_reply_to_http_requests:
+                        if b"Connection: close\r\n" in s_server_out:
+                            # We "Connection: close" to detect an HTTP request being sent and we return an HTTP response
+                            self._s_server_stdin.write(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+                            self._s_server_stdin.flush()
                 else:
                     break
 
@@ -125,6 +129,7 @@ class _OpenSslServer(ABC):
         client_auth_config: ClientAuthConfigEnum,
         should_enable_server_cipher_preference: bool,
         openssl_cipher_string: Optional[str],
+        should_reply_to_http_requests: bool = True,
         extra_openssl_args: Optional[List[str]] = None,
     ) -> None:
         if not self.is_platform_supported():
@@ -138,6 +143,7 @@ class _OpenSslServer(ABC):
         self.ip_address = "127.0.0.1"
         self._server_certificate_path = server_certificate_path
         self._server_key_path = server_key_path
+        self._should_reply_to_http_requests = should_reply_to_http_requests
 
         # Retrieve one of the available local ports; set.pop() is thread safe
         self.port = self._AVAILABLE_LOCAL_PORTS.pop()
@@ -161,11 +167,13 @@ class _OpenSslServer(ABC):
             self._process = subprocess.Popen(
                 args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
             )
-            self._server_io_manager = _OpenSslServerIOManager(self._process.stdout, self._process.stdin)
+            self._server_io_manager = _OpenSslServerIOManager(
+                self._process.stdout, self._process.stdin, self._should_reply_to_http_requests
+            )
 
             # Block until s_server is ready to accept requests
             while not self._server_io_manager.is_server_ready:
-                time.sleep(1)
+                time.sleep(0.5)
                 if self._process.poll() is not None:
                     # s_server has terminated early
                     raise RuntimeError("Could not start s_server")
@@ -270,6 +278,7 @@ class ModernOpenSslServer(_OpenSslServer):
         client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
         should_enable_server_cipher_preference: bool = False,
         openssl_cipher_string: Optional[str] = None,
+        should_reply_to_http_requests: bool = True,
         max_early_data: Optional[int] = None,
         groups: Optional[str] = None,
     ) -> None:
@@ -288,4 +297,5 @@ class ModernOpenSslServer(_OpenSslServer):
             should_enable_server_cipher_preference=should_enable_server_cipher_preference,
             server_certificate_path=server_certificate_path,
             server_key_path=server_key_path,
+            should_reply_to_http_requests=should_reply_to_http_requests,
         )

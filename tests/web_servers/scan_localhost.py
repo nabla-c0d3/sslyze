@@ -138,26 +138,8 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
                 ScanCommand.SESSION_RENEGOTIATION,
             }
         elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:
-            # With IIS, client authentication is not enabled so all scan commands succeed
-            expected_scan_command_results = {
-                ScanCommand.TLS_1_3_CIPHER_SUITES,
-                ScanCommand.TLS_1_2_CIPHER_SUITES,
-                ScanCommand.TLS_1_1_CIPHER_SUITES,
-                ScanCommand.TLS_1_0_CIPHER_SUITES,
-                ScanCommand.SSL_3_0_CIPHER_SUITES,
-                ScanCommand.SSL_2_0_CIPHER_SUITES,
-                ScanCommand.OPENSSL_CCS_INJECTION,
-                ScanCommand.HEARTBLEED,
-                ScanCommand.ELLIPTIC_CURVES,
-                ScanCommand.TLS_FALLBACK_SCSV,
-                ScanCommand.CERTIFICATE_INFO,
-                ScanCommand.TLS_COMPRESSION,
-                ScanCommand.SESSION_RESUMPTION,
-                ScanCommand.TLS_1_3_EARLY_DATA,
-                ScanCommand.HTTP_HEADERS,
-                ScanCommand.SESSION_RESUMPTION_RATE,
-                ScanCommand.SESSION_RENEGOTIATION,
-            }
+            # With IIS, client authentication is not enabled so all scan commands should succeed
+            expected_scan_command_results = ScanCommandsRepository.get_all_scan_commands()
         else:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 

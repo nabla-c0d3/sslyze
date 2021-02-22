@@ -1,9 +1,11 @@
-from dataclasses import dataclass
+import json
+from dataclasses import dataclass, asdict
 from typing import Dict
 
 import pytest
 from nassl.ssl_client import ClientCertificateRequested
 
+from sslyze import JsonEncoder
 from sslyze.plugins.http_headers_plugin import (
     HttpHeadersImplementation,
     HttpHeadersScanResult,
@@ -100,6 +102,10 @@ class TestHttpHeadersPlugin:
 
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = json.dumps(asdict(result), cls=JsonEncoder)
+        assert result_as_json
 
     @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed(self):

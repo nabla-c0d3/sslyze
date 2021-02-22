@@ -30,6 +30,7 @@ class WebServerSoftwareEnum(str, Enum):
     # which type of server is being scanned
     APACHE2 = "apache2"
     NGINX = "nginx"
+    IIS = "iis"
 
 
 def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
@@ -50,6 +51,13 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.OPTIONAL:
             raise RuntimeError(
                 f"SSLyze did not detect that client authentication was required by Nginx:"
+                f" {server_info.tls_probing_result.client_auth_requirement}."
+            )
+    elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:
+        # IIS is not configured to require a client cert for now because I don't know how to enable this
+        if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.DISABLED:
+            raise RuntimeError(
+                f"SSLyze detected that client authentication was enabled by IIS:"
                 f" {server_info.tls_probing_result.client_auth_requirement}."
             )
     else:
@@ -107,7 +115,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
                 ScanCommand.TLS_COMPRESSION,
             }
         elif server_software_running_on_localhost == WebServerSoftwareEnum.NGINX:
-            # When configured to require client authentication, more scan commands work with nginx because unlike
+            # With nginx, when configured to require client authentication, more scan commands work because unlike
             # Apache2, it does complete a full TLS handshake even when a client cert was not provided. It then returns
             # an error page at the HTTP layer.
             expected_scan_command_results = {
@@ -129,17 +137,39 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
                 ScanCommand.SESSION_RESUMPTION_RATE,
                 ScanCommand.SESSION_RENEGOTIATION,
             }
+        elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:
+            # With IIS, client authentication is not enabled so all scan commands should succeed
+            expected_scan_command_results = ScanCommandsRepository.get_all_scan_commands()  # type: ignore
         else:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
-        if server_scan_result.scan_commands_results.keys() != expected_scan_command_results:
-            raise RuntimeError("SSLyze did not complete all the expected scan commands.")
+        completed_scan_command_results = server_scan_result.scan_commands_results.keys()
+        if completed_scan_command_results != expected_scan_command_results:
+            raise RuntimeError(
+                f"SSLyze did not complete all the expected scan commands: {completed_scan_command_results}"
+            )
         else:
             print("OK: Completed all the expected scan commands.")
 
-        # Ensure TLS 1.2 and 1.3 were detected by SSLyze as enabled
+        # Ensure the right TLS versions were detected by SSLyze as enabled
         # https://github.com/nabla-c0d3/sslyze/issues/472
-        for ciphers_scan_cmd in [ScanCommand.TLS_1_3_CIPHER_SUITES, ScanCommand.TLS_1_2_CIPHER_SUITES]:
+        if server_software_running_on_localhost in [WebServerSoftwareEnum.APACHE2, WebServerSoftwareEnum.NGINX]:
+            # Apache and nginx are configured to only enable TLS 1.2 and TLS 1.3
+            expected_enabled_tls_scan_commands = {
+                ScanCommand.TLS_1_3_CIPHER_SUITES,
+                ScanCommand.TLS_1_2_CIPHER_SUITES,
+            }
+        elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:
+            # TLS 1.3 is not supported by IIS
+            expected_enabled_tls_scan_commands = {
+                ScanCommand.TLS_1_2_CIPHER_SUITES,
+                ScanCommand.TLS_1_1_CIPHER_SUITES,
+                ScanCommand.TLS_1_0_CIPHER_SUITES,
+            }
+        else:
+            raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
+
+        for ciphers_scan_cmd in expected_enabled_tls_scan_commands:
             scan_cmd_result = server_scan_result.scan_commands_results[ciphers_scan_cmd]  # type: ignore
             if not scan_cmd_result.accepted_cipher_suites:
                 raise RuntimeError(
@@ -147,21 +177,6 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
                 )
             else:
                 print(f"OK: Scan command {ciphers_scan_cmd} detected cipher suites.")
-
-        # Ensure all other versions of SSL/TLS were detected by SSLyze as disabled
-        for ciphers_scan_cmd in [
-            ScanCommand.TLS_1_1_CIPHER_SUITES,
-            ScanCommand.TLS_1_0_CIPHER_SUITES,
-            ScanCommand.SSL_3_0_CIPHER_SUITES,
-            ScanCommand.SSL_2_0_CIPHER_SUITES,
-        ]:
-            scan_cmd_result = server_scan_result.scan_commands_results[ciphers_scan_cmd]  # type: ignore
-            if scan_cmd_result.accepted_cipher_suites:
-                raise RuntimeError(
-                    f"SSLyze did not detect {scan_cmd_result.tls_version_used.name} to be disabled on the server."
-                )
-            else:
-                print(f"OK: Scan command {ciphers_scan_cmd} did not detect cipher suites.")
 
         # Ensure a JSON output can be generated from the results
         json_output = _SslyzeOutputAsJson(

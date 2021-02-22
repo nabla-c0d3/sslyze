@@ -1,9 +1,11 @@
-from dataclasses import dataclass
+import json
+from dataclasses import dataclass, asdict
 from typing import Dict
 
 import pytest
 from nassl.ssl_client import ClientCertificateRequested
 
+from sslyze import JsonEncoder
 from sslyze.plugins.http_headers_plugin import (
     HttpHeadersImplementation,
     HttpHeadersScanResult,
@@ -17,7 +19,7 @@ from sslyze.server_setting import (
     ClientAuthenticationCredentials,
 )
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
 
 
 class TestHttpHeadersPlugin:
@@ -30,6 +32,8 @@ class TestHttpHeadersPlugin:
         result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
 
         # And only HSTS is detected
+        assert result.http_request_sent
+        assert result.http_path_redirected_to
         assert result.strict_transport_security_header
         assert not result.public_key_pins_header
         assert not result.public_key_pins_report_only_header
@@ -47,6 +51,8 @@ class TestHttpHeadersPlugin:
         result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
 
         # And no headers are detected
+        assert result.http_request_sent
+        assert result.http_path_redirected_to
         assert not result.strict_transport_security_header
         assert not result.public_key_pins_header
         assert not result.public_key_pins_report_only_header
@@ -69,6 +75,37 @@ class TestHttpHeadersPlugin:
 
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
+
+    def test_http_error(self):
+        # Given a server to scan
+        with ModernOpenSslServer(
+            # And the server will trigger an error when receiving an HTTP request
+            should_reply_to_http_requests=False
+        ) as server:
+            server_location = ServerNetworkLocationViaDirectConnection(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = ServerConnectivityTester().perform(server_location)
+
+            # When scanning for HTTP headers, it succeeds
+            result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
+
+        # And the result mention the error returned by the server when sending an HTTP request
+        assert result.http_error_trace
+        assert result.http_request_sent
+
+        # And the other result fields are not set
+        assert not result.http_path_redirected_to
+        assert not result.public_key_pins_header
+        assert not result.public_key_pins_report_only_header
+        assert not result.expect_ct_header
+
+        # And a CLI output can be generated
+        assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = json.dumps(asdict(result), cls=JsonEncoder)
+        assert result_as_json
 
     @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed(self):

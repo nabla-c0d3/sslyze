@@ -10,6 +10,10 @@ class _FakeSocket(BytesIO):
         return self
 
 
+class NotAValidHttpResponseError(Exception):
+    pass
+
+
 class HttpResponseParser:
     """Utility to parse HTTP responses - http://pythonwise.blogspot.com/2010/02/parse-http-response.html.
     """
@@ -34,4 +38,9 @@ class HttpResponseParser:
         fake_sock = _FakeSocket(response)
         response = HTTPResponse(fake_sock)  # type: ignore
         response.begin()
+
+        if response.version == 9:
+            # HTTP 0.9 => Probably not an HTTP response
+            raise NotAValidHttpResponseError()
+
         return response

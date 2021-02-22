@@ -20,11 +20,11 @@ jobs:
 
     - name: Install Apache2
       run: |
-          sudo apt-get install apache2
-          sudo cp ./tests/web_servers/apache2/000-default.conf /etc/apache2/sites-enabled/000-default.conf
-          sudo cp ./tests/web_servers/apache2/apache-selfsigned.crt /etc/ssl/certs/apache-selfsigned.crt
-          sudo cp ./tests/web_servers/apache2/apache-selfsigned.key /etc/ssl/private/apache-selfsigned.key
-          sudo a2enmod ssl
+        sudo apt-get install apache2
+        sudo cp ./tests/web_servers/apache2/000-default.conf /etc/apache2/sites-enabled/000-default.conf
+        sudo cp ./tests/web_servers/apache2/apache-selfsigned.crt /etc/ssl/certs/apache-selfsigned.crt
+        sudo cp ./tests/web_servers/apache2/apache-selfsigned.key /etc/ssl/private/apache-selfsigned.key
+        sudo a2enmod ssl
 
     - name: Start Apache2
       # Start apache2 and display the status if it starting it failed

@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Appendix: Scan Commands &#8212; SSLyze 4.0.3 documentation</title>
+    <title>Appendix: Scan Commands &#8212; SSLyze 4.0.4 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -1129,9 +1129,44 @@ support ECDH cipher suites.</p>
 <h3>Result class<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="sslyze.HttpHeadersScanResult">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sslyze.</span></code><code class="sig-name descname"><span class="pre">HttpHeadersScanResult</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strict_transport_security_header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_key_pins_header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_key_pins_report_only_header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expect_ct_header</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.HttpHeadersScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sslyze.</span></code><code class="sig-name descname"><span class="pre">HttpHeadersScanResult</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">http_request_sent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_error_trace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_path_redirected_to</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_transport_security_header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_key_pins_header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_key_pins_report_only_header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expect_ct_header</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.HttpHeadersScanResult" title="Permalink to this definition">¶</a></dt>
 <dd><p>The result of testing a server for the presence of security-related HTTP headers.</p>
-<p>Each HTTP header described below will be <code class="docutils literal notranslate"><span class="pre">None</span></code> if the server did not return it.</p>
+<p>Each HTTP header described below will be <code class="docutils literal notranslate"><span class="pre">None</span></code> if the server did not return a valid HTTP response, or if the
+server returned an HTTP response without the HTTP header.</p>
+<dl class="py attribute">
+<dt id="sslyze.HttpHeadersScanResult.http_request_sent">
+<code class="sig-name descname"><span class="pre">http_request_sent</span></code><a class="headerlink" href="#sslyze.HttpHeadersScanResult.http_request_sent" title="Permalink to this definition">¶</a></dt>
+<dd><p>The initial HTTP request sent to the server by SSLyze.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sslyze.HttpHeadersScanResult.http_error_trace">
+<code class="sig-name descname"><span class="pre">http_error_trace</span></code><a class="headerlink" href="#sslyze.HttpHeadersScanResult.http_error_trace" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error the server returned after receiving the initial HTTP request. If this field is set,
+all the subsequent fields will be <code class="docutils literal notranslate"><span class="pre">None</span></code> as SSLyze did not receive a valid HTTP response from the server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[traceback.TracebackException]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="sslyze.HttpHeadersScanResult.http_path_redirected_to">
+<code class="sig-name descname"><span class="pre">http_path_redirected_to</span></code><a class="headerlink" href="#sslyze.HttpHeadersScanResult.http_path_redirected_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path SSLyze was eventually redirected to after sending the initial HTTP request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py attribute">
 <dt id="sslyze.HttpHeadersScanResult.strict_transport_security_header">
 <code class="sig-name descname"><span class="pre">strict_transport_security_header</span></code><a class="headerlink" href="#sslyze.HttpHeadersScanResult.strict_transport_security_header" title="Permalink to this definition">¶</a></dt>
@@ -1179,6 +1214,9 @@ support ECDH cipher suites.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>http_request_sent</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – </p></li>
+<li><p><strong>http_error_trace</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code>]) – </p></li>
+<li><p><strong>http_path_redirected_to</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – </p></li>
 <li><p><strong>strict_transport_security_header</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">StrictTransportSecurityHeader</span></code>]) – </p></li>
 <li><p><strong>public_key_pins_header</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">PublicKeyPinsHeader</span></code>]) – </p></li>
 <li><p><strong>public_key_pins_report_only_header</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">PublicKeyPinsHeader</span></code>]) – </p></li>

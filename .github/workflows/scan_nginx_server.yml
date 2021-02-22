@@ -20,8 +20,8 @@ jobs:
 
     - name: Install Nginx
       run: |
-          sudo apt-get install nginx -y
-          sudo cp ./tests/web_servers/nginx/default  /etc/nginx/sites-available/default
+        sudo apt-get install nginx -y
+        sudo cp ./tests/web_servers/nginx/default  /etc/nginx/sites-available/default
 
     - name: Start Nginx
       # Start nginx and display the status if it starting it failed

@@ -1,0 +1,39 @@
+name: Scan IIS Web Server
+
+on:
+  push:
+    branches: [ release ]
+  pull_request:
+    branches: [ release ]
+
+jobs:
+  build:
+
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install IIS
+      run: |
+        Install-WindowsFeature -name Web-Server -IncludeManagementTools -IncludeAllSubFeature
+        Import-Module IISAdministration
+        # Generate a self-signed cert
+        $Cert = New-SelfSignedCertificate -DnsName "TestSite" -KeyAlgorithm RSA -KeyLength 2048 -CertStoreLocation "Cert:\LocalMachine\My" -NotAfter (Get-Date).AddYears(10)
+        $ThumbPrint = $Cert.Thumbprint
+        # Create an HTTPS binding with the self-signed cert
+        New-IISSiteBinding -Name "Default Web Site" -BindingInformation "*:443:" -CertificateThumbPrint $ThumbPrint -CertStoreLocation "Cert:\LocalMachine\My" -Protocol https
+
+    - name: Install pip
+      run: |
+        python -m pip install --upgrade pip pipenv setuptools
+
+    - name: Install SSLyze
+      run: python setup.py install
+
+    - name: Scan web server
+      run: python tests/web_servers/scan_localhost.py iis

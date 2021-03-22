@@ -1,4 +1,3 @@
-from concurrent.futures import Future
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, List, Dict, Tuple
@@ -14,7 +13,13 @@ from sslyze.plugins.certificate_info._cli_connector import _CertificateInfoCliCo
 from sslyze.plugins.certificate_info._get_cert_chain import get_certificate_chain, ArgumentsToGetCertificateChain
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
-from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
+from sslyze.plugins.plugin_base import (
+    ScanCommandImplementation,
+    ScanJob,
+    ScanCommandResult,
+    ScanCommandExtraArguments,
+    ScanJobResult,
+)
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
@@ -86,18 +91,18 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> CertificateInfoScanResult:
-        if len(completed_scan_jobs) != 3:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) != 3:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
         # Only keep certificate deployments that are different
         # Leaf certificate => certificate chain, OCSP response
         all_configured_certificate_chains: Dict[str, Tuple[List[str], Optional[nassl._nassl.OCSP_RESPONSE]]] = {}
         custom_ca_file = None
-        for completed_job in completed_scan_jobs:
+        for completed_job in scan_job_results:
             try:
-                received_chain_as_pem, ocsp_response, custom_ca_file = completed_job.result()
+                received_chain_as_pem, ocsp_response, custom_ca_file = completed_job.get_result()
             except TlsHandshakeFailed:
                 # Can happen when trying to connect with specific cipher suites (such as RSA or non-RSA)
                 continue

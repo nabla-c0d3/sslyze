@@ -1,4 +1,3 @@
-from concurrent.futures._base import Future
 from dataclasses import dataclass
 from typing import List, Optional
 from nassl import _nassl
@@ -10,6 +9,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
@@ -58,12 +58,12 @@ class FallbackScsvImplementation(ScanCommandImplementation[FallbackScsvScanResul
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> FallbackScsvScanResult:
-        if len(completed_scan_jobs) != 1:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) != 1:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
-        return FallbackScsvScanResult(supports_fallback_scsv=completed_scan_jobs[0].result())
+        return FallbackScsvScanResult(supports_fallback_scsv=scan_job_results[0].get_result())
 
 
 def _test_scsv(server_info: ServerConnectivityInfo) -> bool:

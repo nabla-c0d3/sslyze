@@ -2,7 +2,7 @@
 """
 
 from abc import ABC, abstractmethod
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 from dataclasses import dataclass
 
@@ -40,6 +40,18 @@ class ScanJob:
     function_arguments: Any
 
 
+@dataclass(frozen=True)
+class ScanJobResult:
+    _return_value: Optional[Any]
+    _exception: Optional[Exception]
+
+    def get_result(self) -> Any:
+        if self._exception:
+            raise self._exception
+        else:
+            return self._return_value
+
+
 _ScanCommandResultTypeVar = TypeVar("_ScanCommandResultTypeVar", bound=ScanCommandResult)
 _ScanCommandExtraArgumentsTypeVar = TypeVar(
     "_ScanCommandExtraArgumentsTypeVar", bound=Optional[ScanCommandExtraArguments]
@@ -68,9 +80,9 @@ class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandE
     @classmethod
     @abstractmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: "ServerConnectivityInfo", completed_scan_jobs: List[Future]
+        cls, server_info: "ServerConnectivityInfo", scan_job_results: List[ScanJobResult]
     ) -> _ScanCommandResultTypeVar:
-        """Transform the completed scan jobs for a given scan command into a result.
+        """Transform the individual scan job results for a given scan command into a scan command result.
         """
         pass
 
@@ -86,12 +98,16 @@ class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandE
         thread_pool = ThreadPoolExecutor(max_workers=5)
 
         all_jobs = cls.scan_jobs_for_scan_command(server_info, extra_arguments)
-        all_futures = []
+        all_job_results = []
         for job in all_jobs:
             future = thread_pool.submit(job.function_to_call, *job.function_arguments)
-            all_futures.append(future)
+            try:
+                job_result = ScanJobResult(_return_value=future.result(), _exception=None)
+            except Exception as e:
+                job_result = ScanJobResult(_return_value=None, _exception=e)
+            all_job_results.append(job_result)
 
-        result = cls.result_for_completed_scan_jobs(server_info, all_futures)
+        result = cls.result_for_completed_scan_jobs(server_info, all_job_results)
         return result
 
 

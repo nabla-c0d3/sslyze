@@ -1,5 +1,4 @@
 import socket
-from concurrent.futures._base import Future
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Tuple
@@ -15,6 +14,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
@@ -85,14 +85,14 @@ class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenego
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> SessionRenegotiationScanResult:
-        if len(completed_scan_jobs) != 2:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) != 2:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
         results_dict = {}
-        for job in completed_scan_jobs:
-            result_enum, value = job.result()
+        for job in scan_job_results:
+            result_enum, value = job.get_result()
             results_dict[result_enum] = value
 
         return SessionRenegotiationScanResult(

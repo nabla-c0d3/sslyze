@@ -1,11 +1,16 @@
 """A few plugins that really do nothing but used by the test suite to replicate a real plugin's behavior.
 """
 
-from concurrent.futures import Future
 from dataclasses import dataclass
 from typing import Optional, List, ClassVar, Type, Dict, Set
 
-from sslyze.plugins.plugin_base import ScanCommandImplementation, ScanJob, ScanCommandResult, ScanCommandExtraArguments
+from sslyze.plugins.plugin_base import (
+    ScanCommandImplementation,
+    ScanJob,
+    ScanCommandResult,
+    ScanCommandExtraArguments,
+    ScanJobResult,
+)
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 try:
@@ -75,12 +80,12 @@ class _MockPluginImplementation(ScanCommandImplementation):
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> ScanCommandResult:
-        if len(completed_scan_jobs) != cls._scan_jobs_count:
+        if len(scan_job_results) != cls._scan_jobs_count:
             raise AssertionError("Did not receive all the scan jobs that needed to be completed")
 
-        return cls.result_cls(results_field=[future.result() for future in completed_scan_jobs])  # type: ignore
+        return cls.result_cls(results_field=[result.get_result() for result in scan_job_results])  # type: ignore
 
     @staticmethod
     def _scan_job_work_function(arg1: str, arg2: int) -> str:

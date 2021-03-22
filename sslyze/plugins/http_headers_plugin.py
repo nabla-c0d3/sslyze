@@ -1,6 +1,5 @@
 import logging
 import socket
-from concurrent.futures._base import Future
 from http.client import HTTPResponse
 
 from dataclasses import dataclass
@@ -14,6 +13,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
@@ -180,12 +180,12 @@ class HttpHeadersImplementation(ScanCommandImplementation[HttpHeadersScanResult,
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> HttpHeadersScanResult:
-        if len(completed_scan_jobs) != 1:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) != 1:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
-        return completed_scan_jobs[0].result()
+        return scan_job_results[0].get_result()
 
 
 def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> HttpHeadersScanResult:

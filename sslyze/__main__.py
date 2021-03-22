@@ -18,8 +18,6 @@ global_scanner: Optional[Scanner] = None
 
 def sigint_handler(signum: int, frame: Any) -> None:
     print("Scan interrupted... shutting down.")
-    if global_scanner:
-        global_scanner.emergency_shutdown()
     sys.exit()
 
 

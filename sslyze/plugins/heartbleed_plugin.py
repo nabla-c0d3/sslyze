@@ -1,6 +1,5 @@
 import socket
 import types
-from concurrent.futures._base import Future
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -13,6 +12,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArguments,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanJobResult,
 )
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.exceptions import NotEnoughData, UnknownTlsVersionByte
@@ -69,12 +69,12 @@ class HeartbleedImplementation(ScanCommandImplementation[HeartbleedScanResult, N
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> HeartbleedScanResult:
-        if len(completed_scan_jobs) != 1:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) != 1:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
-        return HeartbleedScanResult(is_vulnerable_to_heartbleed=completed_scan_jobs[0].result())
+        return HeartbleedScanResult(is_vulnerable_to_heartbleed=scan_job_results[0].get_result())
 
 
 def _test_heartbleed(server_info: ServerConnectivityInfo) -> bool:

@@ -1,4 +1,3 @@
-from concurrent.futures._base import Future
 from dataclasses import dataclass
 
 from nassl.legacy_ssl_client import LegacySslClient
@@ -10,6 +9,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArguments,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanJobResult,
 )
 from typing import List, Optional
 
@@ -60,12 +60,12 @@ class CompressionImplementation(ScanCommandImplementation[CompressionScanResult,
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> CompressionScanResult:
-        if len(completed_scan_jobs) != 1:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) != 1:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
-        return CompressionScanResult(supports_compression=completed_scan_jobs[0].result())
+        return CompressionScanResult(supports_compression=scan_job_results[0].get_result())
 
 
 def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:

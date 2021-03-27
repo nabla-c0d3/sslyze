@@ -29,23 +29,9 @@ class Scanner:
         self._producer_thread: Optional[ProducerThread] = None  # To be created when we start the scans
         self._server_scan_results_queue: "queue.Queue[ServerScanResult]" = queue.Queue()
 
-        # TODO: Remove in v5.0.0
-        self._api_compat_is_enabled = False
-        self._api_compat_queued_scans: List[ServerScanRequest] = []
-
     @property
     def _are_server_scans_ongoing(self) -> bool:
         return True if self._producer_thread else False
-
-    # TODO: Remove in v5.0.0
-    def queue_scan(self, server_scan: ServerScanRequest) -> None:
-        """Deprecated; use start_server_scans() instead.
-
-        This method is there for backward-compatibility, and will be removed in the next major release.
-        """
-        warnings.warn("queue_scan() is deprecated, use start_scans() instead", PendingDeprecationWarning)
-        self._api_compat_is_enabled = True
-        self._api_compat_queued_scans.append(server_scan)
 
     def start_scans(self, server_scan_requests: List[ServerScanRequest]) -> None:
         if self._are_server_scans_ongoing:
@@ -63,10 +49,6 @@ class Scanner:
         self._producer_thread.start()
 
     def get_results(self) -> Generator[ServerScanResult, None, None]:
-        # TODO: Remove in v5.0.0
-        if self._api_compat_is_enabled:
-            self.start_scans(self._api_compat_queued_scans)
-
         if not self._are_server_scans_ongoing:
             raise ValueError("No scan requests have been submitted")
 

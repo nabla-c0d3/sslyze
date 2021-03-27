@@ -134,7 +134,6 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
                 ScanCommand.SESSION_RESUMPTION,
                 ScanCommand.TLS_1_3_EARLY_DATA,
                 ScanCommand.HTTP_HEADERS,
-                ScanCommand.SESSION_RESUMPTION_RATE,
                 ScanCommand.SESSION_RENEGOTIATION,
             }
         elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:

@@ -1,4 +1,3 @@
-from concurrent.futures import Future
 from operator import attrgetter
 
 from dataclasses import dataclass
@@ -17,6 +16,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandExtraArguments,
     ScanCommandWrongUsageError,
+    ScanJobResult,
 )
 from typing import ClassVar, Optional
 from typing import List
@@ -113,17 +113,17 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> CipherSuitesScanResult:
         expected_scan_jobs_count = len(CipherSuitesRepository.get_all_cipher_suites(cls._tls_version))
-        if len(completed_scan_jobs) != expected_scan_jobs_count:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) != expected_scan_jobs_count:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
         accepted_cipher_suites = []
         rejected_cipher_suites = []
-        for completed_job in completed_scan_jobs:
+        for completed_job in scan_job_results:
             try:
-                cipher_suite_result = completed_job.result()
+                cipher_suite_result = completed_job.get_result()
             except NoCiphersAvailableBugInSSlyze:
                 # Happens when we passed a cipher suite and a TLS version that are not supported together by OpenSSL
                 # Swallowing this exception makes it easier as we can just always use the ALL:COMPLEMENTOFALL OpenSSL

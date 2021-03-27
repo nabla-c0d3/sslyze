@@ -76,6 +76,7 @@ class TestHttpHeadersPlugin:
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
 
+    @can_only_run_on_linux_64
     def test_http_error(self):
         # Given a server to scan
         with ModernOpenSslServer(

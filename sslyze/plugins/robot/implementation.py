@@ -1,4 +1,3 @@
-from concurrent.futures._base import Future
 from dataclasses import dataclass
 from typing import Optional, List, Dict
 
@@ -9,6 +8,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanJobResult,
 )
 
 from sslyze.plugins.robot._robot_tester import (
@@ -79,17 +79,17 @@ class RobotImplementation(ScanCommandImplementation[RobotScanResult, None]):
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> RobotScanResult:
-        if len(completed_scan_jobs) != cls._TEST_ATTEMPTS_NB:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) != cls._TEST_ATTEMPTS_NB:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
         combined_server_responses: Dict[RobotPmsPaddingPayloadEnum, List[str]] = {
             payload_enum: [] for payload_enum in RobotPmsPaddingPayloadEnum
         }
-        for future in completed_scan_jobs:
+        for future in scan_job_results:
             try:
-                server_responses_per_robot_payloads = future.result()
+                server_responses_per_robot_payloads = future.get_result()
                 for payload_enum, server_response in server_responses_per_robot_payloads.items():
                     combined_server_responses[payload_enum].append(server_response)
             except ServerDoesNotSupportRsa:

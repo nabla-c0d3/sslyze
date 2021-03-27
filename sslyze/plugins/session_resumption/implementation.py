@@ -1,4 +1,3 @@
-from concurrent.futures._base import Future
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any, Tuple, Union
 
@@ -9,6 +8,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandCliConnector,
     OptParseCliOption,
+    ScanJobResult,
 )
 from sslyze.plugins.session_resumption._resumption_with_id import (
     resume_with_session_id,
@@ -204,19 +204,19 @@ class SessionResumptionSupportImplementation(ScanCommandImplementation[SessionRe
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> SessionResumptionSupportScanResult:
-        if len(completed_scan_jobs) == 0:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) == 0:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
         # Sort TLS ticket VS session ID results
         results_dict: Dict[_ScanJobResultEnum, List[Any]] = {
             _ScanJobResultEnum.SESSION_ID_RESUMPTION: [],
             _ScanJobResultEnum.TLS_TICKET_RESUMPTION: [],
         }
-        for job in completed_scan_jobs:
+        for job in scan_job_results:
             try:
-                result_enum, value = job.result()
+                result_enum, value = job.get_result()
                 results_dict[result_enum].append(value)
             except ServerOnlySupportsTls13:
                 # If the server only supports TLS 1.3, none of the resumption mechanisms in this plugin are supported

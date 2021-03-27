@@ -1,4 +1,3 @@
-from concurrent.futures._base import Future
 from dataclasses import dataclass
 from operator import attrgetter
 from typing import List, Optional
@@ -16,6 +15,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandExtraArguments,
     ScanJob,
     ScanCommandWrongUsageError,
+    ScanJobResult,
 )
 from sslyze.server_connectivity import enable_ecdh_cipher_suites
 
@@ -109,21 +109,21 @@ class SupportedEllipticCurvesImplementation(ScanCommandImplementation[SupportedE
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> SupportedEllipticCurvesScanResult:
-        if len(completed_scan_jobs) < 1:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) < 1:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
-        if len(completed_scan_jobs) == 1:
+        if len(scan_job_results) == 1:
             try:
-                completed_scan_jobs[0].result()
+                scan_job_results[0].get_result()
                 raise RuntimeError("Should never happen")
             except _EllipticCurveNotSupported:
                 return SupportedEllipticCurvesScanResult(
                     supports_ecdh_key_exchange=False, supported_curves=None, rejected_curves=None,
                 )
         else:
-            all_ecdh_results = [scan_job.result() for scan_job in completed_scan_jobs]
+            all_ecdh_results = [scan_job.get_result() for scan_job in scan_job_results]
             return SupportedEllipticCurvesScanResult(
                 supports_ecdh_key_exchange=True,
                 supported_curves=[

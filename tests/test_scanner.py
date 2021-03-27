@@ -1,5 +1,5 @@
-from collections import Counter
-from concurrent.futures._base import as_completed
+import threading
+from queue import Queue
 from unittest import mock
 
 import pytest
@@ -24,7 +24,7 @@ from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
 @pytest.fixture
 def mock_scan_commands():
-    with mock.patch("sslyze.scanner.ScanCommandsRepository", ScanCommandForTestsRepository):
+    with mock.patch("sslyze.scanner._queued_server_scan.ScanCommandsRepository", ScanCommandForTestsRepository):
         yield
 
 
@@ -52,39 +52,28 @@ class TestScanner:
             scan_commands={ScanCommandForTests.MOCK_COMMAND_1, ScanCommandForTests.MOCK_COMMAND_2},
         )
 
-        # When queuing the scan
+        # When running the scan
         scanner = Scanner()
-        scanner.queue_scan(server_scan)
+        scanner.start_scans([server_scan])
 
         # It succeeds
         all_results = []
         for result in scanner.get_results():
             all_results.append(result)
-
-            # And the right result is returned
-            assert result.server_info == server_scan.server_info
-            assert result.scan_commands == server_scan.scan_commands
-            assert result.scan_commands_extra_arguments == server_scan.scan_commands_extra_arguments
-            assert len(result.scan_commands_results) == 2
-
-            assert type(result.scan_commands_results[ScanCommandForTests.MOCK_COMMAND_1]) == MockPlugin1ScanResult
-            assert type(result.scan_commands_results[ScanCommandForTests.MOCK_COMMAND_2]) == MockPlugin2ScanResult
-
         assert len(all_results) == 1
 
-    def test_duplicate_server(self, mock_scan_commands):
-        # Given a server to scan
-        server_info = ServerConnectivityInfoFactory.create()
+        # And the right result is returned
+        result = all_results[0]
+        assert result.server_info == server_scan.server_info
+        assert result.scan_commands == server_scan.scan_commands
+        assert result.scan_commands_extra_arguments == server_scan.scan_commands_extra_arguments
+        assert len(result.scan_commands_results) == 2
 
-        # When trying to queue two scans for this server
-        server_scan1 = ServerScanRequest(server_info=server_info, scan_commands={ScanCommandForTests.MOCK_COMMAND_1})
-        server_scan2 = ServerScanRequest(server_info=server_info, scan_commands={ScanCommandForTests.MOCK_COMMAND_2})
-        scanner = Scanner()
-        scanner.queue_scan(server_scan1)
+        assert type(result.scan_commands_results[ScanCommandForTests.MOCK_COMMAND_1]) == MockPlugin1ScanResult
+        assert type(result.scan_commands_results[ScanCommandForTests.MOCK_COMMAND_2]) == MockPlugin2ScanResult
 
-        # It fails
-        with pytest.raises(ValueError):
-            scanner.queue_scan(server_scan2)
+        # And the Scanner instance is all done and cleaned up
+        assert not scanner._are_server_scans_ongoing
 
     def test_with_extra_arguments(self, mock_scan_commands):
         # Given a server to scan with a scan command
@@ -97,19 +86,18 @@ class TestScanner:
             },
         )
 
-        # When queuing the scan
+        # When running the scan
         scanner = Scanner()
-        scanner.queue_scan(server_scan)
+        scanner.start_scans([server_scan])
 
         # It succeeds
         all_results = []
         for result in scanner.get_results():
             all_results.append(result)
-
-            # And the extra argument was taken into account
-            assert result.scan_commands_extra_arguments == server_scan.scan_commands_extra_arguments
-
         assert len(all_results) == 1
+
+        # And the extra argument was taken into account
+        assert all_results[0].scan_commands_extra_arguments == server_scan.scan_commands_extra_arguments
 
     def test_error_bug_in_sslyze_when_scheduling_jobs(self, mock_scan_commands):
         # Given a server to scan with some scan commands
@@ -120,13 +108,18 @@ class TestScanner:
 
         # And the first scan command will trigger an error when generating scan jobs
         with mock.patch.object(MockPlugin1Implementation, "scan_jobs_for_scan_command", side_effect=RuntimeError):
-            # When queuing the scan
+            # When running the scan
             scanner = Scanner()
-            scanner.queue_scan(server_scan)
+            scanner.start_scans([server_scan])
 
-        # It succeeds
-        for result in scanner.get_results():
+            # It succeeds
+            all_results = []
+            for result in scanner.get_results():
+                all_results.append(result)
+            assert len(all_results) == 1
+
             # And the exception was properly caught and returned
+            result = all_results[0]
             assert len(result.scan_commands_errors) == 1
             error = result.scan_commands_errors[ScanCommandForTests.MOCK_COMMAND_1]
             assert ScanCommandErrorReasonEnum.BUG_IN_SSLYZE == error.reason
@@ -141,13 +134,18 @@ class TestScanner:
 
         # And the first scan command will trigger an error when processing the completed scan jobs
         with mock.patch.object(MockPlugin1Implementation, "_scan_job_work_function", side_effect=RuntimeError):
-            # When queuing the scan
+            # When running the scan
             scanner = Scanner()
-            scanner.queue_scan(server_scan)
+            scanner.start_scans([server_scan])
 
-        # It succeeds
-        for result in scanner.get_results():
+            # It succeeds
+            all_results = []
+            for result in scanner.get_results():
+                all_results.append(result)
+            assert len(all_results) == 1
+
             # And the exception was properly caught and returned
+            result = all_results[0]
             assert len(result.scan_commands_errors) == 1
             error = result.scan_commands_errors[ScanCommandForTests.MOCK_COMMAND_1]
             assert ScanCommandErrorReasonEnum.BUG_IN_SSLYZE == error.reason
@@ -171,15 +169,14 @@ class TestScanner:
                 },
             )
 
-            # When queuing the scan
+            # When running the scan
             scanner = Scanner()
-            scanner.queue_scan(server_scan)
+            scanner.start_scans([server_scan])
 
             # It succeeds
             all_results = []
             for result in scanner.get_results():
                 all_results.append(result)
-
             assert len(all_results) == 1
 
             # And the error was properly returned
@@ -203,77 +200,55 @@ class TestScanner:
                 error_message="error",
             ),
         ):
-            # When queuing the scan
+            # When running the scan
             scanner = Scanner()
-            scanner.queue_scan(server_scan)
+            scanner.start_scans([server_scan])
 
-        # It succeeds
-        for result in scanner.get_results():
+            # It succeeds
+            all_results = []
+            for result in scanner.get_results():
+                all_results.append(result)
+            assert len(all_results) == 1
+
             # And the error was properly caught and returned
+            result = all_results[0]
             assert len(result.scan_commands_errors) == 1
             error = result.scan_commands_errors[ScanCommandForTests.MOCK_COMMAND_1]
             assert ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE == error.reason
             assert error.exception_trace
 
+    def test_enforces_per_server_concurrent_connections_limit(self, mock_scan_commands):
+        # Given a server to scan with a scan command that requires multiple connections/jobs to the server
+        server_scan = ServerScanRequest(
+            server_info=ServerConnectivityInfoFactory.create(), scan_commands={ScanCommandForTests.MOCK_COMMAND_1},
+        )
 
-class TestScannerInternals:
-    def test(self, mock_scan_commands):
-        # Given a lot of servers to scan
-        total_server_scans_count = 100
-        server_scans = [
-            ServerScanRequest(
-                server_info=ServerConnectivityInfoFactory.create(),
-                scan_commands={ScanCommandForTests.MOCK_COMMAND_1, ScanCommandForTests.MOCK_COMMAND_2},
-            )
-            for _ in range(total_server_scans_count)
-        ]
+        # And a scanner configured to only perform one concurrent connection per server scan
+        scanner = Scanner(per_server_concurrent_connections_limit=1)
 
-        # And a scanner with specifically chosen network settings
-        per_server_concurrent_connections_limit = 4
-        concurrent_server_scans_limit = 20
-        scanner = Scanner(per_server_concurrent_connections_limit, concurrent_server_scans_limit)
+        # And the scan command will notify us when more than one connection is being performed concurrently
+        # Test internals: setup plumbing to detect when more than one thread are running at the same time
+        # We use a Barrier that waits for 2 concurrent threads, and puts True in a queue if that ever happens
+        queue = Queue()
 
-        # When queuing the scans, it succeeds
-        for scan in server_scans:
-            scanner.queue_scan(scan)
+        def flag_concurrent_threads_running():
+            # Only called when two threads are running at the same time
+            queue.put(True)
 
-        # And the right number of scans was performed
-        assert total_server_scans_count == len(scanner._queued_server_scans)
+        barrier = threading.Barrier(parties=2, action=flag_concurrent_threads_running, timeout=1)
 
-        # And the chosen network settings were used
-        assert concurrent_server_scans_limit == len(scanner._thread_pools)
-        for pool in scanner._thread_pools:
-            assert per_server_concurrent_connections_limit == pool._max_workers
+        def scan_job_work_function(arg1: str, arg2: int):
+            barrier.wait()
 
-        # And the server scans were evenly distributed among the thread pools to maximize performance
-        expected_server_scans_per_pool = int(total_server_scans_count / concurrent_server_scans_limit)
-        thread_pools_used = [server_scan.queued_on_thread_pool_at_index for server_scan in scanner._queued_server_scans]
-        server_scans_per_pool_count = Counter(thread_pools_used)
-        for pool_count in server_scans_per_pool_count.values():
-            assert expected_server_scans_per_pool == pool_count
+        with mock.patch.object(MockPlugin1Implementation, "_scan_job_work_function", scan_job_work_function):
+            # When running the scan
+            scanner.start_scans([server_scan])
 
-    def test_emergency_shutdown(self, mock_scan_commands):
-        # Given a lot of servers to scan
-        total_server_scans_count = 100
-        server_scans = [
-            ServerScanRequest(
-                server_info=ServerConnectivityInfoFactory.create(),
-                scan_commands={ScanCommandForTests.MOCK_COMMAND_1, ScanCommandForTests.MOCK_COMMAND_2},
-            )
-            for _ in range(total_server_scans_count)
-        ]
+            # It succeeds
+            all_results = []
+            for result in scanner.get_results():
+                all_results.append(result)
+            assert len(all_results) == 1
 
-        # And the scans get queued
-        scanner = Scanner()
-        for scan in server_scans:
-            scanner.queue_scan(scan)
-
-        # When trying to quickly shutdown the scanner, it succeeds
-        scanner.emergency_shutdown()
-
-        # And all the queued jobs were done or cancelled
-        all_queued_futures = []
-        for server_scan in scanner._queued_server_scans:
-            all_queued_futures.extend(server_scan.all_queued_scan_jobs)
-        for completed_future in as_completed(all_queued_futures):
-            assert completed_future.done()
+            # And there never was more than one thread (=1 job/connection) running at the same time
+            assert queue.empty()

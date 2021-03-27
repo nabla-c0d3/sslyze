@@ -1,4 +1,3 @@
-from concurrent.futures._base import Future
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -12,6 +11,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
@@ -63,12 +63,12 @@ class EarlyDataImplementation(ScanCommandImplementation[EarlyDataScanResult, Non
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, completed_scan_jobs: List[Future]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> EarlyDataScanResult:
-        if len(completed_scan_jobs) != 1:
-            raise RuntimeError(f"Unexpected number of scan jobs received: {completed_scan_jobs}")
+        if len(scan_job_results) != 1:
+            raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
-        return EarlyDataScanResult(supports_early_data=completed_scan_jobs[0].result())
+        return EarlyDataScanResult(supports_early_data=scan_job_results[0].get_result())
 
 
 def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:

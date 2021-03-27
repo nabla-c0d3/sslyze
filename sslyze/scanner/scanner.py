@@ -1,6 +1,5 @@
 import gc
 import queue
-import warnings
 from typing import List, Optional, Generator
 
 from sslyze.scanner._queued_server_scan import ProducerThread, NoMoreServerScansSentinel

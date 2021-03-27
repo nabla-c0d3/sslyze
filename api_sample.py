@@ -23,11 +23,13 @@ def main() -> None:
     scanner = Scanner()
 
     # Then queue some scan commands for each server
-    for server_info in servers_to_scan:
-        server_scan_req = ServerScanRequest(
-            server_info=server_info, scan_commands={ScanCommand.CERTIFICATE_INFO, ScanCommand.SSL_2_0_CIPHER_SUITES},
+    all_server_scans = [
+        ServerScanRequest(
+            server_info=server_info, scan_commands={ScanCommand.CERTIFICATE_INFO, ScanCommand.SSL_2_0_CIPHER_SUITES}
         )
-        scanner.queue_scan(server_scan_req)
+        for server_info in servers_to_scan
+    ]
+    scanner.start_scans(all_server_scans)
 
     # Then retrieve the result of the scan commands for each server
     for server_scan_result in scanner.get_results():
@@ -90,7 +92,7 @@ def basic_example() -> None:
     server_scan_req = ServerScanRequest(
         server_info=server_info, scan_commands={ScanCommand.CERTIFICATE_INFO, ScanCommand.SSL_2_0_CIPHER_SUITES},
     )
-    scanner.queue_scan(server_scan_req)
+    scanner.start_scans([server_scan_req])
 
     # Then retrieve the results
     for server_scan_result in scanner.get_results():

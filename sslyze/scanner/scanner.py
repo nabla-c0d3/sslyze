@@ -51,6 +51,9 @@ class Scanner:
         if self._are_server_scans_ongoing:
             raise ValueError("Already submitted scan requests")
 
+        if not server_scan_requests:
+            raise ValueError("Submitted emtpy list of server_scan_requests")
+
         self._producer_thread = ProducerThread(
             concurrent_server_scans_count=self._concurrent_server_scans_count,
             per_server_concurrent_connections_count=self._per_server_concurrent_connections_count,

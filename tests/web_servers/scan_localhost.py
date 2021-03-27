@@ -69,7 +69,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
     server_scan_req = ServerScanRequest(
         server_info=server_info, scan_commands=ScanCommandsRepository.get_all_scan_commands(),
     )
-    scanner.queue_scan(server_scan_req)
+    scanner.start_scans([server_scan_req])
 
     # Retrieve the result
     for server_scan_result in scanner.get_results():

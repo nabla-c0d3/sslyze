@@ -29,7 +29,7 @@ jobs:
 
     - name: Install pip
       run: |
-        python -m pip install --upgrade pip pipenv setuptools
+        python -m pip install --upgrade pip setuptools
 
     - name: Install SSLyze
       run: python setup.py install

@@ -32,7 +32,7 @@ class TestSessionResumptionSupport:
         assert result.session_id_attempted_resumptions_count
         assert result.session_id_successful_resumptions_count
 
-        assert result.tls_ticket_resumption_result == TlsResumptionSupportEnum.SUPPORTED
+        assert result.tls_ticket_resumption_result == TlsResumptionSupportEnum.FULLY_SUPPORTED
         assert result.tls_ticket_attempted_resumptions_count
         assert result.tls_ticket_successful_resumptions_count
 

@@ -98,14 +98,16 @@ class ConsoleOutputGenerator(OutputGenerator):
                     f"Wrong usage for --{cli_connector_cls._cli_option}"
                 )
                 # Extract the last line which contains the reason
+                last_line = None
                 for line in scan_command_error.exception_trace.format(chain=False):
                     last_line = line
-                exception_cls_in_trace = f"{ScanCommandWrongUsageError.__name__}:"
-                if exception_cls_in_trace in last_line:
-                    details_text = last_line.split(exception_cls_in_trace)[1].strip()
-                    target_result_str += f"       {details_text}"
-                else:
-                    target_result_str += f"       {last_line}"
+                if last_line:
+                    exception_cls_in_trace = f"{ScanCommandWrongUsageError.__name__}:"
+                    if exception_cls_in_trace in last_line:
+                        details_text = last_line.split(exception_cls_in_trace)[1].strip()
+                        target_result_str += f"       {details_text}"
+                    else:
+                        target_result_str += f"       {last_line}"
 
             elif scan_command_error.reason in [
                 ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,

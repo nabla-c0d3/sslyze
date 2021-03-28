@@ -1,10 +1,11 @@
 import logging
-import socket
 from http.client import HTTPResponse
 
 from dataclasses import dataclass
 from traceback import TracebackException
 from urllib.parse import urlsplit
+
+from nassl._nassl import SslError
 
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
@@ -114,11 +115,15 @@ class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, No
         # If an error occurred after sending the HTTP request, just display it
         if result.http_error_trace:
             result_as_txt.append(
-                cls._format_subtitle("Error - Server did not return a valid HTTP response. Is it an HTTP server?")
+                cls._format_subtitle("Error: The server did not return a valid HTTP response. Is it an HTTP server?")
             )
-            result_as_txt.append("")
-            for trace_line in result.http_error_trace.format(chain=False):
-                result_as_txt.append(f"       {trace_line.strip()}")
+            # Extract the last line which contains the reason
+            last_line = None
+            for line in result.http_error_trace.format(chain=False):
+                last_line = line
+            if last_line:
+                result_as_txt.append(f"     Error details: {last_line.strip()}")
+
             return result_as_txt
 
         # HSTS
@@ -212,8 +217,8 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
             )
             http_response = HttpResponseParser.parse_from_ssl_connection(ssl_connection.ssl_client)
 
-        except (socket.timeout, ConnectionError, NotAValidHttpResponseError) as e:
-            # The server didn't return a proper HTTP response
+        except (OSError, NotAValidHttpResponseError, SslError) as e:
+            # The server closed/rejected the connection, or didn't return a valid HTTP response
             http_error_trace = TracebackException.from_exception(e)
 
         finally:

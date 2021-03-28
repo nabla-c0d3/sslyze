@@ -174,7 +174,7 @@ class HttpHeadersImplementation(ScanCommandImplementation[HttpHeadersScanResult,
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         if server_info.network_configuration.tls_opportunistic_encryption:
-            raise ScanCommandWrongUsageError("Cannot test for HTTP headers on a StartTLS connection.")
+            raise ScanCommandWrongUsageError("Cannot scan for HTTP headers against a non-HTTP server.")
 
         return [ScanJob(function_to_call=_retrieve_and_analyze_http_response, function_arguments=[server_info])]
 

@@ -35,14 +35,12 @@ class TestHttpHeadersPlugin:
         assert result.http_request_sent
         assert result.http_path_redirected_to
         assert result.strict_transport_security_header
-        assert not result.public_key_pins_header
-        assert not result.public_key_pins_report_only_header
         assert not result.expect_ct_header
 
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
 
-    def test_hsts_and_hpkp_disabled(self):
+    def test_all_headers_disabled(self):
         # Given a server to scan that does not have security headers
         server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("expired.badssl.com", 443)
         server_info = ServerConnectivityTester().perform(server_location)
@@ -54,8 +52,6 @@ class TestHttpHeadersPlugin:
         assert result.http_request_sent
         assert result.http_path_redirected_to
         assert not result.strict_transport_security_header
-        assert not result.public_key_pins_header
-        assert not result.public_key_pins_report_only_header
         assert not result.expect_ct_header
 
         # And a CLI output can be generated
@@ -97,8 +93,6 @@ class TestHttpHeadersPlugin:
 
         # And the other result fields are not set
         assert not result.http_path_redirected_to
-        assert not result.public_key_pins_header
-        assert not result.public_key_pins_report_only_header
         assert not result.expect_ct_header
 
         # And a CLI output can be generated
@@ -142,8 +136,6 @@ class TestHttpHeadersPlugin:
             result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
 
             assert not result.strict_transport_security_header
-            assert not result.public_key_pins_header
-            assert not result.public_key_pins_report_only_header
             assert not result.expect_ct_header
 
 

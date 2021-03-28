@@ -242,7 +242,7 @@ class _CertificateInfoCliConnector(
 
                 if cert_deployment.ocsp_response.responder_key_hash:
                     ocsp_resp_txt.append(
-                        cls._format_field("Responder Key Hash:", cert_deployment.ocsp_response.responder_key_hash)
+                        cls._format_field("Responder Key Hash:", str(cert_deployment.ocsp_response.responder_key_hash))
                     )
 
                 if cert_deployment.ocsp_response.responder_name:
@@ -256,7 +256,7 @@ class _CertificateInfoCliConnector(
                     ocsp_resp_txt.extend(
                         [
                             cls._format_field("Cert Status:", cert_deployment.ocsp_response.certificate_status.name),
-                            cls._format_field("Cert Serial Number:", cert_deployment.ocsp_response.serial_number),
+                            cls._format_field("Cert Serial Number:", str(cert_deployment.ocsp_response.serial_number)),
                             cls._format_field(
                                 "This Update:", cert_deployment.ocsp_response.this_update.date().isoformat()
                             ),

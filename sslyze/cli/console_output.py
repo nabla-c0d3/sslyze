@@ -1,10 +1,12 @@
 from pathlib import Path
 from typing import cast, TextIO, Optional
 
+from sslyze import __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.output_generator import OutputGenerator
 
 from sslyze.errors import ConnectionToServerFailed
+from sslyze.plugins.plugin_base import ScanCommandWrongUsageError
 from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommandType
 from sslyze.scanner import ServerScanResult, ScanCommandErrorReasonEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthRequirementEnum
@@ -92,9 +94,24 @@ class ConsoleOutputGenerator(OutputGenerator):
                 )
                 target_result_str += " try using --slow_connection to reduce the impact on the server.\n"
 
+            elif scan_command_error.reason == ScanCommandErrorReasonEnum.WRONG_USAGE:
+                target_result_str += cli_connector_cls._format_title(
+                    f"Wrong usage for --{cli_connector_cls._cli_option}"
+                )
+                # Extract the last line which contains the reason
+                last_line = None
+                for line in scan_command_error.exception_trace.format(chain=False):
+                    last_line = line
+                if last_line:
+                    exception_cls_in_trace = f"{ScanCommandWrongUsageError.__name__}:"
+                    if exception_cls_in_trace in last_line:
+                        details_text = last_line.split(exception_cls_in_trace)[1].strip()
+                        target_result_str += f"       {details_text}"
+                    else:
+                        target_result_str += f"       {last_line}"
+
             elif scan_command_error.reason in [
                 ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
-                ScanCommandErrorReasonEnum.WRONG_USAGE,
             ]:
                 target_result_str += cli_connector_cls._format_title(
                     f"Error when running --{cli_connector_cls._cli_option}"
@@ -104,6 +121,7 @@ class ConsoleOutputGenerator(OutputGenerator):
                     "       You can open an issue at https://github.com/nabla-c0d3/sslyze/issues"
                     " with the following information:\n\n"
                 )
+                target_result_str += f"       * SSLyze version: {__version__.__version__}\n"
                 target_result_str += (
                     f"       * Server: {server_location.hostname}:{server_location.port} - {network_route}\n"
                 )

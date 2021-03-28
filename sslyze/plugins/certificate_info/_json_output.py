@@ -31,13 +31,13 @@ def _monkeypatch_to_fix_certificate_asdict() -> None:
     def _deepcopy_method_for_x509_certificate(inner_self: _Certificate, memo: str) -> x509.Certificate:
         return x509.load_pem_x509_certificate(inner_self.public_bytes(Encoding.PEM), backend=default_backend())
 
-    _Certificate.__deepcopy__ = _deepcopy_method_for_x509_certificate
+    _Certificate.__deepcopy__ = _deepcopy_method_for_x509_certificate  # type: ignore
 
     # Same problem with OCSPResponse objects
     def _deepcopy_method_for_ocsp_response(inner_self: _OCSPResponse, memo: str) -> _OCSPResponse:
-        return load_der_ocsp_response(inner_self.public_bytes(Encoding.DER))
+        return load_der_ocsp_response(inner_self.public_bytes(Encoding.DER))  # type: ignore
 
-    _OCSPResponse.__deepcopy__ = _deepcopy_method_for_ocsp_response
+    _OCSPResponse.__deepcopy__ = _deepcopy_method_for_ocsp_response  # type: ignore
 
 
 # Call it on import... hacky but we don't have a choice
@@ -202,7 +202,7 @@ class _OcspResponseAsJson:
     this_update: Optional[datetime]
     next_update: Optional[datetime]
 
-    serial_number: Optional[str]
+    serial_number: Optional[int]
 
 
 def ocsp_response_to_json(ocsp_response: x509.ocsp.OCSPResponse) -> Dict[str, Any]:

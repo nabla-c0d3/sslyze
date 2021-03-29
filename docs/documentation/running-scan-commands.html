@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Step 2: Running Scan Commands Against a Server &#8212; SSLyze 4.0.4 documentation</title>
+    <title>Step 2: Running Scan Commands Against a Server &#8212; SSLyze 4.1.0 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -63,7 +63,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
     <span class="n">server_scan_req</span> <span class="o">=</span> <span class="n">ServerScanRequest</span><span class="p">(</span>
         <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">},</span>
     <span class="p">)</span>
-    <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scan</span><span class="p">(</span><span class="n">server_scan_req</span><span class="p">)</span>
+    <span class="n">scanner</span><span class="o">.</span><span class="n">start_scans</span><span class="p">([</span><span class="n">server_scan_req</span><span class="p">])</span>
 
     <span class="c1"># Then retrieve the results</span>
     <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
@@ -101,11 +101,13 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
     <span class="n">scanner</span> <span class="o">=</span> <span class="n">Scanner</span><span class="p">()</span>
 
     <span class="c1"># Then queue some scan commands for each server</span>
-    <span class="k">for</span> <span class="n">server_info</span> <span class="ow">in</span> <span class="n">servers_to_scan</span><span class="p">:</span>
-        <span class="n">server_scan_req</span> <span class="o">=</span> <span class="n">ServerScanRequest</span><span class="p">(</span>
-            <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">},</span>
+    <span class="n">all_server_scans</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">ServerScanRequest</span><span class="p">(</span>
+            <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">}</span>
         <span class="p">)</span>
-        <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scan</span><span class="p">(</span><span class="n">server_scan_req</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">server_info</span> <span class="ow">in</span> <span class="n">servers_to_scan</span>
+    <span class="p">]</span>
+    <span class="n">scanner</span><span class="o">.</span><span class="n">start_scans</span><span class="p">(</span><span class="n">all_server_scans</span><span class="p">)</span>
 
     <span class="c1"># Then retrieve the result of the scan commands for each server</span>
     <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
@@ -134,13 +136,12 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 </pre></div>
 </div>
 </div>
-<div class="section" id="module-sslyze">
-<span id="related-classes"></span><h2>Related Classes<a class="headerlink" href="#module-sslyze" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="related-classes">
+<h2>Related Classes<a class="headerlink" href="#related-classes" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="sslyze.Scanner">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">sslyze.</span></code><code class="sig-name descname"><span class="pre">Scanner</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">per_server_concurrent_connections_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concurrent_server_scans_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner" title="Permalink to this definition">¶</a></dt>
-<dd><p>The main class to use in order to call and schedule SSLyze’s scan commands from Python.</p>
-<dl class="field-list simple">
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>per_server_concurrent_connections_limit</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – </p></li>
@@ -148,31 +149,6 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt id="sslyze.Scanner.queue_scan">
-<code class="sig-name descname"><span class="pre">queue_scan</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_scan</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner.queue_scan" title="Permalink to this definition">¶</a></dt>
-<dd><p>Queue a server scan.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>server_scan</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ServerScanRequest</span></code>) – </p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="sslyze.Scanner.get_results">
-<code class="sig-name descname"><span class="pre">get_results</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner.get_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return completed server scans.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ServerScanResult</span></code>]</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -386,7 +362,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Step 2: Running Scan Commands Against a Server</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#basic-example">Basic Example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#advanced-usage">Advanced Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-sslyze">Related Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#related-classes">Related Classes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#exporting-to-json">Exporting to JSON</a></li>
 </ul>
 </li>
@@ -426,7 +402,7 @@ mechanism to avoid DOS-ing a single server against which multiple <code class="d
       &copy;Copyright 2020 Alban Diquet.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

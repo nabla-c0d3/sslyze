@@ -5,6 +5,7 @@ htmlcov/
 
 # Pipenv
 .venv
+.venvln
 
 
 *.py[cod]

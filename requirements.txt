@@ -2,6 +2,8 @@
 nassl>=4.0.0,<5.0.0
 cryptography>=2.6,<3.5
 tls-parser>=1.2.2,<1.3.0
+# To remove when we drop support for Python 3.7
+typing_extensions ; python_version<'3.8'
 
 # Dev dependencies
 mypy
@@ -15,4 +17,6 @@ sphinx-autodoc-typehints
 black==19.10b0
 pytest-cov
 faker
-cx-freeze
+
+# For building the Windows executable
+cx-freeze; sys.platform == 'win32'

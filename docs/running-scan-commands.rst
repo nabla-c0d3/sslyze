@@ -39,9 +39,11 @@ The following script provides an example of running scan commands against multip
 Related Classes
 ***************
 
-.. automodule:: sslyze
+.. module:: sslyze
+   :noindex:
+
 .. autoclass:: Scanner
-   :members:
+   :members: start_scans get_results
 
 .. autoclass:: ServerScanRequest
 

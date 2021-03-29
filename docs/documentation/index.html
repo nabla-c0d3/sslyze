@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SSLyze &#8212; SSLyze 4.0.4 documentation</title>
+    <title>SSLyze &#8212; SSLyze 4.1.0 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -33,7 +33,7 @@
             
   <div class="section" id="sslyze">
 <h1><a class="toc-backref" href="#id1">SSLyze</a><a class="headerlink" href="#sslyze" title="Permalink to this headline">¶</a></h1>
-<p>Release 4.0.4</p>
+<p>Release 4.1.0</p>
 <a class="reference external image-reference" href="https://pepy.tech/project/sslyze"><img alt="https://pepy.tech/badge/sslyze" src="https://pepy.tech/badge/sslyze" /></a>
 <a class="reference external image-reference" href="https://pypi.org/project/sslyze/"><img alt="https://img.shields.io/pypi/l/sslyze.svg" src="https://img.shields.io/pypi/l/sslyze.svg" /></a>
 <a class="reference external image-reference" href="https://pypi.org/project/sslyze/"><img alt="https://img.shields.io/pypi/pyversions/sslyze.svg" src="https://img.shields.io/pypi/pyversions/sslyze.svg" /></a>
@@ -130,7 +130,7 @@ endpoints.</p>
     <span class="n">server_scan_req</span> <span class="o">=</span> <span class="n">ServerScanRequest</span><span class="p">(</span>
         <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span> <span class="n">scan_commands</span><span class="o">=</span><span class="p">{</span><span class="n">ScanCommand</span><span class="o">.</span><span class="n">CERTIFICATE_INFO</span><span class="p">,</span> <span class="n">ScanCommand</span><span class="o">.</span><span class="n">SSL_2_0_CIPHER_SUITES</span><span class="p">},</span>
     <span class="p">)</span>
-    <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scan</span><span class="p">(</span><span class="n">server_scan_req</span><span class="p">)</span>
+    <span class="n">scanner</span><span class="o">.</span><span class="n">start_scans</span><span class="p">([</span><span class="n">server_scan_req</span><span class="p">])</span>
 
     <span class="c1"># Then retrieve the results</span>
     <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
@@ -190,7 +190,7 @@ endpoints.</p>
 <li class="toctree-l1"><a class="reference internal" href="running-scan-commands.html">Step 2: Running Scan Commands Against a Server</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="running-scan-commands.html#basic-example">Basic Example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="running-scan-commands.html#advanced-usage">Advanced Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="running-scan-commands.html#module-sslyze">Related Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="running-scan-commands.html#related-classes">Related Classes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="running-scan-commands.html#exporting-to-json">Exporting to JSON</a></li>
 </ul>
 </li>
@@ -270,7 +270,7 @@ endpoints.</p>
       &copy;Copyright 2020 Alban Diquet.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

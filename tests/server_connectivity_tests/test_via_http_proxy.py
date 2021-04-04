@@ -2,6 +2,7 @@ import threading
 
 import pytest
 
+from sslyze.cli.json_output import _ServerConnectivityInfoAsJson
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaHttpProxy, HttpProxySettings
 from sslyze.errors import (
@@ -39,6 +40,10 @@ class TestServerConnectivityTesterWithProxy:
         assert server_info.tls_probing_result.highest_tls_version_supported
         assert server_info.tls_probing_result.client_auth_requirement
         assert server_info.get_preconfigured_tls_connection()
+
+        # And the result can be converted to JSON
+        server_info_as_json = _ServerConnectivityInfoAsJson.from_orm(server_info)
+        assert server_info_as_json.json()
 
     def test_via_http_proxy_but_proxy_dns_error(self):
         # Given a server location

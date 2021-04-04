@@ -3,12 +3,13 @@ import types
 from dataclasses import dataclass
 from typing import List, Optional
 
+import pydantic
 from nassl._nassl import WantReadError
 
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanJob,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
@@ -36,6 +37,10 @@ class OpenSslCcsInjectionScanResult(ScanCommandResult):
     is_vulnerable_to_ccs_injection: bool
 
 
+# Identical fields in the JSON output
+OpenSslCcsInjectionScanResultAsJson = pydantic.dataclasses.dataclass(OpenSslCcsInjectionScanResult, frozen=True)
+
+
 class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector[OpenSslCcsInjectionScanResult, None]):
 
     _cli_option = "openssl_ccs"
@@ -61,7 +66,7 @@ class OpenSslCcsInjectionImplementation(ScanCommandImplementation[OpenSslCcsInje
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")

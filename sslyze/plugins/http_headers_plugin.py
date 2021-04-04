@@ -1,15 +1,16 @@
 import logging
 from http.client import HTTPResponse
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from traceback import TracebackException
 from urllib.parse import urlsplit
 
+import pydantic
 from nassl._nassl import SslError
 
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanJob,
     ScanCommandResult,
     ScanCommandWrongUsageError,
@@ -79,6 +80,63 @@ class HttpHeadersScanResult(ScanCommandResult):
     expect_ct_header: Optional[ExpectCtHeader]
 
 
+class _ExpectCtHeaderAsJson(pydantic.BaseModel):
+    max_age: Optional[int]
+    report_uri: Optional[str]
+    enforce: bool
+
+
+_ExpectCtHeaderAsJson.__doc__ = ExpectCtHeader.__doc__  # type: ignore
+
+
+class _StrictTransportSecurityHeaderAsJson(pydantic.BaseModel):
+    max_age: Optional[int]
+    preload: bool
+    include_subdomains: bool
+
+
+_StrictTransportSecurityHeaderAsJson.__doc__ = StrictTransportSecurityHeader.__doc__  # type: ignore
+
+
+class HttpHeadersScanResultAsJson(pydantic.BaseModel):
+    http_request_sent: str
+    http_error_trace: Optional[str]
+
+    http_path_redirected_to: Optional[str]
+    strict_transport_security_header: Optional[_StrictTransportSecurityHeaderAsJson]
+    expect_ct_header: Optional[_ExpectCtHeaderAsJson]
+
+    class Config:
+        orm_mode = True
+
+    @classmethod
+    def from_orm(cls, result: HttpHeadersScanResult) -> "HttpHeadersScanResultAsJson":
+        http_error_trace_as_str = None
+        if result.http_error_trace:
+            http_error_trace_as_str = ""
+            for line in result.http_error_trace.format(chain=False):
+                http_error_trace_as_str += line
+
+        sts_header_json = None
+        if result.strict_transport_security_header:
+            sts_header_json = _StrictTransportSecurityHeaderAsJson(**asdict(result.strict_transport_security_header))
+
+        ct_header_json = None
+        if result.strict_transport_security_header:
+            ct_header_json = _ExpectCtHeaderAsJson(**asdict(result.expect_ct_header))
+
+        return cls(
+            http_request_sent=result.http_request_sent,
+            http_error_trace=http_error_trace_as_str,
+            http_path_redirected_to=result.http_path_redirected_to,
+            strict_transport_security_header=sts_header_json,
+            expect_ct_header=ct_header_json,
+        )
+
+
+HttpHeadersScanResultAsJson.__doc__ = HttpHeadersScanResult.__doc__  # type: ignore
+
+
 class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, None]):
 
     _cli_option = "http_headers"
@@ -135,7 +193,7 @@ class HttpHeadersImplementation(ScanCommandImplementation[HttpHeadersScanResult,
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")

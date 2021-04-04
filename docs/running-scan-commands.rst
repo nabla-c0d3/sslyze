@@ -48,19 +48,11 @@ Related Classes
 .. autoclass:: ServerScanRequest
 
 .. autoclass:: ServerScanResult
-.. autoclass:: ScanCommandResultsDict
+.. autoclass:: ScanCommandsResults
    :undoc-members:
    :members:
 
-.. autoclass:: ScanCommandErrorsDict
+.. autoclass:: ScanCommandError
 .. autoclass:: ScanCommandErrorReasonEnum
    :undoc-members:
    :members:
-
-
-Exporting to JSON
-*****************
-
-A ``ServerScanResult`` can be serialized to JSON using SSLyze's special ``JsonEncoder``.
-
-.. autoclass:: JsonEncoder

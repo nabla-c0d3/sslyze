@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
+import pydantic
 from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslEarlyDataStatusEnum, SslClient
 
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanJob,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
@@ -27,6 +28,10 @@ class EarlyDataScanResult(ScanCommandResult):
     """
 
     supports_early_data: bool
+
+
+# Identical fields in the JSON output
+EarlyDataScanResultAsJson = pydantic.dataclasses.dataclass(EarlyDataScanResult, frozen=True)
 
 
 class _EarlyDataCliConnector(ScanCommandCliConnector[EarlyDataScanResult, None]):
@@ -54,7 +59,7 @@ class EarlyDataImplementation(ScanCommandImplementation[EarlyDataScanResult, Non
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")

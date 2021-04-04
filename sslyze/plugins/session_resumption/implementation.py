@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any, Tuple, Union
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanJob,
     ScanCommandCliConnector,
     OptParseCliOption,
@@ -21,7 +21,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 @dataclass(frozen=True)
-class SessionResumptionSupportExtraArguments(ScanCommandExtraArguments):
+class SessionResumptionSupportExtraArgument(ScanCommandExtraArgument):
     """Additional configuration for running the SESSION_RESUMPTION scan command.
 
     Attributes:
@@ -76,7 +76,7 @@ def _resumption_result_to_console_output(
 
 
 class _SessionResumptionSupportCliConnector(
-    ScanCommandCliConnector[SessionResumptionSupportScanResult, SessionResumptionSupportExtraArguments]
+    ScanCommandCliConnector[SessionResumptionSupportScanResult, SessionResumptionSupportExtraArgument]
 ):
 
     _cli_option = "resum"
@@ -100,7 +100,7 @@ class _SessionResumptionSupportCliConnector(
     @classmethod
     def find_cli_options_in_command_line(
         cls, parsed_command_line: Dict[str, Union[None, bool, str]]
-    ) -> Tuple[bool, Optional[SessionResumptionSupportExtraArguments]]:
+    ) -> Tuple[bool, Optional[SessionResumptionSupportExtraArgument]]:
         # Check if --resum was used
         is_scan_cmd_enabled, _ = super().find_cli_options_in_command_line(parsed_command_line)
 
@@ -111,7 +111,7 @@ class _SessionResumptionSupportCliConnector(
             if resum_attempts:
                 try:
                     resum_attempts_as_int = int(resum_attempts)
-                    extra_arguments = SessionResumptionSupportExtraArguments(
+                    extra_arguments = SessionResumptionSupportExtraArgument(
                         number_of_resumptions_to_attempt=resum_attempts_as_int
                     )
                 except ValueError:
@@ -181,7 +181,7 @@ class SessionResumptionSupportImplementation(ScanCommandImplementation[SessionRe
     def scan_jobs_for_scan_command(
         cls,
         server_info: ServerConnectivityInfo,
-        extra_arguments: Optional[SessionResumptionSupportExtraArguments] = None,
+        extra_arguments: Optional[SessionResumptionSupportExtraArgument] = None,
     ) -> List[ScanJob]:
         if extra_arguments:
             number_of_resumption_attempts = extra_arguments.number_of_resumptions_to_attempt

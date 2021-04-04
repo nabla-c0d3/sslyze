@@ -1,5 +1,6 @@
+from dataclasses import fields
 from pathlib import Path
-from typing import cast, TextIO, Optional
+from typing import TextIO, Optional
 
 from sslyze import __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
@@ -7,8 +8,8 @@ from sslyze.cli.output_generator import OutputGenerator
 
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.plugin_base import ScanCommandWrongUsageError
-from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommandType
-from sslyze.scanner import ServerScanResult, ScanCommandErrorReasonEnum
+from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
+from sslyze import ServerScanResult, ScanCommandErrorReasonEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, ClientAuthRequirementEnum
 from sslyze.server_setting import (
     ServerNetworkLocationViaDirectConnection,
@@ -70,17 +71,21 @@ class ConsoleOutputGenerator(OutputGenerator):
         network_route = _server_location_to_network_route(server_location)
 
         # Display result for scan commands that were run successfully
-        for scan_command, scan_command_result in server_scan_result.scan_commands_results.items():
-            typed_scan_command = cast(ScanCommandType, scan_command)
-            target_result_str += "\n"
-            cli_connector_cls = ScanCommandsRepository.get_implementation_cls(typed_scan_command).cli_connector_cls
-            for line in cli_connector_cls.result_to_console_output(scan_command_result):
-                target_result_str += line + "\n"
+        for result_field in fields(server_scan_result.scan_commands_results):
+            scan_command = ScanCommand(result_field.name)
+            scan_command_result = getattr(server_scan_result.scan_commands_results, scan_command, None)
+            if scan_command_result:
+                target_result_str += "\n"
+                cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
+                for line in cli_connector_cls.result_to_console_output(scan_command_result):
+                    target_result_str += line + "\n"
 
         # Display scan commands that failed
-        for scan_command, scan_command_error in server_scan_result.scan_commands_errors.items():
+        for scan_command_error in server_scan_result.scan_commands_errors:
             target_result_str += "\n"
-            cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
+            cli_connector_cls = ScanCommandsRepository.get_implementation_cls(
+                scan_command_error.scan_command
+            ).cli_connector_cls
 
             if scan_command_error.reason == ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED:
                 target_result_str += cli_connector_cls._format_title(
@@ -125,7 +130,7 @@ class ConsoleOutputGenerator(OutputGenerator):
                 target_result_str += (
                     f"       * Server: {server_location.hostname}:{server_location.port} - {network_route}\n"
                 )
-                target_result_str += f"       * Scan command: {scan_command}\n\n"
+                target_result_str += f"       * Scan command: {scan_command_error.scan_command}\n\n"
                 for line in scan_command_error.exception_trace.format(chain=False):
                     target_result_str += f"       {line}"
             else:

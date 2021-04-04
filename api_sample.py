@@ -1,9 +1,12 @@
+from pathlib import Path
+
 from sslyze import (
     ServerNetworkLocationViaDirectConnection,
     ServerConnectivityTester,
     Scanner,
     ServerScanRequest,
     ScanCommand,
+    SslyzeOutputAsJson,
 )
 from sslyze.errors import ConnectionToServerFailed
 
@@ -36,29 +39,21 @@ def main() -> None:
         print(f"\nResults for {server_scan_result.server_info.server_location.hostname}:")
 
         # Scan commands that were run with no errors
-        try:
-            ssl2_result = server_scan_result.scan_commands_results[ScanCommand.SSL_2_0_CIPHER_SUITES]
+        ssl2_result = server_scan_result.scan_commands_results.ssl_2_0_cipher_suites
+        if ssl2_result:
             print("\nAccepted cipher suites for SSL 2.0:")
             for accepted_cipher_suite in ssl2_result.accepted_cipher_suites:
                 print(f"* {accepted_cipher_suite.cipher_suite.name}")
-        except KeyError:
-            pass
 
-        try:
-            certinfo_result = server_scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
+        certinfo_result = server_scan_result.scan_commands_results.certificate_info
+        if certinfo_result:
             print("\nCertificate info:")
             for cert_deployment in certinfo_result.certificate_deployments:
                 print(f"Leaf certificate: \n{cert_deployment.received_certificate_chain_as_pem[0]}")
-        except KeyError:
-            pass
 
         # Scan commands that were run with errors
-        for scan_command, error in server_scan_result.scan_commands_errors.items():
-            print(f"\nError when running {scan_command}:\n{error.exception_trace}")
-
-
-if __name__ == "__main__":
-    main()
+        for scan_command_error in server_scan_result.scan_commands_errors:
+            print(f"\nError when running {scan_command_error.scan_command}:\n{scan_command_error.exception_trace}")
 
 
 def basic_example_connectivity_testing() -> None:
@@ -99,13 +94,40 @@ def basic_example() -> None:
         print(f"\nResults for {server_scan_result.server_info.server_location.hostname}:")
 
         # SSL 2.0 results
-        ssl2_result = server_scan_result.scan_commands_results[ScanCommand.SSL_2_0_CIPHER_SUITES]
-        print("\nAccepted cipher suites for SSL 2.0:")
-        for accepted_cipher_suite in ssl2_result.accepted_cipher_suites:
-            print(f"* {accepted_cipher_suite.cipher_suite.name}")
+        ssl2_result = server_scan_result.scan_commands_results.ssl_2_0_cipher_suites
+        if ssl2_result:
+            print("\nAccepted cipher suites for SSL 2.0:")
+            for accepted_cipher_suite in ssl2_result.accepted_cipher_suites:
+                print(f"* {accepted_cipher_suite.cipher_suite.name}")
 
         # Certificate info results
-        certinfo_result = server_scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
-        print("\nCertificate info:")
+        certinfo_result = server_scan_result.scan_commands_results.certificate_info
+        if certinfo_result:
+            print("\nCertificate info:")
+            for cert_deployment in certinfo_result.certificate_deployments:
+                print(f"Leaf certificate: \n{cert_deployment.received_certificate_chain_as_pem[0]}")
+
+
+def example_json_result_parsing() -> None:
+    # SSLyze scan results serialized to JSON were saved to this file using --json_out
+    results_as_json_file = Path(__file__).parent / "tests" / "cli_tests" / "sslyze_output.json"
+    results_as_json = results_as_json_file.read_text()
+
+    # These results can be parsed
+    parsed_results = SslyzeOutputAsJson.parse_raw(results_as_json)
+
+    # Making it easy to do post-processing and inspection of the results
+    print("The following servers were scanned:")
+    for server_scan_result in parsed_results.server_scan_results:
+        print(f"  {server_scan_result.server_info.server_location}")
+
+        certinfo_result = server_scan_result.scan_commands_results.certificate_info
+        if not certinfo_result:
+            raise RuntimeError("Should never happen")
         for cert_deployment in certinfo_result.certificate_deployments:
-            print(f"Leaf certificate: \n{cert_deployment.received_certificate_chain_as_pem[0]}")
+            print(f"    SHA1 of leaf certificate: {cert_deployment.received_certificate_chain[0].fingerprint_sha1}")
+        print("")
+
+
+if __name__ == "__main__":
+    main()

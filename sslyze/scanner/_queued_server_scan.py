@@ -9,16 +9,15 @@ from uuid import UUID, uuid4
 from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze.errors import ConnectionToServerTimedOut, TlsHandshakeTimedOut
-from sslyze.plugins.plugin_base import ScanCommandWrongUsageError, ScanJob, ScanJobResult
-from sslyze.plugins.scan_commands import ScanCommandType, ScanCommandsRepository
+from sslyze.plugins.plugin_base import ScanCommandWrongUsageError, ScanJob, ScanJobResult, ScanCommandResult
+from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
 from sslyze.scanner._worker_thread import WorkerThreadNoMoreJobsSentinel, CompletedScanJob, QueuedScanJob, WorkerThread
 from sslyze.scanner.server_scan_request import (
     ServerScanRequest,
     ServerScanResult,
-    ScanCommandErrorsDict,
     ScanCommandError,
     ScanCommandErrorReasonEnum,
-    ScanCommandResultsDict,
+    ScanCommandsResults,
 )
 
 
@@ -26,7 +25,7 @@ from sslyze.scanner.server_scan_request import (
 class _QueuedServerScan:
     uuid: UUID
     server_scan_request: ServerScanRequest
-    scan_command_errors_during_queuing: ScanCommandErrorsDict
+    scan_command_errors_during_queuing: List[ScanCommandError]
     assigned_queue: queue.Queue
     queued_scan_jobs_count: int
     completed_scan_jobs: List[CompletedScanJob]  # Populated as the scan is getting completed
@@ -178,12 +177,12 @@ def _queue_server_scan(
 
 def _generate_scan_jobs_for_server_scan(
     server_scan_request: ServerScanRequest,
-) -> Tuple[Dict[ScanCommandType, List[ScanJob]], ScanCommandErrorsDict]:
-    all_scan_jobs_per_scan_cmd: Dict[ScanCommandType, List[ScanJob]] = {}
-    scan_command_errors_during_queuing = {}
+) -> Tuple[Dict[ScanCommand, List[ScanJob]], List[ScanCommandError]]:
+    all_scan_jobs_per_scan_cmd: Dict[ScanCommand, List[ScanJob]] = {}
+    scan_command_errors_during_queuing: List[ScanCommandError] = []
     for scan_cmd in server_scan_request.scan_commands:
         implementation_cls = ScanCommandsRepository.get_implementation_cls(scan_cmd)
-        scan_cmd_extra_args = server_scan_request.scan_commands_extra_arguments.get(scan_cmd)  # type: ignore
+        scan_cmd_extra_args = getattr(server_scan_request.scan_commands_extra_arguments, scan_cmd, None)
 
         try:
             jobs_for_scan_cmd = implementation_cls.scan_jobs_for_scan_command(
@@ -193,24 +192,28 @@ def _generate_scan_jobs_for_server_scan(
         # Process exceptions and instantly "complete" the scan command if the call to create the jobs failed
         except ScanCommandWrongUsageError as e:
             error = ScanCommandError(
-                reason=ScanCommandErrorReasonEnum.WRONG_USAGE, exception_trace=TracebackException.from_exception(e)
+                scan_command=scan_cmd,
+                reason=ScanCommandErrorReasonEnum.WRONG_USAGE,
+                exception_trace=TracebackException.from_exception(e),
             )
-            scan_command_errors_during_queuing[scan_cmd] = error
+            scan_command_errors_during_queuing.append(error)
         except Exception as e:
             error = ScanCommandError(
-                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE, exception_trace=TracebackException.from_exception(e),
+                scan_command=scan_cmd,
+                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
+                exception_trace=TracebackException.from_exception(e),
             )
-            scan_command_errors_during_queuing[scan_cmd] = error
+            scan_command_errors_during_queuing.append(error)
 
     return all_scan_jobs_per_scan_cmd, scan_command_errors_during_queuing
 
 
 def _generate_result_for_completed_server_scan(completed_scan: _QueuedServerScan) -> ServerScanResult:
-    server_scan_results: ScanCommandResultsDict = {}
-    server_scan_errors: ScanCommandErrorsDict = {}
+    server_scan_results: Dict[ScanCommand, ScanCommandResult] = {}
+    server_scan_errors: List[ScanCommandError] = []
 
     # Group all the completed jobs per scan command
-    scan_cmd_to_completed_jobs: Dict[ScanCommandType, List[CompletedScanJob]] = {
+    scan_cmd_to_completed_jobs: Dict[ScanCommand, List[CompletedScanJob]] = {
         scan_cmd: [] for scan_cmd in completed_scan.server_scan_request.scan_commands
     }
     for completed_job in completed_scan.completed_scan_jobs:
@@ -230,26 +233,30 @@ def _generate_result_for_completed_server_scan(completed_scan: _QueuedServerScan
         # Process exceptions that may have been raised while the jobs were being completed
         except ClientCertificateRequested as e:
             error = ScanCommandError(
+                scan_command=scan_cmd,
                 reason=ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED,
                 exception_trace=TracebackException.from_exception(e),
             )
-            server_scan_errors[scan_cmd] = error
+            server_scan_errors.append(error)
         except (ConnectionToServerTimedOut, TlsHandshakeTimedOut) as e:
             error = ScanCommandError(
+                scan_command=scan_cmd,
                 reason=ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE,
                 exception_trace=TracebackException.from_exception(e),
             )
-            server_scan_errors[scan_cmd] = error
+            server_scan_errors.append(error)
         except Exception as e:
             error = ScanCommandError(
-                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE, exception_trace=TracebackException.from_exception(e),
+                scan_command=scan_cmd,
+                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
+                exception_trace=TracebackException.from_exception(e),
             )
-            server_scan_errors[scan_cmd] = error
+            server_scan_errors.append(error)
 
     # Lastly, return the fully completed server scan
-    server_scan_errors.update(completed_scan.scan_command_errors_during_queuing)
+    server_scan_errors.extend(completed_scan.scan_command_errors_during_queuing)
     server_scan_result = ServerScanResult(
-        scan_commands_results=server_scan_results,
+        scan_commands_results=ScanCommandsResults(**server_scan_results),  # type: ignore
         scan_commands_errors=server_scan_errors,
         server_info=completed_scan.server_scan_request.server_info,
         scan_commands=completed_scan.server_scan_request.scan_commands,

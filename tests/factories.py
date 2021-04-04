@@ -1,5 +1,5 @@
 from traceback import TracebackException
-from typing import Optional, Set, cast
+from typing import Optional, List
 
 from faker import Faker
 from faker.providers import internet
@@ -8,8 +8,8 @@ from sslyze.cli.command_line.server_string_parser import InvalidServerStringErro
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.compression_plugin import CompressionScanResult
-from sslyze.plugins.scan_commands import ScanCommand, ScanCommandType
-from sslyze.scanner import ServerScanResult, ScanCommandErrorsDict, ScanCommandResultsDict
+from sslyze.plugins.scan_commands import ScanCommand
+from sslyze import ServerScanResult, ScanCommandsResults, ScanCommandsExtraArguments, ScanCommandError
 from sslyze.server_connectivity import (
     ServerConnectivityInfo,
     ServerTlsProbingResult,
@@ -114,28 +114,24 @@ class ServerScanResultFactory:
     @staticmethod
     def create(
         server_info: ServerConnectivityInfo = ServerConnectivityInfoFactory.create(),
-        scan_commands_results: Optional[ScanCommandResultsDict] = None,
-        scan_commands_errors: Optional[ScanCommandErrorsDict] = None,
+        scan_commands_results: Optional[ScanCommandsResults] = None,
+        scan_commands_errors: Optional[List[ScanCommandError]] = None,
     ) -> ServerScanResult:
-        final_results: ScanCommandResultsDict = (
+        final_results: ScanCommandsResults = (
             scan_commands_results
             if scan_commands_results
-            else {ScanCommand.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
+            else ScanCommandsResults(tls_compression=CompressionScanResult(supports_compression=True))
         )
-        final_errors: ScanCommandErrorsDict = scan_commands_errors if scan_commands_errors else {}
-        scan_commands: Set[ScanCommandType] = set()
-        for scan_cmd in final_results.keys():
-            typed_scan_cmd = cast(ScanCommandType, scan_cmd)
-            scan_commands.add(typed_scan_cmd)
-        for scan_cmd in final_errors.keys():
-            scan_commands.add(scan_cmd)
+        final_errors = scan_commands_errors if scan_commands_errors else []
+        scan_commands = final_results.scan_commands_with_result()
+        scan_commands.update({error.scan_command for error in final_errors})
 
         return ServerScanResult(
             scan_commands_results=final_results,
             scan_commands_errors=final_errors,
             server_info=server_info,
             scan_commands=scan_commands,
-            scan_commands_extra_arguments={},
+            scan_commands_extra_arguments=ScanCommandsExtraArguments(),
         )
 
 

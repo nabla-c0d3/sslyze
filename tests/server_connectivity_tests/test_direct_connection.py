@@ -1,6 +1,8 @@
 import socket
 
 import pytest
+
+from sslyze.cli.json_output import _ServerConnectivityInfoAsJson
 from tests.openssl_server import LegacyOpenSslServer
 
 from sslyze.server_connectivity import ServerConnectivityTester, TlsVersionEnum
@@ -41,6 +43,10 @@ class TestServerConnectivityTester:
         assert server_info.tls_probing_result.client_auth_requirement
         assert server_info.tls_probing_result.supports_ecdh_key_exchange
         assert server_info.get_preconfigured_tls_connection()
+
+        # And the result can be converted to JSON
+        server_info_as_json = _ServerConnectivityInfoAsJson.from_orm(server_info)
+        assert server_info_as_json.json()
 
     def test_via_direct_connection_but_server_timed_out(self):
         # Given a server location for a server that's offline
@@ -119,6 +125,10 @@ class TestServerConnectivityTester:
         assert server_info.tls_probing_result.client_auth_requirement
         assert server_info.tls_probing_result.highest_tls_version_supported
         assert server_info.tls_probing_result.cipher_suite_supported
+
+        # And the result can be converted to JSON
+        server_info_as_json = _ServerConnectivityInfoAsJson.from_orm(server_info)
+        assert server_info_as_json.json()
 
     @can_only_run_on_linux_64
     def test_server_triggers_unexpected_connection_error(self):

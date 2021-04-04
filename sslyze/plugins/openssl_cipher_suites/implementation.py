@@ -14,7 +14,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
     ScanCommandResult,
     ScanJob,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanCommandWrongUsageError,
     ScanJobResult,
 )
@@ -95,7 +95,7 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")

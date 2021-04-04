@@ -1,15 +1,14 @@
-import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import Dict
 
 import pytest
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze import JsonEncoder
 from sslyze.plugins.http_headers_plugin import (
     HttpHeadersImplementation,
     HttpHeadersScanResult,
     _detect_http_redirection,
+    HttpHeadersScanResultAsJson,
 )
 from sslyze.server_connectivity import ServerConnectivityTester
 
@@ -99,7 +98,7 @@ class TestHttpHeadersPlugin:
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
 
         # And the result can be converted to JSON
-        result_as_json = json.dumps(asdict(result), cls=JsonEncoder)
+        result_as_json = HttpHeadersScanResultAsJson.from_orm(result).json()
         assert result_as_json
 
     @can_only_run_on_linux_64

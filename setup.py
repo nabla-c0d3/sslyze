@@ -93,7 +93,7 @@ setup(
         "nassl>=4.0.0,<5.0.0",
         "cryptography>=2.6,<3.5",
         "tls-parser>=1.2.2,<1.3.0",
-        "typing_extensions ; python_version<'3.8'",  # To remove when we drop support for Python 3.7
+        "pydantic>=1.7,<1.9",
     ],
     # cx_freeze info for Windows builds with Python embedded
     options={"build_exe": {"packages": ["cffi", "cryptography"], "include_files": get_include_files()}},

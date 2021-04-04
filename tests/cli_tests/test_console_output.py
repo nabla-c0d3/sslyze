@@ -2,8 +2,8 @@ from io import StringIO
 
 from sslyze.cli.console_output import ConsoleOutputGenerator
 from sslyze.plugins.compression_plugin import CompressionScanResult
-from sslyze.plugins.scan_commands import ScanCommand
-from sslyze.scanner import ScanCommandError, ScanCommandErrorReasonEnum
+from sslyze import ScanCommandError, ScanCommandErrorReasonEnum, ScanCommand
+from sslyze.scanner.server_scan_request import ScanCommandsResults
 from sslyze.server_connectivity import ServerTlsProbingResult, ClientAuthRequirementEnum, TlsVersionEnum
 from tests.factories import (
     ServerScanResultFactory,
@@ -112,8 +112,8 @@ class TestConsoleOutputGenerator:
 
     def test_server_scan_completed(self):
         # Given a completed scan for a server
-        scan_results = {ScanCommand.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
-        scan_result = ServerScanResultFactory.create(scan_commands_results=scan_results)
+        scan_commands_results = ScanCommandsResults(tls_compression=CompressionScanResult(supports_compression=True))
+        scan_result = ServerScanResultFactory.create(scan_commands_results=scan_commands_results)
 
         # When generating the console output for this server scan
         with StringIO() as file_out:
@@ -131,8 +131,10 @@ class TestConsoleOutputGenerator:
             # And sslyze connected to the server via an HTTP proxy
             server_location=ServerNetworkLocationViaHttpProxyFactory.create()
         )
-        scan_results = {ScanCommand.TLS_COMPRESSION: CompressionScanResult(supports_compression=True)}
-        scan_result = ServerScanResultFactory.create(server_info=server_info, scan_commands_results=scan_results)
+        scan_commands_results = ScanCommandsResults(tls_compression=CompressionScanResult(supports_compression=True))
+        scan_result = ServerScanResultFactory.create(
+            server_info=server_info, scan_commands_results=scan_commands_results
+        )
 
         # When generating the console output for this server scan
         with StringIO() as file_out:
@@ -147,12 +149,14 @@ class TestConsoleOutputGenerator:
 
     def test_server_scan_completed_with_error(self):
         # Given a completed scan for a server that triggered an error
-        error_trace = TracebackExceptionFactory.create()
-        scan_errors = {
-            ScanCommand.TLS_COMPRESSION: ScanCommandError(
-                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE, exception_trace=error_trace
+        exception_trace = TracebackExceptionFactory.create()
+        scan_errors = [
+            ScanCommandError(
+                scan_command=ScanCommand.TLS_COMPRESSION,
+                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
+                exception_trace=exception_trace,
             )
-        }
+        ]
         scan_result = ServerScanResultFactory.create(scan_commands_errors=scan_errors)
 
         # When generating the console output for this server scan
@@ -163,7 +167,7 @@ class TestConsoleOutputGenerator:
 
         # It succeeds and displays the error
         assert final_output
-        assert error_trace.stack.format()[0] in final_output
+        assert exception_trace.stack.format()[0] in final_output
 
     def test_scans_completed(self):
         # Given the time sslyze took to complete all scans

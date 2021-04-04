@@ -29,7 +29,7 @@ Certificate Information
 Optional arguments
 ==================
 
-.. autoclass:: CertificateInfoExtraArguments
+.. autoclass:: CertificateInfoExtraArgument
 
 Result class
 ============
@@ -96,18 +96,8 @@ Result class
 ============
 
 .. autoclass:: TlsResumptionSupportEnum
-.. autoclass:: SessionResumptionSupportExtraArguments
+.. autoclass:: SessionResumptionSupportExtraArgument
 .. autoclass:: SessionResumptionSupportScanResult
-
-Session Resumption Rate
-***********************
-
-**ScanCommand.SESSION_RESUMPTION_RATE**: Measure a server's session resumption rate when attempting 100 resumptions using session IDs.
-
-Result class
-============
-
-.. autoclass:: SessionResumptionRateScanResult
 
 CRIME
 *****
@@ -159,7 +149,6 @@ Result class
 
 .. autoclass:: HttpHeadersScanResult
 .. autoclass:: StrictTransportSecurityHeader
-.. autoclass:: PublicKeyPinsHeader
 .. autoclass:: ExpectCtHeader
 
 OpenSSL CCS Injection

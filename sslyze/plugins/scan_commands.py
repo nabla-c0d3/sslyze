@@ -1,13 +1,8 @@
+from enum import Enum
 from typing import Dict, Type, TYPE_CHECKING, Set
 
 from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesImplementation
 
-try:
-    # Python 3.7
-    from typing_extensions import Literal
-except ModuleNotFoundError:
-    # Python 3.8+
-    from typing import Literal  # type: ignore
 
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 from sslyze.plugins.compression_plugin import CompressionImplementation
@@ -32,74 +27,39 @@ if TYPE_CHECKING:
     from sslyze.plugins.plugin_base import ScanCommandImplementation  # noqa: F401
 
 
-ScanCommandType = Literal[
-    "certificate_info",
-    "ssl_2_0_cipher_suites",
-    "ssl_3_0_cipher_suites",
-    "tls_1_0_cipher_suites",
-    "tls_1_1_cipher_suites",
-    "tls_1_1_cipher_suites",
-    "tls_1_2_cipher_suites",
-    "tls_1_3_cipher_suites",
-    "tls_compression",
-    "tls_1_3_early_data",
-    "openssl_ccs_injection",
-    "tls_fallback_scsv",
-    "heartbleed",
-    "robot",
-    "session_renegotiation",
-    "session_resumption",
-    "http_headers",
-    "elliptic_curves",
-]
-
-
-# Almost like a re-implementation of an enum
-class ScanCommand:
-    """The list of all scan commands supported by SSLyze.
-    """
-
-    CERTIFICATE_INFO: Literal["certificate_info"] = "certificate_info"
-
-    SSL_2_0_CIPHER_SUITES: Literal["ssl_2_0_cipher_suites"] = "ssl_2_0_cipher_suites"
-    SSL_3_0_CIPHER_SUITES: Literal["ssl_3_0_cipher_suites"] = "ssl_3_0_cipher_suites"
-    TLS_1_0_CIPHER_SUITES: Literal["tls_1_0_cipher_suites"] = "tls_1_0_cipher_suites"
-    TLS_1_1_CIPHER_SUITES: Literal["tls_1_1_cipher_suites"] = "tls_1_1_cipher_suites"
-    TLS_1_2_CIPHER_SUITES: Literal["tls_1_2_cipher_suites"] = "tls_1_2_cipher_suites"
-    TLS_1_3_CIPHER_SUITES: Literal["tls_1_3_cipher_suites"] = "tls_1_3_cipher_suites"
-
-    TLS_COMPRESSION: Literal["tls_compression"] = "tls_compression"
-
-    TLS_1_3_EARLY_DATA: Literal["tls_1_3_early_data"] = "tls_1_3_early_data"
-
-    OPENSSL_CCS_INJECTION: Literal["openssl_ccs_injection"] = "openssl_ccs_injection"
-
-    TLS_FALLBACK_SCSV: Literal["tls_fallback_scsv"] = "tls_fallback_scsv"
-
-    HEARTBLEED: Literal["heartbleed"] = "heartbleed"
-
-    ROBOT: Literal["robot"] = "robot"
-
-    SESSION_RENEGOTIATION: Literal["session_renegotiation"] = "session_renegotiation"
-
-    SESSION_RESUMPTION: Literal["session_resumption"] = "session_resumption"
-
-    HTTP_HEADERS: Literal["http_headers"] = "http_headers"
-    ELLIPTIC_CURVES: Literal["elliptic_curves"] = "elliptic_curves"
+class ScanCommand(str, Enum):
+    CERTIFICATE_INFO = "certificate_info"
+    SESSION_RESUMPTION = "session_resumption"
+    SSL_2_0_CIPHER_SUITES = "ssl_2_0_cipher_suites"
+    SSL_3_0_CIPHER_SUITES = "ssl_3_0_cipher_suites"
+    TLS_1_0_CIPHER_SUITES = "tls_1_0_cipher_suites"
+    TLS_1_1_CIPHER_SUITES = "tls_1_1_cipher_suites"
+    TLS_1_2_CIPHER_SUITES = "tls_1_2_cipher_suites"
+    TLS_1_3_CIPHER_SUITES = "tls_1_3_cipher_suites"
+    TLS_COMPRESSION = "tls_compression"
+    TLS_1_3_EARLY_DATA = "tls_1_3_early_data"
+    OPENSSL_CCS_INJECTION = "openssl_ccs_injection"
+    TLS_FALLBACK_SCSV = "tls_fallback_scsv"
+    HEARTBLEED = "heartbleed"
+    ROBOT = "robot"
+    SESSION_RENEGOTIATION = "session_renegotiation"
+    HTTP_HEADERS = "http_headers"
+    ELLIPTIC_CURVES = "elliptic_curves"
 
 
 class ScanCommandsRepository:
     @staticmethod
-    def get_implementation_cls(scan_command: ScanCommandType) -> Type["ScanCommandImplementation"]:
+    def get_implementation_cls(scan_command: ScanCommand) -> Type["ScanCommandImplementation"]:
         return _IMPLEMENTATION_CLASSES[scan_command]
 
     @staticmethod
-    def get_all_scan_commands() -> Set[ScanCommandType]:
+    def get_all_scan_commands() -> Set[ScanCommand]:
         return set(_IMPLEMENTATION_CLASSES.keys())
 
 
-_IMPLEMENTATION_CLASSES: Dict[ScanCommandType, Type["ScanCommandImplementation"]] = {
+_IMPLEMENTATION_CLASSES: Dict[ScanCommand, Type["ScanCommandImplementation"]] = {
     ScanCommand.CERTIFICATE_INFO: CertificateInfoImplementation,
+    ScanCommand.SESSION_RESUMPTION: SessionResumptionSupportImplementation,
     ScanCommand.SSL_2_0_CIPHER_SUITES: Sslv20ScanImplementation,
     ScanCommand.SSL_3_0_CIPHER_SUITES: Sslv30ScanImplementation,
     ScanCommand.TLS_1_0_CIPHER_SUITES: Tlsv10ScanImplementation,
@@ -113,7 +73,6 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommandType, Type["ScanCommandImplementation"]
     ScanCommand.HEARTBLEED: HeartbleedImplementation,
     ScanCommand.ROBOT: RobotImplementation,
     ScanCommand.SESSION_RENEGOTIATION: SessionRenegotiationImplementation,
-    ScanCommand.SESSION_RESUMPTION: SessionResumptionSupportImplementation,
     ScanCommand.HTTP_HEADERS: HttpHeadersImplementation,
     ScanCommand.ELLIPTIC_CURVES: SupportedEllipticCurvesImplementation,
 }

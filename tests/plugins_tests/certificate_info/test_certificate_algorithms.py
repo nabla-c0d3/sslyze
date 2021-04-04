@@ -1,5 +1,3 @@
-import json
-from dataclasses import asdict
 from pathlib import Path
 from unittest import mock
 from unittest.mock import PropertyMock
@@ -7,10 +5,11 @@ from unittest.mock import PropertyMock
 import pytest
 from cryptography import hazmat
 
+from sslyze.plugins.certificate_info.json_output import CertificateInfoScanResultAsJson
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer
 
-from sslyze import ServerNetworkLocationViaDirectConnection, ServerConnectivityTester, JsonEncoder
+from sslyze import ServerNetworkLocationViaDirectConnection, ServerConnectivityTester
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 
 
@@ -29,7 +28,7 @@ class TestCertificateAlgorithms:
             assert scan_result.certificate_deployments[0].received_certificate_chain
 
             # And the result can be converted to JSON
-            result_as_json = json.dumps(asdict(scan_result), cls=JsonEncoder)
+            result_as_json = CertificateInfoScanResultAsJson.from_orm(scan_result).json()
             assert result_as_json
 
             # And the result can be converted to console output
@@ -53,7 +52,7 @@ class TestCertificateAlgorithms:
             assert scan_result.certificate_deployments[0].received_certificate_chain
 
             # And the result can be converted to JSON
-            result_as_json = json.dumps(asdict(scan_result), cls=JsonEncoder)
+            result_as_json = CertificateInfoScanResultAsJson.from_orm(scan_result).json()
             assert result_as_json
 
             # And the result can be converted to console output
@@ -69,7 +68,7 @@ class TestCertificateAlgorithms:
         scan_result = CertificateInfoImplementation.scan_server(server_info)
 
         # And the result can be converted to JSON
-        result_as_json = json.dumps(asdict(scan_result), cls=JsonEncoder)
+        result_as_json = CertificateInfoScanResultAsJson.from_orm(scan_result).json()
         assert result_as_json
 
         # And the result can be converted to console output
@@ -97,5 +96,5 @@ class TestCertificateAlgorithms:
             assert result_as_txt
 
             # And the result can be converted to JSON
-            result_as_json = json.dumps(asdict(scan_result), cls=JsonEncoder)
+            result_as_json = CertificateInfoScanResultAsJson.from_orm(scan_result).json()
             assert result_as_json

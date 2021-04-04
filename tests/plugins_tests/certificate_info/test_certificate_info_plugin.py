@@ -2,7 +2,7 @@ from pathlib import Path
 
 from cryptography.x509.ocsp import OCSPResponseStatus
 
-from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation, CertificateInfoExtraArguments
+from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation, CertificateInfoExtraArgument
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64
@@ -19,7 +19,7 @@ class TestCertificateInfoPlugin:
         # When trying to enable a custom CA file but the path is wrong, it fails
         with pytest.raises(ValueError):
             CertificateInfoImplementation.scan_server(
-                server_info, CertificateInfoExtraArguments(custom_ca_file=Path("doesntexist"))
+                server_info, CertificateInfoExtraArgument(custom_ca_file=Path("doesntexist"))
             )
 
     def test_ca_file(self):
@@ -32,7 +32,7 @@ class TestCertificateInfoPlugin:
 
         # When running the scan with the custom CA file enabled
         plugin_result = CertificateInfoImplementation.scan_server(
-            server_info, CertificateInfoExtraArguments(custom_ca_file=ca_file_path)
+            server_info, CertificateInfoExtraArgument(custom_ca_file=ca_file_path)
         )
 
         # It succeeds

@@ -17,15 +17,15 @@ from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
     ScanJob,
     ScanCommandResult,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
 @dataclass(frozen=True)
-class CertificateInfoExtraArguments(ScanCommandExtraArguments):
-    """Additional configuration for running the CERTIFICATE_INFO scan command.
+class CertificateInfoExtraArgument(ScanCommandExtraArgument):
+    """Additional configuration for running the certificate_info scan command.
 
     Attributes:
         custom_ca_file: The path to a custom trust store file to use for certificate validation. The file should contain
@@ -62,7 +62,7 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[CertificateInfoExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[CertificateInfoExtraArgument] = None
     ) -> List[ScanJob]:
         custom_ca_file = extra_arguments.custom_ca_file if extra_arguments else None
 

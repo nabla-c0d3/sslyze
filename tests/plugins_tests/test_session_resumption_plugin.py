@@ -5,7 +5,7 @@ from sslyze import TlsResumptionSupportEnum
 from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportImplementation,
     SessionResumptionSupportScanResult,
-    SessionResumptionSupportExtraArguments,
+    SessionResumptionSupportExtraArgument,
 )
 from sslyze.server_connectivity import ServerConnectivityTester
 
@@ -45,7 +45,7 @@ class TestSessionResumptionSupport:
         server_info = ServerConnectivityTester().perform(server_location)
 
         # And we customize how many session resumptions to perform
-        extra_arg = SessionResumptionSupportExtraArguments(number_of_resumptions_to_attempt=20)
+        extra_arg = SessionResumptionSupportExtraArgument(number_of_resumptions_to_attempt=20)
 
         # When testing for resumption, it succeeds
         result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(

@@ -7,7 +7,7 @@ from sslyze.cli.command_line_parser import CommandLineParsingError, CommandLineP
 from time import time
 
 from sslyze.errors import ConnectionToServerFailed
-from sslyze.scanner import Scanner, ServerScanRequest
+from sslyze import Scanner, ServerScanRequest
 from sslyze.server_connectivity import ServerConnectivityTester
 
 

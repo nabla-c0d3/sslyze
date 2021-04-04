@@ -1,5 +1,6 @@
 import pytest
 
+from sslyze.cli.json_output import _ServerConnectivityInfoAsJson
 from sslyze.server_connectivity import ServerConnectivityTester
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkConfiguration
 from sslyze.errors import ServerRejectedOpportunisticTlsNegotiation
@@ -34,6 +35,10 @@ class TestOpportunisticTls:
         assert server_info.tls_probing_result.client_auth_requirement
         assert server_info.tls_probing_result.highest_tls_version_supported
         assert server_info.tls_probing_result.cipher_suite_supported
+
+        # And the result can be converted to JSON
+        server_info_as_json = _ServerConnectivityInfoAsJson.from_orm(server_info)
+        assert server_info_as_json.json()
 
     def test_xmpp_but_server_rejected_opportunistic_tls(self):
         # Given an XMPP server

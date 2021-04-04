@@ -4,13 +4,13 @@ import queue
 from typing import Optional, Any, Callable
 from uuid import UUID
 
-from sslyze.plugins.scan_commands import ScanCommandType
+from sslyze.plugins.scan_commands import ScanCommand
 
 
 @dataclass(frozen=True)
 class CompletedScanJob:
     for_server_scan_uuid: UUID
-    for_scan_command: ScanCommandType
+    for_scan_command: ScanCommand
 
     return_value: Optional[Any]
     exception: Optional[Exception]
@@ -19,7 +19,7 @@ class CompletedScanJob:
 @dataclass(frozen=True)
 class QueuedScanJob:
     for_server_scan_uuid: UUID
-    for_scan_command: ScanCommandType
+    for_scan_command: ScanCommand
 
     function_to_call: Callable
     function_arguments: Any

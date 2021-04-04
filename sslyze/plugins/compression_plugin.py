@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 
+import pydantic
 from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
     ScanJob,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
     ScanJobResult,
@@ -26,6 +27,10 @@ class CompressionScanResult(ScanCommandResult):
     """
 
     supports_compression: bool
+
+
+# Identical fields in the JSON output
+CompressionScanResultAsJson = pydantic.dataclasses.dataclass(CompressionScanResult, frozen=True)
 
 
 class _CompressionCliConnector(ScanCommandCliConnector[CompressionScanResult, None]):
@@ -51,7 +56,7 @@ class CompressionImplementation(ScanCommandImplementation[CompressionScanResult,
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")

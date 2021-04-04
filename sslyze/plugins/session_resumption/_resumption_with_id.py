@@ -1,4 +1,4 @@
-from enum import Enum, unique
+from enum import Enum
 from typing import Optional, Tuple
 
 import nassl
@@ -7,8 +7,7 @@ from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
-@unique
-class TlsResumptionSupportEnum(Enum):
+class TlsResumptionSupportEnum(str, Enum):
     """The result of attempting to resume TLS sessions with the server.
 
     Attributes:
@@ -19,10 +18,10 @@ class TlsResumptionSupportEnum(Enum):
             resumption.
     """
 
-    FULLY_SUPPORTED = 1
-    PARTIALLY_SUPPORTED = 2
-    NOT_SUPPORTED = 3
-    SERVER_IS_TLS_1_3_ONLY = 4
+    FULLY_SUPPORTED = "FULLY_SUPPORTED"
+    PARTIALLY_SUPPORTED = "PARTIALLY_SUPPORTED"
+    NOT_SUPPORTED = "NOT_SUPPORTED"
+    SERVER_IS_TLS_1_3_ONLY = "SERVER_IS_TLS_1_3_ONLY"
 
 
 class _ScanJobResultEnum(Enum):

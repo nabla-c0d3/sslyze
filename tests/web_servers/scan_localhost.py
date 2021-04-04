@@ -7,9 +7,7 @@ See ./.github/workflows and https://github.com/nabla-c0d3/sslyze/issues/472 for 
 
 $ PYTHONPATH=. python tests/web_servers/scan_localhost.py apache2
 """
-import json
 import sys
-from dataclasses import asdict
 from enum import Enum
 
 from sslyze import (
@@ -19,9 +17,8 @@ from sslyze import (
     ServerScanRequest,
     ClientAuthRequirementEnum,
     ScanCommandErrorReasonEnum,
-    JsonEncoder,
 )
-from sslyze.cli.json_output import _SslyzeOutputAsJson
+from sslyze.cli.json_output import SslyzeOutputAsJson, ServerScanResultAsJson
 from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
 
 
@@ -73,19 +70,19 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
 
     # Retrieve the result
     for server_scan_result in scanner.get_results():
-        successful_cmds_count = len(server_scan_result.scan_commands_results)
+        successful_cmds_count = len(server_scan_result.scan_commands_results.scan_commands_with_result())
         errored_cmds_count = len(server_scan_result.scan_commands_errors)
         print(f"Finished scan with {successful_cmds_count} results and {errored_cmds_count} errors.")
 
         # Crash if any scan commands triggered an error that's not due to client authentication being required
         triggered_unexpected_error = False
-        for scan_command, error in server_scan_result.scan_commands_errors.items():
-            if error.reason != ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED:
+        for scan_command_error in server_scan_result.scan_commands_errors:
+            if scan_command_error.reason != ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED:
                 triggered_unexpected_error = True
-                print(f"\nError when running {scan_command}: {error.reason.name}.")
-                if error.exception_trace:
+                print(f"\nError when running {scan_command_error.scan_command}: {scan_command_error.reason.name}.")
+                if scan_command_error.exception_trace:
                     exc_trace = ""
-                    for line in error.exception_trace.format(chain=False):
+                    for line in scan_command_error.exception_trace.format(chain=False):
                         exc_trace += f"       {line}"
                     print(exc_trace)
 
@@ -142,7 +139,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         else:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
-        completed_scan_command_results = server_scan_result.scan_commands_results.keys()
+        completed_scan_command_results = server_scan_result.scan_commands_results.scan_commands_with_result()
         if completed_scan_command_results != expected_scan_command_results:
             raise RuntimeError(
                 f"SSLyze did not complete all the expected scan commands: {completed_scan_command_results}"
@@ -169,7 +166,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
         for ciphers_scan_cmd in expected_enabled_tls_scan_commands:
-            scan_cmd_result = server_scan_result.scan_commands_results[ciphers_scan_cmd]  # type: ignore
+            scan_cmd_result = getattr(server_scan_result.scan_commands_results, ciphers_scan_cmd, None)
             if not scan_cmd_result.accepted_cipher_suites:
                 raise RuntimeError(
                     f"SSLyze did not detect {scan_cmd_result.tls_version_used.name} to be enabled on the server."
@@ -178,11 +175,12 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
                 print(f"OK: Scan command {ciphers_scan_cmd} detected cipher suites.")
 
         # Ensure a JSON output can be generated from the results
-        json_output = _SslyzeOutputAsJson(
-            server_scan_results=[server_scan_result], server_connectivity_errors=[], total_scan_time=3,
+        final_json_output = SslyzeOutputAsJson(
+            server_scan_results=[ServerScanResultAsJson.from_orm(server_scan_result)],
+            server_connectivity_errors=[],
+            total_scan_time=2,
         )
-        json_output_as_dict = asdict(json_output)
-        json.dumps(json_output_as_dict, cls=JsonEncoder, sort_keys=True, indent=4, ensure_ascii=True)
+        final_json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
         print("OK: Was able to generate JSON output.")
 
 

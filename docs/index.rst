@@ -62,8 +62,8 @@ A full description of the supported options is available via the help command::
 
     $ python -m sslyze -h
 
-Runing scans with the Python API
-********************************
+Running scans with the Python API
+*********************************
 
 The Python API gives full access to SSLyze's scanning engine in order to make it easy to implement SSL/TLS scanning as
 part of a continuous security testing platform, and detect any misconfiguration across a range of public and/or internal
@@ -94,6 +94,17 @@ Using the Python API to scan a server is a two-step process, described in more d
 
    testing-connectivity
    running-scan-commands
+
+Exporting and processing scan results in JSON
+*********************************************
+
+The result of SSLyze scans can be serialized to JSON for further processing. SSLyze also provides a helper class to
+parse JSON scan results; it can be used to process the results of SSLyze scans in a separate Python program.
+
+.. toctree::
+   :maxdepth: 2
+
+   json-output
 
 Indices and tables
 ******************

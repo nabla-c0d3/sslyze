@@ -3,13 +3,14 @@ import types
 from dataclasses import dataclass
 from typing import List, Optional
 
+import pydantic
 from nassl._nassl import WantReadError
 
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
     ScanJob,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
     ScanJobResult,
@@ -33,6 +34,10 @@ class HeartbleedScanResult(ScanCommandResult):
     """
 
     is_vulnerable_to_heartbleed: bool
+
+
+# Identical fields in the JSON output
+HeartbleedScanResultAsJson = pydantic.dataclasses.dataclass(HeartbleedScanResult, frozen=True)
 
 
 class _HeartbleedCliConnector(ScanCommandCliConnector[HeartbleedScanResult, None]):
@@ -60,7 +65,7 @@ class HeartbleedImplementation(ScanCommandImplementation[HeartbleedScanResult, N
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")

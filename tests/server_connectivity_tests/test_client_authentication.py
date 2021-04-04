@@ -1,5 +1,6 @@
 import pytest
 
+from sslyze.cli.json_output import _ServerConnectivityInfoAsJson
 from sslyze.server_connectivity import ServerConnectivityTester, ClientAuthRequirementEnum
 from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
 from tests.markers import can_only_run_on_linux_64
@@ -23,6 +24,10 @@ class TestClientAuthentication:
 
         # And it detected the client authentication
         assert server_info.tls_probing_result.client_auth_requirement == ClientAuthRequirementEnum.OPTIONAL
+
+        # And the result can be converted to JSON
+        server_info_as_json = _ServerConnectivityInfoAsJson.from_orm(server_info)
+        assert server_info_as_json.json()
 
 
 @can_only_run_on_linux_64

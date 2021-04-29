@@ -1,9 +1,9 @@
 from pathlib import Path
-from typing import cast, TextIO, Optional
+from typing import cast, Optional
 
 from sslyze import __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
-from sslyze.cli.output_generator import OutputGenerator
+from sslyze.cli.output_generator import OutputGenerator, OutputType
 
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.plugin_base import ScanCommandWrongUsageError
@@ -18,7 +18,7 @@ from sslyze.server_setting import (
 
 
 class ConsoleOutputGenerator(OutputGenerator):
-    def __init__(self, file_to: TextIO) -> None:
+    def __init__(self, file_to: OutputType) -> None:
         super().__init__(file_to)
         self._json_path_out: Optional[Path] = None  # Used to print the path where the JSON output was written
 

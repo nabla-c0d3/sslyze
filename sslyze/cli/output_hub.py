@@ -1,10 +1,10 @@
 import sys
-from typing import List
+from typing import List, Optional
 
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.cli.console_output import ConsoleOutputGenerator
 from sslyze.cli.json_output import JsonOutputGenerator
-from sslyze.cli.output_generator import OutputGenerator
+from sslyze.cli.output_generator import OutputGenerator, OutputType
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -23,11 +23,11 @@ class OutputHub:
             self._output_generator_list.append(ConsoleOutputGenerator(sys.stdout))
 
         # Setup JSON output if needed
-        json_file_out = None
+        json_file_out: Optional[OutputType] = None
         if parsed_command_line.should_print_json_to_console:
             json_file_out = sys.stdout
         elif parsed_command_line.json_path_out:
-            json_file_out = parsed_command_line.json_path_out.open("wt", encoding="utf-8")
+            json_file_out = parsed_command_line.json_path_out
 
         if json_file_out:
             self._output_generator_list.append(JsonOutputGenerator(json_file_out))

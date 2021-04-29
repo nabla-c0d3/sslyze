@@ -1,10 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import TextIO
+from pathlib import Path
+from typing import TextIO, Union
 
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.scanner import ServerScanResult
 from sslyze.server_connectivity import ServerConnectivityInfo
+
+
+OutputType = Union[Path, TextIO]
 
 
 class OutputGenerator(ABC):
@@ -13,11 +17,17 @@ class OutputGenerator(ABC):
     Each method must be implemented and will be called in the order below, as the SSLyze CLI runs scans.
     """
 
-    def __init__(self, file_to: TextIO) -> None:
-        self._file_to = file_to
+    def __init__(self, file_to: OutputType) -> None:
+        if isinstance(file_to, Path):
+            self._close_file_to = True
+            self._file_to = file_to.open("wt", encoding="utf-8")
+        else:
+            self._close_file_to = False
+            self._file_to = file_to
 
     def close(self) -> None:
-        self._file_to.close()
+        if self._close_file_to:
+            self._file_to.close()
 
     @abstractmethod
     def command_line_parsed(self, parsed_command_line: ParsedCommandLine) -> None:

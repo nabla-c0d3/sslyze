@@ -1,10 +1,10 @@
 import json
 from dataclasses import asdict, dataclass
-from typing import TextIO, List
+from typing import List
 
 from sslyze.__version__ import __url__, __version__
 from sslyze.cli.command_line_parser import ParsedCommandLine
-from sslyze.cli.output_generator import OutputGenerator
+from sslyze.cli.output_generator import OutputGenerator, OutputType
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.json import JsonEncoder
 from sslyze.scanner import ServerScanResult
@@ -30,7 +30,7 @@ class _SslyzeOutputAsJson:
 
 
 class JsonOutputGenerator(OutputGenerator):
-    def __init__(self, file_to: TextIO) -> None:
+    def __init__(self, file_to: OutputType) -> None:
         super().__init__(file_to)
         self._server_connectivity_errors: List[_ServerConnectivityErrorAsJson] = []
         self._server_scan_results: List[ServerScanResult] = []

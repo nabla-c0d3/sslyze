@@ -1,21 +1,23 @@
 from io import StringIO
 
-from sslyze.cli.console_output import ConsoleOutputGenerator
+from sslyze.cli.console_output import ObserverToGenerateConsoleOutput
 from sslyze.plugins.compression_plugin import CompressionScanResult
-from sslyze import ScanCommandError, ScanCommandErrorReasonEnum, ScanCommand
-from sslyze.scanner.server_scan_request import ScanCommandsResults
-from sslyze.server_connectivity import ServerTlsProbingResult, ClientAuthRequirementEnum, TlsVersionEnum
+from sslyze import ScanCommandErrorReasonEnum, ScanCommandAttemptStatusEnum
+from sslyze.scanner.models import CompressionScanAttempt
+from sslyze.server_connectivity import ClientAuthRequirementEnum
 from tests.factories import (
     ServerScanResultFactory,
     TracebackExceptionFactory,
-    ServerConnectivityInfoFactory,
     ServerNetworkLocationViaHttpProxyFactory,
     ParsedCommandLineFactory,
     ConnectionToServerFailedFactory,
+    ServerScanRequestFactory,
+    ServerTlsProbingResultFactory,
+    AllScanCommandsAttemptsFactory,
 )
 
 
-class TestConsoleOutputGenerator:
+class TestObserverToGenerateConsoleOutput:
     def test_command_line_parsed(self):
         # Given a command line used to run sslyze
         parsed_cmd_line = ParsedCommandLineFactory.create()
@@ -26,7 +28,7 @@ class TestConsoleOutputGenerator:
 
         # When generating the console output for this
         with StringIO() as file_out:
-            console_gen = ConsoleOutputGenerator(file_to=file_out)
+            console_gen = ObserverToGenerateConsoleOutput(file_to=file_out)
             console_gen.command_line_parsed(parsed_cmd_line)
             final_output = file_out.getvalue()
 
@@ -36,88 +38,87 @@ class TestConsoleOutputGenerator:
             assert bad_server.server_string in final_output
             assert bad_server.error_message in final_output
 
-    def test_server_connectivity_test_failed(self):
+    def test_server_connectivity_test_error(self):
         # Given a server to scan to which sslyze could not connect
+        scan_request = ServerScanRequestFactory.create()
         error = ConnectionToServerFailedFactory.create()
 
         # When generating the console output for this
         with StringIO() as file_out:
-            console_gen = ConsoleOutputGenerator(file_to=file_out)
-            console_gen.server_connectivity_test_failed(error)
+            console_gen = ObserverToGenerateConsoleOutput(file_to=file_out)
+            console_gen.server_connectivity_test_error(scan_request, error)
             final_output = file_out.getvalue()
 
         # It succeeds and the connectivity error was displayed
         assert final_output
         assert error.error_message in final_output
 
-    def test_server_connectivity_test_succeeded(self):
+    def test_server_connectivity_test_completed(self):
         # Given a server to scan to which sslyze was able to connect
-        server_info = ServerConnectivityInfoFactory.create()
+        scan_request = ServerScanRequestFactory.create()
+        connectivity_result = ServerTlsProbingResultFactory.create()
 
         # When generating the console output for this
         with StringIO() as file_out:
-            console_gen = ConsoleOutputGenerator(file_to=file_out)
-            console_gen.server_connectivity_test_succeeded(server_info)
+            console_gen = ObserverToGenerateConsoleOutput(file_to=file_out)
+            console_gen.server_connectivity_test_completed(scan_request, connectivity_result)
             final_output = file_out.getvalue()
 
         # It succeeds and the server is displayed
         assert final_output
-        assert server_info.server_location.hostname in final_output
+        assert scan_request.server_location.hostname in final_output
 
-    def test_server_connectivity_test_succeeded_with_required_client_auth(self):
+    def test_server_connectivity_test_completed_with_required_client_auth(self):
         # Given a server to scan to which sslyze was able to connect
-        server_info = ServerConnectivityInfoFactory.create(
-            tls_probing_result=ServerTlsProbingResult(
-                highest_tls_version_supported=TlsVersionEnum.TLS_1_2,
-                cipher_suite_supported="AES",
-                supports_ecdh_key_exchange=True,
-                # And the server requires client authentication
-                client_auth_requirement=ClientAuthRequirementEnum.REQUIRED,
-            )
+        scan_request = ServerScanRequestFactory.create()
+        connectivity_result = ServerTlsProbingResultFactory.create(
+            # And the server requires client authentication
+            client_auth_requirement=ClientAuthRequirementEnum.REQUIRED,
         )
 
         # When generating the console output for this
         with StringIO() as file_out:
-            console_gen = ConsoleOutputGenerator(file_to=file_out)
-            console_gen.server_connectivity_test_succeeded(server_info)
+            console_gen = ObserverToGenerateConsoleOutput(file_to=file_out)
+            console_gen.server_connectivity_test_completed(scan_request, connectivity_result)
             final_output = file_out.getvalue()
 
         # It succeeds and the fact that the server requires client auth was displayed
         assert final_output
         assert "Server REQUIRED client authentication" in final_output
 
-    def test_server_connectivity_test_succeeded_with_http_tunneling(self):
+    def test_server_connectivity_test_completed_with_http_tunneling(self):
         # Given a server to scan to which sslyze was able to connect
-        server_info = ServerConnectivityInfoFactory.create(
+        scan_request = ServerScanRequestFactory.create(
             # And sslyze connected to it via an HTTP proxy
             server_location=ServerNetworkLocationViaHttpProxyFactory.create()
         )
+        connectivity_result = ServerTlsProbingResultFactory.create()
 
         # When generating the console output for this
         with StringIO() as file_out:
-            console_gen = ConsoleOutputGenerator(file_to=file_out)
-            console_gen.server_connectivity_test_succeeded(server_info)
+            console_gen = ObserverToGenerateConsoleOutput(file_to=file_out)
+            console_gen.server_connectivity_test_completed(scan_request, connectivity_result)
             final_output = file_out.getvalue()
 
         # It succeeds and the fact that an HTTP proxy was used was displayed
         assert final_output
         assert "proxy" in final_output
 
-    def test_scans_started(self):
-        with StringIO() as file_out:
-            console_gen = ConsoleOutputGenerator(file_to=file_out)
-            console_gen.scans_started()
-            final_output = file_out.getvalue()
-        assert final_output
-
     def test_server_scan_completed(self):
-        # Given a completed scan for a server
-        scan_commands_results = ScanCommandsResults(tls_compression=CompressionScanResult(supports_compression=True))
-        scan_result = ServerScanResultFactory.create(scan_commands_results=scan_commands_results)
+        # Given a completed scan for a server when the compression scan command was run
+        compression_attempt = CompressionScanAttempt(
+            status=ScanCommandAttemptStatusEnum.COMPLETED,
+            error_reason=None,
+            error_trace=None,
+            result=CompressionScanResult(supports_compression=True),
+        )
+        scan_result = ServerScanResultFactory.create(
+            scan_result=AllScanCommandsAttemptsFactory.create({"tls_compression": compression_attempt})
+        )
 
         # When generating the console output for this server scan
         with StringIO() as file_out:
-            console_gen = ConsoleOutputGenerator(file_to=file_out)
+            console_gen = ObserverToGenerateConsoleOutput(file_to=file_out)
             console_gen.server_scan_completed(scan_result)
             final_output = file_out.getvalue()
 
@@ -126,19 +127,22 @@ class TestConsoleOutputGenerator:
         assert "Compression" in final_output
 
     def test_server_scan_completed_with_proxy(self):
-        # Given a completed scan for a server
-        server_info = ServerConnectivityInfoFactory.create(
-            # And sslyze connected to the server via an HTTP proxy
-            server_location=ServerNetworkLocationViaHttpProxyFactory.create()
+        # Given a completed scan for a server when the compression scan command was run
+        compression_attempt = CompressionScanAttempt(
+            status=ScanCommandAttemptStatusEnum.COMPLETED,
+            error_reason=None,
+            error_trace=None,
+            result=CompressionScanResult(supports_compression=True),
         )
-        scan_commands_results = ScanCommandsResults(tls_compression=CompressionScanResult(supports_compression=True))
         scan_result = ServerScanResultFactory.create(
-            server_info=server_info, scan_commands_results=scan_commands_results
+            # And sslyze connected to the server via an HTTP proxy
+            server_location=ServerNetworkLocationViaHttpProxyFactory.create(),
+            scan_result=AllScanCommandsAttemptsFactory.create({"tls_compression": compression_attempt}),
         )
 
         # When generating the console output for this server scan
         with StringIO() as file_out:
-            console_gen = ConsoleOutputGenerator(file_to=file_out)
+            console_gen = ObserverToGenerateConsoleOutput(file_to=file_out)
             console_gen.server_scan_completed(scan_result)
             final_output = file_out.getvalue()
 
@@ -149,35 +153,29 @@ class TestConsoleOutputGenerator:
 
     def test_server_scan_completed_with_error(self):
         # Given a completed scan for a server that triggered an error
-        exception_trace = TracebackExceptionFactory.create()
-        scan_errors = [
-            ScanCommandError(
-                scan_command=ScanCommand.TLS_COMPRESSION,
-                reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
-                exception_trace=exception_trace,
-            )
-        ]
-        scan_result = ServerScanResultFactory.create(scan_commands_errors=scan_errors)
+        error_trace = TracebackExceptionFactory.create()
+        compression_attempt = CompressionScanAttempt(
+            status=ScanCommandAttemptStatusEnum.ERROR,
+            error_reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
+            error_trace=error_trace,
+            result=None,
+        )
+        scan_result = ServerScanResultFactory.create(
+            scan_result=AllScanCommandsAttemptsFactory.create({"tls_compression": compression_attempt})
+        )
 
         # When generating the console output for this server scan
         with StringIO() as file_out:
-            console_gen = ConsoleOutputGenerator(file_to=file_out)
+            console_gen = ObserverToGenerateConsoleOutput(file_to=file_out)
             console_gen.server_scan_completed(scan_result)
             final_output = file_out.getvalue()
 
         # It succeeds and displays the error
         assert final_output
-        assert exception_trace.stack.format()[0] in final_output
+        assert error_trace.stack.format()[0] in final_output
 
     def test_scans_completed(self):
-        # Given the time sslyze took to complete all scans
-        scan_time = 1.3
-
-        # When generating the console output for this
+        # When generating the console output for when all scans got completed, it succeeds
         with StringIO() as file_out:
-            console_gen = ConsoleOutputGenerator(file_to=file_out)
-            console_gen.scans_completed(scan_time)
-            final_output = file_out.getvalue()
-
-        # It succeeds and the total scan time is displayed
-        assert str(scan_time) in final_output
+            console_gen = ObserverToGenerateConsoleOutput(file_to=file_out)
+            console_gen.all_server_scans_completed()

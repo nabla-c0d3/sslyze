@@ -13,12 +13,10 @@ from sslyze.plugins import plugin_base
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.plugins.plugin_base import OptParseCliOption
 from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
-from sslyze.scanner.server_scan_request import ScanCommandsExtraArguments
+from sslyze.scanner.models import ScanCommandsExtraArguments
 
 from sslyze.server_setting import (
     HttpProxySettings,
-    ServerNetworkLocationViaDirectConnection,
-    ServerNetworkLocationViaHttpProxy,
     ServerNetworkLocation,
     ServerNetworkConfiguration,
     InvalidServerNetworkConfigurationError,
@@ -237,21 +235,17 @@ class CommandLineParser:
             if http_proxy_settings:
                 # Connect to the server via an HTTP proxy
                 # A limitation when using the CLI is that only one http_proxy_settings can be specified for all servers
-                server_location = ServerNetworkLocationViaHttpProxy(
-                    hostname=hostname, port=final_port, http_proxy_settings=http_proxy_settings
+                server_location = ServerNetworkLocation(
+                    hostname=hostname, port=final_port, http_proxy_settings=http_proxy_settings,
                 )
             else:
                 # Connect to the server directly
                 if ip_address:
-                    server_location = ServerNetworkLocationViaDirectConnection(
-                        hostname=hostname, port=final_port, ip_address=ip_address
-                    )
+                    server_location = ServerNetworkLocation(hostname=hostname, port=final_port, ip_address=ip_address,)
                 else:
                     # No IP address supplied - do a DNS lookup
                     try:
-                        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-                            hostname=hostname, port=final_port
-                        )
+                        server_location = ServerNetworkLocation(hostname=hostname, port=final_port,)
                     except ServerHostnameCouldNotBeResolved:
                         invalid_server_strings.append(
                             InvalidServerStringError(

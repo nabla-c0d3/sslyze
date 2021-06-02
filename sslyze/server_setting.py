@@ -1,6 +1,6 @@
 import socket
-from abc import ABC
 from base64 import b64encode
+from enum import Enum
 from pathlib import Path
 from typing import Optional
 
@@ -13,57 +13,6 @@ from nassl.ssl_client import OpenSslFileTypeEnum, SslClient
 
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.errors import InvalidServerNetworkConfigurationError, ServerHostnameCouldNotBeResolved
-
-
-@dataclass(frozen=True)
-class ServerNetworkLocation(ABC):
-    hostname: str
-    port: int
-
-    def __init__(self, hostname: str, port: int) -> None:
-        # Official workaround for frozen=True: https://docs.python.org/3/library/dataclasses.html#frozen-instances
-        # Store the hostname in ACE format in the case the domain name is unicode
-        object.__setattr__(self, "hostname", hostname.encode("idna").decode("utf-8"))
-        object.__setattr__(self, "port", port)
-
-
-def _do_dns_lookup(hostname: str, port: int) -> str:
-    try:
-        addr_infos = socket.getaddrinfo(hostname, port, socket.AF_UNSPEC, socket.IPPROTO_IP)
-    except (socket.gaierror, IndexError, ConnectionError):
-        raise ServerHostnameCouldNotBeResolved(f"Could not resolve {hostname}")
-
-    family, socktype, proto, canonname, sockaddr = addr_infos[0]
-
-    # By default use the first DNS entry, IPv4 or IPv6
-    tentative_ip_addr = sockaddr[0]
-
-    # But try to use IPv4 if we have both IPv4 and IPv6 addresses, to work around buggy networks
-    for family, socktype, proto, canonname, sockaddr in addr_infos:
-        if family == socket.AF_INET:
-            tentative_ip_addr = sockaddr[0]
-
-    return tentative_ip_addr
-
-
-@dataclass(frozen=True)
-class ServerNetworkLocationViaDirectConnection(ServerNetworkLocation):
-    """All the information needed to connect to a server directly.
-
-    Attributes:
-        hostname: The server's hostname.
-        port: The server's TLS port number.
-        ip_address: The server's IP address. If you do not have the server's IP address, instantiate this class using
-            `with_ip_address_lookup()` to do a DNS lookup for the specified `hostname`.
-    """
-
-    ip_address: str
-
-    @classmethod
-    def with_ip_address_lookup(cls, hostname: str, port: int) -> "ServerNetworkLocationViaDirectConnection":
-        """Helper factory method to automatically do a DNS lookup of the supplied hostname.
-        """
-        return cls(hostname=hostname, port=port, ip_address=_do_dns_lookup(hostname, port))
 
 
 @dataclass(frozen=True)
@@ -101,18 +50,80 @@ class HttpProxySettings:
         return basic_auth_token.decode("utf-8")
 
 
+class ConnectionTypeEnum(str, Enum):
+    DIRECT = "DIRECT"
+    VIA_HTTP_PROXY = "VIA_HTTP_PROXY"
+
+
 @dataclass(frozen=True)
-class ServerNetworkLocationViaHttpProxy(ServerNetworkLocation):
-    """All the information needed to connect to a server by tunneling the traffic through an HTTP proxy.
+class ServerNetworkLocation:
+    """All the information needed to connect to a server.
 
     Attributes:
         hostname: The server's hostname.
         port: The server's TLS port number.
-        http_proxy_settings: The HTTP proxy configuration to use in order to tunnel the scans through a proxy. The
-            proxy will be responsible for looking up the server's IP address and connecting to it.
+        connection_type: How sslyze should connect to the server: either directly, or via an HTTP proxy.
+        ip_address: The server's IP address; only set if sslyze is connecting directly to the server. If no IP address
+            is supplied and connection_type is set to DIRECT, sslyze will automatically lookup one IP address for the
+             supplied hostname.
+        http_proxy_settings: The HTTP proxy configuration to use in order to tunnel the scans through a proxy; only set
+            if sslyze is connecting to the server via an HTTP proxy. The proxy will be responsible for looking up the
+            server's IP address and connecting to it.
     """
 
-    http_proxy_settings: HttpProxySettings
+    hostname: str
+    port: int = 443
+
+    # Set if SSLyze is directly connecting to the server ie. connection_type == DIRECT
+    ip_address: Optional[str] = None
+
+    # Set if SSLyze is connecting via a proxy ie. connection_type == VIA_HTTP_PROXY
+    http_proxy_settings: Optional[HttpProxySettings] = None
+
+    @property
+    def connection_type(self) -> ConnectionTypeEnum:
+        if self.ip_address:
+            return ConnectionTypeEnum.DIRECT
+        elif self.http_proxy_settings:
+            return ConnectionTypeEnum.VIA_HTTP_PROXY
+        else:
+            raise ValueError("Should never happen")
+
+    def __post_init__(self) -> None:
+        # Official workaround for frozen=True: https://docs.python.org/3/library/dataclasses.html#frozen-instances
+        # Store the hostname in ACE format in the case the domain name is unicode
+        hostname = self.hostname
+        object.__setattr__(self, "hostname", hostname.encode("idna").decode("utf-8"))
+
+        if self.http_proxy_settings and self.ip_address:
+            raise ValueError(
+                "Cannot supply both ip_address and http_proxy_settings: when using an HTTP proxy, the proxy will lookup"
+                "the server's IP address automatically."
+            )
+
+        if not self.ip_address and not self.http_proxy_settings:
+            # Automatically lookup the IP address
+            ip_address = _do_dns_lookup(self.hostname, self.port)
+            object.__setattr__(self, "ip_address", ip_address)
+
+
+def _do_dns_lookup(hostname: str, port: int) -> str:
+    try:
+        addr_infos = socket.getaddrinfo(hostname, port, socket.AF_UNSPEC, socket.IPPROTO_IP)
+    except (socket.gaierror, IndexError, ConnectionError):
+        raise ServerHostnameCouldNotBeResolved(f"Could not resolve {hostname}")
+
+    family, socktype, proto, canonname, sockaddr = addr_infos[0]
+
+    # By default use the first DNS entry, IPv4 or IPv6
+    tentative_ip_addr = sockaddr[0]
+
+    # But try to use IPv4 if we have both IPv4 and IPv6 addresses, to work around buggy networks
+    for family, socktype, proto, canonname, sockaddr in addr_infos:
+        if family == socket.AF_INET:
+            tentative_ip_addr = sockaddr[0]
+
+    return tentative_ip_addr
 
 
 @dataclass(frozen=True)

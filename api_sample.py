@@ -1,111 +1,96 @@
 from pathlib import Path
 
 from sslyze import (
-    ServerNetworkLocationViaDirectConnection,
-    ServerConnectivityTester,
     Scanner,
     ServerScanRequest,
-    ScanCommand,
     SslyzeOutputAsJson,
+    ServerNetworkLocation,
+    ScanCommandAttemptStatusEnum,
+    ServerScanStatusEnum,
 )
-from sslyze.errors import ConnectionToServerFailed
+from sslyze.errors import ServerHostnameCouldNotBeResolved
+from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
+
+
+def _print_failed_scan_command_attempt(scan_command_attempt: ScanCommandAttempt) -> None:
+    print(
+        f"\nError when running ssl_2_0_cipher_suites: {scan_command_attempt.error_reason}:\n"
+        f"{scan_command_attempt.error_trace}"
+    )
 
 
 def main() -> None:
-    # First validate that we can connect to the servers we want to scan
-    servers_to_scan = []
-    for hostname in ["cloudflare.com", "google.com"]:
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(hostname, 443)
-        try:
-            server_info = ServerConnectivityTester().perform(server_location)
-            servers_to_scan.append(server_info)
-        except ConnectionToServerFailed as e:
-            print(f"Error connecting to {server_location.hostname}:{server_location.port}: {e.error_message}")
-            return
+    # First create the scan requests for each server that we want to scan
+    try:
+        all_scan_requests = [
+            ServerScanRequest(server_location=ServerNetworkLocation(hostname="cloudflare.com")),
+            ServerScanRequest(server_location=ServerNetworkLocation(hostname="google.com")),
+        ]
+    except ServerHostnameCouldNotBeResolved:
+        # Handle bad input ie. invalid hostnames
+        print("Error resolving the supplied hostnames")
+        return
 
+    # Then queue all the scans
     scanner = Scanner()
+    scanner.queue_scans(all_scan_requests)
 
-    # Then queue some scan commands for each server
-    all_server_scans = [
-        ServerScanRequest(
-            server_info=server_info, scan_commands={ScanCommand.CERTIFICATE_INFO, ScanCommand.SSL_2_0_CIPHER_SUITES}
-        )
-        for server_info in servers_to_scan
-    ]
-    scanner.start_scans(all_server_scans)
-
-    # Then retrieve the result of the scan commands for each server
+    # And retrieve and process the results for each server
     for server_scan_result in scanner.get_results():
-        print(f"\nResults for {server_scan_result.server_info.server_location.hostname}:")
+        print(f"\n\n****Results for {server_scan_result.server_location.hostname}****")
 
-        # Scan commands that were run with no errors
-        ssl2_result = server_scan_result.scan_commands_results.ssl_2_0_cipher_suites
-        if ssl2_result:
+        # Were we able to connect to the server and run the scan?
+        if server_scan_result.scan_status == ServerScanStatusEnum.ERROR_NO_CONNECTIVITY:
+            # No we weren't
+            print(
+                f"\nError: Could not connect to {server_scan_result.server_location.hostname}:"
+                f" {server_scan_result.connectivity_error_trace}"
+            )
+            continue
+
+        # Since we were able to run the scan, scan_result is populated
+        assert server_scan_result.scan_result
+
+        # Process the result of the SSL 2.0 scan command
+        ssl2_attempt = server_scan_result.scan_result.ssl_2_0_cipher_suites
+        if ssl2_attempt.status == ScanCommandAttemptStatusEnum.ERROR:
+            # An error happened when this scan command was run
+            _print_failed_scan_command_attempt(ssl2_attempt)
+        elif ssl2_attempt.status == ScanCommandAttemptStatusEnum.COMPLETED:
+            # This scan command was run successfully
+            ssl2_result = ssl2_attempt.result
+            assert ssl2_result
             print("\nAccepted cipher suites for SSL 2.0:")
             for accepted_cipher_suite in ssl2_result.accepted_cipher_suites:
                 print(f"* {accepted_cipher_suite.cipher_suite.name}")
 
-        certinfo_result = server_scan_result.scan_commands_results.certificate_info
-        if certinfo_result:
-            print("\nCertificate info:")
-            for cert_deployment in certinfo_result.certificate_deployments:
-                print(f"Leaf certificate: \n{cert_deployment.received_certificate_chain_as_pem[0]}")
-
-        # Scan commands that were run with errors
-        for scan_command_error in server_scan_result.scan_commands_errors:
-            print(f"\nError when running {scan_command_error.scan_command}:\n{scan_command_error.exception_trace}")
-
-
-def basic_example_connectivity_testing() -> None:
-    # Define the server that you want to scan
-    server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
-
-    # Do connectivity testing to ensure SSLyze is able to connect
-    try:
-        server_info = ServerConnectivityTester().perform(server_location)
-    except ConnectionToServerFailed as e:
-        # Could not connect to the server; abort
-        print(f"Error connecting to {server_location}: {e.error_message}")
-        return
-    print(f"Connectivity testing completed: {server_info}")
-
-
-def basic_example() -> None:
-    # Define the server that you want to scan
-    server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
-
-    # Do connectivity testing to ensure SSLyze is able to connect
-    try:
-        server_info = ServerConnectivityTester().perform(server_location)
-    except ConnectionToServerFailed as e:
-        # Could not connect to the server; abort
-        print(f"Error connecting to {server_location}: {e.error_message}")
-        return
-
-    # Then queue some scan commands for the server
-    scanner = Scanner()
-    server_scan_req = ServerScanRequest(
-        server_info=server_info, scan_commands={ScanCommand.CERTIFICATE_INFO, ScanCommand.SSL_2_0_CIPHER_SUITES},
-    )
-    scanner.start_scans([server_scan_req])
-
-    # Then retrieve the results
-    for server_scan_result in scanner.get_results():
-        print(f"\nResults for {server_scan_result.server_info.server_location.hostname}:")
-
-        # SSL 2.0 results
-        ssl2_result = server_scan_result.scan_commands_results.ssl_2_0_cipher_suites
-        if ssl2_result:
-            print("\nAccepted cipher suites for SSL 2.0:")
-            for accepted_cipher_suite in ssl2_result.accepted_cipher_suites:
+        # Process the result of the TLS 1.3 scan command
+        tls1_3_attempt = server_scan_result.scan_result.tls_1_3_cipher_suites
+        if tls1_3_attempt.status == ScanCommandAttemptStatusEnum.ERROR:
+            _print_failed_scan_command_attempt(ssl2_attempt)
+        elif tls1_3_attempt.status == ScanCommandAttemptStatusEnum.COMPLETED:
+            tls1_3_result = tls1_3_attempt.result
+            assert tls1_3_result
+            print("\nAccepted cipher suites for TLS 1.3:")
+            for accepted_cipher_suite in tls1_3_result.accepted_cipher_suites:
                 print(f"* {accepted_cipher_suite.cipher_suite.name}")
 
-        # Certificate info results
-        certinfo_result = server_scan_result.scan_commands_results.certificate_info
-        if certinfo_result:
-            print("\nCertificate info:")
+        # Process the result of the certificate info scan command
+        certinfo_attempt = server_scan_result.scan_result.certificate_info
+        if certinfo_attempt.status == ScanCommandAttemptStatusEnum.ERROR:
+            _print_failed_scan_command_attempt(certinfo_attempt)
+        elif certinfo_attempt.status == ScanCommandAttemptStatusEnum.COMPLETED:
+            certinfo_result = certinfo_attempt.result
+            assert certinfo_result
+            print("\nLeaf certificates deployed:")
             for cert_deployment in certinfo_result.certificate_deployments:
-                print(f"Leaf certificate: \n{cert_deployment.received_certificate_chain_as_pem[0]}")
+                leaf_cert = cert_deployment.received_certificate_chain[0]
+                print(
+                    f"{leaf_cert.public_key().__class__.__name__}: {leaf_cert.subject.rfc4514_string()}"
+                    f" (Serial: {leaf_cert.serial_number})"
+                )
+
+        # etc... Other scan command results to process are in server_scan_result.scan_result
 
 
 def example_json_result_parsing() -> None:
@@ -119,14 +104,22 @@ def example_json_result_parsing() -> None:
     # Making it easy to do post-processing and inspection of the results
     print("The following servers were scanned:")
     for server_scan_result in parsed_results.server_scan_results:
-        print(f"  {server_scan_result.server_info.server_location}")
+        print(f"\n****{server_scan_result.server_location.hostname}:{server_scan_result.server_location.port}****")
 
-        certinfo_result = server_scan_result.scan_commands_results.certificate_info
-        if not certinfo_result:
-            raise RuntimeError("Should never happen")
-        for cert_deployment in certinfo_result.certificate_deployments:
-            print(f"    SHA1 of leaf certificate: {cert_deployment.received_certificate_chain[0].fingerprint_sha1}")
-        print("")
+        if server_scan_result.scan_status == ServerScanStatusEnum.ERROR_NO_CONNECTIVITY:
+            print(f"That scan failed with the following error:\n{server_scan_result.connectivity_error_trace}")
+            continue
+
+        assert server_scan_result.scan_result
+        certinfo_attempt = server_scan_result.scan_result.certificate_info
+        if certinfo_attempt.status == ScanCommandAttemptStatusEnum.ERROR:
+            _print_failed_scan_command_attempt(certinfo_attempt)  # type: ignore
+        else:
+            certinfo_result = server_scan_result.scan_result.certificate_info.result
+            assert certinfo_result
+            for cert_deployment in certinfo_result.certificate_deployments:
+                print(f"    SHA1 of leaf certificate: {cert_deployment.received_certificate_chain[0].fingerprint_sha1}")
+            print("")
 
 
 if __name__ == "__main__":

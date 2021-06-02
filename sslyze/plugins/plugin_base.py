@@ -6,8 +6,21 @@ from concurrent.futures import ThreadPoolExecutor
 
 from dataclasses import dataclass
 
-from typing import List, Callable, Any, Optional, TYPE_CHECKING, Tuple, ClassVar, Dict, Type, Union, TypeVar, Generic
-
+from typing import (
+    List,
+    Callable,
+    Any,
+    Optional,
+    TYPE_CHECKING,
+    Tuple,
+    ClassVar,
+    Dict,
+    Type,
+    Union,
+    TypeVar,
+    Generic,
+    Sequence,
+)
 
 if TYPE_CHECKING:
     from sslyze.server_connectivity import ServerConnectivityInfo
@@ -36,7 +49,7 @@ class ScanJob:
     """
 
     function_to_call: Callable
-    function_arguments: Any
+    function_arguments: Sequence[Any]
 
 
 @dataclass(frozen=True)

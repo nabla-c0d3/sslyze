@@ -7,6 +7,7 @@ import pydantic
 from nassl._nassl import OpenSSLError
 from nassl.legacy_ssl_client import LegacySslClient
 
+from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
@@ -35,6 +36,10 @@ class SessionRenegotiationScanResult(ScanCommandResult):
 
 # Identical fields in the JSON output
 SessionRenegotiationScanResultAsJson = pydantic.dataclasses.dataclass(SessionRenegotiationScanResult, frozen=True)
+
+
+class SessionRenegotiationScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[SessionRenegotiationScanResultAsJson]  # type: ignore
 
 
 class _ScanJobResultEnum(Enum):

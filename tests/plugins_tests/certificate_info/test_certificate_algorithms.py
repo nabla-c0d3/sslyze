@@ -6,10 +6,11 @@ import pytest
 from cryptography import hazmat
 
 from sslyze.plugins.certificate_info.json_output import CertificateInfoScanResultAsJson
+from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer
 
-from sslyze import ServerNetworkLocationViaDirectConnection, ServerConnectivityTester
+from sslyze import ServerNetworkLocation
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 
 
@@ -18,10 +19,10 @@ class TestCertificateAlgorithms:
     def test_rsa_certificate(self):
         # Given a server that is configured with an RSA certificate
         with ModernOpenSslServer() as server:
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, port=server.port, ip_address=server.ip_address
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When running the scan, it succeeds
             scan_result = CertificateInfoImplementation.scan_server(server_info)
@@ -42,10 +43,10 @@ class TestCertificateAlgorithms:
             server_certificate_path=Path(__file__).parent.absolute() / "server-ed25519-cert.pem",
             server_key_path=Path(__file__).parent.absolute() / "server-ed25519-key.pem",
         ) as server:
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, port=server.port, ip_address=server.ip_address
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When running the scan, it succeeds
             scan_result = CertificateInfoImplementation.scan_server(server_info)
@@ -61,8 +62,8 @@ class TestCertificateAlgorithms:
 
     def test_ecdsa_certificate(self):
         # Given a server to scan that has an ECDSA certificate
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.cloudflare.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.cloudflare.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan, it succeeds
         scan_result = CertificateInfoImplementation.scan_server(server_info)
@@ -78,8 +79,8 @@ class TestCertificateAlgorithms:
     @pytest.mark.parametrize("certificate_name_field", ["subject", "issuer"])
     def test_invalid_certificate_bad_name(self, certificate_name_field):
         # Given a server to scan
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.cloudflare.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.cloudflare.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # And the server has a certificate with an invalid Subject field
         with mock.patch.object(

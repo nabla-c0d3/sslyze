@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 import pydantic
 from nassl._nassl import SslError
 
+from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
     ScanCommandExtraArgument,
@@ -135,6 +136,10 @@ class HttpHeadersScanResultAsJson(pydantic.BaseModel):
 
 
 HttpHeadersScanResultAsJson.__doc__ = HttpHeadersScanResult.__doc__  # type: ignore
+
+
+class HttpHeadersScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[HttpHeadersScanResultAsJson]
 
 
 class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, None]):

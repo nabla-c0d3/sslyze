@@ -5,6 +5,7 @@ import pydantic
 from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslEarlyDataStatusEnum, SslClient
 
+from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
@@ -32,6 +33,10 @@ class EarlyDataScanResult(ScanCommandResult):
 
 # Identical fields in the JSON output
 EarlyDataScanResultAsJson = pydantic.dataclasses.dataclass(EarlyDataScanResult, frozen=True)
+
+
+class EarlyDataScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[EarlyDataScanResultAsJson]  # type: ignore
 
 
 class _EarlyDataCliConnector(ScanCommandCliConnector[EarlyDataScanResult, None]):

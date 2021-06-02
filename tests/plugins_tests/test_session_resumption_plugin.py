@@ -7,13 +7,13 @@ from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportScanResult,
     SessionResumptionSupportExtraArgument,
 )
-from sslyze.server_connectivity import ServerConnectivityTester
 
 from sslyze.server_setting import (
-    ServerNetworkLocationViaDirectConnection,
+    ServerNetworkLocation,
     ServerNetworkConfiguration,
     ClientAuthenticationCredentials,
 )
+from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, LegacyOpenSslServer
 
@@ -21,8 +21,8 @@ from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, Lega
 class TestSessionResumptionSupport:
     def test(self):
         # Given a server that supports session resumption with both TLS tickets and session IDs
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.facebook.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.facebook.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When testing for resumption, it succeeds
         result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(server_info)
@@ -41,8 +41,8 @@ class TestSessionResumptionSupport:
 
     def test_with_extra_argument(self):
         # Given a server that supports session resumption with both TLS tickets and session IDs
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.google.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # And we customize how many session resumptions to perform
         extra_arg = SessionResumptionSupportExtraArgument(number_of_resumptions_to_attempt=20)
@@ -64,10 +64,10 @@ class TestSessionResumptionSupport:
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When testing for resumption, it fails
             with pytest.raises(ClientCertificateRequested):
@@ -77,7 +77,7 @@ class TestSessionResumptionSupport:
     def test_works_when_client_auth_succeeded(self):
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
             # And sslyze provides a client certificate
@@ -87,7 +87,7 @@ class TestSessionResumptionSupport:
                     certificate_chain_path=server.get_client_certificate_path(), key_path=server.get_client_key_path()
                 ),
             )
-            server_info = ServerConnectivityTester().perform(server_location, network_config)
+            server_info = check_connectivity_to_server_and_return_info(server_location, network_config)
 
             # When testing for resumption, it succeeds
             result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(server_info)

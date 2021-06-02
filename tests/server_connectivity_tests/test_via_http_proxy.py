@@ -2,9 +2,9 @@ import threading
 
 import pytest
 
-from sslyze.cli.json_output import _ServerConnectivityInfoAsJson
-from sslyze.server_connectivity import ServerConnectivityTester
-from sslyze.server_setting import ServerNetworkLocationViaHttpProxy, HttpProxySettings
+from sslyze.cli.json_output import _ServerTlsProbingResultAsJson
+from sslyze.server_connectivity import check_connectivity_to_server
+from sslyze.server_setting import ServerNetworkLocation, HttpProxySettings, ServerNetworkConfiguration
 from sslyze.errors import (
     ConnectionToHttpProxyTimedOut,
     ConnectionToHttpProxyFailed,
@@ -22,7 +22,7 @@ class TestServerConnectivityTesterWithProxy:
         proxy_server_thread.start()
 
         # And a server location
-        server_location = ServerNetworkLocationViaHttpProxy(
+        server_location = ServerNetworkLocation(
             hostname="www.google.com",
             port=443,
             # Configured with this proxy
@@ -31,23 +31,25 @@ class TestServerConnectivityTesterWithProxy:
 
         # When testing connectivity
         try:
-            server_info = ServerConnectivityTester().perform(server_location)
+            tls_probing_result = check_connectivity_to_server(
+                server_location=server_location,
+                network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
+            )
         finally:
             proxy_server.shutdown()
 
         # It succeeds
-        assert server_info.tls_probing_result.cipher_suite_supported
-        assert server_info.tls_probing_result.highest_tls_version_supported
-        assert server_info.tls_probing_result.client_auth_requirement
-        assert server_info.get_preconfigured_tls_connection()
+        assert tls_probing_result.cipher_suite_supported
+        assert tls_probing_result.highest_tls_version_supported
+        assert tls_probing_result.client_auth_requirement
 
         # And the result can be converted to JSON
-        server_info_as_json = _ServerConnectivityInfoAsJson.from_orm(server_info)
-        assert server_info_as_json.json()
+        tls_probing_result_as_json = _ServerTlsProbingResultAsJson.from_orm(tls_probing_result)
+        assert tls_probing_result_as_json.json()
 
     def test_via_http_proxy_but_proxy_dns_error(self):
         # Given a server location
-        server_location = ServerNetworkLocationViaHttpProxy(
+        server_location = ServerNetworkLocation(
             hostname="www.google.com",
             port=443,
             # Configured with a proxy that cannot be looked up via DNS
@@ -56,11 +58,14 @@ class TestServerConnectivityTesterWithProxy:
 
         # When testing connectivity, it fails with the right error
         with pytest.raises(ConnectionToHttpProxyFailed):
-            ServerConnectivityTester().perform(server_location)
+            check_connectivity_to_server(
+                server_location=server_location,
+                network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
+            )
 
     def test_via_http_proxy_but_proxy_timed_out(self):
         # Given a server location
-        server_location = ServerNetworkLocationViaHttpProxy(
+        server_location = ServerNetworkLocation(
             hostname="www.google.com",
             port=443,
             # Configured with a proxy that will time out
@@ -69,11 +74,14 @@ class TestServerConnectivityTesterWithProxy:
 
         # When testing connectivity, it fails with the right error
         with pytest.raises(ConnectionToHttpProxyTimedOut):
-            ServerConnectivityTester().perform(server_location)
+            check_connectivity_to_server(
+                server_location=server_location,
+                network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
+            )
 
     def test_via_http_proxy_but_proxy_rejected_connection(self):
         # Given a server location
-        server_location = ServerNetworkLocationViaHttpProxy(
+        server_location = ServerNetworkLocation(
             hostname="www.google.com",
             port=443,
             # Configured with a proxy that's offline
@@ -82,11 +90,14 @@ class TestServerConnectivityTesterWithProxy:
 
         # When testing connectivity, it fails with the right error
         with pytest.raises(HttpProxyRejectedConnection):
-            ServerConnectivityTester().perform(server_location)
+            check_connectivity_to_server(
+                server_location=server_location,
+                network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
+            )
 
     def test_via_http_proxy_but_proxy_rejected_http_connect(self):
         # Given a server location
-        server_location = ServerNetworkLocationViaHttpProxy(
+        server_location = ServerNetworkLocation(
             hostname="www.google.com",
             port=443,
             # Configured with a proxy that is going to reject the HTTP CONNECT request
@@ -95,4 +106,7 @@ class TestServerConnectivityTesterWithProxy:
 
         # When testing connectivity, it fails with the right error
         with pytest.raises(HttpProxyRejectedConnection):
-            ServerConnectivityTester().perform(server_location)
+            check_connectivity_to_server(
+                server_location=server_location,
+                network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
+            )

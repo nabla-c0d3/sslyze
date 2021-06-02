@@ -20,6 +20,7 @@ from sslyze import (
     PathValidationResult,
     TrustStore,
 )
+from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.certificate_info._certificate_utils import (
     get_public_key_sha256,
     extract_dns_subject_alternative_names,
@@ -265,3 +266,7 @@ class CertificateInfoScanResultAsJson(_BaseModelWithOrmMode):
 
 
 CertificateInfoScanResultAsJson.__doc__ = CertificateInfoScanResult.__doc__  # type: ignore
+
+
+class CertificateInfoScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[CertificateInfoScanResultAsJson]

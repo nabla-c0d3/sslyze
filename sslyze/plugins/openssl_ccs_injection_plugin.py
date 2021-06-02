@@ -6,6 +6,7 @@ from typing import List, Optional
 import pydantic
 from nassl._nassl import WantReadError
 
+from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
@@ -39,6 +40,10 @@ class OpenSslCcsInjectionScanResult(ScanCommandResult):
 
 # Identical fields in the JSON output
 OpenSslCcsInjectionScanResultAsJson = pydantic.dataclasses.dataclass(OpenSslCcsInjectionScanResult, frozen=True)
+
+
+class OpenSslCcsInjectionScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[OpenSslCcsInjectionScanResultAsJson]  # type: ignore
 
 
 class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector[OpenSslCcsInjectionScanResult, None]):

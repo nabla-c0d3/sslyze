@@ -2,9 +2,9 @@
 
 # Classes for configuring the servers to scan
 from sslyze.server_setting import (
-    ServerNetworkLocationViaDirectConnection,
+    ServerNetworkLocation,
+    ConnectionTypeEnum,
     HttpProxySettings,
-    ServerNetworkLocationViaHttpProxy,
     ClientAuthenticationCredentials,
     ServerNetworkConfiguration,
 )
@@ -17,8 +17,6 @@ from sslyze.server_connectivity import (
     ClientAuthRequirementEnum,
     TlsVersionEnum,
     ServerTlsProbingResult,
-    ServerConnectivityInfo,
-    ServerConnectivityTester,
 )
 
 # Classes for setting up scan commands and extra arguments
@@ -26,14 +24,14 @@ from sslyze.plugins.scan_commands import ScanCommand
 from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument
 
 # Classes for scanning the servers
-from sslyze.scanner.server_scan_request import (
-    ScanCommandsExtraArguments,
+from sslyze.scanner.models import (
     ServerScanRequest,
-    ScanCommandsResults,
-    ScanCommandErrorReasonEnum,
-    ScanCommandError,
+    ScanCommandsExtraArguments,
     ServerScanResult,
+    ServerConnectivityStatusEnum,
+    ServerScanStatusEnum,
 )
+from sslyze.scanner.scan_command_attempt import ScanCommandAttemptStatusEnum, ScanCommandErrorReasonEnum
 from sslyze.scanner.scanner import Scanner
 
 

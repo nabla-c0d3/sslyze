@@ -6,6 +6,7 @@ from typing import List, Optional
 import pydantic
 from nassl._nassl import WantReadError
 
+from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
@@ -38,6 +39,10 @@ class HeartbleedScanResult(ScanCommandResult):
 
 # Identical fields in the JSON output
 HeartbleedScanResultAsJson = pydantic.dataclasses.dataclass(HeartbleedScanResult, frozen=True)
+
+
+class HeartbleedScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[HeartbleedScanResultAsJson]  # type: ignore
 
 
 class _HeartbleedCliConnector(ScanCommandCliConnector[HeartbleedScanResult, None]):

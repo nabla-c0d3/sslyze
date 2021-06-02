@@ -7,7 +7,8 @@ from nassl._nassl import OpenSSLError
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
 from nassl.ssl_client import ClientCertificateRequested, SslClient
 
-from sslyze import ServerConnectivityInfo
+from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
@@ -92,6 +93,10 @@ class SupportedEllipticCurvesScanResultAsJson(pydantic.BaseModel):
 
 
 SupportedEllipticCurvesScanResultAsJson.__doc__ = SupportedEllipticCurvesScanResult.__doc__  # type: ignore
+
+
+class SupportedEllipticCurvesScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[SupportedEllipticCurvesScanResultAsJson]
 
 
 class _SupportedEllipticCurvesCliConnector(ScanCommandCliConnector[SupportedEllipticCurvesScanResult, None]):

@@ -4,6 +4,8 @@ from typing import List, Optional
 import pydantic
 from nassl import _nassl
 from nassl.legacy_ssl_client import LegacySslClient
+
+from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
@@ -30,6 +32,10 @@ class FallbackScsvScanResult(ScanCommandResult):
 
 # Identical fields in the JSON output
 FallbackScsvScanResultAsJson = pydantic.dataclasses.dataclass(FallbackScsvScanResult, frozen=True)
+
+
+class FallbackScsvScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[FallbackScsvScanResultAsJson]  # type: ignore
 
 
 class _FallbackScsvCliConnector(ScanCommandCliConnector[FallbackScsvScanResult, None]):

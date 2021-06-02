@@ -1,97 +1,109 @@
-import json
-from io import StringIO
+from datetime import datetime
+from pathlib import Path
 
-from sslyze.cli.json_output import JsonOutputGenerator
+from sslyze.cli.json_output import SslyzeOutputAsJson, ServerScanResultAsJson
 from sslyze.plugins.compression_plugin import CompressionScanResult
-from sslyze.plugins.scan_commands import ScanCommand
-from sslyze import ScanCommandError, ScanCommandErrorReasonEnum, ScanCommandsResults
+from sslyze import ScanCommandErrorReasonEnum, ServerScanStatusEnum, ScanCommandAttemptStatusEnum
+from sslyze.scanner.models import CompressionScanAttempt
 from tests.factories import (
-    ParsedCommandLineFactory,
-    ConnectionToServerFailedFactory,
     ServerScanResultFactory,
     TracebackExceptionFactory,
+    AllScanCommandsAttemptsFactory,
 )
 
 
-class TestJsonOutputGenerator:
-    def test_command_line_parsed(self):
-        # Given a command line used to run sslyze
-        parsed_cmd_line = ParsedCommandLineFactory.create()
+class TestSslyzeOutputAsJson:
+    def test(self):
+        # Given a bunch of scan results
+        all_server_scan_results = [ServerScanResultFactory.create() for _ in range(5)]
 
-        # Which contained some valid, and some invalid servers
-        assert parsed_cmd_line.invalid_servers
-        assert parsed_cmd_line.servers_to_scans
+        # When converting them to JSON, it succeeds
+        json_output = SslyzeOutputAsJson(
+            server_scan_results=[ServerScanResultAsJson.from_orm(result) for result in all_server_scan_results],
+            date_scans_started=datetime.utcnow(),
+            date_scans_completed=datetime.utcnow(),
+        )
+        json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+        assert json_output_as_str
 
-        # When generating the JSON output for this
-        with StringIO() as file_out:
-            json_generator = JsonOutputGenerator(file_out)
-            json_generator.command_line_parsed(parsed_cmd_line)
+        # And it can be parsed again
+        assert SslyzeOutputAsJson.parse_raw(json_output_as_str)
 
-            # We call scans_completed() because this is when the output actually gets written to the file
-            json_generator.scans_completed(0.2)
-            final_output = file_out.getvalue()
+    def test_connectivity_test_failed(self):
+        # Given a scan result where sslyze was unable to connect to the server
+        server_scan_result = ServerScanResultFactory.create(scan_status=ServerScanStatusEnum.ERROR_NO_CONNECTIVITY)
 
-        # It succeeds and the invalid servers were displayed
-        assert final_output
-        for bad_server in parsed_cmd_line.invalid_servers:
-            assert json.dumps(bad_server.server_string) in final_output
-            assert json.dumps(bad_server.error_message) in final_output
+        # When converting it to JSON, it succeeds
+        json_output = SslyzeOutputAsJson(
+            server_scan_results=[ServerScanResultAsJson.from_orm(server_scan_result)],
+            date_scans_started=datetime.utcnow(),
+            date_scans_completed=datetime.utcnow(),
+        )
+        json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+        assert json_output_as_str
 
-    def test_server_connectivity_test_failed(self):
-        # Given a server to scan to which sslyze could not connect
-        error = ConnectionToServerFailedFactory.create()
+        # And it can be parsed again
+        assert SslyzeOutputAsJson.parse_raw(json_output_as_str)
 
-        # When generating the JSON output for this
-        with StringIO() as file_out:
-            json_generator = JsonOutputGenerator(file_to=file_out)
-            json_generator.server_connectivity_test_failed(error)
-
-            # We call scans_completed() because this is when the output actually gets written to the file
-            json_generator.scans_completed(0.2)
-            final_output = file_out.getvalue()
-
-        # It succeeds and the connectivity error was displayed
-        assert final_output
-        assert json.dumps(error.error_message) in final_output
-
-    def test_server_scan_completed(self):
-        # Given a completed scan for a server
-        scan_result = ServerScanResultFactory.create(
-            scan_commands_results=ScanCommandsResults(tls_compression=CompressionScanResult(supports_compression=True))
+    def test_server_scan_completed_scan_command(self):
+        # Given a completed scan for a server where a scan command was run
+        compression_attempt = CompressionScanAttempt(
+            status=ScanCommandAttemptStatusEnum.COMPLETED,
+            error_reason=None,
+            error_trace=None,
+            result=CompressionScanResult(supports_compression=True),
+        )
+        server_scan_result = ServerScanResultFactory.create(
+            scan_result=AllScanCommandsAttemptsFactory.create({"tls_compression": compression_attempt})
         )
 
-        # When generating the JSON output for this server scan
-        with StringIO() as file_out:
-            json_generator = JsonOutputGenerator(file_to=file_out)
-            json_generator.server_scan_completed(scan_result)
+        # When converting it to JSON, it succeeds
+        json_output = SslyzeOutputAsJson(
+            server_scan_results=[ServerScanResultAsJson.from_orm(server_scan_result)],
+            date_scans_started=datetime.utcnow(),
+            date_scans_completed=datetime.utcnow(),
+        )
+        json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+        assert json_output_as_str
+        assert "supports_compression" in json_output_as_str
 
-            # We call scans_completed() because this is when the output actually gets written to the file
-            json_generator.scans_completed(0.2)
-            final_output = file_out.getvalue()
+        # And it can be parsed again
+        assert SslyzeOutputAsJson.parse_raw(json_output_as_str)
 
-        # It succeeds
-        assert final_output
-        assert "supports_compression" in final_output
-
-    def test_server_scan_completed_with_error(self):
-        # Given a completed scan for a server that triggered an error
+    def test_server_scan_completed_but_scan_command_returned_error(self):
+        # Given a completed scan for a server where a scan command was run
         error_trace = TracebackExceptionFactory.create()
-        scan_error = ScanCommandError(
-            scan_command=ScanCommand.TLS_COMPRESSION,
-            reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
-            exception_trace=error_trace,
+        compression_attempt = CompressionScanAttempt(
+            # And it triggered an error
+            status=ScanCommandAttemptStatusEnum.ERROR,
+            error_reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,
+            error_trace=error_trace,
+            result=None,
         )
-        scan_result = ServerScanResultFactory.create(scan_commands_errors=[scan_error])
+        server_scan_result = ServerScanResultFactory.create(
+            scan_result=AllScanCommandsAttemptsFactory.create({"tls_compression": compression_attempt})
+        )
 
-        # When generating the JSON output for this server scan
-        with StringIO() as file_out:
-            json_generator = JsonOutputGenerator(file_to=file_out)
-            json_generator.server_scan_completed(scan_result)
+        # When converting it to JSON, it succeeds
+        json_output = SslyzeOutputAsJson(
+            server_scan_results=[ServerScanResultAsJson.from_orm(server_scan_result)],
+            date_scans_started=datetime.utcnow(),
+            date_scans_completed=datetime.utcnow(),
+        )
+        json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+        assert json_output_as_str
+        assert error_trace.exc_type.__name__ in json_output_as_str
 
-            # We call scans_completed() because this is when the output actually gets written to the file
-            json_generator.scans_completed(0.2)
-            final_output = file_out.getvalue()
+        # And it can be parsed again
+        assert SslyzeOutputAsJson.parse_raw(json_output_as_str)
 
-        # It succeeds and displays the error
-        assert final_output
-        assert error_trace.exc_type.__name__ in final_output
+    def test_parse_json_output(self):
+        # Given the result of a scan saved as JSON output
+        output_as_json_file = Path(__file__).parent / "sslyze_output.json"
+        output_as_json = output_as_json_file.read_text()
+
+        # When parsing the output
+        # It succeeds
+        parsed_output = SslyzeOutputAsJson.parse_raw(output_as_json)
+        assert parsed_output
+        assert 3 == len(parsed_output.server_scan_results)

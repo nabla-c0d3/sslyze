@@ -10,13 +10,13 @@ from sslyze.plugins.http_headers_plugin import (
     _detect_http_redirection,
     HttpHeadersScanResultAsJson,
 )
-from sslyze.server_connectivity import ServerConnectivityTester
 
 from sslyze.server_setting import (
-    ServerNetworkLocationViaDirectConnection,
+    ServerNetworkLocation,
     ServerNetworkConfiguration,
     ClientAuthenticationCredentials,
 )
+from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
 
@@ -24,8 +24,8 @@ from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, Mode
 class TestHttpHeadersPlugin:
     def test_hsts_enabled(self):
         # Given a server to scan that has HSTS enabled
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("hsts.badssl.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("hsts.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for HTTP headers, it succeeds
         result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
@@ -41,8 +41,8 @@ class TestHttpHeadersPlugin:
 
     def test_all_headers_disabled(self):
         # Given a server to scan that does not have security headers
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("expired.badssl.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("expired.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for HTTP headers, it succeeds
         result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
@@ -58,8 +58,8 @@ class TestHttpHeadersPlugin:
 
     def test_expect_ct_enabled(self):
         # Given a server to scan that has Expect-CT enabled
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("github.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("github.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for HTTP headers, it succeeds
         result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
@@ -78,10 +78,10 @@ class TestHttpHeadersPlugin:
             # And the server will trigger an error when receiving an HTTP request
             should_reply_to_http_requests=False
         ) as server:
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When scanning for HTTP headers, it succeeds
             result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
@@ -106,10 +106,10 @@ class TestHttpHeadersPlugin:
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When scanning for HTTP headers, it fails
             with pytest.raises(ClientCertificateRequested):
@@ -119,7 +119,7 @@ class TestHttpHeadersPlugin:
     def test_works_when_client_auth_succeeded(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
             # And sslyze provides a client certificate
@@ -129,7 +129,7 @@ class TestHttpHeadersPlugin:
                     certificate_chain_path=server.get_client_certificate_path(), key_path=server.get_client_key_path()
                 ),
             )
-            server_info = ServerConnectivityTester().perform(server_location, network_config)
+            server_info = check_connectivity_to_server_and_return_info(server_location, network_config)
 
             # When scanning for HTTP headers, it succeeds
             result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)

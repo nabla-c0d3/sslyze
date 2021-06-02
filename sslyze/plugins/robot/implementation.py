@@ -3,6 +3,7 @@ from typing import Optional, List, Dict
 
 import pydantic
 
+from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
@@ -36,6 +37,10 @@ class RobotScanResult(ScanCommandResult):
 
 # Identical fields in the JSON output
 RobotScanResultAsJson = pydantic.dataclasses.dataclass(RobotScanResult, frozen=True)
+
+
+class RobotScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[RobotScanResultAsJson]  # type: ignore
 
 
 class _RobotCliConnector(ScanCommandCliConnector[RobotScanResult, None]):

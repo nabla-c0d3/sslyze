@@ -8,15 +8,17 @@ See ./.github/workflows and https://github.com/nabla-c0d3/sslyze/issues/472 for 
 $ PYTHONPATH=. python tests/web_servers/scan_localhost.py apache2
 """
 import sys
+from datetime import datetime
 from enum import Enum
 
 from sslyze import (
-    ServerNetworkLocationViaDirectConnection,
-    ServerConnectivityTester,
     Scanner,
     ServerScanRequest,
     ClientAuthRequirementEnum,
     ScanCommandErrorReasonEnum,
+    ServerNetworkLocation,
+    ServerConnectivityStatusEnum,
+    ScanCommandAttemptStatusEnum,
 )
 from sslyze.cli.json_output import SslyzeOutputAsJson, ServerScanResultAsJson
 from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
@@ -31,63 +33,61 @@ class WebServerSoftwareEnum(str, Enum):
 
 
 def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
-    # Ensure the server is accessible on localhost
-    server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("localhost", 443)
-    server_info = ServerConnectivityTester().perform(server_location)
-
-    if server_software_running_on_localhost == WebServerSoftwareEnum.APACHE2:
-        # Apache2 is configured to require a client cert, and returns an error at the TLS layer if it is missing
-        if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.REQUIRED:
-            raise RuntimeError(
-                f"SSLyze did not detect that client authentication was required by Apache2:"
-                f" {server_info.tls_probing_result.client_auth_requirement}."
-            )
-    elif server_software_running_on_localhost == WebServerSoftwareEnum.NGINX:
-        # Nginx is configured to require a client cert but implements this by returning an error at the HTTP layer,
-        # if the client cert is missing. This gets translated in SSLyze as "optionally" requiring a client cert
-        if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.OPTIONAL:
-            raise RuntimeError(
-                f"SSLyze did not detect that client authentication was required by Nginx:"
-                f" {server_info.tls_probing_result.client_auth_requirement}."
-            )
-    elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:
-        # IIS is not configured to require a client cert for now because I don't know how to enable this
-        if server_info.tls_probing_result.client_auth_requirement != ClientAuthRequirementEnum.DISABLED:
-            raise RuntimeError(
-                f"SSLyze detected that client authentication was enabled by IIS:"
-                f" {server_info.tls_probing_result.client_auth_requirement}."
-            )
-    else:
-        raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
-
-    # Queue all scan commands
+    # Queue all scan commands against a server running on localhost
     print("Starting scan.")
+    date_scans_started = datetime.utcnow()
     scanner = Scanner()
-    server_scan_req = ServerScanRequest(
-        server_info=server_info, scan_commands=ScanCommandsRepository.get_all_scan_commands(),
-    )
-    scanner.start_scans([server_scan_req])
+    scanner.queue_scans([ServerScanRequest(server_location=ServerNetworkLocation("localhost", 443))])
 
     # Retrieve the result
     for server_scan_result in scanner.get_results():
-        successful_cmds_count = len(server_scan_result.scan_commands_results.scan_commands_with_result())
-        errored_cmds_count = len(server_scan_result.scan_commands_errors)
-        print(f"Finished scan with {successful_cmds_count} results and {errored_cmds_count} errors.")
 
-        # Crash if any scan commands triggered an error that's not due to client authentication being required
+        # First validate the connectivity testing
+        assert server_scan_result.connectivity_status == ServerConnectivityStatusEnum.COMPLETED
+        assert server_scan_result.connectivity_result
+        if server_software_running_on_localhost == WebServerSoftwareEnum.APACHE2:
+            # Apache2 is configured to require a client cert, and returns an error at the TLS layer if it is missing
+            if server_scan_result.connectivity_result.client_auth_requirement != ClientAuthRequirementEnum.REQUIRED:
+                raise RuntimeError(
+                    f"SSLyze did not detect that client authentication was required by Apache2:"
+                    f" {server_scan_result.connectivity_result.client_auth_requirement}."
+                )
+        elif server_software_running_on_localhost == WebServerSoftwareEnum.NGINX:
+            # Nginx is configured to require a client cert but implements this by returning an error at the HTTP layer,
+            # if the client cert is missing. This gets translated in SSLyze as "optionally" requiring a client cert
+            if server_scan_result.connectivity_result.client_auth_requirement != ClientAuthRequirementEnum.OPTIONAL:
+                raise RuntimeError(
+                    f"SSLyze did not detect that client authentication was required by Nginx:"
+                    f" {server_scan_result.connectivity_result.client_auth_requirement}."
+                )
+        elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:
+            # IIS is not configured to require a client cert for now because I don't know how to enable this
+            if server_scan_result.connectivity_result.client_auth_requirement != ClientAuthRequirementEnum.DISABLED:
+                raise RuntimeError(
+                    f"SSLyze detected that client authentication was enabled by IIS:"
+                    f" {server_scan_result.connectivity_result.client_auth_requirement}."
+                )
+        else:
+            raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
+
+        successful_cmds = []
         triggered_unexpected_error = False
-        for scan_command_error in server_scan_result.scan_commands_errors:
-            if scan_command_error.reason != ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED:
-                triggered_unexpected_error = True
-                print(f"\nError when running {scan_command_error.scan_command}: {scan_command_error.reason.name}.")
-                if scan_command_error.exception_trace:
-                    exc_trace = ""
-                    for line in scan_command_error.exception_trace.format(chain=False):
-                        exc_trace += f"       {line}"
-                    print(exc_trace)
+        for scan_command in ScanCommandsRepository.get_all_scan_commands():
+            scan_cmd_attempt = getattr(server_scan_result.scan_result, scan_command.value)
+            if scan_cmd_attempt.status == ScanCommandAttemptStatusEnum.COMPLETED:
+                successful_cmds.append(scan_command)
+            elif scan_cmd_attempt.status == ScanCommandAttemptStatusEnum.ERROR:
+                # Crash if any scan commands triggered an error that's not due to client authentication being required
+                if scan_cmd_attempt.error_reason != ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED:
+                    triggered_unexpected_error = True
+                    print(f"\nError when running {scan_command}: {scan_cmd_attempt.error_reason}.")
+                    if scan_cmd_attempt.error_trace:
+                        exc_trace = ""
+                        for line in scan_cmd_attempt.error_trace.format(chain=False):
+                            exc_trace += f"       {line}"
+                        print(exc_trace)
 
-                print("\n")
-
+        print(f"Finished scan with {len(successful_cmds)} results.")
         if triggered_unexpected_error:
             raise RuntimeError("The scan triggered unexpected errors")
         else:
@@ -139,13 +139,9 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         else:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
-        completed_scan_command_results = server_scan_result.scan_commands_results.scan_commands_with_result()
-        if completed_scan_command_results != expected_scan_command_results:
-            raise RuntimeError(
-                f"SSLyze did not complete all the expected scan commands: {completed_scan_command_results}"
-            )
-        else:
-            print("OK: Completed all the expected scan commands.")
+        if str(successful_cmds) != expected_scan_command_results:
+            raise RuntimeError(f"SSLyze did not complete all the expected scan commands: {successful_cmds}")
+        print("OK: Completed all the expected scan commands.")
 
         # Ensure the right TLS versions were detected by SSLyze as enabled
         # https://github.com/nabla-c0d3/sslyze/issues/472
@@ -166,7 +162,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
         for ciphers_scan_cmd in expected_enabled_tls_scan_commands:
-            scan_cmd_result = getattr(server_scan_result.scan_commands_results, ciphers_scan_cmd, None)
+            scan_cmd_result = getattr(server_scan_result.scan_result, ciphers_scan_cmd, None)
             if not scan_cmd_result.accepted_cipher_suites:
                 raise RuntimeError(
                     f"SSLyze did not detect {scan_cmd_result.tls_version_used.name} to be enabled on the server."
@@ -177,8 +173,8 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         # Ensure a JSON output can be generated from the results
         final_json_output = SslyzeOutputAsJson(
             server_scan_results=[ServerScanResultAsJson.from_orm(server_scan_result)],
-            server_connectivity_errors=[],
-            total_scan_time=2,
+            date_scans_started=date_scans_started,
+            date_scans_completed=datetime.utcnow(),
         )
         final_json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
         print("OK: Was able to generate JSON output.")

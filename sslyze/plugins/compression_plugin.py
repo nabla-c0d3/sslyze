@@ -3,6 +3,8 @@ from dataclasses import dataclass
 import pydantic
 from nassl.legacy_ssl_client import LegacySslClient
 from nassl.ssl_client import ClientCertificateRequested
+
+from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
@@ -31,6 +33,10 @@ class CompressionScanResult(ScanCommandResult):
 
 # Identical fields in the JSON output
 CompressionScanResultAsJson = pydantic.dataclasses.dataclass(CompressionScanResult, frozen=True)
+
+
+class CompressionScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[CompressionScanResultAsJson]  # type: ignore
 
 
 class _CompressionCliConnector(ScanCommandCliConnector[CompressionScanResult, None]):

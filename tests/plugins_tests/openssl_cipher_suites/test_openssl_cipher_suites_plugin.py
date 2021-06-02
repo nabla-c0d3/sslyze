@@ -13,8 +13,9 @@ from sslyze.plugins.openssl_cipher_suites.implementation import (
     Tlsv12ScanImplementation,
     Tlsv13ScanImplementation,
 )
-from sslyze.server_connectivity import ServerConnectivityTester
-from sslyze.server_setting import ServerNetworkLocationViaDirectConnection, ServerNetworkConfiguration
+
+from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
+from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ModernOpenSslServer, ClientAuthConfigEnum
 
@@ -47,10 +48,10 @@ class DisabledTestCipherSuitePreference:
         with ModernOpenSslServer(
             openssl_cipher_string=cipher_string, should_enable_server_cipher_preference=True
         ) as server:
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When scanning for cipher suites, it succeeds
             result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
@@ -61,8 +62,8 @@ class DisabledTestCipherSuitePreference:
 
     def test_follows_client_cipher_suite_preference(self):
         # Given a server to scan that follows client cipher suite preference
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.hotmail.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
@@ -74,8 +75,8 @@ class DisabledTestCipherSuitePreference:
 class TestCipherSuitesPluginWithOnlineServer:
     def test_sslv2_disabled(self):
         # Given a server to scan that does not support SSL 2.0
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.google.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Sslv20ScanImplementation.scan_server(server_info)
@@ -86,8 +87,8 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_sslv3_disabled(self):
         # Given a server to scan that does not support SSL 3.0
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.google.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Sslv30ScanImplementation.scan_server(server_info)
@@ -98,8 +99,8 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_tlsv1_0_enabled(self):
         # Given a server to scan that supports TLS 1.0
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.google.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv10ScanImplementation.scan_server(server_info)
@@ -120,8 +121,8 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_tlsv1_0_disabled(self):
         # Given a server to scan that does NOT support TLS 1.0
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("success.trendmicro.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("success.trendmicro.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv10ScanImplementation.scan_server(server_info)
@@ -132,8 +133,8 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_tlsv1_1_enabled(self):
         # Given a server to scan that supports TLS 1.1
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.google.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv11ScanImplementation.scan_server(server_info)
@@ -154,8 +155,8 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_tlsv1_2_enabled(self):
         # Given a server to scan that supports TLS 1.2
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.google.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
@@ -180,8 +181,8 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_null_cipher_suites(self):
         # Given a server to scan that supports NULL cipher suites
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("null.badssl.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("null.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
@@ -210,8 +211,8 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_rc4_cipher_suites(self):
         # Given a server to scan that supports RC4 cipher suites
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("rc4.badssl.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("rc4.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
@@ -223,8 +224,8 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_ecdsa_cipher_suites(self):
         # Given a server to scan that supports ECDSA cipher suites
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("ecc256.badssl.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("ecc256.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
@@ -246,11 +247,11 @@ class TestCipherSuitesPluginWithOnlineServer:
     def test_smtp(self):
         # Given an SMTP server to scan
         hostname = "smtp.gmail.com"
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(hostname, 587)
+        server_location = ServerNetworkLocation(hostname, 587)
         network_configuration = ServerNetworkConfiguration(
             tls_server_name_indication=hostname, tls_opportunistic_encryption=ProtocolWithOpportunisticTlsEnum.SMTP
         )
-        server_info = ServerConnectivityTester().perform(server_location, network_configuration)
+        server_info = check_connectivity_to_server_and_return_info(server_location, network_configuration)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
@@ -258,8 +259,8 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_tls_1_3_cipher_suites(self):
         # Given a server to scan that supports TLS 1.3
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.cloudflare.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.cloudflare.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv13ScanImplementation.scan_server(server_info)
@@ -271,8 +272,8 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_ephemeral_key_info(self):
         # Given a server to scan that supports DH and ECDH ephemeral keys
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.hotmail.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
@@ -296,10 +297,10 @@ class TestCipherSuitesPluginWithLocalServer:
     def test_sslv2_enabled(self):
         # Given a server to scan that supports SSL 2.0
         with LegacyOpenSslServer(openssl_cipher_string="ALL:COMPLEMENTOFALL") as server:
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When scanning for cipher suites, it succeeds
             result: CipherSuitesScanResult = Sslv20ScanImplementation.scan_server(server_info)
@@ -311,10 +312,10 @@ class TestCipherSuitesPluginWithLocalServer:
     def test_sslv3_enabled(self):
         # Given a server to scan that supports SSL 3.0
         with LegacyOpenSslServer(openssl_cipher_string="ALL:COMPLEMENTOFALL") as server:
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When scanning for cipher suites, it succeeds
             result: CipherSuitesScanResult = Sslv30ScanImplementation.scan_server(server_info)
@@ -327,10 +328,10 @@ class TestCipherSuitesPluginWithLocalServer:
         # Given a TLS 1.2 server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And SSLyze does NOT provide a client certificate
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When scanning for cipher suites, it succeeds
             result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
@@ -341,10 +342,10 @@ class TestCipherSuitesPluginWithLocalServer:
         # Given a TLS 1.3 server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And SSLyze does NOT provide a client certificate
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When scanning for cipher suites, it succeeds
             result: CipherSuitesScanResult = Tlsv13ScanImplementation.scan_server(server_info)

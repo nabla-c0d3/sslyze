@@ -123,7 +123,7 @@ class CommandLineParser:
             "--regular",
             action="store_true",
             dest=None,
-            help=f"Regular HTTPS scan; shortcut for --{'--'.join(self.REGULAR_CMD)}",
+            help=f"Regular HTTPS scan; shortcut for --{' --'.join(self.REGULAR_CMD)}",
         )
 
     def parse_command_line(self) -> ParsedCommandLine:

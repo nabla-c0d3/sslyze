@@ -1,13 +1,15 @@
 from dataclasses import dataclass
-from optparse import OptionParser, OptionGroup
-
+from argparse import ArgumentParser
 from pathlib import Path
 
 from nassl.ssl_client import OpenSslFileTypeEnum
 from typing import Set, List, Optional
 from typing import Tuple
 
-from sslyze.cli.command_line.server_string_parser import InvalidServerStringError, CommandLineServerStringParser
+from sslyze.cli.command_line.server_string_parser import (
+    InvalidServerStringError,
+    CommandLineServerStringParser,
+)
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.plugins.plugin_base import OptParseCliOption
@@ -96,40 +98,36 @@ class CommandLineParser:
         "elliptic_curves",
     ]
 
-    SSLYZE_USAGE = "usage: %prog [options] target1.com target2.com:443 target3.com:443{ip} etc..."
-
-    START_TLS_USAGE = (
-        "StartTLS should be one of: auto, {}. The 'auto' option will cause SSLyze to deduce the protocol "
-        "(ftp, imap, etc.) from the supplied port number, "
-        "for each target servers.".format(", ".join(_STARTTLS_PROTOCOL_DICT.keys()))
-    )
-
     def __init__(self, sslyze_version: str) -> None:
         """Generate SSLyze's command line parser.
         """
-        self._parser = OptionParser(version=sslyze_version, usage=self.SSLYZE_USAGE)
+        self.aparser = ArgumentParser(prog="sslyze", description=f"SSLyze version {sslyze_version}")
 
         # Add generic command line options to the parser
         self._add_default_options()
 
         # Add plugin .ie scan command options to the parser
-        scan_commands_group = OptionGroup(self._parser, "Scan commands", "")
-        for option in self._get_plugin_scan_commands():
-            scan_commands_group.add_option(f"--{option.option}", help=option.help, action=option.action)
-        self._parser.add_option_group(scan_commands_group)
+        scan_commands_group = self.aparser.add_argument_group("Scan commands")
+        for scan_option in self._get_plugin_scan_commands():
+            scan_commands_group.add_argument(
+                f"--{scan_option.option}", help=scan_option.help, action=scan_option.action,
+            )
 
         # Add the --regular command line parameter as a shortcut if possible
-        self._parser.add_option(
+        self.aparser.add_argument(
             "--regular",
             action="store_true",
             dest=None,
             help=f"Regular HTTPS scan; shortcut for --{' --'.join(self.REGULAR_CMD)}",
         )
 
+        self.aparser.add_argument(dest="target", default=[], nargs="*")
+
     def parse_command_line(self) -> ParsedCommandLine:
         """Parses the command line used to launch SSLyze.
         """
-        (args_command_list, args_target_list) = self._parser.parse_args()
+        args_command_list = self.aparser.parse_args()
+        args_target_list = []
 
         if args_command_list.update_trust_stores:
             # Just update the trust stores and do nothing
@@ -138,9 +136,6 @@ class CommandLineParser:
 
         # Handle the --targets_in command line and fill args_target_list
         if args_command_list.targets_in:
-            if args_target_list:
-                raise CommandLineParsingError("Cannot use --targets_list and specify targets within the command line.")
-
             try:  # Read targets from a file
                 with open(args_command_list.targets_in) as f:
                     for target in f.readlines():
@@ -148,9 +143,10 @@ class CommandLineParser:
                             if not target.startswith("#"):  # Ignore comment lines
                                 args_target_list.append(target.strip())
             except IOError:
-                raise CommandLineParsingError(
-                    "Can't read targets from input file '{}.".format(args_command_list.targets_in)
-                )
+                raise CommandLineParsingError(f"Can't read targets from input file '{args_command_list.targets_in}'")
+
+        for target in args_command_list.target:
+            args_target_list.append(target)
 
         if not args_target_list:
             raise CommandLineParsingError("No targets to scan.")
@@ -162,15 +158,13 @@ class CommandLineParser:
             if getattr(args_command_list, option.option)
         ]
         if not enabled_scan_commands:
-            if self._parser.has_option("--regular"):
-                setattr(args_command_list, "regular", True)
+            setattr(args_command_list, "regular", True)
 
         # Handle the --regular command line parameter as a shortcut to a bunch of commands
-        if self._parser.has_option("--regular"):
-            if getattr(args_command_list, "regular"):
-                setattr(args_command_list, "regular", False)
-                for cmd in self.REGULAR_CMD:
-                    setattr(args_command_list, cmd, True)
+        if args_command_list.regular:
+            setattr(args_command_list, "regular", False)
+            for cmd in self.REGULAR_CMD:
+                setattr(args_command_list, cmd, True)
 
         # Handle JSON settings
         should_print_json_to_console = False
@@ -194,8 +188,6 @@ class CommandLineParser:
                 key_type = OpenSslFileTypeEnum.ASN1
             elif args_command_list.keyform == "PEM":
                 key_type = OpenSslFileTypeEnum.PEM
-            else:
-                raise CommandLineParsingError("--keyform should be DER or PEM.")
 
             # Let's try to open the cert and key files
             try:
@@ -222,7 +214,7 @@ class CommandLineParser:
         for server_string in args_target_list:
             try:
                 # Parse the string supplied via the CLI for this server
-                hostname, ip_address, port = CommandLineServerStringParser.parse_server_string(server_string)
+                (hostname, ip_address, port,) = CommandLineServerStringParser.parse_server_string(server_string)
             except InvalidServerStringError as e:
                 # The server string is malformed
                 invalid_server_strings.append(e)
@@ -237,7 +229,7 @@ class CommandLineParser:
                 # Connect to the server via an HTTP proxy
                 # A limitation when using the CLI is that only one http_proxy_settings can be specified for all servers
                 server_location = ServerNetworkLocationViaHttpProxy(
-                    hostname=hostname, port=final_port, http_proxy_settings=http_proxy_settings
+                    hostname=hostname, port=final_port, http_proxy_settings=http_proxy_settings,
                 )
             else:
                 # Connect to the server directly
@@ -270,7 +262,9 @@ class CommandLineParser:
                 elif args_command_list.starttls in _STARTTLS_PROTOCOL_DICT:
                     opportunistic_tls = _STARTTLS_PROTOCOL_DICT[args_command_list.starttls]
                 else:
-                    raise CommandLineParsingError(self.START_TLS_USAGE)
+                    raise CommandLineParsingError(
+                        f"StartTLS should be one of: auto, {', '.join(_STARTTLS_PROTOCOL_DICT.keys())}."
+                    )
 
             try:
                 sni_hostname = args_command_list.sni if args_command_list.sni else hostname
@@ -299,7 +293,7 @@ class CommandLineParser:
         scan_commands_extra_arguments: ScanCommandExtraArgumentsDict = {}
         for scan_command in ScanCommandsRepository.get_all_scan_commands():
             cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
-            is_scan_cmd_enabled, extra_args = cli_connector_cls.find_cli_options_in_command_line(
+            (is_scan_cmd_enabled, extra_args,) = cli_connector_cls.find_cli_options_in_command_line(
                 args_command_list.__dict__
             )
             if is_scan_cmd_enabled:
@@ -323,107 +317,124 @@ class CommandLineParser:
         """Add default command line options to the parser.
         """
         # Updating the trust stores
-        update_stores_group = OptionGroup(self._parser, "Trust stores options", "")
-        update_stores_group.add_option(
+        trust_stores_group = self.aparser.add_argument_group("Trust stores options")
+        trust_stores_group.add_argument(
             "--update_trust_stores",
-            help="Update the default trust stores used by SSLyze. The latest stores will be downloaded from "
-            "https://github.com/nabla-c0d3/trust_stores_observatory. This option is meant to be used separately, "
-            "and will silence any other command line option supplied to SSLyze.",
+            help="Update the default trust stores used by SSLyze. The latest stores will be "
+            "downloaded from https://github.com/nabla-c0d3/trust_stores_observatory. This option "
+            "is meant to be used separately, and will silence any other command line option "
+            "supplied to SSLyze.",
             dest="update_trust_stores",
             action="store_true",
         )
-        self._parser.add_option_group(update_stores_group)
 
         # Client certificate options
-        clientcert_group = OptionGroup(self._parser, "Client certificate options", "")
-        clientcert_group.add_option(
+        client_certificate_group = self.aparser.add_argument_group("Client certificate options")
+        client_certificate_group.add_argument(
             "--cert",
-            help="Client certificate chain filename. The certificates must be in PEM format and must be sorted "
-            "starting with the subject's client certificate, followed by intermediate CA certificates if "
-            "applicable.",
+            metavar="CERTIFICATE_FILE",
+            help="Client certificate chain filename. The certificates must be in PEM format and "
+            "must be sorted starting with the subject's client certificate, followed by "
+            "intermediate CA certificates if applicable.",
             dest="cert",
         )
-        clientcert_group.add_option("--key", help="Client private key filename.", dest="key")
-        clientcert_group.add_option(
-            "--keyform", help="Client private key format. DER or PEM (default).", dest="keyform", default="PEM"
+        client_certificate_group.add_argument(
+            "--key", metavar="KEY_FILE", help="Client private key filename.", dest="key"
         )
-        clientcert_group.add_option("--pass", help="Client private key passphrase.", dest="keypass", default="")
-        self._parser.add_option_group(clientcert_group)
+        client_certificate_group.add_argument(
+            "--keyform",
+            metavar="KEY_FORMAT",
+            choices=["DER", "PEM"],
+            help="Client private key format. DER or PEM " "(default).",
+            dest="keyform",
+            default="PEM",
+        )
+        client_certificate_group.add_argument(
+            "--pass", metavar="PASSPHRASE", help="Client private key passphrase.", dest="keypass", default="",
+        )
 
         # Input / output
-        output_group = OptionGroup(self._parser, "Input and output options", "")
+        input_and_output_group = self.aparser.add_argument_group("Input and output options")
         # JSON output
-        output_group.add_option(
+        input_and_output_group.add_argument(
             "--json_out",
-            help='Write the scan results as a JSON document to the file JSON_FILE. If JSON_FILE is set to "-", the '
-            "JSON output will instead be printed to stdout. The resulting JSON file is a serialized version of "
-            "the ScanResult objects described in SSLyze's Python API: the nodes and attributes will be the same. "
-            "See https://nabla-c0d3.github.io/sslyze/documentation/available-scan-commands.html for more details.",
+            metavar="JSON_FILE",
+            help="Write the scan results as a JSON document to the file JSON_FILE. If JSON_FILE "
+            "is set to '-', the JSON output will instead be printed to stdout. The resulting "
+            "JSON file is a serialized version of the ScanResult objects described in SSLyze's "
+            "Python API: the nodes and attributes will be the same. "
+            "See https://nabla-c0d3.github.io/sslyze/documentation/available-scan-commands.html "
+            "for more details.",
             dest="json_file",
             default=None,
         )
         # Read targets from input file
-        output_group.add_option(
+        input_and_output_group.add_argument(
             "--targets_in",
-            help="Read the list of targets to scan from the file TARGETS_IN. It should contain one host:port per "
-            "line.",
+            metavar="TARGET_FILE",
+            help="Read the list of targets to scan from the file TARGET_FILE. It should contain "
+            "one host:port per line.",
             dest="targets_in",
             default=None,
         )
         # No text output
-        output_group.add_option(
+        input_and_output_group.add_argument(
             "--quiet",
             action="store_true",
             dest="quiet",
             help="Do not output anything to stdout; useful when using --json_out.",
         )
-        self._parser.add_option_group(output_group)
 
         # Connectivity option group
-        connect_group = OptionGroup(self._parser, "Connectivity options", "")
+        connectivity_group = self.aparser.add_argument_group("Contectivity options")
         # Connection speed
-        connect_group.add_option(
+        connectivity_group.add_argument(
             "--slow_connection",
-            help="Greatly reduce the number of concurrent connections initiated by SSLyze. This will make the scans "
-            "slower but more reliable if the connection between your host and the server is slow, or if the "
-            "server cannot handle many concurrent connections. Enable this option if you are getting a lot of "
-            "timeouts or errors.",
+            help="Greatly reduce the number of concurrent connections initiated by SSLyze. This "
+            "will make the scans slower but more reliable if the connection between your host and "
+            "the server is slow, or if the server cannot handle many concurrent connections. "
+            "Enable this option if you are getting a lot of timeouts or errors.",
             action="store_true",
             dest="slow_connection",
         )
         # HTTP CONNECT Proxy
-        connect_group.add_option(
+        connectivity_group.add_argument(
             "--https_tunnel",
-            help="Tunnel all traffic to the target server(s) through an HTTP CONNECT proxy. HTTP_TUNNEL should be the "
-            "proxy's URL: 'http://USER:PW@HOST:PORT/'. For proxies requiring authentication, only Basic "
-            "Authentication is supported.",
+            metavar="PROXY_SETTINGS",
+            help="Tunnel all traffic to the target server(s) through an HTTP CONNECT proxy. "
+            "HTTP_TUNNEL should be the proxy's URL: 'http://USER:PW@HOST:PORT/'. For proxies "
+            "requiring authentication, only Basic Authentication is supported.",
             dest="https_tunnel",
             default=None,
         )
         # STARTTLS
-        connect_group.add_option(
+        connectivity_group.add_argument(
             "--starttls",
+            metavar="PROTOCOL",
             help="Perform a StartTLS handshake when connecting to the target server(s). "
-            "{}".format(self.START_TLS_USAGE),
+            f"StartTLS should be one of: auto, {', '.join(_STARTTLS_PROTOCOL_DICT.keys())}. The "
+            "'auto' option will cause SSLyze to deduce the protocol (ftp, imap, etc.) from the "
+            "supplied port number, for each target servers.",
             dest="starttls",
             default=None,
         )
-        connect_group.add_option(
+        connectivity_group.add_argument(
             "--xmpp_to",
-            help="Optional setting for STARTTLS XMPP. XMPP_TO should be the hostname to be put in the 'to' "
-            "attribute of the XMPP stream. Default is the server's hostname.",
+            metavar="HOSTNAME",
+            help="Optional setting for STARTTLS XMPP. XMPP_TO should be the hostname to be put in "
+            "the 'to' attribute of the XMPP stream. Default is the server's hostname.",
             dest="xmpp_to",
             default=None,
         )
         # Server Name Indication
-        connect_group.add_option(
+        connectivity_group.add_argument(
             "--sni",
-            help="Use Server Name Indication to specify the hostname to connect to.  Will only affect TLS 1.0+ "
-            "connections.",
+            metavar="SERVER_NAME_INDICATION",
+            help="Use Server Name Indication to specify the hostname to connect to. Will only "
+            "affect TLS 1.0+ connections.",
             dest="sni",
             default=None,
         )
-        self._parser.add_option_group(connect_group)
 
     @staticmethod
     def _get_plugin_scan_commands() -> List[OptParseCliOption]:

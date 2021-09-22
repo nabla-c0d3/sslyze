@@ -32,9 +32,22 @@ Quick start
 
 SSLyze can be installed directly via pip:
 
-    $ pip install --upgrade setuptools
+    $ pip install --upgrade pip setuptools wheel
     $ pip install --upgrade sslyze
     $ python -m sslyze www.yahoo.com www.google.com "[2607:f8b0:400a:807::2004]:443"
+
+Development environment
+-----------------------
+
+To setup a development environment:
+
+    $ pip install --upgrade pip setuptools wheel
+    $ pip install -e . 
+    $ pip install -r dev-requirements.txt
+
+The tests can then be run using:
+
+    $ invoke test
 
 Documentation
 -------------

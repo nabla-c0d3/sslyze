@@ -19,10 +19,13 @@ jobs:
 
     - name: Install pip
       run: |
-        python -m pip install --upgrade pip setuptools
+        python -m pip install --upgrade pip setuptools wheel
+
+    - name: Install sslyze dependencies
+      run: python -m pip install -e .
 
     - name: Install dev dependencies
-      run: python -m pip install -r requirements.txt
+      run: python -m pip install -r dev-requirements.txt
 
     - name: Run linters
       # Only do linting once

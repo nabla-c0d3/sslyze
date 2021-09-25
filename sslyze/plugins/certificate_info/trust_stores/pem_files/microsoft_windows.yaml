@@ -1,11 +1,9 @@
 platform: MICROSOFT_WINDOWS
 version: null
 url: https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFT
-date_fetched: 2021-02-08
-trusted_certificates_count: 263
+date_fetched: 2021-09-07
+trusted_certificates_count: 258
 trusted_certificates:
-- subject_name: A-Trust-Root-07
-  fingerprint: 8ac552ad577e37ad2c6808d72aa331d6a96b4b3febff34ce9bc0578e08055ec3
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
 - subject_name: AC RAIZ DNIE
@@ -16,8 +14,6 @@ trusted_certificates:
   fingerprint: 554153b13d2cf9ddb753bfbe1a4e0ae08d0aa4187058fe60a2b862b2e4b87bcb
 - subject_name: "AC Ra\xEDz Certic\xE1mara S.A."
   fingerprint: d2a90e5d35cac4d41f7d44ce66aff885e1815fb339185853a87e66c05c9bef1e
-- subject_name: AC1 RAIZ MTIN
-  fingerprint: 5b1d9d24de0afea8b35ba04a1c3e25d0812cdf7c4625de0a89af9fe4bbd1bb15
 - subject_name: ACA ROOT
   fingerprint: 97f654859cbde586fd90311e82ec7902c238cba0d6e529564c9c88f44895ec50
 - subject_name: ACCVRAIZ1
@@ -26,10 +22,10 @@ trusted_certificates:
   fingerprint: f4336bc2ac75950beccf1c1f2f9da6dddafd1f41161ca71f59c76889bd474033
 - subject_name: ANCERT Certificados Notariales V2
   fingerprint: 4be8b5a1c76c6aead0611918fccf9dbd398b67fb12294758bdf994d0f9682f60
+- subject_name: ANF Global Root CA
+  fingerprint: e3268f6106ba8b665a1a962ddea1459d2a46972f1f2440329b390b895749ad45
 - subject_name: Actalis Authentication Root CA
   fingerprint: 55926084ec963a64b96e2abe01ce0ba86a64fbfebcc7aab5afc155b37fd76066
-- subject_name: AddTrust External CA Root
-  fingerprint: 687fa451382278fff0c8b11f8d43d576671c6eb2bceab413fb83d965d06d2ff2
 - subject_name: AffirmTrust Commercial
   fingerprint: 0376ab1d54c5f9803ce4b2e201a0ee7eef7b57b636e8a93c9b8d4860c96f5fa7
 - subject_name: AffirmTrust Networking
@@ -70,12 +66,8 @@ trusted_certificates:
   fingerprint: edf7ebbca27a2a384d387b7d4010c666e2edb4843e4c29b4ae1d5b9332e6b24d
 - subject_name: CA DATEV BT 03
   fingerprint: 0c0b6b2bd1edd7b27fead157f8e846b335b784a39f06c47216c8746f64c5ceda
-- subject_name: CA DATEV INT 02
-  fingerprint: 997e15c5a4481a8598499753971ee2601d1047c3635aff21af4221a817fd2d96
 - subject_name: CA DATEV INT 03
   fingerprint: 8ba1bd9c88efb3947e60ebe21137f81df7f09994cef27f097055018b8194c634
-- subject_name: CA DATEV STD 02
-  fingerprint: 05d38c2a70bfc500ccb0cb509159b46b065c6ac9cb42d2e6f16167841434572a
 - subject_name: CA DATEV STD 03
   fingerprint: 54ae8a683fe2d78ff1ef0e0b3f58425092953ba08c67fe4a95595d1cebcdcb30
 - subject_name: CA Disig Root R2
@@ -100,6 +92,10 @@ trusted_certificates:
   fingerprint: 1793927a0614549789adce2f8f34f7f0b66d0f3ae3a3b84d21ec15dbba4fadc7
 - subject_name: COMODO RSA Certification Authority
   fingerprint: 52f0e1c4e58ec629291b60317f074671b85d7ea80d5b07273463534b32b40234
+- subject_name: Certainly Root E1
+  fingerprint: b4585f22e4ac756a4e8612a1361c5d9d031a93fd84febb778fa3068b0fc42dc2
+- subject_name: Certainly Root R1
+  fingerprint: 77b82cd8644c4305f7acc5cb156b45675004033d51c60c6202a8e0c33467d3a0
 - subject_name: Certigna
   fingerprint: e3b6a2db2ed7ce48842f7ac53241c7b71d54144bfb40c11f3f1d0b42f5eea12d
 - subject_name: Certigna Root CA
@@ -124,8 +120,6 @@ trusted_certificates:
   fingerprint: 229ccc196d32c98421cc119e78486eebef603aecd525c6b88b47abb740692b96
 - subject_name: Cisco Root CA 2048
   fingerprint: 8327bc8c9d69947b3de3c27511537267f59c21b9fa7b613fafbccd53b7024000
-- subject_name: Class 2 Primary CA
-  fingerprint: 0f993c8aef97baaf5687140ed59ad1821bb4afacf0aa9a58b5d57a338a3afbcb
 - subject_name: ComSign Global Root CA
   fingerprint: 2605875afcc176b2d66dd66a995d7f8d5ebb86ce120d0e7e9e7c6ef294a27d4c
 - subject_name: Cybertrust Global Root
@@ -138,14 +132,22 @@ trusted_certificates:
   fingerprint: eec5496b988ce98625b934092eec2908bed0b0f316c2d4730c84eaf1f3d34881
 - subject_name: DST Root CA X3
   fingerprint: 0687260331a72403d909f105e69bcf0d32e1bd2493ffc6d9206d11bcd6770739
-- subject_name: Deutsche Telekom Root CA 2
-  fingerprint: b6191a50d0c3977f7da99bcdaac86a227daeb9679ec70ba3b0c9d92271c170d3
 - subject_name: DigiCert Assured ID Root CA
   fingerprint: 3e9099b5015e8f486c00bcea9d111ee721faba355a89bcf1df69561e3dc6325c
 - subject_name: DigiCert Assured ID Root G2
   fingerprint: 7d05ebb682339f8c9451ee094eebfefa7953a114edb2f44949452fab7d2fc185
 - subject_name: DigiCert Assured ID Root G3
   fingerprint: 7e37cb8b4c47090cab36551ba6f45db840680fba166a952db100717f43053fc2
+- subject_name: DigiCert CS ECC P384 Root G5
+  fingerprint: 26c56ad2208d1e9b152f66853bf4797cbeb7552c1f3f477251e8cb1ae7e797bf
+- subject_name: DigiCert CS RSA4096 Root G5
+  fingerprint: 7353b6d6c2d6da4247773f3f07d075decb5134212bead0928ef1f46115260941
+- subject_name: DigiCert Client ECC P384 Root G5
+  fingerprint: cd851c5c25467c0095a43927d0b2292d932975e84dce4c5e794542c6574c3aa4
+- subject_name: DigiCert Client RSA4096 Root G5
+  fingerprint: 3af21466920fa91fa31f4331e445c16be2330024bfd2c239c0d85ab530714766
+- subject_name: DigiCert ECC P384 Root G5
+  fingerprint: c1468cf2254e6004b24696aba209d1a30ba6e2dff68a9a4e32c6ab414f90c8d9
 - subject_name: DigiCert Global Root CA
   fingerprint: 4348a0e9444c78cb265e058d5e8944b4d84f9662bd26db257f8934a443c70161
 - subject_name: DigiCert Global Root G2
@@ -154,16 +156,22 @@ trusted_certificates:
   fingerprint: 31ad6648f8104138c738f39ea4320133393e3a18cc02296ef97c2ac9ef6731d0
 - subject_name: DigiCert High Assurance EV Root CA
   fingerprint: 7431e5f4c3c1ce4690774f0b61e05440883ba9a01ed00ba6abd7806ed3b118cf
+- subject_name: DigiCert RSA4096 Root G5
+  fingerprint: e46a392204a8dca342a71c1ca9a60c9185b9a930370120c3b9c7e3856f0d8f3b
+- subject_name: DigiCert SMIME ECC P384 Root G5
+  fingerprint: e8e8176536a60cc2c4e10187c3befca20ef263497018f566d5bea0f94d0c111b
+- subject_name: DigiCert SMIME RSA4096 Root G5
+  fingerprint: 90370d3efa88bf58c30105ba25104a358460a7fa52dfc2011df233a0f417912a
+- subject_name: DigiCert TLS ECC P384 Root G5
+  fingerprint: 018e13f0772532cf809bd1b17281867283fc48c6e13be9c69812854a490c1b05
+- subject_name: DigiCert TLS RSA4096 Root G5
+  fingerprint: 371a00dc0533b3721a7eeb40e8419e70799d2b0a0f2c1d80693165f7cec4ad75
 - subject_name: DigiCert Trusted Root G4
   fingerprint: 552f7bdcf1a7af9e6ce672017f4f12abf77240c78e761ac203d1d9d20ac89988
-- subject_name: Digidentity Services Root CA
-  fingerprint: e28097721a8cab8880af80fdef8902b1f15bc7473ad68ec22991257a910d9ea2
 - subject_name: E-Tugra Certification Authority
   fingerprint: b0bfd52bb0d7d9bd92bf5d4dc13da255c02c542f378365ea893911f55e55f23c
 - subject_name: EC-ACC
   fingerprint: 88497f01602f3154246ae28c4d5aef10f1d87ebb76626f4ae0b7f95ba7968799
-- subject_name: EE Certification Centre Root CA
-  fingerprint: 3e84ba4342908516e77573c0992f0979ca084e4685681ff195ccba8a229b8a76
 - subject_name: Echoworx Root CA2
   fingerprint: 6639d13cab85df1ad9a23c443b3a60901e2b138d456fa71183578108884ec6bf
 - subject_name: Entrust Root Certification Authority
@@ -176,6 +184,8 @@ trusted_certificates:
   fingerprint: db3517d1f6732a2d5ab97c533ec70779ee3270a62fb4ac4238372460e6f01e88
 - subject_name: Entrust.net Certification Authority (2048)
   fingerprint: 6dc47172e01cbcb0bf62580d895fe2b8ac9ad4f873801e0c10b9c837d21eb177
+- subject_name: Evrotrust RSA Root CA
+  fingerprint: b49cf652b72e586498db42cd007500912fd1672afc3dff0b11b927ea97d41a2d
 - subject_name: Federal Common Policy CA
   fingerprint: 894ebc0b23da2a50c0186b7f8f25ef1f6b2935af32a94584ef80aaf877a3a06e
 - subject_name: Fina Root CA
@@ -203,18 +213,8 @@ trusted_certificates:
   fingerprint: 15d5b8774619ea7d54ce1ca6d0b0c403e037a917f131e8a04e1e6b7a71babce5
 - subject_name: GTS Root R4
   fingerprint: 71cca5391f9e794b04802530b363e121da8a3043bb26662fea4dca7fc951a4bd
-- subject_name: GeoTrust Global CA
-  fingerprint: ff856a2d251dcd88d36656f450126798cfabaade40799c722de4d2b5db36a73a
-- subject_name: GeoTrust Primary Certification Authority
-  fingerprint: 37d51006c512eaab626421f1ec8c92013fc5f82ae98ee533eb4619b8deb4d06c
-- subject_name: GeoTrust Primary Certification Authority - G2
-  fingerprint: 5edb7ac43b82a06a8761e8d7be4979ebf2611f7dd79bf91c1c6b566a219ed766
-- subject_name: GeoTrust Primary Certification Authority - G3
-  fingerprint: b478b812250df878635c2aa7ec7d155eaa625ee82916e2cd294361886cd1fbd4
 - subject_name: GeoTrust Universal CA
   fingerprint: a0459b9f63b22559f5fa5d4c6db3f9f72ff19342033578f073bf1d1b46cbb912
-- subject_name: GeoTrust Universal CA 2
-  fingerprint: a0234f3bc8527ca5628eec81ad5d69895da5680dc91d1cb8477f33f878b95b0b
 - subject_name: Global Chambersign Root
   fingerprint: ef3cb417fc8ebf6f97876c9e4ece39de1ea5fe649141d1028b7d11c0b2298ced
 - subject_name: Global Chambersign Root - 2008
@@ -229,6 +229,18 @@ trusted_certificates:
   fingerprint: ca42dd41745fd0b81eb902362cf9d8bf719da1bd1b1efc946f5b4c99f42c1b9e
 - subject_name: GlobalSign
   fingerprint: cbb522d7b7f127ad6a0113865bdf1cd4102e7d0759af635a7cf4720dc963c53b
+- subject_name: GlobalSign Client Authentication Root E45
+  fingerprint: 8b0f0faa2c00fe0532a8a54e7bc5fd139c1922c4f10f0b16e10fb8be1a634964
+- subject_name: GlobalSign Client Authentication Root R45
+  fingerprint: 165c7e810bd37c1d57ce9849accd500e5cb01eea37dc550db07e598aad2474a8
+- subject_name: GlobalSign Code Signing Root E45
+  fingerprint: 26c6c5fd4928fd57a8a4c5724fdd279745869c60c338e262ffe901c31bd1db2b
+- subject_name: GlobalSign Code Signing Root R45
+  fingerprint: 7b9d553e1c92cb6e8803e137f4f287d4363757f5d44b37d52f9fca22fb97df86
+- subject_name: GlobalSign Document Signing Root E45
+  fingerprint: f86973bdd0514735e10c1190d0345bf89c77e1c4adbd3f65963b803fd3c9e1ff
+- subject_name: GlobalSign Document Signing Root R45
+  fingerprint: 38be6c7eeb4547d82b9287f243af32a9deeb5dc5c9a87a0056f938d91b456a5a
 - subject_name: GlobalSign Root CA
   fingerprint: ebd41040e4bb3ec742c9e381d31ef2a41a48b6685c96e7cef3c1df6cd4331c99
 - subject_name: GlobalSign Root E46
@@ -249,6 +261,18 @@ trusted_certificates:
   fingerprint: 70b922bfda0e3f4a342e4ee22d579ae598d071cc5ec9c30f123680340388aea5
 - subject_name: Government Root Certification Authority
   fingerprint: 7600295eefe85b9e1fd624db76062aaaae59818a54d2774cd4c0b2c01131e1b3
+- subject_name: HARICA Client ECC Root CA 2021
+  fingerprint: 8dd4b5373cb0de36769c12339280d82746b3aa6cd426e797a31babe4279cf00b
+- subject_name: HARICA Client RSA Root CA 2021
+  fingerprint: 1be7abe30686b16348afd1c61b6866a0ea7f4821e67d5e8af937cf8011bc750d
+- subject_name: HARICA Code Signing ECC Root CA 2021
+  fingerprint: 794e774638ce7b3cf05ebc8967cf47315316c351dc26387476e0c099c2ed47cc
+- subject_name: HARICA Code Signing RSA Root CA 2021
+  fingerprint: c40ebdcd75a90e4b7496abb23e789a48e33c03284f75d95130575ae6860ae13c
+- subject_name: HARICA TLS ECC Root CA 2021
+  fingerprint: 3f99cc474acfce4dfed58794665e478d1547739f2e780f1bb4ca9b133097d401
+- subject_name: HARICA TLS RSA Root CA 2021
+  fingerprint: d95d0e8eda79525bf9beb11b14d2100d3294985f0c62d9fabd9cd999eccb7b1d
 - subject_name: Halcom Root Certificate Authority
   fingerprint: d7ba3f4ff8ad05633451470dda3378a3491b90005e5c687d2b68d53647cfdd66
 - subject_name: Hellenic Academic and Research Institutions ECC RootCA 2015
@@ -273,24 +297,18 @@ trusted_certificates:
   fingerprint: d3d607a9ff24a19523b6da9d2c649446f8788cb96d9fd130972e120c13677730
 - subject_name: ISRG Root X1
   fingerprint: 96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6
+- subject_name: ISRG Root X2
+  fingerprint: 69729b8e15a86efc177a57afb7171dfc64add28c2fca8cf1507e34453ccb1470
 - subject_name: IdenTrust Commercial Root CA 1
   fingerprint: 5d56499be4d2e08bcfcad08a3e38723d50503bde706948e42f55603019e528ae
 - subject_name: IdenTrust Public Sector Root CA 1
   fingerprint: 30d0895a9a448a262091635522d1f52010b5867acae12c78ef958fd4f4389f2f
 - subject_name: Izenpe.com
-  fingerprint: 23804203ca45d8cde716b8c13bf3b448457fa06cc10250997fa01458317c41e5
-- subject_name: Izenpe.com
   fingerprint: 2530cc8e98321502bad96f9b1fba1b099e2d299e0f4548bb914f363bc0d4531f
-- subject_name: KISA RootCA 1
-  fingerprint: 6fdb3f76c8b801a75338d8a50a7c02879f6198b57e594d318d3832900fedcd79
 - subject_name: LAWtrust Root Certification Authority 2048
   fingerprint: 9b14e8f5f6ea167666e76dcd6becc190861d5e8970b99a9470f0231236049704
-- subject_name: LuxTrust Global Root 2
-  fingerprint: 54455f7129c20b1447c418f997168f24c58fc5023bf5da5be2eb6e1dd8902ed5
 - subject_name: MULTICERT Root Certification Authority 01
   fingerprint: 604d32d036895aed3bfefaeb727c009ec0f2b3cdfa42a1c71730e6a72c3be9d4
-- subject_name: Macao Post eSignTrust Root Certification Authority (G02)
-  fingerprint: 6ea1db6719d6041a06fc0898e5b3cf349a8fa8ecee85edb005965628f617f7c8
 - subject_name: Microsec e-Szigno Root CA 2009
   fingerprint: 3c5f81fea5fab82c64bfa2eaecafcde8e077fc8620a7cae537163df36edbf378
 - subject_name: Microsoft ECC Product Root Certificate Authority 2018
@@ -299,10 +317,8 @@ trusted_certificates:
   fingerprint: 358df39d764af9e1b766e9c972df352ee15cfac227af6ad1d70e8e4a6edcba02
 - subject_name: Microsoft ECC TS Root Certificate Authority 2018
   fingerprint: 3fd4be8baad2f26e1bde06c7584bb720dd1a972d111f5a4999bc44b08fb4960d
-- subject_name: Microsoft EV ECC Root Certificate Authority 2017
-  fingerprint: de1af143ffa160cf5fa86abfe577291633dc264da12c863c5738bea4afbb2cdb
-- subject_name: Microsoft EV RSA Root Certificate Authority 2017
-  fingerprint: 66960242db2ed5906e113295f2454f33d6fb418c4c65e8166d43be64d19ba4fa
+- subject_name: Microsoft Identity Verification Root Certificate Authority 2020
+  fingerprint: 5367f20c7ade0e2bca790915056d086b720c33c1fa2a2661acf787e3292e1270
 - subject_name: Microsoft RSA Root Certificate Authority 2017
   fingerprint: c741f70f4b2a8d88bf2e71c14122ef53ef10eba0cfa5e64cfa20f418853073e0
 - subject_name: Microsoft Root Certificate Authority 2010
@@ -353,14 +369,10 @@ trusted_certificates:
   fingerprint: 18f1fc7f205df8adddeb7fe007dd57e3af375a9c4d8d73546bf4f1fed1e18d35
 - subject_name: QuoVadis Root CA 3 G3
   fingerprint: 88ef81de202eb018452e43f864725cea5fbd1fc2d9d205730709c5d8b8690f46
-- subject_name: QuoVadis Root Certification Authority
-  fingerprint: a45ede3bbbf09c8ae15c72efc07268d693a21c996fd51e67ca079460fd6d8873
 - subject_name: "Registradores de Espa\xF1a - CA Ra\xEDz"
   fingerprint: 7d2bf3489ebc9ad3448b8b0827715a3cbfe3d523e3b56a9b5fc1d2a2da2f20fe
 - subject_name: SI-TRUST Root
   fingerprint: fad540811afae0dc767cdf6572a088fa3ce8493dd82b3b869a67d10aab4e8124
-- subject_name: SITHS Root CA v1
-  fingerprint: fc50b26bdc4a8fdf1344cc80157ae13ac671e2706facfc0605fe34e249eb72d6
 - subject_name: SSL.com EV Root Certification Authority ECC
   fingerprint: 22a2c1f7bded704cc1e701b5f408c310880fe956b5de2a4a44f99c873a25a7c8
 - subject_name: SSL.com EV Root Certification Authority RSA R2
@@ -369,8 +381,6 @@ trusted_certificates:
   fingerprint: 3417bb06cc6007da1b961c920b8ab4ce3fad820e4aa30b9acbc4a74ebdcebc65
 - subject_name: SSL.com Root Certification Authority RSA
   fingerprint: 85666a562ee0be5ce925c1d8890a6f76a87ec16d4d7d5f29ea7419cf20123b69
-- subject_name: SZAFIR ROOT CA
-  fingerprint: fabcf5197cdd7f458ac33832d3284021db2425fd6bea7a2e69b7486e8f51f9cc
 - subject_name: SZAFIR ROOT CA2
   fingerprint: a1339d33281a0b56e557d3d32b1ce7f9367eb094bd5fa72a7e5004c8ded7cafe
 - subject_name: Saudi National Root CA
@@ -413,18 +423,10 @@ trusted_certificates:
   fingerprint: 3b222e566711e992300dc0b15ab9473dafdef8c84d0cef7d3317b4c1821d1436
 - subject_name: SwissSign Silver CA - G2
   fingerprint: be6c4da2bbb9ba59b6f3939768374246c3c005993fa98f020d1dedbed48a81d5
-- subject_name: Symantec Class 1 Public Primary Certification Authority - G4
-  fingerprint: 363f3c849eab03b0a2a0f636d7b86d04d3ac7fcfe26a0a9121ab9795f6e176df
 - subject_name: Symantec Class 1 Public Primary Certification Authority - G6
   fingerprint: 9d190b2e314566685be8a889e27aa8c7d7ae1d8aaddba3c1ecf9d24863cd34b9
-- subject_name: Symantec Class 2 Public Primary Certification Authority - G4
-  fingerprint: fe863d0822fe7a2353fa484d5924e875656d3dc9fb58771f6f616f9d571bc592
 - subject_name: Symantec Class 2 Public Primary Certification Authority - G6
   fingerprint: cb627d18b58ad56dde331a30456bc65c601a4e9b18dedcea08e7daaa07815ff0
-- subject_name: Symantec Class 3 Public Primary Certification Authority - G4
-  fingerprint: 53dfdfa4e297fcfe07594e8c62d5b8ab06b32c7549f38a163094fd6429d5da43
-- subject_name: Symantec Class 3 Public Primary Certification Authority - G6
-  fingerprint: b32396746453442f353e616292bb20bbaa5d23b546450fdb9c54b8386167d529
 - subject_name: T-TeleSec GlobalRoot Class 2
   fingerprint: 91e2f5788d5810eba7ba58737de1548a8ecacd014598bc0b143e041b17052552
 - subject_name: T-TeleSec GlobalRoot Class 3
@@ -443,8 +445,6 @@ trusted_certificates:
   fingerprint: dd6936fe21f8f077c123a1a521c12224f72255b73e03a7260693e8a24b0fa389
 - subject_name: Thailand National Root Certification Authority - G1
   fingerprint: 2a8da2f8d23e0cd3b5871ecfb0f42276ca73230667f474eede71c5ee32cc3ec6
-- subject_name: Thawte Timestamping CA
-  fingerprint: 6b6c1e01f590f5afc5fcf85cd0b9396884048659fc2c6d1170d68b045216c3fd
 - subject_name: TrustCor ECA-1
   fingerprint: 5a885db19c01d912c5759388938cafbbdf031ab2d48e91ee15589b42971d039c
 - subject_name: TrustCor RootCert CA-1
@@ -475,10 +475,6 @@ trusted_certificates:
   fingerprint: 4ff460d54b9c86dabfbcfc5712e0400d2bed3fbc4d4fbdaa86e06adcd2a9ad7a
 - subject_name: USERTrust RSA Certification Authority
   fingerprint: e793c9b02fd8aa13e21c31228accb08119643b749c898964b1746d46c3d4cbd2
-- subject_name: UTN-USERFirst-Client Authentication and Email
-  fingerprint: 43f257412d440d627476974f877da8f1fc2444565a367ae60eddc27a412531ae
-- subject_name: UTN-USERFirst-Object
-  fingerprint: 6fff78e400a70c11011cd85977c459fb5af96a3df0540820d0f4b8607875e58f
 - subject_name: VRK Gov. Root CA
   fingerprint: f008733ec500dc498763cc9264c6fcea40ec22000e927d053ce9c90bfa046cb2
 - subject_name: VRK Gov. Root CA - G2
@@ -487,18 +483,16 @@ trusted_certificates:
   fingerprint: cbb5af185e942a2402f9eacbc0ed5bb876eea3c1223623d00447e4f3ba554b65
 - subject_name: VeriSign Class 2 Public Primary Certification Authority - G3
   fingerprint: 92a9d9833fe1944db366e8bfae7a95b6480c2d6c6c2a1be65d4236b608fca1bb
-- subject_name: VeriSign Class 3 Public Primary Certification Authority - G3
-  fingerprint: eb04cf5eb1f39afa762f2bb120f296cba520c1b97db1589565b81cb9a17b7244
-- subject_name: VeriSign Class 3 Public Primary Certification Authority - G4
-  fingerprint: 69ddd7ea90bb57c93e135dc85ea6fcd5480b603239bdc454fc758b2a26cf7f79
-- subject_name: VeriSign Class 3 Public Primary Certification Authority - G5
-  fingerprint: 9acfab7e43c8d880d06b262a94deeee4b4659989c3d0caf19baf6405e41ab7df
 - subject_name: VeriSign Universal Root Certification Authority
   fingerprint: 2399561127a57125de8cefea610ddf2fa078b5c8067f4e828290bfb860e84b3c
 - subject_name: Verizon Global Root CA
   fingerprint: 68ad50909b04363c605ef13581a939ff2c96372e3f12325b0a6861e1d59f6603
 - subject_name: Visa Information Delivery Root CA
   fingerprint: c57a3acbe8c06ba1988a83485bf326f2448775379849de01ca43571af357e74b
+- subject_name: Visa Public ECC Root CA
+  fingerprint: e6be68ce06fe0da0c140f1aeb00b67b636c5eea9422088929362375ce086db39
+- subject_name: Visa Public RSA Root CA
+  fingerprint: 07cd9aa9064a9b94c6aef8fb784c1bbc1beda08acbe86878d781a39167626cf8
 - subject_name: Visa eCommerce Root
   fingerprint: 69fac9bd55fb0ac78d53bbee5cf1d597989fd0aaab20a25151bdf1733ee7d122
 - subject_name: XRamp Global Certification Authority
@@ -509,6 +503,8 @@ trusted_certificates:
   fingerprint: eaa962c4fa4a6bafebe415196d351ccd888d4f53f3fa8ae6d7c466a94e6042bb
 - subject_name: certSIGN ROOT CA G2
   fingerprint: 657cfe2fa73faa38462571f332a2363a46fce7020951710702cdfbb6eeda3305
+- subject_name: e-Szigno Root CA 2017
+  fingerprint: beb00b30839b9bc32c32e4447905950641f26421b15ed089198b518ae2ea1b99
 - subject_name: ePKI Root Certification Authority
   fingerprint: c0a6f4dc63a24bfdcf54ef2a6a082a0a72de35803e2ff5ff527ae5d87206dfd5
 - subject_name: ePKI Root Certification Authority - G2
@@ -525,13 +521,7 @@ trusted_certificates:
   fingerprint: 40f6af0346a99aa1cd1d555a4e9cce62c7f9634603ee406615833dc8c8d00367
 - subject_name: emSign Root CA - G2
   fingerprint: 1aa0c2709e831bd6e3b5129a00ba41f7eeef020872f1e6504bf0f6c3f24f3af3
-- subject_name: thawte Primary Root CA
-  fingerprint: 8d722f81a9c113c0791df136a2966db26c950a971db46b4199f4ea54b78bfb9f
-- subject_name: thawte Primary Root CA - G2
-  fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
-- subject_name: thawte Primary Root CA - G3
-  fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c
-blocked_certificates_count: 148
+blocked_certificates_count: 182
 blocked_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -539,12 +529,16 @@ blocked_certificates:
   fingerprint: 6baf50ae3467eff3c35fefdc76a02a97fab6267723eda91e99f1b3dc2b28f82e
 - subject_name: A-Trust-Root-05
   fingerprint: 2dde9d0c0a90e7b32b5abc01f41799d42e95a1e3c31c3b39373bb8141ea54471
+- subject_name: A-Trust-Root-07
+  fingerprint: 8ac552ad577e37ad2c6808d72aa331d6a96b4b3febff34ce9bc0578e08055ec3
 - subject_name: A-Trust-nQual-03
   fingerprint: 8688e58f4c7a945fadce7f62bfef521b82da7dc38bfdb0163478a5fe42e57870
 - subject_name: AC RAIZ FNMT-RCM
   fingerprint: 4d9ebb28825c9643ab15d54e5f9614f13cb3e95de3cf4eac971301f320f9226e
 - subject_name: "AC Ra\xEDz Certic\xE1mara S.A."
   fingerprint: a6c51e0da5ca0a9309d2e4c0e40c2af9107aae8203857fe198e3e769e343085c
+- subject_name: AC1 RAIZ MTIN
+  fingerprint: 5b1d9d24de0afea8b35ba04a1c3e25d0812cdf7c4625de0a89af9fe4bbd1bb15
 - subject_name: ACEDICOM Root
   fingerprint: 03950fb49a531f3e1991942398dfa9e0ea32d7ba1cdd9bc85db57ed9400b434a
 - subject_name: ACNLB
@@ -567,6 +561,8 @@ blocked_certificates:
   fingerprint: c1727f3b673e6ae7f12f23d789a7be38b918223ef6911c592da1f583444a547e
 - subject_name: Actalis Authentication CA G1
   fingerprint: afe80a97ea11159190e927e08ec2e60c59a40559483a3fee838a85321b3aeaad
+- subject_name: AddTrust External CA Root
+  fingerprint: 687fa451382278fff0c8b11f8d43d576671c6eb2bceab413fb83d965d06d2ff2
 - subject_name: Admin-Root-CA
   fingerprint: a31f093053bd12c1f5c3c6efd498023fd2914d7758d05d698ce084b50626e0e5
 - subject_name: AdminCA-CD-T01
@@ -595,10 +591,16 @@ blocked_certificates:
   fingerprint: 5607e260163f49c8ea4175a1c0a53b13195cb7d07845611e943a2ff507036834
 - subject_name: CA DATEV BT 01
   fingerprint: 1e910b40c08184c0ca20468e824502ff2485163f77b03bb73296823f03885621
+- subject_name: CA DATEV BT 02
+  fingerprint: 81c2568503eb3be5eec366653960e6d1be9448915e4605b793fbeb34ccb2470f
 - subject_name: CA DATEV INT 01
   fingerprint: efb5157e9c66caa1dcc63c9fac0127cde83b7a426c4579b7b43a41ba46a56deb
+- subject_name: CA DATEV INT 02
+  fingerprint: 997e15c5a4481a8598499753971ee2601d1047c3635aff21af4221a817fd2d96
 - subject_name: CA DATEV STD 01
   fingerprint: 1ba622b36325544ae922afc22ef9d367943794f6e16874f368a733c65c9d5279
+- subject_name: CA DATEV STD 02
+  fingerprint: 05d38c2a70bfc500ccb0cb509159b46b065c6ac9cb42d2e6f16167841434572a
 - subject_name: CA Disig
   fingerprint: 92bf5119abeccad0b1332dc4e1d05fba75b5679044ee0ca26e931f744f2f33cf
 - subject_name: CA Disig Root R1
@@ -635,6 +637,8 @@ blocked_certificates:
   fingerprint: 1c01c6f4dbb2fefc22558b2bca32563f49844acfc32b7be4b0ff599f9e8c7af7
 - subject_name: Class 1 Primary CA
   fingerprint: 7d8ce822222b90c0b14342c7a8145d1f24351f4d1a1fe0edfd312ee73fb00149
+- subject_name: Class 2 Primary CA
+  fingerprint: 0f993c8aef97baaf5687140ed59ad1821bb4afacf0aa9a58b5d57a338a3afbcb
 - subject_name: Class 3 Primary CA
   fingerprint: c1b12f480020336e5b04f520bc19c2e2e10ab42c9d9235f05cbec33ffa4d4dea
 - subject_name: Class 3 Public Primary Certification Authority
@@ -661,14 +665,20 @@ blocked_certificates:
   fingerprint: 8da75f1327217c88060fd2529eff2816e50b0c74541ea4ea3dfcee66a71efe09
 - subject_name: D-TRUST Root Class 3 CA 2007
   fingerprint: 90f3e05396995ff20922c44592db62d7845e1bf64aef512cca75bc669caa2479
+- subject_name: Deutsche Telekom Root CA 2
+  fingerprint: b6191a50d0c3977f7da99bcdaac86a227daeb9679ec70ba3b0c9d92271c170d3
 - subject_name: Digidentity L3 Root CA - G2
   fingerprint: 417dcf3180f4ed1a3747acf1179316cd48cb05c5788435168aed98c98cdcb615
+- subject_name: Digidentity Services Root CA
+  fingerprint: e28097721a8cab8880af80fdef8902b1f15bc7473ad68ec22991257a910d9ea2
 - subject_name: E-ME SSI (RCA)
   fingerprint: cd0b3b2aa174b55f18c7502f3c3a76f2198175ce45637370cf4f48b9c2ce4fbf
 - subject_name: "EBG Elektronik Sertifika Hizmet Sa\u011Flay\u0131c\u0131s\u0131"
   fingerprint: 35ae5bddd8f7ae635cffba5682a8f00b95f48462c7108ee9a0e5292b074aafb2
 - subject_name: ECRaizEstado
   fingerprint: 488e134f30c5db56b76473e608086842bf21af8ab3cd7ac67ebdf125d531834e
+- subject_name: EE Certification Centre Root CA
+  fingerprint: 3e84ba4342908516e77573c0992f0979ca084e4685681ff195ccba8a229b8a76
 - subject_name: Equifax Secure Certificate Authority
   fingerprint: 08297a4047dba23680c731db6e317653ca7848e1bebd3a0b0179a707f92cf178
 - subject_name: Equifax Secure Global eBusiness CA-1
@@ -677,8 +687,18 @@ blocked_certificates:
   fingerprint: 62b9267266212832a8e22dab933d91c7011274acf71703f9cc97833751a6e94f
 - subject_name: GTE CyberTrust Global Root
   fingerprint: a53125188d2110aa964b02c7b7c6da3203170894e5fb71fffb6667d5e6810a36
+- subject_name: GeoTrust Global CA
+  fingerprint: ff856a2d251dcd88d36656f450126798cfabaade40799c722de4d2b5db36a73a
 - subject_name: GeoTrust Global CA 2
   fingerprint: ca2d82a08677072f8ab6764ff035676cfe3e5e325e012172df3f92096db79b85
+- subject_name: GeoTrust Primary Certification Authority
+  fingerprint: 37d51006c512eaab626421f1ec8c92013fc5f82ae98ee533eb4619b8deb4d06c
+- subject_name: GeoTrust Primary Certification Authority - G2
+  fingerprint: 5edb7ac43b82a06a8761e8d7be4979ebf2611f7dd79bf91c1c6b566a219ed766
+- subject_name: GeoTrust Primary Certification Authority - G3
+  fingerprint: b478b812250df878635c2aa7ec7d155eaa625ee82916e2cd294361886cd1fbd4
+- subject_name: GeoTrust Universal CA 2
+  fingerprint: a0234f3bc8527ca5628eec81ad5d69895da5680dc91d1cb8477f33f878b95b0b
 - subject_name: Halcom CA FO
   fingerprint: 5a1b5d6bc65523b40a6deffa45b48e4288ae8dd86dd70a5b858d4a5affc94f71
 - subject_name: Halcom CA PO 2
@@ -698,13 +718,21 @@ blocked_certificates:
 - subject_name: IGC/A AC racine Etat francais
   fingerprint: 1e1a6984b4e76bd709aee3e9c9cf3118eac096dab9cc20dc25faab67297e965a
 - subject_name: Izenpe.com
+  fingerprint: 23804203ca45d8cde716b8c13bf3b448457fa06cc10250997fa01458317c41e5
+- subject_name: Izenpe.com
   fingerprint: b0877aee2d39274df831f66fdeeb7717557c258fc9eb55231a9f8a647a75433f
 - subject_name: Juur-SK
   fingerprint: ecc3e9c3407503bee091aa952f41348ff88baa863b2264befac807901574e939
 - subject_name: KEYNECTIS ROOT CA
   fingerprint: 4210f199499a9ac33c8de02ba6dbaa14408bdd8a6e324689c1922d069715a332
+- subject_name: KISA RootCA 1
+  fingerprint: 6fdb3f76c8b801a75338d8a50a7c02879f6198b57e594d318d3832900fedcd79
 - subject_name: LuxTrust Global Root
   fingerprint: a1b2dbeb64e706c6169e3c4118b23baa09018a8427666d8bf0e28891ec051950
+- subject_name: LuxTrust Global Root 2
+  fingerprint: 54455f7129c20b1447c418f997168f24c58fc5023bf5da5be2eb6e1dd8902ed5
+- subject_name: Macao Post eSignTrust Root Certification Authority (G02)
+  fingerprint: 6ea1db6719d6041a06fc0898e5b3cf349a8fa8ecee85edb005965628f617f7c8
 - subject_name: Microsec e-Szigno Root CA
   fingerprint: 327a3d761abadea034eb998406275cb1a4776efdae2fdf6d0168ea1c4f5567d0
 - subject_name: Microsoft Root Authority
@@ -723,6 +751,8 @@ blocked_certificates:
   fingerprint: 075bfcca2d55ae6e35742c32afd0ca8ea4c958feefc23224999541c033d69c8d
 - subject_name: PosDigicert Class 2 Root CA G2
   fingerprint: 19abcdff3a74402fa8f0ca206bf7fab0dffff3ae2bbd719584d21090a4353207
+- subject_name: QuoVadis Root Certification Authority
+  fingerprint: a45ede3bbbf09c8ae15c72efc07268d693a21c996fd51e67ca079460fd6d8873
 - subject_name: RCSC RootCA
   fingerprint: 7707bb2be9f7ce057060b8308c3bc087b56529b3638eaf5b2a8049c8e15ed720
 - subject_name: Root CA Generalitat Valenciana
@@ -739,6 +769,8 @@ blocked_certificates:
   fingerprint: 6ed99f7d1b562e464a032c861dbb4137805377fa7f5683f0d4da992b41306a6c
 - subject_name: SITHS CA v3
   fingerprint: b2f3c4216af7aff72462466dc13cd2810db8eed853eabb9a063a608efc18fbe8
+- subject_name: SITHS Root CA v1
+  fingerprint: fc50b26bdc4a8fdf1344cc80157ae13ac671e2706facfc0605fe34e249eb72d6
 - subject_name: SSC GDL CA Root A
   fingerprint: b0428b08c228c43f6f9aa0fc29e9d602ed1098ff6f153c6733383fea17216528
 - subject_name: SSC GDL CA Root B
@@ -753,10 +785,10 @@ blocked_certificates:
   fingerprint: e6e4a951ecbf7d8edc01bc873f7b6fd35868bdb10ed786f3a1b1ee16d8cec3e9
 - subject_name: SSL.com EV Root Certification Authority RSA
   fingerprint: 5adfa25013bed3710831572de51c4b9a21171c00313249c4cb4719d37fbb8d20
+- subject_name: SZAFIR ROOT CA
+  fingerprint: fabcf5197cdd7f458ac33832d3284021db2425fd6bea7a2e69b7486e8f51f9cc
 - subject_name: SecureSign RootCA1
   fingerprint: 5f960eebd716dbcb4d8a78b996e680ec2547441e69b4e44e98a595502e28a002
-- subject_name: SecureSign RootCA2
-  fingerprint: af6d08eef3cac4e1584abc63c8a9472ac529af99f3f791319a43776063f58dca
 - subject_name: SecureSign RootCA3
   fingerprint: ae92e90000541a9ebc101b70b6c33a62f5a53a55ba815e81d31abddf03507f5d
 - subject_name: Security Communication EV RootCA1
@@ -789,6 +821,14 @@ blocked_certificates:
   fingerprint: f09b122c7114f4a09bd4ea4f4a99d558b46e4c25cd81140d29c05613914c3841
 - subject_name: Swisscom Root EV CA 2
   fingerprint: d95fea3ca4eedce74cd76e75fc6d1ff62c441f0fa8bc77f034b19e5db258015d
+- subject_name: Symantec Class 1 Public Primary Certification Authority - G4
+  fingerprint: 363f3c849eab03b0a2a0f636d7b86d04d3ac7fcfe26a0a9121ab9795f6e176df
+- subject_name: Symantec Class 2 Public Primary Certification Authority - G4
+  fingerprint: fe863d0822fe7a2353fa484d5924e875656d3dc9fb58771f6f616f9d571bc592
+- subject_name: Symantec Class 3 Public Primary Certification Authority - G4
+  fingerprint: 53dfdfa4e297fcfe07594e8c62d5b8ab06b32c7549f38a163094fd6429d5da43
+- subject_name: Symantec Class 3 Public Primary Certification Authority - G6
+  fingerprint: b32396746453442f353e616292bb20bbaa5d23b546450fdb9c54b8386167d529
 - subject_name: Symantec Enterprise Mobile Root for Microsoft
   fingerprint: 8a5e4881d42f7475e8ec3726fcd5e51884aa04daa9fa7adac8cd26452cf885d4
 - subject_name: TC TrustCenter Class 3 CA II
@@ -801,6 +841,8 @@ blocked_certificates:
   fingerprint: ab7036365c7154aa29c2c29f5d4191163b162a2225011357d56d07ffa7bc1f72
 - subject_name: Thawte Server CA
   fingerprint: b4410b73e2e6eaca47fbc42f8fa4018af4381dc54cfaa84450461eed09454de9
+- subject_name: Thawte Timestamping CA
+  fingerprint: 6b6c1e01f590f5afc5fcf85cd0b9396884048659fc2c6d1170d68b045216c3fd
 - subject_name: "T\xDCB\u0130TAK UEKAE K\xF6k Sertifika Hizmet Sa\u011Flay\u0131c\u0131\
     s\u0131 - S\xFCr\xFCm 3"
   fingerprint: e4c73430d7a5b50925df43370a0d216e9a79b9d6db8373a0c69eb1cc31c7c52a
@@ -814,12 +856,22 @@ blocked_certificates:
   fingerprint: a1f05ccb80c2d710ec7d479abdcbb879e58d7edb7149fe78a87884e3d0bad0f9
 - subject_name: UCA Root
   fingerprint: 93e65ec762f055dc718a332582c41a04430d72e3cb87e8b897b67516f0d1aa39
+- subject_name: UTN-USERFirst-Client Authentication and Email
+  fingerprint: 43f257412d440d627476974f877da8f1fc2444565a367ae60eddc27a412531ae
 - subject_name: UTN-USERFirst-Hardware
   fingerprint: 6ea54741d004667eed1b4816634aa3a79e6e4b96950f8279dafc8d9bd8812137
+- subject_name: UTN-USERFirst-Object
+  fingerprint: 6fff78e400a70c11011cd85977c459fb5af96a3df0540820d0f4b8607875e58f
 - subject_name: VAS Latvijas Pasts SSI(RCA)
   fingerprint: aad9ceed5aa6b1cea28596a8e4e1abed9386d6ebc9d4aad9acde0fa36ba069d0
 - subject_name: VI Registru Centras RCSC (RootCA)
   fingerprint: 0536801fbb443b3e905fd6d70d8c81eb88551be8061299110d2b4f82e64cade1
+- subject_name: VeriSign Class 3 Public Primary Certification Authority - G3
+  fingerprint: eb04cf5eb1f39afa762f2bb120f296cba520c1b97db1589565b81cb9a17b7244
+- subject_name: VeriSign Class 3 Public Primary Certification Authority - G4
+  fingerprint: 69ddd7ea90bb57c93e135dc85ea6fcd5480b603239bdc454fc758b2a26cf7f79
+- subject_name: VeriSign Class 3 Public Primary Certification Authority - G5
+  fingerprint: 9acfab7e43c8d880d06b262a94deeee4b4659989c3d0caf19baf6405e41ab7df
 - subject_name: VeriSign Commercial Software Publishers CA
   fingerprint: ac1fae74b4e97106092131f2e7f746b6734386742bdfd8423731aed14a4ce446
 - subject_name: VeriSign, Inc.
@@ -832,3 +884,9 @@ blocked_certificates:
   fingerprint: 12d480c1a3c664781b99d9df0e9faf3f1cacee1b3c30c3123a337a4a454ffed2
 - subject_name: sigov-ca
   fingerprint: 74cb3a4ea791afb0a2d1a0b13301b3bee0e50ad5c79a1a6f2c663e6f4ee7a484
+- subject_name: thawte Primary Root CA
+  fingerprint: 8d722f81a9c113c0791df136a2966db26c950a971db46b4199f4ea54b78bfb9f
+- subject_name: thawte Primary Root CA - G2
+  fingerprint: a4310d50af18a6447190372a86afaf8b951ffb431d837f1e5688b45971ed1557
+- subject_name: thawte Primary Root CA - G3
+  fingerprint: 4b03f45807ad70f21bfc2cae71c9fde4604c064cf5ffb686bae5dbaad7fdd34c

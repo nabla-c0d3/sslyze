@@ -1,16 +1,9 @@
 name: "Release Build"
 on:
-  push:
   release:
     types: [released]
 
 env:
-  # ---- Language Versions ----
-
-  PYTHON_VERSION: "3.9"
-
-  # ---- Docker Namespace ----
-
   # DOCKER_USER and DOCKER_TOKEN must be stored as GitHub secrets as well
   DOCKER_NAMESPACE: ${{ secrets.DOCKER_NAMESPACE }}
 

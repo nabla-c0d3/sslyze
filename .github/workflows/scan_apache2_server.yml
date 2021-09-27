@@ -2,40 +2,42 @@ name: Scan Apache2 Web Server
 
 on:
   push:
-    branches: [ release ]
+    branches: [release]
   pull_request:
-    branches: [ release ]
+    branches: [release]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install Apache2
-      run: |
-        sudo apt-get install apache2
-        sudo cp ./tests/web_servers/apache2/000-default.conf /etc/apache2/sites-enabled/000-default.conf
-        sudo cp ./tests/web_servers/apache2/apache-selfsigned.crt /etc/ssl/certs/apache-selfsigned.crt
-        sudo cp ./tests/web_servers/apache2/apache-selfsigned.key /etc/ssl/private/apache-selfsigned.key
-        sudo a2enmod ssl
+      - name: Install Apache2
+        run: |
+          sudo apt-get install apache2
+          sudo cp ./tests/web_servers/apache2/000-default.conf /etc/apache2/sites-enabled/000-default.conf
+          sudo cp ./tests/web_servers/apache2/apache-selfsigned.crt /etc/ssl/certs/apache-selfsigned.crt
+          sudo cp ./tests/web_servers/apache2/apache-selfsigned.key /etc/ssl/private/apache-selfsigned.key
+          sudo a2enmod ssl
 
-    - name: Start Apache2
-      # Start apache2 and display the status if it starting it failed
-      run: sudo /etc/init.d/apache2 restart || systemctl status apache2.service
+      - name: Start Apache2
+        # Start apache2 and display the status if it starting it failed
+        run: sudo /etc/init.d/apache2 restart || systemctl status apache2.service
 
-    - name: Install pip
-      run: |
-        python -m pip install --upgrade pip setuptools
+      - name: Install pip
+        run: |
+          python -m pip install --upgrade pip setuptools
 
-    - name: Install SSLyze
-      run: python setup.py install
+      - name: Install SSLyze
+        run: python setup.py install
 
-    - name: Scan web server
-      run: python tests/web_servers/scan_localhost.py apache2
+      - name: Scan web server
+        run: python tests/web_servers/scan_localhost.py apache2

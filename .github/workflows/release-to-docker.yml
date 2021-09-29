@@ -1,4 +1,4 @@
-name: "Release Build"
+name: "Release to Docker"
 on:
   release:
     types: [released]

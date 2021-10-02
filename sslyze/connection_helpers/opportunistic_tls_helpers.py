@@ -1,25 +1,25 @@
 import socket
 import struct
 from abc import abstractmethod, ABC
-from enum import Enum, auto
+from enum import Enum
 from typing import ClassVar, Optional
 
 
-class ProtocolWithOpportunisticTlsEnum(Enum):
+class ProtocolWithOpportunisticTlsEnum(str, Enum):
     """The list of plaintext protocols supported by SSLyze for opportunistic TLS upgrade (such as STARTTLS).
 
     This allows SSLyze to figure out how to complete an SSL/TLS handshake with the server.
     """
 
-    SMTP = auto()
-    XMPP = auto()
-    XMPP_SERVER = auto()
-    FTP = auto()
-    POP3 = auto()
-    LDAP = auto()
-    IMAP = auto()
-    RDP = auto()
-    POSTGRES = auto()
+    SMTP = "SMTP"
+    XMPP = "XMPP"
+    XMPP_SERVER = "XMPP_SERVER"
+    FTP = "FTP"
+    POP3 = "POP3"
+    LDAP = "LDAP"
+    IMAP = "IMAP"
+    RDP = "RDP"
+    POSTGRES = "POSTGRES"
 
     @classmethod
     def from_default_port(cls, port: int) -> Optional["ProtocolWithOpportunisticTlsEnum"]:

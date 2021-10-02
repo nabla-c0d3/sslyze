@@ -4,7 +4,6 @@ from typing import List, Optional
 from uuid import UUID
 
 import pydantic
-from nassl.ssl_client import OpenSslFileTypeEnum
 
 from sslyze import (
     ServerNetworkConfiguration,
@@ -12,8 +11,8 @@ from sslyze import (
     ProtocolWithOpportunisticTlsEnum,
     ServerScanStatusEnum,
     ServerConnectivityStatusEnum,
-    TlsVersionEnum,
     ClientAuthRequirementEnum,
+    ClientAuthenticationCredentials,
 )
 from sslyze.__version__ import __url__, __version__
 from sslyze.plugins.certificate_info.json_output import (
@@ -107,17 +106,34 @@ class _ClientAuthenticationCredentialsAsJson(pydantic.BaseModel):
     # Compared to the ClientAuthenticationCredentials class, this model does not have the key_password field
     certificate_chain_path: Path
     key_path: Path
-    key_type: OpenSslFileTypeEnum = OpenSslFileTypeEnum.PEM
+    key_type: str
 
     class Config:
         orm_mode = True
 
+    @classmethod
+    def from_orm(cls, client_auth_creds: "ClientAuthenticationCredentials") -> "_ClientAuthenticationCredentialsAsJson":
+        return cls(
+            certificate_chain_path=client_auth_creds.certificate_chain_path,
+            key_path=client_auth_creds.key_path,
+            key_type=client_auth_creds.key_type.name,
+        )
+
 
 class _ServerTlsProbingResultAsJson(_BaseModelWithOrmModeAndForbid):
-    highest_tls_version_supported: TlsVersionEnum
+    highest_tls_version_supported: str
     cipher_suite_supported: str
     client_auth_requirement: ClientAuthRequirementEnum
     supports_ecdh_key_exchange: bool
+
+    @classmethod
+    def from_orm(cls, tls_probing_result: ServerTlsProbingResult) -> "_ServerTlsProbingResultAsJson":
+        return cls(
+            highest_tls_version_supported=tls_probing_result.highest_tls_version_supported.name,
+            cipher_suite_supported=tls_probing_result.cipher_suite_supported,
+            client_auth_requirement=tls_probing_result.client_auth_requirement,
+            supports_ecdh_key_exchange=tls_probing_result.supports_ecdh_key_exchange,
+        )
 
 
 _ServerTlsProbingResultAsJson.__doc__ = ServerTlsProbingResult.__doc__  # type: ignore

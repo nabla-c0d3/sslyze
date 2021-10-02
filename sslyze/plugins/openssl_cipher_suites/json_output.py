@@ -6,7 +6,6 @@ from nassl.ephemeral_key_info import EphemeralKeyInfo, EcDhEphemeralKeyInfo, Nis
 
 from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.openssl_cipher_suites.implementation import (
-    TlsVersionEnum,
     CipherSuitesScanResult,
     CipherSuiteAcceptedByServer,
 )
@@ -89,11 +88,20 @@ class _CipherSuiteRejectedByServerAsJson(_BaseModelWithOrmMode):
 
 
 class CipherSuitesScanResultAsJson(_BaseModelWithOrmMode):
-    tls_version_used: TlsVersionEnum
-    is_tls_protocol_version_supported: bool
+    tls_version_used: str
+    is_tls_version_supported: bool
 
     accepted_cipher_suites: List[_CipherSuiteAcceptedByServerAsJson]
     rejected_cipher_suites: List[_CipherSuiteRejectedByServerAsJson]
+
+    @classmethod
+    def from_orm(cls, scan_result: CipherSuitesScanResult) -> "CipherSuitesScanResultAsJson":
+        return cls(
+            tls_version_used=scan_result.tls_version_used.name,
+            is_tls_version_supported=scan_result.is_tls_version_supported,
+            accepted_cipher_suites=scan_result.accepted_cipher_suites,
+            rejected_cipher_suites=scan_result.rejected_cipher_suites,
+        )
 
 
 CipherSuitesScanResultAsJson.__doc__ = CipherSuitesScanResult.__doc__  # type: ignore

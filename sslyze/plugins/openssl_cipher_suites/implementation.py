@@ -35,12 +35,11 @@ class CipherSuitesScanResult(ScanCommandResult):
     """
 
     tls_version_used: TlsVersionEnum
-
     accepted_cipher_suites: List[CipherSuiteAcceptedByServer]
     rejected_cipher_suites: List[CipherSuiteRejectedByServer]
 
     @property
-    def is_tls_protocol_version_supported(self) -> bool:
+    def is_tls_version_supported(self) -> bool:
         """Is the SSL/TLS version used to connect the server supported by it?
         """
         return True if self.accepted_cipher_suites else False

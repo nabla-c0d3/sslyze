@@ -1,5 +1,5 @@
 import socket
-from enum import Enum, unique, auto
+from enum import Enum, unique
 from pathlib import Path
 from typing import Optional
 
@@ -19,13 +19,13 @@ from sslyze.connection_helpers.tls_connection import SslConnection
 
 
 @unique
-class ClientAuthRequirementEnum(Enum):
+class ClientAuthRequirementEnum(str, Enum):
     """Whether the server asked for client authentication.
     """
 
-    DISABLED = auto()
-    OPTIONAL = auto()
-    REQUIRED = auto()
+    DISABLED = "DISABLED"
+    OPTIONAL = "OPTIONAL"
+    REQUIRED = "REQUIRED"
 
 
 @unique

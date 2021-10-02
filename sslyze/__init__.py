@@ -30,9 +30,11 @@ from sslyze.scanner.models import (
     ServerScanResult,
     ServerConnectivityStatusEnum,
     ServerScanStatusEnum,
+    AllScanCommandsAttempts,
 )
 from sslyze.scanner.scan_command_attempt import ScanCommandAttemptStatusEnum, ScanCommandErrorReasonEnum
 from sslyze.scanner.scanner import Scanner
+from sslyze.errors import ServerHostnameCouldNotBeResolved
 
 
 # Classes with the scan results

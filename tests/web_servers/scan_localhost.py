@@ -70,12 +70,12 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         else:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
-        successful_cmds = []
+        successful_cmds = set()
         triggered_unexpected_error = False
         for scan_command in ScanCommandsRepository.get_all_scan_commands():
             scan_cmd_attempt = getattr(server_scan_result.scan_result, scan_command.value)
             if scan_cmd_attempt.status == ScanCommandAttemptStatusEnum.COMPLETED:
-                successful_cmds.append(scan_command)
+                successful_cmds.add(scan_command)
             elif scan_cmd_attempt.status == ScanCommandAttemptStatusEnum.ERROR:
                 # Crash if any scan commands triggered an error that's not due to client authentication being required
                 if scan_cmd_attempt.error_reason != ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED:
@@ -97,7 +97,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
         # Crash if SSLyze didn't complete the scan commands that are supposed to work even when we don't provide a
         # client certificate
         if server_software_running_on_localhost == WebServerSoftwareEnum.APACHE2:
-            expected_scan_command_results = {
+            expected_scan_cmds_to_succeed = {
                 ScanCommand.TLS_1_3_CIPHER_SUITES,
                 ScanCommand.TLS_1_2_CIPHER_SUITES,
                 ScanCommand.TLS_1_1_CIPHER_SUITES,
@@ -115,7 +115,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
             # With nginx, when configured to require client authentication, more scan commands work because unlike
             # Apache2, it does complete a full TLS handshake even when a client cert was not provided. It then returns
             # an error page at the HTTP layer.
-            expected_scan_command_results = {
+            expected_scan_cmds_to_succeed = {
                 ScanCommand.TLS_1_3_CIPHER_SUITES,
                 ScanCommand.TLS_1_2_CIPHER_SUITES,
                 ScanCommand.TLS_1_1_CIPHER_SUITES,
@@ -135,12 +135,13 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
             }
         elif server_software_running_on_localhost == WebServerSoftwareEnum.IIS:
             # With IIS, client authentication is not enabled so all scan commands should succeed
-            expected_scan_command_results = ScanCommandsRepository.get_all_scan_commands()  # type: ignore
+            expected_scan_cmds_to_succeed = ScanCommandsRepository.get_all_scan_commands()  # type: ignore
         else:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
-        if str(successful_cmds) != expected_scan_command_results:
-            raise RuntimeError(f"SSLyze did not complete all the expected scan commands: {successful_cmds}")
+        missing_scan_cmds = expected_scan_cmds_to_succeed.difference(successful_cmds)
+        if missing_scan_cmds:
+            raise RuntimeError(f"SSLyze did not complete all the expected scan commands: {missing_scan_cmds}")
         print("OK: Completed all the expected scan commands.")
 
         # Ensure the right TLS versions were detected by SSLyze as enabled
@@ -162,7 +163,8 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
             raise ValueError(f"Unexpected value: {server_software_running_on_localhost}")
 
         for ciphers_scan_cmd in expected_enabled_tls_scan_commands:
-            scan_cmd_result = getattr(server_scan_result.scan_result, ciphers_scan_cmd, None)
+            scan_cmd_attempt = getattr(server_scan_result.scan_result, ciphers_scan_cmd, None)
+            scan_cmd_result = scan_cmd_attempt.result
             if not scan_cmd_result.accepted_cipher_suites:
                 raise RuntimeError(
                     f"SSLyze did not detect {scan_cmd_result.tls_version_used.name} to be enabled on the server."

@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2021-06-27
-trusted_certificates_count: 128
+date_fetched: 2021-09-25
+trusted_certificates_count: 131
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -134,6 +134,10 @@ trusted_certificates:
   fingerprint: c3846bf24b9e93ca64274c0ec67c1ecc5e024ffcacd2d74019350e81fe546ae4
 - subject_name: Go Daddy Root Certificate Authority - G2
   fingerprint: 45140b3247eb9cc8c5b4f0d7b53091f73292089e6e5a63e2749dd3aca9198eda
+- subject_name: HARICA TLS ECC Root CA 2021
+  fingerprint: 3f99cc474acfce4dfed58794665e478d1547739f2e780f1bb4ca9b133097d401
+- subject_name: HARICA TLS RSA Root CA 2021
+  fingerprint: d95d0e8eda79525bf9beb11b14d2100d3294985f0c62d9fabd9cd999eccb7b1d
 - subject_name: Hellenic Academic and Research Institutions ECC RootCA 2015
   fingerprint: 44b545aa8a25e65a73ca15dc27fc36d24c1cb9953a066539b11582dc487b4833
 - subject_name: Hellenic Academic and Research Institutions RootCA 2011
@@ -234,6 +238,8 @@ trusted_certificates:
   fingerprint: 945bbc825ea554f489d1fd51a73ddf2ea624ac7019a05205225c22a78ccfa8b4
 - subject_name: Trustwave Global ECC P384 Certification Authority
   fingerprint: 55903859c8c0c3ebb8759ece4e2557225ff5758bbd38ebd48276601e1bd58097
+- subject_name: TunTrust Root CA
+  fingerprint: 2e44102ab58cb85419451c8e19d9acf3662cafbc614b6a53960a30f7d0e2eb41
 - subject_name: UCA Extended Validation Root
   fingerprint: d43af9b35473755c9684fc06d7d8cb70ee5c28e773fb294eb41ee71722924d24
 - subject_name: UCA Global G2 Root

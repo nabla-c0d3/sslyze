@@ -1,7 +1,7 @@
 platform: OPENJDK
-version: jdk-16.0.2
-url: https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-x64_bin.tar.gz
-date_fetched: 2021-07-25
+version: jdk-17
+url: https://download.java.net/java/GA/jdk17/0d483333a00540d886896bac774ff48b/35/GPL/openjdk-17_linux-x64_bin.tar.gz
+date_fetched: 2021-09-25
 trusted_certificates_count: 91
 trusted_certificates:
 - subject_name: AAA Certificate Services

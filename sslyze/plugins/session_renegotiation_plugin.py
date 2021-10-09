@@ -7,7 +7,7 @@ import pydantic
 from nassl._nassl import OpenSSLError
 from nassl.legacy_ssl_client import LegacySslClient
 
-from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,

@@ -7,7 +7,7 @@ from nassl._nassl import OpenSSLError
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
 from nassl.ssl_client import ClientCertificateRequested, SslClient
 
-from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 from sslyze.plugins.plugin_base import (

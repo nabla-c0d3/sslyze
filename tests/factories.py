@@ -5,7 +5,7 @@ from uuid import uuid4
 from faker import Faker
 from faker.providers import internet
 
-from sslyze.cli.command_line.server_string_parser import InvalidServerStringError
+from sslyze.cli.server_string_parser import InvalidServerStringError
 from sslyze.cli.command_line_parser import ParsedCommandLine
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.scan_commands import ScanCommand

@@ -2,7 +2,7 @@ import socket
 
 import pytest
 
-from sslyze.cli.json_output import _ServerTlsProbingResultAsJson
+from sslyze.json.json_output import _ServerTlsProbingResultAsJson
 from tests.openssl_server import LegacyOpenSslServer
 
 from sslyze.server_connectivity import TlsVersionEnum, check_connectivity_to_server

@@ -6,7 +6,7 @@ from typing import List, Optional
 import pydantic
 from nassl._nassl import WantReadError
 
-from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,

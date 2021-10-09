@@ -2,7 +2,7 @@ import threading
 
 import pytest
 
-from sslyze.cli.json_output import _ServerTlsProbingResultAsJson
+from sslyze.json.json_output import _ServerTlsProbingResultAsJson
 from sslyze.server_connectivity import check_connectivity_to_server
 from sslyze.server_setting import ServerNetworkLocation, HttpProxySettings, ServerNetworkConfiguration
 from sslyze.errors import (

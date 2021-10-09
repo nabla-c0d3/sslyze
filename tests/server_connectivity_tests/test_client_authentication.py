@@ -1,6 +1,6 @@
 import pytest
 
-from sslyze.cli.json_output import _ServerTlsProbingResultAsJson
+from sslyze.json.json_output import _ServerTlsProbingResultAsJson
 from sslyze.server_connectivity import ClientAuthRequirementEnum, check_connectivity_to_server
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
 from tests.markers import can_only_run_on_linux_64

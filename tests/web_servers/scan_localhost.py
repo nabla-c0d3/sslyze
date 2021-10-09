@@ -20,7 +20,7 @@ from sslyze import (
     ServerConnectivityStatusEnum,
     ScanCommandAttemptStatusEnum,
 )
-from sslyze.cli.json_output import SslyzeOutputAsJson, ServerScanResultAsJson
+from sslyze.json.json_output import SslyzeOutputAsJson, ServerScanResultAsJson
 from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
 
 

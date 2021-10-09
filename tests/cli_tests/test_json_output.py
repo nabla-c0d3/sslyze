@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 
-from sslyze.cli.json_output import SslyzeOutputAsJson, ServerScanResultAsJson
+from sslyze.json.json_output import SslyzeOutputAsJson, ServerScanResultAsJson
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze import ScanCommandErrorReasonEnum, ServerScanStatusEnum, ScanCommandAttemptStatusEnum
 from sslyze.scanner.models import CompressionScanAttempt

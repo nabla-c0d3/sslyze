@@ -6,7 +6,7 @@ from nassl.ssl_client import OpenSslFileTypeEnum
 from typing import Set, List, Optional, Dict
 from typing import Tuple
 
-from sslyze.cli.command_line.server_string_parser import (
+from sslyze.cli.server_string_parser import (
     InvalidServerStringError,
     CommandLineServerStringParser,
 )

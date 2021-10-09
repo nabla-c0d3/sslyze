@@ -5,7 +5,7 @@ import pydantic
 from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslEarlyDataStatusEnum, SslClient
 
-from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,

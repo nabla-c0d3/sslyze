@@ -3,7 +3,7 @@ from typing import Optional
 import pydantic
 
 from sslyze import SessionResumptionSupportExtraArgument, SessionResumptionSupportScanResult, TlsResumptionSupportEnum
-from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 
 
 class _BaseModelWithForbidAndOrmMode(pydantic.BaseModel):

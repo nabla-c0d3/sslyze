@@ -68,7 +68,7 @@ def build_exe(ctx):
 @task
 def gen_json_schema(ctx):
     # type: (Context) -> None
-    from sslyze.cli.json_output import SslyzeOutputAsJson
+    from sslyze.json.json_output import SslyzeOutputAsJson
 
     json_schema = SslyzeOutputAsJson.schema_json(indent=2)
     json_schema_file = Path(__file__).parent / "json_output_schema.json"

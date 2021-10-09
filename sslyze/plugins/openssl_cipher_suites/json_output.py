@@ -4,7 +4,7 @@ from typing import List, Optional
 import pydantic
 from nassl.ephemeral_key_info import EphemeralKeyInfo, EcDhEphemeralKeyInfo, NistEcDhKeyExchangeInfo, DhEphemeralKeyInfo
 
-from sslyze.cli.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.openssl_cipher_suites.implementation import (
     CipherSuitesScanResult,
     CipherSuiteAcceptedByServer,

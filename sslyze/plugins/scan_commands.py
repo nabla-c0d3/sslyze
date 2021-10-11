@@ -30,6 +30,7 @@ from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionRateImplementation,
     SessionResumptionSupportImplementation,
 )
+from sslyze.plugins.forwarded_plugin import ForwardedImplementation
 
 if TYPE_CHECKING:
     from sslyze.plugins.plugin_base import ScanCommandImplementation  # noqa: F401
@@ -55,6 +56,7 @@ ScanCommandType = Literal[
     "session_resumption_rate",
     "http_headers",
     "elliptic_curves",
+    "forwarded",
 ]
 
 
@@ -92,6 +94,8 @@ class ScanCommand:
     HTTP_HEADERS: Literal["http_headers"] = "http_headers"
     ELLIPTIC_CURVES: Literal["elliptic_curves"] = "elliptic_curves"
 
+    FORWARDED: Literal["forwarded"] = "forwarded"
+
 
 class ScanCommandsRepository:
     @staticmethod
@@ -122,4 +126,5 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommandType, Type["ScanCommandImplementation"]
     ScanCommand.SESSION_RESUMPTION_RATE: SessionResumptionRateImplementation,
     ScanCommand.HTTP_HEADERS: HttpHeadersImplementation,
     ScanCommand.ELLIPTIC_CURVES: SupportedEllipticCurvesImplementation,
+    ScanCommand.FORWARDED: ForwardedImplementation,
 }

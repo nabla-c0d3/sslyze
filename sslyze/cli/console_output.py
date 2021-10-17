@@ -99,7 +99,7 @@ class ObserverToGenerateConsoleOutput(ScannerObserver):
         server_location = server_scan_result.server_location
         network_route = _server_location_to_network_route(server_location)
         scan_txt = f"Scan Results For {server_location.hostname}:{server_location.port} - {network_route}"
-        self._file_to.write(self._format_title(scan_txt) + scan_command_results_str + "\n\n")
+        self._file_to.write("\n" + self._format_title(scan_txt) + scan_command_results_str + "\n")
 
     def all_server_scans_completed(self) -> None:
         scans_duration = datetime.utcnow() - self._date_scans_started

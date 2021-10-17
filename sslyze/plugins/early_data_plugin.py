@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
+import socket
 import pydantic
 from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslEarlyDataStatusEnum, SslClient
@@ -96,7 +97,10 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
         # TLS 1.3 not supported
         is_early_data_supported = False
     except TlsHandshakeTimedOut:
-        # Sometimes triggered by servers that don't support at all TLS 1.3 such as Amazon Cloudfront
+        # Sometimes triggered by servers that don't support TLS 1.3 at all, such as Amazon Cloudfront
+        is_early_data_supported = False
+    except socket.timeout:
+        # Some servers just don't answer the read() call
         is_early_data_supported = False
     finally:
         ssl_connection.close()

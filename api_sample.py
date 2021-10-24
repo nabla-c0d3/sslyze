@@ -95,7 +95,7 @@ def main() -> None:
 
 def example_json_result_parsing() -> None:
     # SSLyze scan results serialized to JSON were saved to this file using --json_out
-    results_as_json_file = Path(__file__).parent / "tests" / "cli_tests" / "sslyze_output.json"
+    results_as_json_file = Path(__file__).parent / "tests" / "json_tests" / "sslyze_output.json"
     results_as_json = results_as_json_file.read_text()
 
     # These results can be parsed

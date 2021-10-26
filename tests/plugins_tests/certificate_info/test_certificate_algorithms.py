@@ -2,8 +2,8 @@ from pathlib import Path
 from unittest import mock
 from unittest.mock import PropertyMock
 
+import cryptography
 import pytest
-from cryptography import hazmat
 
 from sslyze.plugins.certificate_info.json_output import CertificateInfoScanResultAsJson
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
@@ -84,7 +84,7 @@ class TestCertificateAlgorithms:
 
         # And the server has a certificate with an invalid Subject field
         with mock.patch.object(
-            hazmat.backends.openssl.x509._Certificate, certificate_name_field, new_callable=PropertyMock
+            cryptography.x509.Certificate, certificate_name_field, new_callable=PropertyMock
         ) as mock_certificate_name:
             # https://github.com/nabla-c0d3/sslyze/issues/495
             mock_certificate_name.side_effect = ValueError("Country name must be a 2 character country code")

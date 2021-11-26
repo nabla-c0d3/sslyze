@@ -81,6 +81,11 @@ class ServerNetworkLocation:
     http_proxy_settings: Optional[HttpProxySettings] = None
 
     @property
+    def display_string(self) -> str:
+        """How to display this location to a user."""
+        return f"{self.hostname}:{self.port}"
+
+    @property
     def connection_type(self) -> ConnectionTypeEnum:
         if self.ip_address:
             return ConnectionTypeEnum.DIRECT

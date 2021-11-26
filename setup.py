@@ -34,16 +34,23 @@ def get_project_info() -> Dict[str, str]:
 
 
 def get_include_files() -> List[Tuple[str, str]]:
-    """"Get the list of trust stores so they properly packaged when doing a cx_freeze build.
+    """"Get the list of non-Python files to package when doing a cx_freeze build.
     """
-    plugin_data_files = []
+    non_python_files = []
+
+    # The trust stores
     trust_stores_pem_path = root_path / "sslyze" / "plugins" / "certificate_info" / "trust_stores" / "pem_files"
     for file in listdir(trust_stores_pem_path):
         file = path.join(trust_stores_pem_path, file)
         if path.isfile(file):  # skip directories
             filename = path.basename(file)
-            plugin_data_files.append((file, path.join("pem_files", filename)))
-    return plugin_data_files
+            non_python_files.append((file, path.join("pem_files", filename)))
+
+    # The Mozilla profile
+    mozilla_profile_path = root_path / "sslyze" / "mozilla_tls_profile" / "5.6.json"
+    non_python_files.append(str(mozilla_profile_path))
+
+    return non_python_files
 
 
 project_info = get_project_info()
@@ -86,6 +93,7 @@ setup(
     package_data={
         "sslyze": ["py.typed"],
         "sslyze.plugins.certificate_info.trust_stores": ["pem_files/*.pem", "pem_files/*.yaml"],
+        "sslyze.mozilla_tls_profile": ["5.6.json"],
     },
     entry_points={"console_scripts": ["sslyze = sslyze.__main__:main"]},
     # Dependencies

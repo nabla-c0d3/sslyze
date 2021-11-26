@@ -6,7 +6,16 @@ from sslyze.cli.console_output import ObserverToGenerateConsoleOutput
 from sslyze.__version__ import __version__
 from sslyze.cli.command_line_parser import CommandLineParsingError, CommandLineParser
 
-from sslyze import Scanner, ServerScanRequest, SslyzeOutputAsJson, ServerScanResultAsJson
+from sslyze import (
+    Scanner,
+    ServerScanRequest,
+    SslyzeOutputAsJson,
+    ServerScanResultAsJson,
+)
+from sslyze.mozilla_tls_profile.mozilla_config_checker import (
+    MozillaTlsConfigurationChecker,
+    ServerNotCompliantWithMozillaTlsConfiguration,
+)
 
 
 def main() -> None:
@@ -69,6 +78,40 @@ def main() -> None:
         )
         json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
         json_file_out.write(json_output_as_str)
+
+    # Check the results against the Mozilla config if needed
+    are_all_servers_compliant = True
+    # TODO(AD): Expose format_title method
+    title = ObserverToGenerateConsoleOutput._format_title("Compliance against Mozilla TLS configuration")
+    print()
+    print(title)
+    if not parsed_command_line.check_against_mozilla_config:
+        print("    Disabled; use --mozilla-config={old, intermediate, modern}.")
+    else:
+
+        print(
+            f'    Checking results against Mozilla\'s "{parsed_command_line.check_against_mozilla_config}"'
+            f" configuration. See https://ssl-config.mozilla.org/ for more details.\n"
+        )
+        mozilla_checker = MozillaTlsConfigurationChecker.get_default()
+        for server_scan_result in all_server_scan_results:
+            try:
+                mozilla_checker.check_server(
+                    against_config=parsed_command_line.check_against_mozilla_config,
+                    server_scan_result=server_scan_result,
+                )
+                print(f"    {server_scan_result.server_location.display_string}: OK - Compliant.\n")
+
+            except ServerNotCompliantWithMozillaTlsConfiguration as e:
+                are_all_servers_compliant = False
+                print(f"    {server_scan_result.server_location.display_string}: FAILED - Not compliant.")
+                for criteria, error_description in e.issues.items():
+                    print(f"        * {criteria}: {error_description}")
+                print()
+
+    if not are_all_servers_compliant:
+        # Return a non-zero error code to signal failure (for example to fail a CI/CD pipeline)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -34,7 +34,7 @@ class ObserverToGenerateConsoleOutput(ScannerObserver):
 
     def command_line_parsed(self, parsed_command_line: ParsedCommandLine) -> None:
         self._file_to.write("\n")
-        self._file_to.write(self._format_title("Checking host(s) availability"))
+        self._file_to.write(self._format_title("Checking connectivity to server(s)"))
         self._file_to.write("\n")
 
         for bad_server_str in parsed_command_line.invalid_servers:
@@ -47,7 +47,7 @@ class ObserverToGenerateConsoleOutput(ScannerObserver):
         self, server_scan_request: ServerScanRequest, connectivity_error: ConnectionToServerFailed
     ) -> None:
         self._file_to.write(
-            f"   {connectivity_error.server_location.hostname}:{connectivity_error.server_location.port:<25}"
+            f"   {connectivity_error.server_location.display_string:<25}"
             f" => ERROR: {connectivity_error.error_message}; discarding scan.\n"
         )
 
@@ -63,9 +63,7 @@ class ObserverToGenerateConsoleOutput(ScannerObserver):
 
         server_location = server_scan_request.server_location
         network_route = _server_location_to_network_route(server_location)
-        self._file_to.write(
-            f"   {server_location.hostname}:{server_location.port:<25} => {network_route} {client_auth_msg}\n"
-        )
+        self._file_to.write(f"   {server_location.display_string:<25} => {network_route} {client_auth_msg}\n")
 
     def server_scan_completed(self, server_scan_result: ServerScanResult) -> None:
         if server_scan_result.scan_status != ServerScanStatusEnum.COMPLETED:
@@ -98,7 +96,7 @@ class ObserverToGenerateConsoleOutput(ScannerObserver):
         # Also display the server that was scanned
         server_location = server_scan_result.server_location
         network_route = _server_location_to_network_route(server_location)
-        scan_txt = f"Scan Results For {server_location.hostname}:{server_location.port} - {network_route}"
+        scan_txt = f"Scan Results For {server_location.display_string} - {network_route}"
         self._file_to.write("\n" + self._format_title(scan_txt) + scan_command_results_str + "\n")
 
     def all_server_scans_completed(self) -> None:
@@ -168,7 +166,7 @@ def scan_command_error_as_console_output(
             " with the following information:\n\n"
         )
         target_result_str += f"       * SSLyze version: {__version__.__version__}\n"
-        target_result_str += f"       * Server: {server_location.hostname}:{server_location.port}"
+        target_result_str += f"       * Server: {server_location.display_string}"
         target_result_str += f" - {_server_location_to_network_route(server_location)}\n"
         target_result_str += f"       * Scan command: {scan_command}\n\n"
         for line in scan_command_attempt.error_trace.format(chain=False):

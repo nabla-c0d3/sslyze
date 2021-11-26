@@ -39,8 +39,8 @@ $ python -m sslyze www.yahoo.com www.google.com "[2607:f8b0:400a:807::2004]:443"
 Usage as a CI/CD step
 ---------------------
 
-By default, SSLyze will check the server's results against Mozilla recommended ["intermediate" TLS
-configuration](https://wiki.mozilla.org/Security/Server_Side_TLS) and will return a non-zero exit code if the server
+By default, SSLyze will check the server's scan results against Mozilla's recommended ["intermediate" TLS
+configuration](https://wiki.mozilla.org/Security/Server_Side_TLS), and will return a non-zero exit code if the server
 is not compliant. 
 
 ```

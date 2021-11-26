@@ -131,6 +131,7 @@ class SupportedEllipticCurvesScanAttempt(ScanCommandAttempt[SupportedEllipticCur
 @dataclass(frozen=True)
 class AllScanCommandsAttempts:
     """The result of every scan command supported by SSLyze."""
+
     certificate_info: CertificateInfoScanAttempt
     ssl_2_0_cipher_suites: CipherSuitesScanAttempt
     ssl_3_0_cipher_suites: CipherSuitesScanAttempt

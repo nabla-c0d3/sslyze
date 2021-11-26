@@ -32,6 +32,7 @@ class ScanCommandAttempt(Generic[_ScanCommandResultTypeVar]):
         result: The actual result of the scan command; None if the scan command failed. The type of this attribute is
             the "ScanResult" object corresponding to the scan command.
     """
+
     status: ScanCommandAttemptStatusEnum
 
     # Set if status == ERROR

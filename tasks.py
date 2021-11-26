@@ -63,3 +63,13 @@ def build_exe(ctx):
         raise EnvironmentError("Can only be used on Windows")
     # WARNING(AD): This does not work well within a pipenv and the system's Python should be used
     ctx.run("python setup.py build_exe")
+
+
+@task
+def gen_json_schema(ctx):
+    # type: (Context) -> None
+    from sslyze.json.json_output import SslyzeOutputAsJson
+
+    json_schema = SslyzeOutputAsJson.schema_json(indent=2)
+    json_schema_file = Path(__file__).parent / "json_output_schema.json"
+    json_schema_file.write_text(json_schema)

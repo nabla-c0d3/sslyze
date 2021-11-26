@@ -1,4 +1,4 @@
-from sslyze.cli.command_line.server_string_parser import CommandLineServerStringParser
+from sslyze.cli.server_string_parser import CommandLineServerStringParser
 
 
 class TestCommandLineServerStringParser:

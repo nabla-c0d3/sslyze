@@ -3,23 +3,26 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from nassl.ssl_client import OpenSslFileTypeEnum
-from typing import Set, List, Optional
+from typing import Set, List, Optional, Dict
 from typing import Tuple
 
-from sslyze.cli.command_line.server_string_parser import (
+from sslyze.cli.server_string_parser import (
     InvalidServerStringError,
     CommandLineServerStringParser,
 )
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
+from sslyze.mozilla_tls_profile.mozilla_config_checker import (
+    MozillaTlsConfigurationEnum,
+    SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER,
+)
+from sslyze.plugins import plugin_base
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.plugins.plugin_base import OptParseCliOption
-from sslyze.plugins.scan_commands import ScanCommandType, ScanCommandsRepository
-from sslyze.scanner import ScanCommandExtraArgumentsDict
+from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
+from sslyze.scanner.models import ScanCommandsExtraArguments
 
 from sslyze.server_setting import (
     HttpProxySettings,
-    ServerNetworkLocationViaDirectConnection,
-    ServerNetworkLocationViaHttpProxy,
     ServerNetworkLocation,
     ServerNetworkConfiguration,
     InvalidServerNetworkConfigurationError,
@@ -51,8 +54,8 @@ class ParsedCommandLine:
 
     # Servers to scan
     servers_to_scans: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]]
-    scan_commands: Set[ScanCommandType]
-    scan_commands_extra_arguments: ScanCommandExtraArgumentsDict
+    scan_commands: Set[ScanCommand]
+    scan_commands_extra_arguments: ScanCommandsExtraArguments
 
     # Output settings
     json_path_out: Optional[Path]
@@ -62,6 +65,9 @@ class ParsedCommandLine:
     # Network settings
     per_server_concurrent_connections_limit: Optional[int]
     concurrent_server_scans_limit: Optional[int]
+
+    # Mozilla compliance; None if shouldn't be run
+    check_against_mozilla_config: Optional[MozillaTlsConfigurationEnum]
 
 
 _STARTTLS_PROTOCOL_DICT = {
@@ -78,26 +84,6 @@ _STARTTLS_PROTOCOL_DICT = {
 
 
 class CommandLineParser:
-    # Defines what --regular means
-    REGULAR_CMD = [
-        "sslv2",
-        "sslv3",
-        "tlsv1",
-        "tlsv1_1",
-        "tlsv1_2",
-        "tlsv1_3",
-        "reneg",
-        "resum",
-        "certinfo",
-        "hide_rejected_ciphers",
-        "compression",
-        "heartbleed",
-        "openssl_ccs",
-        "fallback",
-        "robot",
-        "elliptic_curves",
-    ]
-
     def __init__(self, sslyze_version: str) -> None:
         """Generate SSLyze's command line parser.
         """
@@ -113,15 +99,16 @@ class CommandLineParser:
                 f"--{scan_option.option}", help=scan_option.help, action=scan_option.action,
             )
 
-        # Add the --regular command line parameter as a shortcut if possible
         self.aparser.add_argument(
-            "--regular",
-            action="store_true",
-            dest=None,
-            help=f"Regular HTTPS scan; shortcut for --{' --'.join(self.REGULAR_CMD)}",
+            "--mozilla-config",
+            action="store",
+            dest="mozilla_config",
+            choices=[config.value for config in MozillaTlsConfigurationEnum],
+            help="Shortcut to queue various scan commands needed to check the server's TLS configurations against one"
+            ' of Mozilla\'s recommended TLS configuration. Set to "intermediate" by default.',
         )
 
-        self.aparser.add_argument(dest="target", default=[], nargs="*")
+        self.aparser.add_argument(dest="target", default=[], nargs="*", help="The list of servers to scan.")
 
     def parse_command_line(self) -> ParsedCommandLine:
         """Parses the command line used to launch SSLyze.
@@ -151,20 +138,23 @@ class CommandLineParser:
         if not args_target_list:
             raise CommandLineParsingError("No targets to scan.")
 
-        # Handle the case when no scan commands have been specified: run --regular by default
-        enabled_scan_commands = [
-            getattr(args_command_list, option.option)
-            for option in self._get_plugin_scan_commands()
-            if getattr(args_command_list, option.option)
-        ]
-        if not enabled_scan_commands:
-            setattr(args_command_list, "regular", True)
+        # Handle the case when no scan commands have been specified: run --mozilla-config=intermediate by default
+        if not args_command_list.mozilla_config:
+            did_user_enable_some_scan_commands = [
+                getattr(args_command_list, option.option)
+                for option in self._get_plugin_scan_commands()
+                if getattr(args_command_list, option.option)
+            ]
+            if not did_user_enable_some_scan_commands:
+                setattr(args_command_list, "mozilla_config", MozillaTlsConfigurationEnum.INTERMEDIATE.value)
 
-        # Handle the --regular command line parameter as a shortcut to a bunch of commands
-        if args_command_list.regular:
-            setattr(args_command_list, "regular", False)
-            for cmd in self.REGULAR_CMD:
-                setattr(args_command_list, cmd, True)
+        # Enable the commands needed by --mozilla-config
+        check_against_mozilla_config: Optional[MozillaTlsConfigurationEnum] = None
+        if args_command_list.mozilla_config:
+            check_against_mozilla_config = MozillaTlsConfigurationEnum(args_command_list.mozilla_config)
+            for scan_cmd in SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER:
+                cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_cmd).cli_connector_cls
+                setattr(args_command_list, cli_connector_cls._cli_option, True)
 
         # Handle JSON settings
         should_print_json_to_console = False
@@ -228,21 +218,17 @@ class CommandLineParser:
             if http_proxy_settings:
                 # Connect to the server via an HTTP proxy
                 # A limitation when using the CLI is that only one http_proxy_settings can be specified for all servers
-                server_location = ServerNetworkLocationViaHttpProxy(
+                server_location = ServerNetworkLocation(
                     hostname=hostname, port=final_port, http_proxy_settings=http_proxy_settings,
                 )
             else:
                 # Connect to the server directly
                 if ip_address:
-                    server_location = ServerNetworkLocationViaDirectConnection(
-                        hostname=hostname, port=final_port, ip_address=ip_address
-                    )
+                    server_location = ServerNetworkLocation(hostname=hostname, port=final_port, ip_address=ip_address,)
                 else:
                     # No IP address supplied - do a DNS lookup
                     try:
-                        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-                            hostname=hostname, port=final_port
-                        )
+                        server_location = ServerNetworkLocation(hostname=hostname, port=final_port,)
                     except ServerHostnameCouldNotBeResolved:
                         invalid_server_strings.append(
                             InvalidServerStringError(
@@ -289,8 +275,8 @@ class CommandLineParser:
             per_server_concurrent_connections_limit = 2
 
         # Figure out the scan commands that are enabled
-        scan_commands: Set[ScanCommandType] = set()
-        scan_commands_extra_arguments: ScanCommandExtraArgumentsDict = {}
+        scan_commands: Set[ScanCommand] = set()
+        scan_commands_extra_arguments_dict: Dict[ScanCommand, plugin_base.ScanCommandExtraArgument] = {}
         for scan_command in ScanCommandsRepository.get_all_scan_commands():
             cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
             (is_scan_cmd_enabled, extra_args,) = cli_connector_cls.find_cli_options_in_command_line(
@@ -299,7 +285,8 @@ class CommandLineParser:
             if is_scan_cmd_enabled:
                 scan_commands.add(scan_command)
                 if extra_args:
-                    scan_commands_extra_arguments[scan_command] = extra_args  # type: ignore
+                    scan_commands_extra_arguments_dict[scan_command] = extra_args
+        scan_commands_extra_arguments = ScanCommandsExtraArguments(**scan_commands_extra_arguments_dict)  # type: ignore
 
         return ParsedCommandLine(
             invalid_servers=invalid_server_strings,
@@ -311,6 +298,7 @@ class CommandLineParser:
             should_disable_console_output=args_command_list.quiet or args_command_list.json_file == "-",
             concurrent_server_scans_limit=concurrent_server_scans_limit,
             per_server_concurrent_connections_limit=per_server_concurrent_connections_limit,
+            check_against_mozilla_config=check_against_mozilla_config,
         )
 
     def _add_default_options(self) -> None:

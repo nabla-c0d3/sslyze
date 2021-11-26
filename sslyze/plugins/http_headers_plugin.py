@@ -1,15 +1,17 @@
 import logging
 from http.client import HTTPResponse
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from traceback import TracebackException
 from urllib.parse import urlsplit
 
+import pydantic
 from nassl._nassl import SslError
 
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanJob,
     ScanCommandResult,
     ScanCommandWrongUsageError,
@@ -23,26 +25,6 @@ from typing import List, Optional
 
 
 _logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class PublicKeyPinsHeader:
-    """A Public-Key-Pins header parsed from a server's HTTP response.
-
-    Attributes:
-        include_subdomains: ``True`` if the includesubdomains directive is set.
-        max_age: The content of the max-age field.
-        sha256_pins: The list of pin-sha256 values set in the header.
-        report_uri: The content of the report-uri field.
-        report_to: The content of the report-to field, available via the Reporting API as described at
-            https://w3c.github.io/reporting/#examples.
-    """
-
-    max_age: Optional[int]
-    sha256_pins: List[str]
-    include_subdomains: bool
-    report_uri: Optional[str]
-    report_to: Optional[str]
 
 
 @dataclass(frozen=True)
@@ -88,8 +70,6 @@ class HttpHeadersScanResult(ScanCommandResult):
             all the subsequent fields will be ``None`` as SSLyze did not receive a valid HTTP response from the server.
         http_path_redirected_to: The path SSLyze was eventually redirected to after sending the initial HTTP request.
         strict_transport_security_header: The Strict-Transport-Security header returned by the server.
-        public_key_pins_header: The Public-Key-Pins header returned by the server.
-        public_key_pins_report_only_header: The Public-Key-Pins-Report-Only header returned by the server.
         expect_ct_header: The Expect-CT header returned by the server.
     """
 
@@ -98,9 +78,68 @@ class HttpHeadersScanResult(ScanCommandResult):
 
     http_path_redirected_to: Optional[str]
     strict_transport_security_header: Optional[StrictTransportSecurityHeader]
-    public_key_pins_header: Optional[PublicKeyPinsHeader]
-    public_key_pins_report_only_header: Optional[PublicKeyPinsHeader]
     expect_ct_header: Optional[ExpectCtHeader]
+
+
+class _ExpectCtHeaderAsJson(pydantic.BaseModel):
+    max_age: Optional[int]
+    report_uri: Optional[str]
+    enforce: bool
+
+
+_ExpectCtHeaderAsJson.__doc__ = ExpectCtHeader.__doc__  # type: ignore
+
+
+class _StrictTransportSecurityHeaderAsJson(pydantic.BaseModel):
+    max_age: Optional[int]
+    preload: bool
+    include_subdomains: bool
+
+
+_StrictTransportSecurityHeaderAsJson.__doc__ = StrictTransportSecurityHeader.__doc__  # type: ignore
+
+
+class HttpHeadersScanResultAsJson(pydantic.BaseModel):
+    http_request_sent: str
+    http_error_trace: Optional[str]
+
+    http_path_redirected_to: Optional[str]
+    strict_transport_security_header: Optional[_StrictTransportSecurityHeaderAsJson]
+    expect_ct_header: Optional[_ExpectCtHeaderAsJson]
+
+    class Config:
+        orm_mode = True
+
+    @classmethod
+    def from_orm(cls, result: HttpHeadersScanResult) -> "HttpHeadersScanResultAsJson":
+        http_error_trace_as_str = None
+        if result.http_error_trace:
+            http_error_trace_as_str = ""
+            for line in result.http_error_trace.format(chain=False):
+                http_error_trace_as_str += line
+
+        sts_header_json = None
+        if result.strict_transport_security_header:
+            sts_header_json = _StrictTransportSecurityHeaderAsJson(**asdict(result.strict_transport_security_header))
+
+        ct_header_json = None
+        if result.strict_transport_security_header:
+            ct_header_json = _ExpectCtHeaderAsJson(**asdict(result.expect_ct_header))
+
+        return cls(
+            http_request_sent=result.http_request_sent,
+            http_error_trace=http_error_trace_as_str,
+            http_path_redirected_to=result.http_path_redirected_to,
+            strict_transport_security_header=sts_header_json,
+            expect_ct_header=ct_header_json,
+        )
+
+
+HttpHeadersScanResultAsJson.__doc__ = HttpHeadersScanResult.__doc__  # type: ignore
+
+
+class HttpHeadersScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[HttpHeadersScanResultAsJson]
 
 
 class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, None]):
@@ -139,20 +178,6 @@ class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, No
             )
             result_as_txt.append(cls._format_field("Preload:", str(result.strict_transport_security_header.preload)))
 
-        # HPKP
-        for header, subtitle in [
-            (result.public_key_pins_header, "Public-Key-Pins Header"),
-            (result.public_key_pins_report_only_header, "Public-Key-Pins-Report-Only Header"),
-        ]:
-            result_as_txt.extend(["", cls._format_subtitle(subtitle)])
-            if not header:
-                result_as_txt.append(cls._format_field("NOT SUPPORTED - Server did not return the header", ""))
-            else:
-                result_as_txt.append(cls._format_field("Max Age:", str(header.max_age)))
-                result_as_txt.append(cls._format_field("Include Subdomains:", str(header.include_subdomains)))
-                result_as_txt.append(cls._format_field("Report URI:", str(header.report_uri)))
-                result_as_txt.append(cls._format_field("SHA-256 Pin List:", ", ".join(header.sha256_pins)))
-
         # Expect-CT
         result_as_txt.extend(["", cls._format_subtitle("Expect-CT Header")])
         if not result.expect_ct_header:
@@ -173,7 +198,7 @@ class HttpHeadersImplementation(ScanCommandImplementation[HttpHeadersScanResult,
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
@@ -247,8 +272,6 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
             http_error_trace=http_error_trace,
             http_path_redirected_to=None,
             strict_transport_security_header=None,
-            public_key_pins_header=None,
-            public_key_pins_report_only_header=None,
             expect_ct_header=None,
         )
     else:
@@ -258,8 +281,6 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
             http_path_redirected_to=http_path_redirected_to,
             http_error_trace=None,
             strict_transport_security_header=_parse_hsts_header_from_http_response(http_response),
-            public_key_pins_header=_parse_hpkp_header_from_http_response(http_response),
-            public_key_pins_report_only_header=_parse_hpkp_report_only_header_from_http_response(http_response),
             expect_ct_header=_parse_expect_ct_header_from_http_response(http_response),
         )
 
@@ -325,50 +346,6 @@ def _parse_hsts_header_from_http_response(response: HTTPResponse) -> Optional[St
             _logger.warning(f"Unexpected value in HSTS header: {repr(hsts_directive)}")
 
     return StrictTransportSecurityHeader(max_age, preload, include_subdomains)
-
-
-def _parse_hpkp_report_only_header_from_http_response(response: HTTPResponse) -> Optional[PublicKeyPinsHeader]:
-    raw_hpkp_report_only_header = _extract_first_header_value(response, "public-key-pins-report-only")
-    if not raw_hpkp_report_only_header:
-        return None
-    return _parse_hpkp_from_header(raw_hpkp_report_only_header)
-
-
-def _parse_hpkp_header_from_http_response(response: HTTPResponse) -> Optional[PublicKeyPinsHeader]:
-    raw_hpkp_header = _extract_first_header_value(response, "public-key-pins")
-    if not raw_hpkp_header:
-        return None
-    return _parse_hpkp_from_header(raw_hpkp_header)
-
-
-def _parse_hpkp_from_header(raw_hpkp_header: str) -> PublicKeyPinsHeader:
-    report_uri = None
-    include_subdomains = False
-    max_age = None
-    report_to = None
-    pin_sha256_list = []
-    for hpkp_directive in raw_hpkp_header.split(";"):
-        hpkp_directive = hpkp_directive.strip()
-        if not hpkp_directive:
-            # Empty space at the end of the header
-            continue
-
-        if "pin-sha256" in hpkp_directive:
-            pin_sha256_list.append(hpkp_directive.split("pin-sha256=")[1].strip(' "'))
-        elif "max-age" in hpkp_directive:
-            max_age = int(hpkp_directive.split("max-age=")[1].strip())
-        elif "includesubdomains" in hpkp_directive.lower():
-            # Some websites have a different case for IncludeSubDomains
-            include_subdomains = True
-        elif "report-uri" in hpkp_directive:
-            report_uri = hpkp_directive.split("report-uri=")[1].strip(' "')
-        elif "report-to" in hpkp_directive:
-            # Reporting API `report-to` group name; https://w3c.github.io/reporting/#examples
-            report_to = hpkp_directive.split("report-to=")[1].strip(' "')
-        else:
-            _logger.warning(f"Unexpected value in HPKP header: {repr(hpkp_directive)}")
-
-    return PublicKeyPinsHeader(max_age, pin_sha256_list, include_subdomains, report_uri, report_to)
 
 
 def _parse_expect_ct_header_from_http_response(response: HTTPResponse) -> Optional[ExpectCtHeader]:

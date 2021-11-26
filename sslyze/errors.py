@@ -26,7 +26,7 @@ class ConnectionToServerFailed(Exception):
     error_message: str
 
     def __str__(self) -> str:
-        return f'{self.server_location.hostname}:{self.server_location.port} -> "{self.error_message}".'
+        return f'{self.server_location.display_string} -> "{self.error_message}".'
 
 
 @dataclass(frozen=True)

@@ -6,25 +6,23 @@ SSLyze
 [![PyPI version](https://img.shields.io/pypi/v/sslyze.svg)](https://pypi.org/project/sslyze/)
 [![Python version](https://img.shields.io/pypi/pyversions/sslyze.svg)](https://pypi.org/project/sslyze/)
 
-SSLyze is a fast and powerful SSL/TLS scanning library.
+SSLyze is a fast and powerful SSL/TLS scanning tool and Python library.
 
-It allows you to analyze the SSL/TLS configuration of a server by connecting to it, in order to detect various
-issues (bad certificate, weak cipher suites, Heartbleed, ROBOT, TLS 1.3 support, etc.).
-
-SSLyze can either be used as a command line tool or as a Python library.
+SSLyze can analyze the SSL/TLS configuration of a server by connecting to it, in order to ensure that it uses strong
+encryption settings (certificate, cipher suites, elliptic curves, etc.), and that it is not vulnerable to known TLS
+attacks (Heartbleed, ROBOT, OpenSSL CCS injection, etc.).
 
 Key features
 ------------
 
-* Fully [documented Python API](https://nabla-c0d3.github.io/sslyze/documentation/), in order to run scans and process 
-the results directly from Python.
-* Support for TLS 1.3 and early data (0-RTT) testing.
-* Scans are automatically dispatched among multiple workers, making them very fast.
-* Performance testing: session resumption and TLS tickets support.
-* Security testing: weak cipher suites, supported curves, ROBOT, Heartbleed and more.
-* Server certificate validation and revocation checking through OCSP stapling.
-* Support for StartTLS handshakes on SMTP, XMPP, LDAP, POP, IMAP, RDP, PostGres and FTP.
-* Scan results can be written to a JSON file for further processing.
+* Focus on speed and reliability: SSLyze is a battle-tested tool that is used to reliably scan **hundreds of thousands**
+of servers every day.
+* Easy to operationalize: SSLyze can be directly run from CI/CD, in order to continuously check a server against 
+Mozilla's recommended TLS configuration.
+* Fully documented [Python API](https://nabla-c0d3.github.io/sslyze/documentation/) to run scans directly from any
+Python application, such as a function deployed to AWS Lambda.
+* Support for scanning non-HTTP servers including SMTP, XMPP, LDAP, POP, IMAP, RDP, Postgres and FTP servers.
+* Results of a scan can easily be saved to a JSON file for later processing.
 * And much more!
 
 Quick start
@@ -32,14 +30,65 @@ Quick start
 
 SSLyze can be installed directly via pip:
 
-    $ pip install --upgrade setuptools pip
-    $ pip install --upgrade sslyze
-    $ python -m sslyze www.yahoo.com www.google.com "[2607:f8b0:400a:807::2004]:443"
+```
+$ pip install --upgrade pip setuptools wheel
+$ pip install --upgrade sslyze
+$ python -m sslyze www.yahoo.com www.google.com "[2607:f8b0:400a:807::2004]:443"
+```
 
-Documentation
--------------
+Usage as a CI/CD step
+---------------------
 
-Documentation is [available here][documentation].
+By default, SSLyze will check the server's scan results against Mozilla's recommended ["intermediate" TLS
+configuration](https://wiki.mozilla.org/Security/Server_Side_TLS), and will return a non-zero exit code if the server
+is not compliant. 
+
+```
+$ python -m sslyze mozilla.com
+```
+```
+    Checking results against Mozilla's "intermediate" configuration. See https://ssl-config.mozilla.org/ for more details.
+
+    mozilla.com:443: OK - Compliant.
+```
+
+The Mozilla configuration to check against can be configured via `--mozilla-config={old, intermediate, modern}`:
+```
+$ python -m sslyze --mozilla-config=modern mozilla.com
+```
+```
+    Checking results against Mozilla's "modern" configuration. See https://ssl-config.mozilla.org/ for more details.
+
+    mozilla.com:443: FAILED - Not compliant.
+        * certificate_types: Deployed certificate types are {'rsa'}, should have at least one of {'ecdsa'}.
+        * certificate_signatures: Deployed certificate signatures are {'sha256WithRSAEncryption'}, should have at least one of {'ecdsa-with-SHA512', 'ecdsa-with-SHA256', 'ecdsa-with-SHA384'}.
+        * tls_versions: TLS versions {'TLSv1.2'} are supported, but should be rejected.
+        * ciphers: Cipher suites {'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384', 'TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256'} are supported, but should be rejected.
+```
+
+This can be used to easily run an SSLyze scan as a CI/CD step.
+
+Development environment
+-----------------------
+
+To setup a development environment:
+
+```
+$ pip install --upgrade pip setuptools wheel
+$ pip install -e . 
+$ pip install -r dev-requirements.txt
+```
+
+The tests can then be run using:
+
+```
+$ invoke test
+```
+
+API Documentation
+-----------------
+
+Documentation for SSLyze's Python API is [available here][documentation].
 
 License
 -------

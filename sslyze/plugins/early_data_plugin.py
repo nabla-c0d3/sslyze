@@ -1,13 +1,16 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
+import socket
+import pydantic
 from nassl._nassl import OpenSSLError
 from nassl.ssl_client import OpenSslEarlyDataStatusEnum, SslClient
 
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanJob,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
@@ -27,6 +30,14 @@ class EarlyDataScanResult(ScanCommandResult):
     """
 
     supports_early_data: bool
+
+
+# Identical fields in the JSON output
+EarlyDataScanResultAsJson = pydantic.dataclasses.dataclass(EarlyDataScanResult, frozen=True)
+
+
+class EarlyDataScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[EarlyDataScanResultAsJson]  # type: ignore
 
 
 class _EarlyDataCliConnector(ScanCommandCliConnector[EarlyDataScanResult, None]):
@@ -54,7 +65,7 @@ class EarlyDataImplementation(ScanCommandImplementation[EarlyDataScanResult, Non
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
@@ -86,7 +97,10 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
         # TLS 1.3 not supported
         is_early_data_supported = False
     except TlsHandshakeTimedOut:
-        # Sometimes triggered by servers that don't support at all TLS 1.3 such as Amazon Cloudfront
+        # Sometimes triggered by servers that don't support TLS 1.3 at all, such as Amazon Cloudfront
+        is_early_data_supported = False
+    except socket.timeout:
+        # Some servers just don't answer the read() call
         is_early_data_supported = False
     finally:
         ssl_connection.close()

@@ -3,13 +3,15 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Tuple
 
+import pydantic
 from nassl._nassl import OpenSSLError
 from nassl.legacy_ssl_client import LegacySslClient
 
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanJob,
     ScanCommandResult,
     ScanCommandWrongUsageError,
@@ -30,6 +32,14 @@ class SessionRenegotiationScanResult(ScanCommandResult):
 
     supports_secure_renegotiation: bool
     is_vulnerable_to_client_renegotiation_dos: bool
+
+
+# Identical fields in the JSON output
+SessionRenegotiationScanResultAsJson = pydantic.dataclasses.dataclass(SessionRenegotiationScanResult, frozen=True)
+
+
+class SessionRenegotiationScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[SessionRenegotiationScanResultAsJson]  # type: ignore
 
 
 class _ScanJobResultEnum(Enum):
@@ -73,7 +83,7 @@ class SessionRenegotiationImplementation(ScanCommandImplementation[SessionRenego
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")

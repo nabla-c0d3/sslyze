@@ -1,25 +1,18 @@
-import json
-from dataclasses import asdict
-
-import sslyze
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
-from sslyze.plugins.scan_commands import ScanCommand
-from sslyze.server_connectivity import ServerConnectivityTester
-from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
-from tests.factories import ServerScanResultFactory
+from sslyze.plugins.certificate_info.json_output import CertificateInfoScanResultAsJson
+from sslyze.server_setting import ServerNetworkLocation
+from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 
 
 class TestJsonEncoder:
     def test(self):
         # Given a completed scan for a server with the CERTIFICATE_INFO scan command
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.facebook.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.facebook.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
-        scan_results = {ScanCommand.CERTIFICATE_INFO: plugin_result}
-        scan_result = ServerScanResultFactory.create(scan_commands_results=scan_results)
 
-        # When converting it into to JSON
-        result_as_json = json.dumps(asdict(scan_result), cls=sslyze.JsonEncoder)
+        # When converting it to JSON
+        result_as_json = CertificateInfoScanResultAsJson.from_orm(plugin_result).json()
 
         # It succeeds
         assert result_as_json

@@ -1,13 +1,13 @@
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
-from sslyze.server_connectivity import ServerConnectivityTester
-from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
+from sslyze.server_setting import ServerNetworkLocation
+from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 
 
 class TestCertificateInfoCliConnector:
     def test(self):
         # Given a completed scan for a CERTIFICATE_INFO scan command
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.facebook.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.facebook.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # When generating the CLI output for this result, it succeeds

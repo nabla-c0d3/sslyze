@@ -1,0 +1,1472 @@
+{
+  "title": "SslyzeOutputAsJson",
+  "description": "The \"root\" dictionary of the JSON output when using the --json command line option.\n    ",
+  "type": "object",
+  "properties": {
+    "server_scan_results": {
+      "title": "Server Scan Results",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ServerScanResultAsJson"
+      }
+    },
+    "date_scans_started": {
+      "title": "Date Scans Started",
+      "type": "string",
+      "format": "date-time"
+    },
+    "date_scans_completed": {
+      "title": "Date Scans Completed",
+      "type": "string",
+      "format": "date-time"
+    },
+    "sslyze_version": {
+      "title": "Sslyze Version",
+      "default": "5.0.0",
+      "type": "string"
+    },
+    "sslyze_url": {
+      "title": "Sslyze Url",
+      "default": "https://github.com/nabla-c0d3/sslyze",
+      "type": "string"
+    }
+  },
+  "required": [
+    "server_scan_results",
+    "date_scans_started",
+    "date_scans_completed"
+  ],
+  "definitions": {
+    "ConnectionTypeEnum": {
+      "title": "ConnectionTypeEnum",
+      "description": "An enumeration.",
+      "enum": [
+        "DIRECT",
+        "VIA_HTTP_PROXY"
+      ],
+      "type": "string"
+    },
+    "HttpProxySettings": {
+      "title": "HttpProxySettings",
+      "type": "object",
+      "properties": {
+        "hostname": {
+          "title": "Hostname",
+          "type": "string"
+        },
+        "port": {
+          "title": "Port",
+          "type": "integer"
+        },
+        "basic_auth_user": {
+          "title": "Basic Auth User",
+          "type": "string"
+        },
+        "basic_auth_password": {
+          "title": "Basic Auth Password",
+          "type": "string"
+        }
+      },
+      "required": [
+        "hostname",
+        "port"
+      ]
+    },
+    "_ServerNetworkLocationAsJson": {
+      "title": "_ServerNetworkLocationAsJson",
+      "description": "All the information needed to connect to a server.\n\nAttributes:\n    hostname: The server's hostname.\n    port: The server's TLS port number.\n    connection_type: How sslyze should connect to the server: either directly, or via an HTTP proxy.\n    ip_address: The server's IP address; only set if sslyze is connecting directly to the server. If no IP address\n        is supplied and connection_type is set to DIRECT, sslyze will automatically lookup one IP address for the\n         supplied hostname.\n    http_proxy_settings: The HTTP proxy configuration to use in order to tunnel the scans through a proxy; only set\n        if sslyze is connecting to the server via an HTTP proxy. The proxy will be responsible for looking up the\n        server's IP address and connecting to it.",
+      "type": "object",
+      "properties": {
+        "hostname": {
+          "title": "Hostname",
+          "type": "string"
+        },
+        "port": {
+          "title": "Port",
+          "type": "integer"
+        },
+        "connection_type": {
+          "$ref": "#/definitions/ConnectionTypeEnum"
+        },
+        "ip_address": {
+          "title": "Ip Address",
+          "type": "string"
+        },
+        "http_proxy_settings": {
+          "$ref": "#/definitions/HttpProxySettings"
+        }
+      },
+      "required": [
+        "hostname",
+        "port",
+        "connection_type"
+      ],
+      "additionalProperties": false
+    },
+    "ProtocolWithOpportunisticTlsEnum": {
+      "title": "ProtocolWithOpportunisticTlsEnum",
+      "description": "The list of plaintext protocols supported by SSLyze for opportunistic TLS upgrade (such as STARTTLS).\n\nThis allows SSLyze to figure out how to complete an SSL/TLS handshake with the server.",
+      "enum": [
+        "SMTP",
+        "XMPP",
+        "XMPP_SERVER",
+        "FTP",
+        "POP3",
+        "LDAP",
+        "IMAP",
+        "RDP",
+        "POSTGRES"
+      ],
+      "type": "string"
+    },
+    "_ClientAuthenticationCredentialsAsJson": {
+      "title": "_ClientAuthenticationCredentialsAsJson",
+      "type": "object",
+      "properties": {
+        "certificate_chain_path": {
+          "title": "Certificate Chain Path",
+          "type": "string",
+          "format": "path"
+        },
+        "key_path": {
+          "title": "Key Path",
+          "type": "string",
+          "format": "path"
+        },
+        "key_type": {
+          "title": "Key Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "certificate_chain_path",
+        "key_path",
+        "key_type"
+      ]
+    },
+    "_ServerNetworkConfigurationAsJson": {
+      "title": "_ServerNetworkConfigurationAsJson",
+      "description": "Additional network settings to provide fine-grained control on how to connect to a specific server.\n\nAttributes:\n    tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension.\n    tls_wrapped_protocol: The protocol wrapped in TLS that the server expects. It allows SSLyze to figure out\n        how to establish a (Start)TLS connection to the server and what kind of \"hello\" message\n        (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not supplied, standard\n        TLS will be used.\n    tls_client_auth_credentials: The client certificate and private key needed to perform mutual authentication\n        with the server. If not supplied, SSLyze will attempt to connect to the server without performing\n        client authentication.\n    xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream. If not supplied, the\n        server's hostname will be used. Should only be set if the supplied `tls_wrapped_protocol` is an\n        XMPP protocol.\n    network_timeout: The timeout (in seconds) to be used when attempting to establish a connection to the\n        server.\n    network_max_retries: The number of retries SSLyze will perform when attempting to establish a connection\n        to the server.",
+      "type": "object",
+      "properties": {
+        "tls_server_name_indication": {
+          "title": "Tls Server Name Indication",
+          "type": "string"
+        },
+        "tls_opportunistic_encryption": {
+          "$ref": "#/definitions/ProtocolWithOpportunisticTlsEnum"
+        },
+        "tls_client_auth_credentials": {
+          "$ref": "#/definitions/_ClientAuthenticationCredentialsAsJson"
+        },
+        "xmpp_to_hostname": {
+          "title": "Xmpp To Hostname",
+          "type": "string"
+        },
+        "network_timeout": {
+          "title": "Network Timeout",
+          "default": 5,
+          "type": "integer"
+        },
+        "network_max_retries": {
+          "title": "Network Max Retries",
+          "default": 3,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tls_server_name_indication"
+      ],
+      "additionalProperties": false
+    },
+    "ServerConnectivityStatusEnum": {
+      "title": "ServerConnectivityStatusEnum",
+      "description": "An enumeration.",
+      "enum": [
+        "ERROR",
+        "COMPLETED"
+      ],
+      "type": "string"
+    },
+    "ClientAuthRequirementEnum": {
+      "title": "ClientAuthRequirementEnum",
+      "description": "Whether the server asked for client authentication.\n    ",
+      "enum": [
+        "DISABLED",
+        "OPTIONAL",
+        "REQUIRED"
+      ],
+      "type": "string"
+    },
+    "_ServerTlsProbingResultAsJson": {
+      "title": "_ServerTlsProbingResultAsJson",
+      "description": "Additional details about the server, detected via connectivity testing.\n    ",
+      "type": "object",
+      "properties": {
+        "highest_tls_version_supported": {
+          "title": "Highest Tls Version Supported",
+          "type": "string"
+        },
+        "cipher_suite_supported": {
+          "title": "Cipher Suite Supported",
+          "type": "string"
+        },
+        "client_auth_requirement": {
+          "$ref": "#/definitions/ClientAuthRequirementEnum"
+        },
+        "supports_ecdh_key_exchange": {
+          "title": "Supports Ecdh Key Exchange",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "highest_tls_version_supported",
+        "cipher_suite_supported",
+        "client_auth_requirement",
+        "supports_ecdh_key_exchange"
+      ],
+      "additionalProperties": false
+    },
+    "ServerScanStatusEnum": {
+      "title": "ServerScanStatusEnum",
+      "description": "An enumeration.",
+      "enum": [
+        "ERROR_NO_CONNECTIVITY",
+        "COMPLETED"
+      ],
+      "type": "string"
+    },
+    "ScanCommandAttemptStatusEnum": {
+      "title": "ScanCommandAttemptStatusEnum",
+      "description": "An enumeration.",
+      "enum": [
+        "ERROR",
+        "COMPLETED",
+        "NOT_SCHEDULED"
+      ],
+      "type": "string"
+    },
+    "ScanCommandErrorReasonEnum": {
+      "title": "ScanCommandErrorReasonEnum",
+      "description": "An enumeration.",
+      "enum": [
+        "BUG_IN_SSLYZE",
+        "CLIENT_CERTIFICATE_NEEDED",
+        "CONNECTIVITY_ISSUE",
+        "WRONG_USAGE"
+      ],
+      "type": "string"
+    },
+    "_SubjAltNameAsJson": {
+      "title": "_SubjAltNameAsJson",
+      "type": "object",
+      "properties": {
+        "dns": {
+          "title": "Dns",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "dns"
+      ]
+    },
+    "_HashAlgorithmAsJson": {
+      "title": "_HashAlgorithmAsJson",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "digest_size": {
+          "title": "Digest Size",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "digest_size"
+      ]
+    },
+    "_ObjectIdentifierAsJson": {
+      "title": "_ObjectIdentifierAsJson",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "dotted_string": {
+          "title": "Dotted String",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "dotted_string"
+      ]
+    },
+    "_NameAttributeAsJson": {
+      "title": "_NameAttributeAsJson",
+      "type": "object",
+      "properties": {
+        "oid": {
+          "$ref": "#/definitions/_ObjectIdentifierAsJson"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        },
+        "rfc4514_string": {
+          "title": "Rfc4514 String",
+          "type": "string"
+        }
+      },
+      "required": [
+        "oid",
+        "value",
+        "rfc4514_string"
+      ]
+    },
+    "_X509NameAsJson": {
+      "title": "_X509NameAsJson",
+      "type": "object",
+      "properties": {
+        "rfc4514_string": {
+          "title": "Rfc4514 String",
+          "type": "string"
+        },
+        "attributes": {
+          "title": "Attributes",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_NameAttributeAsJson"
+          }
+        }
+      },
+      "required": [
+        "rfc4514_string",
+        "attributes"
+      ]
+    },
+    "_PublicKeyAsJson": {
+      "title": "_PublicKeyAsJson",
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "title": "Algorithm",
+          "type": "string"
+        },
+        "key_size": {
+          "title": "Key Size",
+          "type": "integer"
+        },
+        "rsa_e": {
+          "title": "Rsa E",
+          "type": "integer"
+        },
+        "rsa_n": {
+          "title": "Rsa N",
+          "type": "integer"
+        },
+        "ec_curve_name": {
+          "title": "Ec Curve Name",
+          "type": "string"
+        },
+        "ec_x": {
+          "title": "Ec X",
+          "type": "integer"
+        },
+        "ec_y": {
+          "title": "Ec Y",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "algorithm"
+      ]
+    },
+    "_CertificateAsJson": {
+      "title": "_CertificateAsJson",
+      "type": "object",
+      "properties": {
+        "as_pem": {
+          "title": "As Pem",
+          "type": "string"
+        },
+        "hpkp_pin": {
+          "title": "Hpkp Pin",
+          "type": "string"
+        },
+        "fingerprint_sha1": {
+          "title": "Fingerprint Sha1",
+          "type": "string"
+        },
+        "fingerprint_sha256": {
+          "title": "Fingerprint Sha256",
+          "type": "string"
+        },
+        "serial_number": {
+          "title": "Serial Number",
+          "type": "integer"
+        },
+        "not_valid_before": {
+          "title": "Not Valid Before",
+          "type": "string",
+          "format": "date-time"
+        },
+        "not_valid_after": {
+          "title": "Not Valid After",
+          "type": "string",
+          "format": "date-time"
+        },
+        "subject_alternative_name": {
+          "$ref": "#/definitions/_SubjAltNameAsJson"
+        },
+        "signature_hash_algorithm": {
+          "$ref": "#/definitions/_HashAlgorithmAsJson"
+        },
+        "signature_algorithm_oid": {
+          "$ref": "#/definitions/_ObjectIdentifierAsJson"
+        },
+        "subject": {
+          "$ref": "#/definitions/_X509NameAsJson"
+        },
+        "issuer": {
+          "$ref": "#/definitions/_X509NameAsJson"
+        },
+        "public_key": {
+          "$ref": "#/definitions/_PublicKeyAsJson"
+        }
+      },
+      "required": [
+        "as_pem",
+        "hpkp_pin",
+        "fingerprint_sha1",
+        "fingerprint_sha256",
+        "serial_number",
+        "not_valid_before",
+        "not_valid_after",
+        "subject_alternative_name",
+        "signature_algorithm_oid",
+        "public_key"
+      ]
+    },
+    "_TrustStoreAsJson": {
+      "title": "_TrustStoreAsJson",
+      "description": "A set of root certificates to be used for certificate validation.\n\nAttributes:\n    path: The path on the local system to the PEM-formatted file containing the root certificates.\n    name: The human-readable name of the trust store (such as \"Mozilla\").\n    version: The human-readable version or date of the trust store (such as \"09/2016\").",
+      "type": "object",
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string",
+          "format": "path"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "ev_oids": {
+          "title": "Ev Oids",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_ObjectIdentifierAsJson"
+          }
+        }
+      },
+      "required": [
+        "path",
+        "name",
+        "version"
+      ]
+    },
+    "_PathValidationResultAsJson": {
+      "title": "_PathValidationResultAsJson",
+      "description": "The result of trying to validate a server's certificate chain using a specific trust store.\n\nAttributes:\n    trust_stores: The trust store used for validation.\n    verified_certificate_chain: The verified certificate chain returned by OpenSSL.\n        Index 0 is the leaf certificate and the last element is the anchor/CA certificate from the trust store.\n        Will be None if the validation failed or the verified chain could not be built.\n        Each certificate is parsed using the cryptography module; documentation is available at\n        https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.\n    openssl_error_string: The result string returned by OpenSSL's validation function; None if validation was\n        successful.\n    was_validation_successful: Whether the certificate chain is trusted when using supplied the trust_stores.",
+      "type": "object",
+      "properties": {
+        "trust_store": {
+          "$ref": "#/definitions/_TrustStoreAsJson"
+        },
+        "verified_certificate_chain": {
+          "title": "Verified Certificate Chain",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_CertificateAsJson"
+          }
+        },
+        "openssl_error_string": {
+          "title": "Openssl Error String",
+          "type": "string"
+        },
+        "was_validation_successful": {
+          "title": "Was Validation Successful",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "trust_store",
+        "was_validation_successful"
+      ]
+    },
+    "_OcspResponseAsJson": {
+      "title": "_OcspResponseAsJson",
+      "type": "object",
+      "properties": {
+        "response_status": {
+          "title": "Response Status",
+          "type": "string"
+        },
+        "certificate_status": {
+          "title": "Certificate Status",
+          "type": "string"
+        },
+        "revocation_time": {
+          "title": "Revocation Time",
+          "type": "string",
+          "format": "date-time"
+        },
+        "produced_at": {
+          "title": "Produced At",
+          "type": "string",
+          "format": "date-time"
+        },
+        "this_update": {
+          "title": "This Update",
+          "type": "string",
+          "format": "date-time"
+        },
+        "next_update": {
+          "title": "Next Update",
+          "type": "string",
+          "format": "date-time"
+        },
+        "serial_number": {
+          "title": "Serial Number",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "response_status"
+      ]
+    },
+    "_CertificateDeploymentAnalysisResultAsJson": {
+      "title": "_CertificateDeploymentAnalysisResultAsJson",
+      "description": "The result of analyzing a server's certificate to verify its validity.\n\nAny certificate available within the fields that follow is parsed as a ``Certificate`` object using the cryptography\nmodule; documentation is available at\nhttps://cryptography.io/en/latest/x509/reference.html?highlight=Certificate#cryptography.x509.Certificate\n\nAttributes:\n    received_certificate_chain: The certificate chain sent by the server; index 0 is the leaf certificate.\n    verified_certificate_chain: The verified certificate chain returned by OpenSSL for one of the trust stores\n        packaged within SSLyze. Will be ``None`` if the validation failed with all of the available trust stores\n        (Apple, Mozilla, etc.). This is essentially a shortcut to\n        ``path_validation_result_list[0].verified_certificate_chain``.\n    path_validation_results: The result of validating the server's\n        certificate chain using each trust store that is packaged with SSLyze (Mozilla, Apple, etc.).\n        If for a given trust store, the validation was successful, the verified certificate chain built by OpenSSL\n        can be retrieved from the ``PathValidationResult``.\n    leaf_certificate_subject_matches_hostname: ``True`` if the leaf certificate's Common Name or Subject Alternative\n        Names match the server's hostname.\n    leaf_certificate_is_ev: ``True`` if the leaf certificate is Extended Validation, according to Mozilla.\n    leaf_certificate_has_must_staple_extension: ``True`` if the OCSP must-staple extension is present in the leaf\n        certificate.\n    leaf_certificate_signed_certificate_timestamps_count: The number of Signed Certificate\n        Timestamps (SCTs) for Certificate Transparency embedded in the leaf certificate. ``None`` if the version of\n        OpenSSL installed on the system is too old to be able to parse the SCT extension.\n    received_chain_has_valid_order: ``True`` if the certificate chain returned by the server was sent in the right\n        order. `None`` if any of the certificates in the chain could not be parsed.\n    received_chain_contains_anchor_certificate: ``True`` if the server included the anchor/root\n        certificate in the chain it sends back to clients. ``None`` if the verified chain could not be built.\n    verified_chain_has_sha1_signature: ``True`` if any of the leaf or intermediate certificates are\n        signed using the SHA-1 algorithm. ``None`` if the verified chain could not be built.\n    verified_chain_has_legacy_symantec_anchor: ``True`` if the certificate chain contains a distrusted Symantec\n        anchor\n        (https://blog.qualys.com/ssllabs/2017/09/26/google-and-mozilla-deprecating-existing-symantec-certificates).\n        ``None`` if the verified chain could not be built.\n    ocsp_response: The OCSP response returned by the server. ``None`` if no response was sent by the server or if\n        the scan was run through an HTTP proxy (the proxy will not forward the server's OCSP response). If present,\n        the OCSP response is an ``OCSPResponse`` object parsed using the cryptography module; documentation is\n        available at\n        https://cryptography.io/en/latest/x509/ocsp.html?highlight=OCSPResponse#cryptography.x509.ocsp.OCSPResponse\n    ocsp_response_is_trusted: ``True`` if the OCSP response is trusted using the Mozilla trust store.\n        ``None`` if no OCSP response was sent by the server.",
+      "type": "object",
+      "properties": {
+        "received_certificate_chain": {
+          "title": "Received Certificate Chain",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_CertificateAsJson"
+          }
+        },
+        "leaf_certificate_subject_matches_hostname": {
+          "title": "Leaf Certificate Subject Matches Hostname",
+          "type": "boolean"
+        },
+        "leaf_certificate_has_must_staple_extension": {
+          "title": "Leaf Certificate Has Must Staple Extension",
+          "type": "boolean"
+        },
+        "leaf_certificate_is_ev": {
+          "title": "Leaf Certificate Is Ev",
+          "type": "boolean"
+        },
+        "leaf_certificate_signed_certificate_timestamps_count": {
+          "title": "Leaf Certificate Signed Certificate Timestamps Count",
+          "type": "integer"
+        },
+        "received_chain_contains_anchor_certificate": {
+          "title": "Received Chain Contains Anchor Certificate",
+          "type": "boolean"
+        },
+        "received_chain_has_valid_order": {
+          "title": "Received Chain Has Valid Order",
+          "type": "boolean"
+        },
+        "path_validation_results": {
+          "title": "Path Validation Results",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_PathValidationResultAsJson"
+          }
+        },
+        "verified_chain_has_sha1_signature": {
+          "title": "Verified Chain Has Sha1 Signature",
+          "type": "boolean"
+        },
+        "verified_chain_has_legacy_symantec_anchor": {
+          "title": "Verified Chain Has Legacy Symantec Anchor",
+          "type": "boolean"
+        },
+        "ocsp_response": {
+          "$ref": "#/definitions/_OcspResponseAsJson"
+        },
+        "ocsp_response_is_trusted": {
+          "title": "Ocsp Response Is Trusted",
+          "type": "boolean"
+        },
+        "verified_certificate_chain": {
+          "title": "Verified Certificate Chain",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_CertificateAsJson"
+          }
+        }
+      },
+      "required": [
+        "received_certificate_chain",
+        "leaf_certificate_subject_matches_hostname",
+        "leaf_certificate_has_must_staple_extension",
+        "leaf_certificate_is_ev",
+        "path_validation_results"
+      ]
+    },
+    "CertificateInfoScanResultAsJson": {
+      "title": "CertificateInfoScanResultAsJson",
+      "description": "The result of retrieving and analyzing a server's certificates to verify their validity.\n\nAttributes:\n    hostname_used_for_server_name_indication: The hostname sent by SSLyze as the Server Name Indication extension.\n    certificate_deployments: A list of leaf certificates detected by SSLyze and the corresponding analysis. Most\n        servers only deploy one leaf certificate, but some websites (such as Facebook) return different leaf\n        certificates depending on the client, as a way to maximize compatibility with older clients/devices.",
+      "type": "object",
+      "properties": {
+        "hostname_used_for_server_name_indication": {
+          "title": "Hostname Used For Server Name Indication",
+          "type": "string"
+        },
+        "certificate_deployments": {
+          "title": "Certificate Deployments",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_CertificateDeploymentAnalysisResultAsJson"
+          }
+        }
+      },
+      "required": [
+        "hostname_used_for_server_name_indication",
+        "certificate_deployments"
+      ]
+    },
+    "CertificateInfoScanAttemptAsJson": {
+      "title": "CertificateInfoScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/CertificateInfoScanResultAsJson"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "_CipherSuiteAsJson": {
+      "title": "_CipherSuiteAsJson",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "is_anonymous": {
+          "title": "Is Anonymous",
+          "type": "boolean"
+        },
+        "key_size": {
+          "title": "Key Size",
+          "type": "integer"
+        },
+        "openssl_name": {
+          "title": "Openssl Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "is_anonymous",
+        "key_size",
+        "openssl_name"
+      ],
+      "additionalProperties": false
+    },
+    "_EphemeralKeyInfoAsJson": {
+      "title": "_EphemeralKeyInfoAsJson",
+      "type": "object",
+      "properties": {
+        "type_name": {
+          "title": "Type Name",
+          "type": "string"
+        },
+        "size": {
+          "title": "Size",
+          "type": "integer"
+        },
+        "public_bytes": {
+          "title": "Public Bytes",
+          "type": "string"
+        },
+        "curve_name": {
+          "title": "Curve Name",
+          "type": "string"
+        },
+        "x": {
+          "title": "X",
+          "type": "string"
+        },
+        "y": {
+          "title": "Y",
+          "type": "string"
+        },
+        "prime": {
+          "title": "Prime",
+          "type": "string"
+        },
+        "generator": {
+          "title": "Generator",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type_name",
+        "size",
+        "public_bytes"
+      ],
+      "additionalProperties": false
+    },
+    "_CipherSuiteAcceptedByServerAsJson": {
+      "title": "_CipherSuiteAcceptedByServerAsJson",
+      "description": "ephemeral_key: The ephemeral key negotiated with the server when using (EC) DH cipher suites. None if the cipher\n    suite does not use ephemeral keys or if the ephemeral key could not be retrieved.",
+      "type": "object",
+      "properties": {
+        "cipher_suite": {
+          "$ref": "#/definitions/_CipherSuiteAsJson"
+        },
+        "ephemeral_key": {
+          "$ref": "#/definitions/_EphemeralKeyInfoAsJson"
+        }
+      },
+      "required": [
+        "cipher_suite"
+      ],
+      "additionalProperties": false
+    },
+    "_CipherSuiteRejectedByServerAsJson": {
+      "title": "_CipherSuiteRejectedByServerAsJson",
+      "type": "object",
+      "properties": {
+        "cipher_suite": {
+          "$ref": "#/definitions/_CipherSuiteAsJson"
+        },
+        "error_message": {
+          "title": "Error Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cipher_suite",
+        "error_message"
+      ],
+      "additionalProperties": false
+    },
+    "CipherSuitesScanResultAsJson": {
+      "title": "CipherSuitesScanResultAsJson",
+      "description": "The result of testing a server for cipher suites with a specific version of SSL/TLS.\n\nAttributes:\n    tls_version_used: The SSL/TLS version used to connect to the server.\n    accepted_ciphers: The list of cipher suites supported supported by both SSLyze and the server.\n    rejected_ciphers: The list of cipher suites supported by SSLyze that were rejected by the server.",
+      "type": "object",
+      "properties": {
+        "tls_version_used": {
+          "title": "Tls Version Used",
+          "type": "string"
+        },
+        "is_tls_version_supported": {
+          "title": "Is Tls Version Supported",
+          "type": "boolean"
+        },
+        "accepted_cipher_suites": {
+          "title": "Accepted Cipher Suites",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_CipherSuiteAcceptedByServerAsJson"
+          }
+        },
+        "rejected_cipher_suites": {
+          "title": "Rejected Cipher Suites",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_CipherSuiteRejectedByServerAsJson"
+          }
+        }
+      },
+      "required": [
+        "tls_version_used",
+        "is_tls_version_supported",
+        "accepted_cipher_suites",
+        "rejected_cipher_suites"
+      ],
+      "additionalProperties": false
+    },
+    "CipherSuitesScanAttemptAsJson": {
+      "title": "CipherSuitesScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/CipherSuitesScanResultAsJson"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "CompressionScanResult": {
+      "title": "CompressionScanResult",
+      "type": "object",
+      "properties": {
+        "supports_compression": {
+          "title": "Supports Compression",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "supports_compression"
+      ]
+    },
+    "CompressionScanAttemptAsJson": {
+      "title": "CompressionScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/CompressionScanResult"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "EarlyDataScanResult": {
+      "title": "EarlyDataScanResult",
+      "type": "object",
+      "properties": {
+        "supports_early_data": {
+          "title": "Supports Early Data",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "supports_early_data"
+      ]
+    },
+    "EarlyDataScanAttemptAsJson": {
+      "title": "EarlyDataScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/EarlyDataScanResult"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "OpenSslCcsInjectionScanResult": {
+      "title": "OpenSslCcsInjectionScanResult",
+      "type": "object",
+      "properties": {
+        "is_vulnerable_to_ccs_injection": {
+          "title": "Is Vulnerable To Ccs Injection",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "is_vulnerable_to_ccs_injection"
+      ]
+    },
+    "OpenSslCcsInjectionScanAttemptAsJson": {
+      "title": "OpenSslCcsInjectionScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/OpenSslCcsInjectionScanResult"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "FallbackScsvScanResult": {
+      "title": "FallbackScsvScanResult",
+      "type": "object",
+      "properties": {
+        "supports_fallback_scsv": {
+          "title": "Supports Fallback Scsv",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "supports_fallback_scsv"
+      ]
+    },
+    "FallbackScsvScanAttemptAsJson": {
+      "title": "FallbackScsvScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/FallbackScsvScanResult"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "HeartbleedScanResult": {
+      "title": "HeartbleedScanResult",
+      "type": "object",
+      "properties": {
+        "is_vulnerable_to_heartbleed": {
+          "title": "Is Vulnerable To Heartbleed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "is_vulnerable_to_heartbleed"
+      ]
+    },
+    "HeartbleedScanAttemptAsJson": {
+      "title": "HeartbleedScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/HeartbleedScanResult"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "RobotScanResultEnum": {
+      "title": "RobotScanResultEnum",
+      "description": "The result of attempting exploit the ROBOT issue on the server.\n\nAttributes:\n    VULNERABLE_WEAK_ORACLE: The server is vulnerable but the attack would take too long.\n    VULNERABLE_STRONG_ORACLE: The server is vulnerable and real attacks are feasible.\n    NOT_VULNERABLE_NO_ORACLE: The server supports RSA cipher suites but does not act as an oracle.\n    NOT_VULNERABLE_RSA_NOT_SUPPORTED: The server does not supports RSA cipher suites.\n    UNKNOWN_INCONSISTENT_RESULTS: Could not determine whether the server is vulnerable or not.",
+      "enum": [
+        "VULNERABLE_WEAK_ORACLE",
+        "VULNERABLE_STRONG_ORACLE",
+        "NOT_VULNERABLE_NO_ORACLE",
+        "NOT_VULNERABLE_RSA_NOT_SUPPORTED",
+        "UNKNOWN_INCONSISTENT_RESULTS"
+      ],
+      "type": "string"
+    },
+    "RobotScanResult": {
+      "title": "RobotScanResult",
+      "type": "object",
+      "properties": {
+        "robot_result": {
+          "$ref": "#/definitions/RobotScanResultEnum"
+        }
+      },
+      "required": [
+        "robot_result"
+      ]
+    },
+    "RobotScanAttemptAsJson": {
+      "title": "RobotScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/RobotScanResult"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "SessionRenegotiationScanResult": {
+      "title": "SessionRenegotiationScanResult",
+      "type": "object",
+      "properties": {
+        "supports_secure_renegotiation": {
+          "title": "Supports Secure Renegotiation",
+          "type": "boolean"
+        },
+        "is_vulnerable_to_client_renegotiation_dos": {
+          "title": "Is Vulnerable To Client Renegotiation Dos",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "supports_secure_renegotiation",
+        "is_vulnerable_to_client_renegotiation_dos"
+      ]
+    },
+    "SessionRenegotiationScanAttemptAsJson": {
+      "title": "SessionRenegotiationScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/SessionRenegotiationScanResult"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "TlsResumptionSupportEnum": {
+      "title": "TlsResumptionSupportEnum",
+      "description": "The result of attempting to resume TLS sessions with the server.\n\nAttributes:\n    FULLY_SUPPORTED: All the session resumption attempts were successful.\n    PARTIALLY_SUPPORTED: Only some of the session resumption attempts were successful.\n    NOT_SUPPORTED: None of the session resumption attempts were successful.\n    SERVER_IS_TLS_1_3_ONLY: The server only supports TLS 1.3, which does not support Session ID nor TLS Tickets\n        resumption.",
+      "enum": [
+        "FULLY_SUPPORTED",
+        "PARTIALLY_SUPPORTED",
+        "NOT_SUPPORTED",
+        "SERVER_IS_TLS_1_3_ONLY"
+      ],
+      "type": "string"
+    },
+    "SessionResumptionSupportScanResultAsJson": {
+      "title": "SessionResumptionSupportScanResultAsJson",
+      "description": "The result of testing a server for TLS 1.2 session resumption support, using Session IDs and TLS tickets.\n\nAttributes:\n    session_id_resumption_result: The overall result of session ID resumption testing.\n    session_id_attempted_resumptions_count: The total number of session ID resumptions that were attempted.\n    session_id_successful_resumptions_count: The number of session ID resumptions that were successful.\n    tls_ticket_resumption_result: The overall result of TLS ticket resumption testing.\n    tls_ticket_attempted_resumptions_count: The total number of TLS ticket resumptions that were attempted.\n    tls_ticket_successful_resumptions_count: The number of TLS ticket resumptions that were successful.",
+      "type": "object",
+      "properties": {
+        "session_id_resumption_result": {
+          "$ref": "#/definitions/TlsResumptionSupportEnum"
+        },
+        "session_id_attempted_resumptions_count": {
+          "title": "Session Id Attempted Resumptions Count",
+          "type": "integer"
+        },
+        "session_id_successful_resumptions_count": {
+          "title": "Session Id Successful Resumptions Count",
+          "type": "integer"
+        },
+        "tls_ticket_resumption_result": {
+          "$ref": "#/definitions/TlsResumptionSupportEnum"
+        },
+        "tls_ticket_attempted_resumptions_count": {
+          "title": "Tls Ticket Attempted Resumptions Count",
+          "type": "integer"
+        },
+        "tls_ticket_successful_resumptions_count": {
+          "title": "Tls Ticket Successful Resumptions Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "session_id_resumption_result",
+        "session_id_attempted_resumptions_count",
+        "session_id_successful_resumptions_count",
+        "tls_ticket_resumption_result",
+        "tls_ticket_attempted_resumptions_count",
+        "tls_ticket_successful_resumptions_count"
+      ],
+      "additionalProperties": false
+    },
+    "SessionResumptionSupportScanAttemptAsJson": {
+      "title": "SessionResumptionSupportScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/SessionResumptionSupportScanResultAsJson"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "_EllipticCurveAsJson": {
+      "title": "_EllipticCurveAsJson",
+      "description": "A specific elliptic curve.\n\nAttributes:\n    name: The ANSI X9.62 name if available, otherwise the SECG name.\n    openssl_nid: The OpenSSL NID_XXX value valid for OpenSslEvpPkeyEnum.EC (obj_mac.h).",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "openssl_nid": {
+          "title": "Openssl Nid",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "openssl_nid"
+      ]
+    },
+    "SupportedEllipticCurvesScanResultAsJson": {
+      "title": "SupportedEllipticCurvesScanResultAsJson",
+      "description": "The result of testing a server for supported elliptic curves.\n\nAttributes:\n    supports_ecdh_key_exchange: True if the server supports at least one cipher suite with an ECDH key exchange.\n    supported_curves: A list of `EllipticCurve` that were accepted by the server or `None` if the server does not\n        support ECDH cipher suites.\n    rejected_curves: A list of `EllipticCurve` that were rejected by the server or `None` if the server does not\n        support ECDH cipher suites.",
+      "type": "object",
+      "properties": {
+        "supports_ecdh_key_exchange": {
+          "title": "Supports Ecdh Key Exchange",
+          "type": "boolean"
+        },
+        "supported_curves": {
+          "title": "Supported Curves",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_EllipticCurveAsJson"
+          }
+        },
+        "rejected_curves": {
+          "title": "Rejected Curves",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/_EllipticCurveAsJson"
+          }
+        }
+      },
+      "required": [
+        "supports_ecdh_key_exchange"
+      ]
+    },
+    "SupportedEllipticCurvesScanAttemptAsJson": {
+      "title": "SupportedEllipticCurvesScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/SupportedEllipticCurvesScanResultAsJson"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "_StrictTransportSecurityHeaderAsJson": {
+      "title": "_StrictTransportSecurityHeaderAsJson",
+      "description": "A Strict-Transport-Security header parsed from a server's HTTP response.\n\nAttributes:\n    preload: ``True`` if the preload directive is set.\n    include_subdomains: ``True`` if the includesubdomains directive is set.\n    max_age: The content of the max-age field.",
+      "type": "object",
+      "properties": {
+        "max_age": {
+          "title": "Max Age",
+          "type": "integer"
+        },
+        "preload": {
+          "title": "Preload",
+          "type": "boolean"
+        },
+        "include_subdomains": {
+          "title": "Include Subdomains",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "preload",
+        "include_subdomains"
+      ]
+    },
+    "_ExpectCtHeaderAsJson": {
+      "title": "_ExpectCtHeaderAsJson",
+      "description": "An Expect-CT header parsed from a server's HTTP response.\n\nAttributes:\n    max-age: The content of the max-age field.\n    report-uri: The content of report-uri field.\n    enforce: True if enforce directive is set.",
+      "type": "object",
+      "properties": {
+        "max_age": {
+          "title": "Max Age",
+          "type": "integer"
+        },
+        "report_uri": {
+          "title": "Report Uri",
+          "type": "string"
+        },
+        "enforce": {
+          "title": "Enforce",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enforce"
+      ]
+    },
+    "HttpHeadersScanResultAsJson": {
+      "title": "HttpHeadersScanResultAsJson",
+      "description": "The result of testing a server for the presence of security-related HTTP headers.\n\nEach HTTP header described below will be ``None`` if the server did not return a valid HTTP response, or if the\nserver returned an HTTP response without the HTTP header.\n\nAttributes:\n    http_request_sent: The initial HTTP request sent to the server by SSLyze.\n    http_error_trace: An error the server returned after receiving the initial HTTP request. If this field is set,\n        all the subsequent fields will be ``None`` as SSLyze did not receive a valid HTTP response from the server.\n    http_path_redirected_to: The path SSLyze was eventually redirected to after sending the initial HTTP request.\n    strict_transport_security_header: The Strict-Transport-Security header returned by the server.\n    expect_ct_header: The Expect-CT header returned by the server.",
+      "type": "object",
+      "properties": {
+        "http_request_sent": {
+          "title": "Http Request Sent",
+          "type": "string"
+        },
+        "http_error_trace": {
+          "title": "Http Error Trace",
+          "type": "string"
+        },
+        "http_path_redirected_to": {
+          "title": "Http Path Redirected To",
+          "type": "string"
+        },
+        "strict_transport_security_header": {
+          "$ref": "#/definitions/_StrictTransportSecurityHeaderAsJson"
+        },
+        "expect_ct_header": {
+          "$ref": "#/definitions/_ExpectCtHeaderAsJson"
+        }
+      },
+      "required": [
+        "http_request_sent"
+      ]
+    },
+    "HttpHeadersScanAttemptAsJson": {
+      "title": "HttpHeadersScanAttemptAsJson",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "$ref": "#/definitions/ScanCommandErrorReasonEnum"
+        },
+        "error_trace": {
+          "title": "Error Trace",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/HttpHeadersScanResultAsJson"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "AllScanCommandsAttemptsAsJson": {
+      "title": "AllScanCommandsAttemptsAsJson",
+      "type": "object",
+      "properties": {
+        "certificate_info": {
+          "$ref": "#/definitions/CertificateInfoScanAttemptAsJson"
+        },
+        "ssl_2_0_cipher_suites": {
+          "$ref": "#/definitions/CipherSuitesScanAttemptAsJson"
+        },
+        "ssl_3_0_cipher_suites": {
+          "$ref": "#/definitions/CipherSuitesScanAttemptAsJson"
+        },
+        "tls_1_0_cipher_suites": {
+          "$ref": "#/definitions/CipherSuitesScanAttemptAsJson"
+        },
+        "tls_1_1_cipher_suites": {
+          "$ref": "#/definitions/CipherSuitesScanAttemptAsJson"
+        },
+        "tls_1_2_cipher_suites": {
+          "$ref": "#/definitions/CipherSuitesScanAttemptAsJson"
+        },
+        "tls_1_3_cipher_suites": {
+          "$ref": "#/definitions/CipherSuitesScanAttemptAsJson"
+        },
+        "tls_compression": {
+          "$ref": "#/definitions/CompressionScanAttemptAsJson"
+        },
+        "tls_1_3_early_data": {
+          "$ref": "#/definitions/EarlyDataScanAttemptAsJson"
+        },
+        "openssl_ccs_injection": {
+          "$ref": "#/definitions/OpenSslCcsInjectionScanAttemptAsJson"
+        },
+        "tls_fallback_scsv": {
+          "$ref": "#/definitions/FallbackScsvScanAttemptAsJson"
+        },
+        "heartbleed": {
+          "$ref": "#/definitions/HeartbleedScanAttemptAsJson"
+        },
+        "robot": {
+          "$ref": "#/definitions/RobotScanAttemptAsJson"
+        },
+        "session_renegotiation": {
+          "$ref": "#/definitions/SessionRenegotiationScanAttemptAsJson"
+        },
+        "session_resumption": {
+          "$ref": "#/definitions/SessionResumptionSupportScanAttemptAsJson"
+        },
+        "elliptic_curves": {
+          "$ref": "#/definitions/SupportedEllipticCurvesScanAttemptAsJson"
+        },
+        "http_headers": {
+          "$ref": "#/definitions/HttpHeadersScanAttemptAsJson"
+        }
+      },
+      "required": [
+        "certificate_info",
+        "ssl_2_0_cipher_suites",
+        "ssl_3_0_cipher_suites",
+        "tls_1_0_cipher_suites",
+        "tls_1_1_cipher_suites",
+        "tls_1_2_cipher_suites",
+        "tls_1_3_cipher_suites",
+        "tls_compression",
+        "tls_1_3_early_data",
+        "openssl_ccs_injection",
+        "tls_fallback_scsv",
+        "heartbleed",
+        "robot",
+        "session_renegotiation",
+        "session_resumption",
+        "elliptic_curves",
+        "http_headers"
+      ],
+      "additionalProperties": false
+    },
+    "ServerScanResultAsJson": {
+      "title": "ServerScanResultAsJson",
+      "description": "The result of scanning a server.\n\nAttributes:\n    uuid\n    server_location\n    network_configuration\n    connectivity_status: Whether SSLyze was able to connect to the server, or not.\n    connectivity_error_trace: The connectivity error; only set if SSLyze was NOT able to connect to the server.\n    connectivity_result: The result of connectivity testing; only set if SSLyze was able to connect to the server.\n    scan_status: Whether SSLyze was able to complete the scan, or not.\n    scan_result: The result of the scan; only set if SSLyze was able to complete the scan.",
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "title": "Uuid",
+          "type": "string",
+          "format": "uuid"
+        },
+        "server_location": {
+          "$ref": "#/definitions/_ServerNetworkLocationAsJson"
+        },
+        "network_configuration": {
+          "$ref": "#/definitions/_ServerNetworkConfigurationAsJson"
+        },
+        "connectivity_status": {
+          "$ref": "#/definitions/ServerConnectivityStatusEnum"
+        },
+        "connectivity_error_trace": {
+          "title": "Connectivity Error Trace",
+          "type": "string"
+        },
+        "connectivity_result": {
+          "$ref": "#/definitions/_ServerTlsProbingResultAsJson"
+        },
+        "scan_status": {
+          "$ref": "#/definitions/ServerScanStatusEnum"
+        },
+        "scan_result": {
+          "$ref": "#/definitions/AllScanCommandsAttemptsAsJson"
+        }
+      },
+      "required": [
+        "uuid",
+        "server_location",
+        "network_configuration",
+        "connectivity_status",
+        "scan_status"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

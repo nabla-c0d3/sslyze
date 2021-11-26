@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Exporting and processing scan results in JSON &#8212; SSLyze 5.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Appendix: Scan Commands" href="available-scan-commands.html" />
+    <link rel="prev" title="Running a Scan in Python" href="running-a-scan-in-python.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="exporting-and-processing-scan-results-in-json">
+<h1>Exporting and processing scan results in JSON<a class="headerlink" href="#exporting-and-processing-scan-results-in-json" title="Permalink to this headline">¶</a></h1>
+<p>The result of SSLyze scans can be serialized to JSON for further processing. SSLyze also provides a helper class to
+parse JSON scan results; it can be used to process the results of SSLyze scans in a separate Python program.</p>
+<p>A schema of the JSON output is available in the code repository at
+<a class="reference external" href="https://github.com/nabla-c0d3/sslyze/blob/release/json_output_schema.json">./json_output_schema.json</a>.</p>
+<section id="json-output-when-using-the-cli">
+<h2>JSON output when using the CLI<a class="headerlink" href="#json-output-when-using-the-cli" title="Permalink to this headline">¶</a></h2>
+<p>When using the CLI, the scan results can be exported to a JSON file using the <code class="docutils literal notranslate"><span class="pre">--json_out</span></code> option:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m sslyze www.google.com www.facebook.com --json_out=result.json
+</pre></div>
+</div>
+<p>The generated JSON file can then be parsed using the <code class="docutils literal notranslate"><span class="pre">SslyzeOutputAsJson.from_file()</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">example_json_result_parsing</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># SSLyze scan results serialized to JSON were saved to this file using --json_out</span>
+    <span class="n">results_as_json_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;tests&quot;</span> <span class="o">/</span> <span class="s2">&quot;json_tests&quot;</span> <span class="o">/</span> <span class="s2">&quot;sslyze_output.json&quot;</span>
+    <span class="n">results_as_json</span> <span class="o">=</span> <span class="n">results_as_json_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+
+    <span class="c1"># These results can be parsed</span>
+    <span class="n">parsed_results</span> <span class="o">=</span> <span class="n">SslyzeOutputAsJson</span><span class="o">.</span><span class="n">parse_raw</span><span class="p">(</span><span class="n">results_as_json</span><span class="p">)</span>
+
+    <span class="c1"># Making it easy to do post-processing and inspection of the results</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The following servers were scanned:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">parsed_results</span><span class="o">.</span><span class="n">server_scan_results</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">****</span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">server_location</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">****&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_status</span> <span class="o">==</span> <span class="n">ServerScanStatusEnum</span><span class="o">.</span><span class="n">ERROR_NO_CONNECTIVITY</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;That scan failed with the following error:</span><span class="se">\n</span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">connectivity_error_trace</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">assert</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_result</span>
+        <span class="n">certinfo_attempt</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_result</span><span class="o">.</span><span class="n">certificate_info</span>
+        <span class="k">if</span> <span class="n">certinfo_attempt</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">ScanCommandAttemptStatusEnum</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span>
+            <span class="n">_print_failed_scan_command_attempt</span><span class="p">(</span><span class="n">certinfo_attempt</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">certinfo_result</span> <span class="o">=</span> <span class="n">server_scan_result</span><span class="o">.</span><span class="n">scan_result</span><span class="o">.</span><span class="n">certificate_info</span><span class="o">.</span><span class="n">result</span>
+            <span class="k">assert</span> <span class="n">certinfo_result</span>
+            <span class="k">for</span> <span class="n">cert_deployment</span> <span class="ow">in</span> <span class="n">certinfo_result</span><span class="o">.</span><span class="n">certificate_deployments</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    SHA1 of leaf certificate: </span><span class="si">{</span><span class="n">cert_deployment</span><span class="o">.</span><span class="n">received_certificate_chain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">fingerprint_sha1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The resulting Python object then contains the scan results. Type annotations are available for all fields, thereby
+making it easier to process the results.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SSLyze</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation of SSLyze</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="running-a-scan-in-python.html">Running a Scan in Python</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Exporting and processing scan results in JSON</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#json-output-when-using-the-cli">JSON output when using the CLI</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="available-scan-commands.html">Appendix: Scan Commands</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="running-a-scan-in-python.html" title="previous chapter">Running a Scan in Python</a></li>
+      <li>Next: <a href="available-scan-commands.html" title="next chapter">Appendix: Scan Commands</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Copyright 2021 Alban Diquet.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/json-output.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

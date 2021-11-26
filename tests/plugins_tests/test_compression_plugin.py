@@ -1,8 +1,8 @@
 import pytest
 
 from sslyze.plugins.compression_plugin import CompressionImplementation, CompressionScanResult
-from sslyze.server_connectivity import ServerConnectivityTester
-from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
+from sslyze.server_setting import ServerNetworkLocation
+from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
@@ -10,8 +10,8 @@ from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 class TestCompressionPlugin:
     def test_compression_disabled(self):
         # Given a server to scan that has TLS compression disabled
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.google.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation(hostname="www.google.com", port=443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When testing for compression support, it succeeds
         result: CompressionScanResult = CompressionImplementation.scan_server(server_info)
@@ -32,10 +32,10 @@ class TestCompressionPlugin:
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, ip_address=server.ip_address, port=server.port
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When testing for compression support, it succeeds
             result: CompressionScanResult = CompressionImplementation.scan_server(server_info)

@@ -34,16 +34,22 @@ def get_project_info() -> Dict[str, str]:
 
 
 def get_include_files() -> List[Tuple[str, str]]:
-    """"Get the list of trust stores so they properly packaged when doing a cx_freeze build.
+    """"Get the list of non-Python files to package when doing a cx_freeze build.
     """
-    plugin_data_files = []
+    non_python_files = []
+
+    # The trust stores
     trust_stores_pem_path = root_path / "sslyze" / "plugins" / "certificate_info" / "trust_stores" / "pem_files"
     for file in listdir(trust_stores_pem_path):
         file = path.join(trust_stores_pem_path, file)
         if path.isfile(file):  # skip directories
             filename = path.basename(file)
-            plugin_data_files.append((file, path.join("pem_files", filename)))
-    return plugin_data_files
+            non_python_files.append((file, path.join("pem_files", filename)))
+
+    # The Mozilla profile
+    mozilla_profile_path = root_path / "sslyze" / "mozilla_tls_profile" / "5.6.json"
+    non_python_files.append((str(mozilla_profile_path), mozilla_profile_path.name))
+    return non_python_files
 
 
 project_info = get_project_info()
@@ -86,14 +92,15 @@ setup(
     package_data={
         "sslyze": ["py.typed"],
         "sslyze.plugins.certificate_info.trust_stores": ["pem_files/*.pem", "pem_files/*.yaml"],
+        "sslyze.mozilla_tls_profile": ["5.6.json"],
     },
     entry_points={"console_scripts": ["sslyze = sslyze.__main__:main"]},
     # Dependencies
     install_requires=[
-        "nassl>=4.0.0,<5.0.0",
-        "cryptography>=2.6,<3.5",
+        "nassl>=4.0.1,<5.0.0",
+        "cryptography>=2.6,<36.0.0",
         "tls-parser>=1.2.2,<1.3.0",
-        "typing_extensions ; python_version<'3.8'",  # To remove when we drop support for Python 3.7
+        "pydantic>=1.7,<1.9",
     ],
     # cx_freeze info for Windows builds with Python embedded
     options={"build_exe": {"packages": ["cffi", "cryptography"], "include_files": get_include_files()}},

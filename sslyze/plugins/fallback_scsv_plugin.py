@@ -1,11 +1,15 @@
 from dataclasses import dataclass
 from typing import List, Optional
+
+import pydantic
 from nassl import _nassl
 from nassl.legacy_ssl_client import LegacySslClient
+
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanJob,
     ScanCommandWrongUsageError,
     ScanCommandCliConnector,
@@ -24,6 +28,14 @@ class FallbackScsvScanResult(ScanCommandResult):
     """
 
     supports_fallback_scsv: bool
+
+
+# Identical fields in the JSON output
+FallbackScsvScanResultAsJson = pydantic.dataclasses.dataclass(FallbackScsvScanResult, frozen=True)
+
+
+class FallbackScsvScanAttemptAsJson(ScanCommandAttemptAsJson):
+    result: Optional[FallbackScsvScanResultAsJson]  # type: ignore
 
 
 class _FallbackScsvCliConnector(ScanCommandCliConnector[FallbackScsvScanResult, None]):
@@ -49,7 +61,7 @@ class FallbackScsvImplementation(ScanCommandImplementation[FallbackScsvScanResul
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")

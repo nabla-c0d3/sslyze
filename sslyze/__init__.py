@@ -2,9 +2,9 @@
 
 # Classes for configuring the servers to scan
 from sslyze.server_setting import (
-    ServerNetworkLocationViaDirectConnection,
+    ServerNetworkLocation,
+    ConnectionTypeEnum,
     HttpProxySettings,
-    ServerNetworkLocationViaHttpProxy,
     ClientAuthenticationCredentials,
     ServerNetworkConfiguration,
 )
@@ -17,30 +17,33 @@ from sslyze.server_connectivity import (
     ClientAuthRequirementEnum,
     TlsVersionEnum,
     ServerTlsProbingResult,
-    ServerConnectivityInfo,
-    ServerConnectivityTester,
 )
 
 # Classes for setting up scan commands and extra arguments
-from sslyze.plugins.scan_commands import ScanCommand, ScanCommandType
-from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArguments
-
-from sslyze.json import JsonEncoder
+from sslyze.plugins.scan_commands import ScanCommand
+from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument
 
 # Classes for scanning the servers
-from sslyze.scanner import (
-    ScanCommandError,
-    ScanCommandErrorReasonEnum,
-    ScanCommandExtraArgumentsDict,
-    ScanCommandResultsDict,
-    ScanCommandErrorsDict,
+from sslyze.scanner.models import (
     ServerScanRequest,
+    ScanCommandsExtraArguments,
     ServerScanResult,
-    Scanner,
+    ServerConnectivityStatusEnum,
+    ServerScanStatusEnum,
+    AllScanCommandsAttempts,
 )
+from sslyze.scanner.scan_command_attempt import (
+    ScanCommandAttempt,
+    ScanCommandAttemptStatusEnum,
+    ScanCommandErrorReasonEnum,
+)
+from sslyze.scanner.scanner import Scanner
+from sslyze.errors import ServerHostnameCouldNotBeResolved
 
 
 # Classes with the scan results
+from sslyze.plugins.plugin_base import ScanCommandResult
+
 # Certificate Info
 from sslyze.plugins.certificate_info.implementation import (
     CertificateInfoScanResult,
@@ -62,9 +65,8 @@ from sslyze.plugins.robot.implementation import RobotScanResult, RobotScanResult
 
 from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportScanResult,
-    SessionResumptionRateScanResult,
-    TlsSessionTicketSupportEnum,
-    TlsSessionIdSupportEnum,
+    TlsResumptionSupportEnum,
+    SessionResumptionSupportExtraArgument,
 )
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.early_data_plugin import EarlyDataScanResult
@@ -75,7 +77,6 @@ from sslyze.plugins.heartbleed_plugin import HeartbleedScanResult
 from sslyze.plugins.http_headers_plugin import (
     HttpHeadersScanResult,
     StrictTransportSecurityHeader,
-    PublicKeyPinsHeader,
     ExpectCtHeader,
 )
 
@@ -83,3 +84,5 @@ from sslyze.plugins.http_headers_plugin import (
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanResult
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanResult
 from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanResult, EllipticCurve
+
+from sslyze.json.json_output import SslyzeOutputAsJson, ServerScanResultAsJson

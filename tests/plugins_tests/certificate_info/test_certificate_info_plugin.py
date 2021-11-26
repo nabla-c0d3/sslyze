@@ -2,9 +2,10 @@ from pathlib import Path
 
 from cryptography.x509.ocsp import OCSPResponseStatus
 
-from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation, CertificateInfoExtraArguments
-from sslyze.server_connectivity import ServerConnectivityTester
-from sslyze.server_setting import ServerNetworkLocationViaDirectConnection
+from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation, CertificateInfoExtraArgument
+
+from sslyze.server_setting import ServerNetworkLocation
+from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum
 import pytest
@@ -13,26 +14,26 @@ import pytest
 class TestCertificateInfoPlugin:
     def test_ca_file_bad_file(self):
         # Given a server to scan
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.hotmail.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When trying to enable a custom CA file but the path is wrong, it fails
         with pytest.raises(ValueError):
             CertificateInfoImplementation.scan_server(
-                server_info, CertificateInfoExtraArguments(custom_ca_file=Path("doesntexist"))
+                server_info, CertificateInfoExtraArgument(custom_ca_file=Path("doesntexist"))
             )
 
     def test_ca_file(self):
         # Given a server to scan
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.hotmail.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.hotmail.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # And a valid path to a custom CA file
         ca_file_path = Path(__file__).parent / ".." / ".." / "certificates" / "wildcard-self-signed.pem"
 
         # When running the scan with the custom CA file enabled
         plugin_result = CertificateInfoImplementation.scan_server(
-            server_info, CertificateInfoExtraArguments(custom_ca_file=ca_file_path)
+            server_info, CertificateInfoExtraArgument(custom_ca_file=ca_file_path)
         )
 
         # It succeeds
@@ -45,8 +46,8 @@ class TestCertificateInfoPlugin:
 
     def test_valid_chain_with_ocsp_stapling(self):
         # Given a server to scan that supports OCSP stapling
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.apple.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.apple.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
@@ -59,8 +60,8 @@ class TestCertificateInfoPlugin:
 
     def test_valid_chain_with_ev_cert(self):
         # Given a server to scan that has an EV certificate
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.digicert.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.digicert.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
@@ -82,8 +83,8 @@ class TestCertificateInfoPlugin:
 
     def test_invalid_chain(self):
         # Given a server to scan that has a self-signed certificate
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("self-signed.badssl.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("self-signed.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
@@ -108,8 +109,8 @@ class TestCertificateInfoPlugin:
 
     def test_1000_sans_chain(self):
         # Given a server to scan that has a leaf cert with 1000 SANs
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("1000-sans.badssl.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("1000-sans.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan, it succeeds
         CertificateInfoImplementation.scan_server(server_info)
@@ -117,10 +118,8 @@ class TestCertificateInfoPlugin:
     @pytest.mark.skip("Can no longer build a verified because CA cert expired")
     def test_sha1_chain(self):
         # Given a server to scan that has a SHA1-signed certificate
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            "sha1-intermediate.badssl.com", 443
-        )
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("sha1-intermediate.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
@@ -130,8 +129,8 @@ class TestCertificateInfoPlugin:
 
     def test_sha256_chain(self):
         # Given a server to scan that has a SHA256-signed certificate
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("sha256.badssl.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("sha256.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
@@ -141,8 +140,8 @@ class TestCertificateInfoPlugin:
 
     def test_chain_with_anchor(self):
         # Given a server to scan that has its anchor certificate returned in its chain
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.verizon.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.verizon.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan, it succeeds
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
@@ -150,31 +149,11 @@ class TestCertificateInfoPlugin:
         # And the anchor certificate was detected
         assert plugin_result.certificate_deployments[0].received_chain_contains_anchor_certificate
 
-    def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
-        # Given a server to scan that has a certificate chain valid for the Microsoft but not the Mozilla trust stores
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            "webmail.russia.nasa.gov", 443
-        )
-        server_info = ServerConnectivityTester().perform(server_location)
-
-        # When running the scan, it succeeds
-        plugin_result = CertificateInfoImplementation.scan_server(server_info)
-
-        # And the chain was correctly identified as valid with the Microsoft store
-        found_microsoft_store = False
-        for validation_result in plugin_result.certificate_deployments[0].path_validation_results:
-            if validation_result.trust_store.name == "Windows":
-                found_microsoft_store = True
-                assert validation_result.was_validation_successful
-                break
-        assert found_microsoft_store
-
+    @pytest.mark.skip("Server is currently offline; check https://github.com/chromium/badssl.com/issues/481")
     def test_certificate_with_no_cn(self):
         # Given a server to scan that has a certificate with no CN
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            "no-common-name.badssl.com", 443
-        )
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("no-common-name.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan, it succeeds
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
@@ -183,8 +162,8 @@ class TestCertificateInfoPlugin:
 
     def test_certificate_with_no_subject(self):
         # Given a server to scan that has a certificate with no Subject
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("no-subject.badssl.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("no-subject.badssl.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan, it succeeds
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
@@ -193,8 +172,8 @@ class TestCertificateInfoPlugin:
 
     def test_certificate_with_scts(self):
         # Given a server to scan that has a certificate with SCTS
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.apple.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.apple.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan, it succeeds
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
@@ -204,8 +183,8 @@ class TestCertificateInfoPlugin:
 
     def test_multiple_certificates(self):
         # Given a server to scan that exposes multiple certificates for maximum compatibility
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup("www.facebook.com", 443)
-        server_info = ServerConnectivityTester().perform(server_location)
+        server_location = ServerNetworkLocation("www.facebook.com", 443)
+        server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan, it succeeds
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
@@ -218,10 +197,10 @@ class TestCertificateInfoPlugin:
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And the client does NOT provide a client certificate
-            server_location = ServerNetworkLocationViaDirectConnection(
+            server_location = ServerNetworkLocation(
                 hostname=server.hostname, port=server.port, ip_address=server.ip_address
             )
-            server_info = ServerConnectivityTester().perform(server_location)
+            server_info = check_connectivity_to_server_and_return_info(server_location)
 
             # When running the scan, it succeeds
             plugin_result = CertificateInfoImplementation.scan_server(server_info)

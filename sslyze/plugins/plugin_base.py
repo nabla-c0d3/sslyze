@@ -6,19 +6,31 @@ from concurrent.futures import ThreadPoolExecutor
 
 from dataclasses import dataclass
 
-from typing import List, Callable, Any, Optional, TYPE_CHECKING, Tuple, ClassVar, Dict, Type, Union, TypeVar, Generic
-
+from typing import (
+    List,
+    Callable,
+    Any,
+    Optional,
+    TYPE_CHECKING,
+    Tuple,
+    ClassVar,
+    Dict,
+    Type,
+    Union,
+    TypeVar,
+    Generic,
+    Sequence,
+)
 
 if TYPE_CHECKING:
     from sslyze.server_connectivity import ServerConnectivityInfo
-    from sslyze.json import JsonSerializerFunction  # noqa: F401
 
 
 class ScanCommandResult(ABC):
     pass
 
 
-class ScanCommandExtraArguments(ABC):
+class ScanCommandExtraArgument(ABC):
     pass
 
 
@@ -37,7 +49,7 @@ class ScanJob:
     """
 
     function_to_call: Callable
-    function_arguments: Any
+    function_arguments: Sequence[Any]
 
 
 @dataclass(frozen=True)
@@ -53,12 +65,10 @@ class ScanJobResult:
 
 
 _ScanCommandResultTypeVar = TypeVar("_ScanCommandResultTypeVar", bound=ScanCommandResult)
-_ScanCommandExtraArgumentsTypeVar = TypeVar(
-    "_ScanCommandExtraArgumentsTypeVar", bound=Optional[ScanCommandExtraArguments]
-)
+_ScanCommandExtraArgumentTypeVar = TypeVar("_ScanCommandExtraArgumentTypeVar", bound=Optional[ScanCommandExtraArgument])
 
 
-class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentsTypeVar]):
+class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentTypeVar]):
     """Describes everything needed to run a specific scan command.
     """
 
@@ -68,7 +78,7 @@ class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandE
     @classmethod
     @abstractmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[_ScanCommandExtraArgumentsTypeVar] = None
+        cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[_ScanCommandExtraArgumentTypeVar] = None
     ) -> List[ScanJob]:
         """Transform a scan command to run into smaller scan jobs to be run concurrently.
 
@@ -88,7 +98,7 @@ class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandE
 
     @classmethod
     def scan_server(
-        cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[_ScanCommandExtraArgumentsTypeVar] = None
+        cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[_ScanCommandExtraArgumentTypeVar] = None
     ) -> _ScanCommandResultTypeVar:
         """Utility method to run a scan command directly.
 
@@ -118,7 +128,7 @@ class OptParseCliOption:
     action: str = "store_true"
 
 
-class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentsTypeVar]):
+class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentTypeVar]):
     """Contains all the logic for making a scan command available via the CLI.
     """
 
@@ -136,7 +146,7 @@ class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExt
     @classmethod
     def find_cli_options_in_command_line(
         cls, parsed_command_line: Dict[str, Union[None, bool, str]]
-    ) -> Tuple[bool, Optional[_ScanCommandExtraArgumentsTypeVar]]:
+    ) -> Tuple[bool, Optional[_ScanCommandExtraArgumentTypeVar]]:
         """Check a parsed command line to see if the CLI option for the scan command was enabled.
         """
         try:
@@ -147,14 +157,6 @@ class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExt
 
         extra_arguments = None
         return is_scan_cmd_enabled, extra_arguments
-
-    @classmethod
-    def get_json_serializer_functions(cls) -> List["JsonSerializerFunction"]:
-        """To be overridden if the scan command returns objects that require custom logic to be serialized to JSON.
-
-        See certificate_info for an example.
-        """
-        return []
 
     @classmethod
     @abstractmethod

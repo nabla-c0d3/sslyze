@@ -1,4 +1,3 @@
-from enum import Enum, unique
 from typing import Tuple
 
 import nassl
@@ -7,26 +6,7 @@ from sslyze.plugins.session_resumption._resumption_with_id import retrieve_tls_s
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
-@unique
-class TlsSessionTicketSupportEnum(Enum):
-    """The result of attempting to resume a TLS session with the server using TLS Tickets.
-    """
-
-    SUCCEEDED = 1
-    FAILED_TICKET_NOT_ASSIGNED = 2
-    FAILED_TICKED_IGNORED = 3
-    FAILED_ONLY_TLS_1_3_SUPPORTED = 4
-
-    # TODO(AD): Switch to these names for v5.0.0 and leverage ServerOnlySupportsTls13() to simplify flow
-    # SUPPORTED = 1
-    # NOT_SUPPORTED_TICKET_NOT_ASSIGNED = 2
-    # NOT_SUPPORTED_TICKET_IGNORED = 3
-    # SERVER_IS_TLS_1_3_ONLY = 4
-
-
-def resume_with_tls_ticket(
-    server_info: ServerConnectivityInfo,
-) -> Tuple[_ScanJobResultEnum, TlsSessionTicketSupportEnum]:
+def resume_with_tls_ticket(server_info: ServerConnectivityInfo,) -> Tuple[_ScanJobResultEnum, bool]:
     """Perform one session resumption using TLS Session Tickets.
     """
     # Connect to the server and keep the TLS session
@@ -35,7 +15,8 @@ def resume_with_tls_ticket(
         # Recover the TLS ticket
         session1_tls_ticket = _extract_tls_session_ticket(session1)
     except IndexError:
-        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TlsSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED
+        # Ticket was not assigned
+        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, False
 
     # Try to resume that session using the TLS ticket
     session2 = retrieve_tls_session(server_info, session_to_resume=session1, should_enable_tls_ticket=True)
@@ -43,13 +24,15 @@ def resume_with_tls_ticket(
         # Recover the TLS ticket
         session2_tls_ticket = _extract_tls_session_ticket(session2)
     except IndexError:
-        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TlsSessionTicketSupportEnum.FAILED_TICKET_NOT_ASSIGNED
+        # Ticket was not assigned
+        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, False
 
     # Finally, compare the two TLS Tickets
     if session1_tls_ticket != session2_tls_ticket:
-        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TlsSessionTicketSupportEnum.FAILED_TICKED_IGNORED
+        # The Ticket we supplied got ignored
+        return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, False
 
-    return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, TlsSessionTicketSupportEnum.SUCCEEDED
+    return _ScanJobResultEnum.TLS_TICKET_RESUMPTION, True
 
 
 def _extract_tls_session_ticket(ssl_session: nassl._nassl.SSL_SESSION) -> str:

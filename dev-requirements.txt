@@ -1,0 +1,14 @@
+mypy
+flake8
+invoke
+pytest<6.0.0
+sphinx
+sphinx-rtd-theme
+twine
+sphinx-autodoc-typehints
+black==19.10b0
+pytest-cov
+faker
+
+# For building the Windows executable
+cx-freeze; sys.platform == 'win32'

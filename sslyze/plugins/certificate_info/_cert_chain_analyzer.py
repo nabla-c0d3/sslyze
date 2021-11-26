@@ -7,7 +7,7 @@ import cryptography
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate, load_pem_x509_certificate
+from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate, load_pem_x509_certificate, TLSFeature
 from cryptography.x509.ocsp import load_der_ocsp_response, OCSPResponseStatus, OCSPResponse
 from nassl._nassl import X509
 from nassl.cert_chain_verifier import CertificateChainVerifier, CertificateChainVerificationFailed
@@ -160,7 +160,8 @@ class CertificateDeploymentAnalyzer:
         has_ocsp_must_staple = False
         try:
             tls_feature_ext = leaf_cert.extensions.get_extension_for_oid(ExtensionOID.TLS_FEATURE)
-            for feature_type in tls_feature_ext.value:
+            tls_feature_value = cast(TLSFeature, tls_feature_ext.value)
+            for feature_type in tls_feature_value:
                 if feature_type == cryptography.x509.TLSFeatureType.status_request:
                     has_ocsp_must_staple = True
                     break

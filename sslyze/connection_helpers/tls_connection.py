@@ -6,9 +6,8 @@ from nassl.legacy_ssl_client import LegacySslClient
 
 from sslyze.server_setting import (
     ServerNetworkLocation,
-    ServerNetworkLocationViaDirectConnection,
-    ServerNetworkLocationViaHttpProxy,
     ServerNetworkConfiguration,
+    ConnectionTypeEnum,
 )
 from sslyze.errors import (
     ConnectionToServerTimedOut,
@@ -36,9 +35,8 @@ if TYPE_CHECKING:
     from sslyze.server_connectivity import TlsVersionEnum
 
 
-def _open_socket_for_direct_connection(
-    server_location: ServerNetworkLocationViaDirectConnection, network_timeout: int
-) -> socket.socket:
+def _open_socket_for_direct_connection(server_location: ServerNetworkLocation, network_timeout: int) -> socket.socket:
+    assert server_location.ip_address
     # Exceptions get caught/processed by the caller
     return socket.create_connection((server_location.ip_address, server_location.port), timeout=network_timeout)
 
@@ -56,8 +54,9 @@ class _ConnectionToHttpProxyFailed(Exception):
 
 
 def _open_socket_for_connection_via_http_proxy(
-    server_location: ServerNetworkLocationViaHttpProxy, network_timeout: int
+    server_location: ServerNetworkLocation, network_timeout: int
 ) -> socket.socket:
+    assert server_location.http_proxy_settings
     try:
         sock = socket.create_connection(
             (server_location.http_proxy_settings.hostname, server_location.http_proxy_settings.port),
@@ -91,9 +90,9 @@ def _open_socket_for_connection_via_http_proxy(
 
 
 def _open_socket(server_location: ServerNetworkLocation, network_timeout: int) -> socket.socket:
-    if isinstance(server_location, ServerNetworkLocationViaHttpProxy):
+    if server_location.connection_type == ConnectionTypeEnum.VIA_HTTP_PROXY:
         return _open_socket_for_connection_via_http_proxy(server_location, network_timeout)
-    elif isinstance(server_location, ServerNetworkLocationViaDirectConnection):
+    elif server_location.connection_type == ConnectionTypeEnum.DIRECT:
         return _open_socket_for_direct_connection(server_location, network_timeout)
     else:
         raise ValueError()

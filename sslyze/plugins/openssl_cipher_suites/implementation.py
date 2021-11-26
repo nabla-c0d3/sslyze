@@ -14,7 +14,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
     ScanCommandResult,
     ScanJob,
-    ScanCommandExtraArguments,
+    ScanCommandExtraArgument,
     ScanCommandWrongUsageError,
     ScanJobResult,
 )
@@ -35,12 +35,11 @@ class CipherSuitesScanResult(ScanCommandResult):
     """
 
     tls_version_used: TlsVersionEnum
-
     accepted_cipher_suites: List[CipherSuiteAcceptedByServer]
     rejected_cipher_suites: List[CipherSuiteRejectedByServer]
 
     @property
-    def is_tls_protocol_version_supported(self) -> bool:
+    def is_tls_version_supported(self) -> bool:
         """Is the SSL/TLS version used to connect the server supported by it?
         """
         return True if self.accepted_cipher_suites else False
@@ -95,7 +94,7 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArguments] = None
+        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
     ) -> List[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")

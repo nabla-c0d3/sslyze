@@ -99,6 +99,7 @@ class ParsedCommandLineFactory:
             should_disable_console_output=False,
             per_server_concurrent_connections_limit=None,
             concurrent_server_scans_limit=None,
+            check_against_mozilla_config=None,
         )
         return cmd_line
 

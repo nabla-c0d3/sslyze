@@ -149,23 +149,7 @@ class TestCertificateInfoPlugin:
         # And the anchor certificate was detected
         assert plugin_result.certificate_deployments[0].received_chain_contains_anchor_certificate
 
-    def test_not_trusted_by_mozilla_but_trusted_by_microsoft(self):
-        # Given a server to scan that has a certificate chain valid for the Microsoft but not the Mozilla trust stores
-        server_location = ServerNetworkLocation("webmail.russia.nasa.gov", 443)
-        server_info = check_connectivity_to_server_and_return_info(server_location)
-
-        # When running the scan, it succeeds
-        plugin_result = CertificateInfoImplementation.scan_server(server_info)
-
-        # And the chain was correctly identified as valid with the Microsoft store
-        found_microsoft_store = False
-        for validation_result in plugin_result.certificate_deployments[0].path_validation_results:
-            if validation_result.trust_store.name == "Windows":
-                found_microsoft_store = True
-                assert validation_result.was_validation_successful
-                break
-        assert found_microsoft_store
-
+    @pytest.mark.skip("Server is currently offline; check https://github.com/chromium/badssl.com/issues/481")
     def test_certificate_with_no_cn(self):
         # Given a server to scan that has a certificate with no CN
         server_location = ServerNetworkLocation("no-common-name.badssl.com", 443)

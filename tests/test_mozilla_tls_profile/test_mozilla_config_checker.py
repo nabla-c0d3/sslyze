@@ -25,7 +25,9 @@ class TestMozillaTlsConfigurationChecker:
     def test_badssl_compliant_with_old(self):
         # Given the scan results for a server that is compliant with the "old" Mozilla config
         scanner = Scanner()
-        scanner.queue_scans([ServerScanRequest(server_location=ServerNetworkLocation(hostname="mozilla-old.badssl.com"))])
+        scanner.queue_scans(
+            [ServerScanRequest(server_location=ServerNetworkLocation(hostname="mozilla-old.badssl.com"))]
+        )
         server_scan_result = next(scanner.get_results())
 
         # When checking if the server is compliant with the Mozilla "old" TLS config
@@ -44,7 +46,9 @@ class TestMozillaTlsConfigurationChecker:
     def test_badssl_compliant_with_intermediate(self):
         # Given the scan results for a server that is compliant with the "intermediate" Mozilla config
         scanner = Scanner()
-        scanner.queue_scans([ServerScanRequest(server_location=ServerNetworkLocation(hostname="mozilla-intermediate.badssl.com"))])
+        scanner.queue_scans(
+            [ServerScanRequest(server_location=ServerNetworkLocation(hostname="mozilla-intermediate.badssl.com"))]
+        )
         server_scan_result = next(scanner.get_results())
 
         # When checking if the server is compliant with the Mozilla "intermediate" TLS config
@@ -63,7 +67,9 @@ class TestMozillaTlsConfigurationChecker:
     def test_badssl_compliant_with_modern(self):
         # Given the scan results for a server that is compliant with the "modern" Mozilla config
         scanner = Scanner()
-        scanner.queue_scans([ServerScanRequest(server_location=ServerNetworkLocation(hostname="mozilla-modern.badssl.com"))])
+        scanner.queue_scans(
+            [ServerScanRequest(server_location=ServerNetworkLocation(hostname="mozilla-modern.badssl.com"))]
+        )
         server_scan_result = next(scanner.get_results())
 
         # When checking if the server is compliant with the Mozilla "modern" TLS config

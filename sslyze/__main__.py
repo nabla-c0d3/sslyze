@@ -15,6 +15,7 @@ from sslyze import (
 from sslyze.mozilla_tls_profile.mozilla_config_checker import (
     MozillaTlsConfigurationChecker,
     ServerNotCompliantWithMozillaTlsConfiguration,
+    ServerScanResultIncomplete,
 )
 
 
@@ -86,7 +87,7 @@ def main() -> None:
     print()
     print(title)
     if not parsed_command_line.check_against_mozilla_config:
-        print("    Disabled; use --mozilla-config={old, intermediate, modern}.")
+        print("    Disabled; use --mozilla-config={old, intermediate, modern}.\n")
     else:
 
         print(
@@ -108,6 +109,13 @@ def main() -> None:
                 for criteria, error_description in e.issues.items():
                     print(f"        * {criteria}: {error_description}")
                 print()
+
+            except ServerScanResultIncomplete:
+                are_all_servers_compliant = False
+                print(
+                    f"    {server_scan_result.server_location.display_string}: ERROR - Scan did not run successfully;"
+                    f" review the scan logs above."
+                )
 
     if not are_all_servers_compliant:
         # Return a non-zero error code to signal failure (for example to fail a CI/CD pipeline)

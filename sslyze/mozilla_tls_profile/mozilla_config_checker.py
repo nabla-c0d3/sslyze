@@ -108,13 +108,13 @@ class MozillaTlsConfigurationChecker:
     def check_server(self, against_config: MozillaTlsConfigurationEnum, server_scan_result: ServerScanResult,) -> None:
         # Ensure the scan was successful
         if server_scan_result.scan_status != ServerScanStatusEnum.COMPLETED:
-            raise ServerScanResultIncomplete()
+            raise ServerScanResultIncomplete("The server scan was not completed.")
 
         # Ensure all the scan command we need were run successfully
         for scan_command in SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER:
             scan_cmd_attempt = getattr(server_scan_result.scan_result, scan_command.value)
             if scan_cmd_attempt.status != ScanCommandAttemptStatusEnum.COMPLETED:
-                raise ServerScanResultIncomplete()
+                raise ServerScanResultIncomplete(f"The {scan_command.value} result is missing.")
 
         # Now let's check the server's scan results against the Mozilla config
         mozilla_config: _MozillaTlsConfigurationAsJson = getattr(

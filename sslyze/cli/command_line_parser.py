@@ -11,6 +11,10 @@ from sslyze.cli.server_string_parser import (
     CommandLineServerStringParser,
 )
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
+from sslyze.mozilla_tls_profile.mozilla_config_checker import (
+    MozillaTlsConfigurationEnum,
+    SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER,
+)
 from sslyze.plugins import plugin_base
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.plugins.plugin_base import OptParseCliOption
@@ -62,6 +66,9 @@ class ParsedCommandLine:
     per_server_concurrent_connections_limit: Optional[int]
     concurrent_server_scans_limit: Optional[int]
 
+    # Mozilla compliance; None if shouldn't be run
+    check_against_mozilla_config: Optional[MozillaTlsConfigurationEnum]
+
 
 _STARTTLS_PROTOCOL_DICT = {
     "smtp": ProtocolWithOpportunisticTlsEnum.SMTP,
@@ -77,26 +84,6 @@ _STARTTLS_PROTOCOL_DICT = {
 
 
 class CommandLineParser:
-    # Defines what --regular means
-    REGULAR_CMD = [
-        "sslv2",
-        "sslv3",
-        "tlsv1",
-        "tlsv1_1",
-        "tlsv1_2",
-        "tlsv1_3",
-        "reneg",
-        "resum",
-        "certinfo",
-        "hide_rejected_ciphers",
-        "compression",
-        "heartbleed",
-        "openssl_ccs",
-        "fallback",
-        "robot",
-        "elliptic_curves",
-    ]
-
     def __init__(self, sslyze_version: str) -> None:
         """Generate SSLyze's command line parser.
         """
@@ -112,15 +99,16 @@ class CommandLineParser:
                 f"--{scan_option.option}", help=scan_option.help, action=scan_option.action,
             )
 
-        # Add the --regular command line parameter as a shortcut if possible
         self.aparser.add_argument(
-            "--regular",
-            action="store_true",
-            dest=None,
-            help=f"Regular HTTPS scan; shortcut for --{' --'.join(self.REGULAR_CMD)}",
+            "--mozilla-config",
+            action="store",
+            dest="mozilla_config",
+            choices=[config.value for config in MozillaTlsConfigurationEnum],
+            help="Shortcut to queue various scan commands needed to check the server's TLS configurations against one"
+            ' of Mozilla\'s recommended TLS configuration. Set to "intermediate" by default.',
         )
 
-        self.aparser.add_argument(dest="target", default=[], nargs="*")
+        self.aparser.add_argument(dest="target", default=[], nargs="*", help="The list of servers to scan.")
 
     def parse_command_line(self) -> ParsedCommandLine:
         """Parses the command line used to launch SSLyze.
@@ -150,20 +138,23 @@ class CommandLineParser:
         if not args_target_list:
             raise CommandLineParsingError("No targets to scan.")
 
-        # Handle the case when no scan commands have been specified: run --regular by default
-        enabled_scan_commands = [
-            getattr(args_command_list, option.option)
-            for option in self._get_plugin_scan_commands()
-            if getattr(args_command_list, option.option)
-        ]
-        if not enabled_scan_commands:
-            setattr(args_command_list, "regular", True)
+        # Handle the case when no scan commands have been specified: run --mozilla-config=intermediate by default
+        if not args_command_list.mozilla_config:
+            did_user_enable_some_scan_commands = [
+                getattr(args_command_list, option.option)
+                for option in self._get_plugin_scan_commands()
+                if getattr(args_command_list, option.option)
+            ]
+            if not did_user_enable_some_scan_commands:
+                setattr(args_command_list, "mozilla_config", MozillaTlsConfigurationEnum.INTERMEDIATE.value)
 
-        # Handle the --regular command line parameter as a shortcut to a bunch of commands
-        if args_command_list.regular:
-            setattr(args_command_list, "regular", False)
-            for cmd in self.REGULAR_CMD:
-                setattr(args_command_list, cmd, True)
+        # Enable the commands needed by --mozilla-config
+        check_against_mozilla_config: Optional[MozillaTlsConfigurationEnum] = None
+        if args_command_list.mozilla_config:
+            check_against_mozilla_config = MozillaTlsConfigurationEnum(args_command_list.mozilla_config)
+            for scan_cmd in SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER:
+                cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_cmd).cli_connector_cls
+                setattr(args_command_list, cli_connector_cls._cli_option, True)
 
         # Handle JSON settings
         should_print_json_to_console = False
@@ -307,6 +298,7 @@ class CommandLineParser:
             should_disable_console_output=args_command_list.quiet or args_command_list.json_file == "-",
             concurrent_server_scans_limit=concurrent_server_scans_limit,
             per_server_concurrent_connections_limit=per_server_concurrent_connections_limit,
+            check_against_mozilla_config=check_against_mozilla_config,
         )
 
     def _add_default_options(self) -> None:

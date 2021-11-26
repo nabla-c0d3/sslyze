@@ -21,7 +21,7 @@ from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, Lega
 class TestSessionResumptionSupport:
     def test(self):
         # Given a server that supports session resumption with both TLS tickets and session IDs
-        server_location = ServerNetworkLocation("www.facebook.com", 443)
+        server_location = ServerNetworkLocation("www.google.com", 443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When testing for resumption, it succeeds
@@ -45,7 +45,10 @@ class TestSessionResumptionSupport:
         server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # And we customize how many session resumptions to perform
-        extra_arg = SessionResumptionSupportExtraArgument(number_of_resumptions_to_attempt=20)
+        custom_resumption_attempts_count = 6
+        extra_arg = SessionResumptionSupportExtraArgument(
+            number_of_resumptions_to_attempt=custom_resumption_attempts_count
+        )
 
         # When testing for resumption, it succeeds
         result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(
@@ -53,8 +56,8 @@ class TestSessionResumptionSupport:
         )
 
         # And the expected number of resumptions was performed
-        assert result.session_id_attempted_resumptions_count == 20
-        assert result.tls_ticket_attempted_resumptions_count == 20
+        assert result.session_id_attempted_resumptions_count == custom_resumption_attempts_count
+        assert result.tls_ticket_attempted_resumptions_count == custom_resumption_attempts_count
 
         # And a CLI output can be generated
         assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)

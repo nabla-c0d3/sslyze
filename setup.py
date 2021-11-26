@@ -48,8 +48,7 @@ def get_include_files() -> List[Tuple[str, str]]:
 
     # The Mozilla profile
     mozilla_profile_path = root_path / "sslyze" / "mozilla_tls_profile" / "5.6.json"
-    non_python_files.append(str(mozilla_profile_path))
-
+    non_python_files.append((str(mozilla_profile_path), mozilla_profile_path.name))
     return non_python_files
 
 

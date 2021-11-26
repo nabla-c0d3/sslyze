@@ -65,7 +65,7 @@ class ServerNetworkLocation:
         connection_type: How sslyze should connect to the server: either directly, or via an HTTP proxy.
         ip_address: The server's IP address; only set if sslyze is connecting directly to the server. If no IP address
             is supplied and connection_type is set to DIRECT, sslyze will automatically lookup one IP address for the
-             supplied hostname.
+            supplied hostname.
         http_proxy_settings: The HTTP proxy configuration to use in order to tunnel the scans through a proxy; only set
             if sslyze is connecting to the server via an HTTP proxy. The proxy will be responsible for looking up the
             server's IP address and connecting to it.

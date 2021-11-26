@@ -6,7 +6,7 @@ This part of the documentation covers the installation of SSLyze.
 SSLyze can be installed on the following platforms:
 
 * Windows 10 (64 bits)
-* macOS Catalina
+* macOS Big Sur
 * Linux (x86 and x86-64)
 
 Other platforms (such as ARM-based platforms) are not supported.
@@ -16,8 +16,8 @@ Using pip
 
 To install SSLyze, simply run this simple command in your terminal of choice::
 
-    $ pip install --upgrade setuptools
-    $ pip install sslyze
+    $ pip install --upgrade pip setuptools wheel
+    $ pip install --upgrade sslyze
 
 Using the source code
 *********************

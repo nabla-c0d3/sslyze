@@ -23,6 +23,15 @@ class ScanCommandErrorReasonEnum(str, Enum):
 
 @dataclass(frozen=True)
 class ScanCommandAttempt(Generic[_ScanCommandResultTypeVar]):
+    """The result of a single scan command.
+
+    Attributes:
+        status: Whether this specific scan command was ran successfully.
+        error_reason: The reason why the scan command failed; None if the scan command succeeded.
+        error_trace: The exception trace of when the scan command failed; None if the scan command succeeded.
+        result: The actual result of the scan command; None if the scan command failed. The type of this attribute is
+            the "ScanResult" object corresponding to the scan command.
+    """
     status: ScanCommandAttemptStatusEnum
 
     # Set if status == ERROR

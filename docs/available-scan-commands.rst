@@ -2,12 +2,12 @@
 Appendix: Scan Commands
 #######################
 
-Every type of scan that SSLyze can run against a server (supported cipher suites, session renegotiation, etc.) is
+Every type of TLS check that SSLyze can run against a server (supported cipher suites, session renegotiation, etc.) is
 represented by a ``ScanCommand``, which, when run against a server, will return a specific result.
 
 This page lists all the ``ScanCommand`` and their corresponding results available in the current release of SSLyze.
 
-For an example on how to run a ``ScanCommand``, see :doc:`/running-scan-commands`.
+For an example on how to run a scan via the Python API, see :doc:`/running-a-scan-in-python`.
 
 .. contents::
    :depth: 2

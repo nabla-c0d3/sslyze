@@ -28,13 +28,27 @@ Python application, such as a function deployed to AWS Lambda.
 Quick start
 -----------
 
-SSLyze can be installed directly via pip:
+On Windows, Linux (x86 or x64) and macOS, SSLyze can be installed directly via pip:
 
 ```
 $ pip install --upgrade pip setuptools wheel
 $ pip install --upgrade sslyze
 $ python -m sslyze www.yahoo.com www.google.com "[2607:f8b0:400a:807::2004]:443"
 ```
+
+It can also be used via Docker:
+
+```
+$ docker run --rm -it nablac0d3/sslyze:5.0.0 www.google.com
+```
+
+Lastly, a pre-compiled Windows executable can be downloaded from [the Releases
+page](https://github.com/nabla-c0d3/sslyze/releases).
+
+Python API Documentation
+------------------------
+
+Documentation for SSLyze's Python API is [available here][documentation].
 
 Usage as a CI/CD step
 ---------------------
@@ -84,11 +98,6 @@ The tests can then be run using:
 ```
 $ invoke test
 ```
-
-API Documentation
------------------
-
-Documentation for SSLyze's Python API is [available here][documentation].
 
 License
 -------

@@ -80,6 +80,10 @@ def main() -> None:
         json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
         json_file_out.write(json_output_as_str)
 
+    # If we printed the JSON results to the console, don't run the Mozilla compliance check so we return valid JSON
+    if parsed_command_line.should_print_json_to_console:
+        sys.exit(0)
+
     # Check the results against the Mozilla config if needed
     are_all_servers_compliant = True
     # TODO(AD): Expose format_title method

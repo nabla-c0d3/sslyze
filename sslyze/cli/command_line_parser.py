@@ -100,7 +100,7 @@ class CommandLineParser:
             )
 
         self.aparser.add_argument(
-            "--mozilla-config",
+            "--mozilla_config",
             action="store",
             dest="mozilla_config",
             choices=[config.value for config in MozillaTlsConfigurationEnum],

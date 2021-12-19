@@ -22,7 +22,7 @@
     },
     "sslyze_version": {
       "title": "Sslyze Version",
-      "default": "5.0.0",
+      "default": "5.0.1",
       "type": "string"
     },
     "sslyze_url": {
@@ -74,7 +74,7 @@
     },
     "_ServerNetworkLocationAsJson": {
       "title": "_ServerNetworkLocationAsJson",
-      "description": "All the information needed to connect to a server.\n\nAttributes:\n    hostname: The server's hostname.\n    port: The server's TLS port number.\n    connection_type: How sslyze should connect to the server: either directly, or via an HTTP proxy.\n    ip_address: The server's IP address; only set if sslyze is connecting directly to the server. If no IP address\n        is supplied and connection_type is set to DIRECT, sslyze will automatically lookup one IP address for the\n         supplied hostname.\n    http_proxy_settings: The HTTP proxy configuration to use in order to tunnel the scans through a proxy; only set\n        if sslyze is connecting to the server via an HTTP proxy. The proxy will be responsible for looking up the\n        server's IP address and connecting to it.",
+      "description": "All the information needed to connect to a server.\n\nAttributes:\n    hostname: The server's hostname.\n    port: The server's TLS port number.\n    connection_type: How sslyze should connect to the server: either directly, or via an HTTP proxy.\n    ip_address: The server's IP address; only set if sslyze is connecting directly to the server. If no IP address\n        is supplied and connection_type is set to DIRECT, sslyze will automatically lookup one IP address for the\n        supplied hostname.\n    http_proxy_settings: The HTTP proxy configuration to use in order to tunnel the scans through a proxy; only set\n        if sslyze is connecting to the server via an HTTP proxy. The proxy will be responsible for looking up the\n        server's IP address and connecting to it.",
       "type": "object",
       "properties": {
         "hostname": {

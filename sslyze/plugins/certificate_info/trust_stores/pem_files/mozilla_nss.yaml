@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2021-09-25
-trusted_certificates_count: 131
+date_fetched: 2021-12-19
+trusted_certificates_count: 133
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -36,6 +36,8 @@ trusted_certificates:
   fingerprint: f356bea244b7a91eb35d53ca9ad7864ace018e2d35d5f8f96ddf68a6f41aa474
 - subject_name: Autoridad de Certificacion Firmaprofesional CIF A62634068
   fingerprint: 04048028bf1f2864d48f9ad4d83294366a828856553f3b14303f90147f5d40ef
+- subject_name: Autoridad de Certificacion Firmaprofesional CIF A62634068
+  fingerprint: 57de0583efd2b26e0361da99da9df4648def7ee8441c3b728afa9bcde0f9b26a
 - subject_name: Baltimore CyberTrust Root
   fingerprint: 16af57a9f676b0ab126095aa5ebadef22ab31119d644ac95cd4b93dbf3f26aeb
 - subject_name: Buypass Class 2 Root CA
@@ -64,14 +66,10 @@ trusted_certificates:
   fingerprint: b676f2eddae8775cd36cb0f63cd1d4603961f49e6265ba013a2f0307b6d0b804
 - subject_name: Certum Trusted Root CA
   fingerprint: fe7696573855773e37a95e7ad4d9cc96c30157c15d31765ba9b15704e1ae78fd
-- subject_name: Cybertrust Global Root
-  fingerprint: 960adf0063e96356750c2965dd0a0867da0b9cbd6e77714aeafb2349ab393da3
 - subject_name: D-TRUST Root Class 3 CA 2 2009
   fingerprint: 49e7a442acf0ea6287050054b52564b650e4f49e42e348d6aa38e039e957b1c1
 - subject_name: D-TRUST Root Class 3 CA 2 EV 2009
   fingerprint: eec5496b988ce98625b934092eec2908bed0b0f316c2d4730c84eaf1f3d34881
-- subject_name: DST Root CA X3
-  fingerprint: 0687260331a72403d909f105e69bcf0d32e1bd2493ffc6d9206d11bcd6770739
 - subject_name: DigiCert Assured ID Root CA
   fingerprint: 3e9099b5015e8f486c00bcea9d111ee721faba355a89bcf1df69561e3dc6325c
 - subject_name: DigiCert Assured ID Root G2
@@ -107,21 +105,19 @@ trusted_certificates:
 - subject_name: GLOBALTRUST 2020
   fingerprint: 9a296a5182d1d451a2e37f439b74daafa267523329f90f9a0d2007c334e23c9a
 - subject_name: GTS Root R1
-  fingerprint: 2a575471e31340bc21581cbd2cf13e158463203ece94bcf9d3cc196bf09a5472
+  fingerprint: d947432abde7b7fa90fc2e6b59101b1280e0e1c7e4e40fa3c6887fff57a7f4cf
 - subject_name: GTS Root R2
-  fingerprint: c45d7bb08e6d67e62e4235110b564e5f78fd92ef058c840aea4e6455d7585c60
+  fingerprint: 8d25cd97229dbf70356bda4eb3cc734031e24cf00fafcfd32dc76eb5841c7ea8
 - subject_name: GTS Root R3
-  fingerprint: 15d5b8774619ea7d54ce1ca6d0b0c403e037a917f131e8a04e1e6b7a71babce5
+  fingerprint: 34d8a73ee208d9bcdb0d956520934b4e40e69482596e8b6f73c8426b010a6f48
 - subject_name: GTS Root R4
-  fingerprint: 71cca5391f9e794b04802530b363e121da8a3043bb26662fea4dca7fc951a4bd
+  fingerprint: 349dfa4058c5e263123b398ae795573c4e1313c83fe68f93556cd5e8031b3c7d
 - subject_name: GlobalSign
   fingerprint: 179fbc148a3dd00fd24ea13458cc43bfa7f59c8182d783a513f6ebec100c8924
 - subject_name: GlobalSign
   fingerprint: 2cabeafe37d06ca22aba7391c0033d25982952c453647349763a3ab5ad6ccf69
 - subject_name: GlobalSign
-  fingerprint: bec94911c2955676db6c0a550986d76e3ba005667c442c9762b4fbb773de228c
-- subject_name: GlobalSign
-  fingerprint: ca42dd41745fd0b81eb902362cf9d8bf719da1bd1b1efc946f5b4c99f42c1b9e
+  fingerprint: b085d70b964f191a73e4af0d54ae7a0e07aafdaf9b71dd0862138ab7325a24a2
 - subject_name: GlobalSign
   fingerprint: cbb522d7b7f127ad6a0113865bdf1cd4102e7d0759af635a7cf4720dc963c53b
 - subject_name: GlobalSign Root CA
@@ -144,12 +140,16 @@ trusted_certificates:
   fingerprint: bc104f15a48be709dca542a7e1d4b9df6f054527e802eaa92d595444258afe71
 - subject_name: Hellenic Academic and Research Institutions RootCA 2015
   fingerprint: a040929a02ce53b4acf4f2ffc6981ce4496f755e6d45fe0b2a692bcd52523f36
+- subject_name: HiPKI Root CA - G1
+  fingerprint: f015ce3cc239bfef064be9f1d2c417e1a0264a0a94be1f0c8d121864eb6949cc
 - subject_name: Hongkong Post Root CA 1
   fingerprint: f9e67d336c51002ac054c632022d66dda2e7e3fff10ad061ed31d8bbb410cfb2
 - subject_name: Hongkong Post Root CA 3
   fingerprint: 5a2fc03f0c83b090bbfa40604b0988446c7636183df9846e17101a447fb8efd6
 - subject_name: ISRG Root X1
   fingerprint: 96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6
+- subject_name: ISRG Root X2
+  fingerprint: 69729b8e15a86efc177a57afb7171dfc64add28c2fca8cf1507e34453ccb1470
 - subject_name: IdenTrust Commercial Root CA 1
   fingerprint: 5d56499be4d2e08bcfcad08a3e38723d50503bde706948e42f55603019e528ae
 - subject_name: IdenTrust Public Sector Root CA 1
@@ -266,6 +266,10 @@ trusted_certificates:
   fingerprint: 125609aa301da0a249b97a8239cb6a34216f44dcac9f3954b14292f2e8c8608f
 - subject_name: emSign Root CA - G1
   fingerprint: 40f6af0346a99aa1cd1d555a4e9cce62c7f9634603ee406615833dc8c8d00367
+- subject_name: vTrus ECC Root CA
+  fingerprint: 30fbba2c32238e2a98547af97931e550428b9b3f1c8eeb6633dcfa86c5b27dd3
+- subject_name: vTrus Root CA
+  fingerprint: 8a71de6559336f426c26e53880d00d88a18da4c6a91f0dcb6194e206c5c96387
 blocked_certificates_count: 4
 blocked_certificates:
 - subject_name: '*.EGO.GOV.TR'

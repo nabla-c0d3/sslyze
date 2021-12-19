@@ -1,4 +1,4 @@
-mypy
+mypy==0.910
 flake8
 invoke
 pytest<6.0.0

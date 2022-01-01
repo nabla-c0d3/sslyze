@@ -62,7 +62,7 @@ class TestClientAuthenticationWithLocalServer:
         # SSLyze correctly detects that client auth is required
         assert tls_probing_result.client_auth_requirement == ClientAuthRequirementEnum.REQUIRED
 
-    @pytest.mark.skip(msg="Client auth config detection with TLS 1.3 is broken; fix me")
+    @pytest.mark.skip(reason="Client auth config detection with TLS 1.3 is broken; fix me")
     def test_required_client_auth_tls_1_3(self):
         # Given a TLS 1.3 server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:

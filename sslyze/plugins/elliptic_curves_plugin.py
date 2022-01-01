@@ -237,7 +237,7 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
     finally:
         ssl_connection.close()
 
-    # If no error occurred check if the curve was really used
+        # If no error occurred check if the curve was really used
         try:
             curve_name = _OPENSSL_NID_TO_SECG_ANSI_X9_62[curve_nid]  # TODO(AD): Make this public in nassl
         except KeyError:

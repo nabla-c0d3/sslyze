@@ -149,7 +149,6 @@ class TestCertificateInfoPlugin:
         # And the anchor certificate was detected
         assert plugin_result.certificate_deployments[0].received_chain_contains_anchor_certificate
 
-    @pytest.mark.skip("Server is currently offline; check https://github.com/chromium/badssl.com/issues/481")
     def test_certificate_with_no_cn(self):
         # Given a server to scan that has a certificate with no CN
         server_location = ServerNetworkLocation("no-common-name.badssl.com", 443)

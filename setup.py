@@ -76,6 +76,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: System :: Networking",
         "Topic :: System :: Monitoring",
         "Topic :: System :: Networking :: Monitoring",
@@ -99,7 +100,7 @@ setup(
     install_requires=[
         "nassl>=4.0.1,<5.0.0",
         "cryptography>=2.6,<37.0.0",
-        "tls-parser>=1.2.2,<1.3.0",
+        "tls-parser>=2.0.0,<3.0.0",
         "pydantic>=1.7,<1.9",
     ],
     # cx_freeze info for Windows builds with Python embedded

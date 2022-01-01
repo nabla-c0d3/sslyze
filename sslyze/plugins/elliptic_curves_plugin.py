@@ -238,7 +238,11 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
         ssl_connection.close()
 
     # If no error occurred check if the curve was really used
-    curve_name = _OPENSSL_NID_TO_SECG_ANSI_X9_62[curve_nid]  # TODO(AD): Make this public in nassl
+        try:
+            curve_name = _OPENSSL_NID_TO_SECG_ANSI_X9_62[curve_nid]  # TODO(AD): Make this public in nassl
+        except KeyError:
+            curve_name = f"unknown-curve-with-openssl-id-{curve_nid.value}"
+
     if negotiated_ephemeral_key:
         if isinstance(negotiated_ephemeral_key, EcDhEphemeralKeyInfo):
             if negotiated_ephemeral_key.curve != curve_nid:

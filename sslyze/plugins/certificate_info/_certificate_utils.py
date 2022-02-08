@@ -3,18 +3,24 @@ from typing import List, cast
 
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
-from cryptography.x509 import ExtensionOID, DNSName, ExtensionNotFound, NameOID
+from cryptography.x509 import DNSName, ExtensionNotFound, IPAddress, NameOID
 from cryptography.x509.extensions import DuplicateExtension  # type: ignore
-
+from cryptography.x509.oid import ExtensionOID
 
 def extract_dns_subject_alternative_names(certificate: x509.Certificate) -> List[str]:
-    """Retrieve all the DNS entries of the Subject Alternative Name extension.
+    """Retrieve all the DNS entries and IP Addresses of the Subject Alternative Name extension.
     """
     subj_alt_names: List[str] = []
     try:
         san_ext = certificate.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
         san_ext_value = cast(x509.SubjectAlternativeName, san_ext.value)
-        subj_alt_names = san_ext_value.get_values_for_type(DNSName)
+        for san_value in san_ext_value:
+            if isinstance(san_value, IPAddress):
+                subj_alt_names.append(str(san_value.value))
+            elif isinstance(san_value, DNSName):
+                subj_alt_names.append(san_value.value)
+            else:
+                pass
     except ExtensionNotFound:
         pass
     except DuplicateExtension:

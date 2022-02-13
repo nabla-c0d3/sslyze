@@ -101,7 +101,7 @@ setup(
         "nassl>=4.0.1,<5.0.0",
         "cryptography>=2.6,<37.0.0",
         "tls-parser>=2.0.0,<3.0.0",
-        "pydantic>=1.7,<1.9",
+        "pydantic>=1.7,<1.10",
     ],
     # cx_freeze info for Windows builds with Python embedded
     options={"build_exe": {"packages": ["cffi", "cryptography"], "include_files": get_include_files()}},

@@ -56,7 +56,11 @@ def main() -> None:
             scan_commands_extra_arguments=parsed_command_line.scan_commands_extra_arguments,
         )
         all_server_scan_requests.append(scan_request)
-    assert all_server_scan_requests
+    try:
+        assert all_server_scan_requests, "No hosts to scan!"
+    except AssertionError as e:
+        print(e)
+        return
 
     sslyze_scanner.queue_scans(all_server_scan_requests)
     all_server_scan_results = []

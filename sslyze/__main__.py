@@ -59,14 +59,16 @@ def main() -> None:
     try:
         assert all_server_scan_requests, "No hosts to scan!"
     except AssertionError as e:
-        print(e)
-        return
+        pass
 
-    sslyze_scanner.queue_scans(all_server_scan_requests)
     all_server_scan_results = []
-    for result in sslyze_scanner.get_results():
-        # Results are actually displayed by the observer; here we just store them
-        all_server_scan_results.append(result)
+    try:
+      sslyze_scanner.queue_scans(all_server_scan_requests)
+      for result in sslyze_scanner.get_results():
+          # Results are actually displayed by the observer; here we just store them
+          all_server_scan_results.append(result)
+    except ValueError as e:
+      pass
 
     # Write results to a JSON file if needed
     json_file_out: Optional[TextIO] = None
@@ -86,6 +88,10 @@ def main() -> None:
 
     # If we printed the JSON results to the console, don't run the Mozilla compliance check so we return valid JSON
     if parsed_command_line.should_print_json_to_console:
+        sys.exit(0)
+
+    # If the results are empty, don't run the Mozilla compliance check either
+    if len(all_server_scan_results) == 0:
         sys.exit(0)
 
     # Check the results against the Mozilla config if needed

@@ -123,7 +123,7 @@ class HttpHeadersScanResultAsJson(pydantic.BaseModel):
             sts_header_json = _StrictTransportSecurityHeaderAsJson(**asdict(result.strict_transport_security_header))
 
         ct_header_json = None
-        if result.strict_transport_security_header:
+        if result.expect_ct_header:
             ct_header_json = _ExpectCtHeaderAsJson(**asdict(result.expect_ct_header))
 
         return cls(

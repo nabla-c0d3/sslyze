@@ -106,7 +106,7 @@ class CommandLineParser:
             choices=[config.value for config in MozillaTlsConfigurationEnum] + ["disable"],
             help="Shortcut to queue various scan commands needed to check the server's TLS configurations against one"
             ' of Mozilla\'s recommended TLS configuration. Set to "intermediate" by default. Use "disable" to disable'
-            ' this check.',
+            " this check.",
         )
 
         self.aparser.add_argument(dest="target", default=[], nargs="*", help="The list of servers to scan.")

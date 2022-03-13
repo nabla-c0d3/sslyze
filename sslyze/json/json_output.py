@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from uuid import UUID
 
 import pydantic
@@ -40,6 +40,9 @@ from sslyze import (
 )
 from sslyze.scanner.models import AllScanCommandsAttempts
 from sslyze.server_setting import ConnectionTypeEnum, ServerNetworkLocation
+
+if TYPE_CHECKING:
+    from sslyze.cli.server_string_parser import InvalidServerStringError
 
 
 class _BaseModelWithOrmModeAndForbid(pydantic.BaseModel):
@@ -211,12 +214,30 @@ class ServerScanResultAsJson(_BaseModelWithOrmModeAndForbid):
 ServerScanResultAsJson.__doc__ = ServerScanResult.__doc__  # type: ignore
 
 
+class InvalidServerStringAsJson(_BaseModelWithOrmModeAndForbid):
+    """A hostname:port string supplied via the command line that SSLyze was unable to parse or resolve.
+    """
+
+    server_string: str
+    error_message: str
+
+    @classmethod
+    def from_orm(cls, invalid_server_string_error: "InvalidServerStringError") -> "InvalidServerStringAsJson":
+        return cls(
+            server_string=invalid_server_string_error.server_string,
+            error_message=invalid_server_string_error.error_message,
+        )
+
+
 class SslyzeOutputAsJson(pydantic.BaseModel):
     """The "root" dictionary of the JSON output when using the --json command line option.
     """
 
+    invalid_server_strings: List[InvalidServerStringAsJson] = []  # TODO(AD): Remove default value starting with v6.x.x
     server_scan_results: List[ServerScanResultAsJson]
+
     date_scans_started: datetime
     date_scans_completed: datetime
+
     sslyze_version: str = __version__
     sslyze_url: str = __url__

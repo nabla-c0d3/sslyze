@@ -3,6 +3,14 @@
   "description": "The \"root\" dictionary of the JSON output when using the --json command line option.\n    ",
   "type": "object",
   "properties": {
+    "invalid_server_strings": {
+      "title": "Invalid Server Strings",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/InvalidServerStringAsJson"
+      }
+    },
     "server_scan_results": {
       "title": "Server Scan Results",
       "type": "array",
@@ -22,7 +30,7 @@
     },
     "sslyze_version": {
       "title": "Sslyze Version",
-      "default": "5.0.1",
+      "default": "5.0.3",
       "type": "string"
     },
     "sslyze_url": {
@@ -37,6 +45,26 @@
     "date_scans_completed"
   ],
   "definitions": {
+    "InvalidServerStringAsJson": {
+      "title": "InvalidServerStringAsJson",
+      "description": "A hostname:port string supplied via the command line that SSLyze was unable to parse or resolve.\n    ",
+      "type": "object",
+      "properties": {
+        "server_string": {
+          "title": "Server String",
+          "type": "string"
+        },
+        "error_message": {
+          "title": "Error Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "server_string",
+        "error_message"
+      ],
+      "additionalProperties": false
+    },
     "ConnectionTypeEnum": {
       "title": "ConnectionTypeEnum",
       "description": "An enumeration.",

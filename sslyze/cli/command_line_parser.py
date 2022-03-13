@@ -103,9 +103,10 @@ class CommandLineParser:
             "--mozilla_config",
             action="store",
             dest="mozilla_config",
-            choices=[config.value for config in MozillaTlsConfigurationEnum],
+            choices=[config.value for config in MozillaTlsConfigurationEnum] + ["disable"],
             help="Shortcut to queue various scan commands needed to check the server's TLS configurations against one"
-            ' of Mozilla\'s recommended TLS configuration. Set to "intermediate" by default.',
+            ' of Mozilla\'s recommended TLS configuration. Set to "intermediate" by default. Use "disable" to disable'
+            " this check.",
         )
 
         self.aparser.add_argument(dest="target", default=[], nargs="*", help="The list of servers to scan.")
@@ -151,7 +152,11 @@ class CommandLineParser:
         # Enable the commands needed by --mozilla-config
         check_against_mozilla_config: Optional[MozillaTlsConfigurationEnum] = None
         if args_command_list.mozilla_config:
-            check_against_mozilla_config = MozillaTlsConfigurationEnum(args_command_list.mozilla_config)
+            if args_command_list.mozilla_config == "disable":
+                check_against_mozilla_config = None
+            else:
+                check_against_mozilla_config = MozillaTlsConfigurationEnum(args_command_list.mozilla_config)
+
             for scan_cmd in SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER:
                 cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_cmd).cli_connector_cls
                 setattr(args_command_list, cli_connector_cls._cli_option, True)

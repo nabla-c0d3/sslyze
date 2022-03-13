@@ -46,7 +46,7 @@ class TestCertificateInfoPlugin:
 
     def test_valid_chain_with_ocsp_stapling(self):
         # Given a server to scan that supports OCSP stapling
-        server_location = ServerNetworkLocation("www.apple.com", 443)
+        server_location = ServerNetworkLocation("www.microsoft.com", 443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When running the scan

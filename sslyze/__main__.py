@@ -12,6 +12,7 @@ from sslyze import (
     SslyzeOutputAsJson,
     ServerScanResultAsJson,
 )
+from sslyze.json.json_output import InvalidServerStringAsJson
 from sslyze.mozilla_tls_profile.mozilla_config_checker import (
     MozillaTlsConfigurationChecker,
     ServerNotCompliantWithMozillaTlsConfiguration,
@@ -56,13 +57,14 @@ def main() -> None:
             scan_commands_extra_arguments=parsed_command_line.scan_commands_extra_arguments,
         )
         all_server_scan_requests.append(scan_request)
-    assert all_server_scan_requests
 
-    sslyze_scanner.queue_scans(all_server_scan_requests)
+    # If there are servers that we were able to resolve, scan them
     all_server_scan_results = []
-    for result in sslyze_scanner.get_results():
-        # Results are actually displayed by the observer; here we just store them
-        all_server_scan_results.append(result)
+    if all_server_scan_requests:
+        sslyze_scanner.queue_scans(all_server_scan_requests)
+        for result in sslyze_scanner.get_results():
+            # Results are actually displayed by the observer; here we just store them
+            all_server_scan_results.append(result)
 
     # Write results to a JSON file if needed
     json_file_out: Optional[TextIO] = None
@@ -74,6 +76,9 @@ def main() -> None:
     if json_file_out:
         json_output = SslyzeOutputAsJson(
             server_scan_results=[ServerScanResultAsJson.from_orm(result) for result in all_server_scan_results],
+            invalid_server_strings=[
+                InvalidServerStringAsJson.from_orm(bad_server) for bad_server in parsed_command_line.invalid_servers
+            ],
             date_scans_started=date_scans_started,
             date_scans_completed=datetime.utcnow(),
         )
@@ -84,6 +89,10 @@ def main() -> None:
     if parsed_command_line.should_print_json_to_console:
         sys.exit(0)
 
+    if not all_server_scan_results:
+        # There are no results to present: all supplied server strings were invalid?
+        sys.exit(0)
+
     # Check the results against the Mozilla config if needed
     are_all_servers_compliant = True
     # TODO(AD): Expose format_title method
@@ -91,7 +100,7 @@ def main() -> None:
     print()
     print(title)
     if not parsed_command_line.check_against_mozilla_config:
-        print("    Disabled; use --mozilla-config={old, intermediate, modern}.\n")
+        print("    Disabled; use --mozilla_config={old, intermediate, modern}.\n")
     else:
 
         print(

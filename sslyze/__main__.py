@@ -100,7 +100,7 @@ def main() -> None:
     print()
     print(title)
     if not parsed_command_line.check_against_mozilla_config:
-        print("    Disabled; use --mozilla-config={old, intermediate, modern}.\n")
+        print("    Disabled; use --mozilla_config={old, intermediate, modern}.\n")
     else:
 
         print(

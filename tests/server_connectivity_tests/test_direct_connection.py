@@ -124,7 +124,7 @@ class TestServerConnectivityTester:
 
     def test_international_hostname(self):
         # Given a server with non-ascii characters in its hostname
-        server_location = ServerNetworkLocation(hostname="www.sociétégénérale.com", port=443)
+        server_location = ServerNetworkLocation(hostname="www.société.com", port=443)
 
         # When testing connectivity against it
         tls_probing_result = check_connectivity_to_server(

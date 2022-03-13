@@ -1,8 +1,8 @@
 platform: OPENJDK
-version: jdk-17.0.1
-url: https://download.java.net/java/GA/jdk17.0.1/2a2082e5a09d4267845be086888add4f/12/GPL/openjdk-17.0.1_linux-x64_bin.tar.gz
-date_fetched: 2021-10-24
-trusted_certificates_count: 90
+version: jdk-17.0.2
+url: https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz
+date_fetched: 2022-01-23
+trusted_certificates_count: 89
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -94,8 +94,6 @@ trusted_certificates:
   fingerprint: 2cabeafe37d06ca22aba7391c0033d25982952c453647349763a3ab5ad6ccf69
 - subject_name: GlobalSign
   fingerprint: bec94911c2955676db6c0a550986d76e3ba005667c442c9762b4fbb773de228c
-- subject_name: GlobalSign
-  fingerprint: ca42dd41745fd0b81eb902362cf9d8bf719da1bd1b1efc946f5b4c99f42c1b9e
 - subject_name: GlobalSign
   fingerprint: cbb522d7b7f127ad6a0113865bdf1cd4102e7d0759af635a7cf4720dc963c53b
 - subject_name: GlobalSign Root CA

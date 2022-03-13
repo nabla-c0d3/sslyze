@@ -1,13 +1,15 @@
 platform: APPLE
-version: iOS 15, iPadOS 15, macOS 12, tvOS 15, and watchOS 8
-url: https://support.apple.com/kb/HT212773
-date_fetched: 2021-10-03
-trusted_certificates_count: 166
+version: iOS 15.1, iPadOS 15.1, macOS 12.1, tvOS 15.1, and watchOS 8.1
+url: https://support.apple.com/kb/HT213080
+date_fetched: 2022-02-06
+trusted_certificates_count: 172
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
 - subject_name: AC RAIZ FNMT-RCM
   fingerprint: ebc5570c29018c4d67b1aa127baf12f703b4611ebc17b7dab5573894179b93fa
+- subject_name: ACCVRAIZ1
+  fingerprint: 9a6ec012e1a7da9dbe34194d478ad7c0db1822fb071df12981496ed104384113
 - subject_name: ANF Global Root CA
   fingerprint: e3268f6106ba8b665a1a962ddea1459d2a46972f1f2440329b390b895749ad45
 - subject_name: Actalis Authentication Root CA
@@ -124,6 +126,8 @@ trusted_certificates:
   fingerprint: 02ed0eb28c14da45165c566791700d6451d7fb56f0b2ab1d3b8eb070e56edff5
 - subject_name: Entrust Root Certification Authority - G2
   fingerprint: 43df5774b03e7fef5fe40d931a7bedf1bb2e6b42738c4e6d3841103d3aa7f339
+- subject_name: Entrust Root Certification Authority - G4
+  fingerprint: db3517d1f6732a2d5ab97c533ec70779ee3270a62fb4ac4238372460e6f01e88
 - subject_name: Entrust.net Certification Authority (2048)
   fingerprint: 6dc47172e01cbcb0bf62580d895fe2b8ac9ad4f873801e0c10b9c837d21eb177
 - subject_name: GDCA TrustAUTH R5 ROOT
@@ -198,6 +202,10 @@ trusted_certificates:
   fingerprint: 6fdb3f76c8b801a75338d8a50a7c02879f6198b57e594d318d3832900fedcd79
 - subject_name: Microsec e-Szigno Root CA 2009
   fingerprint: 3c5f81fea5fab82c64bfa2eaecafcde8e077fc8620a7cae537163df36edbf378
+- subject_name: Microsoft ECC Root Certificate Authority 2017
+  fingerprint: 358df39d764af9e1b766e9c972df352ee15cfac227af6ad1d70e8e4a6edcba02
+- subject_name: Microsoft RSA Root Certificate Authority 2017
+  fingerprint: c741f70f4b2a8d88bf2e71c14122ef53ef10eba0cfa5e64cfa20f418853073e0
 - subject_name: "NetLock Arany (Class Gold) F\u0151tan\xFAs\xEDtv\xE1ny"
   fingerprint: 6c61dac3a2def031506be036d2a6fe401994fbd13df9c8d466599274c446ec98
 - subject_name: Network Solutions Certificate Authority
@@ -332,6 +340,10 @@ trusted_certificates:
   fingerprint: eaa962c4fa4a6bafebe415196d351ccd888d4f53f3fa8ae6d7c466a94e6042bb
 - subject_name: ePKI Root Certification Authority
   fingerprint: c0a6f4dc63a24bfdcf54ef2a6a082a0a72de35803e2ff5ff527ae5d87206dfd5
+- subject_name: emSign ECC Root CA - G3
+  fingerprint: 86a1ecba089c4a8d3bbe2734c612ba341d813e043cf9e8a862cd5c57a36bbe6b
+- subject_name: emSign Root CA - G1
+  fingerprint: 40f6af0346a99aa1cd1d555a4e9cce62c7f9634603ee406615833dc8c8d00367
 - subject_name: thawte Primary Root CA
   fingerprint: 8d722f81a9c113c0791df136a2966db26c950a971db46b4199f4ea54b78bfb9f
 - subject_name: thawte Primary Root CA - G3

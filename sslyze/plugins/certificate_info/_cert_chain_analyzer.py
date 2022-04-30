@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 from ssl import CertificateError, match_hostname
-from typing import Optional, List, cast
+from typing import Optional, List, cast, Dict
 
 import cryptography
 from cryptography.hazmat.backends import default_backend
@@ -321,9 +322,37 @@ def _certificate_matches_hostname(certificate: Certificate, server_hostname: str
         return False
 
 
+# TODO(AD): There is probably a memory leak in nassl.X509 or nassl.X509_STORE_CTX
+#  https://github.com/nabla-c0d3/sslyze/issues/560
+#  It might be due to bad reference counting in nassl_X509_STORE_CTX_set0_trusted_stack()
+#  More specifically the call to X509_chain_up_ref() - is there corresponding call to decrease ref count?
+#  As a workaround, we cache the (huge) list of trusted certificates, for each trust store
+_cache_for_trusted_certificates_per_file: Dict[Path, List[X509]] = {}
+
+
+def _convert_and_cache_pem_certs_to_x509s(trusted_certificates_path: Path) -> List[X509]:
+    certs_as_509s = _cache_for_trusted_certificates_per_file.get(trusted_certificates_path)
+    if certs_as_509s:
+        return certs_as_509s
+
+    # Parse the PEM certificate in the file
+    all_certs_as_pem: List[str] = []
+    with trusted_certificates_path.open() as file_content:
+        for pem_segment in file_content.read().split("-----BEGIN CERTIFICATE-----")[1::]:
+            pem_content = pem_segment.split("-----END CERTIFICATE-----")[0]
+            pem_cert = f"-----BEGIN CERTIFICATE-----{pem_content}-----END CERTIFICATE-----"
+            all_certs_as_pem.append(pem_cert)
+
+    # Convert them to X509 objects and save that in the cache
+    all_certs_as_509s = [X509(cert_pem) for cert_pem in all_certs_as_pem]
+    _cache_for_trusted_certificates_per_file[trusted_certificates_path] = all_certs_as_509s
+    return all_certs_as_509s
+
+
 def _verify_certificate_chain(server_certificate_chain: List[str], trust_store: TrustStore) -> PathValidationResult:
     server_chain_as_x509s = [X509(pem_cert) for pem_cert in server_certificate_chain]
-    chain_verifier = CertificateChainVerifier.from_file(trust_store.path)
+    trust_store_as_x509s = _convert_and_cache_pem_certs_to_x509s(trust_store.path)
+    chain_verifier = CertificateChainVerifier(trust_store_as_x509s)
 
     verified_chain: Optional[List[Certificate]]
     try:

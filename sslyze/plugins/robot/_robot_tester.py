@@ -74,8 +74,7 @@ class _RobotTlsRecordPayloads:
         modulus: int,
         exponent: int,
     ) -> TlsRsaClientKeyExchangeRecord:
-        """A client key exchange record with a hardcoded pre_master_secret, and a valid or invalid padding.
-        """
+        """A client key exchange record with a hardcoded pre_master_secret, and a valid or invalid padding."""
         pms_padding = cls._compute_pms_padding(modulus)
         tls_version_hex = binascii.b2a_hex(TlsRecordTlsVersionBytes[tls_version.name].value).decode("ascii")
 
@@ -106,8 +105,7 @@ class _RobotTlsRecordPayloads:
 
     @classmethod
     def get_finished_record_bytes(cls, tls_version: tls_parser.tls_version.TlsVersionEnum) -> bytes:
-        """The Finished TLS record corresponding to the hardcoded PMS used in the Client Key Exchange record.
-        """
+        """The Finished TLS record corresponding to the hardcoded PMS used in the Client Key Exchange record."""
         # TODO(AD): The ROBOT poc script uses the same Finished record for all possible client hello (default, GCM,
         # etc.); as the Finished record contains a hashes of all previous records, it will be wrong and will cause
         # servers to send a TLS Alert 20
@@ -125,8 +123,7 @@ class RobotServerResponsesAnalyzer:
         self._attempts_count = attempts_count
 
     def compute_result_enum(self) -> RobotScanResultEnum:
-        """Look at the server's response to each ROBOT payload and return the conclusion of the analysis.
-        """
+        """Look at the server's response to each ROBOT payload and return the conclusion of the analysis."""
         # Ensure the results were consistent
         for payload_enum, server_responses in self._payload_responses.items():
             # We ran the check a number of times per payload and the responses should be the same
@@ -236,7 +233,8 @@ def _get_rsa_parameters(
     server_info: ServerConnectivityInfo, tls_version: TlsVersionEnum, openssl_cipher_string: str
 ) -> Optional[RSAPublicNumbers]:
     ssl_connection = server_info.get_preconfigured_tls_connection(
-        override_tls_version=tls_version, should_use_legacy_openssl=True,
+        override_tls_version=tls_version,
+        should_use_legacy_openssl=True,
     )
     ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
     parsed_cert = None
@@ -338,8 +336,7 @@ class ServerResponseToRobot(Exception):
 
 
 def do_handshake_with_robot(self):  # type: ignore
-    """Modified do_handshake() to send a ROBOT payload and return the result.
-    """
+    """Modified do_handshake() to send a ROBOT payload and return the result."""
     try:
         # Start the handshake using nassl - will throw WantReadError right away
         self._ssl.do_handshake()

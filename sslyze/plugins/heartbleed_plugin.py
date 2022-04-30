@@ -63,8 +63,7 @@ class _HeartbleedCliConnector(ScanCommandCliConnector[HeartbleedScanResult, None
 
 
 class HeartbleedImplementation(ScanCommandImplementation[HeartbleedScanResult, None]):
-    """Test a server for the OpenSSL Heartbleed vulnerability.
-    """
+    """Test a server for the OpenSSL Heartbleed vulnerability."""
 
     cli_connector_cls = _HeartbleedCliConnector
 
@@ -119,18 +118,15 @@ def _test_heartbleed(server_info: ServerConnectivityInfo) -> bool:
 
 
 class _VulnerableToHeartbleed(Exception):
-    """Exception to raise during the handshake to hijack the flow and test for Heartbleed.
-    """
+    """Exception to raise during the handshake to hijack the flow and test for Heartbleed."""
 
 
 class _NotVulnerableToHeartbleed(Exception):
-    """Exception to raise during the handshake to hijack the flow and test for Heartbleed.
-    """
+    """Exception to raise during the handshake to hijack the flow and test for Heartbleed."""
 
 
 def _do_handshake_with_heartbleed(self):  # type: ignore
-    """Modified do_handshake() to send a heartbleed payload and return the result.
-    """
+    """Modified do_handshake() to send a heartbleed payload and return the result."""
     try:
         # Start the handshake using nassl - will throw WantReadError right away
         self._ssl.do_handshake()

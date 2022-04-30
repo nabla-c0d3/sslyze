@@ -135,11 +135,11 @@ def _do_dns_lookup(hostname: str, port: int) -> str:
 class ClientAuthenticationCredentials:
     """Everything needed by a client to perform SSL/TLS client authentication with the server.
 
-       Attributes:
-           certificate_chain_path: Path to the file containing the client's certificate.
-           key_path: Path to the file containing the client's private key.
-           key_password: The password to decrypt the private key.
-           key_type: The format of the key file.
+    Attributes:
+        certificate_chain_path: Path to the file containing the client's certificate.
+        key_path: Path to the file containing the client's private key.
+        key_password: The password to decrypt the private key.
+        key_type: The format of the key file.
     """
 
     certificate_chain_path: Path

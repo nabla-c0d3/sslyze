@@ -173,7 +173,8 @@ def _queue_server_scan(
 ) -> _OngoingServerScan:
     # Queue all the underlying jobs for this server scan
     all_scan_jobs_per_scan_cmd, scan_command_errors_during_queuing = _generate_scan_jobs_for_server_scan(
-        server_scan_request=server_scan_request, server_connectivity_result=server_connectivity_result,
+        server_scan_request=server_scan_request,
+        server_connectivity_result=server_connectivity_result,
     )
     total_job_counts = 0
     for scan_cmd, all_jobs in all_scan_jobs_per_scan_cmd.items():
@@ -201,7 +202,8 @@ def _queue_server_scan(
 
 
 def _generate_scan_jobs_for_server_scan(
-    server_scan_request: ServerScanRequest, server_connectivity_result: ServerTlsProbingResult,
+    server_scan_request: ServerScanRequest,
+    server_connectivity_result: ServerTlsProbingResult,
 ) -> Tuple[Dict[ScanCommand, List[ScanJob]], Dict[ScanCommand, ScanCommandAttempt]]:
     all_scan_jobs_per_scan_cmd: Dict[ScanCommand, List[ScanJob]] = {}
     scan_command_errors_during_queuing: Dict[ScanCommand, ScanCommandAttempt] = {}
@@ -311,7 +313,10 @@ def _generate_result_for_completed_server_scan(completed_scan: _OngoingServerSca
             scan_cmd = ScanCommand(cls_field.name)
             scan_command_attempt_cls = get_scan_command_attempt_cls(scan_cmd)
             all_scan_command_attempts[scan_cmd] = scan_command_attempt_cls(
-                status=ScanCommandAttemptStatusEnum.NOT_SCHEDULED, error_reason=None, error_trace=None, result=None,
+                status=ScanCommandAttemptStatusEnum.NOT_SCHEDULED,
+                error_reason=None,
+                error_trace=None,
+                result=None,
             )
 
     # Generate the final scan_result object

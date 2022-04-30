@@ -54,8 +54,7 @@ class _FallbackScsvCliConnector(ScanCommandCliConnector[FallbackScsvScanResult, 
 
 
 class FallbackScsvImplementation(ScanCommandImplementation[FallbackScsvScanResult, None]):
-    """Test a server for the TLS_FALLBACK_SCSV mechanism to prevent downgrade attacks.
-    """
+    """Test a server for the TLS_FALLBACK_SCSV mechanism to prevent downgrade attacks."""
 
     cli_connector_cls = _FallbackScsvCliConnector
 

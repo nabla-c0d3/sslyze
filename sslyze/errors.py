@@ -7,19 +7,16 @@ if TYPE_CHECKING:
 
 
 class InvalidServerNetworkConfigurationError(Exception):
-    """Raised when trying to create a ServerNetworkConfiguration with invalid settings.
-    """
+    """Raised when trying to create a ServerNetworkConfiguration with invalid settings."""
 
 
 class ServerHostnameCouldNotBeResolved(Exception):
-    """Raised when trying to create a ServerNetworkLocationViaDirectConnection with a hostname whose DNS lookup failed.
-    """
+    """Raised when trying to create a ServerNetworkLocationViaDirectConnection but DNS lookup failed."""
 
 
 @dataclass(frozen=True)
 class ConnectionToServerFailed(Exception):
-    """Parent class for all exceptions raised when a connecting to a server failed.
-    """
+    """Parent class for all exceptions raised when a connecting to a server failed."""
 
     server_location: "ServerNetworkLocation"
     network_configuration: "ServerNetworkConfiguration"

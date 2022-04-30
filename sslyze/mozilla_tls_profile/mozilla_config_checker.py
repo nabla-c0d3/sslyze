@@ -66,15 +66,16 @@ class MozillaTlsConfigurationEnum(str, Enum):
 
 class ServerNotCompliantWithMozillaTlsConfiguration(Exception):
     def __init__(
-        self, mozilla_config: MozillaTlsConfigurationEnum, issues: Dict[str, str],
+        self,
+        mozilla_config: MozillaTlsConfigurationEnum,
+        issues: Dict[str, str],
     ):
         self.mozilla_config = mozilla_config
         self.issues = issues
 
 
 class ServerScanResultIncomplete(Exception):
-    """The server scan result does not have enough information to check it against Mozilla's configuration.
-    """
+    """The server scan result does not have enough information to check it against Mozilla's configuration."""
 
 
 SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: Set[ScanCommand] = {
@@ -105,7 +106,11 @@ class MozillaTlsConfigurationChecker:
         parsed_profile = _MozillaTlsProfileAsJson(**json.loads(json_profile_as_str))
         return cls(parsed_profile)
 
-    def check_server(self, against_config: MozillaTlsConfigurationEnum, server_scan_result: ServerScanResult,) -> None:
+    def check_server(
+        self,
+        against_config: MozillaTlsConfigurationEnum,
+        server_scan_result: ServerScanResult,
+    ) -> None:
         # Ensure the scan was successful
         if server_scan_result.scan_status != ServerScanStatusEnum.COMPLETED:
             raise ServerScanResultIncomplete("The server scan was not completed.")
@@ -127,7 +132,8 @@ class MozillaTlsConfigurationChecker:
         assert server_scan_result.scan_result.certificate_info
         assert server_scan_result.scan_result.certificate_info.result
         issues_with_certificates = _check_certificates(
-            cert_info_result=server_scan_result.scan_result.certificate_info.result, mozilla_config=mozilla_config,
+            cert_info_result=server_scan_result.scan_result.certificate_info.result,
+            mozilla_config=mozilla_config,
         )
         all_issues.update(issues_with_certificates)
 
@@ -139,7 +145,8 @@ class MozillaTlsConfigurationChecker:
         # Checks on the TLS curves
         assert server_scan_result.scan_result.elliptic_curves.result
         issues_with_tls_curves = _check_tls_curves(
-            server_scan_result.scan_result.elliptic_curves.result, mozilla_config,
+            server_scan_result.scan_result.elliptic_curves.result,
+            mozilla_config,
         )
         all_issues.update(issues_with_tls_curves)
 
@@ -149,12 +156,14 @@ class MozillaTlsConfigurationChecker:
 
         if all_issues:
             raise ServerNotCompliantWithMozillaTlsConfiguration(
-                mozilla_config=against_config, issues=all_issues,
+                mozilla_config=against_config,
+                issues=all_issues,
             )
 
 
 def _check_tls_curves(
-    tls_curves_result: SupportedEllipticCurvesScanResult, mozilla_config: _MozillaTlsConfigurationAsJson,
+    tls_curves_result: SupportedEllipticCurvesScanResult,
+    mozilla_config: _MozillaTlsConfigurationAsJson,
 ) -> Dict[str, str]:
     issues_with_tls_curves = {}
     if tls_curves_result.supported_curves:
@@ -203,7 +212,8 @@ def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str
 
 
 def _check_tls_versions_and_ciphers(
-    scan_result: AllScanCommandsAttempts, mozilla_config: _MozillaTlsConfigurationAsJson,
+    scan_result: AllScanCommandsAttempts,
+    mozilla_config: _MozillaTlsConfigurationAsJson,
 ) -> Dict[str, str]:
     # First parse the results related to TLS versions and ciphers
     tls_versions_supported = set()
@@ -274,7 +284,8 @@ def _check_tls_versions_and_ciphers(
 
 
 def _check_certificates(
-    cert_info_result: CertificateInfoScanResult, mozilla_config: _MozillaTlsConfigurationAsJson,
+    cert_info_result: CertificateInfoScanResult,
+    mozilla_config: _MozillaTlsConfigurationAsJson,
 ) -> Dict[str, str]:
     issues_with_certificates = {}
     deployed_key_algorithms = set()

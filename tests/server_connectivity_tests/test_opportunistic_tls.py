@@ -29,7 +29,8 @@ class TestOpportunisticTls:
 
         # When testing connectivity against it
         tls_probing_result = check_connectivity_to_server(
-            server_location=server_location, network_configuration=network_configuration,
+            server_location=server_location,
+            network_configuration=network_configuration,
         )
 
         # It succeeds
@@ -56,5 +57,6 @@ class TestOpportunisticTls:
         # When testing connectivity, it fails with the right error
         with pytest.raises(ServerRejectedOpportunisticTlsNegotiation):
             check_connectivity_to_server(
-                server_location=server_location, network_configuration=network_configuration,
+                server_location=server_location,
+                network_configuration=network_configuration,
             )

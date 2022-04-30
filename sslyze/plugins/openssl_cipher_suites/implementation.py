@@ -40,8 +40,7 @@ class CipherSuitesScanResult(ScanCommandResult):
 
     @property
     def is_tls_version_supported(self) -> bool:
-        """Is the SSL/TLS version used to connect the server supported by it?
-        """
+        """Is the SSL/TLS version used to connect the server supported by it?"""
         return True if self.accepted_cipher_suites else False
 
 
@@ -149,48 +148,42 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
 
 
 class Sslv20ScanImplementation(_CipherSuitesScanImplementation):
-    """Test a server for SSL 2.0 support.
-    """
+    """Test a server for SSL 2.0 support."""
 
     cli_connector_cls = _Sslv20CliConnector
     _tls_version = TlsVersionEnum.SSL_2_0
 
 
 class Sslv30ScanImplementation(_CipherSuitesScanImplementation):
-    """Test a server for SSL 3.0 support.
-    """
+    """Test a server for SSL 3.0 support."""
 
     cli_connector_cls = _Sslv30CliConnector
     _tls_version = TlsVersionEnum.SSL_3_0
 
 
 class Tlsv10ScanImplementation(_CipherSuitesScanImplementation):
-    """Test a server for TLS 1.0 support.
-    """
+    """Test a server for TLS 1.0 support."""
 
     cli_connector_cls = _Tlsv10CliConnector
     _tls_version = TlsVersionEnum.TLS_1_0
 
 
 class Tlsv11ScanImplementation(_CipherSuitesScanImplementation):
-    """Test a server for TLS 1.1 support.
-    """
+    """Test a server for TLS 1.1 support."""
 
     cli_connector_cls = _Tlsv11CliConnector
     _tls_version = TlsVersionEnum.TLS_1_1
 
 
 class Tlsv12ScanImplementation(_CipherSuitesScanImplementation):
-    """Test a server for TLS 1.2 support.
-    """
+    """Test a server for TLS 1.2 support."""
 
     cli_connector_cls = _Tlsv12CliConnector
     _tls_version = TlsVersionEnum.TLS_1_2
 
 
 class Tlsv13ScanImplementation(_CipherSuitesScanImplementation):
-    """Test a server for TLS 1.3 support.
-    """
+    """Test a server for TLS 1.3 support."""
 
     cli_connector_cls = _Tlsv13CliConnector
     _tls_version = TlsVersionEnum.TLS_1_3

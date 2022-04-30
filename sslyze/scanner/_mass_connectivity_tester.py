@@ -14,8 +14,7 @@ ServerConnectivityTestErrorCallback = Callable[[ServerScanRequest, ConnectionToS
 
 
 class MassConnectivityTester:
-    """Wrapper around check_connectivity_to_server() for concurrent/mass testing.
-    """
+    """Wrapper around check_connectivity_to_server() for concurrent/mass testing."""
 
     def __init__(self, concurrent_server_scans_count: int) -> None:
         if concurrent_server_scans_count < 1:
@@ -25,7 +24,8 @@ class MassConnectivityTester:
         self._results_queue: "queue.Queue[Tuple[ServerScanRequest, _ServerConnectivityTestingResult]]" = queue.Queue()
         self._all_worker_threads = [
             _ConnectivityTesterThread(
-                scan_requests_queue_in=self._scan_requests_queue, results_queue_out=self._results_queue,
+                scan_requests_queue_in=self._scan_requests_queue,
+                results_queue_out=self._results_queue,
             )
             for _ in range(concurrent_server_scans_count)
         ]

@@ -15,8 +15,7 @@ class NotAValidHttpResponseError(Exception):
 
 
 class HttpResponseParser:
-    """Utility to parse HTTP responses - http://pythonwise.blogspot.com/2010/02/parse-http-response.html.
-    """
+    """Utility to parse HTTP responses - http://pythonwise.blogspot.com/2010/02/parse-http-response.html."""
 
     @classmethod
     def parse_from_socket(cls, sock: socket) -> HTTPResponse:
@@ -28,8 +27,7 @@ class HttpResponseParser:
 
     @staticmethod
     def _parse(read_method: Callable) -> HTTPResponse:
-        """Trick to standardize the API between sockets and SSLConnection objects.
-        """
+        """Trick to standardize the API between sockets and SSLConnection objects."""
         response = read_method(4096)
         while b"HTTP/" not in response or b"\r\n\r\n" not in response:
             # Parse until the end of the headers

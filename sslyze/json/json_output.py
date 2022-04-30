@@ -215,8 +215,7 @@ ServerScanResultAsJson.__doc__ = ServerScanResult.__doc__  # type: ignore
 
 
 class InvalidServerStringAsJson(_BaseModelWithOrmModeAndForbid):
-    """A hostname:port string supplied via the command line that SSLyze was unable to parse or resolve.
-    """
+    """A hostname:port string supplied via the command line that SSLyze was unable to parse or resolve."""
 
     server_string: str
     error_message: str
@@ -230,8 +229,7 @@ class InvalidServerStringAsJson(_BaseModelWithOrmModeAndForbid):
 
 
 class SslyzeOutputAsJson(pydantic.BaseModel):
-    """The "root" dictionary of the JSON output when using the --json command line option.
-    """
+    """The "root" dictionary of the JSON output when using the --json command line option."""
 
     invalid_server_strings: List[InvalidServerStringAsJson] = []  # TODO(AD): Remove default value starting with v6.x.x
     server_scan_results: List[ServerScanResultAsJson]

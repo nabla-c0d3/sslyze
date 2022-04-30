@@ -55,8 +55,7 @@ class _CompressionCliConnector(ScanCommandCliConnector[CompressionScanResult, No
 
 
 class CompressionImplementation(ScanCommandImplementation[CompressionScanResult, None]):
-    """Test a server for TLS compression support, which can be leveraged to perform a CRIME attack.
-    """
+    """Test a server for TLS compression support, which can be leveraged to perform a CRIME attack."""
 
     cli_connector_cls = _CompressionCliConnector
 

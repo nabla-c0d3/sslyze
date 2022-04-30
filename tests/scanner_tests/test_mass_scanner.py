@@ -112,7 +112,8 @@ class TestMassScannerProducerThread:
             certificate_info=CertificateInfoExtraArgument(custom_ca_file=Path(__file__))
         )
         server_scan_request = ServerScanRequestFactory.create(
-            scan_commands={ScanCommand.CERTIFICATE_INFO}, scan_commands_extra_arguments=scan_commands_extra_arguments,
+            scan_commands={ScanCommand.CERTIFICATE_INFO},
+            scan_commands_extra_arguments=scan_commands_extra_arguments,
         )
         server_connectivity_result = ServerTlsProbingResultFactory.create()
 

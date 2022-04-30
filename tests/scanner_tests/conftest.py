@@ -62,7 +62,6 @@ class _MockPluginImplementation(ScanCommandImplementation):
 
 @pytest.fixture
 def mock_scan_commands():
-    """Make all scan commands point to a mock implementation so that no actual scans are performed.
-    """
+    """Make all scan commands point to a mock implementation so that no actual scans are performed."""
     with mock.patch.object(ScanCommandsRepository, "get_implementation_cls", return_value=_MockPluginImplementation):
         yield

@@ -5,7 +5,8 @@ from sslyze.server_connectivity import ServerConnectivityInfo, check_connectivit
 
 
 def check_connectivity_to_server_and_return_info(
-    server_location: ServerNetworkLocation, network_configuration: Optional[ServerNetworkConfiguration] = None,
+    server_location: ServerNetworkLocation,
+    network_configuration: Optional[ServerNetworkConfiguration] = None,
 ) -> ServerConnectivityInfo:
     if network_configuration is None:
         final_network_config = ServerNetworkConfiguration.default_for_server_location(server_location)

@@ -30,8 +30,7 @@ class _ScanJobResultEnum(Enum):
 
 
 class ServerOnlySupportsTls13(Exception):
-    """If the server only supports TLS 1.3 or higher, it does not support session resumption with IDs or tickets.
-    """
+    """If the server only supports TLS 1.3 or higher, it does not support session resumption with IDs or tickets."""
 
     pass
 
@@ -82,16 +81,14 @@ def retrieve_tls_session(
 
 
 def _extract_session_id(ssl_session: nassl._nassl.SSL_SESSION) -> str:
-    """Extract the SSL session ID from a SSL session object or raises IndexError if the session ID was not set.
-    """
+    """Extract the SSL session ID from a SSL session object or raises IndexError if the session ID was not set."""
     session_string = ((ssl_session.as_text()).split("Session-ID:"))[1]
     session_id = (session_string.split("Session-ID-ctx:"))[0].strip()
     return session_id
 
 
 def resume_with_session_id(server_info: ServerConnectivityInfo) -> Tuple[_ScanJobResultEnum, bool]:
-    """Perform one session resumption using Session IDs.
-    """
+    """Perform one session resumption using Session IDs."""
     # Create a new TLS session with the server
     session1 = retrieve_tls_session(server_info)
     try:

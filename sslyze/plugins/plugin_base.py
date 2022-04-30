@@ -35,8 +35,7 @@ class ScanCommandExtraArgument(ABC):
 
 
 class ScanCommandWrongUsageError(Exception):
-    """Raised when the configuration or arguments passed to complete a scan command are wrong.
-    """
+    """Raised when the configuration or arguments passed to complete a scan command are wrong."""
 
     pass
 
@@ -69,8 +68,7 @@ _ScanCommandExtraArgumentTypeVar = TypeVar("_ScanCommandExtraArgumentTypeVar", b
 
 
 class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentTypeVar]):
-    """Describes everything needed to run a specific scan command.
-    """
+    """Describes everything needed to run a specific scan command."""
 
     # Contains all the logic for making the scan command available via the CLI
     cli_connector_cls: ClassVar[Type["ScanCommandCliConnector"]]
@@ -92,8 +90,7 @@ class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandE
     def result_for_completed_scan_jobs(
         cls, server_info: "ServerConnectivityInfo", scan_job_results: List[ScanJobResult]
     ) -> _ScanCommandResultTypeVar:
-        """Transform the individual scan job results for a given scan command into a scan command result.
-        """
+        """Transform the individual scan job results for a given scan command into a scan command result."""
         pass
 
     @classmethod
@@ -129,16 +126,14 @@ class OptParseCliOption:
 
 
 class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentTypeVar]):
-    """Contains all the logic for making a scan command available via the CLI.
-    """
+    """Contains all the logic for making a scan command available via the CLI."""
 
     _cli_option: ClassVar[str]
     _cli_description: ClassVar[str]
 
     @classmethod
     def get_cli_options(cls) -> List[OptParseCliOption]:
-        """Return the CLI option(s) relevant to the scan command.
-        """
+        """Return the CLI option(s) relevant to the scan command."""
         # Subclasses can add command line options for extra arguments here; by default scan commands don't have
         # extra arguments
         return [OptParseCliOption(option=cls._cli_option, help=cls._cli_description)]
@@ -147,8 +142,7 @@ class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExt
     def find_cli_options_in_command_line(
         cls, parsed_command_line: Dict[str, Union[None, bool, str]]
     ) -> Tuple[bool, Optional[_ScanCommandExtraArgumentTypeVar]]:
-        """Check a parsed command line to see if the CLI option for the scan command was enabled.
-        """
+        """Check a parsed command line to see if the CLI option for the scan command was enabled."""
         try:
             option = parsed_command_line[cls._cli_option]
             is_scan_cmd_enabled = True if option else False
@@ -161,8 +155,7 @@ class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExt
     @classmethod
     @abstractmethod
     def result_to_console_output(cls, result: _ScanCommandResultTypeVar) -> List[str]:
-        """Transform the result of the scan command into lines of text to be printed by the CLI.
-        """
+        """Transform the result of the scan command into lines of text to be printed by the CLI."""
         pass
 
     # Common formatting methods to have a consistent console output

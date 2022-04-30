@@ -8,8 +8,7 @@ from cryptography.x509.extensions import DuplicateExtension  # type: ignore
 
 
 def extract_dns_subject_alternative_names(certificate: x509.Certificate) -> List[str]:
-    """Retrieve all the DNS entries of the Subject Alternative Name extension.
-    """
+    """Retrieve all the DNS entries of the Subject Alternative Name extension."""
     subj_alt_names: List[str] = []
     try:
         san_ext = certificate.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME)

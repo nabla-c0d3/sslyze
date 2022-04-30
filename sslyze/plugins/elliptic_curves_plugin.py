@@ -126,8 +126,7 @@ class _SupportedEllipticCurvesCliConnector(ScanCommandCliConnector[SupportedElli
 
 
 class SupportedEllipticCurvesImplementation(ScanCommandImplementation[SupportedEllipticCurvesScanResult, None]):
-    """Test a server for supported elliptic curves.
-    """
+    """Test a server for supported elliptic curves."""
 
     cli_connector_cls = _SupportedEllipticCurvesCliConnector
 
@@ -162,7 +161,9 @@ class SupportedEllipticCurvesImplementation(ScanCommandImplementation[SupportedE
                 raise RuntimeError("Should never happen")
             except _EllipticCurveNotSupported:
                 return SupportedEllipticCurvesScanResult(
-                    supports_ecdh_key_exchange=False, supported_curves=None, rejected_curves=None,
+                    supports_ecdh_key_exchange=False,
+                    supported_curves=None,
+                    rejected_curves=None,
                 )
         else:
             all_ecdh_results = [scan_job.get_result() for scan_job in scan_job_results]
@@ -249,9 +250,11 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
                 raise RuntimeError("Should never happen")
 
             return _EllipticCurveResult(
-                curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value), was_accepted_by_server=True,
+                curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value),
+                was_accepted_by_server=True,
             )
 
     return _EllipticCurveResult(
-        curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value), was_accepted_by_server=False,
+        curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value),
+        was_accepted_by_server=False,
     )

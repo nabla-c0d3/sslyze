@@ -5,8 +5,7 @@ from typing import Tuple, Optional
 
 @dataclass(frozen=True)
 class InvalidServerStringError(Exception):
-    """Exception raised when SSLyze was unable to parse a hostname:port string supplied via the command line.
-    """
+    """Exception raised when SSLyze was unable to parse a hostname:port string supplied via the command line."""
 
     server_string: str
     error_message: str

@@ -23,8 +23,7 @@ class ProtocolWithOpportunisticTlsEnum(str, Enum):
 
     @classmethod
     def from_default_port(cls, port: int) -> Optional["ProtocolWithOpportunisticTlsEnum"]:
-        """Given a port number, return the protocol that uses this port number by default.
-        """
+        """Given a port number, return the protocol that uses this port number by default."""
         try:
             return _DEFAULT_PORTS[port]
         except KeyError:
@@ -55,14 +54,12 @@ class OpportunisticTlsError(Exception):
 class _OpportunisticTlsHelper(ABC):
     @abstractmethod
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
-        """Send the right protocol-specific requests to prepare the server for the TLS handshake.
-        """
+        """Send the right protocol-specific requests to prepare the server for the TLS handshake."""
         pass
 
 
 class _SmtpHelper(_OpportunisticTlsHelper):
-    """Perform an SMTP StartTLS negotiation.
-    """
+    """Perform an SMTP StartTLS negotiation."""
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         # Get the SMTP banner
@@ -80,8 +77,7 @@ class _SmtpHelper(_OpportunisticTlsHelper):
 
 
 class _XmppHelper(_OpportunisticTlsHelper):
-    """Perform an XMPP StartTLS negotiation.
-    """
+    """Perform an XMPP StartTLS negotiation."""
 
     XMPP_OPEN_STREAM = (
         "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' "
@@ -123,8 +119,7 @@ class _XmppServerHelper(_XmppHelper):
 
 
 class _LdapHelper(_OpportunisticTlsHelper):
-    """Performs an LDAP StartTLS negotiation.
-    """
+    """Performs an LDAP StartTLS negotiation."""
 
     START_TLS_CMD = b"0\x1d\x02\x01\x01w\x18\x80\x161.3.6.1.4.1.1466.20037"
     START_TLS_OK = b"\x30\x0c\x02\x01\x01\x78\x07\x0a\x01\x00\x04\x00\x04"
@@ -142,8 +137,7 @@ class _LdapHelper(_OpportunisticTlsHelper):
 
 
 class _RdpHelper(_OpportunisticTlsHelper):
-    """Perform an RDP StartTLS negotiation.
-    """
+    """Perform an RDP StartTLS negotiation."""
 
     ERR_NO_STARTTLS = "RDP AUTH TLS was rejected"
 

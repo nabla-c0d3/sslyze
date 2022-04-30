@@ -126,7 +126,10 @@ class AllScanCommandsAttemptsFactory:
             if scan_cmd.value not in final_all_scan_command_attempts:
                 scan_command_attempt_cls = get_scan_command_attempt_cls(scan_cmd)
                 final_all_scan_command_attempts[scan_cmd.value] = scan_command_attempt_cls(
-                    status=ScanCommandAttemptStatusEnum.NOT_SCHEDULED, error_reason=None, error_trace=None, result=None,
+                    status=ScanCommandAttemptStatusEnum.NOT_SCHEDULED,
+                    error_reason=None,
+                    error_trace=None,
+                    result=None,
                 )
 
         return AllScanCommandsAttempts(**final_all_scan_command_attempts)  # type: ignore

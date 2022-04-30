@@ -34,7 +34,8 @@ class TestMozillaTlsConfigurationChecker:
         # It succeeds and the server is returned as compliant
         checker = MozillaTlsConfigurationChecker.get_default()
         checker.check_server(
-            against_config=MozillaTlsConfigurationEnum.OLD, server_scan_result=server_scan_result,
+            against_config=MozillaTlsConfigurationEnum.OLD,
+            server_scan_result=server_scan_result,
         )
 
         # And the server is returned as NOT compliant for the other Mozilla configs
@@ -55,7 +56,8 @@ class TestMozillaTlsConfigurationChecker:
         # It succeeds and the server is returned as compliant
         checker = MozillaTlsConfigurationChecker.get_default()
         checker.check_server(
-            against_config=MozillaTlsConfigurationEnum.INTERMEDIATE, server_scan_result=server_scan_result,
+            against_config=MozillaTlsConfigurationEnum.INTERMEDIATE,
+            server_scan_result=server_scan_result,
         )
 
         # And the server is returned as NOT compliant for the other Mozilla configs
@@ -76,7 +78,8 @@ class TestMozillaTlsConfigurationChecker:
         # It succeeds and the server is returned as compliant
         checker = MozillaTlsConfigurationChecker.get_default()
         checker.check_server(
-            against_config=MozillaTlsConfigurationEnum.MODERN, server_scan_result=server_scan_result,
+            against_config=MozillaTlsConfigurationEnum.MODERN,
+            server_scan_result=server_scan_result,
         )
 
         # And the server is returned as NOT compliant for the other Mozilla configs
@@ -91,7 +94,8 @@ class TestMozillaTlsConfigurationChecker:
 
         # It succeeds and the server is returned as compliant
         checker.check_server(
-            against_config=MozillaTlsConfigurationEnum.OLD, server_scan_result=server_scan_result_for_google,
+            against_config=MozillaTlsConfigurationEnum.OLD,
+            server_scan_result=server_scan_result_for_google,
         )
 
     def test_multi_certs_deployment_not_compliant_with_intermediate(self, server_scan_result_for_google):
@@ -114,7 +118,8 @@ class TestMozillaTlsConfigurationChecker:
         # It succeeds and the server is returned as NOT compliant
         with pytest.raises(ServerNotCompliantWithMozillaTlsConfiguration):
             checker.check_server(
-                against_config=MozillaTlsConfigurationEnum.MODERN, server_scan_result=server_scan_result_for_google,
+                against_config=MozillaTlsConfigurationEnum.MODERN,
+                server_scan_result=server_scan_result_for_google,
             )
 
     def test_incomplete_scan_result(self):
@@ -126,5 +131,6 @@ class TestMozillaTlsConfigurationChecker:
         # It fails
         with pytest.raises(ServerScanResultIncomplete):
             checker.check_server(
-                against_config=MozillaTlsConfigurationEnum.MODERN, server_scan_result=server_scan_result,
+                against_config=MozillaTlsConfigurationEnum.MODERN,
+                server_scan_result=server_scan_result,
             )

@@ -107,8 +107,7 @@ class CertificateDeploymentAnalysisResult:
 
     @property
     def verified_certificate_chain(self) -> Optional[List[Certificate]]:
-        """Get one of the verified certificate chains if one was successfully built using any of the trust stores.
-        """
+        """Get one of the verified certificate chains if one was successfully built using any of the trust stores."""
         for path_result in self.path_validation_results:
             if path_result.was_validation_successful:
                 return path_result.verified_certificate_chain
@@ -301,8 +300,7 @@ class CertificateDeploymentAnalyzer:
 
 
 def _certificate_matches_hostname(certificate: Certificate, server_hostname: str) -> bool:
-    """Verify that the certificate was issued for the given hostname.
-    """
+    """Verify that the certificate was issued for the given hostname."""
     # Extract the names from the certificate to create the properly-formatted dictionary
     try:
         cert_subject = certificate.subject

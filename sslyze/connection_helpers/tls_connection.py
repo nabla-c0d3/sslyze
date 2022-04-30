@@ -124,8 +124,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
 
 
 class NoCiphersAvailableBugInSSlyze(Exception):
-    """Should never happen.
-    """
+    """Should never happen."""
 
 
 class SslConnection:

@@ -57,7 +57,9 @@ class SessionResumptionSupportScanResult(ScanCommandResult):
 
 
 def _resumption_result_to_console_output(
-    resumption_result: TlsResumptionSupportEnum, successful_resumptions_count: int, attempted_resumptions_count: int,
+    resumption_result: TlsResumptionSupportEnum,
+    successful_resumptions_count: int,
+    attempted_resumptions_count: int,
 ) -> str:
     if resumption_result == TlsResumptionSupportEnum.FULLY_SUPPORTED:
         resumption_support_txt = "OK - Supported"
@@ -170,8 +172,7 @@ def _process_resumption_attempt_results(
 
 
 class SessionResumptionSupportImplementation(ScanCommandImplementation[SessionResumptionSupportScanResult, None]):
-    """Test a server for session resumption support using session IDs and TLS tickets.
-    """
+    """Test a server for session resumption support using session IDs and TLS tickets."""
 
     cli_connector_cls = _SessionResumptionSupportCliConnector
 

@@ -650,8 +650,7 @@ class CipherSuitesRepository:
 
     @classmethod
     def get_all_cipher_suites(cls, tls_version: TlsVersionEnum) -> Set[CipherSuite]:
-        """Get the list of cipher suites supported by OpenSSL for the given SSL/TLS version.
-        """
+        """Get the list of cipher suites supported by OpenSSL for the given SSL/TLS version."""
         return cls._ALL_CIPHER_SUITES[tls_version]
 
     @classmethod

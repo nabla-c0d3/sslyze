@@ -52,7 +52,8 @@ class TestSessionResumptionSupport:
 
         # When testing for resumption, it succeeds
         result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(
-            server_info, extra_arguments=extra_arg,
+            server_info,
+            extra_arguments=extra_arg,
         )
 
         # And the expected number of resumptions was performed

@@ -20,8 +20,7 @@ from sslyze.connection_helpers.tls_connection import SslConnection
 
 @unique
 class ClientAuthRequirementEnum(str, Enum):
-    """Whether the server asked for client authentication.
-    """
+    """Whether the server asked for client authentication."""
 
     DISABLED = "DISABLED"
     OPTIONAL = "OPTIONAL"
@@ -41,8 +40,7 @@ class TlsVersionEnum(Enum):
 
 @dataclass(frozen=True)
 class ServerTlsProbingResult:
-    """Additional details about the server, detected via connectivity testing.
-    """
+    """Additional details about the server, detected via connectivity testing."""
 
     highest_tls_version_supported: TlsVersionEnum
     cipher_suite_supported: str  # The OpenSSL name/string of cipher suite(s) supported by the server
@@ -74,7 +72,8 @@ def check_connectivity_to_server(
     # Fist try TLS 1.3
     try:
         tls_detection_result = _detect_support_for_tls_1_3(
-            server_location=server_location, network_config=network_configuration,
+            server_location=server_location,
+            network_config=network_configuration,
         )
     except _TlsVersionNotSupported:
         pass
@@ -90,7 +89,9 @@ def check_connectivity_to_server(
         ]:
             try:
                 tls_detection_result = _detect_support_for_tls_1_2_or_below(
-                    server_location=server_location, network_config=network_configuration, tls_version=tls_version,
+                    server_location=server_location,
+                    network_config=network_configuration,
+                    tls_version=tls_version,
                 )
                 break
             except _TlsVersionNotSupported:
@@ -109,7 +110,8 @@ def check_connectivity_to_server(
     if tls_detection_result.server_requested_client_cert:
         if tls_detection_result.tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
             client_auth_requirement = _detect_client_auth_requirement_with_tls_1_3(
-                server_location=server_location, network_config=network_configuration,
+                server_location=server_location,
+                network_config=network_configuration,
             )
         else:
             client_auth_requirement = _detect_client_auth_requirement_with_tls_1_2_or_below(
@@ -219,7 +221,8 @@ class _TlsVersionNotSupported(Exception):
 
 
 def _detect_support_for_tls_1_3(
-    server_location: ServerNetworkLocation, network_config: ServerNetworkConfiguration,
+    server_location: ServerNetworkLocation,
+    network_config: ServerNetworkConfiguration,
 ) -> _TlsVersionDetectionResult:
     ssl_connection = SslConnection(
         server_location=server_location,
@@ -265,7 +268,9 @@ def _detect_support_for_tls_1_3(
 
 
 def _detect_support_for_tls_1_2_or_below(
-    server_location: ServerNetworkLocation, network_config: ServerNetworkConfiguration, tls_version: TlsVersionEnum,
+    server_location: ServerNetworkLocation,
+    network_config: ServerNetworkConfiguration,
+    tls_version: TlsVersionEnum,
 ) -> _TlsVersionDetectionResult:
     # First try the default cipher list, and then all ciphers; this is to work around F5 network devices
     # that time out when the client hello is too long (ie. too many cipher suites enabled)
@@ -321,10 +326,10 @@ def _detect_support_for_tls_1_2_or_below(
 
 
 def _detect_client_auth_requirement_with_tls_1_3(
-    server_location: ServerNetworkLocation, network_config: ServerNetworkConfiguration,
+    server_location: ServerNetworkLocation,
+    network_config: ServerNetworkConfiguration,
 ) -> ClientAuthRequirementEnum:
-    """Try to detect if client authentication is optional or required.
-    """
+    """Try to detect if client authentication is optional or required."""
     ssl_connection_auth = SslConnection(
         server_location=server_location,
         network_configuration=network_config,
@@ -362,8 +367,7 @@ def _detect_client_auth_requirement_with_tls_1_2_or_below(
     tls_version: TlsVersionEnum,
     cipher_list: str,
 ) -> ClientAuthRequirementEnum:
-    """Try to detect if client authentication is optional or required.
-    """
+    """Try to detect if client authentication is optional or required."""
     if tls_version.value >= TlsVersionEnum.TLS_1_3.value:
         raise ValueError("Use _detect_client_auth_requirement_with_tls_1_3()")
 
@@ -387,7 +391,9 @@ def _detect_client_auth_requirement_with_tls_1_2_or_below(
 
 
 def _detect_ecdh_support(
-    server_location: ServerNetworkLocation, network_config: ServerNetworkConfiguration, tls_version: TlsVersionEnum,
+    server_location: ServerNetworkLocation,
+    network_config: ServerNetworkConfiguration,
+    tls_version: TlsVersionEnum,
 ) -> bool:
     if tls_version.value < TlsVersionEnum.TLS_1_2.value:
         # Retrieving ECDH information is only implemented in the modern nassl.SslClient, which is TLS 1.2+
@@ -422,8 +428,7 @@ def _detect_ecdh_support(
 
 
 def enable_ecdh_cipher_suites(tls_version: TlsVersionEnum, ssl_client: SslClient) -> None:
-    """Set the elliptic curve cipher suites.
-    """
+    """Set the elliptic curve cipher suites."""
     if tls_version == TlsVersionEnum.TLS_1_3:
         # Cipher suites source: https://tools.ietf.org/html/rfc8446#appendix-B.4
         ssl_client.set_ciphersuites(

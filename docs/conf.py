@@ -130,7 +130,7 @@ latex_elements = {  # type: ignore
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "sslyze.tex", u"SSLyze Documentation", author, "manual"),
+    (master_doc, "sslyze.tex", "SSLyze Documentation", author, "manual"),
 ]
 
 
@@ -138,7 +138,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "sslyze", u"SSLyze Documentation", [author], 1)]
+man_pages = [(master_doc, "sslyze", "SSLyze Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output -------------------------------------------
@@ -147,7 +147,7 @@ man_pages = [(master_doc, "sslyze", u"SSLyze Documentation", [author], 1)]
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, "sslyze", u"SSLyze Documentation", author, author, __version__.__description__, "Security"),
+    (master_doc, "sslyze", "SSLyze Documentation", author, author, __version__.__description__, "Security"),
 ]
 
 autodoc_member_order = "bysource"

@@ -14,13 +14,11 @@ from typing import Optional, List, IO
 
 
 class NotOnLinux64Error(EnvironmentError):
-    """The embedded OpenSSL server is only available on Linux 64.
-    """
+    """The embedded OpenSSL server is only available on Linux 64."""
 
 
 class ClientAuthConfigEnum(Enum):
-    """Whether the server asked for client authentication.
-    """
+    """Whether the server asked for client authentication."""
 
     DISABLED = 1
     OPTIONAL = 2
@@ -28,8 +26,7 @@ class ClientAuthConfigEnum(Enum):
 
 
 class _OpenSslServerIOManager:
-    """Thread to log all output from s_server and reply to incoming connections.
-    """
+    """Thread to log all output from s_server and reply to incoming connections."""
 
     def __init__(
         self, s_server_stdout: IO[bytes], s_server_stdin: IO[bytes], should_reply_to_http_requests: bool
@@ -79,8 +76,7 @@ _DEFAULT_SERVER_KEY_PATH = Path(__file__).parent.absolute() / "server-rsa-key.pe
 
 
 class _OpenSslServer(ABC):
-    """A wrapper around OpenSSL's s_server CLI.
-    """
+    """A wrapper around OpenSSL's s_server CLI."""
 
     _AVAILABLE_LOCAL_PORTS = set(range(8110, 8150))
 
@@ -206,8 +202,7 @@ class _OpenSslServer(ABC):
 
 
 class LegacyOpenSslServer(_OpenSslServer):
-    """A wrapper around the OpenSSL 1.0.0e s_server binary.
-    """
+    """A wrapper around the OpenSSL 1.0.0e s_server binary."""
 
     def __init__(
         self,
@@ -253,8 +248,7 @@ class LegacyOpenSslServer(_OpenSslServer):
 
 
 class ModernOpenSslServer(_OpenSslServer):
-    """A wrapper around the OpenSSL 1.1.1 s_server binary.
-    """
+    """A wrapper around the OpenSSL 1.1.1 s_server binary."""
 
     @classmethod
     def get_openssl_path(cls) -> Path:

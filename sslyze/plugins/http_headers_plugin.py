@@ -191,8 +191,7 @@ class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, No
 
 
 class HttpHeadersImplementation(ScanCommandImplementation[HttpHeadersScanResult, None]):
-    """Test a server for HTTP headers related to security, including HSTS and HPKP.
-    """
+    """Test a server for HTTP headers related to security, including HSTS and HPKP."""
 
     cli_connector_cls = _HttpHeadersCliConnector
 
@@ -286,8 +285,7 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
 
 
 def _detect_http_redirection(http_response: HTTPResponse, server_host_name: str, server_port: int) -> Optional[str]:
-    """If the HTTP response contains a redirection to the same server, return the path to the new location.
-    """
+    """If the HTTP response contains a redirection to the same server, return the path to the new location."""
     next_location_path = None
     if 300 <= http_response.status < 400:
         location_header = _extract_first_header_value(http_response, "Location")

@@ -34,8 +34,7 @@ def get_project_info() -> Dict[str, str]:
 
 
 def get_include_files() -> List[Tuple[str, str]]:
-    """"Get the list of non-Python files to package when doing a cx_freeze build.
-    """
+    """ "Get the list of non-Python files to package when doing a cx_freeze build."""
     non_python_files = []
 
     # The trust stores

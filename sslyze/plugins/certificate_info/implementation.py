@@ -55,8 +55,7 @@ class CertificateInfoScanResult(ScanCommandResult):
 
 
 class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoScanResult, None]):
-    """Retrieve and analyze a server's certificate(s) to verify its validity.
-    """
+    """Retrieve and analyze a server's certificate(s) to verify its validity."""
 
     cli_connector_cls = _CertificateInfoCliConnector
 

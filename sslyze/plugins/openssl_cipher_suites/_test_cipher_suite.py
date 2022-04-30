@@ -35,8 +35,7 @@ class CipherSuiteRejectedByServer:
 def connect_with_cipher_suite(
     server_connectivity_info: ServerConnectivityInfo, tls_version: TlsVersionEnum, cipher_suite: CipherSuite
 ) -> Union[CipherSuiteAcceptedByServer, CipherSuiteRejectedByServer]:
-    """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified.
-    """
+    """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified."""
     requires_legacy_openssl = True
     if tls_version == TlsVersionEnum.TLS_1_2:
         # For TLS 1.2, we need to pick the right version of OpenSSL depending on which cipher suite

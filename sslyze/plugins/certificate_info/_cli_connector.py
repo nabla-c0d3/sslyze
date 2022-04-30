@@ -327,8 +327,7 @@ def _get_issuer_as_short_text(certificate: Certificate) -> str:
 
 
 def _get_name_as_short_text(name_field: x509.Name) -> str:
-    """Convert a name field returned by the cryptography module to a string suitable for displaying it to the user.
-    """
+    """Convert a name field returned by the cryptography module to a string suitable for displaying it to the user."""
     # Name_field is supposed to be a Subject or an Issuer; print the CN if there is one
     common_names = get_common_names(name_field)
     if common_names:

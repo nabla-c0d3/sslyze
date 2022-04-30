@@ -25,8 +25,7 @@ class TrustStore:
     ev_oids: Optional[List[ObjectIdentifier]] = None
 
     def is_certificate_extended_validation(self, certificate: Certificate) -> bool:
-        """Is the supplied server certificate EV?
-        """
+        """Is the supplied server certificate EV?"""
         if not self.ev_oids:
             raise ValueError("No EV OIDs supplied for {} store - cannot detect EV certificates".format(self.name))
 

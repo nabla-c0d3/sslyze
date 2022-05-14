@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2021-12-19
-trusted_certificates_count: 133
+date_fetched: 2022-04-03
+trusted_certificates_count: 136
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -66,6 +66,10 @@ trusted_certificates:
   fingerprint: b676f2eddae8775cd36cb0f63cd1d4603961f49e6265ba013a2f0307b6d0b804
 - subject_name: Certum Trusted Root CA
   fingerprint: fe7696573855773e37a95e7ad4d9cc96c30157c15d31765ba9b15704e1ae78fd
+- subject_name: D-TRUST BR Root CA 1 2020
+  fingerprint: e59aaa816009c22bff5b25bad37df306f049797c1f81d85ab089e657bd8f0044
+- subject_name: D-TRUST EV Root CA 1 2020
+  fingerprint: 08170d1aa36453901a2f959245e347db0c8d37abaabc56b81aa100dc958970db
 - subject_name: D-TRUST Root Class 3 CA 2 2009
   fingerprint: 49e7a442acf0ea6287050054b52564b650e4f49e42e348d6aa38e039e957b1c1
 - subject_name: D-TRUST Root Class 3 CA 2 EV 2009
@@ -224,6 +228,8 @@ trusted_certificates:
   fingerprint: 59769007f7685d0fcd50872f9f95d5755a5b2b457d81f3692b610a98672f0e1b
 - subject_name: TWCA Root Certification Authority
   fingerprint: bfd88fe1101c41ae3e801bf8be56350ee9bad1a6b9bd515edc5c6d5b8711ac44
+- subject_name: Telia Root CA v2
+  fingerprint: 242b69742fcb1e5b2abf98898b94572187544e5b4d9911786573621f6a74b82c
 - subject_name: TeliaSonera Root CA v1
   fingerprint: dd6936fe21f8f077c123a1a521c12224f72255b73e03a7260693e8a24b0fa389
 - subject_name: TrustCor ECA-1
@@ -270,13 +276,7 @@ trusted_certificates:
   fingerprint: 30fbba2c32238e2a98547af97931e550428b9b3f1c8eeb6633dcfa86c5b27dd3
 - subject_name: vTrus Root CA
   fingerprint: 8a71de6559336f426c26e53880d00d88a18da4c6a91f0dcb6194e206c5c96387
-blocked_certificates_count: 4
+blocked_certificates_count: 1
 blocked_certificates:
-- subject_name: '*.EGO.GOV.TR'
-  fingerprint: 42187727be39faf667aeb92bf0cc4e268f6e2ead2cefbec575bdc90430024f69
-- subject_name: DigiNotar PKIoverheid CA Organisatie - G2
-  fingerprint: fb6b5816d5067a1847e612ac9d5cb4ec6a18ea5bbdbf1e7b06ed72f8a9d96040
 - subject_name: DigiNotar Root CA
   fingerprint: 9187a8d3b4b711dd51f53c2fd29041cf7c7b9535329556bfc9c706f38db0f81a
-- subject_name: e-islem.kktcmerkezbankasi.org
-  fingerprint: 372447c43185c38edd2ce0e9c853f9ac1576ddd1704c2f54d96076c089cb4227

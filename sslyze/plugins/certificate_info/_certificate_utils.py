@@ -26,7 +26,7 @@ def extract_dns_subject_alternative_names(certificate: x509.Certificate) -> List
 
 
 def get_common_names(name_field: x509.Name) -> List[str]:
-    return [cn.value for cn in name_field.get_attributes_for_oid(NameOID.COMMON_NAME)]
+    return [cn.value for cn in name_field.get_attributes_for_oid(NameOID.COMMON_NAME)]  # type: ignore
 
 
 def get_public_key_sha256(certificate: x509.Certificate) -> bytes:

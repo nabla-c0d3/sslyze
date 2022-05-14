@@ -74,7 +74,7 @@ class ObserverToGenerateConsoleOutput(ScannerObserver):
         scan_command_results_str = ""
         for result_field in fields(server_scan_result.scan_result):
             scan_command = ScanCommand(result_field.name)
-            scan_command_attempt = getattr(server_scan_result.scan_result, scan_command, None)
+            scan_command_attempt = getattr(server_scan_result.scan_result, scan_command)
 
             if scan_command_attempt.status == ScanCommandAttemptStatusEnum.COMPLETED:
                 scan_command_results_str += "\n"

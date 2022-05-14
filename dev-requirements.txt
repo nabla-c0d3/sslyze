@@ -1,7 +1,7 @@
-mypy==0.910
-flake8
-invoke
-pytest<7.0.0
+mypy==0.950
+flake8<5.0.0
+invoke<2.0.0
+pytest<8.0.0
 sphinx
 sphinx-rtd-theme
 twine

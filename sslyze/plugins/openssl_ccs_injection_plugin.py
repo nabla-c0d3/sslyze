@@ -160,9 +160,14 @@ def _do_handshake_with_ccs_injection(self):  # type: ignore
                 raise
         except NotEnoughData:
             # Try to get more data
-            raw_ssl_bytes = self._sock.recv(16381)
+            try:
+                raw_ssl_bytes = self._sock.recv(16381)
+            except ConnectionError:
+                # No more data?
+                break
+
             if not raw_ssl_bytes:
-                # No data?
+                # No more data?
                 break
 
             remaining_bytes = remaining_bytes + raw_ssl_bytes

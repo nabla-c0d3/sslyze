@@ -300,7 +300,7 @@ def _check_certificates(
         if not cert_deployment.verified_certificate_chain:
             issues_with_certificates[
                 "certificate_path_validation"
-            ] = f"Certificate not path validation failed for {leaf_cert.subject.rfc4514_string()}."
+            ] = f"Certificate path validation failed for {leaf_cert.subject.rfc4514_string()}."
 
         # Validate the public key
         public_key = leaf_cert.public_key()

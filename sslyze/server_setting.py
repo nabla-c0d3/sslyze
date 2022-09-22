@@ -114,7 +114,7 @@ class ServerNetworkLocation:
 
 def _do_dns_lookup(hostname: str, port: int) -> str:
     try:
-        addr_infos = socket.getaddrinfo(hostname, port, socket.AF_UNSPEC, socket.IPPROTO_IP)
+        addr_infos = socket.getaddrinfo(hostname.split("/")[0], port, socket.AF_UNSPEC, socket.IPPROTO_IP)
     except (socket.gaierror, IndexError, ConnectionError):
         raise ServerHostnameCouldNotBeResolved(f"Could not resolve {hostname}")
 

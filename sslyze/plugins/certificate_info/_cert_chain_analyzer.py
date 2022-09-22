@@ -314,7 +314,7 @@ def _certificate_matches_hostname(certificate: Certificate, server_hostname: str
     }
     # CertificateError is raised on failure
     try:
-        match_hostname(certificate_names, server_hostname)  # type: ignore
+        match_hostname(certificate_names, server_hostname.split("/")[0])  # type: ignore
         return True
     except CertificateError:
         return False

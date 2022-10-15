@@ -102,7 +102,7 @@ def check_connectivity_to_server(
         raise ServerTlsConfigurationNotSupported(
             server_location=server_location,
             network_configuration=network_configuration,
-            error_message="Probing failed: could not find a TLS version and cipher suite supported by the server",
+            error_message="TLS probing failed: could not find a TLS version and cipher suite supported by the server",
         )
 
     # If the server requested a client certificate, detect if the client cert is optional or required

@@ -102,7 +102,7 @@ def main() -> None:
         # etc... Other scan command results to process are in server_scan_result.scan_result
 
     # Lastly, save the all the results to a JSON file
-    json_file_out = Path(f"api_sample_results.json")
+    json_file_out = Path("api_sample_results.json")
     print(f"\n\n=> Saving scan results to {json_file_out}")
     example_json_result_output(json_file_out, all_server_scan_results, date_scans_started, datetime.utcnow())
 

@@ -85,13 +85,13 @@ _STARTTLS_PROTOCOL_DICT = {
 class CommandLineParser:
     def __init__(self, sslyze_version: str) -> None:
         """Generate SSLyze's command line parser."""
-        self.aparser = ArgumentParser(prog="sslyze", description=f"SSLyze version {sslyze_version}")
+        self._parser = ArgumentParser(prog="sslyze", description=f"SSLyze version {sslyze_version}")
 
         # Add generic command line options to the parser
         self._add_default_options()
 
         # Add plugin .ie scan command options to the parser
-        scan_commands_group = self.aparser.add_argument_group("Scan commands")
+        scan_commands_group = self._parser.add_argument_group("Scan commands")
         for scan_option in self._get_plugin_scan_commands():
             scan_commands_group.add_argument(
                 f"--{scan_option.option}",
@@ -99,7 +99,7 @@ class CommandLineParser:
                 action=scan_option.action,
             )
 
-        self.aparser.add_argument(
+        self._parser.add_argument(
             "--mozilla_config",
             action="store",
             dest="mozilla_config",
@@ -109,11 +109,11 @@ class CommandLineParser:
             " this check.",
         )
 
-        self.aparser.add_argument(dest="target", default=[], nargs="*", help="The list of servers to scan.")
+        self._parser.add_argument(dest="target", default=[], nargs="*", help="The list of servers to scan.")
 
     def parse_command_line(self) -> ParsedCommandLine:
         """Parses the command line used to launch SSLyze."""
-        args_command_list = self.aparser.parse_args()
+        args_command_list = self._parser.parse_args()
         args_target_list = []
 
         if args_command_list.update_trust_stores:
@@ -140,11 +140,14 @@ class CommandLineParser:
 
         # Handle the case when no scan commands have been specified: run --mozilla-config=intermediate by default
         if not args_command_list.mozilla_config:
-            did_user_enable_some_scan_commands = [
-                getattr(args_command_list, option.option)
-                for option in self._get_plugin_scan_commands()
-                if getattr(args_command_list, option.option)
-            ]
+            did_user_enable_some_scan_commands = False
+            for scan_command in ScanCommandsRepository.get_all_scan_commands():
+                cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
+                is_scan_cmd_enabled, _ = cli_connector_cls.find_cli_options_in_command_line(args_command_list.__dict__)
+                if is_scan_cmd_enabled:
+                    did_user_enable_some_scan_commands = True
+                    break
+
             if not did_user_enable_some_scan_commands:
                 setattr(args_command_list, "mozilla_config", MozillaTlsConfigurationEnum.INTERMEDIATE.value)
 
@@ -322,7 +325,7 @@ class CommandLineParser:
     def _add_default_options(self) -> None:
         """Add default command line options to the parser."""
         # Updating the trust stores
-        trust_stores_group = self.aparser.add_argument_group("Trust stores options")
+        trust_stores_group = self._parser.add_argument_group("Trust stores options")
         trust_stores_group.add_argument(
             "--update_trust_stores",
             help="Update the default trust stores used by SSLyze. The latest stores will be "
@@ -334,7 +337,7 @@ class CommandLineParser:
         )
 
         # Client certificate options
-        client_certificate_group = self.aparser.add_argument_group("Client certificate options")
+        client_certificate_group = self._parser.add_argument_group("Client certificate options")
         client_certificate_group.add_argument(
             "--cert",
             metavar="CERTIFICATE_FILE",
@@ -363,7 +366,7 @@ class CommandLineParser:
         )
 
         # Input / output
-        input_and_output_group = self.aparser.add_argument_group("Input and output options")
+        input_and_output_group = self._parser.add_argument_group("Input and output options")
         # JSON output
         input_and_output_group.add_argument(
             "--json_out",
@@ -395,7 +398,7 @@ class CommandLineParser:
         )
 
         # Connectivity option group
-        connectivity_group = self.aparser.add_argument_group("Contectivity options")
+        connectivity_group = self._parser.add_argument_group("Contectivity options")
         # Connection speed
         connectivity_group.add_argument(
             "--slow_connection",

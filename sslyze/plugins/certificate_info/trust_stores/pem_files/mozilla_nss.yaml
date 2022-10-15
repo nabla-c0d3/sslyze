@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2022-06-19
-trusted_certificates_count: 141
+date_fetched: 2022-09-18
+trusted_certificates_count: 143
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -212,10 +212,14 @@ trusted_certificates:
   fingerprint: bf0feefb9e3a581ad5f9e9db7589985743d261085c4d314f6f5d7259aa421612
 - subject_name: SecureTrust CA
   fingerprint: f1c1b50ae5a20dd8030ec9f6bc24823dd367b5255759b4e71b61fce9f7375d73
+- subject_name: Security Communication ECC RootCA1
+  fingerprint: e74fbda55bd564c473a36b441aa799c8a68e077440e8288b9fa1e50e4bbaca11
 - subject_name: Security Communication RootCA1
   fingerprint: e75e72ed9f560eec6eb4800073a43fc3ad19195a392282017895974a99026b6c
 - subject_name: Security Communication RootCA2
   fingerprint: 513b2cecb810d4cde5dd85391adfc6c2dd60d87bb736d2b521484aa47a0ebef6
+- subject_name: Security Communication RootCA3
+  fingerprint: 24a55c2ab051442d0617766541239a4ad032d7c55175aa34ffde2fbc4f5c5294
 - subject_name: Staat der Nederlanden EV Root CA
   fingerprint: 4d2491414cfe956746ec4cefa6cf6f72e28a1329432f9d8a907ac4cb5dadc15a
 - subject_name: Starfield Class 2 Certification Authority

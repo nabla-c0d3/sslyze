@@ -7,7 +7,6 @@ import pydantic
 
 from sslyze import (
     ServerNetworkConfiguration,
-    HttpProxySettings,
     ProtocolWithOpportunisticTlsEnum,
     ServerScanStatusEnum,
     ServerConnectivityStatusEnum,

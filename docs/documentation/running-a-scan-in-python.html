@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Running a Scan in Python &#8212; SSLyze 5.0.3 documentation</title>
+    <title>Running a Scan in Python &#8212; SSLyze 5.0.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -81,6 +81,9 @@ attributes containing the results of the scan command.</p>
 <h2>Full Example<a class="headerlink" href="#full-example" title="Permalink to this headline">¶</a></h2>
 <p>A full example of running a scan on a couple servers follow:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&gt; Starting the scans&quot;</span><span class="p">)</span>
+    <span class="n">date_scans_started</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+
     <span class="c1"># First create the scan requests for each server that we want to scan</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">all_scan_requests</span> <span class="o">=</span> <span class="p">[</span>
@@ -97,7 +100,9 @@ attributes containing the results of the scan command.</p>
     <span class="n">scanner</span><span class="o">.</span><span class="n">queue_scans</span><span class="p">(</span><span class="n">all_scan_requests</span><span class="p">)</span>
 
     <span class="c1"># And retrieve and process the results for each server</span>
+    <span class="n">all_server_scan_results</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">server_scan_result</span> <span class="ow">in</span> <span class="n">scanner</span><span class="o">.</span><span class="n">get_results</span><span class="p">():</span>
+        <span class="n">all_server_scan_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">server_scan_result</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">****Results for </span><span class="si">{</span><span class="n">server_scan_result</span><span class="o">.</span><span class="n">server_location</span><span class="o">.</span><span class="n">hostname</span><span class="si">}</span><span class="s2">****&quot;</span><span class="p">)</span>
 
         <span class="c1"># Were we able to connect to the server and run the scan?</span>
@@ -150,6 +155,17 @@ attributes containing the results of the scan command.</p>
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">leaf_cert</span><span class="o">.</span><span class="n">public_key</span><span class="p">()</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">leaf_cert</span><span class="o">.</span><span class="n">subject</span><span class="o">.</span><span class="n">rfc4514_string</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="sa">f</span><span class="s2">&quot; (Serial: </span><span class="si">{</span><span class="n">leaf_cert</span><span class="o">.</span><span class="n">serial_number</span><span class="si">}</span><span class="s2">)&quot;</span>
                 <span class="p">)</span>
+
+        <span class="c1"># etc... Other scan command results to process are in server_scan_result.scan_result</span>
+
+    <span class="c1"># Lastly, save the all the results to a JSON file</span>
+    <span class="n">json_file_out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;api_sample_results.json&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">=&gt; Saving scan results to </span><span class="si">{</span><span class="n">json_file_out</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">example_json_result_output</span><span class="p">(</span><span class="n">json_file_out</span><span class="p">,</span> <span class="n">all_server_scan_results</span><span class="p">,</span> <span class="n">date_scans_started</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">())</span>
+
+    <span class="c1"># And ensure we are able to parse them</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">=&gt; Parsing scan results from </span><span class="si">{</span><span class="n">json_file_out</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">example_json_result_parsing</span><span class="p">(</span><span class="n">json_file_out</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -814,7 +830,7 @@ the “ScanResult” object corresponding to the scan command.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;Copyright 2021 Alban Diquet.
+      &copy;Copyright 2022 Alban Diquet.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>

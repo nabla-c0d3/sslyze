@@ -1,4 +1,6 @@
+from datetime import datetime
 from pathlib import Path
+from typing import List
 
 from sslyze import (
     Scanner,
@@ -7,6 +9,8 @@ from sslyze import (
     ServerNetworkLocation,
     ScanCommandAttemptStatusEnum,
     ServerScanStatusEnum,
+    ServerScanResult,
+    ServerScanResultAsJson,
 )
 from sslyze.errors import ServerHostnameCouldNotBeResolved
 from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
@@ -20,6 +24,9 @@ def _print_failed_scan_command_attempt(scan_command_attempt: ScanCommandAttempt)
 
 
 def main() -> None:
+    print("=> Starting the scans")
+    date_scans_started = datetime.utcnow()
+
     # First create the scan requests for each server that we want to scan
     try:
         all_scan_requests = [
@@ -36,7 +43,9 @@ def main() -> None:
     scanner.queue_scans(all_scan_requests)
 
     # And retrieve and process the results for each server
+    all_server_scan_results = []
     for server_scan_result in scanner.get_results():
+        all_server_scan_results.append(server_scan_result)
         print(f"\n\n****Results for {server_scan_result.server_location.hostname}****")
 
         # Were we able to connect to the server and run the scan?
@@ -92,10 +101,34 @@ def main() -> None:
 
         # etc... Other scan command results to process are in server_scan_result.scan_result
 
+    # Lastly, save the all the results to a JSON file
+    json_file_out = Path("api_sample_results.json")
+    print(f"\n\n=> Saving scan results to {json_file_out}")
+    example_json_result_output(json_file_out, all_server_scan_results, date_scans_started, datetime.utcnow())
 
-def example_json_result_parsing() -> None:
+    # And ensure we are able to parse them
+    print(f"\n\n=> Parsing scan results from {json_file_out}")
+    example_json_result_parsing(json_file_out)
+
+
+def example_json_result_output(
+    json_file_out: Path,
+    all_server_scan_results: List[ServerScanResult],
+    date_scans_started: datetime,
+    date_scans_completed: datetime,
+) -> None:
+    json_output = SslyzeOutputAsJson(
+        server_scan_results=[ServerScanResultAsJson.from_orm(result) for result in all_server_scan_results],
+        invalid_server_strings=[],  # Not needed here - specific to the CLI interface
+        date_scans_started=date_scans_started,
+        date_scans_completed=date_scans_completed,
+    )
+    json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+    json_file_out.write_text(json_output_as_str)
+
+
+def example_json_result_parsing(results_as_json_file: Path) -> None:
     # SSLyze scan results serialized to JSON were saved to this file using --json_out
-    results_as_json_file = Path(__file__).parent / "tests" / "json_tests" / "sslyze_output.json"
     results_as_json = results_as_json_file.read_text()
 
     # These results can be parsed

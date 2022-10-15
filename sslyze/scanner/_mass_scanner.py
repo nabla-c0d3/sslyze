@@ -9,7 +9,7 @@ from uuid import UUID
 from nassl.ssl_client import ClientCertificateRequested
 
 from sslyze import ServerTlsProbingResult, ScanCommandAttemptStatusEnum, ScanCommandErrorReasonEnum
-from sslyze.errors import ConnectionToServerTimedOut, TlsHandshakeTimedOut
+from sslyze.errors import ConnectionToServerTimedOut, TlsHandshakeTimedOut, ServerRejectedTlsHandshake
 from sslyze.plugins.plugin_base import ScanCommandWrongUsageError, ScanJob, ScanJobResult
 from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
 from sslyze.scanner._jobs_worker_thread import (
@@ -287,7 +287,7 @@ def _generate_result_for_completed_server_scan(completed_scan: _OngoingServerSca
                 error_trace=TracebackException.from_exception(e),
                 result=None,
             )
-        except (ConnectionToServerTimedOut, TlsHandshakeTimedOut) as e:
+        except (ConnectionToServerTimedOut, TlsHandshakeTimedOut, ServerRejectedTlsHandshake) as e:
             scan_cmd_attempt = scan_command_attempt_cls(
                 status=ScanCommandAttemptStatusEnum.ERROR,
                 error_reason=ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE,

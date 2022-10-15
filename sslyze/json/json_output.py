@@ -7,7 +7,6 @@ import pydantic
 
 from sslyze import (
     ServerNetworkConfiguration,
-    HttpProxySettings,
     ProtocolWithOpportunisticTlsEnum,
     ServerScanStatusEnum,
     ServerConnectivityStatusEnum,
@@ -102,7 +101,12 @@ class AllScanCommandsAttemptsAsJson(_BaseModelWithOrmModeAndForbid):
 
 
 # Identical fields in the JSON output
-_HttpProxySettingsAsJson = pydantic.dataclasses.dataclass(HttpProxySettings, frozen=True)
+class _HttpProxySettingsAsJson(pydantic.BaseModel):
+    hostname: str
+    port: int
+
+    basic_auth_user: Optional[str] = None
+    basic_auth_password: Optional[str] = None
 
 
 class _ClientAuthenticationCredentialsAsJson(pydantic.BaseModel):

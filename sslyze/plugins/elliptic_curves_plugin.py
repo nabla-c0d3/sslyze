@@ -232,6 +232,9 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
         elif "sslv3 alert unexpected message" in e.args[0]:
             # https://github.com/nabla-c0d3/sslyze/issues/490
             negotiated_ephemeral_key = None
+        elif "wrong curve" in e.args[0]:
+            # https://github.com/nabla-c0d3/sslyze/issues/579
+            negotiated_ephemeral_key = None
         else:
             raise
 

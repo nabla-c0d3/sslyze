@@ -1,6 +1,6 @@
 {
   "title": "SslyzeOutputAsJson",
-  "description": "The \"root\" dictionary of the JSON output when using the --json command line option.\n    ",
+  "description": "The \"root\" dictionary of the JSON output when using the --json command line option.",
   "type": "object",
   "properties": {
     "invalid_server_strings": {
@@ -30,7 +30,7 @@
     },
     "sslyze_version": {
       "title": "Sslyze Version",
-      "default": "5.0.3",
+      "default": "5.0.6",
       "type": "string"
     },
     "sslyze_url": {
@@ -47,7 +47,7 @@
   "definitions": {
     "InvalidServerStringAsJson": {
       "title": "InvalidServerStringAsJson",
-      "description": "A hostname:port string supplied via the command line that SSLyze was unable to parse or resolve.\n    ",
+      "description": "A hostname:port string supplied via the command line that SSLyze was unable to parse or resolve.",
       "type": "object",
       "properties": {
         "server_string": {
@@ -74,8 +74,8 @@
       ],
       "type": "string"
     },
-    "HttpProxySettings": {
-      "title": "HttpProxySettings",
+    "_HttpProxySettingsAsJson": {
+      "title": "_HttpProxySettingsAsJson",
       "type": "object",
       "properties": {
         "hostname": {
@@ -121,7 +121,7 @@
           "type": "string"
         },
         "http_proxy_settings": {
-          "$ref": "#/definitions/HttpProxySettings"
+          "$ref": "#/definitions/_HttpProxySettingsAsJson"
         }
       },
       "required": [
@@ -133,7 +133,7 @@
     },
     "ProtocolWithOpportunisticTlsEnum": {
       "title": "ProtocolWithOpportunisticTlsEnum",
-      "description": "The list of plaintext protocols supported by SSLyze for opportunistic TLS upgrade (such as STARTTLS).\n\nThis allows SSLyze to figure out how to complete an SSL/TLS handshake with the server.",
+      "description": "The list of plaintext protocols supported by SSLyze for opportunistic TLS upgrade (such as STARTTLS).\n\n    This allows SSLyze to figure out how to complete an SSL/TLS handshake with the server.\n    ",
       "enum": [
         "SMTP",
         "XMPP",
@@ -218,7 +218,7 @@
     },
     "ClientAuthRequirementEnum": {
       "title": "ClientAuthRequirementEnum",
-      "description": "Whether the server asked for client authentication.\n    ",
+      "description": "Whether the server asked for client authentication.",
       "enum": [
         "DISABLED",
         "OPTIONAL",
@@ -228,7 +228,7 @@
     },
     "_ServerTlsProbingResultAsJson": {
       "title": "_ServerTlsProbingResultAsJson",
-      "description": "Additional details about the server, detected via connectivity testing.\n    ",
+      "description": "Additional details about the server, detected via connectivity testing.",
       "type": "object",
       "properties": {
         "highest_tls_version_supported": {
@@ -1053,7 +1053,7 @@
     },
     "RobotScanResultEnum": {
       "title": "RobotScanResultEnum",
-      "description": "The result of attempting exploit the ROBOT issue on the server.\n\nAttributes:\n    VULNERABLE_WEAK_ORACLE: The server is vulnerable but the attack would take too long.\n    VULNERABLE_STRONG_ORACLE: The server is vulnerable and real attacks are feasible.\n    NOT_VULNERABLE_NO_ORACLE: The server supports RSA cipher suites but does not act as an oracle.\n    NOT_VULNERABLE_RSA_NOT_SUPPORTED: The server does not supports RSA cipher suites.\n    UNKNOWN_INCONSISTENT_RESULTS: Could not determine whether the server is vulnerable or not.",
+      "description": "The result of attempting exploit the ROBOT issue on the server.\n\n    Attributes:\n        VULNERABLE_WEAK_ORACLE: The server is vulnerable but the attack would take too long.\n        VULNERABLE_STRONG_ORACLE: The server is vulnerable and real attacks are feasible.\n        NOT_VULNERABLE_NO_ORACLE: The server supports RSA cipher suites but does not act as an oracle.\n        NOT_VULNERABLE_RSA_NOT_SUPPORTED: The server does not supports RSA cipher suites.\n        UNKNOWN_INCONSISTENT_RESULTS: Could not determine whether the server is vulnerable or not.\n    ",
       "enum": [
         "VULNERABLE_WEAK_ORACLE",
         "VULNERABLE_STRONG_ORACLE",
@@ -1141,7 +1141,7 @@
     },
     "TlsResumptionSupportEnum": {
       "title": "TlsResumptionSupportEnum",
-      "description": "The result of attempting to resume TLS sessions with the server.\n\nAttributes:\n    FULLY_SUPPORTED: All the session resumption attempts were successful.\n    PARTIALLY_SUPPORTED: Only some of the session resumption attempts were successful.\n    NOT_SUPPORTED: None of the session resumption attempts were successful.\n    SERVER_IS_TLS_1_3_ONLY: The server only supports TLS 1.3, which does not support Session ID nor TLS Tickets\n        resumption.",
+      "description": "The result of attempting to resume TLS sessions with the server.\n\n    Attributes:\n        FULLY_SUPPORTED: All the session resumption attempts were successful.\n        PARTIALLY_SUPPORTED: Only some of the session resumption attempts were successful.\n        NOT_SUPPORTED: None of the session resumption attempts were successful.\n        SERVER_IS_TLS_1_3_ONLY: The server only supports TLS 1.3, which does not support Session ID nor TLS Tickets\n            resumption.\n    ",
       "enum": [
         "FULLY_SUPPORTED",
         "PARTIALLY_SUPPORTED",

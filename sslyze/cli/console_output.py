@@ -97,10 +97,11 @@ class ObserverToGenerateConsoleOutput(ScannerObserver):
         server_location = server_scan_result.server_location
         network_route = _server_location_to_network_route(server_location)
         scan_txt = f"Scan Results For {server_location.display_string} - {network_route}"
-        self._file_to.write("\n" + self._format_title(scan_txt) + scan_command_results_str + "\n")
+        self._file_to.write("\n\n" + self._format_title(scan_txt) + scan_command_results_str)
 
     def all_server_scans_completed(self) -> None:
         scans_duration = datetime.utcnow() - self._date_scans_started
+        self._file_to.write("\n")
         self._file_to.write(
             self._format_title(f"Scans Completed in {scans_duration.seconds}.{scans_duration.microseconds} s")
         )
@@ -140,7 +141,7 @@ def scan_command_error_as_console_output(
 
     elif scan_command_attempt.error_reason == ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE:
         target_result_str += cli_connector_cls._format_title(
-            f"Connection timed out for --{cli_connector_cls._cli_option}"
+            f"Connection timed out or was rejected for --{cli_connector_cls._cli_option}"
         )
         target_result_str += " try using --slow_connection to reduce the impact on the server.\n"
 

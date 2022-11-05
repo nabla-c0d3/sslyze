@@ -101,7 +101,7 @@ class AllScanCommandsAttemptsAsJson(_BaseModelWithOrmModeAndForbid):
 
 
 # Identical fields in the JSON output
-class _HttpProxySettingsAsJson(pydantic.BaseModel):
+class _HttpProxySettingsAsJson(_BaseModelWithOrmModeAndForbid):
     hostname: str
     port: int
 

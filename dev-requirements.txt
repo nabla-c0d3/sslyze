@@ -1,4 +1,4 @@
-mypy==0.950
+mypy==0.981
 flake8<5.0.0
 invoke<2.0.0
 pytest<8.0.0
@@ -6,7 +6,7 @@ sphinx
 sphinx-rtd-theme
 twine
 sphinx-autodoc-typehints
-black==22.3.0
+black==22.10.0
 pytest-cov
 faker
 

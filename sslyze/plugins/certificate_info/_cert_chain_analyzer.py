@@ -11,7 +11,10 @@ from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate, load
 from cryptography.x509.ocsp import load_der_ocsp_response, OCSPResponseStatus, OCSPResponse
 import nassl.ocsp_response
 
-from sslyze.plugins.certificate_info._certificate_utils import extract_dns_subject_alternative_names, get_common_names
+from sslyze.plugins.certificate_info._certificate_utils import (
+    parse_subject_alternative_name_extension,
+    get_common_names,
+)
 from sslyze.plugins.certificate_info._symantec import SymantecDistructTester
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore, PathValidationResult
 
@@ -280,9 +283,13 @@ def _certificate_matches_hostname(certificate: Certificate, server_hostname: str
         # Cryptography could not parse the certificate https://github.com/nabla-c0d3/sslyze/issues/495
         return False
 
+    subj_alt_name_ext = parse_subject_alternative_name_extension(certificate)
+    subj_alt_name_as_list = [("DNS", name) for name in subj_alt_name_ext.dns_names]
+    subj_alt_name_as_list.extend([("IP Address", ip) for ip in subj_alt_name_ext.ip_addresses])
+
     certificate_names = {
         "subject": (tuple([("commonName", name) for name in get_common_names(cert_subject)]),),
-        "subjectAltName": tuple([("DNS", name) for name in extract_dns_subject_alternative_names(certificate)]),
+        "subjectAltName": tuple(subj_alt_name_as_list),
     }
     # CertificateError is raised on failure
     try:

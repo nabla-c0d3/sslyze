@@ -20,7 +20,7 @@ from sslyze import (
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.certificate_info._certificate_utils import (
     get_public_key_sha256,
-    extract_dns_subject_alternative_names,
+    parse_subject_alternative_name_extension,
 )
 
 
@@ -107,7 +107,13 @@ class _X509NameAsJson(_BaseModelWithOrmMode):
 
 
 class _SubjAltNameAsJson(pydantic.BaseModel):
-    dns: List[str]
+
+    # TODO(6.0.0): Remove the Config, alias and default value as the name "dns" is deprecated
+    class Config:
+        allow_population_by_field_name = True
+
+    dns_names: List[str] = pydantic.Field(alias="dns")
+    ip_addresses: List[pydantic.IPvAnyAddress] = []
 
 
 class _HashAlgorithmAsJson(_BaseModelWithOrmMode):
@@ -164,6 +170,8 @@ class _CertificateAsJson(_BaseModelWithOrmMode):
         except ValueError:
             issuer_field = None
 
+        subj_alt_name_ext = parse_subject_alternative_name_extension(certificate)
+
         return cls(
             as_pem=certificate.public_bytes(Encoding.PEM).decode("ascii"),
             hpkp_pin=b64encode(get_public_key_sha256(certificate)).decode("ascii"),
@@ -172,7 +180,10 @@ class _CertificateAsJson(_BaseModelWithOrmMode):
             serial_number=certificate.serial_number,
             not_valid_before=certificate.not_valid_before,
             not_valid_after=certificate.not_valid_after,
-            subject_alternative_name=_SubjAltNameAsJson(dns=extract_dns_subject_alternative_names(certificate)),
+            subject_alternative_name=_SubjAltNameAsJson(
+                dns_names=subj_alt_name_ext.dns_names,
+                ip_addresses=subj_alt_name_ext.ip_addresses,
+            ),
             signature_hash_algorithm=signature_hash_algorithm,
             signature_algorithm_oid=certificate.signature_algorithm_oid,
             subject=subject_field,

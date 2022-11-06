@@ -79,7 +79,7 @@ class HttpHeadersScanResult(ScanCommandResult):
 
     http_path_redirected_to: Optional[str]
     strict_transport_security_header: Optional[StrictTransportSecurityHeader]
-    expect_ct_header: None = None  # Deprecated; to be removed in the next major version
+    expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
 
 class _StrictTransportSecurityHeaderAsJson(pydantic.BaseModel):
@@ -97,7 +97,7 @@ class HttpHeadersScanResultAsJson(pydantic.BaseModel):
 
     http_path_redirected_to: Optional[str]
     strict_transport_security_header: Optional[_StrictTransportSecurityHeaderAsJson]
-    expect_ct_header: None = None  # Deprecated; to be removed in the next major version
+    expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
     class Config:
         orm_mode = True

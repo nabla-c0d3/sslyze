@@ -34,7 +34,6 @@ class TestHttpHeadersPlugin:
         assert result.http_request_sent
         assert result.http_path_redirected_to
         assert result.strict_transport_security_header
-        assert not result.expect_ct_header
 
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
@@ -52,21 +51,6 @@ class TestHttpHeadersPlugin:
         assert result.http_path_redirected_to
         assert not result.strict_transport_security_header
         assert not result.expect_ct_header
-
-        # And a CLI output can be generated
-        assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
-
-    def test_expect_ct_enabled(self):
-        # Given a server to scan that has Expect-CT enabled
-        server_location = ServerNetworkLocation("github.com", 443)
-        server_info = check_connectivity_to_server_and_return_info(server_location)
-
-        # When scanning for HTTP headers, it succeeds
-        result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
-
-        # And the Expect-CT header was detected
-        assert result.expect_ct_header
-        assert result.expect_ct_header.max_age >= 0
 
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
@@ -92,7 +76,6 @@ class TestHttpHeadersPlugin:
 
         # And the other result fields are not set
         assert not result.http_path_redirected_to
-        assert not result.expect_ct_header
 
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
@@ -135,7 +118,6 @@ class TestHttpHeadersPlugin:
             result: HttpHeadersScanResult = HttpHeadersImplementation.scan_server(server_info)
 
             assert not result.strict_transport_security_header
-            assert not result.expect_ct_header
 
 
 @dataclass

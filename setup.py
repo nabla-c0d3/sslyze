@@ -97,10 +97,11 @@ setup(
     entry_points={"console_scripts": ["sslyze = sslyze.__main__:main"]},
     # Dependencies
     install_requires=[
-        "nassl>=4.0.1,<5.0.0",
-        "cryptography>=2.6,<39.0.0",
-        "tls-parser>=2.0.0,<3.0.0",
+        "nassl>=4.0.1,<5",
+        "cryptography>=2.6,<39",
+        "tls-parser>=2,<3",
         "pydantic>=1.7,<1.11",
+        "pyOpenSSL>=20,<23",
     ],
     # cx_freeze info for Windows builds with Python embedded
     options={"build_exe": {"packages": ["cffi", "cryptography"], "include_files": get_include_files()}},

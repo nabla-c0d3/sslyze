@@ -3,8 +3,7 @@ from typing import List, cast
 
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
-from cryptography.x509 import ExtensionOID, DNSName, ExtensionNotFound, NameOID
-from cryptography.x509.extensions import DuplicateExtension  # type: ignore
+from cryptography.x509 import ExtensionOID, DNSName, ExtensionNotFound, NameOID, DuplicateExtension
 
 
 def extract_dns_subject_alternative_names(certificate: x509.Certificate) -> List[str]:

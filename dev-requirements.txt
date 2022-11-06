@@ -10,5 +10,8 @@ black==22.3.0
 pytest-cov
 faker
 
+# For mypy
+types-pyOpenSSL
+
 # For building the Windows executable
 cx-freeze; sys.platform == 'win32'

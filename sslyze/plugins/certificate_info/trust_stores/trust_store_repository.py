@@ -10,7 +10,7 @@ import inspect
 import sys
 from os.path import realpath
 
-from cryptography.hazmat._oid import ObjectIdentifier
+from cryptography.x509 import ObjectIdentifier
 
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from typing import List

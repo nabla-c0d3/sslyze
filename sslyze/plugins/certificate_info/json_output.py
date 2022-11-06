@@ -4,13 +4,10 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 import pydantic
-from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509 import NameAttribute
-from cryptography.x509.ocsp import OCSPResponseStatus
-from cryptography.x509.oid import ObjectIdentifier  # type: ignore
+from cryptography.x509 import NameAttribute, ObjectIdentifier, Name, Certificate, ocsp
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 
 from sslyze import (
@@ -78,7 +75,10 @@ class _ObjectIdentifierAsJson(_BaseModelWithOrmMode):
 
     @classmethod
     def from_orm(cls, oid: ObjectIdentifier) -> "_ObjectIdentifierAsJson":
-        return cls(name=oid._name, dotted_string=oid.dotted_string)
+        return cls(
+            name=oid._name,  # type: ignore
+            dotted_string=oid.dotted_string,
+        )
 
 
 class _NameAttributeAsJson(_BaseModelWithOrmMode):
@@ -100,7 +100,7 @@ class _X509NameAsJson(_BaseModelWithOrmMode):
     attributes: List[_NameAttributeAsJson]
 
     @classmethod
-    def from_orm(cls, name: x509.name.Name) -> "_X509NameAsJson":
+    def from_orm(cls, name: Name) -> "_X509NameAsJson":
         return cls(
             rfc4514_string=name.rfc4514_string(), attributes=[_NameAttributeAsJson.from_orm(attr) for attr in name]
         )
@@ -143,7 +143,7 @@ class _CertificateAsJson(_BaseModelWithOrmMode):
     public_key: _PublicKeyAsJson
 
     @classmethod
-    def from_orm(cls, certificate: x509.Certificate) -> "_CertificateAsJson":
+    def from_orm(cls, certificate: Certificate) -> "_CertificateAsJson":
         signature_hash_algorithm: Optional[_HashAlgorithmAsJson]
         if certificate.signature_hash_algorithm:
             signature_hash_algorithm = _HashAlgorithmAsJson.from_orm(certificate.signature_hash_algorithm)
@@ -194,9 +194,9 @@ class _OcspResponseAsJson(_BaseModelWithOrmMode):
     serial_number: Optional[int]
 
     @classmethod
-    def from_orm(cls, ocsp_response: x509.ocsp.OCSPResponse) -> "_OcspResponseAsJson":
+    def from_orm(cls, ocsp_response: ocsp.OCSPResponse) -> "_OcspResponseAsJson":
         response_status = ocsp_response.response_status.name
-        if ocsp_response.response_status != OCSPResponseStatus.SUCCESSFUL:
+        if ocsp_response.response_status != ocsp.OCSPResponseStatus.SUCCESSFUL:
             return cls(
                 response_status=response_status,
                 certificate_status=None,

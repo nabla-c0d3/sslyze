@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-from pathlib import Path
 
 from ssl import CertificateError, match_hostname
-from typing import Optional, List, cast, Dict
+from typing import Optional, List, cast
 
 import cryptography
 from cryptography.hazmat.backends import default_backend
@@ -10,38 +9,11 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate, load_pem_x509_certificate, TLSFeature
 from cryptography.x509.ocsp import load_der_ocsp_response, OCSPResponseStatus, OCSPResponse
-from nassl._nassl import X509
-from nassl.cert_chain_verifier import CertificateChainVerifier, CertificateChainVerificationFailed
 import nassl.ocsp_response
 
 from sslyze.plugins.certificate_info._certificate_utils import extract_dns_subject_alternative_names, get_common_names
 from sslyze.plugins.certificate_info._symantec import SymantecDistructTester
-from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
-
-
-@dataclass(frozen=True)
-class PathValidationResult:
-    """The result of trying to validate a server's certificate chain using a specific trust store.
-
-    Attributes:
-        trust_stores: The trust store used for validation.
-        verified_certificate_chain: The verified certificate chain returned by OpenSSL.
-            Index 0 is the leaf certificate and the last element is the anchor/CA certificate from the trust store.
-            Will be None if the validation failed or the verified chain could not be built.
-            Each certificate is parsed using the cryptography module; documentation is available at
-            https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
-        openssl_error_string: The result string returned by OpenSSL's validation function; None if validation was
-            successful.
-        was_validation_successful: Whether the certificate chain is trusted when using supplied the trust_stores.
-    """
-
-    trust_store: TrustStore
-    verified_certificate_chain: Optional[List[Certificate]]
-    openssl_error_string: Optional[str]
-
-    @property
-    def was_validation_successful(self) -> bool:
-        return True if self.verified_certificate_chain else False
+from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore, PathValidationResult
 
 
 @dataclass(frozen=True)
@@ -221,7 +193,7 @@ class CertificateDeploymentAnalyzer:
         # Try to generate the verified certificate chain using each trust store
         all_path_validation_results = []
         for trust_store in self.trust_stores_for_validation:
-            path_validation_result = _verify_certificate_chain(self.server_certificate_chain_as_pem, trust_store)
+            path_validation_result = trust_store.verify_certificate_chain(self.server_certificate_chain_as_pem)
             all_path_validation_results.append(path_validation_result)
 
         # Keep one trust store that was able to build the verified chain to then run additional checks
@@ -318,52 +290,3 @@ def _certificate_matches_hostname(certificate: Certificate, server_hostname: str
         return True
     except CertificateError:
         return False
-
-
-# TODO(AD): There is probably a memory leak in nassl.X509 or nassl.X509_STORE_CTX
-#  https://github.com/nabla-c0d3/sslyze/issues/560
-#  It might be due to bad reference counting in nassl_X509_STORE_CTX_set0_trusted_stack()
-#  More specifically the call to X509_chain_up_ref() - is there corresponding call to decrease ref count?
-#  As a workaround, we cache the (huge) list of trusted certificates, for each trust store
-_cache_for_trusted_certificates_per_file: Dict[Path, List[X509]] = {}
-
-
-def _convert_and_cache_pem_certs_to_x509s(trusted_certificates_path: Path) -> List[X509]:
-    certs_as_509s = _cache_for_trusted_certificates_per_file.get(trusted_certificates_path)
-    if certs_as_509s:
-        return certs_as_509s
-
-    # Parse the PEM certificate in the file
-    all_certs_as_pem: List[str] = []
-    with trusted_certificates_path.open() as file_content:
-        for pem_segment in file_content.read().split("-----BEGIN CERTIFICATE-----")[1::]:
-            pem_content = pem_segment.split("-----END CERTIFICATE-----")[0]
-            pem_cert = f"-----BEGIN CERTIFICATE-----{pem_content}-----END CERTIFICATE-----"
-            all_certs_as_pem.append(pem_cert)
-
-    # Convert them to X509 objects and save that in the cache
-    all_certs_as_509s = [X509(cert_pem) for cert_pem in all_certs_as_pem]
-    _cache_for_trusted_certificates_per_file[trusted_certificates_path] = all_certs_as_509s
-    return all_certs_as_509s
-
-
-def _verify_certificate_chain(server_certificate_chain: List[str], trust_store: TrustStore) -> PathValidationResult:
-    server_chain_as_x509s = [X509(pem_cert) for pem_cert in server_certificate_chain]
-    trust_store_as_x509s = _convert_and_cache_pem_certs_to_x509s(trust_store.path)
-    chain_verifier = CertificateChainVerifier(trust_store_as_x509s)
-
-    verified_chain: Optional[List[Certificate]]
-    try:
-        openssl_verify_str = None
-        verified_chain_as_509s = chain_verifier.verify(server_chain_as_x509s)
-        verified_chain = [
-            load_pem_x509_certificate(x509_cert.as_pem().encode("ascii"), backend=default_backend())
-            for x509_cert in verified_chain_as_509s
-        ]
-    except CertificateChainVerificationFailed as e:
-        verified_chain = None
-        openssl_verify_str = e.openssl_error_string
-
-    return PathValidationResult(
-        trust_store=trust_store, verified_certificate_chain=verified_chain, openssl_error_string=openssl_verify_str
-    )

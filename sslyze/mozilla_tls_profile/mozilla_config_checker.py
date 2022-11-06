@@ -324,7 +324,7 @@ def _check_certificates(
         else:
             deployed_key_algorithms.add(public_key.__class__.__name__)
 
-        deployed_signature_algorithms.add(leaf_cert.signature_algorithm_oid._name)
+        deployed_signature_algorithms.add(leaf_cert.signature_algorithm_oid._name)  # type: ignore
 
         # Validate the cert's lifespan
         leaf_cert_lifespan = leaf_cert.not_valid_after - leaf_cert.not_valid_before

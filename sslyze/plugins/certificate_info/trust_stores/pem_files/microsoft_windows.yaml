@@ -1,9 +1,11 @@
 platform: MICROSOFT_WINDOWS
 version: null
 url: https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFT
-date_fetched: 2022-08-15
-trusted_certificates_count: 249
+date_fetched: 2022-11-06
+trusted_certificates_count: 259
 trusted_certificates:
+- subject_name: A-Trust-Root-07
+  fingerprint: 8ac552ad577e37ad2c6808d72aa331d6a96b4b3febff34ce9bc0578e08055ec3
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
 - subject_name: AC RAIZ FNMT-RCM
@@ -44,6 +46,8 @@ trusted_certificates:
   fingerprint: 209e956af04df3996507c887d356230d6eb49fdbdd2d8a058ff50b8f80f690aa
 - subject_name: Autoridad de Certificacion Firmaprofesional CIF A62634068
   fingerprint: 04048028bf1f2864d48f9ad4d83294366a828856553f3b14303f90147f5d40ef
+- subject_name: Autoridad de Certificacion Firmaprofesional CIF A62634068
+  fingerprint: 57de0583efd2b26e0361da99da9df4648def7ee8441c3b728afa9bcde0f9b26a
 - subject_name: Autoridade Certificadora Raiz Brasileira v1
   fingerprint: cbd8ed38d4a2d677d453d70dd8890af4f6374cba6299943f1ab3a6936c6fd795
 - subject_name: Autoridade Certificadora Raiz Brasileira v10
@@ -74,6 +78,8 @@ trusted_certificates:
   fingerprint: 60109bc6c38328598a112c7a25e38b0f23e5a7511cb815fb64e0c4ff05db7df7
 - subject_name: CCA India 2015 SPL
   fingerprint: c34c5df53080078ffe45b21a7f600469917204f4f0293f1d7209393e5265c04f
+- subject_name: CCA India 2022
+  fingerprint: 9a3fd3176798e842ddcb12c262f11cfacca70a8b84c6ea6fda30842a95a94cd8
 - subject_name: CFCA EV ROOT
   fingerprint: 5cc3d78e4e1d5e45547a04e6873e64f90cf9536d1ccc2ef800f355c4c5fd70fd
 - subject_name: CFCA Identity CA
@@ -88,6 +94,8 @@ trusted_certificates:
   fingerprint: 1793927a0614549789adce2f8f34f7f0b66d0f3ae3a3b84d21ec15dbba4fadc7
 - subject_name: COMODO RSA Certification Authority
   fingerprint: 52f0e1c4e58ec629291b60317f074671b85d7ea80d5b07273463534b32b40234
+- subject_name: Carillon PKI Services G2 Root CA 1
+  fingerprint: ee0ec4a0b5e6ecb865f49689b50e3de38d4fd924a4041c0c2a62636db0b6b31d
 - subject_name: Certigna
   fingerprint: e3b6a2db2ed7ce48842f7ac53241c7b71d54144bfb40c11f3f1d0b42f5eea12d
 - subject_name: Certigna Root CA
@@ -164,10 +172,16 @@ trusted_certificates:
   fingerprint: 552f7bdcf1a7af9e6ce672017f4f12abf77240c78e761ac203d1d9d20ac89988
 - subject_name: E-Tugra Certification Authority
   fingerprint: b0bfd52bb0d7d9bd92bf5d4dc13da255c02c542f378365ea893911f55e55f23c
+- subject_name: E-Tugra Global Root CA ECC v3
+  fingerprint: 873f4685fa7f563625252e6d36bcd7f16fc24951f264e47e1b954f4908cdca13
+- subject_name: E-Tugra Global Root CA RSA v3
+  fingerprint: ef66b0b10a3cdb9f2e3648c76bd2af18ead2bfe6f117655e28c4060da1a3f4c2
 - subject_name: EC-ACC
   fingerprint: 88497f01602f3154246ae28c4d5aef10f1d87ebb76626f4ae0b7f95ba7968799
 - subject_name: Echoworx Root CA2
   fingerprint: 6639d13cab85df1ad9a23c443b3a60901e2b138d456fa71183578108884ec6bf
+- subject_name: Entrust Code Signing Root Certification Authority - CSBR1
+  fingerprint: b80847fda453bf6ed876ca7bc046a2481909e15b6ed376e665e7ad09f3864e71
 - subject_name: Entrust Root Certification Authority
   fingerprint: 73c176434f1bc6d5adf45b0e76e727287c8de57616c1e6e6141a2b2cbc7d8e4c
 - subject_name: Entrust Root Certification Authority - EC1
@@ -281,10 +295,16 @@ trusted_certificates:
   fingerprint: 5a2fc03f0c83b090bbfa40604b0988446c7636183df9846e17101a447fb8efd6
 - subject_name: Hotspot 2.0 Trust Root CA - 03
   fingerprint: a3cc68595dfe7e86d8ad1772a8b5284add54ace3b8a798df47bccafb1fdb84df
+- subject_name: I.CA Root CA/ECC 05/2022
+  fingerprint: 3808ce3e961ca532682ffb8708b544e8f175aa065601a45902df92128fc38532
 - subject_name: I.CA Root CA/ECC 12/2016
   fingerprint: b8692148ff49c3799fa2347ae28bcc5289623512b67dc19170452ade24ba51d5
 - subject_name: I.CA Root CA/RSA
   fingerprint: d3d607a9ff24a19523b6da9d2c649446f8788cb96d9fd130972e120c13677730
+- subject_name: I.CA Root CA/RSA 05/2022
+  fingerprint: d279c01a12e8dd9a6230e459faa447ceb336998477338c2ee4135c96737418eb
+- subject_name: I.CA TLS Root CA/RSA 05/2022
+  fingerprint: f9a17a00e5c294ba9614a715819af57f3fd48cc413453fbb8a5fc7e97964e2bc
 - subject_name: ISRG Root X1
   fingerprint: 96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6
 - subject_name: ISRG Root X2
@@ -503,7 +523,7 @@ trusted_certificates:
   fingerprint: 40f6af0346a99aa1cd1d555a4e9cce62c7f9634603ee406615833dc8c8d00367
 - subject_name: emSign Root CA - G2
   fingerprint: 1aa0c2709e831bd6e3b5129a00ba41f7eeef020872f1e6504bf0f6c3f24f3af3
-blocked_certificates_count: 189
+blocked_certificates_count: 188
 blocked_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -511,8 +531,6 @@ blocked_certificates:
   fingerprint: 6baf50ae3467eff3c35fefdc76a02a97fab6267723eda91e99f1b3dc2b28f82e
 - subject_name: A-Trust-Root-05
   fingerprint: 2dde9d0c0a90e7b32b5abc01f41799d42e95a1e3c31c3b39373bb8141ea54471
-- subject_name: A-Trust-Root-07
-  fingerprint: 8ac552ad577e37ad2c6808d72aa331d6a96b4b3febff34ce9bc0578e08055ec3
 - subject_name: A-Trust-nQual-03
   fingerprint: 8688e58f4c7a945fadce7f62bfef521b82da7dc38bfdb0163478a5fe42e57870
 - subject_name: AC RAIZ DNIE

@@ -6,7 +6,9 @@ from traceback import TracebackException
 from urllib.parse import urlsplit
 
 import pydantic
-from nassl._nassl import SslError
+
+# TODO: Fix type annotations in nassl
+from nassl._nassl import SslError  # type: ignore
 
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (

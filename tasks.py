@@ -6,7 +6,7 @@ from sys import platform
 import inspect
 
 if not hasattr(inspect, "getargspec"):
-    inspect.getargspec = inspect.getfullargspec
+    inspect.getargspec = inspect.getfullargspec  # type: ignore
 
 
 from invoke import task, Context

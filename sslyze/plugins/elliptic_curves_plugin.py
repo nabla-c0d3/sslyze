@@ -145,7 +145,7 @@ class SupportedEllipticCurvesImplementation(ScanCommandImplementation[SupportedE
         # https://tools.ietf.org/html/rfc8446#section-4.2.7
         return [
             ScanJob(function_to_call=_test_curve, function_arguments=[server_info, curve_nid])
-            for curve_nid in OpenSslEcNidEnum
+            for curve_nid in OpenSslEcNidEnum.get_supported_by_ssl_client()
         ]
 
     @classmethod

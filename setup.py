@@ -97,7 +97,7 @@ setup(
     entry_points={"console_scripts": ["sslyze = sslyze.__main__:main"]},
     # Dependencies
     install_requires=[
-        "nassl>=4.0.1,<5",
+        "nassl>=5.0.0,<6",
         "cryptography>=2.6,<39",
         "tls-parser>=2,<3",
         "pydantic>=1.7,<1.11",

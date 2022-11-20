@@ -1,6 +1,14 @@
 from pathlib import Path
 from sys import platform
 
+# Monkeypatch for Python 3.11
+# TODO: Remove after this is fixed: https://github.com/pyinvoke/invoke/issues/833
+import inspect
+
+if not hasattr(inspect, "getargspec"):
+    inspect.getargspec = inspect.getfullargspec
+
+
 from invoke import task, Context
 from sslyze import __version__
 

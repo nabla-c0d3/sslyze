@@ -5,6 +5,7 @@ htmlcov/
 
 # Pipenv
 .venv
+.venv311
 .venvln
 
 

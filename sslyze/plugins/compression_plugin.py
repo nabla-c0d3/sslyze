@@ -32,7 +32,7 @@ class CompressionScanResult(ScanCommandResult):
 
 
 # Identical fields in the JSON output
-CompressionScanResultAsJson = pydantic.dataclasses.dataclass(CompressionScanResult, frozen=True)
+CompressionScanResultAsJson = pydantic.dataclasses.dataclass(CompressionScanResult)
 
 
 class CompressionScanAttemptAsJson(ScanCommandAttemptAsJson):

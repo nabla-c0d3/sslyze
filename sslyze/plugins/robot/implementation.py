@@ -36,7 +36,7 @@ class RobotScanResult(ScanCommandResult):
 
 
 # Identical fields in the JSON output
-RobotScanResultAsJson = pydantic.dataclasses.dataclass(RobotScanResult, frozen=True)
+RobotScanResultAsJson = pydantic.dataclasses.dataclass(RobotScanResult)
 
 
 class RobotScanAttemptAsJson(ScanCommandAttemptAsJson):

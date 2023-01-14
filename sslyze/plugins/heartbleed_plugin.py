@@ -38,7 +38,7 @@ class HeartbleedScanResult(ScanCommandResult):
 
 
 # Identical fields in the JSON output
-HeartbleedScanResultAsJson = pydantic.dataclasses.dataclass(HeartbleedScanResult, frozen=True)
+HeartbleedScanResultAsJson = pydantic.dataclasses.dataclass(HeartbleedScanResult)
 
 
 class HeartbleedScanAttemptAsJson(ScanCommandAttemptAsJson):

@@ -39,7 +39,7 @@ class OpenSslCcsInjectionScanResult(ScanCommandResult):
 
 
 # Identical fields in the JSON output
-OpenSslCcsInjectionScanResultAsJson = pydantic.dataclasses.dataclass(OpenSslCcsInjectionScanResult, frozen=True)
+OpenSslCcsInjectionScanResultAsJson = pydantic.dataclasses.dataclass(OpenSslCcsInjectionScanResult)
 
 
 class OpenSslCcsInjectionScanAttemptAsJson(ScanCommandAttemptAsJson):

@@ -33,7 +33,7 @@ class EarlyDataScanResult(ScanCommandResult):
 
 
 # Identical fields in the JSON output
-EarlyDataScanResultAsJson = pydantic.dataclasses.dataclass(EarlyDataScanResult, frozen=True)
+EarlyDataScanResultAsJson = pydantic.dataclasses.dataclass(EarlyDataScanResult)
 
 
 class EarlyDataScanAttemptAsJson(ScanCommandAttemptAsJson):

@@ -35,7 +35,7 @@ class SessionRenegotiationScanResult(ScanCommandResult):
 
 
 # Identical fields in the JSON output
-SessionRenegotiationScanResultAsJson = pydantic.dataclasses.dataclass(SessionRenegotiationScanResult, frozen=True)
+SessionRenegotiationScanResultAsJson = pydantic.dataclasses.dataclass(SessionRenegotiationScanResult)
 
 
 class SessionRenegotiationScanAttemptAsJson(ScanCommandAttemptAsJson):

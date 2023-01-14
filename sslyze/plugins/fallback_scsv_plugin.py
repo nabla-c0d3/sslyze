@@ -31,7 +31,7 @@ class FallbackScsvScanResult(ScanCommandResult):
 
 
 # Identical fields in the JSON output
-FallbackScsvScanResultAsJson = pydantic.dataclasses.dataclass(FallbackScsvScanResult, frozen=True)
+FallbackScsvScanResultAsJson = pydantic.dataclasses.dataclass(FallbackScsvScanResult)
 
 
 class FallbackScsvScanAttemptAsJson(ScanCommandAttemptAsJson):

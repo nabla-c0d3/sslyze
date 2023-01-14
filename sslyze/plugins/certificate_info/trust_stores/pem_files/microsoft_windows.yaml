@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
 version: null
 url: https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFT
-date_fetched: 2022-11-06
-trusted_certificates_count: 259
+date_fetched: 2022-12-04
+trusted_certificates_count: 256
 trusted_certificates:
 - subject_name: A-Trust-Root-07
   fingerprint: 8ac552ad577e37ad2c6808d72aa331d6a96b4b3febff34ce9bc0578e08055ec3
@@ -453,12 +453,6 @@ trusted_certificates:
   fingerprint: dd6936fe21f8f077c123a1a521c12224f72255b73e03a7260693e8a24b0fa389
 - subject_name: Thailand National Root Certification Authority - G1
   fingerprint: 2a8da2f8d23e0cd3b5871ecfb0f42276ca73230667f474eede71c5ee32cc3ec6
-- subject_name: TrustCor ECA-1
-  fingerprint: 5a885db19c01d912c5759388938cafbbdf031ab2d48e91ee15589b42971d039c
-- subject_name: TrustCor RootCert CA-1
-  fingerprint: d40e9c86cd8fe468c1776959f49ea774fa548684b6c406f3909261f4dce2575c
-- subject_name: TrustCor RootCert CA-2
-  fingerprint: 0753e940378c1bd5e3836e395daea5cb839e5046f1bd0eae1951cf10fec7c965
 - subject_name: TrustFactory Client Root Certificate Authority
   fingerprint: 92c4db06c42a130d663574d7741b7f93c806fd6714dce890e84b568fae86e64c
 - subject_name: Trustwave Global Certification Authority
@@ -523,7 +517,7 @@ trusted_certificates:
   fingerprint: 40f6af0346a99aa1cd1d555a4e9cce62c7f9634603ee406615833dc8c8d00367
 - subject_name: emSign Root CA - G2
   fingerprint: 1aa0c2709e831bd6e3b5129a00ba41f7eeef020872f1e6504bf0f6c3f24f3af3
-blocked_certificates_count: 188
+blocked_certificates_count: 191
 blocked_certificates:
 - subject_name: A-Trust-Qual-02
   fingerprint: f28630babf256e567b5821069fcf13148ab9a23e28fc0d70615aae6ed284f4c8
@@ -855,6 +849,12 @@ blocked_certificates:
   fingerprint: b4410b73e2e6eaca47fbc42f8fa4018af4381dc54cfaa84450461eed09454de9
 - subject_name: Thawte Timestamping CA
   fingerprint: 6b6c1e01f590f5afc5fcf85cd0b9396884048659fc2c6d1170d68b045216c3fd
+- subject_name: TrustCor ECA-1
+  fingerprint: 5a885db19c01d912c5759388938cafbbdf031ab2d48e91ee15589b42971d039c
+- subject_name: TrustCor RootCert CA-1
+  fingerprint: d40e9c86cd8fe468c1776959f49ea774fa548684b6c406f3909261f4dce2575c
+- subject_name: TrustCor RootCert CA-2
+  fingerprint: 0753e940378c1bd5e3836e395daea5cb839e5046f1bd0eae1951cf10fec7c965
 - subject_name: TrustFactory SSL Root Certificate Authority
   fingerprint: 608142da5c675dd47c1aa3a26ee329e24e81d5ff3b94017bc1c1a0c37db4c1a0
 - subject_name: Trustis FPS Root CA

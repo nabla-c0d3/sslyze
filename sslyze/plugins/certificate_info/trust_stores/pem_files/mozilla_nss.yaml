@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2022-09-18
-trusted_certificates_count: 143
+date_fetched: 2022-12-11
+trusted_certificates_count: 140
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -104,8 +104,6 @@ trusted_certificates:
   fingerprint: 873f4685fa7f563625252e6d36bcd7f16fc24951f264e47e1b954f4908cdca13
 - subject_name: E-Tugra Global Root CA RSA v3
   fingerprint: ef66b0b10a3cdb9f2e3648c76bd2af18ead2bfe6f117655e28c4060da1a3f4c2
-- subject_name: EC-ACC
-  fingerprint: 88497f01602f3154246ae28c4d5aef10f1d87ebb76626f4ae0b7f95ba7968799
 - subject_name: Entrust Root Certification Authority
   fingerprint: 73c176434f1bc6d5adf45b0e76e727287c8de57616c1e6e6141a2b2cbc7d8e4c
 - subject_name: Entrust Root Certification Authority - EC1
@@ -180,8 +178,6 @@ trusted_certificates:
   fingerprint: 88f438dcf8ffd1fa8f429115ffe5f82ae1e06e0c70c375faad717b34a49e7265
 - subject_name: "NetLock Arany (Class Gold) F\u0151tan\xFAs\xEDtv\xE1ny"
   fingerprint: 6c61dac3a2def031506be036d2a6fe401994fbd13df9c8d466599274c446ec98
-- subject_name: Network Solutions Certificate Authority
-  fingerprint: 15f0ba00a3ac7af3ac884c072b1011a077bd77c097f40164b2f8598abd83860c
 - subject_name: OISTE WISeKey Global Root GB CA
   fingerprint: 6b9c08e86eb0f767cfad65cd98b62149e5494a67f5845e7bd1ed019f27b86bd6
 - subject_name: OISTE WISeKey Global Root GC CA
@@ -220,8 +216,6 @@ trusted_certificates:
   fingerprint: 513b2cecb810d4cde5dd85391adfc6c2dd60d87bb736d2b521484aa47a0ebef6
 - subject_name: Security Communication RootCA3
   fingerprint: 24a55c2ab051442d0617766541239a4ad032d7c55175aa34ffde2fbc4f5c5294
-- subject_name: Staat der Nederlanden EV Root CA
-  fingerprint: 4d2491414cfe956746ec4cefa6cf6f72e28a1329432f9d8a907ac4cb5dadc15a
 - subject_name: Starfield Class 2 Certification Authority
   fingerprint: 1465fa205397b876faa6f0a9958e5590e40fcc7faa4fb7c2c8677521fb5fb658
 - subject_name: Starfield Root Certificate Authority - G2

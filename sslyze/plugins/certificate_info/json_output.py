@@ -18,6 +18,7 @@ from sslyze import (
     TrustStore,
 )
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.plugins.certificate_info._cert_chain_analyzer import PublicKeyIssue
 from sslyze.plugins.certificate_info._certificate_utils import (
     get_public_key_sha256,
     parse_subject_alternative_name_extension,
@@ -249,6 +250,14 @@ class _PathValidationResultAsJson(_BaseModelWithOrmMode):
 _PathValidationResultAsJson.__doc__ = PathValidationResult.__doc__  # type: ignore
 
 
+class _PublicKeyIssueAsJson(_BaseModelWithOrmMode):
+    pass
+# TODO
+
+
+_PublicKeyIssueAsJson.__doc__ = PublicKeyIssue.__doc__
+
+
 class _CertificateDeploymentAnalysisResultAsJson(_BaseModelWithOrmMode):
     received_certificate_chain: List[_CertificateAsJson]
     leaf_certificate_subject_matches_hostname: bool
@@ -266,6 +275,8 @@ class _CertificateDeploymentAnalysisResultAsJson(_BaseModelWithOrmMode):
     ocsp_response_is_trusted: Optional[bool]
 
     verified_certificate_chain: Optional[List[_CertificateAsJson]]
+
+    leaf_certificate_public_key_issues: List[_PublicKeyIssueAsJson] = []  # TODO(6.0.0): Remove default value
 
 
 _CertificateDeploymentAnalysisResultAsJson.__doc__ = CertificateDeploymentAnalysisResult.__doc__  # type: ignore

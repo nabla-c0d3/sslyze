@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 
 from ssl import CertificateError, match_hostname
 from typing import Optional, List, cast
@@ -17,6 +18,18 @@ from sslyze.plugins.certificate_info._certificate_utils import (
 )
 from sslyze.plugins.certificate_info._symantec import SymantecDistructTester
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore, PathValidationResult
+
+
+class PublicKeyIssueTypeEnum(Enum):
+    pass
+
+
+@dataclass(frozen=True)
+class PublicKeyIssue:
+    type: PublicKeyIssueTypeEnum
+    name: str
+    url_with_more_information: str
+    affected_public_key_as_pem: str
 
 
 @dataclass(frozen=True)
@@ -45,6 +58,8 @@ class CertificateDeploymentAnalysisResult:
         leaf_certificate_signed_certificate_timestamps_count: The number of Signed Certificate
             Timestamps (SCTs) for Certificate Transparency embedded in the leaf certificate. ``None`` if the version of
             OpenSSL installed on the system is too old to be able to parse the SCT extension.
+        leaf_certificate_public_key_issues: A list of security issues affecting the leaf certificate's public key, such
+            a weak or known compromised key; empty if no issues were detected.
         received_chain_has_valid_order: ``True`` if the certificate chain returned by the server was sent in the right
             order. `None`` if any of the certificates in the chain could not be parsed.
         received_chain_contains_anchor_certificate: ``True`` if the server included the anchor/root
@@ -62,7 +77,6 @@ class CertificateDeploymentAnalysisResult:
             https://cryptography.io/en/latest/x509/ocsp.html?highlight=OCSPResponse#cryptography.x509.ocsp.OCSPResponse
         ocsp_response_is_trusted: ``True`` if the OCSP response is trusted using the Mozilla trust store.
             ``None`` if no OCSP response was sent by the server.
-
     """
 
     received_certificate_chain: List[Certificate]
@@ -79,6 +93,8 @@ class CertificateDeploymentAnalysisResult:
 
     ocsp_response: Optional[OCSPResponse]
     ocsp_response_is_trusted: Optional[bool]
+
+    leaf_certificate_public_key_issues: List[PublicKeyIssue]
 
     @property
     def verified_certificate_chain(self) -> Optional[List[Certificate]]:

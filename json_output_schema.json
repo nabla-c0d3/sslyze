@@ -30,7 +30,7 @@
     },
     "sslyze_version": {
       "title": "Sslyze Version",
-      "default": "5.0.6",
+      "default": "5.1.0",
       "type": "string"
     },
     "sslyze_url": {
@@ -98,7 +98,8 @@
       "required": [
         "hostname",
         "port"
-      ]
+      ],
+      "additionalProperties": false
     },
     "_ServerNetworkLocationAsJson": {
       "title": "_ServerNetworkLocationAsJson",
@@ -294,6 +295,15 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        },
+        "ip_addresses": {
+          "title": "Ip Addresses",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "ipvanyaddress"
           }
         }
       },
@@ -517,7 +527,7 @@
     },
     "_PathValidationResultAsJson": {
       "title": "_PathValidationResultAsJson",
-      "description": "The result of trying to validate a server's certificate chain using a specific trust store.\n\nAttributes:\n    trust_stores: The trust store used for validation.\n    verified_certificate_chain: The verified certificate chain returned by OpenSSL.\n        Index 0 is the leaf certificate and the last element is the anchor/CA certificate from the trust store.\n        Will be None if the validation failed or the verified chain could not be built.\n        Each certificate is parsed using the cryptography module; documentation is available at\n        https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.\n    openssl_error_string: The result string returned by OpenSSL's validation function; None if validation was\n        successful.\n    was_validation_successful: Whether the certificate chain is trusted when using supplied the trust_stores.",
+      "description": "The result of trying to validate a server's certificate chain using a specific trust store.\n\nAttributes:\n    trust_store: The trust store used for validation.\n    verified_certificate_chain: The verified certificate chain returned by OpenSSL.\n        Index 0 is the leaf certificate and the last element is the anchor/CA certificate from the trust store.\n        Will be None if the validation failed or the verified chain could not be built.\n        Each certificate is parsed using the cryptography module; documentation is available at\n        https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.\n    openssl_error_string: The result string returned by OpenSSL's validation function; None if validation was\n        successful.\n    was_validation_successful: Whether the certificate chain is trusted when using supplied the trust_stores.",
       "type": "object",
       "properties": {
         "trust_store": {
@@ -1304,31 +1314,9 @@
         "include_subdomains"
       ]
     },
-    "_ExpectCtHeaderAsJson": {
-      "title": "_ExpectCtHeaderAsJson",
-      "description": "An Expect-CT header parsed from a server's HTTP response.\n\nAttributes:\n    max-age: The content of the max-age field.\n    report-uri: The content of report-uri field.\n    enforce: True if enforce directive is set.",
-      "type": "object",
-      "properties": {
-        "max_age": {
-          "title": "Max Age",
-          "type": "integer"
-        },
-        "report_uri": {
-          "title": "Report Uri",
-          "type": "string"
-        },
-        "enforce": {
-          "title": "Enforce",
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "enforce"
-      ]
-    },
     "HttpHeadersScanResultAsJson": {
       "title": "HttpHeadersScanResultAsJson",
-      "description": "The result of testing a server for the presence of security-related HTTP headers.\n\nEach HTTP header described below will be ``None`` if the server did not return a valid HTTP response, or if the\nserver returned an HTTP response without the HTTP header.\n\nAttributes:\n    http_request_sent: The initial HTTP request sent to the server by SSLyze.\n    http_error_trace: An error the server returned after receiving the initial HTTP request. If this field is set,\n        all the subsequent fields will be ``None`` as SSLyze did not receive a valid HTTP response from the server.\n    http_path_redirected_to: The path SSLyze was eventually redirected to after sending the initial HTTP request.\n    strict_transport_security_header: The Strict-Transport-Security header returned by the server.\n    expect_ct_header: The Expect-CT header returned by the server.",
+      "description": "The result of testing a server for the presence of security-related HTTP headers.\n\nEach HTTP header described below will be ``None`` if the server did not return a valid HTTP response, or if the\nserver returned an HTTP response without the HTTP header.\n\nAttributes:\n    http_request_sent: The initial HTTP request sent to the server by SSLyze.\n    http_error_trace: An error the server returned after receiving the initial HTTP request. If this field is set,\n        all the subsequent fields will be ``None`` as SSLyze did not receive a valid HTTP response from the server.\n    http_path_redirected_to: The path SSLyze was eventually redirected to after sending the initial HTTP request.\n    strict_transport_security_header: The Strict-Transport-Security header returned by the server.\n    expect_ct_header: DEPRECATED - will always be ``None``. This is because the Expect-CT header has officially\n        been deprecated.",
       "type": "object",
       "properties": {
         "http_request_sent": {
@@ -1347,7 +1335,8 @@
           "$ref": "#/definitions/_StrictTransportSecurityHeaderAsJson"
         },
         "expect_ct_header": {
-          "$ref": "#/definitions/_ExpectCtHeaderAsJson"
+          "title": "Expect Ct Header",
+          "type": "null"
         }
       },
       "required": [

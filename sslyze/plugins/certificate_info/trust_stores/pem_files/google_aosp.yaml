@@ -1,7 +1,7 @@
 platform: GOOGLE_AOSP
-version: 13.0.0_r8
+version: 13.0.0_r9
 url: https://android.googlesource.com/platform/system/ca-certificates
-date_fetched: 2022-10-09
+date_fetched: 2022-10-16
 trusted_certificates_count: 129
 trusted_certificates:
 - subject_name: AAA Certificate Services

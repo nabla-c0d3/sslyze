@@ -6,7 +6,9 @@ from traceback import TracebackException
 from urllib.parse import urlsplit
 
 import pydantic
-from nassl._nassl import SslError
+
+# TODO: Fix type annotations in nassl
+from nassl._nassl import SslError  # type: ignore
 
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
@@ -70,7 +72,8 @@ class HttpHeadersScanResult(ScanCommandResult):
             all the subsequent fields will be ``None`` as SSLyze did not receive a valid HTTP response from the server.
         http_path_redirected_to: The path SSLyze was eventually redirected to after sending the initial HTTP request.
         strict_transport_security_header: The Strict-Transport-Security header returned by the server.
-        expect_ct_header: The Expect-CT header returned by the server.
+        expect_ct_header: DEPRECATED - will always be ``None``. This is because the Expect-CT header has officially
+            been deprecated.
     """
 
     http_request_sent: str
@@ -78,16 +81,7 @@ class HttpHeadersScanResult(ScanCommandResult):
 
     http_path_redirected_to: Optional[str]
     strict_transport_security_header: Optional[StrictTransportSecurityHeader]
-    expect_ct_header: Optional[ExpectCtHeader]
-
-
-class _ExpectCtHeaderAsJson(pydantic.BaseModel):
-    max_age: Optional[int]
-    report_uri: Optional[str]
-    enforce: bool
-
-
-_ExpectCtHeaderAsJson.__doc__ = ExpectCtHeader.__doc__  # type: ignore
+    expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
 
 class _StrictTransportSecurityHeaderAsJson(pydantic.BaseModel):
@@ -105,7 +99,7 @@ class HttpHeadersScanResultAsJson(pydantic.BaseModel):
 
     http_path_redirected_to: Optional[str]
     strict_transport_security_header: Optional[_StrictTransportSecurityHeaderAsJson]
-    expect_ct_header: Optional[_ExpectCtHeaderAsJson]
+    expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
     class Config:
         orm_mode = True
@@ -122,16 +116,11 @@ class HttpHeadersScanResultAsJson(pydantic.BaseModel):
         if result.strict_transport_security_header:
             sts_header_json = _StrictTransportSecurityHeaderAsJson(**asdict(result.strict_transport_security_header))
 
-        ct_header_json = None
-        if result.expect_ct_header:
-            ct_header_json = _ExpectCtHeaderAsJson(**asdict(result.expect_ct_header))
-
         return cls(
             http_request_sent=result.http_request_sent,
             http_error_trace=http_error_trace_as_str,
             http_path_redirected_to=result.http_path_redirected_to,
             strict_transport_security_header=sts_header_json,
-            expect_ct_header=ct_header_json,
         )
 
 
@@ -177,15 +166,6 @@ class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, No
                 )
             )
             result_as_txt.append(cls._format_field("Preload:", str(result.strict_transport_security_header.preload)))
-
-        # Expect-CT
-        result_as_txt.extend(["", cls._format_subtitle("Expect-CT Header")])
-        if not result.expect_ct_header:
-            result_as_txt.append(cls._format_field("NOT SUPPORTED - Server did not return the header", ""))
-        else:
-            result_as_txt.append(cls._format_field("Max Age:", str(result.expect_ct_header.max_age)))
-            result_as_txt.append(cls._format_field("Report- URI:", str(result.expect_ct_header.report_uri)))
-            result_as_txt.append(cls._format_field("Enforce:", str(result.expect_ct_header.enforce)))
 
         return result_as_txt
 
@@ -271,7 +251,6 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
             http_error_trace=http_error_trace,
             http_path_redirected_to=None,
             strict_transport_security_header=None,
-            expect_ct_header=None,
         )
     else:
         # If no HTTP error happened, parse and return each header
@@ -280,7 +259,6 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
             http_path_redirected_to=http_path_redirected_to,
             http_error_trace=None,
             strict_transport_security_header=_parse_hsts_header_from_http_response(http_response),
-            expect_ct_header=_parse_expect_ct_header_from_http_response(http_response),
         )
 
 
@@ -344,29 +322,3 @@ def _parse_hsts_header_from_http_response(response: HTTPResponse) -> Optional[St
             _logger.warning(f"Unexpected value in HSTS header: {repr(hsts_directive)}")
 
     return StrictTransportSecurityHeader(max_age, preload, include_subdomains)
-
-
-def _parse_expect_ct_header_from_http_response(response: HTTPResponse) -> Optional[ExpectCtHeader]:
-    raw_expect_ct_header = _extract_first_header_value(response, "expect-ct")
-    if not raw_expect_ct_header:
-        return None
-
-    max_age = None
-    report_uri = None
-    enforce = False
-    for expect_ct_directive in raw_expect_ct_header.split(","):
-        expect_ct_directive = expect_ct_directive.strip()
-
-        if not expect_ct_directive:
-            continue
-
-        if "max-age" in expect_ct_directive:
-            max_age = int(expect_ct_directive.split("max-age=")[1].strip())
-        elif "report-uri" in expect_ct_directive:
-            report_uri = expect_ct_directive.split("report-uri=")[1].strip(' "')
-        elif "enforce" in expect_ct_directive:
-            enforce = True
-        else:
-            _logger.warning(f"Unexpected value in Expect-CT header: {repr(expect_ct_directive)}")
-
-    return ExpectCtHeader(max_age, report_uri, enforce)

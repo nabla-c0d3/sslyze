@@ -4,13 +4,10 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 import pydantic
-from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509 import NameAttribute
-from cryptography.x509.ocsp import OCSPResponseStatus
-from cryptography.x509.oid import ObjectIdentifier  # type: ignore
+from cryptography.x509 import NameAttribute, ObjectIdentifier, Name, Certificate, ocsp
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 
 from sslyze import (
@@ -23,7 +20,7 @@ from sslyze import (
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.certificate_info._certificate_utils import (
     get_public_key_sha256,
-    extract_dns_subject_alternative_names,
+    parse_subject_alternative_name_extension,
 )
 
 
@@ -78,7 +75,10 @@ class _ObjectIdentifierAsJson(_BaseModelWithOrmMode):
 
     @classmethod
     def from_orm(cls, oid: ObjectIdentifier) -> "_ObjectIdentifierAsJson":
-        return cls(name=oid._name, dotted_string=oid.dotted_string)
+        return cls(
+            name=oid._name,  # type: ignore
+            dotted_string=oid.dotted_string,
+        )
 
 
 class _NameAttributeAsJson(_BaseModelWithOrmMode):
@@ -100,14 +100,20 @@ class _X509NameAsJson(_BaseModelWithOrmMode):
     attributes: List[_NameAttributeAsJson]
 
     @classmethod
-    def from_orm(cls, name: x509.name.Name) -> "_X509NameAsJson":
+    def from_orm(cls, name: Name) -> "_X509NameAsJson":
         return cls(
             rfc4514_string=name.rfc4514_string(), attributes=[_NameAttributeAsJson.from_orm(attr) for attr in name]
         )
 
 
 class _SubjAltNameAsJson(pydantic.BaseModel):
-    dns: List[str]
+
+    # TODO(6.0.0): Remove the Config, alias and default value as the name "dns" is deprecated
+    class Config:
+        allow_population_by_field_name = True
+
+    dns_names: List[str] = pydantic.Field(alias="dns")
+    ip_addresses: List[pydantic.IPvAnyAddress] = []
 
 
 class _HashAlgorithmAsJson(_BaseModelWithOrmMode):
@@ -143,7 +149,7 @@ class _CertificateAsJson(_BaseModelWithOrmMode):
     public_key: _PublicKeyAsJson
 
     @classmethod
-    def from_orm(cls, certificate: x509.Certificate) -> "_CertificateAsJson":
+    def from_orm(cls, certificate: Certificate) -> "_CertificateAsJson":
         signature_hash_algorithm: Optional[_HashAlgorithmAsJson]
         if certificate.signature_hash_algorithm:
             signature_hash_algorithm = _HashAlgorithmAsJson.from_orm(certificate.signature_hash_algorithm)
@@ -164,6 +170,8 @@ class _CertificateAsJson(_BaseModelWithOrmMode):
         except ValueError:
             issuer_field = None
 
+        subj_alt_name_ext = parse_subject_alternative_name_extension(certificate)
+
         return cls(
             as_pem=certificate.public_bytes(Encoding.PEM).decode("ascii"),
             hpkp_pin=b64encode(get_public_key_sha256(certificate)).decode("ascii"),
@@ -172,7 +180,10 @@ class _CertificateAsJson(_BaseModelWithOrmMode):
             serial_number=certificate.serial_number,
             not_valid_before=certificate.not_valid_before,
             not_valid_after=certificate.not_valid_after,
-            subject_alternative_name=_SubjAltNameAsJson(dns=extract_dns_subject_alternative_names(certificate)),
+            subject_alternative_name=_SubjAltNameAsJson(
+                dns_names=subj_alt_name_ext.dns_names,
+                ip_addresses=subj_alt_name_ext.ip_addresses,
+            ),
             signature_hash_algorithm=signature_hash_algorithm,
             signature_algorithm_oid=certificate.signature_algorithm_oid,
             subject=subject_field,
@@ -194,9 +205,9 @@ class _OcspResponseAsJson(_BaseModelWithOrmMode):
     serial_number: Optional[int]
 
     @classmethod
-    def from_orm(cls, ocsp_response: x509.ocsp.OCSPResponse) -> "_OcspResponseAsJson":
+    def from_orm(cls, ocsp_response: ocsp.OCSPResponse) -> "_OcspResponseAsJson":
         response_status = ocsp_response.response_status.name
-        if ocsp_response.response_status != OCSPResponseStatus.SUCCESSFUL:
+        if ocsp_response.response_status != ocsp.OCSPResponseStatus.SUCCESSFUL:
             return cls(
                 response_status=response_status,
                 certificate_status=None,

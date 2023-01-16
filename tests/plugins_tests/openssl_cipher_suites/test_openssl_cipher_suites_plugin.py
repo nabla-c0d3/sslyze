@@ -1,7 +1,7 @@
 import random
 
 import pytest
-from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo, DhEphemeralKeyInfo
+from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo
 
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.plugins.openssl_cipher_suites.implementation import (
@@ -272,23 +272,19 @@ class TestCipherSuitesPluginWithOnlineServer:
 
     def test_ephemeral_key_info(self):
         # Given a server to scan that supports DH and ECDH ephemeral keys
-        server_location = ServerNetworkLocation("www.hotmail.com", 443)
+        server_location = ServerNetworkLocation("cloudflare.com", 443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # When scanning for cipher suites, it succeeds
         result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
-        assert result.accepted_cipher_suites
 
-        # And the ephemeral keys were returned
-        found_dh_key = False
+        # And the ephemeral keys for ECDHE were returned
+        assert result.accepted_cipher_suites
         found_ecdh_key = False
         for accepted_cipher_suite in result.accepted_cipher_suites:
-            if isinstance(accepted_cipher_suite.ephemeral_key, EcDhEphemeralKeyInfo):
+            if "_ECDHE_" in accepted_cipher_suite.cipher_suite.name:
+                assert isinstance(accepted_cipher_suite.ephemeral_key, EcDhEphemeralKeyInfo)
                 found_ecdh_key = True
-            elif isinstance(accepted_cipher_suite.ephemeral_key, DhEphemeralKeyInfo):
-                found_dh_key = True
-
-        assert found_dh_key
         assert found_ecdh_key
 
 

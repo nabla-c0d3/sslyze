@@ -109,6 +109,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "insufficient security": "TLS error: insufficient security",
     "block type is not 01": "TLS error: block type is not 01",  # Actually an RSA error
     "wrong ssl version": "TLS error: wrong SSL version",
+    "digest check failed": "TLS error: digest check failed",
     "sslv3 alert handshake failure": "TLS alert: handshake failure",
     "tlsv1 alert protocol version": "TLS alert: protocol version ",
     "tlsv1 alert decrypt error": "TLS alert: Decrypt error",

@@ -1,9 +1,9 @@
 from base64 import b64encode
 from typing import List, Optional
 
-import pydantic
 from nassl.ephemeral_key_info import EphemeralKeyInfo, EcDhEphemeralKeyInfo, NistEcDhKeyExchangeInfo, DhEphemeralKeyInfo
 
+from sslyze.json.pydantic_utils import BaseModelWithOrmMode
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.openssl_cipher_suites.implementation import (
     CipherSuitesScanResult,
@@ -11,13 +11,7 @@ from sslyze.plugins.openssl_cipher_suites.implementation import (
 )
 
 
-class _BaseModelWithOrmMode(pydantic.BaseModel):
-    class Config:
-        orm_mode = True
-        extra = "forbid"  # Fields must match between the JSON representation and the result objects
-
-
-class _CipherSuiteAsJson(_BaseModelWithOrmMode):
+class _CipherSuiteAsJson(BaseModelWithOrmMode):
     name: str
     is_anonymous: bool
     key_size: int
@@ -27,7 +21,7 @@ class _CipherSuiteAsJson(_BaseModelWithOrmMode):
 _Base64EncodedBytes = str
 
 
-class _EphemeralKeyInfoAsJson(_BaseModelWithOrmMode):
+class _EphemeralKeyInfoAsJson(BaseModelWithOrmMode):
     type_name: str
     size: int
     public_bytes: _Base64EncodedBytes
@@ -74,7 +68,7 @@ class _EphemeralKeyInfoAsJson(_BaseModelWithOrmMode):
         )
 
 
-class _CipherSuiteAcceptedByServerAsJson(_BaseModelWithOrmMode):
+class _CipherSuiteAcceptedByServerAsJson(BaseModelWithOrmMode):
     cipher_suite: _CipherSuiteAsJson
     ephemeral_key: Optional[_EphemeralKeyInfoAsJson]
 
@@ -82,12 +76,12 @@ class _CipherSuiteAcceptedByServerAsJson(_BaseModelWithOrmMode):
 _CipherSuiteAcceptedByServerAsJson.__doc__ = CipherSuiteAcceptedByServer.__doc__  # type: ignore
 
 
-class _CipherSuiteRejectedByServerAsJson(_BaseModelWithOrmMode):
+class _CipherSuiteRejectedByServerAsJson(BaseModelWithOrmMode):
     cipher_suite: _CipherSuiteAsJson
     error_message: str
 
 
-class CipherSuitesScanResultAsJson(_BaseModelWithOrmMode):
+class CipherSuitesScanResultAsJson(BaseModelWithOrmMode):
     tls_version_used: str
     is_tls_version_supported: bool
 

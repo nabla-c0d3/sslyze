@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Tuple
 
-import pydantic
 from nassl._nassl import OpenSSLError
 from nassl.legacy_ssl_client import LegacySslClient
 
+from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.plugins.plugin_base import (
@@ -34,8 +34,9 @@ class SessionRenegotiationScanResult(ScanCommandResult):
     is_vulnerable_to_client_renegotiation_dos: bool
 
 
-# Identical fields in the JSON output
-SessionRenegotiationScanResultAsJson = pydantic.dataclasses.dataclass(SessionRenegotiationScanResult)
+class SessionRenegotiationScanResultAsJson(BaseModelWithOrmModeAndForbid):
+    supports_secure_renegotiation: bool
+    is_vulnerable_to_client_renegotiation_dos: bool
 
 
 class SessionRenegotiationScanAttemptAsJson(ScanCommandAttemptAsJson):

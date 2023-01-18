@@ -14,6 +14,7 @@ from sslyze import (
     ClientAuthenticationCredentials,
 )
 from sslyze.__version__ import __url__, __version__
+from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.plugins.certificate_info.json_output import (
     CertificateInfoExtraArgumentAsJson,
     CertificateInfoScanAttemptAsJson,
@@ -44,19 +45,13 @@ if TYPE_CHECKING:
     from sslyze.cli.server_string_parser import InvalidServerStringError
 
 
-class _BaseModelWithOrmModeAndForbid(pydantic.BaseModel):
-    class Config:
-        orm_mode = True
-        extra = "forbid"  # Fields must match between the JSON representation and the actual objects
-
-
-class ScanCommandsExtraArgumentsAsJson(_BaseModelWithOrmModeAndForbid):
+class ScanCommandsExtraArgumentsAsJson(BaseModelWithOrmModeAndForbid):
     # Field is present if extra arguments were provided for the corresponding scan command
     certificate_info: Optional[CertificateInfoExtraArgumentAsJson] = None
     session_resumption: Optional[SessionResumptionSupportExtraArgumentAsJson] = None
 
 
-class AllScanCommandsAttemptsAsJson(_BaseModelWithOrmModeAndForbid):
+class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
     certificate_info: CertificateInfoScanAttemptAsJson
     ssl_2_0_cipher_suites: CipherSuitesScanAttemptAsJson
     ssl_3_0_cipher_suites: CipherSuitesScanAttemptAsJson
@@ -101,7 +96,7 @@ class AllScanCommandsAttemptsAsJson(_BaseModelWithOrmModeAndForbid):
 
 
 # Identical fields in the JSON output
-class _HttpProxySettingsAsJson(_BaseModelWithOrmModeAndForbid):
+class _HttpProxySettingsAsJson(BaseModelWithOrmModeAndForbid):
     hostname: str
     port: int
 
@@ -127,7 +122,7 @@ class _ClientAuthenticationCredentialsAsJson(pydantic.BaseModel):
         )
 
 
-class _ServerTlsProbingResultAsJson(_BaseModelWithOrmModeAndForbid):
+class _ServerTlsProbingResultAsJson(BaseModelWithOrmModeAndForbid):
     highest_tls_version_supported: str
     cipher_suite_supported: str
     client_auth_requirement: ClientAuthRequirementEnum
@@ -146,7 +141,7 @@ class _ServerTlsProbingResultAsJson(_BaseModelWithOrmModeAndForbid):
 _ServerTlsProbingResultAsJson.__doc__ = ServerTlsProbingResult.__doc__  # type: ignore
 
 
-class _ServerNetworkConfigurationAsJson(_BaseModelWithOrmModeAndForbid):
+class _ServerNetworkConfigurationAsJson(BaseModelWithOrmModeAndForbid):
     tls_server_name_indication: str
     tls_opportunistic_encryption: Optional[ProtocolWithOpportunisticTlsEnum] = None
     tls_client_auth_credentials: Optional[_ClientAuthenticationCredentialsAsJson] = None
@@ -160,7 +155,7 @@ class _ServerNetworkConfigurationAsJson(_BaseModelWithOrmModeAndForbid):
 _ServerNetworkConfigurationAsJson.__doc__ = ServerNetworkConfiguration.__doc__  # type: ignore
 
 
-class _ServerNetworkLocationAsJson(_BaseModelWithOrmModeAndForbid):
+class _ServerNetworkLocationAsJson(BaseModelWithOrmModeAndForbid):
     hostname: str
     port: int
     connection_type: ConnectionTypeEnum
@@ -171,7 +166,7 @@ class _ServerNetworkLocationAsJson(_BaseModelWithOrmModeAndForbid):
 _ServerNetworkLocationAsJson.__doc__ = ServerNetworkLocation.__doc__  # type: ignore
 
 
-class ServerScanResultAsJson(_BaseModelWithOrmModeAndForbid):
+class ServerScanResultAsJson(BaseModelWithOrmModeAndForbid):
     uuid: UUID
     server_location: _ServerNetworkLocationAsJson
     network_configuration: _ServerNetworkConfigurationAsJson
@@ -218,7 +213,7 @@ class ServerScanResultAsJson(_BaseModelWithOrmModeAndForbid):
 ServerScanResultAsJson.__doc__ = ServerScanResult.__doc__  # type: ignore
 
 
-class InvalidServerStringAsJson(_BaseModelWithOrmModeAndForbid):
+class InvalidServerStringAsJson(BaseModelWithOrmModeAndForbid):
     """A hostname:port string supplied via the command line that SSLyze was unable to parse or resolve."""
 
     server_string: str

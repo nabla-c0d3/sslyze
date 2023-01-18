@@ -17,6 +17,7 @@ from sslyze import (
     PathValidationResult,
     TrustStore,
 )
+from sslyze.json.pydantic_utils import BaseModelWithOrmMode
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.certificate_info._certificate_utils import (
     get_public_key_sha256,
@@ -24,19 +25,14 @@ from sslyze.plugins.certificate_info._certificate_utils import (
 )
 
 
-class _BaseModelWithOrmMode(pydantic.BaseModel):
-    class Config:
-        orm_mode = True
-
-
-class CertificateInfoExtraArgumentAsJson(_BaseModelWithOrmMode):
+class CertificateInfoExtraArgumentAsJson(BaseModelWithOrmMode):
     custom_ca_file: Path
 
 
 CertificateInfoExtraArgumentAsJson.__doc__ = CertificateInfoExtraArgument.__doc__  # type: ignore
 
 
-class _PublicKeyAsJson(_BaseModelWithOrmMode):
+class _PublicKeyAsJson(BaseModelWithOrmMode):
     algorithm: str
     key_size: Optional[int]  # None for Ed25519PublicKey and Ed448PublicKey
 
@@ -69,7 +65,7 @@ class _PublicKeyAsJson(_BaseModelWithOrmMode):
         )
 
 
-class _ObjectIdentifierAsJson(_BaseModelWithOrmMode):
+class _ObjectIdentifierAsJson(BaseModelWithOrmMode):
     name: str
     dotted_string: str
 
@@ -81,7 +77,7 @@ class _ObjectIdentifierAsJson(_BaseModelWithOrmMode):
         )
 
 
-class _NameAttributeAsJson(_BaseModelWithOrmMode):
+class _NameAttributeAsJson(BaseModelWithOrmMode):
     oid: _ObjectIdentifierAsJson
     value: str
     rfc4514_string: str
@@ -95,7 +91,7 @@ class _NameAttributeAsJson(_BaseModelWithOrmMode):
         )
 
 
-class _X509NameAsJson(_BaseModelWithOrmMode):
+class _X509NameAsJson(BaseModelWithOrmMode):
     rfc4514_string: str
     attributes: List[_NameAttributeAsJson]
 
@@ -116,7 +112,7 @@ class _SubjAltNameAsJson(pydantic.BaseModel):
     ip_addresses: List[pydantic.IPvAnyAddress] = []
 
 
-class _HashAlgorithmAsJson(_BaseModelWithOrmMode):
+class _HashAlgorithmAsJson(BaseModelWithOrmMode):
     name: str
     digest_size: int
 
@@ -125,7 +121,7 @@ class _HashAlgorithmAsJson(_BaseModelWithOrmMode):
         return cls(name=hash_algorithm.name, digest_size=hash_algorithm.digest_size)
 
 
-class _CertificateAsJson(_BaseModelWithOrmMode):
+class _CertificateAsJson(BaseModelWithOrmMode):
     as_pem: str
     hpkp_pin: str  # RFC 7469
     fingerprint_sha1: str
@@ -192,7 +188,7 @@ class _CertificateAsJson(_BaseModelWithOrmMode):
         )
 
 
-class _OcspResponseAsJson(_BaseModelWithOrmMode):
+class _OcspResponseAsJson(BaseModelWithOrmMode):
     response_status: str
 
     certificate_status: Optional[str]
@@ -229,7 +225,7 @@ class _OcspResponseAsJson(_BaseModelWithOrmMode):
             )
 
 
-class _TrustStoreAsJson(_BaseModelWithOrmMode):
+class _TrustStoreAsJson(BaseModelWithOrmMode):
     path: Path
     name: str
     version: str
@@ -239,7 +235,7 @@ class _TrustStoreAsJson(_BaseModelWithOrmMode):
 _TrustStoreAsJson.__doc__ = TrustStore.__doc__  # type: ignore
 
 
-class _PathValidationResultAsJson(_BaseModelWithOrmMode):
+class _PathValidationResultAsJson(BaseModelWithOrmMode):
     trust_store: _TrustStoreAsJson
     verified_certificate_chain: Optional[List[_CertificateAsJson]]
     openssl_error_string: Optional[str]
@@ -249,7 +245,7 @@ class _PathValidationResultAsJson(_BaseModelWithOrmMode):
 _PathValidationResultAsJson.__doc__ = PathValidationResult.__doc__  # type: ignore
 
 
-class _CertificateDeploymentAnalysisResultAsJson(_BaseModelWithOrmMode):
+class _CertificateDeploymentAnalysisResultAsJson(BaseModelWithOrmMode):
     received_certificate_chain: List[_CertificateAsJson]
     leaf_certificate_subject_matches_hostname: bool
     leaf_certificate_has_must_staple_extension: bool
@@ -271,7 +267,7 @@ class _CertificateDeploymentAnalysisResultAsJson(_BaseModelWithOrmMode):
 _CertificateDeploymentAnalysisResultAsJson.__doc__ = CertificateDeploymentAnalysisResult.__doc__  # type: ignore
 
 
-class CertificateInfoScanResultAsJson(_BaseModelWithOrmMode):
+class CertificateInfoScanResultAsJson(BaseModelWithOrmMode):
     hostname_used_for_server_name_indication: str
     certificate_deployments: List[_CertificateDeploymentAnalysisResultAsJson]
 

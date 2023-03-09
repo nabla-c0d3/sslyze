@@ -17,7 +17,8 @@ class TestOpportunisticTls:
             ("ldap.uchicago.edu", 389, ProtocolWithOpportunisticTlsEnum.LDAP),
             ("jabber.org", 5222, ProtocolWithOpportunisticTlsEnum.XMPP_SERVER),
             # Some Heroku Postgres instance I created
-            ("ec2-54-217-15-9.eu-west-1.compute.amazonaws.com", 5432, ProtocolWithOpportunisticTlsEnum.POSTGRES),
+            # TODO(AD): Heroku no longer offers free instances; need to find a new Postgres test server
+            # ("ec2-54-217-15-9.eu-west-1.compute.amazonaws.com", 5432, ProtocolWithOpportunisticTlsEnum.POSTGRES),
         ],
     )
     def test(self, hostname, port, protocol):

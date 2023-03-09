@@ -17,7 +17,7 @@ jobs:
         python-version: 3.8
 
     - name: Install pip and cx-freeze
-      run: python -m pip install --upgrade pip pipenv setuptools cx-freeze
+      run: python -m pip install --upgrade pip pipenv setuptools cx-freeze==6.13.1
 
     - name: Install SSLyze dependencies
       run: |

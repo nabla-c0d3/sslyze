@@ -1,4 +1,42 @@
-from io import StringIO
+fromToggle navigation
+Toggle navigation
+ Subnet Calculator
+148.66.54.79
+ 
+Input
+148.66.54.79/29
+CIDR
+148.66.54.72/29
+Input IP
+148.66.54.79
+CIDR IP Range
+148.66.54.72 - 148.66.54.79
+Input Long
+2487367247
+CIDR Long Range
+2487367240 - 2487367247
+Input Hex
+94.42.36.4F
+CIDR Hex Range
+94.42.36.48 - 94.42.36.4F
+IPs in Range
+8
+Mask Bits
+29
+Subnet Mask
+255.255.255.248
+Hex Subnet Mask
+FF.FF.FF.F8
+ABOUT SUBNET CALCULATOR
+The subnet calculator lets you enter a subnet range (CIDR) and see IP address information about that range You can type your range directly in CIDR notation, or use the optional Mask pull-down:
+
+74.125.227.0/29
+74.125.227.0, then select Optional Mask from dropdown
+This is a useful feature for service providers and network operator who frequently allocate and work with subnets. CIDR stands for Classless Inter-Domain Routing, and refers to the standard of dividing the entire IP address space into smaller networks of variable size.
+
+Your IP is: 102.89.33.103|  Contact Terms & Conditions Site Map API Privacy Phone: (866)-MXTOOLBOX / (866)-698-6652 |  © Copyright 2004-2021, MXToolBox, Inc, All rights reserved. US Patents 10839353 B2 & 11461738 B2
+ 
+burritos@banana-pancakes.com braunstrowman@banana-pancakes.com finnbalor@banana-pancakes.com ricflair@banana-pancakes.com randysavage@banana-pancakes.com io import StringIO
 
 from sslyze.cli.console_output import ObserverToGenerateConsoleOutput
 from sslyze.plugins.compression_plugin import CompressionScanResult

@@ -101,7 +101,7 @@ class MozillaTlsConfigurationChecker:
 
     @classmethod
     def get_default(cls) -> "MozillaTlsConfigurationChecker":
-        json_profile_path = Path(__file__).parent.absolute() / "5.6.json"
+        json_profile_path = Path(__file__).parent.absolute() / "5.7.json"
         json_profile_as_str = json_profile_path.read_text()
         parsed_profile = _MozillaTlsProfileAsJson(**json.loads(json_profile_as_str))
         return cls(parsed_profile)

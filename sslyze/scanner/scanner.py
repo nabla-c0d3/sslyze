@@ -1,6 +1,6 @@
 import queue
 from traceback import TracebackException
-from typing import List, Optional, Generator, Tuple, Sequence
+from typing import List, Optional, Generator, Sequence
 
 from sslyze import ServerTlsProbingResult
 from sslyze.errors import ConnectionToServerFailed
@@ -8,6 +8,8 @@ from sslyze.scanner._mass_connectivity_tester import MassConnectivityTester
 from sslyze.scanner._mass_scanner import (
     MassScannerProducerThread,
     NoMoreServerScanRequestsSentinel,
+    ServerScanRequestsQueueType,
+    ServerScanResultsQueueType,
 )
 from sslyze.scanner.models import (
     ServerScanRequest,
@@ -67,8 +69,8 @@ class Scanner:
             raise ValueError("No scan requests have been submitted")
 
         # Setup the queues for running and completing the scans
-        server_scan_requests_queue: "queue.Queue[Tuple[ServerScanRequest, ServerTlsProbingResult]]" = queue.Queue()
-        server_scan_results_queue: "queue.Queue[ServerScanResult]" = queue.Queue()
+        server_scan_requests_queue: ServerScanRequestsQueueType = queue.Queue()
+        server_scan_results_queue: ServerScanResultsQueueType = queue.Queue()
 
         def server_connectivity_test_completed_callback(
             server_scan_request: ServerScanRequest, connectivity_result: ServerTlsProbingResult
@@ -115,7 +117,7 @@ class Scanner:
         )
 
         # Notify the MassScanner that all the scan requests have been queued
-        server_scan_requests_queue.put(NoMoreServerScanRequestsSentinel())  # type: ignore
+        server_scan_requests_queue.put(NoMoreServerScanRequestsSentinel())
 
         # Wait for all scans to finish
         while True:

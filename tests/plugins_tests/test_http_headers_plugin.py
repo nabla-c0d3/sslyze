@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from http.client import HTTPResponse
 from typing import Dict
 
 import pytest
@@ -22,7 +23,7 @@ from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, Mode
 
 
 class TestHttpHeadersPlugin:
-    def test_hsts_enabled(self):
+    def test_hsts_enabled(self) -> None:
         # Given a server to scan that has HSTS enabled
         server_location = ServerNetworkLocation("hsts.badssl.com", 443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
@@ -38,7 +39,7 @@ class TestHttpHeadersPlugin:
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
 
-    def test_all_headers_disabled(self):
+    def test_all_headers_disabled(self) -> None:
         # Given a server to scan that does not have security headers
         server_location = ServerNetworkLocation("expired.badssl.com", 443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
@@ -56,7 +57,7 @@ class TestHttpHeadersPlugin:
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
 
     @can_only_run_on_linux_64
-    def test_http_error(self):
+    def test_http_error(self) -> None:
         # Given a server to scan
         with ModernOpenSslServer(
             # And the server will trigger an error when receiving an HTTP request
@@ -85,7 +86,7 @@ class TestHttpHeadersPlugin:
         assert result_as_json
 
     @can_only_run_on_linux_64
-    def test_fails_when_client_auth_failed(self):
+    def test_fails_when_client_auth_failed(self) -> None:
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate
@@ -99,7 +100,7 @@ class TestHttpHeadersPlugin:
                 HttpHeadersImplementation.scan_server(server_info)
 
     @can_only_run_on_linux_64
-    def test_works_when_client_auth_succeeded(self):
+    def test_works_when_client_auth_succeeded(self) -> None:
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             server_location = ServerNetworkLocation(
@@ -121,7 +122,7 @@ class TestHttpHeadersPlugin:
 
 
 @dataclass
-class _MockHttpResponse:
+class _MockHttpResponse(HTTPResponse):
     status: int
     _headers: Dict[str, str]
 
@@ -131,7 +132,7 @@ class _MockHttpResponse:
 
 
 class TestHttpRedirection:
-    def test_no_redirection(self):
+    def test_no_redirection(self) -> None:
         # Given an HTTP response with no redirection
         http_response = _MockHttpResponse(
             status=200,
@@ -146,7 +147,7 @@ class TestHttpRedirection:
         # No new location is returned
         assert next_location_path is None
 
-    def test_redirection_relative_url(self):
+    def test_redirection_relative_url(self) -> None:
         # Given an HTTP response with a redirection to a relative URL
         http_response = _MockHttpResponse(
             status=302,
@@ -161,7 +162,7 @@ class TestHttpRedirection:
         # The new location is returned
         assert next_location_path == "/newpath"
 
-    def test_redirection_absolute_url_same_server(self):
+    def test_redirection_absolute_url_same_server(self) -> None:
         # Given an HTTP response with a redirection to an absolute URL that points to the same server
         http_response = _MockHttpResponse(
             status=302,
@@ -176,7 +177,7 @@ class TestHttpRedirection:
         # The new location is returned
         assert next_location_path == "/newpath"
 
-    def test_redirection_absolute_url_different_hostname(self):
+    def test_redirection_absolute_url_different_hostname(self) -> None:
         # Given an HTTP response with a redirection to an absolute URL that points to a different hostname
         http_response = _MockHttpResponse(
             status=302,
@@ -191,7 +192,7 @@ class TestHttpRedirection:
         # No new location is returned
         assert next_location_path is None
 
-    def test_redirection_absolute_url_different_port(self):
+    def test_redirection_absolute_url_different_port(self) -> None:
         # Given an HTTP response with a redirection to an absolute URL that points to a different port
         http_response = _MockHttpResponse(
             status=302,

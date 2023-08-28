@@ -29,7 +29,8 @@ class CertificateInfoExtraArgumentAsJson(BaseModelWithOrmMode):
     custom_ca_file: Path
 
 
-CertificateInfoExtraArgumentAsJson.__doc__ = CertificateInfoExtraArgument.__doc__  # type: ignore
+assert CertificateInfoExtraArgument.__doc__
+CertificateInfoExtraArgumentAsJson.__doc__ = CertificateInfoExtraArgument.__doc__
 
 
 class _PublicKeyAsJson(BaseModelWithOrmMode):
@@ -232,7 +233,8 @@ class _TrustStoreAsJson(BaseModelWithOrmMode):
     ev_oids: Optional[List[_ObjectIdentifierAsJson]]
 
 
-_TrustStoreAsJson.__doc__ = TrustStore.__doc__  # type: ignore
+assert TrustStore.__doc__
+_TrustStoreAsJson.__doc__ = TrustStore.__doc__
 
 
 class _PathValidationResultAsJson(BaseModelWithOrmMode):
@@ -242,7 +244,8 @@ class _PathValidationResultAsJson(BaseModelWithOrmMode):
     was_validation_successful: bool
 
 
-_PathValidationResultAsJson.__doc__ = PathValidationResult.__doc__  # type: ignore
+assert PathValidationResult.__doc__
+_PathValidationResultAsJson.__doc__ = PathValidationResult.__doc__
 
 
 class _CertificateDeploymentAnalysisResultAsJson(BaseModelWithOrmMode):
@@ -264,7 +267,8 @@ class _CertificateDeploymentAnalysisResultAsJson(BaseModelWithOrmMode):
     verified_certificate_chain: Optional[List[_CertificateAsJson]]
 
 
-_CertificateDeploymentAnalysisResultAsJson.__doc__ = CertificateDeploymentAnalysisResult.__doc__  # type: ignore
+assert CertificateDeploymentAnalysisResult.__doc__
+_CertificateDeploymentAnalysisResultAsJson.__doc__ = CertificateDeploymentAnalysisResult.__doc__
 
 
 class CertificateInfoScanResultAsJson(BaseModelWithOrmMode):
@@ -272,7 +276,8 @@ class CertificateInfoScanResultAsJson(BaseModelWithOrmMode):
     certificate_deployments: List[_CertificateDeploymentAnalysisResultAsJson]
 
 
-CertificateInfoScanResultAsJson.__doc__ = CertificateInfoScanResult.__doc__  # type: ignore
+assert CertificateInfoScanResult.__doc__
+CertificateInfoScanResultAsJson.__doc__ = CertificateInfoScanResult.__doc__
 
 
 class CertificateInfoScanAttemptAsJson(ScanCommandAttemptAsJson):

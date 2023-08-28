@@ -171,7 +171,9 @@ def _process_resumption_attempt_results(
     return result, successful_attempts_count, total_attempts_count
 
 
-class SessionResumptionSupportImplementation(ScanCommandImplementation[SessionResumptionSupportScanResult, None]):
+class SessionResumptionSupportImplementation(
+    ScanCommandImplementation[SessionResumptionSupportScanResult, SessionResumptionSupportExtraArgument]
+):
     """Test a server for session resumption support using session IDs and TLS tickets."""
 
     cli_connector_cls = _SessionResumptionSupportCliConnector

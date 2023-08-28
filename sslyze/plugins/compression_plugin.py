@@ -36,7 +36,7 @@ class CompressionScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class CompressionScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[CompressionScanResultAsJson]  # type: ignore
+    result: Optional[CompressionScanResultAsJson]
 
 
 class _CompressionCliConnector(ScanCommandCliConnector[CompressionScanResult, None]):

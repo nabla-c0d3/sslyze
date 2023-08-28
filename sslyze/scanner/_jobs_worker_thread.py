@@ -1,10 +1,18 @@
 import threading
 from dataclasses import dataclass
 import queue
-from typing import Optional, Any, Callable, Sequence
+from typing import Optional, Any, Callable, Sequence, Union
 from uuid import UUID
 
 from sslyze.plugins.scan_commands import ScanCommand
+
+
+try:
+    # Python 3.10+
+    from typing import TypeAlias  # type: ignore
+except ImportError:
+    # Python 3.9 and before
+    from typing_extensions import TypeAlias  # type: ignore
 
 
 @dataclass(frozen=True)
@@ -29,10 +37,11 @@ class WorkerThreadNoMoreJobsSentinel:
     pass
 
 
+WorkerQueueType: TypeAlias = "queue.Queue[Union[WorkerThreadNoMoreJobsSentinel, QueuedScanJob]]"
+
+
 class JobsWorkerThread(threading.Thread):
-    def __init__(
-        self, jobs_queue_in: "queue.Queue[QueuedScanJob]", completed_jobs_queue_out: "queue.Queue[CompletedScanJob]"
-    ):
+    def __init__(self, jobs_queue_in: WorkerQueueType, completed_jobs_queue_out: "queue.Queue[CompletedScanJob]"):
         super().__init__()
         self._jobs_queue_in = jobs_queue_in
         self._completed_jobs_queue_out = completed_jobs_queue_out

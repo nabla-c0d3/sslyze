@@ -19,7 +19,7 @@ from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, Lega
 
 
 class TestSessionResumptionSupport:
-    def test(self):
+    def test(self) -> None:
         # Given a server that supports session resumption with both TLS tickets and session IDs
         server_location = ServerNetworkLocation("www.google.com", 443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
@@ -39,7 +39,7 @@ class TestSessionResumptionSupport:
         # And a CLI output can be generated
         assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)
 
-    def test_with_extra_argument(self):
+    def test_with_extra_argument(self) -> None:
         # Given a server that supports session resumption with both TLS tickets and session IDs
         server_location = ServerNetworkLocation("www.google.com", 443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
@@ -78,7 +78,7 @@ class TestSessionResumptionSupport:
                 SessionResumptionSupportImplementation.scan_server(server_info)
 
     @can_only_run_on_linux_64
-    def test_works_when_client_auth_succeeded(self):
+    def test_works_when_client_auth_succeeded(self) -> None:
         # Given a server that requires client authentication
         with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             server_location = ServerNetworkLocation(

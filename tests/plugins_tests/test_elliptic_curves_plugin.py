@@ -9,7 +9,7 @@ from tests.openssl_server import ModernOpenSslServer
 
 
 class TestEllipticCurvesPluginWithOnlineServer:
-    def test_supported_curves(self):
+    def test_supported_curves(self) -> None:
         # Given a server to scan that supports ECDH cipher suites
         server_location = ServerNetworkLocation("www.cloudflare.com", 443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
@@ -28,7 +28,7 @@ class TestEllipticCurvesPluginWithOnlineServer:
 
 @can_only_run_on_linux_64
 class TestEllipticCurvesPluginWithLocalServer:
-    def test_supported_curves(self):
+    def test_supported_curves(self) -> None:
         # Given a server to scan that supports ECDH cipher suites with specific curves
         server_curves = ["X25519", "X448", "prime256v1", "secp384r1", "secp521r1"]
         with ModernOpenSslServer(groups=":".join(server_curves)) as server:
@@ -41,4 +41,5 @@ class TestEllipticCurvesPluginWithLocalServer:
             result: SupportedEllipticCurvesScanResult = SupportedEllipticCurvesImplementation.scan_server(server_info)
 
         # And the supported curves were detected
+        assert result.supported_curves
         assert set(server_curves) == {curve.name for curve in result.supported_curves}

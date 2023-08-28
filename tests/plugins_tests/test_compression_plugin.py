@@ -8,7 +8,7 @@ from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
 
 
 class TestCompressionPlugin:
-    def test_compression_disabled(self):
+    def test_compression_disabled(self) -> None:
         # Given a server to scan that has TLS compression disabled
         server_location = ServerNetworkLocation(hostname="www.google.com", port=443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
@@ -23,12 +23,12 @@ class TestCompressionPlugin:
         assert CompressionImplementation.cli_connector_cls.result_to_console_output(result)
 
     @pytest.mark.skip("Not implemented; find a server vulnerable to TLS compression")
-    def test_compression_enabled(self):
+    def test_compression_enabled(self) -> None:
         # TODO
         pass
 
     @can_only_run_on_linux_64
-    def test_succeeds_when_client_auth_failed(self):
+    def test_succeeds_when_client_auth_failed(self) -> None:
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate

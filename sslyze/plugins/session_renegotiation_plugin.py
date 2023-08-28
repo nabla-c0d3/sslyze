@@ -40,7 +40,7 @@ class SessionRenegotiationScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class SessionRenegotiationScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[SessionRenegotiationScanResultAsJson]  # type: ignore
+    result: Optional[SessionRenegotiationScanResultAsJson]
 
 
 class _ScanJobResultEnum(Enum):

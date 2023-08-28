@@ -90,7 +90,7 @@ To setup a development environment:
 ```
 $ pip install --upgrade pip setuptools wheel
 $ pip install -e . 
-$ pip install -r dev-requirements.txt
+$ pip install -r requirements-dev.txt
 ```
 
 The tests can then be run using:

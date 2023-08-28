@@ -1,7 +1,7 @@
 mypy==1.4.1
-flake8
+flake8>=5,<7
 invoke>=2,<3
-pytest==7.2.2
+pytest>=7.4,<8
 sphinx
 sphinx-rtd-theme
 twine>=4,<5
@@ -14,4 +14,4 @@ faker
 types-pyOpenSSL
 
 # For building the Windows executable
-cx-freeze; sys.platform == 'win32'
+cx-freeze==6.13.1; sys.platform == 'win32'

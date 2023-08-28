@@ -39,7 +39,7 @@ class RobotScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class RobotScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[RobotScanResultAsJson]  # type: ignore
+    result: Optional[RobotScanResultAsJson]
 
 
 class _RobotCliConnector(ScanCommandCliConnector[RobotScanResult, None]):

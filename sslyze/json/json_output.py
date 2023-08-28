@@ -138,7 +138,8 @@ class _ServerTlsProbingResultAsJson(BaseModelWithOrmModeAndForbid):
         )
 
 
-_ServerTlsProbingResultAsJson.__doc__ = ServerTlsProbingResult.__doc__  # type: ignore
+assert ServerTlsProbingResult.__doc__
+_ServerTlsProbingResultAsJson.__doc__ = ServerTlsProbingResult.__doc__
 
 
 class _ServerNetworkConfigurationAsJson(BaseModelWithOrmModeAndForbid):
@@ -152,7 +153,8 @@ class _ServerNetworkConfigurationAsJson(BaseModelWithOrmModeAndForbid):
     network_max_retries: int = 3
 
 
-_ServerNetworkConfigurationAsJson.__doc__ = ServerNetworkConfiguration.__doc__  # type: ignore
+assert ServerNetworkConfiguration.__doc__
+_ServerNetworkConfigurationAsJson.__doc__ = ServerNetworkConfiguration.__doc__
 
 
 class _ServerNetworkLocationAsJson(BaseModelWithOrmModeAndForbid):
@@ -160,10 +162,11 @@ class _ServerNetworkLocationAsJson(BaseModelWithOrmModeAndForbid):
     port: int
     connection_type: ConnectionTypeEnum
     ip_address: Optional[str] = None
-    http_proxy_settings: Optional[_HttpProxySettingsAsJson] = None  # type: ignore
+    http_proxy_settings: Optional[_HttpProxySettingsAsJson] = None
 
 
-_ServerNetworkLocationAsJson.__doc__ = ServerNetworkLocation.__doc__  # type: ignore
+assert ServerNetworkLocation.__doc__
+_ServerNetworkLocationAsJson.__doc__ = ServerNetworkLocation.__doc__
 
 
 class ServerScanResultAsJson(BaseModelWithOrmModeAndForbid):
@@ -210,7 +213,8 @@ class ServerScanResultAsJson(BaseModelWithOrmModeAndForbid):
         )
 
 
-ServerScanResultAsJson.__doc__ = ServerScanResult.__doc__  # type: ignore
+assert ServerScanResult.__doc__
+ServerScanResultAsJson.__doc__ = ServerScanResult.__doc__
 
 
 class InvalidServerStringAsJson(BaseModelWithOrmModeAndForbid):

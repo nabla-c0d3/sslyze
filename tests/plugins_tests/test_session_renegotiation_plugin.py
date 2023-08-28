@@ -17,7 +17,7 @@ import pytest
 
 
 class TestSessionRenegotiationPlugin:
-    def test_renegotiation_good(self):
+    def test_renegotiation_good(self) -> None:
         # Given a server that is NOT vulnerable to insecure reneg nor client reneg DOS
         server_location = ServerNetworkLocation("www.google.com", 443)
         server_info = check_connectivity_to_server_and_return_info(server_location)
@@ -33,7 +33,7 @@ class TestSessionRenegotiationPlugin:
         assert SessionRenegotiationImplementation.cli_connector_cls.result_to_console_output(result)
 
     @can_only_run_on_linux_64
-    def test_renegotiation_is_vulnerable_to_client_renegotiation_dos(self):
+    def test_renegotiation_is_vulnerable_to_client_renegotiation_dos(self) -> None:
         # Given a server that is vulnerable to client renegotiation DOS
         with LegacyOpenSslServer() as server:
             server_location = ServerNetworkLocation(
@@ -51,7 +51,7 @@ class TestSessionRenegotiationPlugin:
         assert SessionRenegotiationImplementation.cli_connector_cls.result_to_console_output(result)
 
     @can_only_run_on_linux_64
-    def test_fails_when_client_auth_failed(self):
+    def test_fails_when_client_auth_failed(self) -> None:
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate
@@ -65,7 +65,7 @@ class TestSessionRenegotiationPlugin:
                 SessionRenegotiationImplementation.scan_server(server_info)
 
     @can_only_run_on_linux_64
-    def test_works_when_client_auth_succeeded(self):
+    def test_works_when_client_auth_succeeded(self) -> None:
         # Given a server that is vulnerable and that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             server_location = ServerNetworkLocation(

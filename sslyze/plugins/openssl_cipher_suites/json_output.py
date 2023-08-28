@@ -73,7 +73,8 @@ class _CipherSuiteAcceptedByServerAsJson(BaseModelWithOrmMode):
     ephemeral_key: Optional[_EphemeralKeyInfoAsJson]
 
 
-_CipherSuiteAcceptedByServerAsJson.__doc__ = CipherSuiteAcceptedByServer.__doc__  # type: ignore
+assert CipherSuiteAcceptedByServer.__doc__
+_CipherSuiteAcceptedByServerAsJson.__doc__ = CipherSuiteAcceptedByServer.__doc__
 
 
 class _CipherSuiteRejectedByServerAsJson(BaseModelWithOrmMode):
@@ -98,7 +99,8 @@ class CipherSuitesScanResultAsJson(BaseModelWithOrmMode):
         )
 
 
-CipherSuitesScanResultAsJson.__doc__ = CipherSuitesScanResult.__doc__  # type: ignore
+assert CipherSuitesScanResult.__doc__
+CipherSuitesScanResultAsJson.__doc__ = CipherSuitesScanResult.__doc__
 
 
 class CipherSuitesScanAttemptAsJson(ScanCommandAttemptAsJson):

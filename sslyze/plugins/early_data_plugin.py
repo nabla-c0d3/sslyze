@@ -37,7 +37,7 @@ class EarlyDataScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class EarlyDataScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[EarlyDataScanResultAsJson]  # type: ignore
+    result: Optional[EarlyDataScanResultAsJson]
 
 
 class _EarlyDataCliConnector(ScanCommandCliConnector[EarlyDataScanResult, None]):

@@ -35,7 +35,7 @@ class FallbackScsvScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class FallbackScsvScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[FallbackScsvScanResultAsJson]  # type: ignore
+    result: Optional[FallbackScsvScanResultAsJson]
 
 
 class _FallbackScsvCliConnector(ScanCommandCliConnector[FallbackScsvScanResult, None]):

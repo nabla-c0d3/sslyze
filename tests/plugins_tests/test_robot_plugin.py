@@ -10,7 +10,7 @@ import pytest
 
 
 class TestRobotPluginPlugin:
-    def test_robot_attack_good(self):
+    def test_robot_attack_good(self) -> None:
         # Validate the bug fix for https://github.com/nabla-c0d3/sslyze/issues/282
         # Given a server to scan that is not vulnerable to ROBOT
         server_location = ServerNetworkLocation("guide.duo.com", 443)
@@ -23,11 +23,11 @@ class TestRobotPluginPlugin:
         assert RobotImplementation.cli_connector_cls.result_to_console_output(result)
 
     @pytest.mark.skip("Not implemented; TODO: Find a vulnerable server.")
-    def test_robot_attack_bad(self):
+    def test_robot_attack_bad(self) -> None:
         pass
 
     @can_only_run_on_linux_64
-    def test_fails_when_client_auth_failed(self):
+    def test_fails_when_client_auth_failed(self) -> None:
         # Given a TLS 1.2 server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
             # And sslyze does NOT provide a client certificate

@@ -42,7 +42,7 @@ class HeartbleedScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class HeartbleedScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[HeartbleedScanResultAsJson]  # type: ignore
+    result: Optional[HeartbleedScanResultAsJson]
 
 
 class _HeartbleedCliConnector(ScanCommandCliConnector[HeartbleedScanResult, None]):

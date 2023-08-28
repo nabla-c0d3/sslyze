@@ -64,7 +64,8 @@ class _EllipticCurveAsJson(pydantic.BaseModel):
     openssl_nid: int
 
 
-_EllipticCurveAsJson.__doc__ = EllipticCurve.__doc__  # type: ignore
+assert EllipticCurve.__doc__
+_EllipticCurveAsJson.__doc__ = EllipticCurve.__doc__
 
 
 class SupportedEllipticCurvesScanResultAsJson(pydantic.BaseModel):
@@ -92,7 +93,8 @@ class SupportedEllipticCurvesScanResultAsJson(pydantic.BaseModel):
         )
 
 
-SupportedEllipticCurvesScanResultAsJson.__doc__ = SupportedEllipticCurvesScanResult.__doc__  # type: ignore
+assert SupportedEllipticCurvesScanResult.__doc__
+SupportedEllipticCurvesScanResultAsJson.__doc__ = SupportedEllipticCurvesScanResult.__doc__
 
 
 class SupportedEllipticCurvesScanAttemptAsJson(ScanCommandAttemptAsJson):

@@ -53,7 +53,7 @@ class _AllMozillaTlsConfigurationsAsJson(pydantic.BaseModel):
 
 
 class _MozillaTlsProfileAsJson(pydantic.BaseModel):
-    version: str
+    version: float
     href: str
     configurations: _AllMozillaTlsConfigurationsAsJson
 

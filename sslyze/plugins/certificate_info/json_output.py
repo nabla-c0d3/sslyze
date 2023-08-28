@@ -4,6 +4,14 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 import pydantic
+
+try:
+    # pydantic 2.x
+    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
+except ImportError:
+    # pydantic 1.x
+    from pydantic import BaseModel  # type: ignore
+
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
@@ -85,9 +93,10 @@ class _NameAttributeAsJson(BaseModelWithOrmMode):
 
     @classmethod
     def from_orm(cls, name_attribute: NameAttribute) -> "_NameAttributeAsJson":
+
         return cls(
             oid=_ObjectIdentifierAsJson.from_orm(name_attribute.oid),
-            value=name_attribute.value,
+            value=name_attribute.value if isinstance(name_attribute.value, str) else str(name_attribute.value),
             rfc4514_string=name_attribute.rfc4514_string(),
         )
 
@@ -103,14 +112,14 @@ class _X509NameAsJson(BaseModelWithOrmMode):
         )
 
 
-class _SubjAltNameAsJson(pydantic.BaseModel):
+class _SubjAltNameAsJson(BaseModel):
 
     # TODO(6.0.0): Remove the Config, alias and default value as the name "dns" is deprecated
     class Config:
         allow_population_by_field_name = True
 
     dns_names: List[str] = pydantic.Field(alias="dns")
-    ip_addresses: List[pydantic.IPvAnyAddress] = []
+    ip_addresses: List[str] = []
 
 
 class _HashAlgorithmAsJson(BaseModelWithOrmMode):
@@ -182,7 +191,7 @@ class _CertificateAsJson(BaseModelWithOrmMode):
                 ip_addresses=subj_alt_name_ext.ip_addresses,
             ),
             signature_hash_algorithm=signature_hash_algorithm,
-            signature_algorithm_oid=certificate.signature_algorithm_oid,
+            signature_algorithm_oid=_ObjectIdentifierAsJson.from_orm(certificate.signature_algorithm_oid),
             subject=subject_field,
             issuer=issuer_field,
             public_key=_PublicKeyAsJson.from_orm(certificate.public_key()),

@@ -82,7 +82,7 @@ def main() -> None:
             date_scans_started=date_scans_started,
             date_scans_completed=datetime.utcnow(),
         )
-        json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+        json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
         json_file_out.write(json_output_as_str)
 
     # If we printed the JSON results to the console, don't run the Mozilla compliance check so we return valid JSON

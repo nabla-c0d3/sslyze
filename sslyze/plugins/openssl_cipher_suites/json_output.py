@@ -94,8 +94,12 @@ class CipherSuitesScanResultAsJson(BaseModelWithOrmMode):
         return cls(
             tls_version_used=scan_result.tls_version_used.name,
             is_tls_version_supported=scan_result.is_tls_version_supported,
-            accepted_cipher_suites=scan_result.accepted_cipher_suites,
-            rejected_cipher_suites=scan_result.rejected_cipher_suites,
+            accepted_cipher_suites=[
+                _CipherSuiteAcceptedByServerAsJson.from_orm(ciph) for ciph in scan_result.accepted_cipher_suites
+            ],
+            rejected_cipher_suites=[
+                _CipherSuiteRejectedByServerAsJson.from_orm(ciph) for ciph in scan_result.rejected_cipher_suites
+            ],
         )
 
 

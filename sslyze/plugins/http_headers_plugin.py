@@ -5,7 +5,12 @@ from dataclasses import dataclass, asdict
 from traceback import TracebackException
 from urllib.parse import urlsplit
 
-import pydantic
+try:
+    # pydantic 2.x
+    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
+except ImportError:
+    # pydantic 1.x
+    from pydantic import BaseModel  # type: ignore
 
 # TODO: Fix type annotations in nassl
 from nassl._nassl import SslError  # type: ignore
@@ -85,7 +90,7 @@ class HttpHeadersScanResult(ScanCommandResult):
     expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
 
-class _StrictTransportSecurityHeaderAsJson(pydantic.BaseModel):
+class _StrictTransportSecurityHeaderAsJson(BaseModel):
     max_age: Optional[int]
     preload: bool
     include_subdomains: bool

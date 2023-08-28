@@ -101,7 +101,7 @@ setup(
         "nassl>=5,<6",
         "cryptography>=2.6,<42",
         "tls-parser>=2,<3",
-        "pydantic>=1.7,<1.11",
+        "pydantic>=1.10,<2.4",
         "pyOpenSSL>=23,<24",
     ],
     # cx_freeze info for Windows builds with Python embedded

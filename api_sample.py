@@ -123,7 +123,7 @@ def example_json_result_output(
         date_scans_started=date_scans_started,
         date_scans_completed=date_scans_completed,
     )
-    json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+    json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
     json_file_out.write_text(json_output_as_str)
 
 

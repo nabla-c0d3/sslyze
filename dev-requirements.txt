@@ -1,4 +1,4 @@
-mypy==0.981
+mypy==1.5.1
 flake8
 invoke>=2,<3
 pytest==7.2.2

@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 try:
     import pydantic.v1 as pydantic
 except ImportError:
-    import pydantic
+    import pydantic # type: ignore # noqa
 
 # TODO: Fix type annotations in nassl
 from nassl._nassl import SslError  # type: ignore

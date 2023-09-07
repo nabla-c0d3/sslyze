@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 try:
     import pydantic.v1 as pydantic
 except ImportError:
-    import pydantic
+    import pydantic # type: ignore # noqa
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding

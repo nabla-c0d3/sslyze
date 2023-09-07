@@ -6,7 +6,7 @@ from uuid import UUID
 try:
     import pydantic.v1 as pydantic
 except ImportError:
-    import pydantic
+    import pydantic # type: ignore # noqa
 
 from sslyze import (
     ServerNetworkConfiguration,

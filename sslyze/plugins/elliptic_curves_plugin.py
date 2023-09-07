@@ -5,7 +5,7 @@ from typing import List, Optional
 try:
     import pydantic.v1 as pydantic
 except ImportError:
-    import pydantic
+    import pydantic # type: ignore # noqa
 from nassl._nassl import OpenSSLError
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
 from nassl.ssl_client import ClientCertificateRequested, SslClient

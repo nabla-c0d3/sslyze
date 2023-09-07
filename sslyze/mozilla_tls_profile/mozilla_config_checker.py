@@ -6,7 +6,7 @@ from typing import Optional, Set, Dict
 try:
     import pydantic.v1 as pydantic
 except ImportError:
-    import pydantic
+    import pydantic # type: ignore # noqa
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo, DhEphemeralKeyInfo

@@ -1,7 +1,7 @@
 try:
     import pydantic.v1 as pydantic
 except ImportError:
-    import pydantic
+    import pydantic # type: ignore # noqa
 
 
 class BaseModelWithOrmMode(pydantic.BaseModel):

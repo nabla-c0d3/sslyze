@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from OpenSSL import crypto
+from OpenSSL import crypto # type: ignore # noqa
 from cryptography.x509 import Certificate
 from cryptography.x509 import ExtensionNotFound, CertificatePolicies
 from cryptography.x509 import ObjectIdentifier

@@ -2,7 +2,10 @@ from dataclasses import dataclass, asdict
 from operator import attrgetter
 from typing import List, Optional
 
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 from nassl._nassl import OpenSSLError
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
 from nassl.ssl_client import ClientCertificateRequested, SslClient

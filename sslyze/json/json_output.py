@@ -3,7 +3,10 @@ from pathlib import Path
 from typing import List, Optional, TYPE_CHECKING
 from uuid import UUID
 
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 
 from sslyze import (
     ServerNetworkConfiguration,

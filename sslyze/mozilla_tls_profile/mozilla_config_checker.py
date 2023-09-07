@@ -3,7 +3,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, Set, Dict
 
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo, DhEphemeralKeyInfo

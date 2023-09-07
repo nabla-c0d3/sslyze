@@ -5,7 +5,10 @@ from dataclasses import dataclass, asdict
 from traceback import TracebackException
 from urllib.parse import urlsplit
 
-import pydantic
+try:
+    import pydantic.v1 as pydantic
+except ImportError:
+    import pydantic
 
 # TODO: Fix type annotations in nassl
 from nassl._nassl import SslError  # type: ignore

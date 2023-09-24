@@ -372,6 +372,17 @@ def _detect_client_auth_requirement_with_tls_1_3(
         else:
             raise
 
+    except OSError as e:
+        # If these errors get propagated here, it means they're not part of the known/normal errors that
+        # can happen when trying to check requirements for client auth and defined in tls_connection.py
+        # Hence we re-raise these as "unknown" connection errors; might be caused by bad connectivity to
+        # the server (random disconnects, etc.) and the scan against this server should not be performed
+        raise ConnectionToServerFailed(
+            server_location=server_location,
+            network_configuration=network_config,
+            error_message=f'Unexpected connection error: "{e.args}"',
+        )
+
     finally:
         ssl_connection_auth.close()
 

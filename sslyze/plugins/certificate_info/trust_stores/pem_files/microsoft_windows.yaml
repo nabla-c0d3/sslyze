@@ -1,8 +1,8 @@
 platform: MICROSOFT_WINDOWS
 version: null
 url: https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFT
-date_fetched: 2023-02-19
-trusted_certificates_count: 241
+date_fetched: 2023-06-11
+trusted_certificates_count: 251
 trusted_certificates:
 - subject_name: A-Trust-Root-07
   fingerprint: 8ac552ad577e37ad2c6808d72aa331d6a96b4b3febff34ce9bc0578e08055ec3
@@ -365,6 +365,22 @@ trusted_certificates:
   fingerprint: a1339d33281a0b56e557d3d32b1ce7f9367eb094bd5fa72a7e5004c8ded7cafe
 - subject_name: Saudi National Root CA
   fingerprint: 34bb34e14faed0d3392f2fc441c0ecd5fd88ad88118df2d1ba76cdec1eea10b8
+- subject_name: Sectigo Public Document Signing Root E46
+  fingerprint: 01a1a03e1f3dd7ed3ccadae4d668b4446065ddf3b2dcf05d1daffdb2591b3838
+- subject_name: Sectigo Public Document Signing Root R46
+  fingerprint: 43a61038597c31f4e7d75deeb831e38462d968308c68b5a078f719139735da89
+- subject_name: Sectigo Public Email Protection Root E46
+  fingerprint: 22d9599234d60f1d4bc7c7e96f43fa555b07301fd475175089dafb8c25e477b3
+- subject_name: Sectigo Public Email Protection Root R46
+  fingerprint: d5917a7791eb7cf20a2e57eb98284a67b28a57e89182da53d546678c9fde2b4f
+- subject_name: Sectigo Public Server Authentication Root E46
+  fingerprint: c90f26f0fb1b4018b22227519b5ca2b53e2ca5b3be5cf18efe1bef47380c5383
+- subject_name: Sectigo Public Server Authentication Root R46
+  fingerprint: 7bb647a62aeeac88bf257aa522d01ffea395e0ab45c73f93f65654ec38f25a06
+- subject_name: Sectigo Public Time Stamping Root E46
+  fingerprint: e44ddb7952261f15005cd60c1d0c38c18cbfd17c273a31f8ed4c8f53e2685f32
+- subject_name: Sectigo Public Time Stamping Root R46
+  fingerprint: 4941b001b8a97e961b7817c9d9e960ec4b056bfc915a8c1aabf6ef6b3ac046a5
 - subject_name: Secure Global CA
   fingerprint: 4200f5043ac8590ebb527d209ed1503029fbcbd41ca1b506ec27f15ade7dac69
 - subject_name: SecureSign Root CA12
@@ -475,6 +491,10 @@ trusted_certificates:
   fingerprint: c0a6f4dc63a24bfdcf54ef2a6a082a0a72de35803e2ff5ff527ae5d87206dfd5
 - subject_name: ePKI Root Certification Authority - G2
   fingerprint: 1e51942b84fd467bf77d1c89da241c04254dc8f3ef4c22451fe7a89978bdcd4f
+- subject_name: ePKI Root Certification Authority - G4
+  fingerprint: 19a2fa09332c6d8eac1393d5f30371dd8b4dd687b0e1e50a6b48ae762caba2b5
+- subject_name: eSignTrust Root Certification Authority (G03)
+  fingerprint: 0e30d04a94dcc423e26fdc4c24afcf4923bd80d83b661b06a2f5856361560407
 - subject_name: emSign ECC Root CA - C3
   fingerprint: bc4d809b15189d78db3e1d8cf4f9726a795da1643ca5f1358e1ddb0edc0d7eb3
 - subject_name: emSign ECC Root CA - G3

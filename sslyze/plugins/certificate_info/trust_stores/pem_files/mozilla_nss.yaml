@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2022-12-11
-trusted_certificates_count: 140
+date_fetched: 2023-07-27
+trusted_certificates_count: 144
 trusted_certificates:
 - subject_name: AAA Certificate Services
   fingerprint: d7a7a0fb5d7e2731d771e9484ebcdef71d5f0c3e0a2948782bc83ee0ea699ef4
@@ -34,10 +34,18 @@ trusted_certificates:
   fingerprint: e35d28419ed02025cfa69038cd623962458da5c695fbdea3c22b0bfb25897092
 - subject_name: Atos TrustedRoot 2011
   fingerprint: f356bea244b7a91eb35d53ca9ad7864ace018e2d35d5f8f96ddf68a6f41aa474
+- subject_name: Atos TrustedRoot Root CA ECC TLS 2021
+  fingerprint: b2fae53e14ccd7ab9212064701ae279c1d8988facb775fa8a008914e663988a8
+- subject_name: Atos TrustedRoot Root CA RSA TLS 2021
+  fingerprint: 81a9088ea59fb364c548a6f85559099b6f0405efbf18e5324ec9f457ba00112f
 - subject_name: Autoridad de Certificacion Firmaprofesional CIF A62634068
   fingerprint: 04048028bf1f2864d48f9ad4d83294366a828856553f3b14303f90147f5d40ef
 - subject_name: Autoridad de Certificacion Firmaprofesional CIF A62634068
   fingerprint: 57de0583efd2b26e0361da99da9df4648def7ee8441c3b728afa9bcde0f9b26a
+- subject_name: BJCA Global Root CA1
+  fingerprint: f3896f88fe7c0a882766a7fa6ad2749fb57a7f3e98fb769c1fa7b09c2c44d5ae
+- subject_name: BJCA Global Root CA2
+  fingerprint: 574df6931e278039667b720afdc1600fc27eb66dd3092979fb73856487212882
 - subject_name: Baltimore CyberTrust Root
   fingerprint: 16af57a9f676b0ab126095aa5ebadef22ab31119d644ac95cd4b93dbf3f26aeb
 - subject_name: Buypass Class 2 Root CA
@@ -98,12 +106,6 @@ trusted_certificates:
   fingerprint: 371a00dc0533b3721a7eeb40e8419e70799d2b0a0f2c1d80693165f7cec4ad75
 - subject_name: DigiCert Trusted Root G4
   fingerprint: 552f7bdcf1a7af9e6ce672017f4f12abf77240c78e761ac203d1d9d20ac89988
-- subject_name: E-Tugra Certification Authority
-  fingerprint: b0bfd52bb0d7d9bd92bf5d4dc13da255c02c542f378365ea893911f55e55f23c
-- subject_name: E-Tugra Global Root CA ECC v3
-  fingerprint: 873f4685fa7f563625252e6d36bcd7f16fc24951f264e47e1b954f4908cdca13
-- subject_name: E-Tugra Global Root CA RSA v3
-  fingerprint: ef66b0b10a3cdb9f2e3648c76bd2af18ead2bfe6f117655e28c4060da1a3f4c2
 - subject_name: Entrust Root Certification Authority
   fingerprint: 73c176434f1bc6d5adf45b0e76e727287c8de57616c1e6e6141a2b2cbc7d8e4c
 - subject_name: Entrust Root Certification Authority - EC1
@@ -154,8 +156,6 @@ trusted_certificates:
   fingerprint: a040929a02ce53b4acf4f2ffc6981ce4496f755e6d45fe0b2a692bcd52523f36
 - subject_name: HiPKI Root CA - G1
   fingerprint: f015ce3cc239bfef064be9f1d2c417e1a0264a0a94be1f0c8d121864eb6949cc
-- subject_name: Hongkong Post Root CA 1
-  fingerprint: f9e67d336c51002ac054c632022d66dda2e7e3fff10ad061ed31d8bbb410cfb2
 - subject_name: Hongkong Post Root CA 3
   fingerprint: 5a2fc03f0c83b090bbfa40604b0988446c7636183df9846e17101a447fb8efd6
 - subject_name: ISRG Root X1
@@ -200,8 +200,16 @@ trusted_certificates:
   fingerprint: 3417bb06cc6007da1b961c920b8ab4ce3fad820e4aa30b9acbc4a74ebdcebc65
 - subject_name: SSL.com Root Certification Authority RSA
   fingerprint: 85666a562ee0be5ce925c1d8890a6f76a87ec16d4d7d5f29ea7419cf20123b69
+- subject_name: SSL.com TLS ECC Root CA 2022
+  fingerprint: c32ffd9f46f936d16c3673990959434b9ad60aafbb9e7cf33654f144cc1ba143
+- subject_name: SSL.com TLS RSA Root CA 2022
+  fingerprint: 8faf7d2e2cb4709bb8e0b33666bf75a5dd45b5de480f8ea8d4bfe6bebc17f2ed
 - subject_name: SZAFIR ROOT CA2
   fingerprint: a1339d33281a0b56e557d3d32b1ce7f9367eb094bd5fa72a7e5004c8ded7cafe
+- subject_name: Sectigo Public Server Authentication Root E46
+  fingerprint: c90f26f0fb1b4018b22227519b5ca2b53e2ca5b3be5cf18efe1bef47380c5383
+- subject_name: Sectigo Public Server Authentication Root R46
+  fingerprint: 7bb647a62aeeac88bf257aa522d01ffea395e0ab45c73f93f65654ec38f25a06
 - subject_name: Secure Global CA
   fingerprint: 4200f5043ac8590ebb527d209ed1503029fbcbd41ca1b506ec27f15ade7dac69
 - subject_name: SecureSign RootCA11

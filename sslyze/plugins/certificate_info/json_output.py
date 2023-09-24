@@ -4,6 +4,14 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 import pydantic
+
+try:
+    # pydantic 2.x
+    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
+except ImportError:
+    # pydantic 1.x
+    from pydantic import BaseModel  # type: ignore
+
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
@@ -29,7 +37,8 @@ class CertificateInfoExtraArgumentAsJson(BaseModelWithOrmMode):
     custom_ca_file: Path
 
 
-CertificateInfoExtraArgumentAsJson.__doc__ = CertificateInfoExtraArgument.__doc__  # type: ignore
+assert CertificateInfoExtraArgument.__doc__
+CertificateInfoExtraArgumentAsJson.__doc__ = CertificateInfoExtraArgument.__doc__
 
 
 class _PublicKeyAsJson(BaseModelWithOrmMode):
@@ -84,9 +93,10 @@ class _NameAttributeAsJson(BaseModelWithOrmMode):
 
     @classmethod
     def from_orm(cls, name_attribute: NameAttribute) -> "_NameAttributeAsJson":
+
         return cls(
             oid=_ObjectIdentifierAsJson.from_orm(name_attribute.oid),
-            value=name_attribute.value,
+            value=name_attribute.value if isinstance(name_attribute.value, str) else str(name_attribute.value),
             rfc4514_string=name_attribute.rfc4514_string(),
         )
 
@@ -102,14 +112,14 @@ class _X509NameAsJson(BaseModelWithOrmMode):
         )
 
 
-class _SubjAltNameAsJson(pydantic.BaseModel):
+class _SubjAltNameAsJson(BaseModel):
 
     # TODO(6.0.0): Remove the Config, alias and default value as the name "dns" is deprecated
     class Config:
         allow_population_by_field_name = True
 
     dns_names: List[str] = pydantic.Field(alias="dns")
-    ip_addresses: List[pydantic.IPvAnyAddress] = []
+    ip_addresses: List[str] = []
 
 
 class _HashAlgorithmAsJson(BaseModelWithOrmMode):
@@ -181,7 +191,7 @@ class _CertificateAsJson(BaseModelWithOrmMode):
                 ip_addresses=subj_alt_name_ext.ip_addresses,
             ),
             signature_hash_algorithm=signature_hash_algorithm,
-            signature_algorithm_oid=certificate.signature_algorithm_oid,
+            signature_algorithm_oid=_ObjectIdentifierAsJson.from_orm(certificate.signature_algorithm_oid),
             subject=subject_field,
             issuer=issuer_field,
             public_key=_PublicKeyAsJson.from_orm(certificate.public_key()),
@@ -232,7 +242,8 @@ class _TrustStoreAsJson(BaseModelWithOrmMode):
     ev_oids: Optional[List[_ObjectIdentifierAsJson]]
 
 
-_TrustStoreAsJson.__doc__ = TrustStore.__doc__  # type: ignore
+assert TrustStore.__doc__
+_TrustStoreAsJson.__doc__ = TrustStore.__doc__
 
 
 class _PathValidationResultAsJson(BaseModelWithOrmMode):
@@ -242,7 +253,8 @@ class _PathValidationResultAsJson(BaseModelWithOrmMode):
     was_validation_successful: bool
 
 
-_PathValidationResultAsJson.__doc__ = PathValidationResult.__doc__  # type: ignore
+assert PathValidationResult.__doc__
+_PathValidationResultAsJson.__doc__ = PathValidationResult.__doc__
 
 
 class _CertificateDeploymentAnalysisResultAsJson(BaseModelWithOrmMode):
@@ -264,7 +276,8 @@ class _CertificateDeploymentAnalysisResultAsJson(BaseModelWithOrmMode):
     verified_certificate_chain: Optional[List[_CertificateAsJson]]
 
 
-_CertificateDeploymentAnalysisResultAsJson.__doc__ = CertificateDeploymentAnalysisResult.__doc__  # type: ignore
+assert CertificateDeploymentAnalysisResult.__doc__
+_CertificateDeploymentAnalysisResultAsJson.__doc__ = CertificateDeploymentAnalysisResult.__doc__
 
 
 class CertificateInfoScanResultAsJson(BaseModelWithOrmMode):
@@ -272,7 +285,8 @@ class CertificateInfoScanResultAsJson(BaseModelWithOrmMode):
     certificate_deployments: List[_CertificateDeploymentAnalysisResultAsJson]
 
 
-CertificateInfoScanResultAsJson.__doc__ = CertificateInfoScanResult.__doc__  # type: ignore
+assert CertificateInfoScanResult.__doc__
+CertificateInfoScanResultAsJson.__doc__ = CertificateInfoScanResult.__doc__
 
 
 class CertificateInfoScanAttemptAsJson(ScanCommandAttemptAsJson):

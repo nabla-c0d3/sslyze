@@ -17,7 +17,7 @@ else:
 
     # Create fake Executable that does nothing so the setup.py file can be used on Linux
     class Executable:  # type: ignore
-        def __init__(self, script, targetName):  # type: ignore
+        def __init__(self, script, target_name):  # type: ignore
             pass
 
 
@@ -46,7 +46,7 @@ def get_include_files() -> List[Tuple[str, str]]:
             non_python_files.append((file, path.join("pem_files", filename)))
 
     # The Mozilla profile
-    mozilla_profile_path = root_path / "sslyze" / "mozilla_tls_profile" / "5.6.json"
+    mozilla_profile_path = root_path / "sslyze" / "mozilla_tls_profile" / "5.7.json"
     non_python_files.append((str(mozilla_profile_path), mozilla_profile_path.name))
     return non_python_files
 
@@ -93,18 +93,18 @@ setup(
     package_data={
         "sslyze": ["py.typed"],
         "sslyze.plugins.certificate_info.trust_stores": ["pem_files/*.pem", "pem_files/*.yaml"],
-        "sslyze.mozilla_tls_profile": ["5.6.json"],
+        "sslyze.mozilla_tls_profile": ["5.7.json"],
     },
     entry_points={"console_scripts": ["sslyze = sslyze.__main__:main"]},
     # Dependencies
     install_requires=[
-        "nassl>=5,<6",
-        "cryptography>=2.6,<40",
+        "nassl>=5.1,<6",
+        "cryptography>=2.6,<42",
         "tls-parser>=2,<3",
-        "pydantic>=1.7,<1.11",
+        "pydantic>=1.10,<2.4",
         "pyOpenSSL>=23,<24",
     ],
     # cx_freeze info for Windows builds with Python embedded
     options={"build_exe": {"packages": ["cffi", "cryptography"], "include_files": get_include_files()}},
-    executables=[Executable(path.join("sslyze", "__main__.py"), targetName="sslyze.exe")],
+    executables=[Executable(path.join("sslyze", "__main__.py"), target_name="sslyze.exe")],
 )

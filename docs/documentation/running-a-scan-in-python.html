@@ -1,18 +1,16 @@
-
 <!DOCTYPE html>
 
-<html>
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Running a Scan in Python &#8212; SSLyze 5.1.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
+    <title>Running a Scan in Python &#8212; SSLyze 5.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script src="_static/documentation_options.js?v=2dde5210"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Exporting and processing scan results in JSON" href="json-output.html" />
@@ -34,9 +32,9 @@
           <div class="body" role="main">
             
   <section id="running-a-scan-in-python">
-<h1>Running a Scan in Python<a class="headerlink" href="#running-a-scan-in-python" title="Permalink to this headline">¶</a></h1>
+<h1>Running a Scan in Python<a class="headerlink" href="#running-a-scan-in-python" title="Link to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>SSLyze’s Python API can be used to run scans and process results in an automated fashion.</p>
 <p>Every SSLyze class has typing annotations, which allows IDEs such as VS Code and PyCharms to auto-import modules
 and auto-complete field names. Make sure to leverage this typing information as it will make it significantly easier
@@ -78,7 +76,7 @@ attributes containing the results of the scan command.</p>
 </div>
 </section>
 <section id="full-example">
-<h2>Full Example<a class="headerlink" href="#full-example" title="Permalink to this headline">¶</a></h2>
+<h2>Full Example<a class="headerlink" href="#full-example" title="Link to this heading">¶</a></h2>
 <p>A full example of running a scan on a couple servers follow:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&gt; Starting the scans&quot;</span><span class="p">)</span>
@@ -170,16 +168,16 @@ attributes containing the results of the scan command.</p>
 </div>
 </section>
 <section id="classes-for-starting-a-scan">
-<h2>Classes for Starting a Scan<a class="headerlink" href="#classes-for-starting-a-scan" title="Permalink to this headline">¶</a></h2>
+<h2>Classes for Starting a Scan<a class="headerlink" href="#classes-for-starting-a-scan" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ServerScanRequest">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerScanRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_configuration=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_commands=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_commands_extra_arguments=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uuid=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanRequest" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerScanRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_configuration=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_commands=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_commands_extra_arguments=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uuid=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanRequest" title="Link to this definition">¶</a></dt>
 <dd><p>A request to scan a specific server.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>server_location</strong> (<a class="reference internal" href="#sslyze.ServerNetworkLocation" title="sslyze.server_setting.ServerNetworkLocation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerNetworkLocation</span></code></a>) – The server to scan.</p></li>
-<li><p><strong>network_configuration</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.ServerNetworkConfiguration" title="sslyze.server_setting.ServerNetworkConfiguration"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerNetworkConfiguration</span></code></a>]) – An optional network configuration. If not supplied, a default configuration will be used.</p></li>
+<li><p><strong>network_configuration</strong> (<a class="reference internal" href="#sslyze.ServerNetworkConfiguration" title="sslyze.server_setting.ServerNetworkConfiguration"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerNetworkConfiguration</span></code></a>) – An optional network configuration. If not supplied, a default configuration will be used.</p></li>
 <li><p><strong>scan_commands</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code>[<a class="reference internal" href="available-scan-commands.html#sslyze.ScanCommand" title="sslyze.plugins.scan_commands.ScanCommand"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommand</span></code></a>]) – An optional list of scan commands to run against the server. If not supplied, all available
 scan commands will be run.</p></li>
 <li><p><strong>scan_commands_extra_arguments</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandsExtraArguments</span></code>) – An optional list of extra arguments specific to some scan commands. If not
@@ -192,64 +190,44 @@ supplied, no extra arguments will be set.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkLocation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerNetworkLocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">443</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_proxy_settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerNetworkLocation" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerNetworkLocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">443</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_proxy_settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerNetworkLocation" title="Link to this definition">¶</a></dt>
 <dd><p>All the information needed to connect to a server.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkLocation.hostname">
-<span class="sig-name descname"><span class="pre">hostname</span></span><a class="headerlink" href="#sslyze.ServerNetworkLocation.hostname" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">hostname</span></span><a class="headerlink" href="#sslyze.ServerNetworkLocation.hostname" title="Link to this definition">¶</a></dt>
 <dd><p>The server’s hostname.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkLocation.port">
-<span class="sig-name descname"><span class="pre">port</span></span><a class="headerlink" href="#sslyze.ServerNetworkLocation.port" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">port</span></span><a class="headerlink" href="#sslyze.ServerNetworkLocation.port" title="Link to this definition">¶</a></dt>
 <dd><p>The server’s TLS port number.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkLocation.connection_type">
-<span class="sig-name descname"><span class="pre">connection_type</span></span><a class="headerlink" href="#sslyze.ServerNetworkLocation.connection_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">connection_type</span></span><a class="headerlink" href="#sslyze.ServerNetworkLocation.connection_type" title="Link to this definition">¶</a></dt>
 <dd><p>How sslyze should connect to the server: either directly, or via an HTTP proxy.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkLocation.ip_address">
-<span class="sig-name descname"><span class="pre">ip_address</span></span><a class="headerlink" href="#sslyze.ServerNetworkLocation.ip_address" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">ip_address</span></span><a class="headerlink" href="#sslyze.ServerNetworkLocation.ip_address" title="Link to this definition">¶</a></dt>
 <dd><p>The server’s IP address; only set if sslyze is connecting directly to the server. If no IP address
 is supplied and connection_type is set to DIRECT, sslyze will automatically lookup one IP address for the
 supplied hostname.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[str]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkLocation.http_proxy_settings">
-<span class="sig-name descname"><span class="pre">http_proxy_settings</span></span><a class="headerlink" href="#sslyze.ServerNetworkLocation.http_proxy_settings" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">http_proxy_settings</span></span><a class="headerlink" href="#sslyze.ServerNetworkLocation.http_proxy_settings" title="Link to this definition">¶</a></dt>
 <dd><p>The HTTP proxy configuration to use in order to tunnel the scans through a proxy; only set
 if sslyze is connecting to the server via an HTTP proxy. The proxy will be responsible for looking up the
 server’s IP address and connecting to it.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[sslyze.server_setting.HttpProxySettings]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>hostname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – </p></li>
 <li><p><strong>port</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – </p></li>
@@ -262,9 +240,9 @@ server’s IP address and connecting to it.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.Scanner">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">Scanner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">per_server_concurrent_connections_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concurrent_server_scans_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">Scanner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">per_server_concurrent_connections_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concurrent_server_scans_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.Scanner" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>per_server_concurrent_connections_limit</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – </p></li>
 <li><p><strong>concurrent_server_scans_limit</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – </p></li>
@@ -275,25 +253,20 @@ server’s IP address and connecting to it.</p>
 </dd></dl>
 
 <section id="additional-settings-starttls-sni-etc">
-<h3>Additional settings: StartTLS, SNI, etc.<a class="headerlink" href="#additional-settings-starttls-sni-etc" title="Permalink to this headline">¶</a></h3>
+<h3>Additional settings: StartTLS, SNI, etc.<a class="headerlink" href="#additional-settings-starttls-sni-etc" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkConfiguration">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerNetworkConfiguration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tls_server_name_indication</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_opportunistic_encryption</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_client_auth_credentials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmpp_to_hostname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerNetworkConfiguration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tls_server_name_indication</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_opportunistic_encryption</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_client_auth_credentials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmpp_to_hostname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration" title="Link to this definition">¶</a></dt>
 <dd><p>Additional network settings to provide fine-grained control on how to connect to a specific server.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkConfiguration.tls_server_name_indication">
-<span class="sig-name descname"><span class="pre">tls_server_name_indication</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.tls_server_name_indication" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tls_server_name_indication</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.tls_server_name_indication" title="Link to this definition">¶</a></dt>
 <dd><p>The hostname to set within the Server Name Indication TLS extension.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkConfiguration.tls_wrapped_protocol">
-<span class="sig-name descname"><span class="pre">tls_wrapped_protocol</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.tls_wrapped_protocol" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tls_wrapped_protocol</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.tls_wrapped_protocol" title="Link to this definition">¶</a></dt>
 <dd><p>The protocol wrapped in TLS that the server expects. It allows SSLyze to figure out
 how to establish a (Start)TLS connection to the server and what kind of “hello” message
 (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not supplied, standard
@@ -302,56 +275,36 @@ TLS will be used.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkConfiguration.tls_client_auth_credentials">
-<span class="sig-name descname"><span class="pre">tls_client_auth_credentials</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.tls_client_auth_credentials" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tls_client_auth_credentials</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.tls_client_auth_credentials" title="Link to this definition">¶</a></dt>
 <dd><p>The client certificate and private key needed to perform mutual authentication
 with the server. If not supplied, SSLyze will attempt to connect to the server without performing
 client authentication.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[<a class="reference internal" href="#sslyze.ClientAuthenticationCredentials" title="sslyze.server_setting.ClientAuthenticationCredentials">sslyze.server_setting.ClientAuthenticationCredentials</a>]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkConfiguration.xmpp_to_hostname">
-<span class="sig-name descname"><span class="pre">xmpp_to_hostname</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.xmpp_to_hostname" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">xmpp_to_hostname</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.xmpp_to_hostname" title="Link to this definition">¶</a></dt>
 <dd><p>The hostname to set within the <cite>to</cite> attribute of the XMPP stream. If not supplied, the
 server’s hostname will be used. Should only be set if the supplied <cite>tls_wrapped_protocol</cite> is an
 XMPP protocol.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[str]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkConfiguration.network_timeout">
-<span class="sig-name descname"><span class="pre">network_timeout</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.network_timeout" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">network_timeout</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.network_timeout" title="Link to this definition">¶</a></dt>
 <dd><p>The timeout (in seconds) to be used when attempting to establish a connection to the
 server.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerNetworkConfiguration.network_max_retries">
-<span class="sig-name descname"><span class="pre">network_max_retries</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.network_max_retries" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">network_max_retries</span></span><a class="headerlink" href="#sslyze.ServerNetworkConfiguration.network_max_retries" title="Link to this definition">¶</a></dt>
 <dd><p>The number of retries SSLyze will perform when attempting to establish a connection
 to the server.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tls_server_name_indication</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – </p></li>
 <li><p><strong>tls_opportunistic_encryption</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.ProtocolWithOpportunisticTlsEnum" title="sslyze.connection_helpers.opportunistic_tls_helpers.ProtocolWithOpportunisticTlsEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProtocolWithOpportunisticTlsEnum</span></code></a>]) – </p></li>
@@ -366,63 +319,63 @@ to the server.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ProtocolWithOpportunisticTlsEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ProtocolWithOpportunisticTlsEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum" title="Link to this definition">¶</a></dt>
 <dd><p>The list of plaintext protocols supported by SSLyze for opportunistic TLS upgrade (such as STARTTLS).</p>
 <p>This allows SSLyze to figure out how to complete an SSL/TLS handshake with the server.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum.SMTP">
-<span class="sig-name descname"><span class="pre">SMTP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SMTP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.SMTP" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">SMTP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SMTP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.SMTP" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum.XMPP">
-<span class="sig-name descname"><span class="pre">XMPP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'XMPP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.XMPP" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">XMPP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'XMPP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.XMPP" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum.XMPP_SERVER">
-<span class="sig-name descname"><span class="pre">XMPP_SERVER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'XMPP_SERVER'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.XMPP_SERVER" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">XMPP_SERVER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'XMPP_SERVER'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.XMPP_SERVER" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum.FTP">
-<span class="sig-name descname"><span class="pre">FTP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'FTP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.FTP" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">FTP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'FTP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.FTP" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum.POP3">
-<span class="sig-name descname"><span class="pre">POP3</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'POP3'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.POP3" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">POP3</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'POP3'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.POP3" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum.LDAP">
-<span class="sig-name descname"><span class="pre">LDAP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'LDAP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.LDAP" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">LDAP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'LDAP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.LDAP" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum.IMAP">
-<span class="sig-name descname"><span class="pre">IMAP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'IMAP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.IMAP" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">IMAP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'IMAP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.IMAP" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum.RDP">
-<span class="sig-name descname"><span class="pre">RDP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'RDP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.RDP" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">RDP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'RDP'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.RDP" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum.POSTGRES">
-<span class="sig-name descname"><span class="pre">POSTGRES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'POSTGRES'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.POSTGRES" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">POSTGRES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'POSTGRES'</span></em><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.POSTGRES" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sslyze.ProtocolWithOpportunisticTlsEnum.from_default_port">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_default_port</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.from_default_port" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_default_port</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ProtocolWithOpportunisticTlsEnum.from_default_port" title="Link to this definition">¶</a></dt>
 <dd><p>Given a port number, return the protocol that uses this port number by default.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>port</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – </p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.ProtocolWithOpportunisticTlsEnum" title="sslyze.connection_helpers.opportunistic_tls_helpers.ProtocolWithOpportunisticTlsEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProtocolWithOpportunisticTlsEnum</span></code></a>]</p>
 </dd>
 </dl>
@@ -432,57 +385,37 @@ to the server.</p>
 
 </section>
 <section id="enabling-ssl-tls-client-authentication">
-<h3>Enabling SSL/TLS client authentication<a class="headerlink" href="#enabling-ssl-tls-client-authentication" title="Permalink to this headline">¶</a></h3>
+<h3>Enabling SSL/TLS client authentication<a class="headerlink" href="#enabling-ssl-tls-client-authentication" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ClientAuthenticationCredentials">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ClientAuthenticationCredentials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">certificate_chain_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_password</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">OpenSslFileTypeEnum.PEM</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ClientAuthenticationCredentials" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ClientAuthenticationCredentials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">certificate_chain_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_password</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">OpenSslFileTypeEnum.PEM</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ClientAuthenticationCredentials" title="Link to this definition">¶</a></dt>
 <dd><p>Everything needed by a client to perform SSL/TLS client authentication with the server.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ClientAuthenticationCredentials.certificate_chain_path">
-<span class="sig-name descname"><span class="pre">certificate_chain_path</span></span><a class="headerlink" href="#sslyze.ClientAuthenticationCredentials.certificate_chain_path" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">certificate_chain_path</span></span><a class="headerlink" href="#sslyze.ClientAuthenticationCredentials.certificate_chain_path" title="Link to this definition">¶</a></dt>
 <dd><p>Path to the file containing the client’s certificate.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>pathlib.Path</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ClientAuthenticationCredentials.key_path">
-<span class="sig-name descname"><span class="pre">key_path</span></span><a class="headerlink" href="#sslyze.ClientAuthenticationCredentials.key_path" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">key_path</span></span><a class="headerlink" href="#sslyze.ClientAuthenticationCredentials.key_path" title="Link to this definition">¶</a></dt>
 <dd><p>Path to the file containing the client’s private key.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>pathlib.Path</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ClientAuthenticationCredentials.key_password">
-<span class="sig-name descname"><span class="pre">key_password</span></span><a class="headerlink" href="#sslyze.ClientAuthenticationCredentials.key_password" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">key_password</span></span><a class="headerlink" href="#sslyze.ClientAuthenticationCredentials.key_password" title="Link to this definition">¶</a></dt>
 <dd><p>The password to decrypt the private key.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ClientAuthenticationCredentials.key_type">
-<span class="sig-name descname"><span class="pre">key_type</span></span><a class="headerlink" href="#sslyze.ClientAuthenticationCredentials.key_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">key_type</span></span><a class="headerlink" href="#sslyze.ClientAuthenticationCredentials.key_type" title="Link to this definition">¶</a></dt>
 <dd><p>The format of the key file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#sslyze.OpenSslFileTypeEnum" title="nassl.ssl_client.OpenSslFileTypeEnum">nassl.ssl_client.OpenSslFileTypeEnum</a></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>certificate_chain_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>) – </p></li>
 <li><p><strong>key_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>) – </p></li>
@@ -495,16 +428,16 @@ to the server.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.OpenSslFileTypeEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">OpenSslFileTypeEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.OpenSslFileTypeEnum" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">OpenSslFileTypeEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.OpenSslFileTypeEnum" title="Link to this definition">¶</a></dt>
 <dd><p>Certificate and private key format constants which map to the SSL_FILETYPE_XXX OpenSSL constants.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.OpenSslFileTypeEnum.PEM">
-<span class="sig-name descname"><span class="pre">PEM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#sslyze.OpenSslFileTypeEnum.PEM" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">PEM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#sslyze.OpenSslFileTypeEnum.PEM" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.OpenSslFileTypeEnum.ASN1">
-<span class="sig-name descname"><span class="pre">ASN1</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#sslyze.OpenSslFileTypeEnum.ASN1" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">ASN1</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#sslyze.OpenSslFileTypeEnum.ASN1" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -512,98 +445,58 @@ to the server.</p>
 </section>
 </section>
 <section id="classes-for-processing-scan-results">
-<h2>Classes for Processing Scan Results<a class="headerlink" href="#classes-for-processing-scan-results" title="Permalink to this headline">¶</a></h2>
+<h2>Classes for Processing Scan Results<a class="headerlink" href="#classes-for-processing-scan-results" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ServerScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity_error_trace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanResult" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity_error_trace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scan_result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of scanning a server.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerScanResult.uuid">
-<span class="sig-name descname"><span class="pre">uuid</span></span><a class="headerlink" href="#sslyze.ServerScanResult.uuid" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>uuid.UUID</p>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">uuid</span></span><a class="headerlink" href="#sslyze.ServerScanResult.uuid" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerScanResult.server_location">
-<span class="sig-name descname"><span class="pre">server_location</span></span><a class="headerlink" href="#sslyze.ServerScanResult.server_location" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#sslyze.ServerNetworkLocation" title="sslyze.server_setting.ServerNetworkLocation">sslyze.server_setting.ServerNetworkLocation</a></p>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">server_location</span></span><a class="headerlink" href="#sslyze.ServerScanResult.server_location" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerScanResult.network_configuration">
-<span class="sig-name descname"><span class="pre">network_configuration</span></span><a class="headerlink" href="#sslyze.ServerScanResult.network_configuration" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#sslyze.ServerNetworkConfiguration" title="sslyze.server_setting.ServerNetworkConfiguration">sslyze.server_setting.ServerNetworkConfiguration</a></p>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">network_configuration</span></span><a class="headerlink" href="#sslyze.ServerScanResult.network_configuration" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerScanResult.connectivity_status">
-<span class="sig-name descname"><span class="pre">connectivity_status</span></span><a class="headerlink" href="#sslyze.ServerScanResult.connectivity_status" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">connectivity_status</span></span><a class="headerlink" href="#sslyze.ServerScanResult.connectivity_status" title="Link to this definition">¶</a></dt>
 <dd><p>Whether SSLyze was able to connect to the server, or not.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#sslyze.ServerConnectivityStatusEnum" title="sslyze.scanner.models.ServerConnectivityStatusEnum">sslyze.scanner.models.ServerConnectivityStatusEnum</a></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerScanResult.connectivity_error_trace">
-<span class="sig-name descname"><span class="pre">connectivity_error_trace</span></span><a class="headerlink" href="#sslyze.ServerScanResult.connectivity_error_trace" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">connectivity_error_trace</span></span><a class="headerlink" href="#sslyze.ServerScanResult.connectivity_error_trace" title="Link to this definition">¶</a></dt>
 <dd><p>The connectivity error; only set if SSLyze was NOT able to connect to the server.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[traceback.TracebackException]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerScanResult.connectivity_result">
-<span class="sig-name descname"><span class="pre">connectivity_result</span></span><a class="headerlink" href="#sslyze.ServerScanResult.connectivity_result" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">connectivity_result</span></span><a class="headerlink" href="#sslyze.ServerScanResult.connectivity_result" title="Link to this definition">¶</a></dt>
 <dd><p>The result of connectivity testing; only set if SSLyze was able to connect to the server.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[<a class="reference internal" href="#sslyze.ServerTlsProbingResult" title="sslyze.server_connectivity.ServerTlsProbingResult">sslyze.server_connectivity.ServerTlsProbingResult</a>]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerScanResult.scan_status">
-<span class="sig-name descname"><span class="pre">scan_status</span></span><a class="headerlink" href="#sslyze.ServerScanResult.scan_status" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">scan_status</span></span><a class="headerlink" href="#sslyze.ServerScanResult.scan_status" title="Link to this definition">¶</a></dt>
 <dd><p>Whether SSLyze was able to complete the scan, or not.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#sslyze.ServerScanStatusEnum" title="sslyze.scanner.models.ServerScanStatusEnum">sslyze.scanner.models.ServerScanStatusEnum</a></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ServerScanResult.scan_result">
-<span class="sig-name descname"><span class="pre">scan_result</span></span><a class="headerlink" href="#sslyze.ServerScanResult.scan_result" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">scan_result</span></span><a class="headerlink" href="#sslyze.ServerScanResult.scan_result" title="Link to this definition">¶</a></dt>
 <dd><p>The result of the scan; only set if SSLyze was able to complete the scan.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[<a class="reference internal" href="#sslyze.AllScanCommandsAttempts" title="sslyze.scanner.models.AllScanCommandsAttempts">sslyze.scanner.models.AllScanCommandsAttempts</a>]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>uuid</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">UUID</span></code>) – </p></li>
 <li><p><strong>server_location</strong> (<a class="reference internal" href="#sslyze.ServerNetworkLocation" title="sslyze.server_setting.ServerNetworkLocation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerNetworkLocation</span></code></a>) – </p></li>
@@ -620,22 +513,20 @@ to the server.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ServerConnectivityStatusEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerConnectivityStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerConnectivityStatusEnum" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerConnectivityStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerConnectivityStatusEnum" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ServerScanStatusEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerScanStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanStatusEnum" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerScanStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerScanStatusEnum" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ServerTlsProbingResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerTlsProbingResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">highest_tls_version_supported</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cipher_suite_supported</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_auth_requirement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supports_ecdh_key_exchange</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerTlsProbingResult" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ServerTlsProbingResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">highest_tls_version_supported</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cipher_suite_supported</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_auth_requirement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supports_ecdh_key_exchange</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ServerTlsProbingResult" title="Link to this definition">¶</a></dt>
 <dd><p>Additional details about the server, detected via connectivity testing.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>highest_tls_version_supported</strong> (<a class="reference internal" href="available-scan-commands.html#sslyze.TlsVersionEnum" title="sslyze.server_connectivity.TlsVersionEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">TlsVersionEnum</span></code></a>) – </p></li>
 <li><p><strong>cipher_suite_supported</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – </p></li>
@@ -648,10 +539,10 @@ to the server.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.AllScanCommandsAttempts">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">AllScanCommandsAttempts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">certificate_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ssl_2_0_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ssl_3_0_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_1_0_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_1_1_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_1_2_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_1_3_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_compression</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_1_3_early_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">openssl_ccs_injection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_fallback_scsv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heartbleed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_renegotiation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_resumption</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elliptic_curves</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_headers</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.AllScanCommandsAttempts" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">AllScanCommandsAttempts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">certificate_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ssl_2_0_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ssl_3_0_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_1_0_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_1_1_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_1_2_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_1_3_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_compression</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_1_3_early_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">openssl_ccs_injection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_fallback_scsv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heartbleed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_renegotiation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_resumption</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elliptic_curves</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_headers</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.AllScanCommandsAttempts" title="Link to this definition">¶</a></dt>
 <dd><p>The result of every scan command supported by SSLyze.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>certificate_info</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">CertificateInfoScanAttempt</span></code>) – </p></li>
 <li><p><strong>ssl_2_0_cipher_suites</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">CipherSuitesScanAttempt</span></code>) – </p></li>
@@ -677,55 +568,35 @@ to the server.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ScanCommandAttempt">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ScanCommandAttempt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_reason</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_trace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ScanCommandAttempt" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ScanCommandAttempt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_reason</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_trace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ScanCommandAttempt" title="Link to this definition">¶</a></dt>
 <dd><p>The result of a single scan command.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommandAttempt.status">
-<span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#sslyze.ScanCommandAttempt.status" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#sslyze.ScanCommandAttempt.status" title="Link to this definition">¶</a></dt>
 <dd><p>Whether this specific scan command was ran successfully.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>sslyze.scanner.scan_command_attempt.ScanCommandAttemptStatusEnum</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommandAttempt.error_reason">
-<span class="sig-name descname"><span class="pre">error_reason</span></span><a class="headerlink" href="#sslyze.ScanCommandAttempt.error_reason" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">error_reason</span></span><a class="headerlink" href="#sslyze.ScanCommandAttempt.error_reason" title="Link to this definition">¶</a></dt>
 <dd><p>The reason why the scan command failed; None if the scan command succeeded.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[<a class="reference internal" href="#sslyze.ScanCommandErrorReasonEnum" title="sslyze.scanner.scan_command_attempt.ScanCommandErrorReasonEnum">sslyze.scanner.scan_command_attempt.ScanCommandErrorReasonEnum</a>]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommandAttempt.error_trace">
-<span class="sig-name descname"><span class="pre">error_trace</span></span><a class="headerlink" href="#sslyze.ScanCommandAttempt.error_trace" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">error_trace</span></span><a class="headerlink" href="#sslyze.ScanCommandAttempt.error_trace" title="Link to this definition">¶</a></dt>
 <dd><p>The exception trace of when the scan command failed; None if the scan command succeeded.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[traceback.TracebackException]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommandAttempt.result">
-<span class="sig-name descname"><span class="pre">result</span></span><a class="headerlink" href="#sslyze.ScanCommandAttempt.result" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">result</span></span><a class="headerlink" href="#sslyze.ScanCommandAttempt.result" title="Link to this definition">¶</a></dt>
 <dd><p>The actual result of the scan command; None if the scan command failed. The type of this attribute is
 the “ScanResult” object corresponding to the scan command.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[sslyze.scanner.scan_command_attempt._ScanCommandResultTypeVar]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>status</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandAttemptStatusEnum</span></code>) – </p></li>
 <li><p><strong>error_reason</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.ScanCommandErrorReasonEnum" title="sslyze.scanner.scan_command_attempt.ScanCommandErrorReasonEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScanCommandErrorReasonEnum</span></code></a>]) – </p></li>
@@ -738,26 +609,25 @@ the “ScanResult” object corresponding to the scan command.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.ScanCommandErrorReasonEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ScanCommandErrorReasonEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-<dl class="py attribute">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ScanCommandErrorReasonEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum" title="Link to this definition">¶</a></dt>
+<dd><dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommandErrorReasonEnum.BUG_IN_SSLYZE">
-<span class="sig-name descname"><span class="pre">BUG_IN_SSLYZE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'BUG_IN_SSLYZE'</span></em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.BUG_IN_SSLYZE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">BUG_IN_SSLYZE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'BUG_IN_SSLYZE'</span></em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.BUG_IN_SSLYZE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED">
-<span class="sig-name descname"><span class="pre">CLIENT_CERTIFICATE_NEEDED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CLIENT_CERTIFICATE_NEEDED'</span></em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">CLIENT_CERTIFICATE_NEEDED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CLIENT_CERTIFICATE_NEEDED'</span></em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE">
-<span class="sig-name descname"><span class="pre">CONNECTIVITY_ISSUE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CONNECTIVITY_ISSUE'</span></em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">CONNECTIVITY_ISSUE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CONNECTIVITY_ISSUE'</span></em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.CONNECTIVITY_ISSUE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommandErrorReasonEnum.WRONG_USAGE">
-<span class="sig-name descname"><span class="pre">WRONG_USAGE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'WRONG_USAGE'</span></em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.WRONG_USAGE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">WRONG_USAGE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'WRONG_USAGE'</span></em><a class="headerlink" href="#sslyze.ScanCommandErrorReasonEnum.WRONG_USAGE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -816,7 +686,7 @@ the “ScanResult” object corresponding to the scan command.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -830,11 +700,11 @@ the “ScanResult” object corresponding to the scan command.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;Copyright 2022 Alban Diquet.
+      &copy;Copyright 2023 Alban Diquet.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="_sources/running-a-scan-in-python.rst.txt"

@@ -43,7 +43,7 @@ class OpenSslCcsInjectionScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class OpenSslCcsInjectionScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[OpenSslCcsInjectionScanResultAsJson]  # type: ignore
+    result: Optional[OpenSslCcsInjectionScanResultAsJson]
 
 
 class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector[OpenSslCcsInjectionScanResult, None]):

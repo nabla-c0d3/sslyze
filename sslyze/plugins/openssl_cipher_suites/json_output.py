@@ -73,7 +73,8 @@ class _CipherSuiteAcceptedByServerAsJson(BaseModelWithOrmMode):
     ephemeral_key: Optional[_EphemeralKeyInfoAsJson]
 
 
-_CipherSuiteAcceptedByServerAsJson.__doc__ = CipherSuiteAcceptedByServer.__doc__  # type: ignore
+assert CipherSuiteAcceptedByServer.__doc__
+_CipherSuiteAcceptedByServerAsJson.__doc__ = CipherSuiteAcceptedByServer.__doc__
 
 
 class _CipherSuiteRejectedByServerAsJson(BaseModelWithOrmMode):
@@ -93,12 +94,17 @@ class CipherSuitesScanResultAsJson(BaseModelWithOrmMode):
         return cls(
             tls_version_used=scan_result.tls_version_used.name,
             is_tls_version_supported=scan_result.is_tls_version_supported,
-            accepted_cipher_suites=scan_result.accepted_cipher_suites,
-            rejected_cipher_suites=scan_result.rejected_cipher_suites,
+            accepted_cipher_suites=[
+                _CipherSuiteAcceptedByServerAsJson.from_orm(ciph) for ciph in scan_result.accepted_cipher_suites
+            ],
+            rejected_cipher_suites=[
+                _CipherSuiteRejectedByServerAsJson.from_orm(ciph) for ciph in scan_result.rejected_cipher_suites
+            ],
         )
 
 
-CipherSuitesScanResultAsJson.__doc__ = CipherSuitesScanResult.__doc__  # type: ignore
+assert CipherSuitesScanResult.__doc__
+CipherSuitesScanResultAsJson.__doc__ = CipherSuitesScanResult.__doc__
 
 
 class CipherSuitesScanAttemptAsJson(ScanCommandAttemptAsJson):

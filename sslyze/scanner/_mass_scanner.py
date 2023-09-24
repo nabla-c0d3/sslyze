@@ -3,7 +3,7 @@ from dataclasses import dataclass, fields
 import queue
 from time import sleep
 from traceback import TracebackException
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 from uuid import UUID
 
 from nassl.ssl_client import ClientCertificateRequested
@@ -17,6 +17,7 @@ from sslyze.scanner._jobs_worker_thread import (
     CompletedScanJob,
     QueuedScanJob,
     JobsWorkerThread,
+    WorkerQueueType,
 )
 from sslyze.scanner.models import (
     ServerScanRequest,
@@ -28,6 +29,13 @@ from sslyze.scanner.models import (
 )
 from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
 from sslyze.server_connectivity import ServerConnectivityInfo
+
+try:
+    # Python 3.10+
+    from typing import TypeAlias  # type: ignore
+except ImportError:
+    # Python 3.9 and before
+    from typing_extensions import TypeAlias  # type: ignore
 
 
 @dataclass(frozen=True)
@@ -48,6 +56,12 @@ class NoMoreServerScanRequestsSentinel:
     pass
 
 
+ServerScanRequestsQueueType: TypeAlias = (
+    "queue.Queue[Union[NoMoreServerScanRequestsSentinel, Tuple[ServerScanRequest, ServerTlsProbingResult]]]"
+)
+ServerScanResultsQueueType: TypeAlias = "queue.Queue[Union[NoMoreServerScanRequestsSentinel, ServerScanResult]]"
+
+
 class MassScannerProducerThread(threading.Thread):
     """Thread to continuously process more scans and the corresponding jobs as previous ones get completed.
 
@@ -61,8 +75,8 @@ class MassScannerProducerThread(threading.Thread):
         self,
         concurrent_server_scans_count: int,
         per_server_concurrent_connections_count: int,
-        server_scan_requests_queue_in: "queue.Queue[Tuple[ServerScanRequest, ServerTlsProbingResult]]",
-        server_scan_results_queue_out: "queue.Queue[ServerScanResult]",
+        server_scan_requests_queue_in: ServerScanRequestsQueueType,
+        server_scan_results_queue_out: ServerScanResultsQueueType,
     ):
         super().__init__()
         self._server_scan_results_queue_out = server_scan_results_queue_out
@@ -70,10 +84,8 @@ class MassScannerProducerThread(threading.Thread):
         self.daemon = True  # Shutdown the thread if the program is exiting early (ie. ctrl+c)
 
         # Create internal threads and queues for dispatching jobs
-        self._completed_jobs_queue: "queue.Queue[CompletedScanJob]" = queue.Queue()
-        self._all_worker_queues: List["queue.Queue[QueuedScanJob]"] = [
-            queue.Queue() for _ in range(concurrent_server_scans_count)
-        ]
+        self._completed_jobs_queue: queue.Queue[CompletedScanJob] = queue.Queue()
+        self._all_worker_queues: List[WorkerQueueType] = [queue.Queue() for _ in range(concurrent_server_scans_count)]
         self._worker_threads_per_queues_count = per_server_concurrent_connections_count
         self._all_worker_threads = []
         for worker_queue in self._all_worker_queues:
@@ -156,20 +168,20 @@ class MassScannerProducerThread(threading.Thread):
         self._completed_jobs_queue.join()
         for worker_queue in self._all_worker_queues:
             for _ in range(self._worker_threads_per_queues_count):
-                worker_queue.put(WorkerThreadNoMoreJobsSentinel())  # type: ignore
+                worker_queue.put(WorkerThreadNoMoreJobsSentinel())
                 worker_queue.join()
 
         for worker_thread in self._all_worker_threads:
             worker_thread.join()
 
-        self._server_scan_results_queue_out.put(NoMoreServerScanRequestsSentinel())  # type: ignore
+        self._server_scan_results_queue_out.put(NoMoreServerScanRequestsSentinel())
         self._server_scan_results_queue_out.join()
 
 
 def _queue_server_scan(
     server_scan_request: ServerScanRequest,
     server_connectivity_result: ServerTlsProbingResult,
-    assigned_worker_queue: "queue.Queue[QueuedScanJob]",
+    assigned_worker_queue: WorkerQueueType,
 ) -> _OngoingServerScan:
     # Queue all the underlying jobs for this server scan
     all_scan_jobs_per_scan_cmd, scan_command_errors_during_queuing = _generate_scan_jobs_for_server_scan(

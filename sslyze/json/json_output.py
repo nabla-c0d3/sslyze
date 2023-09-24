@@ -3,7 +3,12 @@ from pathlib import Path
 from typing import List, Optional, TYPE_CHECKING
 from uuid import UUID
 
-import pydantic
+try:
+    # pydantic 2.x
+    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
+except ImportError:
+    # pydantic 1.x
+    from pydantic import BaseModel  # type: ignore
 
 from sslyze import (
     ServerNetworkConfiguration,
@@ -73,7 +78,7 @@ class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
     @classmethod
     def from_orm(cls, all_scan_commands_attempts: AllScanCommandsAttempts) -> "AllScanCommandsAttemptsAsJson":
         all_scan_commands_attempts_json = {}
-        for field_name, field in cls.__fields__.items():
+        for field_name, field in cls.__fields__.items():  # type: ignore
             scan_command_attempt = getattr(all_scan_commands_attempts, field_name)
 
             # Convert the error trace to a string; this is why we have to override from_orm()
@@ -84,7 +89,15 @@ class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
                     error_trace_as_str += line
 
             # Create the JSON version of the scan command attempt
-            scan_command_attempt_json_cls = field.type_
+            if hasattr(field, "type_"):
+                # pydantic 1.x;  TODO(#617): Remove
+                scan_command_attempt_json_cls = field.type_
+            elif hasattr(field, "annotation"):
+                # pydantic 2.x
+                scan_command_attempt_json_cls = field.annotation
+            else:
+                raise TypeError("Unexpected version of pydantic?")
+
             all_scan_commands_attempts_json[field_name] = scan_command_attempt_json_cls(
                 status=scan_command_attempt.status,
                 error_reason=scan_command_attempt.error_reason,
@@ -104,7 +117,7 @@ class _HttpProxySettingsAsJson(BaseModelWithOrmModeAndForbid):
     basic_auth_password: Optional[str] = None
 
 
-class _ClientAuthenticationCredentialsAsJson(pydantic.BaseModel):
+class _ClientAuthenticationCredentialsAsJson(BaseModel):
     # Compared to the ClientAuthenticationCredentials class, this model does not have the key_password field
     certificate_chain_path: Path
     key_path: Path
@@ -138,7 +151,8 @@ class _ServerTlsProbingResultAsJson(BaseModelWithOrmModeAndForbid):
         )
 
 
-_ServerTlsProbingResultAsJson.__doc__ = ServerTlsProbingResult.__doc__  # type: ignore
+assert ServerTlsProbingResult.__doc__
+_ServerTlsProbingResultAsJson.__doc__ = ServerTlsProbingResult.__doc__
 
 
 class _ServerNetworkConfigurationAsJson(BaseModelWithOrmModeAndForbid):
@@ -152,7 +166,8 @@ class _ServerNetworkConfigurationAsJson(BaseModelWithOrmModeAndForbid):
     network_max_retries: int = 3
 
 
-_ServerNetworkConfigurationAsJson.__doc__ = ServerNetworkConfiguration.__doc__  # type: ignore
+assert ServerNetworkConfiguration.__doc__
+_ServerNetworkConfigurationAsJson.__doc__ = ServerNetworkConfiguration.__doc__
 
 
 class _ServerNetworkLocationAsJson(BaseModelWithOrmModeAndForbid):
@@ -160,10 +175,11 @@ class _ServerNetworkLocationAsJson(BaseModelWithOrmModeAndForbid):
     port: int
     connection_type: ConnectionTypeEnum
     ip_address: Optional[str] = None
-    http_proxy_settings: Optional[_HttpProxySettingsAsJson] = None  # type: ignore
+    http_proxy_settings: Optional[_HttpProxySettingsAsJson] = None
 
 
-_ServerNetworkLocationAsJson.__doc__ = ServerNetworkLocation.__doc__  # type: ignore
+assert ServerNetworkLocation.__doc__
+_ServerNetworkLocationAsJson.__doc__ = ServerNetworkLocation.__doc__
 
 
 class ServerScanResultAsJson(BaseModelWithOrmModeAndForbid):
@@ -210,7 +226,8 @@ class ServerScanResultAsJson(BaseModelWithOrmModeAndForbid):
         )
 
 
-ServerScanResultAsJson.__doc__ = ServerScanResult.__doc__  # type: ignore
+assert ServerScanResult.__doc__
+ServerScanResultAsJson.__doc__ = ServerScanResult.__doc__
 
 
 class InvalidServerStringAsJson(BaseModelWithOrmModeAndForbid):
@@ -227,10 +244,10 @@ class InvalidServerStringAsJson(BaseModelWithOrmModeAndForbid):
         )
 
 
-class SslyzeOutputAsJson(pydantic.BaseModel):
+class SslyzeOutputAsJson(BaseModel):
     """The "root" dictionary of the JSON output when using the --json command line option."""
 
-    invalid_server_strings: List[InvalidServerStringAsJson] = []  # TODO(AD): Remove default value starting with v6.x.x
+    invalid_server_strings: List[InvalidServerStringAsJson] = []  # TODO(6.0.0): Remove default value
     server_scan_results: List[ServerScanResultAsJson]
 
     date_scans_started: datetime

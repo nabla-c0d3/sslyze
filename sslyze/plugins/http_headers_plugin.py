@@ -5,11 +5,17 @@ from dataclasses import dataclass, asdict
 from traceback import TracebackException
 from urllib.parse import urlsplit
 
-import pydantic
+try:
+    # pydantic 2.x
+    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
+except ImportError:
+    # pydantic 1.x
+    from pydantic import BaseModel  # type: ignore
 
 # TODO: Fix type annotations in nassl
 from nassl._nassl import SslError  # type: ignore
 
+from sslyze.json.pydantic_utils import BaseModelWithOrmMode
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
@@ -84,25 +90,23 @@ class HttpHeadersScanResult(ScanCommandResult):
     expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
 
-class _StrictTransportSecurityHeaderAsJson(pydantic.BaseModel):
+class _StrictTransportSecurityHeaderAsJson(BaseModel):
     max_age: Optional[int]
     preload: bool
     include_subdomains: bool
 
 
-_StrictTransportSecurityHeaderAsJson.__doc__ = StrictTransportSecurityHeader.__doc__  # type: ignore
+assert StrictTransportSecurityHeader.__doc__
+_StrictTransportSecurityHeaderAsJson.__doc__ = StrictTransportSecurityHeader.__doc__
 
 
-class HttpHeadersScanResultAsJson(pydantic.BaseModel):
+class HttpHeadersScanResultAsJson(BaseModelWithOrmMode):
     http_request_sent: str
     http_error_trace: Optional[str]
 
     http_path_redirected_to: Optional[str]
     strict_transport_security_header: Optional[_StrictTransportSecurityHeaderAsJson]
     expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
-
-    class Config:
-        orm_mode = True
 
     @classmethod
     def from_orm(cls, result: HttpHeadersScanResult) -> "HttpHeadersScanResultAsJson":
@@ -124,7 +128,8 @@ class HttpHeadersScanResultAsJson(pydantic.BaseModel):
         )
 
 
-HttpHeadersScanResultAsJson.__doc__ = HttpHeadersScanResult.__doc__  # type: ignore
+assert HttpHeadersScanResult.__doc__
+HttpHeadersScanResultAsJson.__doc__ = HttpHeadersScanResult.__doc__
 
 
 class HttpHeadersScanAttemptAsJson(ScanCommandAttemptAsJson):

@@ -178,7 +178,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
             date_scans_started=date_scans_started,
             date_scans_completed=datetime.utcnow(),
         )
-        final_json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+        final_json_output.json()  # TODO(#617): Switch to model_dump_json()
         print("OK: Was able to generate JSON output.")
 
 

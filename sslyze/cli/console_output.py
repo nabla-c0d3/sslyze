@@ -69,6 +69,7 @@ class ObserverToGenerateConsoleOutput(ScannerObserver):
         if server_scan_result.scan_status != ServerScanStatusEnum.COMPLETED:
             # Nothing to print here if the scan was not completed
             return
+        assert server_scan_result.scan_result  # Must be set if scan_status == ServerScanStatusEnum.COMPLETED
 
         # Generate the console output for each scan command
         scan_command_results_str = ""

@@ -6,11 +6,29 @@ from sslyze import ServerScanRequest, ServerTlsProbingResult
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.server_connectivity import check_connectivity_to_server
 
+try:
+    # Python 3.10+
+    from typing import TypeAlias  # type: ignore
+except ImportError:
+    # Python 3.9 and before
+    from typing_extensions import TypeAlias  # type: ignore
+
+
 _ServerConnectivityTestingResult = Union[ServerTlsProbingResult, ConnectionToServerFailed]
 
 
 ServerConnectivityTestCompletedCallback = Callable[[ServerScanRequest, ServerTlsProbingResult], None]
 ServerConnectivityTestErrorCallback = Callable[[ServerScanRequest, ConnectionToServerFailed], None]
+
+
+class _NoMoreWorkSentinel:
+    pass
+
+
+_ScanRequestsQueueType: TypeAlias = "queue.Queue[Union[_NoMoreWorkSentinel, ServerScanRequest]]"
+_ResultsQueueType: TypeAlias = (
+    "queue.Queue[Union[_NoMoreWorkSentinel, Tuple[ServerScanRequest, _ServerConnectivityTestingResult]]]"
+)
 
 
 class MassConnectivityTester:
@@ -20,8 +38,8 @@ class MassConnectivityTester:
         if concurrent_server_scans_count < 1:
             raise ValueError()
 
-        self._scan_requests_queue: "queue.Queue[ServerScanRequest]" = queue.Queue()
-        self._results_queue: "queue.Queue[Tuple[ServerScanRequest, _ServerConnectivityTestingResult]]" = queue.Queue()
+        self._scan_requests_queue: _ScanRequestsQueueType = queue.Queue()
+        self._results_queue: _ResultsQueueType = queue.Queue()
         self._all_worker_threads = [
             _ConnectivityTesterThread(
                 scan_requests_queue_in=self._scan_requests_queue,
@@ -45,7 +63,7 @@ class MassConnectivityTester:
 
         # Notify workers when all work as been completed
         for _ in self._all_worker_threads:
-            self._scan_requests_queue.put(_NoMoreWorkSentinel())  # type: ignore
+            self._scan_requests_queue.put(_NoMoreWorkSentinel())
 
     def wait_until_all_work_was_processed(
         self,
@@ -76,15 +94,11 @@ class MassConnectivityTester:
             worker_thread.join()
 
 
-class _NoMoreWorkSentinel:
-    pass
-
-
 class _ConnectivityTesterThread(threading.Thread):
     def __init__(
         self,
-        scan_requests_queue_in: "queue.Queue[ServerScanRequest]",
-        results_queue_out: "queue.Queue[Tuple[ServerScanRequest, _ServerConnectivityTestingResult]]",
+        scan_requests_queue_in: _ScanRequestsQueueType,
+        results_queue_out: _ResultsQueueType,
     ):
         super().__init__()
         self._scan_requests_queue_in = scan_requests_queue_in
@@ -97,7 +111,7 @@ class _ConnectivityTesterThread(threading.Thread):
 
             # If there are no more jobs to complete, notify the parent and shutdown the thread
             if isinstance(scan_request, _NoMoreWorkSentinel):
-                self._results_queue_out.put(_NoMoreWorkSentinel())  # type: ignore
+                self._results_queue_out.put(_NoMoreWorkSentinel())
                 self._scan_requests_queue_in.task_done()
                 return
 

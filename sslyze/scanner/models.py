@@ -185,11 +185,11 @@ class ServerScanResult:
     server_location: ServerNetworkLocation
     network_configuration: ServerNetworkConfiguration
 
-    # First, SSLyze ensures that it is able to to connect to the server
+    # First, SSLyze ensures that it is able to connect to the server
     connectivity_status: ServerConnectivityStatusEnum
     connectivity_error_trace: Optional[TracebackException]
     connectivity_result: Optional[ServerTlsProbingResult]
 
-    # If SSLyze was able to connect then it performs the TLS scan
+    # Then, if SSLyze was able to connect, it performs the TLS scan
     scan_status: ServerScanStatusEnum
     scan_result: Optional[AllScanCommandsAttempts]  # Set it the scan_status == COMPLETED

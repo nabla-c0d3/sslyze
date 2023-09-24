@@ -2,7 +2,13 @@ from dataclasses import dataclass, asdict
 from operator import attrgetter
 from typing import List, Optional
 
-import pydantic
+try:
+    # pydantic 2.x
+    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
+except ImportError:
+    # pydantic 1.x
+    from pydantic import BaseModel  # type: ignore
+
 from nassl._nassl import OpenSSLError
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
 from nassl.ssl_client import ClientCertificateRequested, SslClient
@@ -59,15 +65,16 @@ class SupportedEllipticCurvesScanResult(ScanCommandResult):
             self.rejected_curves.sort(key=attrgetter("name"))
 
 
-class _EllipticCurveAsJson(pydantic.BaseModel):
+class _EllipticCurveAsJson(BaseModel):
     name: str
     openssl_nid: int
 
 
-_EllipticCurveAsJson.__doc__ = EllipticCurve.__doc__  # type: ignore
+assert EllipticCurve.__doc__
+_EllipticCurveAsJson.__doc__ = EllipticCurve.__doc__
 
 
-class SupportedEllipticCurvesScanResultAsJson(pydantic.BaseModel):
+class SupportedEllipticCurvesScanResultAsJson(BaseModel):
     supports_ecdh_key_exchange: bool
     supported_curves: Optional[List[_EllipticCurveAsJson]]
     rejected_curves: Optional[List[_EllipticCurveAsJson]]
@@ -92,7 +99,8 @@ class SupportedEllipticCurvesScanResultAsJson(pydantic.BaseModel):
         )
 
 
-SupportedEllipticCurvesScanResultAsJson.__doc__ = SupportedEllipticCurvesScanResult.__doc__  # type: ignore
+assert SupportedEllipticCurvesScanResult.__doc__
+SupportedEllipticCurvesScanResultAsJson.__doc__ = SupportedEllipticCurvesScanResult.__doc__
 
 
 class SupportedEllipticCurvesScanAttemptAsJson(ScanCommandAttemptAsJson):

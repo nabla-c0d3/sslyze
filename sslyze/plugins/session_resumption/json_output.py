@@ -9,7 +9,8 @@ class SessionResumptionSupportExtraArgumentAsJson(BaseModelWithOrmModeAndForbid)
     number_of_resumptions_to_attempt: int
 
 
-SessionResumptionSupportExtraArgumentAsJson.__doc__ = SessionResumptionSupportExtraArgument.__doc__  # type: ignore
+assert SessionResumptionSupportExtraArgument.__doc__
+SessionResumptionSupportExtraArgumentAsJson.__doc__ = SessionResumptionSupportExtraArgument.__doc__
 
 
 class SessionResumptionSupportScanResultAsJson(BaseModelWithOrmModeAndForbid):
@@ -22,7 +23,8 @@ class SessionResumptionSupportScanResultAsJson(BaseModelWithOrmModeAndForbid):
     tls_ticket_successful_resumptions_count: int
 
 
-SessionResumptionSupportScanResultAsJson.__doc__ = SessionResumptionSupportScanResult.__doc__  # type: ignore
+assert SessionResumptionSupportScanResult.__doc__
+SessionResumptionSupportScanResultAsJson.__doc__ = SessionResumptionSupportScanResult.__doc__
 
 
 class SessionResumptionSupportScanAttemptAsJson(ScanCommandAttemptAsJson):

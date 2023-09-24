@@ -23,7 +23,7 @@ class TestSslyzeOutputAsJson:
             date_scans_started=datetime.utcnow(),
             date_scans_completed=datetime.utcnow(),
         )
-        json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+        json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
         assert json_output_as_str
 
         # And it can be parsed again
@@ -39,7 +39,7 @@ class TestSslyzeOutputAsJson:
             date_scans_started=datetime.utcnow(),
             date_scans_completed=datetime.utcnow(),
         )
-        json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+        json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
         assert json_output_as_str
 
         # And it can be parsed again
@@ -63,7 +63,7 @@ class TestSslyzeOutputAsJson:
             date_scans_started=datetime.utcnow(),
             date_scans_completed=datetime.utcnow(),
         )
-        json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+        json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
         assert json_output_as_str
         assert "supports_compression" in json_output_as_str
 
@@ -90,7 +90,7 @@ class TestSslyzeOutputAsJson:
             date_scans_started=datetime.utcnow(),
             date_scans_completed=datetime.utcnow(),
         )
-        json_output_as_str = json_output.json(sort_keys=True, indent=4, ensure_ascii=True)
+        json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
         assert json_output_as_str
         assert error_trace.exc_type.__name__ in json_output_as_str
 

@@ -11,6 +11,7 @@ from sslyze import (
     ServerScanRequest,
     SslyzeOutputAsJson,
     ServerScanResultAsJson,
+    ServerConnectivityStatusEnum,
 )
 from sslyze.json.json_output import InvalidServerStringAsJson
 from sslyze.mozilla_tls_profile.mozilla_config_checker import (
@@ -89,7 +90,7 @@ def main() -> None:
     if parsed_command_line.should_print_json_to_console:
         sys.exit(0)
 
-    if not all_server_scan_results:
+    if {res.connectivity_status for res in all_server_scan_results} in [set(), {ServerConnectivityStatusEnum.ERROR}]:
         # There are no results to present: all supplied server strings were invalid?
         sys.exit(0)
 

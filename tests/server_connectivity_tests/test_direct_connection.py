@@ -159,7 +159,7 @@ class TestServerConnectivityTester:
 
             # When testing connectivity against it
             # It fails and the actual error / root cause is mentioned in the message
-            with pytest.raises(ConnectionToServerFailed, match="unrecognized name") as e:
+            with pytest.raises(ConnectionToServerFailed, match="unrecognized name"):
                 check_connectivity_to_server(
                     server_location=server_location,
                     network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
@@ -175,7 +175,7 @@ class TestServerConnectivityTester:
 
             # When testing connectivity against it
             # It fails and the fact that the server only supports SSL 2.0 is mentioned in the error
-            with pytest.raises(ConnectionToServerFailed, match="SSL 2.0") as e:
+            with pytest.raises(ConnectionToServerFailed, match="SSL 2.0"):
                 check_connectivity_to_server(
                     server_location=server_location,
                     network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),

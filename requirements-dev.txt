@@ -14,4 +14,4 @@ faker
 types-pyOpenSSL
 
 # For building the Windows executable
-cx-freeze==6.13.1; sys.platform == 'win32'
+cx-freeze==6.15.8; sys.platform == 'win32'

@@ -86,6 +86,7 @@ def check_connectivity_to_server(
             TlsVersionEnum.TLS_1_1,
             TlsVersionEnum.TLS_1_0,
             TlsVersionEnum.SSL_3_0,
+            TlsVersionEnum.SSL_2_0,
         ]:
             try:
                 tls_detection_result = _detect_support_for_tls_1_2_or_below(
@@ -103,6 +104,14 @@ def check_connectivity_to_server(
             server_location=server_location,
             network_configuration=network_configuration,
             error_message="TLS probing failed: could not find a TLS version and cipher suite supported by the server",
+        )
+
+    if tls_detection_result.tls_version_supported == TlsVersionEnum.SSL_2_0:
+        raise ServerTlsConfigurationNotSupported(
+            server_location=server_location,
+            network_configuration=network_configuration,
+            error_message="WARNING: Server only supports SSL 2.0 and is therefore affected by critical vulnerabilities."
+            " Update the server's software as soon as possible.",
         )
 
     # If the server requested a client certificate, detect if the client cert is optional or required
@@ -272,10 +281,17 @@ def _detect_support_for_tls_1_2_or_below(
     network_config: ServerNetworkConfiguration,
     tls_version: TlsVersionEnum,
 ) -> _TlsVersionDetectionResult:
+
+    if tls_version == TlsVersionEnum.SSL_2_0:
+        # DEFAULT excludes SSLv2 ciphers in OpenSSL 1.0.2
+        default_cipher_list = "SSLv2"
+    else:
+        default_cipher_list = "DEFAULT"
+
     # First try the default cipher list, and then all ciphers; this is to work around F5 network devices
     # that time out when the client hello is too long (ie. too many cipher suites enabled)
     # https://support.f5.com/csp/article/K14758
-    for cipher_list in ["DEFAULT", "ALL:COMPLEMENTOFALL:-PSK:-SRP"]:
+    for cipher_list in [default_cipher_list, "ALL:COMPLEMENTOFALL:-PSK:-SRP"]:
         ssl_connection = SslConnection(
             server_location=server_location,
             network_configuration=network_config,

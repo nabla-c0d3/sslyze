@@ -158,11 +158,25 @@ class TestServerConnectivityTester:
             )
 
             # When testing connectivity against it
-            # It fails and return the generic "connection failed" error, instead of crashing
-            with pytest.raises(ConnectionToServerFailed) as e:
+            # It fails and the actual error / root cause is mentioned in the message
+            with pytest.raises(ConnectionToServerFailed, match="unrecognized name") as e:
                 check_connectivity_to_server(
                     server_location=server_location,
                     network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
                 )
-                # And the actual error / root cause is mentioned in the message
-                assert "unrecognized name" in e.error_message
+
+    @can_only_run_on_linux_64
+    def test_server_only_supports_sslv2(self):
+        # Given a TLS server that only supports SSLv2
+        with LegacyOpenSslServer(openssl_cipher_string="SSLv2") as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+
+            # When testing connectivity against it
+            # It fails and the fact that the server only supports SSL 2.0 is mentioned in the error
+            with pytest.raises(ConnectionToServerFailed, match="SSL 2.0") as e:
+                check_connectivity_to_server(
+                    server_location=server_location,
+                    network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
+                )

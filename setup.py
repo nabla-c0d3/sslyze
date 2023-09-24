@@ -17,7 +17,7 @@ else:
 
     # Create fake Executable that does nothing so the setup.py file can be used on Linux
     class Executable:  # type: ignore
-        def __init__(self, script, targetName):  # type: ignore
+        def __init__(self, script, target_name):  # type: ignore
             pass
 
 
@@ -106,5 +106,5 @@ setup(
     ],
     # cx_freeze info for Windows builds with Python embedded
     options={"build_exe": {"packages": ["cffi", "cryptography"], "include_files": get_include_files()}},
-    executables=[Executable(path.join("sslyze", "__main__.py"), targetName="sslyze.exe")],
+    executables=[Executable(path.join("sslyze", "__main__.py"), target_name="sslyze.exe")],
 )

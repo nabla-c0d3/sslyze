@@ -125,6 +125,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     # Error returned by OpenSSL when the server didn't return a certificate that can work with the cipher suites
     # enabled in the client; for example client only supports EC cipher suites but server returned an RSA certificate
     "wrong certificate type": "Server returned wrong certificate type",
+    "invalid encoding": "TLS error: Invalid encoding",
 }
 
 

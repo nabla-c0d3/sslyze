@@ -173,6 +173,8 @@ class ServerNetworkConfiguration:
         xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream. If not supplied, the
             server's hostname will be used. Should only be set if the supplied `tls_opportunistic_encryption` is an
             XMPP protocol.
+        smtp_ehlo_hostname: The hostname to set in the SMTP EHLO. If not supplied, the default of "sslyze.scan"
+            will be used. Should only be set if the supplied `tls_opportunistic_encryption` is SMTP.
         network_timeout: The timeout (in seconds) to be used when attempting to establish a connection to the
             server.
         network_max_retries: The number of retries SSLyze will perform when attempting to establish a connection
@@ -184,6 +186,7 @@ class ServerNetworkConfiguration:
     tls_client_auth_credentials: Optional[ClientAuthenticationCredentials] = None
 
     xmpp_to_hostname: Optional[str] = None
+    smtp_ehlo_hostname: str = "sslyze.scan"
 
     network_timeout: int = 5
     network_max_retries: int = 3

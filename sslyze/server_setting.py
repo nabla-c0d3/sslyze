@@ -163,7 +163,7 @@ class ServerNetworkConfiguration:
 
     Attributes:
         tls_server_name_indication: The hostname to set within the Server Name Indication TLS extension.
-        tls_wrapped_protocol: The protocol wrapped in TLS that the server expects. It allows SSLyze to figure out
+        tls_opportunistic_encryption: The protocol wrapped in TLS that the server expects. It allows SSLyze to figure out
             how to establish a (Start)TLS connection to the server and what kind of "hello" message
             (SMTP, XMPP, etc.) to send to the server after the handshake was completed. If not supplied, standard
             TLS will be used.
@@ -171,7 +171,7 @@ class ServerNetworkConfiguration:
             with the server. If not supplied, SSLyze will attempt to connect to the server without performing
             client authentication.
         xmpp_to_hostname: The hostname to set within the `to` attribute of the XMPP stream. If not supplied, the
-            server's hostname will be used. Should only be set if the supplied `tls_wrapped_protocol` is an
+            server's hostname will be used. Should only be set if the supplied `tls_opportunistic_encryption` is an
             XMPP protocol.
         network_timeout: The timeout (in seconds) to be used when attempting to establish a connection to the
             server.

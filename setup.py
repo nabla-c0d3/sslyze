@@ -98,10 +98,9 @@ setup(
     # Dependencies
     install_requires=[
         "nassl>=5.1,<6",
-        "cryptography>=2.6,<42",
+        "cryptography>42,<43",
         "tls-parser>=2,<3",
         "pydantic>=2.2,<2.7",
-        "pyOpenSSL>=23,<24",
     ],
     # cx_freeze info for Windows builds with Python embedded
     options={"build_exe": {"packages": ["cffi", "cryptography"], "include_files": get_include_files()}},

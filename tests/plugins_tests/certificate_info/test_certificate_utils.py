@@ -3,7 +3,6 @@ from pathlib import Path
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 
-from sslyze.plugins.certificate_info._cert_chain_analyzer import _certificate_matches_hostname
 from sslyze.plugins.certificate_info._certificate_utils import (
     get_common_names,
     parse_subject_alternative_name_extension,
@@ -17,12 +16,6 @@ certificate = load_pem_x509_certificate(leaf_pem, default_backend())
 
 
 class TestCertificateUtils:
-    def test_certificate_matches_hostname_good_hostname(self):
-        assert _certificate_matches_hostname(certificate, "www.github.com")
-
-    def test_certificate_matches_hostname_bad_hostname(self):
-        assert not _certificate_matches_hostname(certificate, "notgithub.com")
-
     def test_get_common_names(self):
         assert get_common_names(certificate.subject) == ["github.com"]
 

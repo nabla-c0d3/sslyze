@@ -293,10 +293,6 @@ def _check_certificates(
     for cert_deployment in cert_info_result.certificate_deployments:
         # Validate certificate trust
         leaf_cert = cert_deployment.received_certificate_chain[0]
-        if not cert_deployment.leaf_certificate_subject_matches_hostname:
-            issues_with_certificates[
-                "certificate_hostname_validation"
-            ] = f"Certificate hostname validation failed for {leaf_cert.subject.rfc4514_string()}."
         if not cert_deployment.verified_certificate_chain:
             issues_with_certificates[
                 "certificate_path_validation"

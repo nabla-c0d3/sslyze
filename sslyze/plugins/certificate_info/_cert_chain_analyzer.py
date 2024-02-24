@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from ssl import CertificateError, match_hostname
 from typing import Optional, List, cast
 
 import cryptography
@@ -11,10 +10,6 @@ from cryptography.x509 import ExtensionNotFound, ExtensionOID, Certificate, load
 from cryptography.x509.ocsp import load_der_ocsp_response, OCSPResponseStatus, OCSPResponse
 import nassl.ocsp_response
 
-from sslyze.plugins.certificate_info._certificate_utils import (
-    parse_subject_alternative_name_extension,
-    get_common_names,
-)
 from sslyze.plugins.certificate_info._symantec import SymantecDistructTester
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore, PathValidationResult
 
@@ -35,10 +30,8 @@ class CertificateDeploymentAnalysisResult:
             ``path_validation_result_list[0].verified_certificate_chain``.
         path_validation_results: The result of validating the server's
             certificate chain using each trust store that is packaged with SSLyze (Mozilla, Apple, etc.).
-            If for a given trust store, the validation was successful, the verified certificate chain built by OpenSSL
-            can be retrieved from the ``PathValidationResult``.
-        leaf_certificate_subject_matches_hostname: ``True`` if the leaf certificate's Common Name or Subject Alternative
-            Names match the server's hostname.
+            If for a given trust store, the validation was successful, the verified certificate chain can be
+             retrieved from the ``PathValidationResult``.
         leaf_certificate_is_ev: ``True`` if the leaf certificate is Extended Validation, according to Mozilla.
         leaf_certificate_has_must_staple_extension: ``True`` if the OCSP must-staple extension is present in the leaf
             certificate.
@@ -66,7 +59,6 @@ class CertificateDeploymentAnalysisResult:
     """
 
     received_certificate_chain: List[Certificate]
-    leaf_certificate_subject_matches_hostname: bool
     leaf_certificate_has_must_staple_extension: bool
     leaf_certificate_is_ev: bool
     leaf_certificate_signed_certificate_timestamps_count: Optional[int]
@@ -196,14 +188,16 @@ class CertificateDeploymentAnalyzer:
         # Try to generate the verified certificate chain using each trust store
         all_path_validation_results = []
         for trust_store in self.trust_stores_for_validation:
-            path_validation_result = trust_store.verify_certificate_chain(self.server_certificate_chain_as_pem)
+            path_validation_result = trust_store.verify_certificate_chain(
+                self.server_certificate_chain_as_pem, self.server_hostname
+            )
             all_path_validation_results.append(path_validation_result)
 
         # Keep one trust store that was able to build the verified chain to then run additional checks
         trust_store_that_can_build_verified_chain = None
         verified_certificate_chain = None
 
-        # But first tort the path validation results so the same trust_store always get picked for a given server
+        # But first sort the path validation results so the same trust_store always get picked for a given server
         def sort_function(path_validation: PathValidationResult) -> str:
             return path_validation.trust_store.name.lower()
 
@@ -260,7 +254,6 @@ class CertificateDeploymentAnalyzer:
         # All done
         return CertificateDeploymentAnalysisResult(
             received_certificate_chain=received_certificate_chain,
-            leaf_certificate_subject_matches_hostname=_certificate_matches_hostname(leaf_cert, self.server_hostname),
             leaf_certificate_has_must_staple_extension=has_ocsp_must_staple,
             leaf_certificate_is_ev=is_leaf_certificate_ev,
             leaf_certificate_signed_certificate_timestamps_count=number_of_scts,
@@ -272,28 +265,3 @@ class CertificateDeploymentAnalyzer:
             ocsp_response=final_ocsp_response,
             ocsp_response_is_trusted=is_ocsp_response_trusted,
         )
-
-
-def _certificate_matches_hostname(certificate: Certificate, server_hostname: str) -> bool:
-    """Verify that the certificate was issued for the given hostname."""
-    # Extract the names from the certificate to create the properly-formatted dictionary
-    try:
-        cert_subject = certificate.subject
-    except ValueError:
-        # Cryptography could not parse the certificate https://github.com/nabla-c0d3/sslyze/issues/495
-        return False
-
-    subj_alt_name_ext = parse_subject_alternative_name_extension(certificate)
-    subj_alt_name_as_list = [("DNS", name) for name in subj_alt_name_ext.dns_names]
-    subj_alt_name_as_list.extend([("IP Address", ip) for ip in subj_alt_name_ext.ip_addresses])
-
-    certificate_names = {
-        "subject": (tuple([("commonName", name) for name in get_common_names(cert_subject)]),),
-        "subjectAltName": tuple(subj_alt_name_as_list),
-    }
-    # CertificateError is raised on failure
-    try:
-        match_hostname(certificate_names, server_hostname)  # type: ignore
-        return True
-    except CertificateError:
-        return False

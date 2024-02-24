@@ -41,8 +41,10 @@ class TestCertificateInfoPlugin:
         for path_validation_result in plugin_result.certificate_deployments[0].path_validation_results:
             if path_validation_result.trust_store.path == ca_file_path:
                 assert not path_validation_result.was_validation_successful
+                assert path_validation_result.validation_error
             else:
                 assert path_validation_result.was_validation_successful
+                assert not path_validation_result.validation_error
 
     def test_valid_chain_with_ocsp_stapling(self):
         # Given a server to scan that supports OCSP stapling
@@ -78,7 +80,6 @@ class TestCertificateInfoPlugin:
         for path_validation_result in plugin_result.certificate_deployments[0].path_validation_results:
             assert path_validation_result.was_validation_successful
 
-        assert plugin_result.certificate_deployments[0].leaf_certificate_subject_matches_hostname
         assert plugin_result.certificate_deployments[0].received_chain_has_valid_order
 
     def test_invalid_chain(self):
@@ -103,7 +104,6 @@ class TestCertificateInfoPlugin:
 
         assert plugin_result.certificate_deployments[0].leaf_certificate_signed_certificate_timestamps_count == 0
 
-        assert plugin_result.certificate_deployments[0].leaf_certificate_subject_matches_hostname
         assert plugin_result.certificate_deployments[0].received_chain_has_valid_order
         assert plugin_result.certificate_deployments[0].received_chain_contains_anchor_certificate is None
 

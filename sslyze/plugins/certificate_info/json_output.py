@@ -229,7 +229,7 @@ _TrustStoreAsJson.__doc__ = TrustStore.__doc__
 class _PathValidationResultAsJson(BaseModelWithOrmMode):
     trust_store: _TrustStoreAsJson
     verified_certificate_chain: Optional[List[_CertificateAsJson]]
-    openssl_error_string: Optional[str]
+    validation_error: Optional[str]
     was_validation_successful: bool
 
 
@@ -239,7 +239,6 @@ _PathValidationResultAsJson.__doc__ = PathValidationResult.__doc__
 
 class _CertificateDeploymentAnalysisResultAsJson(BaseModelWithOrmMode):
     received_certificate_chain: List[_CertificateAsJson]
-    leaf_certificate_subject_matches_hostname: bool
     leaf_certificate_has_must_staple_extension: bool
     leaf_certificate_is_ev: bool
     leaf_certificate_signed_certificate_timestamps_count: Optional[int]

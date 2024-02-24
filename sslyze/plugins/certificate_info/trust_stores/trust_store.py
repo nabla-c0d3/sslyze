@@ -1,13 +1,15 @@
 from dataclasses import dataclass
+import datetime
 from pathlib import Path
 
-from OpenSSL import crypto
 from cryptography.x509 import Certificate
 from cryptography.x509 import ExtensionNotFound, CertificatePolicies
 from cryptography.x509 import ObjectIdentifier
 from cryptography.x509 import ExtensionOID
 from typing import List, cast
 from typing import Optional
+from cryptography.x509 import load_pem_x509_certificates, DNSName, load_pem_x509_certificate
+from cryptography.x509.verification import PolicyBuilder, Store, VerificationError
 
 
 @dataclass(frozen=True)
@@ -21,14 +23,14 @@ class PathValidationResult:
             Will be None if the validation failed or the verified chain could not be built.
             Each certificate is parsed using the cryptography module; documentation is available at
             https://cryptography.io/en/latest/x509/reference/#x-509-certificate-object.
-        openssl_error_string: The result string returned by OpenSSL's validation function; None if validation was
+        validation_error: The error returned by the cryptography module's validation function; None if validation was
             successful.
         was_validation_successful: Whether the certificate chain is trusted when using supplied the trust_stores.
     """
 
     trust_store: "TrustStore"
     verified_certificate_chain: Optional[List[Certificate]]
-    openssl_error_string: Optional[str]
+    validation_error: Optional[str]
 
     @property
     def was_validation_successful(self) -> bool:
@@ -50,8 +52,7 @@ class TrustStore:
         self.version = version
         self.ev_oids = ev_oids
 
-        self._x509_store = crypto.X509Store()
-        self._x509_store.load_locations(cafile=self.path)
+        self._x509_store = Store(load_pem_x509_certificates(self.path.read_text().encode("ascii")))
 
     def is_certificate_extended_validation(self, certificate: Certificate) -> bool:
         """Is the supplied server certificate EV?"""
@@ -69,26 +70,30 @@ class TrustStore:
                 return True
         return False
 
-    def verify_certificate_chain(self, certificate_chain_as_pem: List[str]) -> PathValidationResult:
-        certificate = crypto.load_certificate(
-            buffer=certificate_chain_as_pem[0].encode("ascii"), type=crypto.FILETYPE_PEM
-        )
-        chain = [
-            crypto.load_certificate(buffer=cert.encode("ascii"), type=crypto.FILETYPE_PEM)
-            for cert in certificate_chain_as_pem[1::]
-        ]
-        x509_store_ctx = crypto.X509StoreContext(store=self._x509_store, certificate=certificate, chain=chain)
+    def verify_certificate_chain(
+        self,
+        certificate_chain_as_pem: List[str],
+        server_hostname: str,
+        validation_time: Optional[datetime.datetime] = None,
+    ) -> PathValidationResult:
+        final_validation_time = validation_time or datetime.datetime.now()
+        builder = PolicyBuilder().store(self._x509_store)
+        builder = builder.time(final_validation_time)
 
-        verified_chain: Optional[List[Certificate]]
-        error_message: Optional[str]
+        verifier = builder.build_server_verifier(DNSName(server_hostname))
+
+        leaf_cert = load_pem_x509_certificate(certificate_chain_as_pem[0].encode("ascii"))
+        intermediate_certs = [load_pem_x509_certificate(pem.encode("ascii")) for pem in certificate_chain_as_pem[1:]]
+
         try:
-            verified_chain_as_x509s = x509_store_ctx.get_verified_chain()
-            verified_chain = [x509.to_cryptography() for x509 in verified_chain_as_x509s]
+            verified_chain = verifier.verify(leaf_cert, intermediate_certs)
             error_message = None
-        except crypto.X509StoreContextError as exc:
-            verified_chain = None
-            error_message = exc.args[0]
 
-        return PathValidationResult(
-            trust_store=self, verified_certificate_chain=verified_chain, openssl_error_string=error_message
+        except VerificationError as e:
+            error_message = e.args[0]
+            verified_chain = None
+
+        path_result = PathValidationResult(
+            trust_store=self, verified_certificate_chain=verified_chain, validation_error=error_message
         )
+        return path_result

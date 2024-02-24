@@ -62,7 +62,7 @@ setup(
     author=project_info["__author__"],
     author_email=project_info["__author_email__"],
     license=project_info["__license__"],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     # Pypi metadata
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
@@ -72,7 +72,6 @@ setup(
         "Intended Audience :: System Administrators",
         "Natural Language :: French",
         "License :: OSI Approved :: GNU Affero General Public License v3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",

@@ -30,21 +30,6 @@ _logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class ExpectCtHeader:
-    """An Expect-CT header parsed from a server's HTTP response.
-
-    Attributes:
-        max-age: The content of the max-age field.
-        report-uri: The content of report-uri field.
-        enforce: True if enforce directive is set.
-    """
-
-    max_age: Optional[int]
-    report_uri: Optional[str]
-    enforce: bool
-
-
-@dataclass(frozen=True)
 class StrictTransportSecurityHeader:
     """A Strict-Transport-Security header parsed from a server's HTTP response.
 
@@ -72,8 +57,6 @@ class HttpHeadersScanResult(ScanCommandResult):
             all the subsequent fields will be ``None`` as SSLyze did not receive a valid HTTP response from the server.
         http_path_redirected_to: The path SSLyze was eventually redirected to after sending the initial HTTP request.
         strict_transport_security_header: The Strict-Transport-Security header returned by the server.
-        expect_ct_header: DEPRECATED - will always be ``None``. This is because the Expect-CT header has officially
-            been deprecated.
     """
 
     http_request_sent: str
@@ -81,7 +64,6 @@ class HttpHeadersScanResult(ScanCommandResult):
 
     http_path_redirected_to: Optional[str]
     strict_transport_security_header: Optional[StrictTransportSecurityHeader]
-    expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
 
 class _StrictTransportSecurityHeaderAsJson(BaseModel):
@@ -100,7 +82,6 @@ class HttpHeadersScanResultAsJson(BaseModelWithOrmMode):
 
     http_path_redirected_to: Optional[str]
     strict_transport_security_header: Optional[_StrictTransportSecurityHeaderAsJson]
-    expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
     @model_validator(mode="before")
     @classmethod

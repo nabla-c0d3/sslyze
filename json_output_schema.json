@@ -538,7 +538,7 @@
       "type": "object"
     },
     "HttpHeadersScanResultAsJson": {
-      "description": "The result of testing a server for the presence of security-related HTTP headers.\n\nEach HTTP header described below will be ``None`` if the server did not return a valid HTTP response, or if the\nserver returned an HTTP response without the HTTP header.\n\nAttributes:\n    http_request_sent: The initial HTTP request sent to the server by SSLyze.\n    http_error_trace: An error the server returned after receiving the initial HTTP request. If this field is set,\n        all the subsequent fields will be ``None`` as SSLyze did not receive a valid HTTP response from the server.\n    http_path_redirected_to: The path SSLyze was eventually redirected to after sending the initial HTTP request.\n    strict_transport_security_header: The Strict-Transport-Security header returned by the server.\n    expect_ct_header: DEPRECATED - will always be ``None``. This is because the Expect-CT header has officially\n        been deprecated.",
+      "description": "The result of testing a server for the presence of security-related HTTP headers.\n\nEach HTTP header described below will be ``None`` if the server did not return a valid HTTP response, or if the\nserver returned an HTTP response without the HTTP header.\n\nAttributes:\n    http_request_sent: The initial HTTP request sent to the server by SSLyze.\n    http_error_trace: An error the server returned after receiving the initial HTTP request. If this field is set,\n        all the subsequent fields will be ``None`` as SSLyze did not receive a valid HTTP response from the server.\n    http_path_redirected_to: The path SSLyze was eventually redirected to after sending the initial HTTP request.\n    strict_transport_security_header: The Strict-Transport-Security header returned by the server.",
       "properties": {
         "http_request_sent": {
           "title": "Http Request Sent",
@@ -575,11 +575,6 @@
               "type": "null"
             }
           ]
-        },
-        "expect_ct_header": {
-          "default": null,
-          "title": "Expect Ct Header",
-          "type": "null"
         }
       },
       "required": [

@@ -55,7 +55,6 @@ class TestHttpHeadersPlugin:
         assert result.http_request_sent
         assert result.http_path_redirected_to
         assert not result.strict_transport_security_header
-        assert not result.expect_ct_header
 
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)

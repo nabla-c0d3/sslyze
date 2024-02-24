@@ -77,7 +77,6 @@ from sslyze.plugins.heartbleed_plugin import HeartbleedScanResult
 from sslyze.plugins.http_headers_plugin import (
     HttpHeadersScanResult,
     StrictTransportSecurityHeader,
-    ExpectCtHeader,
 )
 
 

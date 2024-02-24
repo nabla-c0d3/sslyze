@@ -119,6 +119,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "bad record mac": "TLS alert: bad record mac",
     "tlsv1 alert internal error": "TLS alert: Internal error",
     "illegal padding": "TLS alert: Illegal padding",
+    "invalid padding": "TLS alert: Invalid padding",
     # illegal parameter is sometimes used by server to reject an invalid client certificate
     # https://github.com/nabla-c0d3/sslyze/issues/555
     "illegal parameter": "TLS alert: Illegal parameter",

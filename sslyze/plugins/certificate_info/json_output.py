@@ -3,19 +3,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, List, Optional
 
-import pydantic
+from pydantic import BaseModel, model_validator
 
-try:
-    # pydantic 2.x
-    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
-except ImportError:
-    # pydantic 1.x
-    from pydantic import BaseModel  # type: ignore
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509 import NameAttribute, ObjectIdentifier, Name, Certificate, ocsp
+from cryptography.x509 import NameAttribute, ObjectIdentifier, Name, Certificate
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 
 from sslyze import (
@@ -25,7 +19,7 @@ from sslyze import (
     PathValidationResult,
     TrustStore,
 )
-from sslyze.json.pydantic_utils import BaseModelWithOrmMode
+from sslyze.json.pydantic_utils import BaseModelWithOrmMode, StrFromEnumValueName
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.certificate_info._certificate_utils import (
     get_public_key_sha256,
@@ -54,14 +48,20 @@ class _PublicKeyAsJson(BaseModelWithOrmMode):
     ec_x: Optional[int]
     ec_y: Optional[int]
 
+    @model_validator(mode="before")
     @classmethod
-    def from_orm(cls, public_key: Any) -> "_PublicKeyAsJson":
+    def _handle_object(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            return data
+
+        # Assuming a cryptography.PublicKey
+        public_key = data
         try:
             public_key_size = public_key.key_size  # type: ignore
         except AttributeError:
             public_key_size = None
 
-        return cls(
+        return dict(
             algorithm=public_key.__class__.__name__,
             key_size=public_key_size,
             # EC-only fields
@@ -78,9 +78,14 @@ class _ObjectIdentifierAsJson(BaseModelWithOrmMode):
     name: str
     dotted_string: str
 
+    @model_validator(mode="before")
     @classmethod
-    def from_orm(cls, oid: ObjectIdentifier) -> "_ObjectIdentifierAsJson":
-        return cls(
+    def _handle_object(cls, data: Any) -> Any:
+        if not isinstance(data, ObjectIdentifier):
+            return data
+
+        oid: ObjectIdentifier = data
+        return dict(
             name=oid._name,  # type: ignore
             dotted_string=oid.dotted_string,
         )
@@ -91,11 +96,15 @@ class _NameAttributeAsJson(BaseModelWithOrmMode):
     value: str
     rfc4514_string: str
 
+    @model_validator(mode="before")
     @classmethod
-    def from_orm(cls, name_attribute: NameAttribute) -> "_NameAttributeAsJson":
+    def _handle_object(cls, data: Any) -> Any:
+        if not isinstance(data, NameAttribute):
+            return data
 
-        return cls(
-            oid=_ObjectIdentifierAsJson.from_orm(name_attribute.oid),
+        name_attribute: NameAttribute = data
+        return dict(
+            oid=name_attribute.oid,
             value=name_attribute.value if isinstance(name_attribute.value, str) else str(name_attribute.value),
             rfc4514_string=name_attribute.rfc4514_string(),
         )
@@ -105,30 +114,25 @@ class _X509NameAsJson(BaseModelWithOrmMode):
     rfc4514_string: str
     attributes: List[_NameAttributeAsJson]
 
+    @model_validator(mode="before")
     @classmethod
-    def from_orm(cls, name: Name) -> "_X509NameAsJson":
-        return cls(
-            rfc4514_string=name.rfc4514_string(), attributes=[_NameAttributeAsJson.from_orm(attr) for attr in name]
-        )
+    def _handle_object(cls, data: Any) -> Any:
+        if not isinstance(data, Name):
+            return data
+
+        name: Name = data
+        return dict(rfc4514_string=name.rfc4514_string(), attributes=[attr for attr in name])
 
 
 class _SubjAltNameAsJson(BaseModel):
 
-    # TODO(6.0.0): Remove the Config, alias and default value as the name "dns" is deprecated
-    class Config:
-        allow_population_by_field_name = True
-
-    dns_names: List[str] = pydantic.Field(alias="dns")
+    dns_names: List[str]
     ip_addresses: List[str] = []
 
 
 class _HashAlgorithmAsJson(BaseModelWithOrmMode):
-    name: str
+    name: StrFromEnumValueName
     digest_size: int
-
-    @classmethod
-    def from_orm(cls, hash_algorithm: hashes.HashAlgorithm) -> "_HashAlgorithmAsJson":
-        return cls(name=hash_algorithm.name, digest_size=hash_algorithm.digest_size)
 
 
 class _CertificateAsJson(BaseModelWithOrmMode):
@@ -154,31 +158,31 @@ class _CertificateAsJson(BaseModelWithOrmMode):
 
     public_key: _PublicKeyAsJson
 
+    @model_validator(mode="before")
     @classmethod
-    def from_orm(cls, certificate: Certificate) -> "_CertificateAsJson":
-        signature_hash_algorithm: Optional[_HashAlgorithmAsJson]
-        if certificate.signature_hash_algorithm:
-            signature_hash_algorithm = _HashAlgorithmAsJson.from_orm(certificate.signature_hash_algorithm)
-        else:
-            signature_hash_algorithm = None
+    def _handle_object(cls, data: Any) -> Any:
+        if not isinstance(data, Certificate):
+            return data
+
+        certificate: Certificate = data
 
         # We may get garbage/invalid certificates so we need to handle ValueErrors.
         # See https://github.com/nabla-c0d3/sslyze/issues/403 for more information
-        subject_field: Optional[_X509NameAsJson]
+        subject_field: Optional[Name]
         try:
-            subject_field = _X509NameAsJson.from_orm(certificate.subject)
+            subject_field = certificate.subject
         except ValueError:
             subject_field = None
 
-        issuer_field: Optional[_X509NameAsJson]
+        issuer_field: Optional[Name]
         try:
-            issuer_field = _X509NameAsJson.from_orm(certificate.issuer)
+            issuer_field = certificate.issuer
         except ValueError:
             issuer_field = None
 
         subj_alt_name_ext = parse_subject_alternative_name_extension(certificate)
 
-        return cls(
+        return dict(
             as_pem=certificate.public_bytes(Encoding.PEM).decode("ascii"),
             hpkp_pin=b64encode(get_public_key_sha256(certificate)).decode("ascii"),
             fingerprint_sha1=b64encode(certificate.fingerprint(hashes.SHA1())).decode("ascii"),
@@ -190,18 +194,18 @@ class _CertificateAsJson(BaseModelWithOrmMode):
                 dns_names=subj_alt_name_ext.dns_names,
                 ip_addresses=subj_alt_name_ext.ip_addresses,
             ),
-            signature_hash_algorithm=signature_hash_algorithm,
-            signature_algorithm_oid=_ObjectIdentifierAsJson.from_orm(certificate.signature_algorithm_oid),
+            signature_hash_algorithm=certificate.signature_hash_algorithm,
+            signature_algorithm_oid=certificate.signature_algorithm_oid,
             subject=subject_field,
             issuer=issuer_field,
-            public_key=_PublicKeyAsJson.from_orm(certificate.public_key()),
+            public_key=certificate.public_key(),
         )
 
 
 class _OcspResponseAsJson(BaseModelWithOrmMode):
-    response_status: str
+    response_status: StrFromEnumValueName
 
-    certificate_status: Optional[str]
+    certificate_status: Optional[StrFromEnumValueName]
     revocation_time: Optional[datetime]
 
     produced_at: Optional[datetime]
@@ -209,30 +213,6 @@ class _OcspResponseAsJson(BaseModelWithOrmMode):
     next_update: Optional[datetime]
 
     serial_number: Optional[int]
-
-    @classmethod
-    def from_orm(cls, ocsp_response: ocsp.OCSPResponse) -> "_OcspResponseAsJson":
-        response_status = ocsp_response.response_status.name
-        if ocsp_response.response_status != ocsp.OCSPResponseStatus.SUCCESSFUL:
-            return cls(
-                response_status=response_status,
-                certificate_status=None,
-                revocation_time=None,
-                produced_at=None,
-                this_update=None,
-                next_update=None,
-                serial_number=None,
-            )
-        else:
-            return cls(
-                response_status=response_status,
-                certificate_status=ocsp_response.certificate_status.name,
-                revocation_time=ocsp_response.revocation_time,
-                produced_at=ocsp_response.produced_at,
-                this_update=ocsp_response.this_update,
-                next_update=ocsp_response.next_update,
-                serial_number=ocsp_response.serial_number,
-            )
 
 
 class _TrustStoreAsJson(BaseModelWithOrmMode):

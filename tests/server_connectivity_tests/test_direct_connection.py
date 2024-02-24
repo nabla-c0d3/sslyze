@@ -47,8 +47,8 @@ class TestServerConnectivityTester:
         assert tls_probing_result.supports_ecdh_key_exchange
 
         # And the result can be converted to JSON
-        tls_probing_result_as_json = _ServerTlsProbingResultAsJson.from_orm(tls_probing_result)
-        assert tls_probing_result_as_json.json()
+        tls_probing_result_as_json = _ServerTlsProbingResultAsJson.model_validate(tls_probing_result)
+        assert tls_probing_result_as_json.model_dump_json()
 
     def test_via_direct_connection_but_server_timed_out(self):
         # Given a server location for a server that's offline
@@ -139,8 +139,8 @@ class TestServerConnectivityTester:
         assert tls_probing_result.cipher_suite_supported
 
         # And the result can be converted to JSON
-        tls_probing_result_as_json = _ServerTlsProbingResultAsJson.from_orm(tls_probing_result)
-        assert tls_probing_result_as_json.json()
+        tls_probing_result_as_json = _ServerTlsProbingResultAsJson.model_validate(tls_probing_result)
+        assert tls_probing_result_as_json.model_dump_json()
 
     @can_only_run_on_linux_64
     def test_server_triggers_unexpected_connection_error(self):

@@ -12,7 +12,7 @@ class TestJsonEncoder:
         plugin_result = CertificateInfoImplementation.scan_server(server_info)
 
         # When converting it to JSON
-        result_as_json = CertificateInfoScanResultAsJson.from_orm(plugin_result).json()
+        result_as_json = CertificateInfoScanResultAsJson.model_validate(plugin_result).model_dump_json()
 
         # It succeeds
         assert result_as_json

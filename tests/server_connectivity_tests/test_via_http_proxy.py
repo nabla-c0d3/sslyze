@@ -44,8 +44,8 @@ class TestServerConnectivityTesterWithProxy:
         assert tls_probing_result.client_auth_requirement
 
         # And the result can be converted to JSON
-        tls_probing_result_as_json = _ServerTlsProbingResultAsJson.from_orm(tls_probing_result)
-        assert tls_probing_result_as_json.json()
+        tls_probing_result_as_json = _ServerTlsProbingResultAsJson.model_validate(tls_probing_result)
+        assert tls_probing_result_as_json.model_dump_json()
 
     def test_via_http_proxy_but_proxy_dns_error(self):
         # Given a server location

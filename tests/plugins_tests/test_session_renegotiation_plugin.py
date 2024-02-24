@@ -3,6 +3,7 @@ from nassl.ssl_client import ClientCertificateRequested
 from sslyze.plugins.session_renegotiation_plugin import (
     SessionRenegotiationImplementation,
     SessionRenegotiationScanResult,
+    SessionRenegotiationScanResultAsJson,
 )
 
 from sslyze.server_setting import (
@@ -31,6 +32,10 @@ class TestSessionRenegotiationPlugin:
 
         # And a CLI output can be generated
         assert SessionRenegotiationImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = SessionRenegotiationScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
     @can_only_run_on_linux_64
     def test_renegotiation_is_vulnerable_to_client_renegotiation_dos(self) -> None:

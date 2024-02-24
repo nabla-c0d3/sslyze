@@ -7,6 +7,7 @@ from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportScanResult,
     SessionResumptionSupportExtraArgument,
 )
+from sslyze.plugins.session_resumption.json_output import SessionResumptionSupportScanResultAsJson
 
 from sslyze.server_setting import (
     ServerNetworkLocation,
@@ -39,6 +40,10 @@ class TestSessionResumptionSupport:
         # And a CLI output can be generated
         assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)
 
+        # And the result can be converted to JSON
+        result_as_json = SessionResumptionSupportScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
+
     def test_with_extra_argument(self) -> None:
         # Given a server that supports session resumption with both TLS tickets and session IDs
         server_location = ServerNetworkLocation("www.google.com", 443)
@@ -62,6 +67,10 @@ class TestSessionResumptionSupport:
 
         # And a CLI output can be generated
         assert SessionResumptionSupportImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = SessionResumptionSupportScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
     @can_only_run_on_linux_64
     def test_fails_when_client_auth_failed(self):

@@ -2,6 +2,7 @@ from sslyze import ServerNetworkLocation
 from sslyze.plugins.elliptic_curves_plugin import (
     SupportedEllipticCurvesScanResult,
     SupportedEllipticCurvesImplementation,
+    SupportedEllipticCurvesScanResultAsJson,
 )
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
@@ -24,6 +25,10 @@ class TestEllipticCurvesPluginWithOnlineServer:
 
         # And a CLI output can be generated
         assert SupportedEllipticCurvesImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = SupportedEllipticCurvesScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
 
 @can_only_run_on_linux_64

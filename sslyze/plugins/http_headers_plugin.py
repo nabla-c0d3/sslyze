@@ -4,13 +4,8 @@ from http.client import HTTPResponse
 from dataclasses import dataclass, asdict
 from traceback import TracebackException
 from urllib.parse import urlsplit
+from pydantic import BaseModel, model_validator
 
-try:
-    # pydantic 2.x
-    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
-except ImportError:
-    # pydantic 1.x
-    from pydantic import BaseModel  # type: ignore
 
 # TODO: Fix type annotations in nassl
 from nassl._nassl import SslError  # type: ignore
@@ -29,8 +24,7 @@ from sslyze.plugins.plugin_base import (
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
 from sslyze.connection_helpers.http_response_parser import HttpResponseParser, NotAValidHttpResponseError
-from typing import List, Optional
-
+from typing import List, Optional, Any
 
 _logger = logging.getLogger(__name__)
 
@@ -108,8 +102,13 @@ class HttpHeadersScanResultAsJson(BaseModelWithOrmMode):
     strict_transport_security_header: Optional[_StrictTransportSecurityHeaderAsJson]
     expect_ct_header: None = None  # TODO(6.0.0): Remove as this is a deprecated field
 
+    @model_validator(mode="before")
     @classmethod
-    def from_orm(cls, result: HttpHeadersScanResult) -> "HttpHeadersScanResultAsJson":
+    def _handle_object(cls, data: Any) -> Any:
+        if not isinstance(data, HttpHeadersScanResult):
+            return data
+
+        result: HttpHeadersScanResult = data
         http_error_trace_as_str = None
         if result.http_error_trace:
             http_error_trace_as_str = ""
@@ -120,7 +119,7 @@ class HttpHeadersScanResultAsJson(BaseModelWithOrmMode):
         if result.strict_transport_security_header:
             sts_header_json = _StrictTransportSecurityHeaderAsJson(**asdict(result.strict_transport_security_header))
 
-        return cls(
+        return dict(
             http_request_sent=result.http_request_sent,
             http_error_trace=http_error_trace_as_str,
             http_path_redirected_to=result.http_path_redirected_to,

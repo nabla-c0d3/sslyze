@@ -118,12 +118,12 @@ def example_json_result_output(
     date_scans_completed: datetime,
 ) -> None:
     json_output = SslyzeOutputAsJson(
-        server_scan_results=[ServerScanResultAsJson.from_orm(result) for result in all_server_scan_results],
+        server_scan_results=[ServerScanResultAsJson.model_validate(result) for result in all_server_scan_results],
         invalid_server_strings=[],  # Not needed here - specific to the CLI interface
         date_scans_started=date_scans_started,
         date_scans_completed=date_scans_completed,
     )
-    json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
+    json_output_as_str = json_output.model_dump_json()
     json_file_out.write_text(json_output_as_str)
 
 
@@ -132,7 +132,7 @@ def example_json_result_parsing(results_as_json_file: Path) -> None:
     results_as_json = results_as_json_file.read_text()
 
     # These results can be parsed
-    parsed_results = SslyzeOutputAsJson.parse_raw(results_as_json)
+    parsed_results = SslyzeOutputAsJson.model_validate_json(results_as_json)
 
     # Making it easy to do post-processing and inspection of the results
     print("The following servers were scanned:")

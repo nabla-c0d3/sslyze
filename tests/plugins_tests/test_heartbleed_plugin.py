@@ -1,4 +1,4 @@
-from sslyze.plugins.heartbleed_plugin import HeartbleedImplementation
+from sslyze.plugins.heartbleed_plugin import HeartbleedImplementation, HeartbleedScanResultAsJson
 from sslyze.server_setting import ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
@@ -20,6 +20,10 @@ class TestHeartbleedPlugin:
 
         # And a CLI output can be generated
         assert HeartbleedImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = HeartbleedScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
     def test_not_vulnerable_and_server_has_cloudfront_bug(self):
         # Test for https://github.com/nabla-c0d3/sslyze/issues/437

@@ -1,13 +1,7 @@
 from dataclasses import dataclass, asdict
 from operator import attrgetter
-from typing import List, Optional
-
-try:
-    # pydantic 2.x
-    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
-except ImportError:
-    # pydantic 1.x
-    from pydantic import BaseModel  # type: ignore
+from typing import List, Optional, Any
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from nassl._nassl import OpenSSLError
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
@@ -75,15 +69,19 @@ _EllipticCurveAsJson.__doc__ = EllipticCurve.__doc__
 
 
 class SupportedEllipticCurvesScanResultAsJson(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     supports_ecdh_key_exchange: bool
     supported_curves: Optional[List[_EllipticCurveAsJson]]
     rejected_curves: Optional[List[_EllipticCurveAsJson]]
 
-    class Config:
-        orm_mode = True
-
+    @model_validator(mode="before")
     @classmethod
-    def from_orm(cls, result: SupportedEllipticCurvesScanResult) -> "SupportedEllipticCurvesScanResultAsJson":
+    def _handle_object(cls, data: Any) -> Any:
+        if not isinstance(data, SupportedEllipticCurvesScanResult):
+            return data
+
+        result: SupportedEllipticCurvesScanResult = data
         supported_curves: Optional[List[_EllipticCurveAsJson]] = None
         if result.supported_curves:
             supported_curves = [_EllipticCurveAsJson(**asdict(curve)) for curve in result.supported_curves]
@@ -92,7 +90,7 @@ class SupportedEllipticCurvesScanResultAsJson(BaseModel):
         if result.rejected_curves:
             rejected_curves = [_EllipticCurveAsJson(**asdict(curve)) for curve in result.rejected_curves]
 
-        return cls(
+        return dict(
             supports_ecdh_key_exchange=result.supports_ecdh_key_exchange,
             supported_curves=supported_curves,
             rejected_curves=rejected_curves,

@@ -1,6 +1,8 @@
+import json
 from pathlib import Path
 from sys import platform
-from invoke import task, Context
+from invoke.context import Context
+from invoke.tasks import task
 from sslyze import __version__
 
 root_path = Path(__file__).parent.absolute()
@@ -63,7 +65,6 @@ def build_exe(ctx: Context) -> None:
 def gen_json_schema(ctx: Context) -> None:
     from sslyze.json.json_output import SslyzeOutputAsJson
 
-    # TODO(#617): Currently broken; switch to model_dump_json()
-    json_schema = SslyzeOutputAsJson.schema_json(indent=2)
+    json_schema = SslyzeOutputAsJson.model_json_schema()
     json_schema_file = Path(__file__).parent / "json_output_schema.json"
-    json_schema_file.write_text(json_schema)
+    json_schema_file.write_text(json.dumps(json_schema, indent=2))

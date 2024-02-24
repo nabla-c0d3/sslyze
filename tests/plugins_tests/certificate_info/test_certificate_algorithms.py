@@ -29,7 +29,7 @@ class TestCertificateAlgorithms:
             assert scan_result.certificate_deployments[0].received_certificate_chain
 
             # And the result can be converted to JSON
-            result_as_json = CertificateInfoScanResultAsJson.from_orm(scan_result).json()
+            result_as_json = CertificateInfoScanResultAsJson.model_validate(scan_result).model_dump_json()
             assert result_as_json
 
             # And the result can be converted to console output
@@ -53,7 +53,7 @@ class TestCertificateAlgorithms:
             assert scan_result.certificate_deployments[0].received_certificate_chain
 
             # And the result can be converted to JSON
-            result_as_json = CertificateInfoScanResultAsJson.from_orm(scan_result).json()
+            result_as_json = CertificateInfoScanResultAsJson.model_validate(scan_result).model_dump_json()
             assert result_as_json
 
             # And the result can be converted to console output
@@ -69,7 +69,7 @@ class TestCertificateAlgorithms:
         scan_result = CertificateInfoImplementation.scan_server(server_info)
 
         # And the result can be converted to JSON
-        result_as_json = CertificateInfoScanResultAsJson.from_orm(scan_result).json()
+        result_as_json = CertificateInfoScanResultAsJson.model_validate(scan_result).model_dump_json()
         assert result_as_json
 
         # And the result can be converted to console output
@@ -97,5 +97,5 @@ class TestCertificateAlgorithms:
             assert result_as_txt
 
             # And the result can be converted to JSON
-            result_as_json = CertificateInfoScanResultAsJson.from_orm(scan_result).json()
+            result_as_json = CertificateInfoScanResultAsJson.model_validate(scan_result).model_dump_json()
             assert result_as_json

@@ -1,4 +1,4 @@
-from sslyze.plugins.early_data_plugin import EarlyDataScanResult, EarlyDataImplementation
+from sslyze.plugins.early_data_plugin import EarlyDataScanResult, EarlyDataImplementation, EarlyDataScanResultAsJson
 from sslyze.server_setting import ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
@@ -23,6 +23,10 @@ class TestEarlyDataPlugin:
 
         # And a CLI output can be generated
         assert EarlyDataImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = EarlyDataScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
     @can_only_run_on_linux_64
     def test_early_data_disabled_no_tls_1_3(self) -> None:

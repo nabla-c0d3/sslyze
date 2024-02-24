@@ -1,6 +1,10 @@
 import pytest
 
-from sslyze.plugins.compression_plugin import CompressionImplementation, CompressionScanResult
+from sslyze.plugins.compression_plugin import (
+    CompressionImplementation,
+    CompressionScanResult,
+    CompressionScanResultAsJson,
+)
 from sslyze.server_setting import ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
@@ -21,6 +25,10 @@ class TestCompressionPlugin:
 
         # And a CLI output can be generated
         assert CompressionImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = CompressionScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
     @pytest.mark.skip("Not implemented; find a server vulnerable to TLS compression")
     def test_compression_enabled(self) -> None:

@@ -27,8 +27,8 @@ class TestClientAuthentication:
         assert tls_probing_result.client_auth_requirement == ClientAuthRequirementEnum.OPTIONAL
 
         # And the result can be converted to JSON
-        server_info_as_json = _ServerTlsProbingResultAsJson.from_orm(tls_probing_result)
-        assert server_info_as_json.json()
+        server_info_as_json = _ServerTlsProbingResultAsJson.model_validate(tls_probing_result)
+        assert server_info_as_json.model_dump_json()
 
 
 @can_only_run_on_linux_64

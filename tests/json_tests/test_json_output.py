@@ -19,15 +19,16 @@ class TestSslyzeOutputAsJson:
 
         # When converting them to JSON, it succeeds
         json_output = SslyzeOutputAsJson(
-            server_scan_results=[ServerScanResultAsJson.from_orm(result) for result in all_server_scan_results],
+            server_scan_results=[ServerScanResultAsJson.model_validate(result) for result in all_server_scan_results],
+            invalid_server_strings=[],
             date_scans_started=datetime.utcnow(),
             date_scans_completed=datetime.utcnow(),
         )
-        json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
+        json_output_as_str = json_output.model_dump_json()
         assert json_output_as_str
 
         # And it can be parsed again
-        assert SslyzeOutputAsJson.parse_raw(json_output_as_str)
+        assert SslyzeOutputAsJson.model_validate_json(json_output_as_str)
 
     def test_connectivity_test_failed(self):
         # Given a scan result where sslyze was unable to connect to the server
@@ -35,15 +36,16 @@ class TestSslyzeOutputAsJson:
 
         # When converting it to JSON, it succeeds
         json_output = SslyzeOutputAsJson(
-            server_scan_results=[ServerScanResultAsJson.from_orm(server_scan_result)],
+            server_scan_results=[ServerScanResultAsJson.model_validate(server_scan_result)],
+            invalid_server_strings=[],
             date_scans_started=datetime.utcnow(),
             date_scans_completed=datetime.utcnow(),
         )
-        json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
+        json_output_as_str = json_output.model_dump_json()
         assert json_output_as_str
 
         # And it can be parsed again
-        assert SslyzeOutputAsJson.parse_raw(json_output_as_str)
+        assert SslyzeOutputAsJson.model_validate_json(json_output_as_str)
 
     def test_server_scan_completed_scan_command(self):
         # Given a completed scan for a server where a scan command was run
@@ -59,16 +61,17 @@ class TestSslyzeOutputAsJson:
 
         # When converting it to JSON, it succeeds
         json_output = SslyzeOutputAsJson(
-            server_scan_results=[ServerScanResultAsJson.from_orm(server_scan_result)],
+            server_scan_results=[ServerScanResultAsJson.model_validate(server_scan_result)],
+            invalid_server_strings=[],
             date_scans_started=datetime.utcnow(),
             date_scans_completed=datetime.utcnow(),
         )
-        json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
+        json_output_as_str = json_output.model_dump_json()
         assert json_output_as_str
         assert "supports_compression" in json_output_as_str
 
         # And it can be parsed again
-        assert SslyzeOutputAsJson.parse_raw(json_output_as_str)
+        assert SslyzeOutputAsJson.model_validate_json(json_output_as_str)
 
     def test_server_scan_completed_but_scan_command_returned_error(self):
         # Given a completed scan for a server where a scan command was run
@@ -86,16 +89,17 @@ class TestSslyzeOutputAsJson:
 
         # When converting it to JSON, it succeeds
         json_output = SslyzeOutputAsJson(
-            server_scan_results=[ServerScanResultAsJson.from_orm(server_scan_result)],
+            server_scan_results=[ServerScanResultAsJson.model_validate(server_scan_result)],
+            invalid_server_strings=[],
             date_scans_started=datetime.utcnow(),
             date_scans_completed=datetime.utcnow(),
         )
-        json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
+        json_output_as_str = json_output.model_dump_json()
         assert json_output_as_str
         assert error_trace.exc_type.__name__ in json_output_as_str
 
         # And it can be parsed again
-        assert SslyzeOutputAsJson.parse_raw(json_output_as_str)
+        assert SslyzeOutputAsJson.model_validate_json(json_output_as_str)
 
     def test_parse_json_output(self):
         # Given the result of a scan saved as JSON output
@@ -104,6 +108,6 @@ class TestSslyzeOutputAsJson:
 
         # When parsing the output
         # It succeeds
-        parsed_output = SslyzeOutputAsJson.parse_raw(output_as_json)
+        parsed_output = SslyzeOutputAsJson.model_validate_json(output_as_json)
         assert parsed_output
         assert 3 == len(parsed_output.server_scan_results)

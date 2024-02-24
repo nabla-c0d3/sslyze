@@ -1,6 +1,10 @@
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanResult, FallbackScsvImplementation
+from sslyze.plugins.fallback_scsv_plugin import (
+    FallbackScsvScanResult,
+    FallbackScsvImplementation,
+    FallbackScsvScanResultAsJson,
+)
 
 from sslyze.server_setting import (
     ServerNetworkLocation,
@@ -27,6 +31,10 @@ class TestFallbackScsvPlugin:
 
         # And a CLI output can be generated
         assert FallbackScsvImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = FallbackScsvScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
     @can_only_run_on_linux_64
     def test_fallback_bad(self) -> None:

@@ -39,6 +39,10 @@ class TestHttpHeadersPlugin:
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
 
+        # And the result can be converted to JSON
+        result_as_json = HttpHeadersScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
+
     def test_all_headers_disabled(self) -> None:
         # Given a server to scan that does not have security headers
         server_location = ServerNetworkLocation("expired.badssl.com", 443)
@@ -55,6 +59,10 @@ class TestHttpHeadersPlugin:
 
         # And a CLI output can be generated
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = HttpHeadersScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
     @can_only_run_on_linux_64
     def test_http_error(self) -> None:
@@ -82,7 +90,7 @@ class TestHttpHeadersPlugin:
         assert HttpHeadersImplementation.cli_connector_cls.result_to_console_output(result)
 
         # And the result can be converted to JSON
-        result_as_json = HttpHeadersScanResultAsJson.from_orm(result).json()
+        result_as_json = HttpHeadersScanResultAsJson.model_validate(result).model_dump_json()
         assert result_as_json
 
     @can_only_run_on_linux_64

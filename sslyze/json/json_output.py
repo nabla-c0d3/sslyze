@@ -1,14 +1,9 @@
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, Any
 from uuid import UUID
 
-try:
-    # pydantic 2.x
-    from pydantic.v1 import BaseModel  # TODO(#617): Remove v1
-except ImportError:
-    # pydantic 1.x
-    from pydantic import BaseModel  # type: ignore
+from pydantic import BaseModel, model_validator
 
 from sslyze import (
     ServerNetworkConfiguration,
@@ -16,10 +11,9 @@ from sslyze import (
     ServerScanStatusEnum,
     ServerConnectivityStatusEnum,
     ClientAuthRequirementEnum,
-    ClientAuthenticationCredentials,
 )
 from sslyze.__version__ import __url__, __version__
-from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
+from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid, BaseModelWithOrmMode, StrFromEnumValueName
 from sslyze.plugins.certificate_info.json_output import (
     CertificateInfoExtraArgumentAsJson,
     CertificateInfoScanAttemptAsJson,
@@ -45,9 +39,6 @@ from sslyze import (
 )
 from sslyze.scanner.models import AllScanCommandsAttempts
 from sslyze.server_setting import ConnectionTypeEnum, ServerNetworkLocation
-
-if TYPE_CHECKING:
-    from sslyze.cli.server_string_parser import InvalidServerStringError
 
 
 class ScanCommandsExtraArgumentsAsJson(BaseModelWithOrmModeAndForbid):
@@ -75,13 +66,18 @@ class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
     elliptic_curves: SupportedEllipticCurvesScanAttemptAsJson
     http_headers: HttpHeadersScanAttemptAsJson
 
+    @model_validator(mode="before")
     @classmethod
-    def from_orm(cls, all_scan_commands_attempts: AllScanCommandsAttempts) -> "AllScanCommandsAttemptsAsJson":
+    def _handle_object(cls, data: Any) -> Any:
+        if not isinstance(data, AllScanCommandsAttempts):
+            return data
+
+        all_scan_commands_attempts: AllScanCommandsAttempts = data
         all_scan_commands_attempts_json = {}
-        for field_name, field in cls.__fields__.items():  # type: ignore
+        for field_name, field in cls.model_fields.items():
             scan_command_attempt = getattr(all_scan_commands_attempts, field_name)
 
-            # Convert the error trace to a string; this is why we have to override from_orm()
+            # Convert the error trace to a string; this is why we have to implement a model_validator()
             error_trace_as_str = None
             if scan_command_attempt.error_trace:
                 error_trace_as_str = ""
@@ -89,15 +85,9 @@ class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
                     error_trace_as_str += line
 
             # Create the JSON version of the scan command attempt
-            if hasattr(field, "type_"):
-                # pydantic 1.x;  TODO(#617): Remove
-                scan_command_attempt_json_cls = field.type_
-            elif hasattr(field, "annotation"):
-                # pydantic 2.x
-                scan_command_attempt_json_cls = field.annotation
-            else:
-                raise TypeError("Unexpected version of pydantic?")
+            scan_command_attempt_json_cls = field.annotation  # Assumes pydantic 2.x
 
+            assert scan_command_attempt_json_cls  # Can never be None
             all_scan_commands_attempts_json[field_name] = scan_command_attempt_json_cls(
                 status=scan_command_attempt.status,
                 error_reason=scan_command_attempt.error_reason,
@@ -105,7 +95,7 @@ class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
                 result=scan_command_attempt.result,
             )
 
-        return cls(**all_scan_commands_attempts_json)
+        return all_scan_commands_attempts_json
 
 
 # Identical fields in the JSON output
@@ -117,38 +107,18 @@ class _HttpProxySettingsAsJson(BaseModelWithOrmModeAndForbid):
     basic_auth_password: Optional[str] = None
 
 
-class _ClientAuthenticationCredentialsAsJson(BaseModel):
+class _ClientAuthenticationCredentialsAsJson(BaseModelWithOrmMode):
     # Compared to the ClientAuthenticationCredentials class, this model does not have the key_password field
     certificate_chain_path: Path
     key_path: Path
-    key_type: str
-
-    class Config:
-        orm_mode = True
-
-    @classmethod
-    def from_orm(cls, client_auth_creds: "ClientAuthenticationCredentials") -> "_ClientAuthenticationCredentialsAsJson":
-        return cls(
-            certificate_chain_path=client_auth_creds.certificate_chain_path,
-            key_path=client_auth_creds.key_path,
-            key_type=client_auth_creds.key_type.name,
-        )
+    key_type: StrFromEnumValueName
 
 
 class _ServerTlsProbingResultAsJson(BaseModelWithOrmModeAndForbid):
-    highest_tls_version_supported: str
+    highest_tls_version_supported: StrFromEnumValueName
     cipher_suite_supported: str
     client_auth_requirement: ClientAuthRequirementEnum
     supports_ecdh_key_exchange: bool
-
-    @classmethod
-    def from_orm(cls, tls_probing_result: ServerTlsProbingResult) -> "_ServerTlsProbingResultAsJson":
-        return cls(
-            highest_tls_version_supported=tls_probing_result.highest_tls_version_supported.name,
-            cipher_suite_supported=tls_probing_result.cipher_suite_supported,
-            client_auth_requirement=tls_probing_result.client_auth_requirement,
-            supports_ecdh_key_exchange=tls_probing_result.supports_ecdh_key_exchange,
-        )
 
 
 assert ServerTlsProbingResult.__doc__
@@ -194,8 +164,13 @@ class ServerScanResultAsJson(BaseModelWithOrmModeAndForbid):
     scan_status: ServerScanStatusEnum
     scan_result: Optional[AllScanCommandsAttemptsAsJson]
 
+    @model_validator(mode="before")
     @classmethod
-    def from_orm(cls, server_scan_result: ServerScanResult) -> "ServerScanResultAsJson":
+    def _handle_object(cls, data: Any) -> Any:
+        if not isinstance(data, ServerScanResult):
+            return data
+
+        server_scan_result: ServerScanResult = data
         connectivity_error_trace_as_str = None
         if server_scan_result.connectivity_error_trace:
             connectivity_error_trace_as_str = ""
@@ -204,20 +179,24 @@ class ServerScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
         connectivity_result_as_json: Optional[_ServerTlsProbingResultAsJson]
         if server_scan_result.connectivity_result:
-            connectivity_result_as_json = _ServerTlsProbingResultAsJson.from_orm(server_scan_result.connectivity_result)
+            connectivity_result_as_json = _ServerTlsProbingResultAsJson.model_validate(
+                server_scan_result.connectivity_result
+            )
         else:
             connectivity_result_as_json = None
 
         scan_result_as_json: Optional[AllScanCommandsAttemptsAsJson]
         if server_scan_result.scan_result:
-            scan_result_as_json = AllScanCommandsAttemptsAsJson.from_orm(server_scan_result.scan_result)
+            scan_result_as_json = AllScanCommandsAttemptsAsJson.model_validate(server_scan_result.scan_result)
         else:
             scan_result_as_json = None
 
-        return cls(
+        return dict(
             uuid=server_scan_result.uuid,
-            server_location=_ServerNetworkLocationAsJson.from_orm(server_scan_result.server_location),
-            network_configuration=_ServerNetworkConfigurationAsJson.from_orm(server_scan_result.network_configuration),
+            server_location=_ServerNetworkLocationAsJson.model_validate(server_scan_result.server_location),
+            network_configuration=_ServerNetworkConfigurationAsJson.model_validate(
+                server_scan_result.network_configuration
+            ),
             connectivity_status=server_scan_result.connectivity_status,
             connectivity_error_trace=connectivity_error_trace_as_str,
             connectivity_result=connectivity_result_as_json,
@@ -236,18 +215,11 @@ class InvalidServerStringAsJson(BaseModelWithOrmModeAndForbid):
     server_string: str
     error_message: str
 
-    @classmethod
-    def from_orm(cls, invalid_server_string_error: "InvalidServerStringError") -> "InvalidServerStringAsJson":
-        return cls(
-            server_string=invalid_server_string_error.server_string,
-            error_message=invalid_server_string_error.error_message,
-        )
-
 
 class SslyzeOutputAsJson(BaseModel):
     """The "root" dictionary of the JSON output when using the --json command line option."""
 
-    invalid_server_strings: List[InvalidServerStringAsJson] = []  # TODO(6.0.0): Remove default value
+    invalid_server_strings: List[InvalidServerStringAsJson]
     server_scan_results: List[ServerScanResultAsJson]
 
     date_scans_started: datetime

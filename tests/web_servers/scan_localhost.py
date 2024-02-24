@@ -164,6 +164,7 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
 
         for ciphers_scan_cmd in expected_enabled_tls_scan_commands:
             scan_cmd_attempt = getattr(server_scan_result.scan_result, ciphers_scan_cmd, None)
+            assert scan_cmd_attempt
             scan_cmd_result = scan_cmd_attempt.result
             if not scan_cmd_result.accepted_cipher_suites:
                 raise RuntimeError(
@@ -174,11 +175,12 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
 
         # Ensure a JSON output can be generated from the results
         final_json_output = SslyzeOutputAsJson(
-            server_scan_results=[ServerScanResultAsJson.from_orm(server_scan_result)],
+            server_scan_results=[ServerScanResultAsJson.model_validate(server_scan_result)],
             date_scans_started=date_scans_started,
             date_scans_completed=datetime.utcnow(),
+            invalid_server_strings=[],
         )
-        final_json_output.json()  # TODO(#617): Switch to model_dump_json()
+        final_json_output.model_dump_json()
         print("OK: Was able to generate JSON output.")
 
 

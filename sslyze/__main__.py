@@ -76,14 +76,15 @@ def main() -> None:
 
     if json_file_out:
         json_output = SslyzeOutputAsJson(
-            server_scan_results=[ServerScanResultAsJson.from_orm(result) for result in all_server_scan_results],
+            server_scan_results=[ServerScanResultAsJson.model_validate(result) for result in all_server_scan_results],
             invalid_server_strings=[
-                InvalidServerStringAsJson.from_orm(bad_server) for bad_server in parsed_command_line.invalid_servers
+                InvalidServerStringAsJson.model_validate(bad_server)
+                for bad_server in parsed_command_line.invalid_servers
             ],
             date_scans_started=date_scans_started,
             date_scans_completed=datetime.utcnow(),
         )
-        json_output_as_str = json_output.json()  # TODO(#617): Switch to model_dump_json()
+        json_output_as_str = json_output.model_dump_json(indent=2)
         json_file_out.write(json_output_as_str)
 
     # If we printed the JSON results to the console, don't run the Mozilla compliance check so we return valid JSON

@@ -40,5 +40,5 @@ class TestMain:
         assert json_output
 
         # And the JSON output has the expected format
-        parsed_output = SslyzeOutputAsJson.parse_raw(json_output)
+        parsed_output = SslyzeOutputAsJson.model_validate_json(json_output)
         assert parsed_output

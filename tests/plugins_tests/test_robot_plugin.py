@@ -1,6 +1,6 @@
 from nassl.ssl_client import ClientCertificateRequested
 
-from sslyze.plugins.robot.implementation import RobotImplementation, RobotScanResult
+from sslyze.plugins.robot.implementation import RobotImplementation, RobotScanResult, RobotScanResultAsJson
 from sslyze.plugins.robot._robot_tester import RobotScanResultEnum
 from sslyze.server_setting import ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
@@ -21,6 +21,10 @@ class TestRobotPluginPlugin:
 
         # And a CLI output can be generated
         assert RobotImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = RobotScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
 
     @pytest.mark.skip("Not implemented; TODO: Find a vulnerable server.")
     def test_robot_attack_bad(self) -> None:

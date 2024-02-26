@@ -41,7 +41,6 @@ class EarlyDataScanAttemptAsJson(ScanCommandAttemptAsJson):
 
 
 class _EarlyDataCliConnector(ScanCommandCliConnector[EarlyDataScanResult, None]):
-
     _cli_option = "early_data"
     _cli_description = "Test a server for TLS 1.3 early data support."
 

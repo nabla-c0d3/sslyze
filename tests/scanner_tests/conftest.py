@@ -22,7 +22,6 @@ class MockPluginScanResult(ScanCommandResult):
 
 
 class _MockPluginImplementation(ScanCommandImplementation):
-
     result_cls = MockPluginScanResult
     _scan_jobs_count = 5
 

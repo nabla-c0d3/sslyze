@@ -43,7 +43,6 @@ class RobotScanAttemptAsJson(ScanCommandAttemptAsJson):
 
 
 class _RobotCliConnector(ScanCommandCliConnector[RobotScanResult, None]):
-
     _cli_option = "robot"
     _cli_description = "Test a server for the ROBOT vulnerability."
 

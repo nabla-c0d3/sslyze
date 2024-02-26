@@ -45,49 +45,42 @@ class CipherSuitesScanResult(ScanCommandResult):
 
 
 class _Sslv20CliConnector(_CipherSuitesCliConnector):
-
     _cli_option = "sslv2"
     _cli_description = "Test a server for SSL 2.0 support."
     _title_in_output = "SSL 2.0 Cipher Suites"
 
 
 class _Sslv30CliConnector(_CipherSuitesCliConnector):
-
     _cli_option = "sslv3"
     _cli_description = "Test a server for SSL 3.0 support."
     _title_in_output = "SSL 3.0 Cipher Suites"
 
 
 class _Tlsv10CliConnector(_CipherSuitesCliConnector):
-
     _cli_option = "tlsv1"
     _cli_description = "Test a server for TLS 1.0 support."
     _title_in_output = "TLS 1.0 Cipher Suites"
 
 
 class _Tlsv11CliConnector(_CipherSuitesCliConnector):
-
     _cli_option = "tlsv1_1"
     _cli_description = "Test a server for TLS 1.1 support."
     _title_in_output = "TLS 1.1 Cipher Suites"
 
 
 class _Tlsv12CliConnector(_CipherSuitesCliConnector):
-
     _cli_option = "tlsv1_2"
     _cli_description = "Test a server for TLS 1.2 support."
     _title_in_output = "TLS 1.2 Cipher Suites"
 
 
 class _Tlsv13CliConnector(_CipherSuitesCliConnector):
-
     _cli_option = "tlsv1_3"
     _cli_description = "Test a server for TLS 1.3 support."
     _title_in_output = "TLS 1.3 Cipher Suites"
 
 
 class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScanResult, None]):
-
     # The SSL version corresponding to the scan command
     _tls_version: ClassVar[TlsVersionEnum]
 

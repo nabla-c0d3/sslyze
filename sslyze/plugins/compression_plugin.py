@@ -40,7 +40,6 @@ class CompressionScanAttemptAsJson(ScanCommandAttemptAsJson):
 
 
 class _CompressionCliConnector(ScanCommandCliConnector[CompressionScanResult, None]):
-
     _cli_option = "compression"
     _cli_description = "Test a server for TLS compression support, which can be leveraged to perform a CRIME attack."
 

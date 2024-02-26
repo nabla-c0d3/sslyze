@@ -34,9 +34,7 @@ t0IQ6jGEq2FeTREHAqcP0vRah5+GBwRDrUURBZOhE0AOuzuNhIANAd6STqRJdg3w
 R7vu2UObYzI35CU=
 -----END CERTIFICATE-----
 
-                """.encode(
-                    encoding="ascii"
-                ),
+                """.encode(encoding="ascii"),
                 default_backend(),
             ),
             # Google Internet Authority G3
@@ -67,9 +65,7 @@ FIwsIONGl1p3A8CgxkqI/UAih3JaGOqcpcdaCIzkBaR9uYQ1X4k2Vg5APRLouzVy
 7a8IVk6wuy6pm+T7HT4LY8ibS5FEZlfAFLSW8NwsVz9SBK2Vqn1N0PIMn5xA6NZV
 c7o835DLAFshEWfC7TIe3g==
 -----END CERTIFICATE-----
-                """.encode(
-                    encoding="ascii"
-                ),
+                """.encode(encoding="ascii"),
                 default_backend(),
             ),
             # GlobalSign Root CA
@@ -96,9 +92,7 @@ ot+3i9DAgBkcRcAtjOj4LaR0VknFBbVPFd5uRHg5h6h+u/N5GJG79G+dwfCMNYxd
 AfvDbbnvRG15RjF+Cv6pgsH/76tuIMRQyV+dTZsXjAzlAcmgQWpzU/qlULRuJQ/7
 TBj0/VLZjmmx6BEP3ojY+x1J96relc8geMJgEtslQIxq/H5COEBkEveegeGTLg==
 -----END CERTIFICATE-----
-                """.encode(
-                    encoding="ascii"
-                ),
+                """.encode(encoding="ascii"),
                 default_backend(),
             ),
         ]
@@ -167,9 +161,7 @@ EyCN38LY+4mzkddqNV4hm6+ON/7q9WG2zVoxFzDX8Kv/FogP4ivspFJUWtF5xZ2X
 QzQuVEXo8FVfMP9wqDEQe1IeOePcYMFEBt4/evEneUvEX2MNLc+wMt8qf44pxryp
 8NIYplnoidK7+W1YRQcFUhx/3xbyoBB2fEHCsvyYGw==
 -----END CERTIFICATE-----
-                """.encode(
-                    encoding="ascii"
-                ),
+                """.encode(encoding="ascii"),
                 default_backend(),
             ),
             # GeoTrust DV SSL
@@ -199,9 +191,7 @@ BXqgMgkTThCBKB+cA2K89AG1KYNGB7nnuF3I6dHdrTv4NNvB0ZWpkRjtPCw3EU3M
 SGGFixD0wYi/f1+KwtfNK5RcHzRKCK/rromoSHVVlR27wJoBufQDIj7U5lIwDWe5
 wJH9LUwwjr2MpQSRu6Srfw/Yb/BmAMmjXPWwj4PmnFrmtrnFvL7kAg==
 -----END CERTIFICATE-----
-                """.encode(
-                    encoding="ascii"
-                ),
+                """.encode(encoding="ascii"),
                 default_backend(),
             ),
             # GeoTrust Global CA
@@ -246,9 +236,7 @@ zmYtNpRMMQqbQvvrXftAohq/W90rK42Ss8kYIf8FsVTa5VaqXW7lIh/3JmBNLZ1D
 Aw5rmaztWlYO64YS7z4am5d9h2rrF1rfgv9Mc3caxAUO3sJZDRyhYaj+7BUgv8HR
 otJHkjr2ASPp31Yf
 -----END CERTIFICATE-----
-                """.encode(
-                    encoding="ascii"
-                ),
+                """.encode(encoding="ascii"),
                 default_backend(),
             ),
             # RapidSSL SHA 256
@@ -279,9 +267,7 @@ BBZqAOv5jUOB8FChH6bKOvMoPF9RrNcKRXdLDlJiG9g4UaCSLT+Qbsh+QJ8gRhVd
 Px8G8k/Ll6BKWcZ40egDuYVtLLrhX7atKz4lecWLVtXjCYDqwSfC2Q7sRwrp0Mr8
 2A==
 -----END CERTIFICATE-----
-                """.encode(
-                    encoding="ascii"
-                ),
+                """.encode(encoding="ascii"),
                 default_backend(),
             ),
             # GeoTrust Global CA

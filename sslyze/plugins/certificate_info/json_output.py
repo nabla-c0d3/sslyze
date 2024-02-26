@@ -125,7 +125,6 @@ class _X509NameAsJson(BaseModelWithOrmMode):
 
 
 class _SubjAltNameAsJson(BaseModel):
-
     dns_names: List[str]
     ip_addresses: List[str] = []
 

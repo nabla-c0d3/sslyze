@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 class _CertificateInfoCliConnector(
     ScanCommandCliConnector["CertificateInfoScanResult", "CertificateInfoExtraArgument"]
 ):
-
     _cli_option = "certinfo"
     _cli_description = "Retrieve and analyze a server's certificate(s) to verify its validity."
 

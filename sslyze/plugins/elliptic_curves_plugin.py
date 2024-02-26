@@ -106,7 +106,6 @@ class SupportedEllipticCurvesScanAttemptAsJson(ScanCommandAttemptAsJson):
 
 
 class _SupportedEllipticCurvesCliConnector(ScanCommandCliConnector[SupportedEllipticCurvesScanResult, None]):
-
     _cli_option = "elliptic_curves"
     _cli_description = "Test a server for supported elliptic curves."
 

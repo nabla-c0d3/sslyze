@@ -39,7 +39,6 @@ class FallbackScsvScanAttemptAsJson(ScanCommandAttemptAsJson):
 
 
 class _FallbackScsvCliConnector(ScanCommandCliConnector[FallbackScsvScanResult, None]):
-
     _cli_option = "fallback"
     _cli_description = "Test a server for the TLS_FALLBACK_SCSV mechanism to prevent downgrade attacks."
 

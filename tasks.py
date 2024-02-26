@@ -15,9 +15,15 @@ def test(ctx: Context) -> None:
 
 @task
 def lint(ctx: Context) -> None:
-    ctx.run("flake8 .")
+    ctx.run("ruff format . --check")
+    ctx.run("ruff check .")
     ctx.run("mypy .")
-    ctx.run("black -l 120 sslyze tests api_sample.py tasks.py --check")
+
+
+@task
+def autoformat(ctx: Context) -> None:
+    ctx.run("ruff format .")
+    ctx.run("ruff check . --fix")
 
 
 @task

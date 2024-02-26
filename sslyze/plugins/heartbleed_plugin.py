@@ -46,7 +46,6 @@ class HeartbleedScanAttemptAsJson(ScanCommandAttemptAsJson):
 
 
 class _HeartbleedCliConnector(ScanCommandCliConnector[HeartbleedScanResult, None]):
-
     _cli_option = "heartbleed"
     _cli_description = "Test a server for the OpenSSL Heartbleed vulnerability."
 

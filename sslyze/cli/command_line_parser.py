@@ -32,7 +32,6 @@ from sslyze.server_setting import (
 
 
 class CommandLineParsingError(Exception):
-
     PARSING_ERROR_FORMAT = "  Command line error: {0}\n  Use -h for help."
 
     def get_error_msg(self) -> str:

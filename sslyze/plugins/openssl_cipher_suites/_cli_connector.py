@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 
 class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult", None]):
-
     _title_in_output: ClassVar[str]
 
     @classmethod

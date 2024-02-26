@@ -1,0 +1,12 @@
+[tool.ruff]
+line-length = 120
+
+[tool.mypy]
+python_version = "3.8"
+ignore_missing_imports = true
+strict_optional = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false

@@ -2,7 +2,6 @@ from sslyze import __version__
 
 
 class HttpRequestGenerator:
-
     HTTP_GET_FORMAT = (
         "GET {path} HTTP/1.1\r\n"
         "Host: {host}\r\n"

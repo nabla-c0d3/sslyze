@@ -41,7 +41,6 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
 
     # Retrieve the result
     for server_scan_result in scanner.get_results():
-
         # First validate the connectivity testing
         assert server_scan_result.connectivity_status == ServerConnectivityStatusEnum.COMPLETED
         assert server_scan_result.connectivity_result

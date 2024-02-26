@@ -47,7 +47,6 @@ class OpenSslCcsInjectionScanAttemptAsJson(ScanCommandAttemptAsJson):
 
 
 class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector[OpenSslCcsInjectionScanResult, None]):
-
     _cli_option = "openssl_ccs"
     _cli_description = "Test a server for the OpenSSL CCS Injection vulnerability (CVE-2014-0224)."
 

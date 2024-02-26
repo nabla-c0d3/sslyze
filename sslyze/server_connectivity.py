@@ -281,7 +281,6 @@ def _detect_support_for_tls_1_2_or_below(
     network_config: ServerNetworkConfiguration,
     tls_version: TlsVersionEnum,
 ) -> _TlsVersionDetectionResult:
-
     if tls_version == TlsVersionEnum.SSL_2_0:
         # DEFAULT excludes SSLv2 ciphers in OpenSSL 1.0.2
         default_cipher_list = "SSLv2"

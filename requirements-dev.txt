@@ -1,17 +1,13 @@
-mypy==1.4.1
-flake8>=5,<7
+mypy==1.8
+ruff==0.2.2
 invoke>=2,<3
 pytest>=7.4,<8
 sphinx
 sphinx-rtd-theme
 twine>=4,<5
 sphinx-autodoc-typehints
-black==22.10.0
 pytest-cov
 faker
 
-# For mypy
-types-pyOpenSSL
-
-# For building the Windows executable
-cx-freeze==6.15.8; sys.platform == 'win32'
+# For building the Windows executable; cx-freeze is not compatible with Python 3.12 yet
+cx-freeze==6.15.15; sys.platform == 'win32' and python_version < '3.12'

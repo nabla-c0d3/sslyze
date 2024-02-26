@@ -49,7 +49,6 @@ class _ScanJobResultEnum(Enum):
 
 
 class _SessionRenegotiationCliConnector(ScanCommandCliConnector[SessionRenegotiationScanResult, None]):
-
     _cli_option = "reneg"
     _cli_description = "Test a server for for insecure TLS renegotiation and client-initiated renegotiation."
 

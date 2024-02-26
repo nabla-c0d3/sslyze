@@ -51,7 +51,6 @@ class RobotPmsPaddingPayloadEnum(Enum):
 
 
 class _RobotTlsRecordPayloads:
-
     # From https://github.com/robotattackorg/robot-detect and testssl.sh
     # The high level idea of an oracle attack is to send several payloads that are slightly wrong, in different ways,
     # hoping that the server is going to give a different response (a TLS alert, a connection reset, no data, etc.) for

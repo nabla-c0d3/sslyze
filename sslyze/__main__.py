@@ -104,7 +104,6 @@ def main() -> None:
     if not parsed_command_line.check_against_mozilla_config:
         print("    Disabled; use --mozilla_config={old, intermediate, modern}.\n")
     else:
-
         print(
             f'    Checking results against Mozilla\'s "{parsed_command_line.check_against_mozilla_config}"'
             f" configuration. See https://ssl-config.mozilla.org/ for more details.\n"

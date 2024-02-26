@@ -19,7 +19,7 @@ class BaseModelWithOrmModeAndForbid(BaseModel):
 
 
 def _handle_enum_name(enum_value: Any) -> str:
-    if type(enum_value) is str:
+    if isinstance(enum_value, str):
         return enum_value
     else:
         return enum_value.name

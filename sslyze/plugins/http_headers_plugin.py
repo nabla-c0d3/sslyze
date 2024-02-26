@@ -117,7 +117,6 @@ class HttpHeadersScanAttemptAsJson(ScanCommandAttemptAsJson):
 
 
 class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, None]):
-
     _cli_option = "http_headers"
     _cli_description = "Test a server for the presence of security-related HTTP headers."
 

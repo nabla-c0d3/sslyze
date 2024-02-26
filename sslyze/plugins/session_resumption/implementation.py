@@ -80,7 +80,6 @@ def _resumption_result_to_console_output(
 class _SessionResumptionSupportCliConnector(
     ScanCommandCliConnector[SessionResumptionSupportScanResult, SessionResumptionSupportExtraArgument]
 ):
-
     _cli_option = "resum"
     _cli_description = "Test a server for TLS 1.2 session resumption support using session IDs and TLS tickets."
 

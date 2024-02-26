@@ -113,7 +113,6 @@ class TestScanner:
     def test_error_client_certificate_needed(self):
         # Given a server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
-
             # And a scan request for it that does NOT provide a client certificate
             scan_request = ServerScanRequest(
                 server_location=ServerNetworkLocation(

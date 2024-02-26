@@ -8,7 +8,8 @@ from sslyze.scanner.scan_command_attempt import ScanCommandAttemptStatusEnum, Sc
 # Must be subclassed in order to add the result field
 class ScanCommandAttemptAsJson(BaseModel, ABC):
     model_config = ConfigDict(
-        extra="forbid", from_attributes=True  # Fields must match between the JSON representation and the actual objects
+        extra="forbid",
+        from_attributes=True,  # Fields must match between the JSON representation and the actual objects
     )
 
     status: ScanCommandAttemptStatusEnum

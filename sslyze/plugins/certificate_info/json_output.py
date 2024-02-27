@@ -187,8 +187,8 @@ class _CertificateAsJson(BaseModelWithOrmMode):
             fingerprint_sha1=b64encode(certificate.fingerprint(hashes.SHA1())).decode("ascii"),
             fingerprint_sha256=b64encode(certificate.fingerprint(hashes.SHA256())).decode("ascii"),
             serial_number=certificate.serial_number,
-            not_valid_before=certificate.not_valid_before,
-            not_valid_after=certificate.not_valid_after,
+            not_valid_before=certificate.not_valid_before_utc,
+            not_valid_after=certificate.not_valid_after_utc,
             subject_alternative_name=_SubjAltNameAsJson(
                 dns_names=subj_alt_name_ext.dns_names,
                 ip_addresses=subj_alt_name_ext.ip_addresses,

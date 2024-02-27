@@ -1,5 +1,5 @@
 import binascii
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import List, Optional
 
@@ -116,7 +116,7 @@ class SymantecDistructTester:
         distrust_enum = None
         if has_blacklisted_cert and not has_whitelisted_cert:
             leaf_cert = verified_certificate_chain[0]
-            if leaf_cert.not_valid_before < datetime(year=2016, month=6, day=1):
+            if leaf_cert.not_valid_before_utc < datetime(year=2016, month=6, day=1, tzinfo=timezone.utc):
                 distrust_enum = SymantecDistrustTimelineEnum.MARCH_2018
             else:
                 distrust_enum = SymantecDistrustTimelineEnum.SEPTEMBER_2018

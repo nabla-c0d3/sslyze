@@ -323,7 +323,7 @@ def _check_certificates(
         deployed_signature_algorithms.add(leaf_cert.signature_algorithm_oid._name)  # type: ignore
 
         # Validate the cert's lifespan
-        leaf_cert_lifespan = leaf_cert.not_valid_after - leaf_cert.not_valid_before
+        leaf_cert_lifespan = leaf_cert.not_valid_after_utc - leaf_cert.not_valid_before_utc
         if leaf_cert_lifespan.days > mozilla_config.maximum_certificate_lifespan:
             issues_with_certificates["maximum_certificate_lifespan"] = (
                 f"Certificate life span is {leaf_cert_lifespan.days} days,"

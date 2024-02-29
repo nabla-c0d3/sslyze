@@ -398,7 +398,7 @@ class CommandLineParser:
         )
 
         # Connectivity option group
-        connectivity_group = self._parser.add_argument_group("Contectivity options")
+        connectivity_group = self._parser.add_argument_group("Connectivity options")
         # Connection speed
         connectivity_group.add_argument(
             "--slow_connection",

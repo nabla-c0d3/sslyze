@@ -233,7 +233,9 @@ class SslConnection:
         # Do the Opportunistic/StartTLS negotiation if needed
         if self._network_configuration.tls_opportunistic_encryption:
             opportunistic_tls_helper = get_opportunistic_tls_helper(
-                self._network_configuration.tls_opportunistic_encryption, self._network_configuration.xmpp_to_hostname
+                self._network_configuration.tls_opportunistic_encryption,
+                self._network_configuration.xmpp_to_hostname,
+                self._network_configuration.smtp_ehlo_hostname,
             )
             try:
                 opportunistic_tls_helper.prepare_socket_for_tls_handshake(sock)

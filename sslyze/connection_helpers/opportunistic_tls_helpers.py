@@ -61,12 +61,15 @@ class _OpportunisticTlsHelper(ABC):
 class _SmtpHelper(_OpportunisticTlsHelper):
     """Perform an SMTP StartTLS negotiation."""
 
+    def __init__(self, smtp_ehlo_hostname: str):
+        self._smtp_ehlo_hostname = smtp_ehlo_hostname
+
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         # Get the SMTP banner
         sock.recv(2048)
 
         # Send a EHLO and wait for the 250 status
-        sock.send(b"EHLO sslyze.scan\r\n")
+        sock.send(f"EHLO {self._smtp_ehlo_hostname}\r\n".encode("ascii"))
         if b"250 " not in sock.recv(2048):
             raise OpportunisticTlsError("SMTP EHLO was rejected")
 
@@ -219,14 +222,16 @@ _START_TLS_HELPER_CLASSES = {
 
 
 def get_opportunistic_tls_helper(
-    protocol: ProtocolWithOpportunisticTlsEnum, xmpp_to_hostname: Optional[str]
+    protocol: ProtocolWithOpportunisticTlsEnum, xmpp_to_hostname: Optional[str], smtp_ehlo_hostname: str
 ) -> _OpportunisticTlsHelper:
     helper_cls = _START_TLS_HELPER_CLASSES[protocol]
-    if protocol not in [ProtocolWithOpportunisticTlsEnum.XMPP, ProtocolWithOpportunisticTlsEnum.XMPP_SERVER]:
-        opportunistic_tls_helper = helper_cls()
-    else:
+    if protocol in [ProtocolWithOpportunisticTlsEnum.XMPP, ProtocolWithOpportunisticTlsEnum.XMPP_SERVER]:
         if xmpp_to_hostname is None:
             raise ValueError("Received None for xmpp_to_hostname")
         opportunistic_tls_helper = helper_cls(xmpp_to=xmpp_to_hostname)
+    elif protocol == ProtocolWithOpportunisticTlsEnum.SMTP:
+        opportunistic_tls_helper = helper_cls(smtp_ehlo_hostname)
+    else:
+        opportunistic_tls_helper = helper_cls()
 
     return opportunistic_tls_helper

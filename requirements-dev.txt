@@ -6,7 +6,7 @@ sphinx
 sphinx-rtd-theme
 twine>=4,<5
 sphinx-autodoc-typehints
-black==22.10.0
+black==24.3.0
 pytest-cov
 faker
 

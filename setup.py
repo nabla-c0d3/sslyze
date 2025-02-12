@@ -99,7 +99,14 @@ setup(
     # Dependencies
     install_requires=[
         "nassl>=5.3,<6",
-        "cryptography>=43,<45",
+        # cryptography doesn't use SemVer (they use browser versioning), and
+        # considers its declared API to be stable, even across major version
+        # changes. There may be breaking changes to address security issues,
+        # which has usually meant dropping support for old cryptographic
+        # primitives and protocols:
+        #
+        # https://cryptography.io/en/latest/api-stability/
+        "cryptography>=44.0.1",
         "tls-parser>=2,<3",
         "pydantic>=2.3,<3",
     ],

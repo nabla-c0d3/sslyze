@@ -3,7 +3,7 @@
     "href": "https://ssl-config.mozilla.org/guidelines/5.7.json",
     "configurations": {
         "modern": {
-            "certificate_curves": ["prime256v1", "secp384r1"],
+            "certificate_curves": ["prime256v1", "secp256r1", "secp384r1"],
             "certificate_signatures": ["ecdsa-with-SHA256", "ecdsa-with-SHA384", "ecdsa-with-SHA512"],
             "certificate_types": ["ecdsa"],
             "ciphers": {
@@ -26,11 +26,11 @@
             "recommended_certificate_lifespan": 90,
             "rsa_key_size": null,
             "server_preferred_order": false,
-            "tls_curves": ["X25519", "prime256v1", "secp384r1"],
+            "tls_curves": ["X25519", "prime256v1", "secp256r1", "secp384r1"],
             "tls_versions": ["TLSv1.3"]
         },
         "intermediate": {
-            "certificate_curves": ["prime256v1", "secp384r1"],
+            "certificate_curves": ["prime256v1", "secp256r1", "secp384r1"],
             "certificate_signatures": ["sha256WithRSAEncryption", "ecdsa-with-SHA256", "ecdsa-with-SHA384", "ecdsa-with-SHA512"],
             "certificate_types": ["ecdsa", "rsa"],
             "ciphers": {
@@ -87,11 +87,11 @@
             "recommended_certificate_lifespan": 90,
             "rsa_key_size": 2048,
             "server_preferred_order": false,
-            "tls_curves": ["X25519", "prime256v1", "secp384r1"],
+            "tls_curves": ["X25519", "prime256v1", "secp256r1", "secp384r1"],
             "tls_versions": ["TLSv1.2", "TLSv1.3"]
         },
         "old": {
-            "certificate_curves": ["prime256v1", "secp384r1"],
+            "certificate_curves": ["prime256v1", "secp256r1", "secp384r1"],
             "certificate_signatures": ["sha256WithRSAEncryption"],
             "certificate_types": ["rsa"],
             "ciphers": {
@@ -202,7 +202,7 @@
             "recommended_certificate_lifespan": 90,
             "rsa_key_size": 2048,
             "server_preferred_order": true,
-            "tls_curves": ["X25519", "prime256v1", "secp384r1"],
+            "tls_curves": ["X25519", "prime256v1", "secp256r1", "secp384r1"],
             "tls_versions": ["TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"]
         }
     }

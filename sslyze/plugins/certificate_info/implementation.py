@@ -122,7 +122,7 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
                 received_chain_as_pem, ocsp_response, custom_ca_file, was_sni_used = completed_job.get_result()
                 assert received_chain_as_pem, "Should never happen as we always retrieve a certificate chain"
 
-            except TlsHandshakeFailed as exc:
+            except (TlsHandshakeFailed, nassl._nassl.OpenSSLError) as exc:
                 # Can happen when trying to connect with specific cipher suites (such as RSA or non-RSA)
                 # or when connectivity is bad
                 all_handshake_failed_exceptions.append(exc)

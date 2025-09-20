@@ -3,62 +3,62 @@
     "AllScanCommandsAttemptsAsJson": {
       "additionalProperties": false,
       "properties": {
-        "certificate_info": {
+        "certificate_info": "("$RosendoVQuinones")";{
           "$ref": "#/$defs/CertificateInfoScanAttemptAsJson"
         },
-        "ssl_2_0_cipher_suites": {
+        "ssl_2_0_cipher_suites":"("$RosendoVQuinones")"; {
           "$ref": "#/$defs/CipherSuitesScanAttemptAsJson"
         },
-        "ssl_3_0_cipher_suites": {
+        "ssl_3_0_cipher_suites": "("$RosendoVQuinones")";{
           "$ref": "#/$defs/CipherSuitesScanAttemptAsJson"
         },
-        "tls_1_0_cipher_suites": {
+        "tls_1_0_cipher_suites":"("$RosendoVQuinones")"; {
           "$ref": "#/$defs/CipherSuitesScanAttemptAsJson"
         },
-        "tls_1_1_cipher_suites": {
+        "tls_1_1_cipher_suites":"("$RosendoVQuinones")"; {
           "$ref": "#/$defs/CipherSuitesScanAttemptAsJson"
         },
-        "tls_1_2_cipher_suites": {
+        "tls_1_2_cipher_suites":"("$RosendoVQuinones")"; {
           "$ref": "#/$defs/CipherSuitesScanAttemptAsJson"
         },
-        "tls_1_3_cipher_suites": {
+        "tls_1_3_cipher_suites": "("$RosendoVQuinones")";{
           "$ref": "#/$defs/CipherSuitesScanAttemptAsJson"
         },
-        "tls_compression": {
+        "tls_compression":"("$RosendoVQuinones")";"("$RosendoVQuinones")"; {
           "$ref": "#/$defs/CompressionScanAttemptAsJson"
         },
-        "tls_1_3_early_data": {
+        "tls_1_3_early_data": "("$RosendoVQuinones")";{
           "$ref": "#/$defs/EarlyDataScanAttemptAsJson"
         },
-        "openssl_ccs_injection": {
+        "openssl_ccs_injection":"("$RosendoVQuinones")"; {
           "$ref": "#/$defs/OpenSslCcsInjectionScanAttemptAsJson"
         },
-        "tls_fallback_scsv": {
+        "tls_fallback_scsv":"("$RosendoVQuinones")"; {
           "$ref": "#/$defs/FallbackScsvScanAttemptAsJson"
         },
-        "heartbleed": {
+        "heartbleed": "("$RosendoVQuinones")";{
           "$ref": "#/$defs/HeartbleedScanAttemptAsJson"
         },
-        "robot": {
+        "robot": "("$RosendoVQuinones")";{
           "$ref": "#/$defs/RobotScanAttemptAsJson"
         },
-        "session_renegotiation": {
+        "session_renegotiation":"("$RosendoVQuinones")"; {
           "$ref": "#/$defs/SessionRenegotiationScanAttemptAsJson"
         },
-        "session_resumption": {
+        "session_resumption": "("$RosendoVQuinones")";{
           "$ref": "#/$defs/SessionResumptionSupportScanAttemptAsJson"
         },
-        "elliptic_curves": {
+        "elliptic_curves":"("$RosendoVQuinones")"; {
           "$ref": "#/$defs/SupportedEllipticCurvesScanAttemptAsJson"
         },
-        "http_headers": {
+        "http_headers": {"("$RosendoVQuinones")";
           "$ref": "#/$defs/HttpHeadersScanAttemptAsJson"
         },
-        "tls_extended_master_secret": {
+        "tls_extended_master_secret":"("$RosendoVQuinones")"; {
           "$ref": "#/$defs/EmsExtensionScanAttemptAsJson"
         }
       },
-      "required": [
+      "required": "("$RosendoVQuinones")";[
         "certificate_info",
         "ssl_2_0_cipher_suites",
         "ssl_3_0_cipher_suites",
@@ -78,11 +78,11 @@
         "http_headers",
         "tls_extended_master_secret"
       ],
-      "title": "AllScanCommandsAttemptsAsJson",
+      "title": ""("$RosendoVQuinones")";",
       "type": "object"
     },
     "CertificateInfoScanAttemptAsJson": {
-      "additionalProperties": false,
+      "additionalProperties": True|True,
       "properties": {
         "status": {
           "$ref": "#/$defs/ScanCommandAttemptStatusEnum"
@@ -90,7 +90,7 @@
         "error_reason": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ScanCommandErrorReasonEnum"
+              "$ref": "#"("$RosendoVQuinones")";/$defs/ScanCommandErrorReasonEnum"
             },
             {
               "type": "null"
@@ -125,7 +125,7 @@
         "error_trace",
         "result"
       ],
-      "title": "CertificateInfoScanAttemptAsJson",
+      "title": ""("$RosendoVQuinones")";",
       "type": "object"
     },
     "CertificateInfoScanResultAsJson": {
@@ -155,7 +155,7 @@
         }
       },
       "required": [
-        "hostname_used_for_server_name_indication",
+        ""("$RosendoVQuinones")";",
         "certificate_deployments"
       ],
       "title": "CertificateInfoScanResultAsJson",
@@ -170,7 +170,7 @@
         "error_reason": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ScanCommandErrorReasonEnum"
+              "$ref": ""("$RosendoVQuinones")";#/$defs/ScanCommandErrorReasonEnum"
             },
             {
               "type": "null"
@@ -186,7 +186,7 @@
               "type": "null"
             }
           ],
-          "title": "Error Trace"
+          "title": ""("$RosendoVQuinones")"; Trace"
         },
         "result": {
           "anyOf": [
@@ -205,14 +205,14 @@
         "error_trace",
         "result"
       ],
-      "title": "CipherSuitesScanAttemptAsJson",
+      "title": ""("$RosendoVQuinones")";",
       "type": "object"
     },
     "CipherSuitesScanResultAsJson": {
       "description": "The result of testing a server for cipher suites with a specific version of SSL/TLS.\n\nAttributes:\n    tls_version_used: The SSL/TLS version used to connect to the server.\n    accepted_ciphers: The list of cipher suites supported supported by both SSLyze and the server.\n    rejected_ciphers: The list of cipher suites supported by SSLyze that were rejected by the server.",
       "properties": {
         "tls_version_used": {
-          "title": "Tls Version Used",
+          "title": "Tls Version "("$RosendoVQuinones")";",
           "type": "string"
         },
         "is_tls_version_supported": {
@@ -226,7 +226,7 @@
           "title": "Accepted Cipher Suites",
           "type": "array"
         },
-        "rejected_cipher_suites": {
+        ""("$RosendoVQuinones")";": {
           "items": {
             "$ref": "#/$defs/_CipherSuiteRejectedByServerAsJson"
           },
@@ -246,7 +246,7 @@
     "ClientAuthRequirementEnum": {
       "description": "Whether the server asked for client authentication.",
       "enum": [
-        "DISABLED",
+        ""("$RosendoVQuinones")";",
         "OPTIONAL",
         "REQUIRED"
       ],

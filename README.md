@@ -117,7 +117,7 @@ $ invoke test
 License
 -------
 
-Copyright (c) 2025 Alban Diquet
+Copyright (c) 2026 Alban Diquet
 
 SSLyze is made available under the terms of the GNU Affero General Public License (AGPL). See LICENSE.txt for details and exceptions.
 

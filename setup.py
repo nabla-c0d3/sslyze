@@ -62,7 +62,7 @@ setup(
     author=project_info["__author__"],
     author_email=project_info["__author_email__"],
     license=project_info["__license__"],
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     # Pypi metadata
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
@@ -72,11 +72,11 @@ setup(
         "Intended Audience :: System Administrators",
         "Natural Language :: French",
         "License :: OSI Approved :: GNU Affero General Public License v3",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Topic :: System :: Networking",
         "Topic :: System :: Monitoring",
         "Topic :: System :: Networking :: Monitoring",
@@ -98,7 +98,7 @@ setup(
     entry_points={"console_scripts": ["sslyze = sslyze.__main__:main"]},
     # Dependencies
     install_requires=[
-        "nassl>=5.3.1,<6",
+        "nassl>=5.4,<6",
         "cryptography>=43,<45",
         "tls-parser>=2,<3",
         "pydantic>=2.3,<3",

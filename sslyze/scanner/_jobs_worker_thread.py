@@ -7,12 +7,7 @@ from uuid import UUID
 from sslyze.plugins.scan_commands import ScanCommand
 
 
-try:
-    # Python 3.10+
-    from typing import TypeAlias  # type: ignore
-except ImportError:
-    # Python 3.9 and before
-    from typing_extensions import TypeAlias  # type: ignore
+from typing import TypeAlias
 
 
 @dataclass(frozen=True)

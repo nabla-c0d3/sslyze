@@ -30,12 +30,7 @@ from sslyze.scanner.models import (
 from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
 from sslyze.server_connectivity import ServerConnectivityInfo
 
-try:
-    # Python 3.10+
-    from typing import TypeAlias  # type: ignore
-except ImportError:
-    # Python 3.9 and before
-    from typing_extensions import TypeAlias  # type: ignore
+from typing import TypeAlias
 
 
 @dataclass(frozen=True)

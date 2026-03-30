@@ -1,3 +1,5 @@
+import ctypes
+import gc
 import queue
 from traceback import TracebackException
 from typing import List, Optional, Generator, Sequence
@@ -63,6 +65,19 @@ class Scanner:
     @property
     def _has_started_work(self) -> bool:
         return self._connectivity_tester.has_started_work
+
+    def _free_memory(self):
+        """
+        Manually trigger a garbage collection and release memory from the heap to OS kernel
+        """
+        try:
+            # Forcing garbage collection to resolve circular references
+            gc.collect()
+            # Call glibc's malloc_trim() to make an attempt to release memory back to OS
+            ctypes.CDLL(None).malloc_trim(0)
+        except Exception:
+            # Could not release memory
+            pass
 
     def get_results(self) -> Generator[ServerScanResult, None, None]:
         if not self._has_started_work:
@@ -140,3 +155,5 @@ class Scanner:
 
         for observer in self._observers:
             observer.all_server_scans_completed()
+
+        self._free_memory()

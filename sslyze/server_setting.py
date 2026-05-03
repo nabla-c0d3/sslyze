@@ -9,7 +9,8 @@ from urllib.parse import quote
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-from nassl.ssl_client import OpenSslFileTypeEnum, SslClient
+from nassl.base_ssl_client import OpenSslFileTypeEnum
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.errors import InvalidServerNetworkConfigurationError, ServerHostnameCouldNotBeResolved
@@ -149,7 +150,7 @@ class ClientAuthenticationCredentials:
 
     def __post_init__(self) -> None:
         # Try to load the cert and key in OpenSSL; will raise an exception if something is wrong
-        SslClient(
+        SslClient_OpenSSL_1_1_1(
             client_certificate_chain=self.certificate_chain_path,
             client_key=self.key_path,
             client_key_type=self.key_type,

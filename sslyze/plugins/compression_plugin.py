@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from nassl.legacy_ssl_client import LegacySslClient
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
+from nassl.base_ssl_client import ClientCertificateRequested
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
@@ -90,7 +90,7 @@ def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
         override_tls_version=tls_version_to_use,
         should_use_legacy_openssl=True,  # Only the legacy SSL client has methods to check for compression support
     )
-    if not isinstance(ssl_connection.ssl_client, LegacySslClient):
+    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2):
         raise RuntimeError("Should never happen")
 
     # Make sure OpenSSL was built with support for compression to avoid false negatives

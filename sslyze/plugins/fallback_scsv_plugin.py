@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from nassl import _nassl
-from nassl.legacy_ssl_client import LegacySslClient
+from nassl._low_level_errors import OpenSSLError
+from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
@@ -90,7 +90,7 @@ def _test_scsv(server_info: ServerConnectivityInfo) -> bool:
         # Only the legacy client has enable_fallback_scsv()
         should_use_legacy_openssl=True,
     )
-    if not isinstance(ssl_connection.ssl_client, LegacySslClient):
+    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2):
         raise RuntimeError("Should never happen")
 
     ssl_connection.ssl_client.enable_fallback_scsv()
@@ -100,7 +100,7 @@ def _test_scsv(server_info: ServerConnectivityInfo) -> bool:
         # Perform the SSL handshake
         ssl_connection.connect()
 
-    except _nassl.OpenSSLError as e:
+    except OpenSSLError as e:
         # This is the right, specific alert the server should return
         if "tlsv1 alert inappropriate fallback" in str(e.args):
             supports_fallback_scsv = True

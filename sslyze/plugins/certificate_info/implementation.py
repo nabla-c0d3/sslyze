@@ -3,7 +3,8 @@ from ipaddress import ip_address
 from pathlib import Path
 from typing import Optional, List, Dict, Tuple, Union
 
-import nassl
+from nassl._low_level_errors import OpenSSLError
+from nassl.openssl_1_1_1._nassl import OCSP_RESPONSE
 
 from sslyze.errors import TlsHandshakeFailed
 from sslyze.plugins.certificate_info._cert_chain_analyzer import (
@@ -62,7 +63,7 @@ class CertificateInfoScanResult(ScanCommandResult):
     certificate_deployment_with_sni_disabled: Optional[CertificateDeploymentAnalysisResult]
 
 
-_ListofPemCertificatesAndOptionalOcspResponse = Tuple[List[str], Optional[nassl._nassl.OCSP_RESPONSE]]
+_ListofPemCertificatesAndOptionalOcspResponse = Tuple[List[str], Optional[OCSP_RESPONSE]]
 
 
 class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoScanResult, None]):
@@ -129,7 +130,7 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
                 # or when connectivity is bad
                 all_handshake_failed_exceptions.append(exc)
 
-            except nassl._nassl.OpenSSLError as exc:
+            except OpenSSLError as exc:
                 if "unrecognized name" in exc.args[0]:
                     # Can happen when trying to connect without SNI
                     all_handshake_failed_exceptions.append(exc)

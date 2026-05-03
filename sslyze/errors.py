@@ -14,7 +14,7 @@ class ServerHostnameCouldNotBeResolved(Exception):
     """Raised when trying to create a ServerNetworkLocationViaDirectConnection but DNS lookup failed."""
 
 
-@dataclass(frozen=True)
+@dataclass
 class ConnectionToServerFailed(Exception):
     """Parent class for all exceptions raised when a connecting to a server failed."""
 
@@ -26,52 +26,52 @@ class ConnectionToServerFailed(Exception):
         return f'{self.server_location.display_string} -> "{self.error_message}".'
 
 
-@dataclass(frozen=True)
+@dataclass
 class ConnectionToServerTimedOut(ConnectionToServerFailed):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class ServerRejectedConnection(ConnectionToServerFailed):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class ConnectionToHttpProxyFailed(ConnectionToServerFailed):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class ConnectionToHttpProxyTimedOut(ConnectionToHttpProxyFailed):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class HttpProxyRejectedConnection(ConnectionToHttpProxyFailed):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class ServerRejectedOpportunisticTlsNegotiation(ConnectionToServerFailed):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class TlsHandshakeFailed(ABC, ConnectionToServerFailed):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class ServerRejectedTlsHandshake(TlsHandshakeFailed):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class ServerTlsConfigurationNotSupported(TlsHandshakeFailed):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class TlsHandshakeTimedOut(TlsHandshakeFailed):
     """Raised when the initial socket connection to the server succeeded, but the TLS handshake then timed out.
 

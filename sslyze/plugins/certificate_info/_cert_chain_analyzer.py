@@ -15,6 +15,8 @@ from cryptography.x509 import (
     DNSName,
     IPAddress,
 )
+
+from nassl.openssl_1_1_1._nassl import OCSP_RESPONSE
 from cryptography.x509.ocsp import load_der_ocsp_response, OCSPResponseStatus, OCSPResponse
 import nassl.ocsp_response
 
@@ -116,7 +118,7 @@ class CertificateDeploymentAnalyzer:
         self,
         server_subject: Union[IPAddress, DNSName],
         server_certificate_chain_as_pem: List[str],
-        server_ocsp_response: Optional[nassl._nassl.OCSP_RESPONSE],
+        server_ocsp_response: Optional[OCSP_RESPONSE],
         trust_stores_for_validation: List[TrustStore],
     ) -> None:
         self.server_subject = server_subject

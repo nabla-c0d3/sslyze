@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from argparse import ArgumentParser
 from pathlib import Path
 
-from nassl.ssl_client import OpenSslFileTypeEnum
+from nassl.base_ssl_client import OpenSslFileTypeEnum
 from typing import Set, List, Optional, Dict
 from typing import Tuple
 

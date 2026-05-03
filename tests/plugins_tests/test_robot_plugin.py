@@ -1,4 +1,4 @@
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.base_ssl_client import ClientCertificateRequested
 
 from sslyze.plugins.robot.implementation import RobotImplementation, RobotScanResult, RobotScanResultAsJson
 from sslyze.plugins.robot._robot_tester import RobotScanResultEnum

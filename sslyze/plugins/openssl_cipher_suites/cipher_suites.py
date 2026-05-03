@@ -3,8 +3,9 @@ from typing import Dict, Set
 
 from dataclasses import dataclass
 
-from nassl.legacy_ssl_client import LegacySslClient
-from nassl.ssl_client import OpenSslVersionEnum, SslClient
+from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
+from nassl.base_ssl_client import OpenSslVersionEnum
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
 from sslyze.server_connectivity import TlsVersionEnum
 
@@ -572,7 +573,7 @@ _TLS_1_3_CIPHER_SUITES = [
 
 
 def _parse_all_cipher_suites_with_legacy_openssl(tls_version: TlsVersionEnum) -> Set[str]:
-    ssl_client = LegacySslClient(ssl_version=OpenSslVersionEnum(tls_version.value))
+    ssl_client = SslClient_OpenSSL_1_0_2(ssl_version=OpenSslVersionEnum(tls_version.value))
     # Disable SRP and PSK cipher suites as they need a special setup in the client and are never used
     ssl_client.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
     return set(ssl_client.get_cipher_list())
@@ -603,7 +604,7 @@ def _parse_all_cipher_suites() -> Dict[TlsVersionEnum, Set[CipherSuite]]:
     # For TLS 1.2, we have to use both the legacy and modern OpenSSL to cover all cipher suites
     cipher_suites_from_legacy_openssl = _parse_all_cipher_suites_with_legacy_openssl(TlsVersionEnum.TLS_1_2)
 
-    ssl_client_modern = SslClient(ssl_version=OpenSslVersionEnum(TlsVersionEnum.TLS_1_2.value))
+    ssl_client_modern = SslClient_OpenSSL_1_1_1(ssl_version=OpenSslVersionEnum(TlsVersionEnum.TLS_1_2.value))
     ssl_client_modern.set_cipher_list("ALL:COMPLEMENTOFALL:-PSK:-SRP")
     cipher_suites_from_modern_openssl = set(ssl_client_modern.get_cipher_list())
 

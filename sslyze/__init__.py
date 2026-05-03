@@ -9,7 +9,7 @@ from sslyze.server_setting import (
     ServerNetworkConfiguration,
 )
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
-from nassl.ssl_client import OpenSslFileTypeEnum
+from nassl.base_ssl_client import OpenSslFileTypeEnum
 
 
 # Classes for testing connectivity with the servers

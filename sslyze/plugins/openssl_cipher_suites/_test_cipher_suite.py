@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from typing import Optional, Union
 
 from nassl.ephemeral_key_info import EphemeralKeyInfo
-from nassl.legacy_ssl_client import LegacySslClient
-from nassl.ssl_client import ClientCertificateRequested, SslClient, BaseSslClient
+from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
+from nassl.base_ssl_client import ClientCertificateRequested, BaseSslClient
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
 from sslyze.errors import (
     ServerRejectedTlsHandshake,
@@ -81,13 +82,13 @@ def connect_with_cipher_suite(
 
 def _set_cipher_suite_string(tls_version: TlsVersionEnum, cipher_suite_str: str, ssl_client: BaseSslClient) -> None:
     # Only enable the cipher suite to test; not trivial anymore since OpenSSL 1.1.1 and TLS 1.3
-    if isinstance(ssl_client, SslClient):
+    if isinstance(ssl_client, SslClient_OpenSSL_1_1_1):
         # With the modern OpenSSL client we have to manage TLS 1.3-specific cipher functions
         if tls_version == TlsVersionEnum.TLS_1_3:
             ssl_client.set_ciphersuites(cipher_suite_str)  # TLS 1.3 method
         else:
             ssl_client.set_cipher_list(cipher_suite_str)  # Legacy method
-    elif isinstance(ssl_client, LegacySslClient):
+    elif isinstance(ssl_client, SslClient_OpenSSL_1_0_2):
         # With the legacy OpenSSL client, nothing special to do
         ssl_client.set_cipher_list(cipher_suite_str)
     else:

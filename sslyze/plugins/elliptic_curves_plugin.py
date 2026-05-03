@@ -3,9 +3,10 @@ from operator import attrgetter
 from typing import List, Optional, Any
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from nassl._nassl import OpenSSLError
+from nassl._low_level_errors import OpenSSLError
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
-from nassl.ssl_client import ClientCertificateRequested, SslClient
+from nassl.base_ssl_client import ClientCertificateRequested
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -205,7 +206,7 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version, should_use_legacy_openssl=False
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient):
+    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1):
         raise RuntimeError(
             "Should never happen: specified should_use_legacy_openssl=False but didn't get the modern SSL client"
         )

@@ -5,8 +5,9 @@ from typing import Optional
 
 from dataclasses import dataclass
 
-from nassl import _nassl
-from nassl.ssl_client import ClientCertificateRequested, SslClient
+from nassl._low_level_errors import OpenSSLError
+from nassl.base_ssl_client import ClientCertificateRequested
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
 from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
 from sslyze.errors import (
@@ -209,7 +210,7 @@ class ServerConnectivityInfo:
         if final_openssl_cipher_string:
             if final_ssl_version == TlsVersionEnum.TLS_1_3:
                 # OpenSSL uses a different API for TLS 1.3
-                if not isinstance(ssl_connection.ssl_client, SslClient):
+                if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1):
                     raise RuntimeError("Should never happen")
                 ssl_connection.ssl_client.set_ciphersuites(final_openssl_cipher_string)
             else:
@@ -258,7 +259,7 @@ def _detect_support_for_tls_1_3(
     except TlsHandshakeFailed:
         pass
 
-    except (OSError, _nassl.OpenSSLError) as e:
+    except (OSError, OpenSSLError) as e:
         # If these errors get propagated here, it means they're not part of the known/normal errors that
         # can happen when trying to connect to a server and defined in tls_connection.py
         # Hence we re-raise these as "unknown" connection errors; might be caused by bad connectivity to
@@ -322,7 +323,7 @@ def _detect_support_for_tls_1_2_or_below(
             # Try the next cipher list
             pass
 
-        except (OSError, _nassl.OpenSSLError) as e:
+        except (OSError, OpenSSLError) as e:
             # If these errors get propagated here, it means they're not part of the known/normal errors that
             # can happen when trying to connect to a server and defined in tls_connection.py
             # Hence we re-raise these as "unknown" connection errors; might be caused by bad connectivity to
@@ -370,7 +371,7 @@ def _detect_client_auth_requirement_with_tls_1_3(
         # more data from us the client
         client_auth_requirement = ClientAuthRequirementEnum.OPTIONAL
 
-    except _nassl.OpenSSLError as e:
+    except OpenSSLError as e:
         # Here we re-use some of the rejection handling logic already implemented in SslConnection.connect()
         # This is because the call to read(1) in the try block might trigger similar errors as connect()
         # https://github.com/nabla-c0d3/sslyze/issues/562
@@ -450,7 +451,7 @@ def _detect_ecdh_support(
         should_use_legacy_openssl=False,
         should_ignore_client_auth=True,
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient):
+    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1):
         raise RuntimeError(
             "Should never happen: specified should_use_legacy_openssl=False but didn't get the modern" " SSL client"
         )
@@ -470,7 +471,7 @@ def _detect_ecdh_support(
     return is_ecdh_key_exchange_supported
 
 
-def enable_ecdh_cipher_suites(tls_version: TlsVersionEnum, ssl_client: SslClient) -> None:
+def enable_ecdh_cipher_suites(tls_version: TlsVersionEnum, ssl_client: SslClient_OpenSSL_1_1_1) -> None:
     """Set the elliptic curve cipher suites."""
     if tls_version == TlsVersionEnum.TLS_1_3:
         # Cipher suites source: https://tools.ietf.org/html/rfc8446#appendix-B.4

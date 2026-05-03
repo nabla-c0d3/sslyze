@@ -1,5 +1,5 @@
 import pytest
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.base_ssl_client import ClientCertificateRequested
 
 from sslyze import TlsResumptionSupportEnum
 from sslyze.plugins.session_resumption.implementation import (

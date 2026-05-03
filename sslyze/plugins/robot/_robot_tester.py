@@ -8,8 +8,8 @@ import math
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey, RSAPublicNumbers
 from cryptography.x509 import load_pem_x509_certificate
-from nassl._nassl import WantReadError
-from nassl.ssl_client import ClientCertificateRequested
+from nassl._low_level_errors import WantReadError
+from nassl.base_ssl_client import ClientCertificateRequested
 from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
 
 from tls_parser.alert_protocol import TlsAlertRecord

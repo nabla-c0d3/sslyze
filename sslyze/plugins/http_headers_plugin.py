@@ -8,7 +8,7 @@ from pydantic import BaseModel, model_validator
 
 
 # TODO: Fix type annotations in nassl
-from nassl._nassl import SslError  # type: ignore
+from nassl._low_level_errors import SslError
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmMode
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson

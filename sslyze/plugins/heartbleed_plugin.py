@@ -3,7 +3,7 @@ import types
 from dataclasses import dataclass
 from typing import List, Optional
 
-from nassl._nassl import WantReadError
+from nassl._low_level_errors import WantReadError
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson

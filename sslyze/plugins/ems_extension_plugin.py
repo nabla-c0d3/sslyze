@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from nassl.ssl_client import SslClient, ExtendedMasterSecretSupportEnum
+from nassl.openssl_1_1_1.ssl_client import ExtendedMasterSecretSupportEnum
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
@@ -81,7 +82,7 @@ def _test_ems(server_info: ServerConnectivityInfo) -> bool:
         # Only the modern client has EMS support
         should_use_legacy_openssl=False,
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient):
+    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1):
         raise RuntimeError("Should never happen")
 
     # Perform the SSL handshake

@@ -1,4 +1,4 @@
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.base_ssl_client import ClientCertificateRequested
 
 from sslyze.plugins.session_renegotiation_plugin import (
     SessionRenegotiationImplementation,

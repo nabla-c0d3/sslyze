@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional, Tuple
 
-import nassl
+from nassl.openssl_1_1_1._nassl import SSL_SESSION
 
 from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
@@ -37,9 +37,9 @@ class ServerOnlySupportsTls13(Exception):
 
 def retrieve_tls_session(
     server_info: ServerConnectivityInfo,
-    session_to_resume: Optional[nassl._nassl.SSL_SESSION] = None,
+    session_to_resume: Optional[SSL_SESSION] = None,
     should_enable_tls_ticket: bool = False,
-) -> nassl._nassl.SSL_SESSION:
+) -> SSL_SESSION:
     """Connect to the server and returns the session object that was assigned for that connection.
 
     If ssl_session is given, tries to resume that session.
@@ -80,7 +80,7 @@ def retrieve_tls_session(
     return new_session
 
 
-def _extract_session_id(ssl_session: nassl._nassl.SSL_SESSION) -> str:
+def _extract_session_id(ssl_session: SSL_SESSION) -> str:
     """Extract the SSL session ID from a SSL session object or raises IndexError if the session ID was not set."""
     session_string = ((ssl_session.as_text()).split("Session-ID:"))[1]
     session_id = (session_string.split("Session-ID-ctx:"))[0].strip()

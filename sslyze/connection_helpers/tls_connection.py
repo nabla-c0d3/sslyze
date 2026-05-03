@@ -2,7 +2,7 @@ import socket
 from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 
-from nassl.legacy_ssl_client import LegacySslClient
+from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 
 from sslyze.server_setting import (
     ServerNetworkLocation,
@@ -25,9 +25,9 @@ from sslyze.connection_helpers.http_response_parser import HttpResponseParser
 
 import time
 
-from nassl import _nassl
-from nassl.ssl_client import SslClient, OpenSslVersionEnum, BaseSslClient, OpenSslVerifyEnum
-from nassl.ssl_client import ClientCertificateRequested
+from nassl._low_level_errors import OpenSSLError
+from nassl.base_ssl_client import BaseSslClient, OpenSslVersionEnum, OpenSslVerifyEnum, ClientCertificateRequested
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
 from sslyze.connection_helpers.opportunistic_tls_helpers import get_opportunistic_tls_helper, OpportunisticTlsError
 
@@ -175,7 +175,7 @@ class SslConnection:
         ):
             raise ValueError("Cannot use modern OpenSSL with SSL 2.0 or 3.0")
 
-        ssl_client_cls = LegacySslClient if final_should_use_legacy_openssl else SslClient
+        ssl_client_cls = SslClient_OpenSSL_1_0_2 if final_should_use_legacy_openssl else SslClient_OpenSSL_1_1_1
 
         if network_configuration.tls_client_auth_credentials:
             # A client certificate and private key were provided
@@ -327,7 +327,7 @@ class SslConnection:
                 )
             # Unknown connection error
             raise
-        except _nassl.OpenSSLError as e:
+        except OpenSSLError as e:
             openssl_error_message = e.args[0]
             if "dh key too small" in openssl_error_message:
                 # This is when SSLyze's OpenSSL rejects DH parameters (to protect against Logjam); this actually

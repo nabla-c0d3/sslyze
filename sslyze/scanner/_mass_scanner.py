@@ -6,7 +6,7 @@ from traceback import TracebackException
 from typing import Dict, List, Tuple, Union
 from uuid import UUID
 
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.base_ssl_client import ClientCertificateRequested
 
 from sslyze import ServerTlsProbingResult, ScanCommandAttemptStatusEnum, ScanCommandErrorReasonEnum
 from sslyze.errors import ConnectionToServerTimedOut, TlsHandshakeTimedOut, ServerRejectedTlsHandshake

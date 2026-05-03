@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 import socket
-from nassl._nassl import OpenSSLError
-from nassl.ssl_client import OpenSslEarlyDataStatusEnum, SslClient
+from nassl._low_level_errors import OpenSSLError
+from nassl.openssl_1_1_1.ssl_client import OpenSslEarlyDataStatusEnum
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
@@ -112,7 +113,7 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
     # Then try to re-use the session and send early data
     if session is not None:
         ssl_connection2 = server_info.get_preconfigured_tls_connection(override_tls_version=TlsVersionEnum.TLS_1_3)
-        if not isinstance(ssl_connection2.ssl_client, SslClient):
+        if not isinstance(ssl_connection2.ssl_client, SslClient_OpenSSL_1_1_1):
             raise RuntimeError("Should never happen")
 
         ssl_connection2.ssl_client.set_session(session)

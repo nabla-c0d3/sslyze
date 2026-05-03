@@ -3,7 +3,7 @@ from http.client import HTTPResponse
 from typing import Dict
 
 import pytest
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.base_ssl_client import ClientCertificateRequested
 
 from sslyze.plugins.http_headers_plugin import (
     HttpHeadersImplementation,

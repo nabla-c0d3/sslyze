@@ -29,6 +29,7 @@ from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanA
 from sslyze.plugins.openssl_cipher_suites.json_output import CipherSuitesScanAttemptAsJson
 from sslyze.plugins.robot.implementation import RobotScanAttemptAsJson
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanAttemptAsJson
+from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeScanAttemptAsJson
 
 from sslyze.plugins.session_resumption.json_output import (
     SessionResumptionSupportExtraArgumentAsJson,
@@ -67,6 +68,7 @@ class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
     elliptic_curves: SupportedEllipticCurvesScanAttemptAsJson
     http_headers: HttpHeadersScanAttemptAsJson
     tls_extended_master_secret: EmsExtensionScanAttemptAsJson
+    pq_key_exchange: PqKeyExchangeScanAttemptAsJson
 
     @model_validator(mode="before")
     @classmethod

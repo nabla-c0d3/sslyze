@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 
 from sslyze import ServerNetworkConfiguration
 from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanResult
+from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeScanResult
 
 
 from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult, CertificateInfoExtraArgument
@@ -137,6 +138,10 @@ class EmsExtensionScanAttempt(ScanCommandAttempt[EmsExtensionScanResult]):
     pass
 
 
+class PqKeyExchangeScanAttempt(ScanCommandAttempt[PqKeyExchangeScanResult]):
+    pass
+
+
 @dataclass(frozen=True)
 class AllScanCommandsAttempts:
     """The result of every scan command supported by SSLyze."""
@@ -159,6 +164,7 @@ class AllScanCommandsAttempts:
     elliptic_curves: SupportedEllipticCurvesScanAttempt
     http_headers: HttpHeadersScanAttempt
     tls_extended_master_secret: EmsExtensionScanAttempt
+    pq_key_exchange: PqKeyExchangeScanAttempt
 
 
 _SCAN_CMD_FIELD_NAME_TO_CLS: dict[str, Type[ScanCommandAttempt]] = {

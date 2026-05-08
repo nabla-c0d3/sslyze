@@ -170,6 +170,7 @@ class ServerConnectivityInfo:
         ca_certificates_path: Optional[Path] = None,
         should_use_legacy_openssl: Optional[bool] = None,
         should_enable_server_name_indication: bool = True,
+        should_use_openssl_4: bool = False,
     ) -> SslConnection:
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
 
@@ -206,6 +207,7 @@ class ServerConnectivityInfo:
             ca_certificates_path=ca_certificates_path,
             should_use_legacy_openssl=should_use_legacy_openssl,
             should_enable_server_name_indication=should_enable_server_name_indication,
+            should_use_openssl_4=should_use_openssl_4,
         )
         if final_openssl_cipher_string:
             if final_ssl_version == TlsVersionEnum.TLS_1_3:

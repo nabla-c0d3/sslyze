@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 
 from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
+from nassl.openssl_4_0_0.ssl_client import SslClient_OpenSSL_4_0_0
 
 from sslyze.server_setting import (
     ServerNetworkLocation,
@@ -111,6 +112,7 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "wrong ssl version": "TLS error: wrong SSL version",
     "digest check failed": "TLS error: digest check failed",
     "sslv3 alert handshake failure": "TLS alert: handshake failure",
+    "tls alert handshake failure": "TLS alert: handshake failure",
     "tlsv1 alert protocol version": "TLS alert: protocol version ",
     "tlsv1 alert decrypt error": "TLS alert: Decrypt error",
     "tlsv1 alert decode error": "TLS alert: Decode error",
@@ -150,6 +152,7 @@ class SslConnection:
         should_use_legacy_openssl: Optional[bool] = None,
         ca_certificates_path: Optional[Path] = None,
         should_enable_server_name_indication: bool = True,
+        should_use_openssl_4: bool = False,
     ) -> None:
         self._server_location = server_location
         self._network_configuration = network_configuration
@@ -174,8 +177,13 @@ class SslConnection:
             and not final_should_use_legacy_openssl
         ):
             raise ValueError("Cannot use modern OpenSSL with SSL 2.0 or 3.0")
+        if should_use_openssl_4 and final_should_use_legacy_openssl:
+            raise ValueError("Cannot use OpenSSL 4 with legacy TLS versions")
 
-        ssl_client_cls = SslClient_OpenSSL_1_0_2 if final_should_use_legacy_openssl else SslClient_OpenSSL_1_1_1
+        if should_use_openssl_4:
+            ssl_client_cls = SslClient_OpenSSL_4_0_0
+        else:
+            ssl_client_cls = SslClient_OpenSSL_1_0_2 if final_should_use_legacy_openssl else SslClient_OpenSSL_1_1_1
 
         if network_configuration.tls_client_auth_credentials:
             # A client certificate and private key were provided

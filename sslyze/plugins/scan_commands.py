@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Dict, Type, TYPE_CHECKING, Set
 
 from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesImplementation
+from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeImplementation
 
 
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
@@ -47,6 +48,7 @@ class ScanCommand(str, Enum):
     HTTP_HEADERS = "http_headers"
     ELLIPTIC_CURVES = "elliptic_curves"
     TLS_EXTENDED_MASTER_SECRET = "tls_extended_master_secret"
+    PQ_KEY_EXCHANGE = "pq_key_exchange"
 
 
 class ScanCommandsRepository:
@@ -78,4 +80,5 @@ _IMPLEMENTATION_CLASSES: Dict[ScanCommand, Type["ScanCommandImplementation"]] = 
     ScanCommand.HTTP_HEADERS: HttpHeadersImplementation,
     ScanCommand.ELLIPTIC_CURVES: SupportedEllipticCurvesImplementation,
     ScanCommand.TLS_EXTENDED_MASTER_SECRET: EmsExtensionImplementation,
+    ScanCommand.PQ_KEY_EXCHANGE: PqKeyExchangeImplementation,
 }

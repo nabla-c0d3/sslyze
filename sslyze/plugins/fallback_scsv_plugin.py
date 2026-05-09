@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from nassl._low_level_errors import OpenSSLError
+from nassl.errors import OpenSSLError
 from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
@@ -15,6 +15,7 @@ from sslyze.plugins.plugin_base import (
     ScanCommandCliConnector,
     ScanJobResult,
 )
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 
@@ -87,8 +88,8 @@ def _test_scsv(server_info: ServerConnectivityInfo) -> bool:
     ssl_version_downgrade = TlsVersionEnum(ssl_version_to_use.value - 1)
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=ssl_version_downgrade,
-        # Only the legacy client has enable_fallback_scsv()
-        should_use_legacy_openssl=True,
+        # Only the 1.0.2 client has enable_fallback_scsv()
+        openssl_version=OpenSslVersionEnum.OPENSSL_1_0_2,
     )
     if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2):
         raise RuntimeError("Should never happen")

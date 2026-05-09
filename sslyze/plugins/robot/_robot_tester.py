@@ -8,7 +8,7 @@ import math
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey, RSAPublicNumbers
 from cryptography.x509 import load_pem_x509_certificate
-from nassl._low_level_errors import WantReadError
+from nassl.errors import WantReadError
 from nassl.base_ssl_client import ClientCertificateRequested
 from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
 
@@ -20,6 +20,7 @@ from tls_parser.parser import TlsRecordParser
 
 import tls_parser.tls_version
 
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum, ClientAuthRequirementEnum
 
@@ -233,7 +234,7 @@ def _get_rsa_parameters(
 ) -> Optional[RSAPublicNumbers]:
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version,
-        should_use_legacy_openssl=True,
+        openssl_version=OpenSslVersionEnum.OPENSSL_1_0_2,
     )
     ssl_connection.ssl_client.set_cipher_list(openssl_cipher_string)
     parsed_cert = None
@@ -264,6 +265,22 @@ def _get_rsa_parameters(
         return None
 
 
+def get_tls_version_for_tls_parser(tls_version: TlsVersionEnum) -> tls_parser.tls_version.TlsVersionEnum:
+    tls_parser_tls_version: tls_parser.tls_version.TlsVersionEnum
+    if tls_version == TlsVersionEnum.SSL_3_0:
+        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.SSLV3
+    elif tls_version == TlsVersionEnum.TLS_1_0:
+        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.TLSV1
+    elif tls_version == TlsVersionEnum.TLS_1_1:
+        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.TLSV1_1
+    elif tls_version == TlsVersionEnum.TLS_1_2:
+        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.TLSV1_2
+    else:
+        raise ValueError("Should never happen")
+
+    return tls_parser_tls_version
+
+
 def _send_robot_payload(
     server_info: ServerConnectivityInfo,
     tls_version_to_use: TlsVersionEnum,
@@ -284,18 +301,7 @@ def _send_robot_payload(
     ssl_connection.ssl_client.set_cipher_list(rsa_cipher_string)
 
     # Compute the  payload
-    tls_parser_tls_version: tls_parser.tls_version.TlsVersionEnum
-    if tls_version_to_use == TlsVersionEnum.SSL_3_0:
-        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.SSLV3
-    elif tls_version_to_use == TlsVersionEnum.TLS_1_0:
-        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.TLSV1
-    elif tls_version_to_use == TlsVersionEnum.TLS_1_1:
-        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.TLSV1_1
-    elif tls_version_to_use == TlsVersionEnum.TLS_1_2:
-        tls_parser_tls_version = tls_parser.tls_version.TlsVersionEnum.TLSV1_2
-    else:
-        raise ValueError("Should never happen")
-
+    tls_parser_tls_version = get_tls_version_for_tls_parser(tls_version_to_use)
     cke_payload = _RobotTlsRecordPayloads.get_client_key_exchange_record(
         robot_payload_enum, tls_parser_tls_version, rsa_modulus, rsa_exponent
     )
@@ -387,13 +393,12 @@ def do_handshake_with_robot(self):  # type: ignore
 
         if self._robot_should_finish_handshake:
             # Then send a CCS record
-            ccs_record = TlsChangeCipherSpecRecord.from_parameters(
-                tls_version=tls_parser.tls_version.TlsVersionEnum[self._ssl_version.name]
-            )
+            tls_parser_tls_version = get_tls_version_for_tls_parser(self._ssl_version)
+            ccs_record = TlsChangeCipherSpecRecord.from_parameters(tls_version=tls_parser_tls_version)
             self._sock.send(ccs_record.to_bytes())
 
             # Lastly send a Finished record
-            finished_record_bytes = _RobotTlsRecordPayloads.get_finished_record_bytes(self._ssl_version)
+            finished_record_bytes = _RobotTlsRecordPayloads.get_finished_record_bytes(tls_parser_tls_version)
             self._sock.send(finished_record_bytes)
 
         # Return whatever the server sent back by raising an exception

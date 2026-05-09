@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 import socket
-from nassl._low_level_errors import OpenSSLError
+from nassl.errors import OpenSSLError
 from nassl.openssl_1_1_1.ssl_client import OpenSslEarlyDataStatusEnum
 from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 

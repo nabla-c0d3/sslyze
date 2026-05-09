@@ -16,6 +16,7 @@ from sslyze.plugins.plugin_base import (
 )
 from typing import List, Optional
 
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 from sslyze.errors import ServerRejectedTlsHandshake
 
@@ -88,7 +89,8 @@ def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
 
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version_to_use,
-        should_use_legacy_openssl=True,  # Only the legacy SSL client has methods to check for compression support
+        # Only the 1.0.2 SSL client has methods to check for compression support
+        openssl_version=OpenSslVersionEnum.OPENSSL_1_0_2,
     )
     if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2):
         raise RuntimeError("Should never happen")

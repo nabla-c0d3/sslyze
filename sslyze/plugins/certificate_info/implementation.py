@@ -3,7 +3,7 @@ from ipaddress import ip_address
 from pathlib import Path
 from typing import Optional, List, Dict, Tuple, Union
 
-from nassl._low_level_errors import OpenSSLError
+from nassl.errors import OpenSSLError
 from nassl.openssl_1_1_1._nassl import OCSP_RESPONSE
 
 from sslyze.errors import TlsHandshakeFailed

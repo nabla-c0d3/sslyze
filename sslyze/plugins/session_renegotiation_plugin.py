@@ -3,12 +3,13 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Tuple
 
-from nassl._low_level_errors import OpenSSLError
+from nassl.errors import OpenSSLError
 from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.errors import ServerRejectedTlsHandshake
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
     ScanCommandExtraArgument,
@@ -145,7 +146,8 @@ def _test_secure_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_Sc
 
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version_to_use,
-        should_use_legacy_openssl=True,  # Only the legacy SSL client has methods to check for secure reneg
+        # Only the legacy 1.0.2 client has methods to check for secure reneg
+        openssl_version=OpenSslVersionEnum.OPENSSL_1_0_2,
     )
     if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2):
         raise RuntimeError("Should never happen")
@@ -183,7 +185,7 @@ def _test_client_renegotiation(
 
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version_to_use,
-        should_use_legacy_openssl=True,  # Only the legacy SSL client has methods to trigger a reneg
+        openssl_version=OpenSslVersionEnum.OPENSSL_1_0_2,
     )
     if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2):
         raise RuntimeError("Should never happen")

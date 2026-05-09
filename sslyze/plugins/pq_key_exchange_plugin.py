@@ -6,6 +6,7 @@ from typing import List, Optional
 from nassl.base_ssl_client import ClientCertificateRequested
 from nassl.openssl_4_0_0.ssl_client import SslClient_OpenSSL_4_0_0
 
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
@@ -145,7 +146,8 @@ class _PqGroupResult:
 def _test_pq_group(server_info: ServerConnectivityInfo, pq_group: PqGroup) -> _PqGroupResult:
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=TlsVersionEnum.TLS_1_3,
-        should_use_openssl_4=True,
+        # Only the 4.0.0 client has support for the PQ groups
+        openssl_version=OpenSslVersionEnum.OPENSSL_4_0_0,
     )
     if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_4_0_0):
         raise RuntimeError(

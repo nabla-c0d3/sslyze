@@ -13,9 +13,7 @@ class WorkaroundForTls12ForCipherSuites:
     @classmethod
     def requires_legacy_openssl(cls, openssl_cipher_name: str) -> bool:
         # Get the list of all ciphers supported by the legacy OpenSSL
-        legacy_client = SslClient_OpenSSL_1_0_2(
-            ssl_version=OpenSslVersionEnum.TLSV1_2, ssl_verify=OpenSslVerifyEnum.NONE
-        )
+        legacy_client = SslClient_OpenSSL_1_0_2(tls_version=TlsVersionEnum.TLS_1_2, ssl_verify=OpenSslVerifyEnum.NONE)
         legacy_client.set_cipher_list("ALL:COMPLEMENTOFALL")
         legacy_ciphers = legacy_client.get_cipher_list()
 

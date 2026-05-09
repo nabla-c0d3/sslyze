@@ -3,11 +3,12 @@ from operator import attrgetter
 from typing import List, Optional, Any
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from nassl._low_level_errors import OpenSSLError
+from nassl.errors import OpenSSLError
 from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
 from nassl.base_ssl_client import ClientCertificateRequested
 from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
@@ -204,12 +205,10 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
 
     tls_version = server_info.tls_probing_result.highest_tls_version_supported
     ssl_connection = server_info.get_preconfigured_tls_connection(
-        override_tls_version=tls_version, should_use_legacy_openssl=False
+        override_tls_version=tls_version, openssl_version=OpenSslVersionEnum.OPENSSL_1_1_1
     )
     if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1):
-        raise RuntimeError(
-            "Should never happen: specified should_use_legacy_openssl=False but didn't get the modern SSL client"
-        )
+        raise RuntimeError("Should never happen")
 
     # Set curve to test whether it is supported by the server
     enable_ecdh_cipher_suites(tls_version, ssl_connection.ssl_client)

@@ -3,7 +3,7 @@ import types
 from dataclasses import dataclass
 from typing import List, Optional
 
-from nassl._low_level_errors import WantReadError
+from nassl.errors import WantReadError
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
@@ -24,6 +24,7 @@ from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeBy
 from tls_parser.parser import TlsRecordParser
 import tls_parser.tls_version
 
+from sslyze.plugins.robot._robot_tester import get_tls_version_for_tls_parser
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
@@ -187,14 +188,13 @@ def _do_handshake_with_ccs_injection(self):  # type: ignore
 
     if did_receive_hello_done:
         # Send an early CCS record - this should be rejected by the server
-        payload = TlsChangeCipherSpecRecord.from_parameters(
-            tls_version=tls_parser.tls_version.TlsVersionEnum[self._ssl_version.name]
-        ).to_bytes()
+        tls_parser_tls_version = get_tls_version_for_tls_parser(self._ssl_version)
+        payload = TlsChangeCipherSpecRecord.from_parameters(tls_version=tls_parser_tls_version).to_bytes()
         self._sock.send(payload)
 
         # Send an early application data record which should be ignored by the server
         app_data_record = TlsApplicationDataRecord.from_parameters(
-            tls_version=tls_parser.tls_version.TlsVersionEnum[self._ssl_version.name], application_data=b"\x00\x00"
+            tls_version=tls_parser_tls_version, application_data=b"\x00\x00"
         )
         self._sock.send(app_data_record.to_bytes())
 

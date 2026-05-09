@@ -6,6 +6,7 @@ from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.plugins.plugin_base import (
     ScanCommandResult,
     ScanCommandImplementation,
@@ -79,8 +80,8 @@ def _test_ems(server_info: ServerConnectivityInfo) -> bool:
         return True
 
     ssl_connection = server_info.get_preconfigured_tls_connection(
-        # Only the modern client has EMS support
-        should_use_legacy_openssl=False,
+        # Only the 1.1.1+ client has EMS support
+        openssl_version=OpenSslVersionEnum.OPENSSL_1_1_1,
     )
     if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1):
         raise RuntimeError("Should never happen")

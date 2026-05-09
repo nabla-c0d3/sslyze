@@ -7,8 +7,7 @@ from urllib.parse import urlsplit
 from pydantic import BaseModel, model_validator
 
 
-# TODO: Fix type annotations in nassl
-from nassl._low_level_errors import SslError
+from nassl.errors import SslError
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmMode
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson

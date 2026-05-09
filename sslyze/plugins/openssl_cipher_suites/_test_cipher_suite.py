@@ -6,6 +6,7 @@ from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 from nassl.base_ssl_client import ClientCertificateRequested, BaseSslClient
 from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.errors import (
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
@@ -37,15 +38,18 @@ def connect_with_cipher_suite(
     server_connectivity_info: ServerConnectivityInfo, tls_version: TlsVersionEnum, cipher_suite: CipherSuite
 ) -> Union[CipherSuiteAcceptedByServer, CipherSuiteRejectedByServer]:
     """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified."""
-    requires_legacy_openssl = True
+    openssl_version = OpenSslVersionEnum.OPENSSL_1_0_2
     if tls_version == TlsVersionEnum.TLS_1_2:
         # For TLS 1.2, we need to pick the right version of OpenSSL depending on which cipher suite
         requires_legacy_openssl = WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_suite.openssl_name)
+        openssl_version = (
+            OpenSslVersionEnum.OPENSSL_1_0_2 if requires_legacy_openssl else OpenSslVersionEnum.OPENSSL_1_1_1
+        )
     elif tls_version == TlsVersionEnum.TLS_1_3:
-        requires_legacy_openssl = False
+        openssl_version = OpenSslVersionEnum.OPENSSL_1_1_1
 
     ssl_connection = server_connectivity_info.get_preconfigured_tls_connection(
-        override_tls_version=tls_version, should_use_legacy_openssl=requires_legacy_openssl
+        override_tls_version=tls_version, openssl_version=openssl_version
     )
     _set_cipher_suite_string(tls_version, cipher_suite.openssl_name, ssl_connection.ssl_client)
 

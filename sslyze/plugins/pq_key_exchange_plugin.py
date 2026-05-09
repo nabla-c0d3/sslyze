@@ -1,11 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
-from operator import attrgetter
-from typing import List, Optional, Any
+from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, model_validator
 
-from nassl._low_level_errors import OpenSSLError
 from nassl.base_ssl_client import ClientCertificateRequested
 from nassl.openssl_4_0_0.ssl_client import SslClient_OpenSSL_4_0_0
 
@@ -37,7 +34,7 @@ class PqKeyExchangeScanResult(ScanCommandResult):
     """The result of testing a server for Post-Quantum/Hybrid key exchange group support in TLS 1.3.
 
     Attributes:
-        supported_pq_groups: The list of ML-KEM hybrid groups accepted by the server, or None if the  
+        supported_pq_groups: The list of ML-KEM hybrid groups accepted by the server, or None if the
                 server does not support TLS 1.3 (PQ groups require TLS 1.3). An empty list means TLS 1.3 is supported but no PQ hybrid groups were accepted.
         supports_pq_key_exchange: True if the server accepted at least one PQ/hybrid group.
     """
@@ -175,5 +172,5 @@ def _test_pq_group(server_info: ServerConnectivityInfo, pq_group: PqGroup) -> _P
         raise RuntimeError(
             f"Should never happen: negotiated group should be {pq_group.value} but got {negotiated_group}"
         )
-    
+
     return _PqGroupResult(group=pq_group, was_accepted_by_server=negotiated_group is not None)

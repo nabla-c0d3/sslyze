@@ -73,6 +73,7 @@ from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.early_data_plugin import EarlyDataScanResult
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanResult
 from sslyze.plugins.heartbleed_plugin import HeartbleedScanResult
+from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeScanResult
 
 # HTTP Headers
 from sslyze.plugins.http_headers_plugin import (

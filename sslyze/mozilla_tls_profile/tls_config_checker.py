@@ -119,6 +119,7 @@ SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: Set[ScanCommand] = {
     ScanCommand.SESSION_RENEGOTIATION,
     ScanCommand.CERTIFICATE_INFO,
     ScanCommand.ELLIPTIC_CURVES,
+    ScanCommand.PQ_KEY_EXCHANGE,  # Not really needed atm, but we should run this by default
     ScanCommand.TLS_EXTENDED_MASTER_SECRET,
     # ScanCommand.HTTP_HEADERS,  # Disabled for now; see below
 }

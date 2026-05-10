@@ -15,15 +15,9 @@ def test(ctx: Context) -> None:
 
 @task
 def lint(ctx: Context) -> None:
-    ctx.run("ruff format . --check")
-    ctx.run("ruff check .")
-    ctx.run("mypy .")
-
-
-@task
-def autoformat(ctx: Context) -> None:
     ctx.run("ruff format .")
     ctx.run("ruff check . --fix")
+    ctx.run("mypy .")
 
 
 @task

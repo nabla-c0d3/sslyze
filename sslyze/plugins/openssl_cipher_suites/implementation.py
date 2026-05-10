@@ -9,7 +9,7 @@ from sslyze.plugins.openssl_cipher_suites._test_cipher_suite import (
     CipherSuiteRejectedByServer,
     CipherSuiteAcceptedByServer,
 )
-from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuitesRepository
+from sslyze.plugins.openssl_cipher_suites.cipher_suites import retrieve_all_available_cipher_suites
 from sslyze.plugins.plugin_base import (
     ScanCommandImplementation,
     ScanCommandResult,
@@ -92,7 +92,7 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         # Run one job per cipher suite to test for
-        all_cipher_suites_to_test = CipherSuitesRepository.get_all_cipher_suites(cls._tls_version)
+        all_cipher_suites_to_test = retrieve_all_available_cipher_suites(cls._tls_version)
         scan_jobs = [
             ScanJob(
                 function_to_call=connect_with_cipher_suite,
@@ -106,7 +106,7 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
     def result_for_completed_scan_jobs(
         cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
     ) -> CipherSuitesScanResult:
-        expected_scan_jobs_count = len(CipherSuitesRepository.get_all_cipher_suites(cls._tls_version))
+        expected_scan_jobs_count = len(retrieve_all_available_cipher_suites(cls._tls_version))
         if len(scan_job_results) != expected_scan_jobs_count:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 

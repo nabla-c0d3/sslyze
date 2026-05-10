@@ -128,6 +128,8 @@ class TestCipherSuitesPluginWithOnlineServer:
             "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
             "TLS_RSA_WITH_AES_128_CBC_SHA",
             "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
         }
         assert expected_ciphers == {
             accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
@@ -176,6 +178,8 @@ class TestCipherSuitesPluginWithOnlineServer:
             "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
             "TLS_RSA_WITH_AES_128_CBC_SHA",
             "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
         }
         assert expected_ciphers == {
             accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
@@ -211,6 +215,10 @@ class TestCipherSuitesPluginWithOnlineServer:
             "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
             "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
             "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
         }
         assert expected_ciphers == {
             accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites

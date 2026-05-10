@@ -1,9 +1,6 @@
 from typing import Dict
 
 
-from nassl.base_ssl_client import TlsVersionEnum
-
-
 # Cipher suite name mappings so we can return the RFC names, instead of the OpenSSL names
 # Based on https://testssl.sh/openssl-rfc.mappping.html
 SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING = {
@@ -17,6 +14,8 @@ SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING = {
     "RC4-64-MD5": "SSL_CK_RC4_64_WITH_MD5",
     "NULL-MD5": "TLS_RSA_WITH_NULL_MD5",
 }
+
+SSLV2_RFC_TO_OPENSSL_NAMES_MAPPING = {v: k for k, v in SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING.items()}
 
 TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
     "NULL-MD5": "TLS_RSA_WITH_NULL_MD5",
@@ -298,13 +297,7 @@ TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
 }
 
 
-OPENSSL_TO_RFC_NAMES_MAPPING: Dict[TlsVersionEnum, Dict[str, str]] = {
-    TlsVersionEnum.SSL_2_0: SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING,
-    TlsVersionEnum.SSL_3_0: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    TlsVersionEnum.TLS_1_0: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    TlsVersionEnum.TLS_1_1: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-    TlsVersionEnum.TLS_1_2: TLS_OPENSSL_TO_RFC_NAMES_MAPPING,
-}
+TLS_RFC_TO_OPENSSL_NAMES_MAPPING = {v: k for k, v in TLS_OPENSSL_TO_RFC_NAMES_MAPPING.items()}
 
 
 RFC_NAME_TO_KEY_SIZE_MAPPING: Dict[str, int] = {

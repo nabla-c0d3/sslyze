@@ -117,28 +117,53 @@ class _XmppHelper(_OpportunisticTlsHelper):
         self._xmpp_to = xmpp_to
 
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
-        # Open an XMPP stream
-        sock.send(self.XMPP_OPEN_STREAM.format(xmpp_to=self._xmpp_to).encode("utf-8"))
+        smtp = SMTP(local_hostname=self._smtp_ehlo_hostname)
+        smtp.sock = sock
 
-        # Get the server's features and check for an error
-        server_resp = sock.recv(4096)
-        if b"<stream:error>" in server_resp:
-            raise OpportunisticTlsError("Error opening XMPP stream, try --xmpp_to")
-        elif b"</stream:features>" not in server_resp:
-            # Get all the server features before initiating startTLS
-            sock.recv(4096)
+        try:
+            try:
+                code, server_reply_as_bytes = smtp.getreply()
+            except SMTPException as exc:
+                raise OpportunisticTlsError(
+                    f"Unexpected error while performing the SMTP EHLO handshakE: {str(exc)}"
+                )
 
-        # Send a STARTTLS message
-        sock.send(self.XMPP_STARTTLS)
-        xmpp_resp = sock.recv(2048)
+            if code != 220:
+                server_reply_as_str = server_reply_as_bytes.decode()
+                raise OpportunisticTlsError(
+                    f"Server did not send a '220 service ready' SMTP message: {server_reply_as_str}"
+                )
 
-        if b"host-unknown" in xmpp_resp:
-            raise OpportunisticTlsError("Error opening XMPP stream: server returned host-unknown error, try --xmpp_to")
+            try:
+                code, server_reply_as_bytes = smtp.ehlo()
+            except SMTPException as exc:
+                raise OpportunisticTlsError(
+                    f"Unexpected error while performing the SMTP EHLO handshake: {str(exc)}"
+                )
 
-        if b"proceed" not in xmpp_resp:
-            raise OpportunisticTlsError("XMPP STARTTLS not supported")
+            if code != 250:
+                server_reply_as_str = server_reply_as_bytes.decode()
+                raise OpportunisticTlsError(f"SMTP EHLO was rejected: {server_reply_as_str}")
 
+            if not smtp.has_extn("starttls"):
+                raise OpportunisticTlsError("Server does not support STARTTLS with SMTP")
 
+            try:
+                code, server_reply_as_bytes = smtp.docmd("STARTTLS")
+            except SMTPException as exc:
+                raise OpportunisticTlsError(
+                    f"Unexpected error while performing the SMTP EHLO handshake: {str(exc)}"
+                )
+
+            if code != 220:
+                server_reply_as_str = server_reply_as_bytes.decode()
+                raise OpportunisticTlsError(f"SMTP STARTTLS rejected: {server_reply_as_str}")
+        except Exception:
+            try:
+                sock.send(b"QUIT\r\n")
+            except OSError:
+                pass
+            raise
 class _XmppServerHelper(_XmppHelper):
     XMPP_OPEN_STREAM = (
         "<stream:stream xmlns='jabber:server' xmlns:stream='http://etherx.jabber.org/streams' "

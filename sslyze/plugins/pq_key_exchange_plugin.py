@@ -37,20 +37,26 @@ class PqKeyExchangeScanResult(ScanCommandResult):
     Attributes:
         supported_pq_groups: The list of ML-KEM hybrid groups accepted by the server, or None if the
                 server does not support TLS 1.3 (PQ groups require TLS 1.3). An empty list means TLS 1.3 is supported but no PQ hybrid groups were accepted.
+        rejected_pq_groups: The list of ML-KEM hybrid groups rejected by the server, or None if the
+                server does not support TLS 1.3 (PQ groups require TLS 1.3).
         supports_pq_key_exchange: True if the server accepted at least one PQ/hybrid group.
     """
 
     supported_pq_groups: Optional[List[str]]
+    rejected_pq_groups: Optional[List[str]]
     supports_pq_key_exchange: bool
 
     def __post_init__(self) -> None:
         # Sort the groups by name
         if self.supported_pq_groups:
             self.supported_pq_groups.sort()
+        if self.rejected_pq_groups:
+            self.rejected_pq_groups.sort()
 
 
 class PqKeyExchangeScanResultAsJson(BaseModelWithOrmModeAndForbid):
     supported_pq_groups: Optional[List[str]]
+    rejected_pq_groups: Optional[List[str]]
     supports_pq_key_exchange: bool
 
 
@@ -72,17 +78,24 @@ class _PqKeyExchangeCliConnector(ScanCommandCliConnector[PqKeyExchangeScanResult
 
         if result.supported_pq_groups is None:
             result_as_txt.append(
-                cls._format_subtitle("TLS 1.3 is not supported; PQ key exchange testing requires TLS 1.3.")
-            )
-        elif result.supports_pq_key_exchange:
-            result_as_txt.append(cls._format_field("Supported PQ groups:", ", ".join(result.supported_pq_groups)))
-        else:
-            result_as_txt.append(
                 cls._format_subtitle(
-                    "VULNERABLE - Server does not support any PQ/hybrid key exchange groups."
-                    " It is not protected against 'harvest now, decrypt later' attacks."
+                    "VULNERABLE - TLS 1.3 is not supported; PQ key exchange support is only available in TLS 1.3."
                 )
             )
+        else:
+            if result.supports_pq_key_exchange:
+                result_as_txt.append(cls._format_field("Supported PQ groups:", ", ".join(result.supported_pq_groups)))
+            else:
+                result_as_txt.append(
+                    cls._format_subtitle(
+                        "VULNERABLE - Server does not support any PQ/hybrid key exchange groups."
+                        " It is not protected against 'harvest now, decrypt later' attacks."
+                    )
+                )
+
+            assert result.rejected_pq_groups
+            result_as_txt.append(cls._format_field("Rejected PQ groups:", ", ".join(result.rejected_pq_groups)))
+
         return result_as_txt
 
 
@@ -118,14 +131,17 @@ class PqKeyExchangeImplementation(ScanCommandImplementation[PqKeyExchangeScanRes
             except _Tls13NotSupported:
                 return PqKeyExchangeScanResult(
                     supported_pq_groups=None,
+                    rejected_pq_groups=None,
                     supports_pq_key_exchange=False,
                 )
 
         all_results = [job.get_result() for job in scan_job_results]
-        supported = [r.group.value for r in all_results if r.was_accepted_by_server]
+        supported_groups = [r.group.value for r in all_results if r.was_accepted_by_server]
+        rejected_groups = [r.group.value for r in all_results if not r.was_accepted_by_server]
         return PqKeyExchangeScanResult(
-            supported_pq_groups=supported,
-            supports_pq_key_exchange=bool(supported),
+            supported_pq_groups=supported_groups,
+            rejected_pq_groups=rejected_groups,
+            supports_pq_key_exchange=bool(supported_groups),
         )
 
 

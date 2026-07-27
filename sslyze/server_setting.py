@@ -125,6 +125,7 @@ def _do_dns_lookup(hostname: str, port: int) -> str:
         if family == socket.AF_INET:
             tentative_ip_addr = sockaddr[0]
 
+    assert isinstance(tentative_ip_addr, str), "Should never happen"
     return tentative_ip_addr
 
 

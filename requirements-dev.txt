@@ -1,4 +1,4 @@
-mypy==1.14
+mypy==2.3
 ruff==0.16.0
 invoke>=2,<3
 pytest>=8,<9

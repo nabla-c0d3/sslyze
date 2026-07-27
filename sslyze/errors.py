@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
+    from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 
 
 class InvalidServerNetworkConfigurationError(Exception):
@@ -80,5 +80,3 @@ class TlsHandshakeTimedOut(TlsHandshakeFailed):
 
     See https://github.com/nabla-c0d3/sslyze/issues/445 for more details.
     """
-
-    pass

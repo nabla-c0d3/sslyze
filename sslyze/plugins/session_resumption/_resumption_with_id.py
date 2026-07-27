@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional, Tuple
 
 from nassl.openssl_1_1_1._nassl import SSL_SESSION
 
@@ -32,12 +31,10 @@ class _ScanJobResultEnum(Enum):
 class ServerOnlySupportsTls13(Exception):
     """If the server only supports TLS 1.3 or higher, it does not support session resumption with IDs or tickets."""
 
-    pass
-
 
 def retrieve_tls_session(
     server_info: ServerConnectivityInfo,
-    session_to_resume: Optional[SSL_SESSION] = None,
+    session_to_resume: SSL_SESSION | None = None,
     should_enable_tls_ticket: bool = False,
 ) -> SSL_SESSION:
     """Connect to the server and returns the session object that was assigned for that connection.
@@ -87,7 +84,7 @@ def _extract_session_id(ssl_session: SSL_SESSION) -> str:
     return session_id
 
 
-def resume_with_session_id(server_info: ServerConnectivityInfo) -> Tuple[_ScanJobResultEnum, bool]:
+def resume_with_session_id(server_info: ServerConnectivityInfo) -> tuple[_ScanJobResultEnum, bool]:
     """Perform one session resumption using Session IDs."""
     # Create a new TLS session with the server
     session1 = retrieve_tls_session(server_info)

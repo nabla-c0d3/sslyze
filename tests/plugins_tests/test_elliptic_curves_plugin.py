@@ -1,7 +1,7 @@
 from sslyze import ServerNetworkLocation
 from sslyze.plugins.elliptic_curves_plugin import (
-    SupportedEllipticCurvesScanResult,
     SupportedEllipticCurvesImplementation,
+    SupportedEllipticCurvesScanResult,
     SupportedEllipticCurvesScanResultAsJson,
 )
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info

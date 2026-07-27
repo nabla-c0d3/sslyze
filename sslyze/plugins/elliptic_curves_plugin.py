@@ -1,27 +1,26 @@
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from operator import attrgetter
-from typing import List, Optional, Any
+from typing import Any
+
+from nassl.base_ssl_client import ClientCertificateRequested
+from nassl.ephemeral_key_info import _OPENSSL_NID_TO_SECG_ANSI_X9_62, EcDhEphemeralKeyInfo, OpenSslEcNidEnum
+from nassl.errors import OpenSSLError
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from nassl.errors import OpenSSLError
-from nassl.ephemeral_key_info import OpenSslEcNidEnum, EcDhEphemeralKeyInfo, _OPENSSL_NID_TO_SECG_ANSI_X9_62
-from nassl.base_ssl_client import ClientCertificateRequested
-from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
-
 from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
-from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
-from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
     ScanCommandCliConnector,
-    ScanCommandImplementation,
     ScanCommandExtraArgument,
-    ScanJob,
+    ScanCommandImplementation,
+    ScanCommandResult,
     ScanCommandWrongUsageError,
+    ScanJob,
     ScanJobResult,
 )
-from sslyze.server_connectivity import enable_ecdh_cipher_suites
+from sslyze.server_connectivity import ServerConnectivityInfo, enable_ecdh_cipher_suites
 
 
 @dataclass(frozen=True)
@@ -50,8 +49,8 @@ class SupportedEllipticCurvesScanResult(ScanCommandResult):
     """
 
     supports_ecdh_key_exchange: bool
-    supported_curves: Optional[List[EllipticCurve]]
-    rejected_curves: Optional[List[EllipticCurve]]
+    supported_curves: list[EllipticCurve] | None
+    rejected_curves: list[EllipticCurve] | None
 
     def __post_init__(self) -> None:
         # Sort the curves by name
@@ -74,8 +73,8 @@ class SupportedEllipticCurvesScanResultAsJson(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     supports_ecdh_key_exchange: bool
-    supported_curves: Optional[List[_EllipticCurveAsJson]]
-    rejected_curves: Optional[List[_EllipticCurveAsJson]]
+    supported_curves: list[_EllipticCurveAsJson] | None
+    rejected_curves: list[_EllipticCurveAsJson] | None
 
     @model_validator(mode="before")
     @classmethod
@@ -84,19 +83,19 @@ class SupportedEllipticCurvesScanResultAsJson(BaseModel):
             return data
 
         result: SupportedEllipticCurvesScanResult = data
-        supported_curves: Optional[List[_EllipticCurveAsJson]] = None
+        supported_curves: list[_EllipticCurveAsJson] | None = None
         if result.supported_curves:
             supported_curves = [_EllipticCurveAsJson(**asdict(curve)) for curve in result.supported_curves]
 
-        rejected_curves: Optional[List[_EllipticCurveAsJson]] = None
+        rejected_curves: list[_EllipticCurveAsJson] | None = None
         if result.rejected_curves:
             rejected_curves = [_EllipticCurveAsJson(**asdict(curve)) for curve in result.rejected_curves]
 
-        return dict(
-            supports_ecdh_key_exchange=result.supports_ecdh_key_exchange,
-            supported_curves=supported_curves,
-            rejected_curves=rejected_curves,
-        )
+        return {
+            "supports_ecdh_key_exchange": result.supports_ecdh_key_exchange,
+            "supported_curves": supported_curves,
+            "rejected_curves": rejected_curves,
+        }
 
 
 assert SupportedEllipticCurvesScanResult.__doc__
@@ -104,7 +103,7 @@ SupportedEllipticCurvesScanResultAsJson.__doc__ = SupportedEllipticCurvesScanRes
 
 
 class SupportedEllipticCurvesScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[SupportedEllipticCurvesScanResultAsJson]
+    result: SupportedEllipticCurvesScanResultAsJson | None
 
 
 class _SupportedEllipticCurvesCliConnector(ScanCommandCliConnector[SupportedEllipticCurvesScanResult, None]):
@@ -112,7 +111,7 @@ class _SupportedEllipticCurvesCliConnector(ScanCommandCliConnector[SupportedElli
     _cli_description = "Test a server for supported elliptic curves."
 
     @classmethod
-    def result_to_console_output(cls, result: SupportedEllipticCurvesScanResult) -> List[str]:
+    def result_to_console_output(cls, result: SupportedEllipticCurvesScanResult) -> list[str]:
         result_as_txt = [cls._format_title("Elliptic Curve Key Exchange")]
 
         if not result.supports_ecdh_key_exchange:
@@ -132,6 +131,7 @@ class _SupportedEllipticCurvesCliConnector(ScanCommandCliConnector[SupportedElli
         return result_as_txt
 
 
+# TODO: Test if OpenSSL 4.0 has new curves
 class SupportedEllipticCurvesImplementation(ScanCommandImplementation[SupportedEllipticCurvesScanResult, None]):
     """Test a server for supported elliptic curves."""
 
@@ -139,8 +139,8 @@ class SupportedEllipticCurvesImplementation(ScanCommandImplementation[SupportedE
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
@@ -157,7 +157,7 @@ class SupportedEllipticCurvesImplementation(ScanCommandImplementation[SupportedE
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> SupportedEllipticCurvesScanResult:
         if len(scan_job_results) < 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
@@ -207,8 +207,7 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version, openssl_version=OpenSslVersionEnum.OPENSSL_1_1_1
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1):
-        raise RuntimeError("Should never happen")
+    assert isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1), "Should never happen"
 
     # Set curve to test whether it is supported by the server
     enable_ecdh_cipher_suites(tls_version, ssl_connection.ssl_client)
@@ -231,10 +230,7 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
         if "ossl_statem_client_read_transition:unexpected message" in e.args[0]:
             # Related to https://github.com/nabla-c0d3/sslyze/issues/466
             negotiated_ephemeral_key = None
-        elif "tls_process_ske_ecdhe:wrong curve" in e.args[0]:
-            # https://github.com/nabla-c0d3/sslyze/issues/490
-            negotiated_ephemeral_key = None
-        elif "sslv3 alert unexpected message" in e.args[0]:
+        elif "tls_process_ske_ecdhe:wrong curve" in e.args[0] or "sslv3 alert unexpected message" in e.args[0]:
             # https://github.com/nabla-c0d3/sslyze/issues/490
             negotiated_ephemeral_key = None
         elif "wrong curve" in e.args[0]:
@@ -252,15 +248,12 @@ def _test_curve(server_info: ServerConnectivityInfo, curve_nid: OpenSslEcNidEnum
         except KeyError:
             curve_name = f"unknown-curve-with-openssl-id-{curve_nid.value}"
 
-    if negotiated_ephemeral_key:
-        if isinstance(negotiated_ephemeral_key, EcDhEphemeralKeyInfo):
-            if negotiated_ephemeral_key.curve != curve_nid:
-                raise RuntimeError("Should never happen")
-
-            return _EllipticCurveResult(
-                curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value),
-                was_accepted_by_server=True,
-            )
+    if negotiated_ephemeral_key and isinstance(negotiated_ephemeral_key, EcDhEphemeralKeyInfo):
+        assert negotiated_ephemeral_key.curve == curve_nid, "Should never happen"
+        return _EllipticCurveResult(
+            curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value),
+            was_accepted_by_server=True,
+        )
 
     return _EllipticCurveResult(
         curve=EllipticCurve(name=curve_name, openssl_nid=curve_nid.value),

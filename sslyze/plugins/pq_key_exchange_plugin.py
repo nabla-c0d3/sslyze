@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
-
 
 from nassl.base_ssl_client import ClientCertificateRequested
 from nassl.openssl_4_0_0.ssl_client import SslClient_OpenSSL_4_0_0
@@ -11,12 +9,12 @@ from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
     ScanCommandCliConnector,
-    ScanCommandImplementation,
     ScanCommandExtraArgument,
-    ScanJob,
+    ScanCommandImplementation,
+    ScanCommandResult,
     ScanCommandWrongUsageError,
+    ScanJob,
     ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
@@ -42,8 +40,8 @@ class PqKeyExchangeScanResult(ScanCommandResult):
         supports_pq_key_exchange: True if the server accepted at least one PQ/hybrid group.
     """
 
-    supported_pq_groups: Optional[List[str]]
-    rejected_pq_groups: Optional[List[str]]
+    supported_pq_groups: list[str] | None
+    rejected_pq_groups: list[str] | None
     supports_pq_key_exchange: bool
 
     def __post_init__(self) -> None:
@@ -55,8 +53,8 @@ class PqKeyExchangeScanResult(ScanCommandResult):
 
 
 class PqKeyExchangeScanResultAsJson(BaseModelWithOrmModeAndForbid):
-    supported_pq_groups: Optional[List[str]]
-    rejected_pq_groups: Optional[List[str]]
+    supported_pq_groups: list[str] | None
+    rejected_pq_groups: list[str] | None
     supports_pq_key_exchange: bool
 
 
@@ -65,7 +63,7 @@ PqKeyExchangeScanResultAsJson.__doc__ = PqKeyExchangeScanResult.__doc__
 
 
 class PqKeyExchangeScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[PqKeyExchangeScanResultAsJson]
+    result: PqKeyExchangeScanResultAsJson | None
 
 
 class _PqKeyExchangeCliConnector(ScanCommandCliConnector[PqKeyExchangeScanResult, None]):
@@ -73,7 +71,7 @@ class _PqKeyExchangeCliConnector(ScanCommandCliConnector[PqKeyExchangeScanResult
     _cli_description = "Test a server for Post-Quantum/Hybrid key exchange group support (requires TLS 1.3)."
 
     @classmethod
-    def result_to_console_output(cls, result: PqKeyExchangeScanResult) -> List[str]:
+    def result_to_console_output(cls, result: PqKeyExchangeScanResult) -> list[str]:
         result_as_txt = [cls._format_title("Post-Quantum Key Exchange (ML-KEM Hybrid Groups)")]
 
         if result.supported_pq_groups is None:
@@ -106,8 +104,8 @@ class PqKeyExchangeImplementation(ScanCommandImplementation[PqKeyExchangeScanRes
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
@@ -119,7 +117,7 @@ class PqKeyExchangeImplementation(ScanCommandImplementation[PqKeyExchangeScanRes
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> PqKeyExchangeScanResult:
         if len(scan_job_results) < 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
@@ -165,14 +163,11 @@ def _test_pq_group(server_info: ServerConnectivityInfo, pq_group: PqGroup) -> _P
         # Only the 4.0.0 client has support for the PQ groups
         openssl_version=OpenSslVersionEnum.OPENSSL_4_0_0,
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_4_0_0):
-        raise RuntimeError(
-            "Should never happen: specified should_use_openssl_4=True but didn't get SslClient_OpenSSL_4_0_0"
-        )
+    assert isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_4_0_0), "Should never happen"
 
     ssl_connection.ssl_client.set_groups_list(pq_group.value)
 
-    negotiated_group: Optional[str] = None
+    negotiated_group: str | None = None
     try:
         ssl_connection.connect()
         negotiated_group = ssl_connection.ssl_client.get_group_name()

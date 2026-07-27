@@ -2,32 +2,31 @@ import socket
 import time
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
+from nassl.base_ssl_client import BaseSslClient, ClientCertificateRequested, OpenSslVerifyEnum, TlsVersionEnum
 from nassl.errors import OpenSSLError
-from nassl.base_ssl_client import BaseSslClient, TlsVersionEnum, OpenSslVerifyEnum, ClientCertificateRequested
 from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 from nassl.openssl_4_0_0.ssl_client import SslClient_OpenSSL_4_0_0
 
 from sslyze.connection_helpers.http_response_parser import HttpResponseParser
-from sslyze.connection_helpers.opportunistic_tls_helpers import get_opportunistic_tls_helper, OpportunisticTlsError
+from sslyze.connection_helpers.opportunistic_tls_helpers import OpportunisticTlsError, get_opportunistic_tls_helper
 from sslyze.errors import (
-    ConnectionToServerTimedOut,
-    ServerRejectedConnection,
-    ConnectionToServerFailed,
-    ConnectionToHttpProxyTimedOut,
-    HttpProxyRejectedConnection,
     ConnectionToHttpProxyFailed,
+    ConnectionToHttpProxyTimedOut,
+    ConnectionToServerFailed,
+    ConnectionToServerTimedOut,
+    HttpProxyRejectedConnection,
+    ServerRejectedConnection,
     ServerRejectedOpportunisticTlsNegotiation,
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
     TlsHandshakeTimedOut,
 )
 from sslyze.server_setting import (
-    ServerNetworkLocation,
-    ServerNetworkConfiguration,
     ConnectionTypeEnum,
+    ServerNetworkConfiguration,
+    ServerNetworkLocation,
 )
 
 
@@ -70,20 +69,20 @@ def _open_socket_for_connection_via_http_proxy(
         # Send a CONNECT request with the host we want to tunnel to
         proxy_authorization_header = server_location.http_proxy_settings.proxy_authorization_header
         if proxy_authorization_header is None:
-            sock.send(f"CONNECT {server_location.hostname}:{server_location.port} HTTP/1.1\r\n\r\n".encode("utf-8"))
+            sock.send(f"CONNECT {server_location.hostname}:{server_location.port} HTTP/1.1\r\n\r\n".encode())
         else:
             sock.send(
                 (
                     f"CONNECT {server_location.hostname}:{server_location.port} HTTP/1.1\r\n"
                     f"Proxy-Authorization: Basic {proxy_authorization_header}\r\n\r\n"
-                ).encode("utf-8")
+                ).encode()
             )
         http_response = HttpResponseParser.parse_from_socket(sock)
-    except socket.timeout:
+    except TimeoutError:
         raise _ConnectionToHttpProxyTimedOut()
     except ConnectionError:
         raise _HttpProxyRejectedConnection("The HTTP proxy rejected the connection")
-    except socket.error:
+    except OSError:
         raise _ConnectionToHttpProxyFailed()
 
     # Check if the proxy was able to connect to the host
@@ -152,8 +151,8 @@ class SslConnection:
         network_configuration: ServerNetworkConfiguration,
         tls_version: TlsVersionEnum,
         should_ignore_client_auth: bool,
-        openssl_version: Optional[OpenSslVersionEnum] = None,
-        ca_certificates_path: Optional[Path] = None,
+        openssl_version: OpenSslVersionEnum | None = None,
+        ca_certificates_path: Path | None = None,
         should_enable_server_name_indication: bool = True,
     ) -> None:
         self._server_location = server_location
@@ -271,7 +270,7 @@ class SslConnection:
             time.sleep(delay_for_next_attempt)
             try:
                 self._do_pre_handshake()
-            except socket.timeout:
+            except TimeoutError:
                 # Attempt to retry connection if a network error occurred during connection or the handshake
                 connection_attempts_nb += 1
                 if connection_attempts_nb >= max_attempts_nb:
@@ -313,7 +312,7 @@ class SslConnection:
         except ClientCertificateRequested:
             # Server expected a client certificate and we didn't provide one
             raise
-        except socket.timeout:
+        except TimeoutError:
             # Network timeout, propagate the error
             raise TlsHandshakeTimedOut(
                 server_location=self._server_location,
@@ -355,12 +354,12 @@ class SslConnection:
                     f"Set a cipher that is not supported by nassl: {self.ssl_client.get_cipher_list()}"
                 )
 
-            for error_msg in _HANDSHAKE_REJECTED_TLS_ERRORS.keys():
-                if error_msg in openssl_error_message:
+            for openssl_error, sslyze_error_msg in _HANDSHAKE_REJECTED_TLS_ERRORS.items():
+                if openssl_error in openssl_error_message:
                     raise ServerRejectedTlsHandshake(
                         server_location=self._server_location,
                         network_configuration=self._network_configuration,
-                        error_message=_HANDSHAKE_REJECTED_TLS_ERRORS[error_msg],
+                        error_message=sslyze_error_msg,
                     )
 
             # Unknown SSL error if we get there

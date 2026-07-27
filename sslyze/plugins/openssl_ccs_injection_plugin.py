@@ -1,29 +1,26 @@
-import socket
 import types
 from dataclasses import dataclass
-from typing import List, Optional
 
+import tls_parser.tls_version
 from nassl.errors import WantReadError
-
-from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
-from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
-from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
-    ScanCommandImplementation,
-    ScanCommandExtraArgument,
-    ScanJob,
-    ScanCommandWrongUsageError,
-    ScanCommandCliConnector,
-    ScanJobResult,
-)
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.application_data_protocol import TlsApplicationDataRecord
 from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
 from tls_parser.exceptions import NotEnoughData, UnknownTlsVersionByte
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte
 from tls_parser.parser import TlsRecordParser
-import tls_parser.tls_version
 
+from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.plugins.plugin_base import (
+    ScanCommandCliConnector,
+    ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanCommandWrongUsageError,
+    ScanJob,
+    ScanJobResult,
+)
 from sslyze.plugins.robot._robot_tester import get_tls_version_for_tls_parser
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
@@ -44,7 +41,7 @@ class OpenSslCcsInjectionScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class OpenSslCcsInjectionScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[OpenSslCcsInjectionScanResultAsJson]
+    result: OpenSslCcsInjectionScanResultAsJson | None
 
 
 class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector[OpenSslCcsInjectionScanResult, None]):
@@ -52,7 +49,7 @@ class _OpenSslCcsInjectionCliConnector(ScanCommandCliConnector[OpenSslCcsInjecti
     _cli_description = "Test a server for the OpenSSL CCS Injection vulnerability (CVE-2014-0224)."
 
     @classmethod
-    def result_to_console_output(cls, result: OpenSslCcsInjectionScanResult) -> List[str]:
+    def result_to_console_output(cls, result: OpenSslCcsInjectionScanResult) -> list[str]:
         result_txt = [cls._format_title("OpenSSL CCS Injection")]
         ccs_text = (
             "VULNERABLE - Server is vulnerable to OpenSSL CCS injection"
@@ -70,8 +67,8 @@ class OpenSslCcsInjectionImplementation(ScanCommandImplementation[OpenSslCcsInje
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
@@ -79,7 +76,7 @@ class OpenSslCcsInjectionImplementation(ScanCommandImplementation[OpenSslCcsInje
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> OpenSslCcsInjectionScanResult:
         if len(scan_job_results) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
@@ -184,7 +181,7 @@ def _do_handshake_with_ccs_injection(self):  # type: ignore
             # Server returned a TLS alert
             break
         else:
-            raise ValueError("Unknown record? Type {}".format(tls_record.header.type))
+            raise TypeError(f"Unknown record? Type {tls_record.header.type}")
 
     if did_receive_hello_done:
         # Send an early CCS record - this should be rejected by the server
@@ -210,7 +207,7 @@ def _do_handshake_with_ccs_injection(self):  # type: ignore
                     if not raw_ssl_bytes:
                         # No data?
                         raise _NotVulnerableToCcsInjection()
-                except socket.error:
+                except OSError:
                     # Server closed the connection after receiving the CCS payload
                     raise _NotVulnerableToCcsInjection()
 

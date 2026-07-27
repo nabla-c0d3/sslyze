@@ -5,7 +5,7 @@ from sslyze.plugins.openssl_ccs_injection_plugin import (
 from sslyze.server_setting import ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer
 
 
 class TestOpenSslCcsInjectionPlugin:

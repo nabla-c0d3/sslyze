@@ -1,32 +1,29 @@
-from dataclasses import dataclass, fields, field
+from dataclasses import dataclass, field, fields
 from enum import Enum
 from traceback import TracebackException
-from typing import Set, Optional, Type
 from uuid import UUID, uuid4
 
 from sslyze import ServerNetworkConfiguration
-from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanResult
-from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeScanResult
-
-
-from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult, CertificateInfoExtraArgument
+from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument, CertificateInfoScanResult
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.early_data_plugin import EarlyDataScanResult
+from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanResult
 from sslyze.plugins.ems_extension_plugin import EmsExtensionScanResult
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanResult
 from sslyze.plugins.heartbleed_plugin import HeartbleedScanResult
 from sslyze.plugins.http_headers_plugin import HttpHeadersScanResult
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanResult
 from sslyze.plugins.openssl_cipher_suites.implementation import CipherSuitesScanResult
+from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeScanResult
 from sslyze.plugins.robot.implementation import RobotScanResult
 from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
 from sslyze.plugins.session_renegotiation_plugin import (
-    SessionRenegotiationScanResult,
     SessionRenegotiationExtraArgument,
+    SessionRenegotiationScanResult,
 )
 from sslyze.plugins.session_resumption.implementation import (
-    SessionResumptionSupportScanResult,
     SessionResumptionSupportExtraArgument,
+    SessionResumptionSupportScanResult,
 )
 from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
 from sslyze.server_connectivity import ServerTlsProbingResult
@@ -36,9 +33,9 @@ from sslyze.server_setting import ServerNetworkLocation
 @dataclass(frozen=True)
 class ScanCommandsExtraArguments:
     # Field is present if extra arguments were provided for the corresponding scan command
-    certificate_info: Optional[CertificateInfoExtraArgument] = None
-    session_resumption: Optional[SessionResumptionSupportExtraArgument] = None
-    session_renegotiation: Optional[SessionRenegotiationExtraArgument] = None
+    certificate_info: CertificateInfoExtraArgument | None = None
+    session_resumption: SessionResumptionSupportExtraArgument | None = None
+    session_renegotiation: SessionRenegotiationExtraArgument | None = None
 
 
 @dataclass(frozen=True)
@@ -60,7 +57,7 @@ class ServerScanRequest:
     network_configuration: ServerNetworkConfiguration = field(default=None)  # type: ignore
 
     # If not specified, run all scan commands by default
-    scan_commands: Set[ScanCommand] = field(default_factory=ScanCommandsRepository.get_all_scan_commands)
+    scan_commands: set[ScanCommand] = field(default_factory=ScanCommandsRepository.get_all_scan_commands)
     scan_commands_extra_arguments: ScanCommandsExtraArguments = field(default_factory=ScanCommandsExtraArguments)
 
     # Random ID to track the scan
@@ -167,13 +164,13 @@ class AllScanCommandsAttempts:
     pq_key_exchange: PqKeyExchangeScanAttempt
 
 
-_SCAN_CMD_FIELD_NAME_TO_CLS: dict[str, Type[ScanCommandAttempt]] = {
+_SCAN_CMD_FIELD_NAME_TO_CLS: dict[str, type[ScanCommandAttempt]] = {
     cls_field.name: cls_field.type  # type: ignore
     for cls_field in fields(AllScanCommandsAttempts)
 }
 
 
-def get_scan_command_attempt_cls(scan_command: ScanCommand) -> Type[ScanCommandAttempt]:
+def get_scan_command_attempt_cls(scan_command: ScanCommand) -> type[ScanCommandAttempt]:
     return _SCAN_CMD_FIELD_NAME_TO_CLS[scan_command.value]
 
 
@@ -208,9 +205,9 @@ class ServerScanResult:
 
     # First, SSLyze ensures that it is able to connect to the server
     connectivity_status: ServerConnectivityStatusEnum
-    connectivity_error_trace: Optional[TracebackException]
-    connectivity_result: Optional[ServerTlsProbingResult]
+    connectivity_error_trace: TracebackException | None
+    connectivity_result: ServerTlsProbingResult | None
 
     # Then, if SSLyze was able to connect, it performs the TLS scan
     scan_status: ServerScanStatusEnum
-    scan_result: Optional[AllScanCommandsAttempts]  # Set it the scan_status == COMPLETED
+    scan_result: AllScanCommandsAttempts | None  # Set it the scan_status == COMPLETED

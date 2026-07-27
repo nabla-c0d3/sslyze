@@ -1,29 +1,27 @@
 import logging
+from dataclasses import asdict, dataclass
 from http.client import HTTPResponse
-
-from dataclasses import dataclass, asdict
 from traceback import TracebackException
+from typing import Any
 from urllib.parse import urlsplit
-from pydantic import BaseModel, model_validator
-
 
 from nassl.errors import SslError
+from pydantic import BaseModel, model_validator
 
+from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
+from sslyze.connection_helpers.http_response_parser import HttpResponseParser, NotAValidHttpResponseError
 from sslyze.json.pydantic_utils import BaseModelWithOrmMode
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
-    ScanCommandImplementation,
+    ScanCommandCliConnector,
     ScanCommandExtraArgument,
-    ScanJob,
+    ScanCommandImplementation,
     ScanCommandResult,
     ScanCommandWrongUsageError,
-    ScanCommandCliConnector,
+    ScanJob,
     ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo
-from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
-from sslyze.connection_helpers.http_response_parser import HttpResponseParser, NotAValidHttpResponseError
-from typing import List, Optional, Any
 
 _logger = logging.getLogger(__name__)
 
@@ -38,7 +36,7 @@ class StrictTransportSecurityHeader:
         max_age: The content of the max-age field.
     """
 
-    max_age: Optional[int]
+    max_age: int | None
     preload: bool
     include_subdomains: bool
 
@@ -59,14 +57,14 @@ class HttpHeadersScanResult(ScanCommandResult):
     """
 
     http_request_sent: str
-    http_error_trace: Optional[TracebackException]
+    http_error_trace: TracebackException | None
 
-    http_path_redirected_to: Optional[str]
-    strict_transport_security_header: Optional[StrictTransportSecurityHeader]
+    http_path_redirected_to: str | None
+    strict_transport_security_header: StrictTransportSecurityHeader | None
 
 
 class _StrictTransportSecurityHeaderAsJson(BaseModel):
-    max_age: Optional[int]
+    max_age: int | None
     preload: bool
     include_subdomains: bool
 
@@ -77,10 +75,10 @@ _StrictTransportSecurityHeaderAsJson.__doc__ = StrictTransportSecurityHeader.__d
 
 class HttpHeadersScanResultAsJson(BaseModelWithOrmMode):
     http_request_sent: str
-    http_error_trace: Optional[str]
+    http_error_trace: str | None
 
-    http_path_redirected_to: Optional[str]
-    strict_transport_security_header: Optional[_StrictTransportSecurityHeaderAsJson]
+    http_path_redirected_to: str | None
+    strict_transport_security_header: _StrictTransportSecurityHeaderAsJson | None
 
     @model_validator(mode="before")
     @classmethod
@@ -99,12 +97,12 @@ class HttpHeadersScanResultAsJson(BaseModelWithOrmMode):
         if result.strict_transport_security_header:
             sts_header_json = _StrictTransportSecurityHeaderAsJson(**asdict(result.strict_transport_security_header))
 
-        return dict(
-            http_request_sent=result.http_request_sent,
-            http_error_trace=http_error_trace_as_str,
-            http_path_redirected_to=result.http_path_redirected_to,
-            strict_transport_security_header=sts_header_json,
-        )
+        return {
+            "http_request_sent": result.http_request_sent,
+            "http_error_trace": http_error_trace_as_str,
+            "http_path_redirected_to": result.http_path_redirected_to,
+            "strict_transport_security_header": sts_header_json,
+        }
 
 
 assert HttpHeadersScanResult.__doc__
@@ -112,7 +110,7 @@ HttpHeadersScanResultAsJson.__doc__ = HttpHeadersScanResult.__doc__
 
 
 class HttpHeadersScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[HttpHeadersScanResultAsJson]
+    result: HttpHeadersScanResultAsJson | None
 
 
 class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, None]):
@@ -120,7 +118,7 @@ class _HttpHeadersCliConnector(ScanCommandCliConnector[HttpHeadersScanResult, No
     _cli_description = "Test a server for the presence of security-related HTTP headers."
 
     @classmethod
-    def result_to_console_output(cls, result: HttpHeadersScanResult) -> List[str]:
+    def result_to_console_output(cls, result: HttpHeadersScanResult) -> list[str]:
         result_as_txt = [cls._format_title("HTTP Security Headers")]
 
         # If an error occurred after sending the HTTP request, just display it
@@ -160,8 +158,8 @@ class HttpHeadersImplementation(ScanCommandImplementation[HttpHeadersScanResult,
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
@@ -172,7 +170,7 @@ class HttpHeadersImplementation(ScanCommandImplementation[HttpHeadersScanResult,
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> HttpHeadersScanResult:
         if len(scan_job_results) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
@@ -184,7 +182,7 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
     # Send HTTP requests until we no longer received an HTTP redirection, but allow only 4 redirections max
     _logger.info(f"Retrieving HTTP headers from {server_info}")
     redirections_count = 0
-    next_location_path: Optional[str] = "/"
+    next_location_path: str | None = "/"
     http_error_trace = None
 
     while next_location_path and redirections_count < 4:
@@ -249,14 +247,14 @@ def _retrieve_and_analyze_http_response(server_info: ServerConnectivityInfo) -> 
         )
 
 
-def _detect_http_redirection(http_response: HTTPResponse, server_host_name: str, server_port: int) -> Optional[str]:
+def _detect_http_redirection(http_response: HTTPResponse, server_host_name: str, server_port: int) -> str | None:
     """If the HTTP response contains a redirection to the same server, return the path to the new location."""
     next_location_path = None
     if 300 <= http_response.status < 400:
         location_header = _extract_first_header_value(http_response, "Location")
         if location_header:
             parsed_location = urlsplit(location_header)
-            is_relative_url = False if parsed_location.hostname else True
+            is_relative_url = not parsed_location.hostname
             if is_relative_url:
                 # Yes, to a relative URL; follow the redirection
                 next_location_path = location_header
@@ -273,7 +271,7 @@ def _detect_http_redirection(http_response: HTTPResponse, server_host_name: str,
     return next_location_path
 
 
-def _extract_first_header_value(response: HTTPResponse, header_name: str) -> Optional[str]:
+def _extract_first_header_value(response: HTTPResponse, header_name: str) -> str | None:
     raw_header = response.getheader(header_name, None)
     if not raw_header:
         return None
@@ -284,7 +282,7 @@ def _extract_first_header_value(response: HTTPResponse, header_name: str) -> Opt
     return raw_header
 
 
-def _parse_hsts_header_from_http_response(response: HTTPResponse) -> Optional[StrictTransportSecurityHeader]:
+def _parse_hsts_header_from_http_response(response: HTTPResponse) -> StrictTransportSecurityHeader | None:
     raw_hsts_header = _extract_first_header_value(response, "strict-transport-security")
     if not raw_hsts_header:
         return None
@@ -306,6 +304,6 @@ def _parse_hsts_header_from_http_response(response: HTTPResponse) -> Optional[St
         elif "preload" in hsts_directive:
             preload = True
         else:
-            _logger.warning(f"Unexpected value in HSTS header: {repr(hsts_directive)}")
+            _logger.warning(f"Unexpected value in HSTS header: {hsts_directive!r}")
 
     return StrictTransportSecurityHeader(max_age, preload, include_subdomains)

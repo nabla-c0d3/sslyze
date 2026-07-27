@@ -1,21 +1,20 @@
+import pytest
 from nassl.base_ssl_client import ClientCertificateRequested
 
 from sslyze.plugins.session_renegotiation_plugin import (
+    SessionRenegotiationExtraArgument,
     SessionRenegotiationImplementation,
     SessionRenegotiationScanResult,
     SessionRenegotiationScanResultAsJson,
-    SessionRenegotiationExtraArgument,
 )
-
 from sslyze.server_setting import (
-    ServerNetworkLocation,
     ClientAuthenticationCredentials,
     ServerNetworkConfiguration,
+    ServerNetworkLocation,
 )
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
-import pytest
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer
 
 
 class TestSessionRenegotiationPlugin:

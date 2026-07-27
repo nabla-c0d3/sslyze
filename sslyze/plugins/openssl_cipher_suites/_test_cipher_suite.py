@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import Optional, Union
 
-from nassl.errors import OpenSSLError
-from nassl.ephemeral_key_info import EphemeralKeyInfo
 from nassl.base_ssl_client import ClientCertificateRequested
+from nassl.ephemeral_key_info import EphemeralKeyInfo
+from nassl.errors import OpenSSLError
 from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 from nassl.openssl_4_0_0.ssl_client import SslClient_OpenSSL_4_0_0
 
@@ -25,7 +24,7 @@ class CipherSuiteAcceptedByServer:
     """
 
     cipher_suite: CipherSuite
-    ephemeral_key: Optional[EphemeralKeyInfo]
+    ephemeral_key: EphemeralKeyInfo | None
 
 
 @dataclass(frozen=True)
@@ -36,7 +35,7 @@ class CipherSuiteRejectedByServer:
 
 def connect_with_cipher_suite(
     server_connectivity_info: ServerConnectivityInfo, tls_version: TlsVersionEnum, cipher_suite: CipherSuite
-) -> Union[CipherSuiteAcceptedByServer, CipherSuiteRejectedByServer]:
+) -> CipherSuiteAcceptedByServer | CipherSuiteRejectedByServer:
     """Initiates a TLS handshake with the server using the TLS version and the cipher suite specified."""
     ssl_connection = server_connectivity_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version, openssl_version=cipher_suite.supported_by_openssl_version
@@ -74,7 +73,6 @@ def connect_with_cipher_suite(
     except ClientCertificateRequested:
         # When the handshake failed due to ClientCertificateRequested
         ephemeral_key = ssl_connection.ssl_client.get_ephemeral_key()
-        pass
 
     except ServerRejectedTlsHandshake as e:
         return CipherSuiteRejectedByServer(cipher_suite=cipher_suite, error_message=e.error_message)

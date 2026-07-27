@@ -1,9 +1,9 @@
 from sslyze import ServerNetworkLocation
 from sslyze.plugins.pq_key_exchange_plugin import (
+    PqGroup,
     PqKeyExchangeImplementation,
     PqKeyExchangeScanResult,
     PqKeyExchangeScanResultAsJson,
-    PqGroup,
 )
 from sslyze.server_connectivity import TlsVersionEnum
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info

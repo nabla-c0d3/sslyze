@@ -1,6 +1,6 @@
 import socket
 import struct
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from enum import Enum
 from smtplib import SMTP, SMTPException
 from typing import ClassVar, Optional
@@ -56,7 +56,6 @@ class _OpportunisticTlsHelper(ABC):
     @abstractmethod
     def prepare_socket_for_tls_handshake(self, sock: socket.socket) -> None:
         """Send the right protocol-specific requests to prepare the server for the TLS handshake."""
-        pass
 
 
 class _SmtpHelper(_OpportunisticTlsHelper):
@@ -74,7 +73,7 @@ class _SmtpHelper(_OpportunisticTlsHelper):
         try:
             code, server_reply_as_bytes = smtp.getreply()
         except SMTPException as exc:
-            raise OpportunisticTlsError(f"Unexpected error while performing the SMTP EHLO handshake: {str(exc)}")
+            raise OpportunisticTlsError(f"Unexpected error while performing the SMTP EHLO handshake: {exc!s}")
 
         if code != 220:
             server_reply_as_str = server_reply_as_bytes.decode()
@@ -85,7 +84,7 @@ class _SmtpHelper(_OpportunisticTlsHelper):
         try:
             code, server_reply_as_bytes = smtp.ehlo()
         except SMTPException as exc:
-            raise OpportunisticTlsError(f"Unexpected error while performing the SMTP EHLO handshake: {str(exc)}")
+            raise OpportunisticTlsError(f"Unexpected error while performing the SMTP EHLO handshake: {exc!s}")
 
         if code != 250:
             server_reply_as_str = server_reply_as_bytes.decode()
@@ -97,7 +96,7 @@ class _SmtpHelper(_OpportunisticTlsHelper):
         try:
             code, server_reply_as_bytes = smtp.docmd("STARTTLS")
         except SMTPException as exc:
-            raise OpportunisticTlsError(f"Unexpected error while performing the SMTP EHLO handshake: {str(exc)}")
+            raise OpportunisticTlsError(f"Unexpected error while performing the SMTP EHLO handshake: {exc!s}")
 
         if code != 220:
             server_reply_as_str = server_reply_as_bytes.decode()
@@ -161,7 +160,7 @@ class _LdapHelper(_OpportunisticTlsHelper):
         sock.send(self.START_TLS_CMD)
         data = sock.recv(2048)
         if self.START_TLS_OK not in data and self.START_TLS_OK_APACHEDS not in data and self.START_TLS_OK2 not in data:
-            raise OpportunisticTlsError(f"LDAP AUTH TLS was rejected; returned: {repr(data)}")
+            raise OpportunisticTlsError(f"LDAP AUTH TLS was rejected; returned: {data!r}")
 
 
 class _RdpHelper(_OpportunisticTlsHelper):
@@ -247,7 +246,7 @@ _START_TLS_HELPER_CLASSES = {
 
 
 def get_opportunistic_tls_helper(
-    protocol: ProtocolWithOpportunisticTlsEnum, xmpp_to_hostname: Optional[str], smtp_ehlo_hostname: Optional[str]
+    protocol: ProtocolWithOpportunisticTlsEnum, xmpp_to_hostname: str | None, smtp_ehlo_hostname: str | None
 ) -> _OpportunisticTlsHelper:
     helper_cls = _START_TLS_HELPER_CLASSES[protocol]
     if protocol in [ProtocolWithOpportunisticTlsEnum.XMPP, ProtocolWithOpportunisticTlsEnum.XMPP_SERVER]:

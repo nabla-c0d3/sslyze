@@ -1,20 +1,20 @@
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any, Tuple, Union
+from typing import Any
 
 from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
-    ScanCommandImplementation,
-    ScanCommandExtraArgument,
-    ScanJob,
-    ScanCommandCliConnector,
     OptParseCliOption,
+    ScanCommandCliConnector,
+    ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanJob,
     ScanJobResult,
 )
 from sslyze.plugins.session_resumption._resumption_with_id import (
-    resume_with_session_id,
-    _ScanJobResultEnum,
-    TlsResumptionSupportEnum,
     ServerOnlySupportsTls13,
+    TlsResumptionSupportEnum,
+    _ScanJobResultEnum,
+    resume_with_session_id,
 )
 from sslyze.plugins.session_resumption._resumption_with_ticket import resume_with_tls_ticket
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -71,7 +71,7 @@ def _resumption_result_to_console_output(
         raise ValueError(f"Unexpected value: {resumption_result}")
 
     resum_rate_txt = (
-        f"({successful_resumptions_count} successful resumptions" f" out of {attempted_resumptions_count} attempts)"
+        f"({successful_resumptions_count} successful resumptions out of {attempted_resumptions_count} attempts)"
     )
 
     return f"{resumption_support_txt} {resum_rate_txt}"
@@ -84,7 +84,7 @@ class _SessionResumptionSupportCliConnector(
     _cli_description = "Test a server for TLS 1.2 session resumption support using session IDs and TLS tickets."
 
     @classmethod
-    def get_cli_options(cls) -> List[OptParseCliOption]:
+    def get_cli_options(cls) -> list[OptParseCliOption]:
         scan_command_option = super().get_cli_options()
         scan_command_option.append(
             OptParseCliOption(
@@ -100,8 +100,8 @@ class _SessionResumptionSupportCliConnector(
 
     @classmethod
     def find_cli_options_in_command_line(
-        cls, parsed_command_line: Dict[str, Union[None, bool, str]]
-    ) -> Tuple[bool, Optional[SessionResumptionSupportExtraArgument]]:
+        cls, parsed_command_line: dict[str, None | bool | str]
+    ) -> tuple[bool, SessionResumptionSupportExtraArgument | None]:
         # Check if --resum was used
         is_scan_cmd_enabled, _ = super().find_cli_options_in_command_line(parsed_command_line)
 
@@ -123,7 +123,7 @@ class _SessionResumptionSupportCliConnector(
         return is_scan_cmd_enabled, extra_arguments
 
     @classmethod
-    def result_to_console_output(cls, result: SessionResumptionSupportScanResult) -> List[str]:
+    def result_to_console_output(cls, result: SessionResumptionSupportScanResult) -> list[str]:
         result_as_txt = [cls._format_title("TLS 1.2 Session Resumption Support")]
 
         # Resumption with session IDs
@@ -152,8 +152,8 @@ class _SessionResumptionSupportCliConnector(
 
 
 def _process_resumption_attempt_results(
-    resumption_attempt_results: List[bool],
-) -> Tuple[TlsResumptionSupportEnum, int, int]:
+    resumption_attempt_results: list[bool],
+) -> tuple[TlsResumptionSupportEnum, int, int]:
     total_attempts_count = len(resumption_attempt_results)
     successful_attempts_count = 0
     for was_resumption_successful in resumption_attempt_results:
@@ -183,8 +183,8 @@ class SessionResumptionSupportImplementation(
     def scan_jobs_for_scan_command(
         cls,
         server_info: ServerConnectivityInfo,
-        extra_arguments: Optional[SessionResumptionSupportExtraArgument] = None,
-    ) -> List[ScanJob]:
+        extra_arguments: SessionResumptionSupportExtraArgument | None = None,
+    ) -> list[ScanJob]:
         if extra_arguments:
             number_of_resumption_attempts = extra_arguments.number_of_resumptions_to_attempt
         else:
@@ -206,13 +206,13 @@ class SessionResumptionSupportImplementation(
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> SessionResumptionSupportScanResult:
         if len(scan_job_results) == 0:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
         # Sort TLS ticket VS session ID results
-        results_dict: Dict[_ScanJobResultEnum, List[Any]] = {
+        results_dict: dict[_ScanJobResultEnum, list[Any]] = {
             _ScanJobResultEnum.SESSION_ID_RESUMPTION: [],
             _ScanJobResultEnum.TLS_TICKET_RESUMPTION: [],
         }

@@ -1,13 +1,9 @@
 import socket
 from base64 import b64encode
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional
-
-from urllib.parse import quote
-
-from dataclasses import dataclass
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from nassl.base_ssl_client import OpenSslFileTypeEnum
 from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
@@ -21,8 +17,8 @@ class HttpProxySettings:
     hostname: str
     port: int
 
-    basic_auth_user: Optional[str] = None
-    basic_auth_password: Optional[str] = None
+    basic_auth_user: str | None = None
+    basic_auth_password: str | None = None
 
     @classmethod
     def from_url(cls, proxy_url: str) -> "HttpProxySettings":
@@ -41,13 +37,13 @@ class HttpProxySettings:
         return cls(parsed_url.hostname, port, parsed_url.username, parsed_url.password)
 
     @property
-    def proxy_authorization_header(self) -> Optional[str]:
+    def proxy_authorization_header(self) -> str | None:
         if not self.basic_auth_user:
             return None
         if not self.basic_auth_password:
             raise ValueError("No password configured for Basic Auth")
 
-        basic_auth_token = b64encode(f"{quote(self.basic_auth_user)}:{quote(self.basic_auth_password)}".encode("utf-8"))
+        basic_auth_token = b64encode(f"{quote(self.basic_auth_user)}:{quote(self.basic_auth_password)}".encode())
         return basic_auth_token.decode("utf-8")
 
 
@@ -76,10 +72,10 @@ class ServerNetworkLocation:
     port: int = 443
 
     # Set if SSLyze is directly connecting to the server ie. connection_type == DIRECT
-    ip_address: Optional[str] = None  # TODO(AD): Should be an IPv4Address or IPv6Address
+    ip_address: str | None = None  # TODO(AD): Should be an IPv4Address or IPv6Address
 
     # Set if SSLyze is connecting via a proxy ie. connection_type == VIA_HTTP_PROXY
-    http_proxy_settings: Optional[HttpProxySettings] = None
+    http_proxy_settings: HttpProxySettings | None = None
 
     @property
     def display_string(self) -> str:
@@ -185,12 +181,12 @@ class ServerNetworkConfiguration:
     """
 
     tls_server_name_indication: str
-    tls_opportunistic_encryption: Optional[ProtocolWithOpportunisticTlsEnum] = None
-    tls_client_auth_credentials: Optional[ClientAuthenticationCredentials] = None
+    tls_opportunistic_encryption: ProtocolWithOpportunisticTlsEnum | None = None
+    tls_client_auth_credentials: ClientAuthenticationCredentials | None = None
 
-    xmpp_to_hostname: Optional[str] = None
-    smtp_ehlo_hostname: Optional[str] = None
-    http_user_agent: Optional[str] = None
+    xmpp_to_hostname: str | None = None
+    smtp_ehlo_hostname: str | None = None
+    http_user_agent: str | None = None
 
     network_timeout: int = 5
     network_max_retries: int = 3

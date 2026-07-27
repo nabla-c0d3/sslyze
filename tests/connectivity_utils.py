@@ -1,12 +1,10 @@
-from typing import Optional
-
-from sslyze import ServerNetworkLocation, ServerNetworkConfiguration
+from sslyze import ServerNetworkConfiguration, ServerNetworkLocation
 from sslyze.server_connectivity import ServerConnectivityInfo, check_connectivity_to_server
 
 
 def check_connectivity_to_server_and_return_info(
     server_location: ServerNetworkLocation,
-    network_configuration: Optional[ServerNetworkConfiguration] = None,
+    network_configuration: ServerNetworkConfiguration | None = None,
 ) -> ServerConnectivityInfo:
     if network_configuration is None:
         final_network_config = ServerNetworkConfiguration.default_for_server_location(server_location)

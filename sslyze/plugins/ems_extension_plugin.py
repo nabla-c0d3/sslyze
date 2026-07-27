@@ -1,19 +1,17 @@
 from dataclasses import dataclass
-from typing import List, Optional
 
-from nassl.openssl_1_1_1.ssl_client import ExtendedMasterSecretSupportEnum
-from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
+from nassl.openssl_1_1_1.ssl_client import ExtendedMasterSecretSupportEnum, SslClient_OpenSSL_1_1_1
 
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
-from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
-    ScanCommandImplementation,
-    ScanCommandExtraArgument,
-    ScanJob,
-    ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanCommandWrongUsageError,
+    ScanJob,
     ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
@@ -35,7 +33,7 @@ class EmsExtensionScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class EmsExtensionScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[EmsExtensionScanResultAsJson]
+    result: EmsExtensionScanResultAsJson | None
 
 
 class _EmsExtensionCliConnector(ScanCommandCliConnector[EmsExtensionScanResult, None]):
@@ -43,7 +41,7 @@ class _EmsExtensionCliConnector(ScanCommandCliConnector[EmsExtensionScanResult, 
     _cli_description = "Test a server for TLS Extended Master Secret extension support."
 
     @classmethod
-    def result_to_console_output(cls, result: EmsExtensionScanResult) -> List[str]:
+    def result_to_console_output(cls, result: EmsExtensionScanResult) -> list[str]:
         result_as_txt = [cls._format_title("TLS Extended Master Secret Extension")]
         downgrade_txt = "OK - Supported" if result.supports_ems_extension else "VULNERABLE - EMS not supported"
         result_as_txt.append(cls._format_field("", downgrade_txt))
@@ -57,8 +55,8 @@ class EmsExtensionImplementation(ScanCommandImplementation[EmsExtensionScanResul
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
@@ -66,7 +64,7 @@ class EmsExtensionImplementation(ScanCommandImplementation[EmsExtensionScanResul
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> EmsExtensionScanResult:
         if len(scan_job_results) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
@@ -83,8 +81,7 @@ def _test_ems(server_info: ServerConnectivityInfo) -> bool:
         # Only the 1.1.1+ client has EMS support
         openssl_version=OpenSslVersionEnum.OPENSSL_1_1_1,
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1):
-        raise RuntimeError("Should never happen")
+    assert isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1), "Should never happen"
 
     # Perform the SSL handshake
     try:

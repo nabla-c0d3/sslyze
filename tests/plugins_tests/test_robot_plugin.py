@@ -1,12 +1,12 @@
+import pytest
 from nassl.base_ssl_client import ClientCertificateRequested
 
-from sslyze.plugins.robot.implementation import RobotImplementation, RobotScanResult, RobotScanResultAsJson
 from sslyze.plugins.robot._robot_tester import RobotScanResultEnum
+from sslyze.plugins.robot.implementation import RobotImplementation, RobotScanResult, RobotScanResultAsJson
 from sslyze.server_setting import ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer
-import pytest
 
 
 class TestRobotPluginPlugin:

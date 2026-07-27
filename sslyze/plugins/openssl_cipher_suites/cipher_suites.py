@@ -1,10 +1,7 @@
-from dataclasses import field
-from typing import Dict, List, Set
+from dataclasses import dataclass, field
 
-from dataclasses import dataclass
-
-from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 from nassl.base_ssl_client import TlsVersionEnum
+from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 from nassl.openssl_4_0_0.ssl_client import SslClient_OpenSSL_4_0_0
 
@@ -41,10 +38,10 @@ _TLS_1_3_CIPHER_SUITES = [
 ]
 
 
-_ALL_PARSED_CIPHER_SUITES_BY_TLS_VERSION: Dict[TlsVersionEnum, Set[CipherSuite]] = {}
+_ALL_PARSED_CIPHER_SUITES_BY_TLS_VERSION: dict[TlsVersionEnum, set[CipherSuite]] = {}
 
 
-def retrieve_all_available_cipher_suites(tls_version: TlsVersionEnum) -> Set[CipherSuite]:
+def retrieve_all_available_cipher_suites(tls_version: TlsVersionEnum) -> set[CipherSuite]:
     if tls_version in _ALL_PARSED_CIPHER_SUITES_BY_TLS_VERSION:
         return _ALL_PARSED_CIPHER_SUITES_BY_TLS_VERSION[tls_version]
 
@@ -52,9 +49,9 @@ def retrieve_all_available_cipher_suites(tls_version: TlsVersionEnum) -> Set[Cip
     cipher_string = "ALL:COMPLEMENTOFALL:-PSK:-SRP"
 
     # Retrieve the list of supported cipher suites by each version of OpenSSL that's in nassl
-    client_1_0_2_ciphers: List[str]
-    client_1_1_1_ciphers: List[str]
-    client_4_0_0_ciphers: List[str]
+    client_1_0_2_ciphers: list[str]
+    client_1_1_1_ciphers: list[str]
+    client_4_0_0_ciphers: list[str]
     if tls_version in [TlsVersionEnum.SSL_2_0, TlsVersionEnum.SSL_3_0]:
         client_1_0_2 = SslClient_OpenSSL_1_0_2(tls_version=tls_version)
         client_1_0_2.set_cipher_list(cipher_string)
@@ -93,7 +90,7 @@ def retrieve_all_available_cipher_suites(tls_version: TlsVersionEnum) -> Set[Cip
     # Deduplicate cipher suites that have multiple names in OpenSSL (ie. DHE-RSA-DES-CBC3-SHA and EDH-RSA-DES-CBC3-SHA)
     #  by using their RFC name as the unique identifier
     # Order is important : we prioritize the 4.0.0 client
-    cipher_rfc_name_to_openssl_version: Dict[str, OpenSslVersionEnum] = {}
+    cipher_rfc_name_to_openssl_version: dict[str, OpenSslVersionEnum] = {}
     for cipher in client_1_0_2_ciphers:
         cipher_rfc_name = openssl_to_rfc_name_mappping.get(cipher, cipher)
         cipher_rfc_name_to_openssl_version[cipher_rfc_name] = OpenSslVersionEnum.OPENSSL_1_0_2
@@ -122,7 +119,7 @@ def retrieve_all_available_cipher_suites(tls_version: TlsVersionEnum) -> Set[Cip
         parsed_suite = CipherSuite(
             name=cipher_suite_rfc_name,
             openssl_name=cipher_suite_openssl_name,
-            is_anonymous=True if "anon" in cipher_suite_rfc_name else False,
+            is_anonymous="anon" in cipher_suite_rfc_name,
             key_size=RFC_NAME_TO_KEY_SIZE_MAPPING[cipher_suite_rfc_name],
             supported_by_openssl_version=openssl_version,
         )

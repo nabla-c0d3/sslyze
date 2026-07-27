@@ -1,19 +1,21 @@
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Any
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
 from sslyze import (
-    ServerNetworkConfiguration,
-    ProtocolWithOpportunisticTlsEnum,
-    ServerScanStatusEnum,
-    ServerConnectivityStatusEnum,
     ClientAuthRequirementEnum,
+    ProtocolWithOpportunisticTlsEnum,
+    ServerConnectivityStatusEnum,
+    ServerNetworkConfiguration,
+    ServerScanResult,
+    ServerScanStatusEnum,
+    ServerTlsProbingResult,
 )
 from sslyze.__version__ import __url__, __version__
-from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid, BaseModelWithOrmMode, StrFromEnumValueName
+from sslyze.json.pydantic_utils import BaseModelWithOrmMode, BaseModelWithOrmModeAndForbid, StrFromEnumValueName
 from sslyze.plugins.certificate_info.json_output import (
     CertificateInfoExtraArgumentAsJson,
     CertificateInfoScanAttemptAsJson,
@@ -27,17 +29,12 @@ from sslyze.plugins.heartbleed_plugin import HeartbleedScanAttemptAsJson
 from sslyze.plugins.http_headers_plugin import HttpHeadersScanAttemptAsJson
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanAttemptAsJson
 from sslyze.plugins.openssl_cipher_suites.json_output import CipherSuitesScanAttemptAsJson
+from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeScanAttemptAsJson
 from sslyze.plugins.robot.implementation import RobotScanAttemptAsJson
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanAttemptAsJson
-from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeScanAttemptAsJson
-
 from sslyze.plugins.session_resumption.json_output import (
     SessionResumptionSupportExtraArgumentAsJson,
     SessionResumptionSupportScanAttemptAsJson,
-)
-from sslyze import (
-    ServerScanResult,
-    ServerTlsProbingResult,
 )
 from sslyze.scanner.models import AllScanCommandsAttempts
 from sslyze.server_setting import ConnectionTypeEnum, ServerNetworkLocation
@@ -45,8 +42,8 @@ from sslyze.server_setting import ConnectionTypeEnum, ServerNetworkLocation
 
 class ScanCommandsExtraArgumentsAsJson(BaseModelWithOrmModeAndForbid):
     # Field is present if extra arguments were provided for the corresponding scan command
-    certificate_info: Optional[CertificateInfoExtraArgumentAsJson] = None
-    session_resumption: Optional[SessionResumptionSupportExtraArgumentAsJson] = None
+    certificate_info: CertificateInfoExtraArgumentAsJson | None = None
+    session_resumption: SessionResumptionSupportExtraArgumentAsJson | None = None
 
 
 class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
@@ -107,8 +104,8 @@ class _HttpProxySettingsAsJson(BaseModelWithOrmModeAndForbid):
     hostname: str
     port: int
 
-    basic_auth_user: Optional[str] = None
-    basic_auth_password: Optional[str] = None
+    basic_auth_user: str | None = None
+    basic_auth_password: str | None = None
 
 
 class _ClientAuthenticationCredentialsAsJson(BaseModelWithOrmMode):
@@ -131,10 +128,10 @@ _ServerTlsProbingResultAsJson.__doc__ = ServerTlsProbingResult.__doc__
 
 class _ServerNetworkConfigurationAsJson(BaseModelWithOrmModeAndForbid):
     tls_server_name_indication: str
-    tls_opportunistic_encryption: Optional[ProtocolWithOpportunisticTlsEnum] = None
-    tls_client_auth_credentials: Optional[_ClientAuthenticationCredentialsAsJson] = None
+    tls_opportunistic_encryption: ProtocolWithOpportunisticTlsEnum | None = None
+    tls_client_auth_credentials: _ClientAuthenticationCredentialsAsJson | None = None
 
-    xmpp_to_hostname: Optional[str] = None
+    xmpp_to_hostname: str | None = None
 
     network_timeout: int = 5
     network_max_retries: int = 3
@@ -148,8 +145,8 @@ class _ServerNetworkLocationAsJson(BaseModelWithOrmModeAndForbid):
     hostname: str
     port: int
     connection_type: ConnectionTypeEnum
-    ip_address: Optional[str] = None
-    http_proxy_settings: Optional[_HttpProxySettingsAsJson] = None
+    ip_address: str | None = None
+    http_proxy_settings: _HttpProxySettingsAsJson | None = None
 
 
 assert ServerNetworkLocation.__doc__
@@ -162,11 +159,11 @@ class ServerScanResultAsJson(BaseModelWithOrmModeAndForbid):
     network_configuration: _ServerNetworkConfigurationAsJson
 
     connectivity_status: ServerConnectivityStatusEnum
-    connectivity_error_trace: Optional[str]
-    connectivity_result: Optional[_ServerTlsProbingResultAsJson]
+    connectivity_error_trace: str | None
+    connectivity_result: _ServerTlsProbingResultAsJson | None
 
     scan_status: ServerScanStatusEnum
-    scan_result: Optional[AllScanCommandsAttemptsAsJson]
+    scan_result: AllScanCommandsAttemptsAsJson | None
 
     @model_validator(mode="before")
     @classmethod
@@ -181,7 +178,7 @@ class ServerScanResultAsJson(BaseModelWithOrmModeAndForbid):
             for line in server_scan_result.connectivity_error_trace.format(chain=False):
                 connectivity_error_trace_as_str += line
 
-        connectivity_result_as_json: Optional[_ServerTlsProbingResultAsJson]
+        connectivity_result_as_json: _ServerTlsProbingResultAsJson | None
         if server_scan_result.connectivity_result:
             connectivity_result_as_json = _ServerTlsProbingResultAsJson.model_validate(
                 server_scan_result.connectivity_result
@@ -189,24 +186,24 @@ class ServerScanResultAsJson(BaseModelWithOrmModeAndForbid):
         else:
             connectivity_result_as_json = None
 
-        scan_result_as_json: Optional[AllScanCommandsAttemptsAsJson]
+        scan_result_as_json: AllScanCommandsAttemptsAsJson | None
         if server_scan_result.scan_result:
             scan_result_as_json = AllScanCommandsAttemptsAsJson.model_validate(server_scan_result.scan_result)
         else:
             scan_result_as_json = None
 
-        return dict(
-            uuid=server_scan_result.uuid,
-            server_location=_ServerNetworkLocationAsJson.model_validate(server_scan_result.server_location),
-            network_configuration=_ServerNetworkConfigurationAsJson.model_validate(
+        return {
+            "uuid": server_scan_result.uuid,
+            "server_location": _ServerNetworkLocationAsJson.model_validate(server_scan_result.server_location),
+            "network_configuration": _ServerNetworkConfigurationAsJson.model_validate(
                 server_scan_result.network_configuration
             ),
-            connectivity_status=server_scan_result.connectivity_status,
-            connectivity_error_trace=connectivity_error_trace_as_str,
-            connectivity_result=connectivity_result_as_json,
-            scan_status=server_scan_result.scan_status,
-            scan_result=scan_result_as_json,
-        )
+            "connectivity_status": server_scan_result.connectivity_status,
+            "connectivity_error_trace": connectivity_error_trace_as_str,
+            "connectivity_result": connectivity_result_as_json,
+            "scan_status": server_scan_result.scan_status,
+            "scan_result": scan_result_as_json,
+        }
 
 
 assert ServerScanResult.__doc__
@@ -223,8 +220,8 @@ class InvalidServerStringAsJson(BaseModelWithOrmModeAndForbid):
 class SslyzeOutputAsJson(BaseModel):
     """The "root" dictionary of the JSON output when using the --json command line option."""
 
-    invalid_server_strings: List[InvalidServerStringAsJson]
-    server_scan_results: List[ServerScanResultAsJson]
+    invalid_server_strings: list[InvalidServerStringAsJson]
+    server_scan_results: list[ServerScanResultAsJson]
 
     date_scans_started: datetime
     date_scans_completed: datetime

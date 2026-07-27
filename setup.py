@@ -1,7 +1,6 @@
 import sys
-from os import path, listdir
+from os import listdir, path
 from pathlib import Path
-from typing import List, Tuple, Dict
 
 from setuptools import find_packages
 
@@ -10,8 +9,7 @@ root_path = Path(__file__).parent.absolute()
 
 # For cx_freeze builds, we need a special setup() function
 if len(sys.argv) > 1 and sys.argv[1] == "build_exe":
-    from cx_Freeze import setup
-    from cx_Freeze import Executable
+    from cx_Freeze import Executable, setup
 else:
     from setuptools import setup
 
@@ -26,14 +24,14 @@ def get_long_description() -> str:
     return path_to_readme.read_text()
 
 
-def get_project_info() -> Dict[str, str]:
-    project_info: Dict[str, str] = {}
+def get_project_info() -> dict[str, str]:
+    project_info: dict[str, str] = {}
     project_info_path = root_path / "sslyze" / "__version__.py"
-    exec(project_info_path.read_text(), project_info)
+    exec(project_info_path.read_text(), project_info)  # noqa: S102
     return project_info
 
 
-def get_include_files() -> List[Tuple[str, str]]:
+def get_include_files() -> list[tuple[str, str]]:
     """ "Get the list of non-Python files to package when doing a cx_freeze build."""
     non_python_files = []
 

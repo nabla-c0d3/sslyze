@@ -1,24 +1,22 @@
 from dataclasses import dataclass
 
-from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 from nassl.base_ssl_client import ClientCertificateRequested
+from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
+from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
-    ScanCommandImplementation,
-    ScanJob,
-    ScanCommandExtraArgument,
-    ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanCommandWrongUsageError,
+    ScanJob,
     ScanJobResult,
 )
-from typing import List, Optional
-
-from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
-from sslyze.errors import ServerRejectedTlsHandshake
 
 
 @dataclass(frozen=True)
@@ -37,7 +35,7 @@ class CompressionScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class CompressionScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[CompressionScanResultAsJson]
+    result: CompressionScanResultAsJson | None
 
 
 class _CompressionCliConnector(ScanCommandCliConnector[CompressionScanResult, None]):
@@ -45,7 +43,7 @@ class _CompressionCliConnector(ScanCommandCliConnector[CompressionScanResult, No
     _cli_description = "Test a server for TLS compression support, which can be leveraged to perform a CRIME attack."
 
     @classmethod
-    def result_to_console_output(cls, result: CompressionScanResult) -> List[str]:
+    def result_to_console_output(cls, result: CompressionScanResult) -> list[str]:
         result_as_txt = [cls._format_title("Deflate Compression")]
         if result.supports_compression:
             result_as_txt.append(cls._format_field("", "VULNERABLE - Server supports Deflate compression"))
@@ -61,8 +59,8 @@ class CompressionImplementation(ScanCommandImplementation[CompressionScanResult,
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
@@ -70,7 +68,7 @@ class CompressionImplementation(ScanCommandImplementation[CompressionScanResult,
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> CompressionScanResult:
         if len(scan_job_results) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
@@ -92,14 +90,13 @@ def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
         # Only the 1.0.2 SSL client has methods to check for compression support
         openssl_version=OpenSslVersionEnum.OPENSSL_1_0_2,
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2):
-        raise RuntimeError("Should never happen")
+    assert isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2), "Should never happen"
 
     # Make sure OpenSSL was built with support for compression to avoid false negatives
     if "zlib compression" not in ssl_connection.ssl_client.get_available_compression_methods():
         raise RuntimeError("OpenSSL was not built with support for zlib / compression. Did you build nassl yourself ?")
 
-    compression_name: Optional[str]
+    compression_name: str | None
     try:
         # Perform the TLS handshake
         ssl_connection.connect()
@@ -118,4 +115,4 @@ def _test_compression_support(server_info: ServerConnectivityInfo) -> bool:
     finally:
         ssl_connection.close()
 
-    return True if compression_name else False
+    return bool(compression_name)

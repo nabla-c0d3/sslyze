@@ -1,21 +1,19 @@
-import socket
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Tuple
 
 from nassl.errors import OpenSSLError
 from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
+from sslyze.errors import ServerRejectedTlsHandshake
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
-from sslyze.errors import ServerRejectedTlsHandshake
-from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.plugins.plugin_base import (
-    ScanCommandImplementation,
-    ScanCommandExtraArgument,
-    ScanJob,
-    ScanCommandResult,
     ScanCommandCliConnector,
+    ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanJob,
     ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
@@ -56,7 +54,7 @@ class SessionRenegotiationScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class SessionRenegotiationScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[SessionRenegotiationScanResultAsJson]
+    result: SessionRenegotiationScanResultAsJson | None
 
 
 class _ScanJobResultEnum(Enum):
@@ -69,7 +67,7 @@ class _SessionRenegotiationCliConnector(ScanCommandCliConnector[SessionRenegotia
     _cli_description = "Test a server for insecure TLS renegotiation and client-initiated renegotiation."
 
     @classmethod
-    def result_to_console_output(cls, result: SessionRenegotiationScanResult) -> List[str]:
+    def result_to_console_output(cls, result: SessionRenegotiationScanResult) -> list[str]:
         result_txt = [cls._format_title("Session Renegotiation")]
 
         # Client-initiated reneg
@@ -100,8 +98,8 @@ class SessionRenegotiationImplementation(
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[SessionRenegotiationExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: SessionRenegotiationExtraArgument | None = None
+    ) -> list[ScanJob]:
         client_renegotiation_attempts = extra_arguments.client_renegotiation_attempts if extra_arguments else 10
 
         return [
@@ -114,7 +112,7 @@ class SessionRenegotiationImplementation(
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> SessionRenegotiationScanResult:
         if len(scan_job_results) != 2:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
@@ -134,7 +132,7 @@ class SessionRenegotiationImplementation(
         )
 
 
-def _test_secure_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_ScanJobResultEnum, bool]:
+def _test_secure_renegotiation(server_info: ServerConnectivityInfo) -> tuple[_ScanJobResultEnum, bool]:
     """Check whether the server supports secure renegotiation."""
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
     if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
@@ -149,8 +147,7 @@ def _test_secure_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_Sc
         # Only the legacy 1.0.2 client has methods to check for secure reneg
         openssl_version=OpenSslVersionEnum.OPENSSL_1_0_2,
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2):
-        raise RuntimeError("Should never happen")
+    assert isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2), "Should never happen"
 
     try:
         # Perform the TLS handshake
@@ -172,7 +169,7 @@ def _test_secure_renegotiation(server_info: ServerConnectivityInfo) -> Tuple[_Sc
 
 def _test_client_renegotiation(
     server_info: ServerConnectivityInfo, client_renegotiation_attempts: int
-) -> Tuple[_ScanJobResultEnum, Tuple[bool, int]]:
+) -> tuple[_ScanJobResultEnum, tuple[bool, int]]:
     """Check whether the server honors session renegotiation requests."""
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher as there is no reneg with TLS 1.3
     client_renegotiations_success_count = 0
@@ -187,8 +184,7 @@ def _test_client_renegotiation(
         override_tls_version=tls_version_to_use,
         openssl_version=OpenSslVersionEnum.OPENSSL_1_0_2,
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2):
-        raise RuntimeError("Should never happen")
+    assert isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2), "Should never happen"
 
     try:
         # Perform the TLS handshake
@@ -212,7 +208,7 @@ def _test_client_renegotiation(
             accepts_client_renegotiation = True
 
         # Errors caused by a server rejecting the renegotiation
-        except socket.timeout:
+        except TimeoutError:
             # This is how Netty rejects a renegotiation - https://github.com/nabla-c0d3/sslyze/issues/114
             accepts_client_renegotiation = False
         except ConnectionError:
@@ -225,9 +221,7 @@ def _test_client_renegotiation(
             else:
                 raise
         except OpenSSLError as e:
-            if "handshake failure" in e.args[0]:
-                accepts_client_renegotiation = False
-            elif "no renegotiation" in e.args[0]:
+            if "handshake failure" in e.args[0] or "no renegotiation" in e.args[0]:
                 accepts_client_renegotiation = False
             elif "tlsv1 unrecognized name" in e.args[0]:
                 # Yahoo's very own way of rejecting a renegotiation

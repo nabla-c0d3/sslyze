@@ -1,22 +1,19 @@
-import socket
+from dataclasses import dataclass
 from enum import Enum, unique
 from pathlib import Path
-from typing import Optional
 
-from dataclasses import dataclass
-
-from nassl.errors import OpenSSLError
 from nassl.base_ssl_client import ClientCertificateRequested, TlsVersionEnum
+from nassl.errors import OpenSSLError
 from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
-from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
+from sslyze.connection_helpers.tls_connection import _HANDSHAKE_REJECTED_TLS_ERRORS, OpenSslVersionEnum, SslConnection
 from sslyze.errors import (
+    ConnectionToServerFailed,
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
     TlsHandshakeFailed,
-    ConnectionToServerFailed,
 )
-from sslyze.connection_helpers.tls_connection import SslConnection, OpenSslVersionEnum, _HANDSHAKE_REJECTED_TLS_ERRORS
+from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 
 
 @unique
@@ -57,7 +54,7 @@ def check_connectivity_to_server(
         ServerConnectivityError: If the server was not reachable or an SSL/TLS handshake could not be completed.
     """
     # Try to complete an SSL handshake to figure out the SSL/TLS version and cipher supported by the server
-    tls_detection_result: Optional[_TlsVersionDetectionResult] = None
+    tls_detection_result: _TlsVersionDetectionResult | None = None
 
     # Fist try TLS 1.3
     try:
@@ -155,9 +152,9 @@ class ServerConnectivityInfo:
 
     def get_preconfigured_tls_connection(
         self,
-        override_tls_version: Optional[TlsVersionEnum] = None,
-        ca_certificates_path: Optional[Path] = None,
-        openssl_version: Optional[OpenSslVersionEnum] = None,
+        override_tls_version: TlsVersionEnum | None = None,
+        ca_certificates_path: Path | None = None,
+        openssl_version: OpenSslVersionEnum | None = None,
         should_enable_server_name_indication: bool = True,
     ) -> SslConnection:
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
@@ -165,7 +162,7 @@ class ServerConnectivityInfo:
         Used by all plugins to connect to the server and run scans.
         """
         final_ssl_version = self.tls_probing_result.highest_tls_version_supported
-        final_openssl_cipher_string: Optional[str]
+        final_openssl_cipher_string: str | None
         final_openssl_cipher_string = self.tls_probing_result.cipher_suite_supported
         if override_tls_version is not None:
             # Caller wants to override the TLS version to use for this connection
@@ -355,7 +352,7 @@ def _detect_client_auth_requirement_with_tls_1_3(
     except (ClientCertificateRequested, ServerRejectedTlsHandshake):
         client_auth_requirement = ClientAuthRequirementEnum.REQUIRED
 
-    except socket.timeout:
+    except TimeoutError:
         # The timeout is triggered when calling read() because the server has client auth optional and is waiting for
         # more data from us the client
         client_auth_requirement = ClientAuthRequirementEnum.OPTIONAL
@@ -367,7 +364,7 @@ def _detect_client_auth_requirement_with_tls_1_3(
         # TODO(AD): Find a way to unify exception handling between the two calls
         openssl_error_message = e.args[0]
         is_known_server_rejection_error = False
-        for error_msg in _HANDSHAKE_REJECTED_TLS_ERRORS.keys():
+        for error_msg in _HANDSHAKE_REJECTED_TLS_ERRORS:
             if error_msg in openssl_error_message:
                 is_known_server_rejection_error = True
                 break
@@ -440,8 +437,7 @@ def _detect_ecdh_support(
         openssl_version=OpenSslVersionEnum.OPENSSL_1_1_1,
         should_ignore_client_auth=True,
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1):
-        raise RuntimeError("Should never happen")
+    assert isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1), "Should never happen"
 
     # Set the right elliptic curve cipher suites
     enable_ecdh_cipher_suites(tls_version, ssl_connection.ssl_client)

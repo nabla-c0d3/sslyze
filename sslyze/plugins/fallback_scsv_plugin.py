@@ -1,23 +1,22 @@
 from dataclasses import dataclass
-from typing import List, Optional
 
 from nassl.errors import OpenSSLError
 from nassl.openssl_1_0_2.ssl_client import SslClient_OpenSSL_1_0_2
 
+from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
+from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
-    ScanCommandImplementation,
-    ScanCommandExtraArgument,
-    ScanJob,
-    ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanCommandWrongUsageError,
+    ScanJob,
     ScanJobResult,
 )
-from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
-from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 
 
 @dataclass(frozen=True)
@@ -36,7 +35,7 @@ class FallbackScsvScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class FallbackScsvScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[FallbackScsvScanResultAsJson]
+    result: FallbackScsvScanResultAsJson | None
 
 
 class _FallbackScsvCliConnector(ScanCommandCliConnector[FallbackScsvScanResult, None]):
@@ -44,7 +43,7 @@ class _FallbackScsvCliConnector(ScanCommandCliConnector[FallbackScsvScanResult, 
     _cli_description = "Test a server for the TLS_FALLBACK_SCSV mechanism to prevent downgrade attacks."
 
     @classmethod
-    def result_to_console_output(cls, result: FallbackScsvScanResult) -> List[str]:
+    def result_to_console_output(cls, result: FallbackScsvScanResult) -> list[str]:
         result_as_txt = [cls._format_title("Downgrade Attacks")]
         downgrade_txt = (
             "OK - Supported" if result.supports_fallback_scsv else "VULNERABLE - Signaling cipher suite not supported"
@@ -60,8 +59,8 @@ class FallbackScsvImplementation(ScanCommandImplementation[FallbackScsvScanResul
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
@@ -69,7 +68,7 @@ class FallbackScsvImplementation(ScanCommandImplementation[FallbackScsvScanResul
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> FallbackScsvScanResult:
         if len(scan_job_results) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
@@ -91,8 +90,7 @@ def _test_scsv(server_info: ServerConnectivityInfo) -> bool:
         # Only the 1.0.2 client has enable_fallback_scsv()
         openssl_version=OpenSslVersionEnum.OPENSSL_1_0_2,
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2):
-        raise RuntimeError("Should never happen")
+    assert isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_0_2), "Should never happen"
 
     ssl_connection.ssl_client.enable_fallback_scsv()
 

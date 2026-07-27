@@ -1,6 +1,3 @@
-from typing import Dict
-
-
 # Cipher suite name mappings so we can return the RFC names, instead of the OpenSSL names
 # Based on https://testssl.sh/openssl-rfc.mappping.html
 SSLV2_OPENSSL_TO_RFC_NAMES_MAPPING = {
@@ -300,7 +297,7 @@ TLS_OPENSSL_TO_RFC_NAMES_MAPPING = {
 TLS_RFC_TO_OPENSSL_NAMES_MAPPING = {v: k for k, v in TLS_OPENSSL_TO_RFC_NAMES_MAPPING.items()}
 
 
-RFC_NAME_TO_KEY_SIZE_MAPPING: Dict[str, int] = {
+RFC_NAME_TO_KEY_SIZE_MAPPING: dict[str, int] = {
     "TLS_RSA_WITH_NULL_MD5": 0,
     "TLS_RSA_WITH_NULL_SHA": 0,
     "TLS_RSA_WITH_AES_128_CBC_SHA": 128,

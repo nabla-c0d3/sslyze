@@ -1,15 +1,13 @@
 from pathlib import Path
 
+import pytest
 from cryptography.x509.ocsp import OCSPResponseStatus
 
-from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation, CertificateInfoExtraArgument
-
+from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument, CertificateInfoImplementation
 from sslyze.server_setting import ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import LegacyOpenSslServer, ModernOpenSslServer, ClientAuthConfigEnum
-import pytest
-
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
 from tests.server_connectivity_tests.test_direct_connection import is_ipv6_available
 
 

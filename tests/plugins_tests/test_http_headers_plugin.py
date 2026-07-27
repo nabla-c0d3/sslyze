@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from http.client import HTTPResponse
-from typing import Dict
 
 import pytest
 from nassl.base_ssl_client import ClientCertificateRequested
@@ -8,14 +7,13 @@ from nassl.base_ssl_client import ClientCertificateRequested
 from sslyze.plugins.http_headers_plugin import (
     HttpHeadersImplementation,
     HttpHeadersScanResult,
-    _detect_http_redirection,
     HttpHeadersScanResultAsJson,
+    _detect_http_redirection,
 )
-
 from sslyze.server_setting import (
-    ServerNetworkLocation,
-    ServerNetworkConfiguration,
     ClientAuthenticationCredentials,
+    ServerNetworkConfiguration,
+    ServerNetworkLocation,
 )
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
@@ -131,7 +129,7 @@ class TestHttpHeadersPlugin:
 @dataclass
 class _MockHttpResponse(HTTPResponse):
     status: int
-    _headers: Dict[str, str]
+    _headers: dict[str, str]
     fp: None = None  # type: ignore
 
     def getheader(self, name: str, default=None):

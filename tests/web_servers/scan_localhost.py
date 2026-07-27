@@ -13,16 +13,16 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from sslyze import (
-    Scanner,
-    ServerScanRequest,
     ClientAuthRequirementEnum,
-    ScanCommandErrorReasonEnum,
-    ServerNetworkLocation,
-    ServerConnectivityStatusEnum,
     ScanCommandAttemptStatusEnum,
+    ScanCommandErrorReasonEnum,
+    Scanner,
+    ServerConnectivityStatusEnum,
+    ServerNetworkLocation,
+    ServerScanRequest,
 )
-from sslyze.json.json_output import SslyzeOutputAsJson, ServerScanResultAsJson
-from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
+from sslyze.json.json_output import ServerScanResultAsJson, SslyzeOutputAsJson
+from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
 
 
 class WebServerSoftwareEnum(str, Enum):
@@ -76,16 +76,18 @@ def main(server_software_running_on_localhost: WebServerSoftwareEnum) -> None:
             scan_cmd_attempt = getattr(server_scan_result.scan_result, scan_command.value)
             if scan_cmd_attempt.status == ScanCommandAttemptStatusEnum.COMPLETED:
                 successful_cmds.add(scan_command)
-            elif scan_cmd_attempt.status == ScanCommandAttemptStatusEnum.ERROR:
+            elif (
+                scan_cmd_attempt.status == ScanCommandAttemptStatusEnum.ERROR
+                and scan_cmd_attempt.error_reason != ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED
+            ):
                 # Crash if any scan commands triggered an error that's not due to client authentication being required
-                if scan_cmd_attempt.error_reason != ScanCommandErrorReasonEnum.CLIENT_CERTIFICATE_NEEDED:
-                    triggered_unexpected_error = True
-                    print(f"\nError when running {scan_command}: {scan_cmd_attempt.error_reason}.")
-                    if scan_cmd_attempt.error_trace:
-                        exc_trace = ""
-                        for line in scan_cmd_attempt.error_trace.format(chain=False):
-                            exc_trace += f"       {line}"
-                        print(exc_trace)
+                triggered_unexpected_error = True
+                print(f"\nError when running {scan_command}: {scan_cmd_attempt.error_reason}.")
+                if scan_cmd_attempt.error_trace:
+                    exc_trace = ""
+                    for line in scan_cmd_attempt.error_trace.format(chain=False):
+                        exc_trace += f"       {line}"
+                    print(exc_trace)
 
         print(f"Finished scan with {len(successful_cmds)} results.")
         if triggered_unexpected_error:

@@ -1,14 +1,12 @@
-from typing import Tuple
-
 from nassl.openssl_1_1_1._nassl import SSL_SESSION
 
-from sslyze.plugins.session_resumption._resumption_with_id import retrieve_tls_session, _ScanJobResultEnum
+from sslyze.plugins.session_resumption._resumption_with_id import _ScanJobResultEnum, retrieve_tls_session
 from sslyze.server_connectivity import ServerConnectivityInfo
 
 
 def resume_with_tls_ticket(
     server_info: ServerConnectivityInfo,
-) -> Tuple[_ScanJobResultEnum, bool]:
+) -> tuple[_ScanJobResultEnum, bool]:
     """Perform one session resumption using TLS Session Tickets."""
     # Connect to the server and keep the TLS session
     session1 = retrieve_tls_session(server_info, should_enable_tls_ticket=True)

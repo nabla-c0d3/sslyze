@@ -1,28 +1,25 @@
-import socket
-import types
-from enum import Enum
-from typing import Optional, List, Dict
-
 import binascii
 import math
+import types
+import typing
+from enum import Enum
+
+import tls_parser.tls_version
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey, RSAPublicNumbers
 from cryptography.x509 import load_pem_x509_certificate
-from nassl.errors import WantReadError
 from nassl.base_ssl_client import ClientCertificateRequested
-from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
-
+from nassl.errors import WantReadError
 from tls_parser.alert_protocol import TlsAlertRecord
-from tls_parser.record_protocol import TlsRecordTlsVersionBytes
+from tls_parser.change_cipher_spec_protocol import TlsChangeCipherSpecRecord
 from tls_parser.exceptions import NotEnoughData
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte, TlsRsaClientKeyExchangeRecord
 from tls_parser.parser import TlsRecordParser
-
-import tls_parser.tls_version
+from tls_parser.record_protocol import TlsRecordTlsVersionBytes
 
 from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
 from sslyze.errors import ServerRejectedTlsHandshake
-from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum, ClientAuthRequirementEnum
+from sslyze.server_connectivity import ClientAuthRequirementEnum, ServerConnectivityInfo, TlsVersionEnum
 
 
 class RobotScanResultEnum(str, Enum):
@@ -56,12 +53,12 @@ class _RobotTlsRecordPayloads:
     # The high level idea of an oracle attack is to send several payloads that are slightly wrong, in different ways,
     # hoping that the server is going to give a different response (a TLS alert, a connection reset, no data, etc.) for
     # each payload
-    _CKE_PAYLOADS_HEX = {
-        RobotPmsPaddingPayloadEnum.VALID: "0002{pms_padding}00{tls_version}{pms}",  # noqa: E241
-        RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES: "4117{pms_padding}00{tls_version}{pms}",  # noqa: E241
-        RobotPmsPaddingPayloadEnum.WRONG_POSITION_00: "0002{pms_padding}11{pms}0011",  # noqa: E241
-        RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE: "0002{pms_padding}111111{pms}",  # noqa: E241
-        RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER: "0002{pms_padding}000202{pms}",  # noqa: E241
+    _CKE_PAYLOADS_HEX: typing.ClassVar = {
+        RobotPmsPaddingPayloadEnum.VALID: "0002{pms_padding}00{tls_version}{pms}",
+        RobotPmsPaddingPayloadEnum.WRONG_FIRST_TWO_BYTES: "4117{pms_padding}00{tls_version}{pms}",
+        RobotPmsPaddingPayloadEnum.WRONG_POSITION_00: "0002{pms_padding}11{pms}0011",
+        RobotPmsPaddingPayloadEnum.NO_00_IN_THE_MIDDLE: "0002{pms_padding}111111{pms}",
+        RobotPmsPaddingPayloadEnum.WRONG_VERSION_NUMBER: "0002{pms_padding}000202{pms}",
     }
 
     _PMS_HEX = "aa112233445566778899112233445566778899112233445566778899112233445566778899112233445566778899"
@@ -90,7 +87,7 @@ class _RobotTlsRecordPayloads:
     @staticmethod
     def _compute_pms_padding(modulus: int) -> str:
         # Generate the padding for the pre_master_scecret
-        modulus_bit_size = int(math.ceil(math.log(modulus, 2)))
+        modulus_bit_size = math.ceil(math.log(modulus, 2))  # noqa: FURB163
         modulus_byte_size = (modulus_bit_size + 7) // 8
         # pad_len is length in hex chars, so bytelen * 2
         pad_len = (modulus_byte_size - 48 - 3) * 2
@@ -114,7 +111,7 @@ class _RobotTlsRecordPayloads:
 
 
 class RobotServerResponsesAnalyzer:
-    def __init__(self, payload_responses: Dict[RobotPmsPaddingPayloadEnum, List[str]], attempts_count: int) -> None:
+    def __init__(self, payload_responses: dict[RobotPmsPaddingPayloadEnum, list[str]], attempts_count: int) -> None:
         # A mapping of a ROBOT payload enum -> a list of two server responses as text
         for server_responses in payload_responses.values():
             if len(server_responses) != attempts_count:
@@ -125,13 +122,13 @@ class RobotServerResponsesAnalyzer:
     def compute_result_enum(self) -> RobotScanResultEnum:
         """Look at the server's response to each ROBOT payload and return the conclusion of the analysis."""
         # Ensure the results were consistent
-        for payload_enum, server_responses in self._payload_responses.items():
+        for server_responses in self._payload_responses.values():
             # We ran the check a number of times per payload and the responses should be the same
             if len(set(server_responses)) != 1:
                 return RobotScanResultEnum.UNKNOWN_INCONSISTENT_RESULTS
 
         # Check if the server acts as an oracle by checking if the server replied differently to the payloads
-        if len(set([server_responses[0] for server_responses in self._payload_responses.values()])) == 1:
+        if len(set([server_responses[0] for server_responses in self._payload_responses.values()])) == 1:  # noqa: C403
             # All server responses were identical - no oracle
             return RobotScanResultEnum.NOT_VULNERABLE_NO_ORACLE
 
@@ -157,7 +154,7 @@ class ServerDoesNotSupportRsa(Exception):
     pass
 
 
-def test_robot(server_info: ServerConnectivityInfo) -> Dict[RobotPmsPaddingPayloadEnum, str]:
+def test_robot(server_info: ServerConnectivityInfo) -> dict[RobotPmsPaddingPayloadEnum, str]:
     # Try with TLS 1.2 even if the server supports TLS 1.3 or higher
     if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
         tls_version_to_use = TlsVersionEnum.TLS_1_2
@@ -212,8 +209,8 @@ def _run_oracle_detection(
     rsa_modulus: int,
     rsa_exponent: int,
     should_complete_handshake: bool,
-) -> Dict[RobotPmsPaddingPayloadEnum, str]:
-    server_responses_per_robot_payloads: Dict[RobotPmsPaddingPayloadEnum, str] = {}
+) -> dict[RobotPmsPaddingPayloadEnum, str]:
+    server_responses_per_robot_payloads: dict[RobotPmsPaddingPayloadEnum, str] = {}
     for payload_enum in RobotPmsPaddingPayloadEnum:
         server_response = _send_robot_payload(
             server_info,
@@ -231,7 +228,7 @@ def _run_oracle_detection(
 
 def _get_rsa_parameters(
     server_info: ServerConnectivityInfo, tls_version: TlsVersionEnum, openssl_cipher_string: str
-) -> Optional[RSAPublicNumbers]:
+) -> RSAPublicNumbers | None:
     ssl_connection = server_info.get_preconfigured_tls_connection(
         override_tls_version=tls_version,
         openssl_version=OpenSslVersionEnum.OPENSSL_1_0_2,
@@ -317,7 +314,7 @@ def _send_robot_payload(
     except ServerResponseToRobot as e:
         # Should always be thrown
         server_response = e.server_response
-    except socket.timeout:
+    except TimeoutError:
         # https://github.com/nabla-c0d3/sslyze/issues/361
         server_response = "Connection timed out"
     except ServerRejectedTlsHandshake:
@@ -385,7 +382,7 @@ def do_handshake_with_robot(self):  # type: ignore
             # Server returned a TLS alert
             break
         else:
-            raise ValueError("Unknown record? Type {}".format(tls_record.header.type))
+            raise TypeError(f"Unknown record? Type {tls_record.header.type}")
 
     if did_receive_hello_done:
         # Send a special Client Key Exchange Record as the payload
@@ -414,17 +411,15 @@ def do_handshake_with_robot(self):  # type: ignore
                     if not raw_ssl_bytes:
                         # No data?
                         raise ServerResponseToRobot("No data")
-                except socket.error as e:
+                except OSError as e:
                     # Server closed the connection after receiving the CCS payload
-                    raise ServerResponseToRobot("socket.error {}".format(str(e)))
+                    raise ServerResponseToRobot(f"socket.error {e!s}")
 
                 remaining_bytes = remaining_bytes + raw_ssl_bytes
                 continue
 
             if isinstance(tls_record, TlsAlertRecord):
-                raise ServerResponseToRobot(
-                    "TLS Alert {} {}".format(tls_record.alert_description, tls_record.alert_severity)
-                )
+                raise ServerResponseToRobot(f"TLS Alert {tls_record.alert_description} {tls_record.alert_severity}")
             else:
                 break
 

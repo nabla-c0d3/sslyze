@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 from sslyze.plugins.compression_plugin import CompressionImplementation
 from sslyze.plugins.early_data_plugin import EarlyDataImplementation
-from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesImplementation
 from sslyze.plugins.ems_extension_plugin import EmsExtensionImplementation
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvImplementation
 from sslyze.plugins.heartbleed_plugin import HeartbleedImplementation
@@ -18,10 +17,10 @@ from sslyze.plugins.openssl_cipher_suites.implementation import (
     Tlsv12ScanImplementation,
     Tlsv13ScanImplementation,
 )
-from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeImplementation
 from sslyze.plugins.robot.implementation import RobotImplementation
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationImplementation
 from sslyze.plugins.session_resumption.implementation import SessionResumptionSupportImplementation
+from sslyze.plugins.supported_groups_plugin import SupportedGroupsImplementation
 
 if TYPE_CHECKING:
     from sslyze.plugins.plugin_base import ScanCommandImplementation
@@ -44,9 +43,8 @@ class ScanCommand(str, Enum):
     ROBOT = "robot"
     SESSION_RENEGOTIATION = "session_renegotiation"
     HTTP_HEADERS = "http_headers"
-    ELLIPTIC_CURVES = "elliptic_curves"
     TLS_EXTENDED_MASTER_SECRET = "tls_extended_master_secret"
-    PQ_KEY_EXCHANGE = "pq_key_exchange"
+    SUPPORTED_GROUPS = "supported_groups"
 
 
 class ScanCommandsRepository:
@@ -76,7 +74,6 @@ _IMPLEMENTATION_CLASSES: dict[ScanCommand, type["ScanCommandImplementation"]] = 
     ScanCommand.ROBOT: RobotImplementation,
     ScanCommand.SESSION_RENEGOTIATION: SessionRenegotiationImplementation,
     ScanCommand.HTTP_HEADERS: HttpHeadersImplementation,
-    ScanCommand.ELLIPTIC_CURVES: SupportedEllipticCurvesImplementation,
     ScanCommand.TLS_EXTENDED_MASTER_SECRET: EmsExtensionImplementation,
-    ScanCommand.PQ_KEY_EXCHANGE: PqKeyExchangeImplementation,
+    ScanCommand.SUPPORTED_GROUPS: SupportedGroupsImplementation,
 }

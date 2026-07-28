@@ -17,9 +17,9 @@ from sslyze import (
     ScanCommandAttemptStatusEnum,
     ServerScanResult,
     ServerScanStatusEnum,
-    SupportedEllipticCurvesScanResult,
 )
 from sslyze.plugins.http_headers_plugin import HttpHeadersScanResult
+from sslyze.plugins.supported_groups_plugin import SupportedGroupsScanResult
 
 
 class _MozillaCiphersAsJson(pydantic.BaseModel):
@@ -118,8 +118,7 @@ SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: set[ScanCommand] = {
     ScanCommand.TLS_COMPRESSION,
     ScanCommand.SESSION_RENEGOTIATION,
     ScanCommand.CERTIFICATE_INFO,
-    ScanCommand.ELLIPTIC_CURVES,
-    ScanCommand.PQ_KEY_EXCHANGE,  # Not really needed atm, but we should run this by default
+    ScanCommand.SUPPORTED_GROUPS,
     ScanCommand.TLS_EXTENDED_MASTER_SECRET,
     # ScanCommand.HTTP_HEADERS,  # Disabled for now; see below
 }
@@ -170,10 +169,10 @@ def check_server_against_tls_configuration(
     )
     all_issues.update(issues_with_tls_ciphers)
 
-    # Checks on the TLS curves
-    assert server_scan_result.scan_result.elliptic_curves.result
+    # Checks on the TLS elliptic curves
+    assert server_scan_result.scan_result.supported_groups.result
     issues_with_tls_curves = _check_tls_curves(
-        server_scan_result.scan_result.elliptic_curves.result,
+        server_scan_result.scan_result.supported_groups.result,
         tls_config_to_check_against,
     )
     all_issues.update(issues_with_tls_curves)
@@ -198,12 +197,12 @@ def check_server_against_tls_configuration(
 
 
 def _check_tls_curves(
-    tls_curves_result: SupportedEllipticCurvesScanResult,
+    supported_groups_result: SupportedGroupsScanResult,
     tls_config: TlsConfigurationAsJson,
 ) -> dict[str, str]:
     issues_with_tls_curves = {}
-    if tls_curves_result.supported_curves:
-        supported_curves = {curve.name for curve in tls_curves_result.supported_curves}
+    if supported_groups_result.supported_elliptic_curve_groups:
+        supported_curves = set(supported_groups_result.supported_elliptic_curve_groups)
     else:
         supported_curves = set()
 

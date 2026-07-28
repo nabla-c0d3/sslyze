@@ -22,20 +22,19 @@ from sslyze.plugins.certificate_info.json_output import (
 )
 from sslyze.plugins.compression_plugin import CompressionScanAttemptAsJson
 from sslyze.plugins.early_data_plugin import EarlyDataScanAttemptAsJson
-from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanAttemptAsJson
 from sslyze.plugins.ems_extension_plugin import EmsExtensionScanAttemptAsJson
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanAttemptAsJson
 from sslyze.plugins.heartbleed_plugin import HeartbleedScanAttemptAsJson
 from sslyze.plugins.http_headers_plugin import HttpHeadersScanAttemptAsJson
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanAttemptAsJson
 from sslyze.plugins.openssl_cipher_suites.json_output import CipherSuitesScanAttemptAsJson
-from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeScanAttemptAsJson
 from sslyze.plugins.robot.implementation import RobotScanAttemptAsJson
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanAttemptAsJson
 from sslyze.plugins.session_resumption.json_output import (
     SessionResumptionSupportExtraArgumentAsJson,
     SessionResumptionSupportScanAttemptAsJson,
 )
+from sslyze.plugins.supported_groups_plugin import SupportedGroupsScanAttemptAsJson
 from sslyze.scanner.models import AllScanCommandsAttempts
 from sslyze.server_setting import ConnectionTypeEnum, ServerNetworkLocation
 
@@ -62,10 +61,9 @@ class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
     robot: RobotScanAttemptAsJson
     session_renegotiation: SessionRenegotiationScanAttemptAsJson
     session_resumption: SessionResumptionSupportScanAttemptAsJson
-    elliptic_curves: SupportedEllipticCurvesScanAttemptAsJson
     http_headers: HttpHeadersScanAttemptAsJson
     tls_extended_master_secret: EmsExtensionScanAttemptAsJson
-    pq_key_exchange: PqKeyExchangeScanAttemptAsJson
+    supported_groups: SupportedGroupsScanAttemptAsJson
 
     @model_validator(mode="before")
     @classmethod

@@ -73,7 +73,7 @@ from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.early_data_plugin import EarlyDataScanResult
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanResult
 from sslyze.plugins.heartbleed_plugin import HeartbleedScanResult
-from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeScanResult
+from sslyze.plugins.supported_groups_plugin import SupportedGroupsScanResult
 
 # HTTP Headers
 from sslyze.plugins.http_headers_plugin import (
@@ -84,7 +84,6 @@ from sslyze.plugins.http_headers_plugin import (
 
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanResult
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanResult
-from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanResult, EllipticCurve
 from sslyze.plugins.ems_extension_plugin import EmsExtensionScanResult
 
 from sslyze.json.json_output import SslyzeOutputAsJson, ServerScanResultAsJson

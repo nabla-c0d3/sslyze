@@ -7,14 +7,12 @@ from sslyze import ServerNetworkConfiguration
 from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument, CertificateInfoScanResult
 from sslyze.plugins.compression_plugin import CompressionScanResult
 from sslyze.plugins.early_data_plugin import EarlyDataScanResult
-from sslyze.plugins.elliptic_curves_plugin import SupportedEllipticCurvesScanResult
 from sslyze.plugins.ems_extension_plugin import EmsExtensionScanResult
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanResult
 from sslyze.plugins.heartbleed_plugin import HeartbleedScanResult
 from sslyze.plugins.http_headers_plugin import HttpHeadersScanResult
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanResult
 from sslyze.plugins.openssl_cipher_suites.implementation import CipherSuitesScanResult
-from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeScanResult
 from sslyze.plugins.robot.implementation import RobotScanResult
 from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
 from sslyze.plugins.session_renegotiation_plugin import (
@@ -25,6 +23,7 @@ from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportExtraArgument,
     SessionResumptionSupportScanResult,
 )
+from sslyze.plugins.supported_groups_plugin import SupportedGroupsScanResult
 from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
 from sslyze.server_connectivity import ServerTlsProbingResult
 from sslyze.server_setting import ServerNetworkLocation
@@ -127,15 +126,11 @@ class HttpHeadersScanAttempt(ScanCommandAttempt[HttpHeadersScanResult]):
     pass
 
 
-class SupportedEllipticCurvesScanAttempt(ScanCommandAttempt[SupportedEllipticCurvesScanResult]):
-    pass
-
-
 class EmsExtensionScanAttempt(ScanCommandAttempt[EmsExtensionScanResult]):
     pass
 
 
-class PqKeyExchangeScanAttempt(ScanCommandAttempt[PqKeyExchangeScanResult]):
+class SupportedGroupsScanAttempt(ScanCommandAttempt[SupportedGroupsScanResult]):
     pass
 
 
@@ -158,10 +153,9 @@ class AllScanCommandsAttempts:
     robot: RobotScanAttempt
     session_renegotiation: SessionRenegotiationScanAttempt
     session_resumption: SessionResumptionSupportScanAttempt
-    elliptic_curves: SupportedEllipticCurvesScanAttempt
     http_headers: HttpHeadersScanAttempt
     tls_extended_master_secret: EmsExtensionScanAttempt
-    pq_key_exchange: PqKeyExchangeScanAttempt
+    supported_groups: SupportedGroupsScanAttempt
 
 
 _SCAN_CMD_FIELD_NAME_TO_CLS: dict[str, type[ScanCommandAttempt]] = {

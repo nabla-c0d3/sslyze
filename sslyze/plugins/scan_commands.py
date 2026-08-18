@@ -22,6 +22,7 @@ from sslyze.plugins.pq_key_exchange_plugin import PqKeyExchangeImplementation
 from sslyze.plugins.robot.implementation import RobotImplementation
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationImplementation
 from sslyze.plugins.session_resumption.implementation import SessionResumptionSupportImplementation
+from sslyze.plugins.signature_algorithms_plugin import SignatureAlgorithmsImplementation
 
 if TYPE_CHECKING:
     from sslyze.plugins.plugin_base import ScanCommandImplementation
@@ -47,6 +48,7 @@ class ScanCommand(str, Enum):
     ELLIPTIC_CURVES = "elliptic_curves"
     TLS_EXTENDED_MASTER_SECRET = "tls_extended_master_secret"
     PQ_KEY_EXCHANGE = "pq_key_exchange"
+    SIGNATURE_ALGORITHMS = "signature_algorithms"
 
 
 class ScanCommandsRepository:
@@ -79,4 +81,5 @@ _IMPLEMENTATION_CLASSES: dict[ScanCommand, type["ScanCommandImplementation"]] = 
     ScanCommand.ELLIPTIC_CURVES: SupportedEllipticCurvesImplementation,
     ScanCommand.TLS_EXTENDED_MASTER_SECRET: EmsExtensionImplementation,
     ScanCommand.PQ_KEY_EXCHANGE: PqKeyExchangeImplementation,
+    ScanCommand.SIGNATURE_ALGORITHMS: SignatureAlgorithmsImplementation,
 }

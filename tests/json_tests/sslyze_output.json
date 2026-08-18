@@ -9203,6 +9203,44 @@
           "result": {
             "supports_ems_extension": true
           }
+        },
+        "signature_algorithms": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "supported_signature_algorithms": [
+              "ecdsa_sha256",
+              "rsa_pss_rsae_sha256",
+              "rsa_pss_rsae_sha384",
+              "rsa_pss_rsae_sha512"
+            ],
+            "rejected_signature_algorithms": [
+              "ecdsa_sha1",
+              "ecdsa_sha224",
+              "ecdsa_sha384",
+              "ecdsa_sha512",
+              "rsa_pkcs1_sha1",
+              "rsa_pkcs1_sha224",
+              "rsa_pkcs1_sha256",
+              "rsa_pkcs1_sha384",
+              "rsa_pkcs1_sha512"
+            ]
+          }
+        },
+        "pq_key_exchange": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "supported_pq_groups": [],
+            "rejected_pq_groups": [
+              "SecP256r1MLKEM768",
+              "SecP384r1MLKEM1024",
+              "X25519MLKEM768"
+            ],
+            "supports_pq_key_exchange": false
+          }
         }
       }
     },
@@ -17558,6 +17596,44 @@
           "error_trace": null,
           "result": {
             "supports_ems_extension": true
+          }
+        },
+        "signature_algorithms": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "supported_signature_algorithms": [
+              "ecdsa_sha256",
+              "rsa_pss_rsae_sha256",
+              "rsa_pss_rsae_sha384",
+              "rsa_pss_rsae_sha512"
+            ],
+            "rejected_signature_algorithms": [
+              "ecdsa_sha1",
+              "ecdsa_sha224",
+              "ecdsa_sha384",
+              "ecdsa_sha512",
+              "rsa_pkcs1_sha1",
+              "rsa_pkcs1_sha224",
+              "rsa_pkcs1_sha256",
+              "rsa_pkcs1_sha384",
+              "rsa_pkcs1_sha512"
+            ]
+          }
+        },
+        "pq_key_exchange": {
+          "status": "COMPLETED",
+          "error_reason": null,
+          "error_trace": null,
+          "result": {
+            "supported_pq_groups": [],
+            "rejected_pq_groups": [
+              "SecP256r1MLKEM768",
+              "SecP384r1MLKEM1024",
+              "X25519MLKEM768"
+            ],
+            "supports_pq_key_exchange": false
           }
         }
       }

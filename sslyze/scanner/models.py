@@ -25,6 +25,7 @@ from sslyze.plugins.session_resumption.implementation import (
     SessionResumptionSupportExtraArgument,
     SessionResumptionSupportScanResult,
 )
+from sslyze.plugins.signature_algorithms_plugin import SignatureAlgorithmsScanResult
 from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
 from sslyze.server_connectivity import ServerTlsProbingResult
 from sslyze.server_setting import ServerNetworkLocation
@@ -139,6 +140,10 @@ class PqKeyExchangeScanAttempt(ScanCommandAttempt[PqKeyExchangeScanResult]):
     pass
 
 
+class SignatureAlgorithmsScanAttempt(ScanCommandAttempt[SignatureAlgorithmsScanResult]):
+    pass
+
+
 @dataclass(frozen=True)
 class AllScanCommandsAttempts:
     """The result of every scan command supported by SSLyze."""
@@ -162,6 +167,7 @@ class AllScanCommandsAttempts:
     http_headers: HttpHeadersScanAttempt
     tls_extended_master_secret: EmsExtensionScanAttempt
     pq_key_exchange: PqKeyExchangeScanAttempt
+    signature_algorithms: SignatureAlgorithmsScanAttempt
 
 
 _SCAN_CMD_FIELD_NAME_TO_CLS: dict[str, type[ScanCommandAttempt]] = {

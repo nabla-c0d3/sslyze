@@ -180,3 +180,15 @@ Result class
 ============
 
 .. autoclass:: EmsExtensionScanResult
+
+
+Signature Algorithms
+********************
+
+**ScanCommand.SIGNATURE_ALGORITHMS**: Test a server for the signature algorithms it accepts for the TLS handshake.
+
+Result class
+============
+
+.. autoclass:: SignatureAlgorithmsScanResult
+.. autoclass:: SignatureAlgorithm

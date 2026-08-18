@@ -36,6 +36,7 @@ from sslyze.plugins.session_resumption.json_output import (
     SessionResumptionSupportExtraArgumentAsJson,
     SessionResumptionSupportScanAttemptAsJson,
 )
+from sslyze.plugins.signature_algorithms_plugin import SignatureAlgorithmsScanAttemptAsJson
 from sslyze.scanner.models import AllScanCommandsAttempts
 from sslyze.server_setting import ConnectionTypeEnum, ServerNetworkLocation
 
@@ -66,6 +67,7 @@ class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
     http_headers: HttpHeadersScanAttemptAsJson
     tls_extended_master_secret: EmsExtensionScanAttemptAsJson
     pq_key_exchange: PqKeyExchangeScanAttemptAsJson
+    signature_algorithms: SignatureAlgorithmsScanAttemptAsJson
 
     @model_validator(mode="before")
     @classmethod

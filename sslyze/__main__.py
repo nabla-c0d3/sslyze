@@ -23,6 +23,14 @@ from sslyze.mozilla_tls_profile.tls_config_checker import (
 
 
 def main() -> None:
+    # Scan results can include server-supplied text (e.g. a certificate subject) with
+    # characters outside the console's active code page. On Windows this is not UTF-8 by
+    # default, and the frozen executable ignores PYTHONIOENCODING/PYTHONUTF8, so printing
+    # such text can raise UnicodeEncodeError and crash the scan instead of reporting it.
+    for stream in (sys.stdout, sys.stderr):
+        if stream is not None and hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+
     # Parse the supplied command line
     date_scans_started = datetime.now(timezone.utc)
     sslyze_parser = CommandLineParser(__version__)

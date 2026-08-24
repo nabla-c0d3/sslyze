@@ -1,3 +1,4 @@
+import io
 from pathlib import Path
 import sys
 from tempfile import NamedTemporaryFile
@@ -9,6 +10,42 @@ from sslyze import SslyzeOutputAsJson
 from sslyze.__main__ import main
 from sslyze.cli.command_line_parser import CommandLineParser, CommandLineParsingError
 from sslyze.mozilla_tls_profile.tls_config_checker import TlsConfigurationEnum
+
+
+class TestMainStdoutEncoding:
+    def test_main_reconfigures_stdout_and_stderr_to_utf8(self):
+        # Given stdout/stderr set up like a redirected console on a non-UTF-8 locale
+        # (this is what a frozen Windows executable's stdout looks like)
+        fake_stdout = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+        fake_stderr = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+
+        # When running main(), even on a command line that fails argument parsing
+        # and never reaches a scan
+        with (
+            mock.patch.object(sys, "argv", ["sslyze"]),
+            mock.patch.object(sys, "stdout", fake_stdout),
+            mock.patch.object(sys, "stderr", fake_stderr),
+        ):
+            main()
+
+        # Then stdout/stderr were switched to UTF-8 with a non-crashing error handler
+        assert fake_stdout.encoding.lower() == "utf-8"
+        assert fake_stdout.errors == "backslashreplace"
+        assert fake_stderr.encoding.lower() == "utf-8"
+        assert fake_stderr.errors == "backslashreplace"
+
+    def test_printing_non_cp1252_text_does_not_crash_after_main(self):
+        # Given a stream that would raise UnicodeEncodeError for this text before the fix
+        stream = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+        server_supplied_text = "Certificate subject CN=测试.example is not trusted"
+        with pytest.raises(UnicodeEncodeError):
+            print(server_supplied_text, file=stream)
+
+        # When main() reconfigures a stream the same way it reconfigures sys.stdout/stderr
+        stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+
+        # Then printing the same server-supplied text no longer raises
+        print(server_supplied_text, file=stream)
 
 
 class TestMain:

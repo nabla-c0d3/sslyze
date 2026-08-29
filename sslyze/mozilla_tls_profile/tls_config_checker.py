@@ -1,32 +1,32 @@
 import json
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, Optional, Set, Dict
+from typing import Annotated
 
 import pydantic
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
-from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo, DhEphemeralKeyInfo
+from nassl.ephemeral_key_info import DhEphemeralKeyInfo, EcDhEphemeralKeyInfo
 
 from sslyze import (
-    ServerScanResult,
-    ServerScanStatusEnum,
-    ScanCommand,
-    ScanCommandAttemptStatusEnum,
-    CertificateInfoScanResult,
     AllScanCommandsAttempts,
+    CertificateInfoScanResult,
     CipherSuitesScanResult,
     RobotScanResultEnum,
-    SupportedEllipticCurvesScanResult,
+    ScanCommand,
+    ScanCommandAttemptStatusEnum,
+    ServerScanResult,
+    ServerScanStatusEnum,
 )
 from sslyze.plugins.http_headers_plugin import HttpHeadersScanResult
+from sslyze.plugins.supported_groups_plugin import SupportedGroupsScanResult
 
 
 class _MozillaCiphersAsJson(pydantic.BaseModel):
-    caddy: Set[str]
-    go: Set[str]
-    iana: Set[str]
-    openssl: Set[str]
+    caddy: set[str]
+    go: set[str]
+    iana: set[str]
+    openssl: set[str]
 
 
 # ANSI X9.62 name (used by the Mozilla TLS profiles) -> SECG name
@@ -37,7 +37,7 @@ _MOZILLA_CURVE_NAME_TO_SECG_CURVE_NAME = {
 }
 
 
-def _convert_mozilla_curve_name_to_secg_name(mozilla_curves: Set[str]) -> Set[str]:
+def _convert_mozilla_curve_name_to_secg_name(mozilla_curves: set[str]) -> set[str]:
     # Some curves use the ANSI X9.62 name in the Mozilla TLS profiles; convert the names to SECG names
     mozilla_curves_secg_names = set()
     for curve_name in mozilla_curves:
@@ -51,21 +51,21 @@ def _convert_mozilla_curve_name_to_secg_name(mozilla_curves: Set[str]) -> Set[st
 
 
 class TlsConfigurationAsJson(pydantic.BaseModel):
-    certificate_curves: Annotated[Set[str], pydantic.AfterValidator(_convert_mozilla_curve_name_to_secg_name)]
-    certificate_signatures: Set[str]
-    certificate_types: Set[str]
-    ciphersuites: Set[str]
+    certificate_curves: Annotated[set[str], pydantic.AfterValidator(_convert_mozilla_curve_name_to_secg_name)]
+    certificate_signatures: set[str]
+    certificate_types: set[str]
+    ciphersuites: set[str]
     ciphers: _MozillaCiphersAsJson
-    dh_param_size: Optional[int]
+    dh_param_size: int | None
     ecdh_param_size: int
     hsts_min_age: int
     maximum_certificate_lifespan: int
     ocsp_staple: bool
     recommended_certificate_lifespan: int
-    rsa_key_size: Optional[int]
+    rsa_key_size: int | None
     server_preferred_order: bool
-    tls_curves: Annotated[Set[str], pydantic.AfterValidator(_convert_mozilla_curve_name_to_secg_name)]
-    tls_versions: Set[str]
+    tls_curves: Annotated[set[str], pydantic.AfterValidator(_convert_mozilla_curve_name_to_secg_name)]
+    tls_versions: set[str]
 
 
 class _AllMozillaTlsConfigurationsAsJson(pydantic.BaseModel):
@@ -91,7 +91,7 @@ class ServerNotCompliantWithTlsConfiguration(Exception):
     def __init__(
         self,
         tls_configuration: TlsConfigurationAsJson,
-        issues: Dict[str, str],
+        issues: dict[str, str],
     ):
         self.tls_configuration = tls_configuration
         self.issues = issues
@@ -104,7 +104,7 @@ class ServerScanResultIncomplete(Exception):
     """The server scan result does not have enough information to check it against Mozilla's configuration."""
 
 
-SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: Set[ScanCommand] = {
+SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: set[ScanCommand] = {
     ScanCommand.SSL_2_0_CIPHER_SUITES,
     ScanCommand.SSL_3_0_CIPHER_SUITES,
     ScanCommand.TLS_1_0_CIPHER_SUITES,
@@ -118,7 +118,7 @@ SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: Set[ScanCommand] = {
     ScanCommand.TLS_COMPRESSION,
     ScanCommand.SESSION_RENEGOTIATION,
     ScanCommand.CERTIFICATE_INFO,
-    ScanCommand.ELLIPTIC_CURVES,
+    ScanCommand.SUPPORTED_GROUPS,
     ScanCommand.TLS_EXTENDED_MASTER_SECRET,
     # ScanCommand.HTTP_HEADERS,  # Disabled for now; see below
 }
@@ -150,7 +150,7 @@ def check_server_against_tls_configuration(
             raise ServerScanResultIncomplete(f"The {scan_command.value} result is missing.")
 
     # Now look for issues
-    all_issues: Dict[str, str] = {}
+    all_issues: dict[str, str] = {}
 
     # Checks on the certificate
     assert server_scan_result.scan_result
@@ -169,10 +169,10 @@ def check_server_against_tls_configuration(
     )
     all_issues.update(issues_with_tls_ciphers)
 
-    # Checks on the TLS curves
-    assert server_scan_result.scan_result.elliptic_curves.result
+    # Checks on the TLS elliptic curves
+    assert server_scan_result.scan_result.supported_groups.result
     issues_with_tls_curves = _check_tls_curves(
-        server_scan_result.scan_result.elliptic_curves.result,
+        server_scan_result.scan_result.supported_groups.result,
         tls_config_to_check_against,
     )
     all_issues.update(issues_with_tls_curves)
@@ -197,12 +197,12 @@ def check_server_against_tls_configuration(
 
 
 def _check_tls_curves(
-    tls_curves_result: SupportedEllipticCurvesScanResult,
+    supported_groups_result: SupportedGroupsScanResult,
     tls_config: TlsConfigurationAsJson,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     issues_with_tls_curves = {}
-    if tls_curves_result.supported_curves:
-        supported_curves = {curve.name for curve in tls_curves_result.supported_curves}
+    if supported_groups_result.supported_elliptic_curve_groups:
+        supported_curves = set(supported_groups_result.supported_elliptic_curve_groups)
     else:
         supported_curves = set()
 
@@ -215,7 +215,7 @@ def _check_tls_curves(
     return issues_with_tls_curves
 
 
-def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str, str]:
+def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> dict[str, str]:
     issues_with_tls_vulns = {}
     assert scan_result.tls_compression.result
     if scan_result.tls_compression.result.supports_compression:
@@ -259,7 +259,7 @@ def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str
 def _check_tls_versions_and_ciphers(
     scan_result: AllScanCommandsAttempts,
     tls_config: TlsConfigurationAsJson,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     # First parse the results related to TLS versions and ciphers
     tls_versions_supported = set()
     cipher_suites_supported = set()
@@ -321,8 +321,7 @@ def _check_tls_versions_and_ciphers(
 
     if tls_config.dh_param_size and smallest_dh_param_size < tls_config.dh_param_size:
         issues_with_tls_ciphers["dh_param_size"] = (
-            f"DH parameter size is {smallest_dh_param_size},"
-            f" should be superior or equal to {tls_config.dh_param_size}."
+            f"DH parameter size is {smallest_dh_param_size}, should be superior or equal to {tls_config.dh_param_size}."
         )
 
     return issues_with_tls_ciphers
@@ -331,7 +330,7 @@ def _check_tls_versions_and_ciphers(
 def _check_certificates(
     cert_info_result: CertificateInfoScanResult,
     tls_config: TlsConfigurationAsJson,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     issues_with_certificates = {}
     deployed_key_algorithms = set()
     deployed_signature_algorithms = set()
@@ -349,8 +348,7 @@ def _check_certificates(
             deployed_key_algorithms.add("ecdsa")
             if public_key.curve.name not in tls_config.certificate_curves:
                 issues_with_certificates["certificate_curves"] = (
-                    f"Certificate curve is {public_key.curve.name},"
-                    f" should be one of {tls_config.certificate_curves}."
+                    f"Certificate curve is {public_key.curve.name}, should be one of {tls_config.certificate_curves}."
                 )
 
         elif isinstance(public_key, RSAPublicKey):
@@ -409,7 +407,7 @@ def _check_certificates(
 def _check_http_headers(
     http_headers_result: HttpHeadersScanResult,
     tls_config: TlsConfigurationAsJson,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     issues_with_http_headers = {}
 
     if not http_headers_result.strict_transport_security_header:

@@ -5,13 +5,12 @@ from unittest.mock import PropertyMock
 import cryptography
 import pytest
 
+from sslyze import ServerNetworkLocation
+from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 from sslyze.plugins.certificate_info.json_output import CertificateInfoScanResultAsJson
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ModernOpenSslServer
-
-from sslyze import ServerNetworkLocation
-from sslyze.plugins.certificate_info.implementation import CertificateInfoImplementation
 
 
 class TestCertificateAlgorithms:

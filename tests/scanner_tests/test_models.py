@@ -3,11 +3,11 @@ from pathlib import Path
 import pytest
 
 from sslyze import (
-    ServerScanRequest,
-    ServerNetworkLocation,
-    ScanCommandsExtraArguments,
     CertificateInfoExtraArgument,
     ScanCommand,
+    ScanCommandsExtraArguments,
+    ServerNetworkLocation,
+    ServerScanRequest,
 )
 from sslyze.scanner.models import get_scan_command_attempt_cls
 

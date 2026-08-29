@@ -2,7 +2,7 @@ from queue import Queue
 from uuid import uuid4
 
 from sslyze import ScanCommand
-from sslyze.scanner._jobs_worker_thread import JobsWorkerThread, WorkerThreadNoMoreJobsSentinel, QueuedScanJob
+from sslyze.scanner._jobs_worker_thread import JobsWorkerThread, QueuedScanJob, WorkerThreadNoMoreJobsSentinel
 
 
 class TestJobsWorkerThread:

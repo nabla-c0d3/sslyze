@@ -1,24 +1,22 @@
 from dataclasses import dataclass
-from typing import List, Optional
 
-import socket
-from nassl._nassl import OpenSSLError
-from nassl.ssl_client import OpenSslEarlyDataStatusEnum, SslClient
+from nassl.errors import OpenSSLError
+from nassl.openssl_1_1_1.ssl_client import OpenSslEarlyDataStatusEnum, SslClient_OpenSSL_1_1_1
 
+from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
+from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
-    ScanCommandImplementation,
-    ScanCommandExtraArgument,
-    ScanJob,
-    ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanCommandWrongUsageError,
+    ScanJob,
     ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
-from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
-from sslyze.connection_helpers.http_request_generator import HttpRequestGenerator
 
 
 @dataclass(frozen=True)
@@ -37,7 +35,7 @@ class EarlyDataScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class EarlyDataScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[EarlyDataScanResultAsJson]
+    result: EarlyDataScanResultAsJson | None
 
 
 class _EarlyDataCliConnector(ScanCommandCliConnector[EarlyDataScanResult, None]):
@@ -45,7 +43,7 @@ class _EarlyDataCliConnector(ScanCommandCliConnector[EarlyDataScanResult, None])
     _cli_description = "Test a server for TLS 1.3 early data support."
 
     @classmethod
-    def result_to_console_output(cls, result: EarlyDataScanResult) -> List[str]:
+    def result_to_console_output(cls, result: EarlyDataScanResult) -> list[str]:
         result_as_txt = [cls._format_title("TLS 1.3 Early Data")]
         if result.supports_early_data:
             result_as_txt.append(cls._format_field("", "Suppported - Server accepted early data"))
@@ -64,8 +62,8 @@ class EarlyDataImplementation(ScanCommandImplementation[EarlyDataScanResult, Non
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
@@ -73,7 +71,7 @@ class EarlyDataImplementation(ScanCommandImplementation[EarlyDataScanResult, Non
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> EarlyDataScanResult:
         if len(scan_job_results) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
@@ -103,7 +101,7 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
     except TlsHandshakeTimedOut:
         # Sometimes triggered by servers that don't support TLS 1.3 at all, such as Amazon Cloudfront
         is_early_data_supported = False
-    except socket.timeout:
+    except TimeoutError:
         # Some servers just don't answer the read() call
         is_early_data_supported = False
     finally:
@@ -112,7 +110,7 @@ def _test_early_data_support(server_info: ServerConnectivityInfo) -> bool:
     # Then try to re-use the session and send early data
     if session is not None:
         ssl_connection2 = server_info.get_preconfigured_tls_connection(override_tls_version=TlsVersionEnum.TLS_1_3)
-        if not isinstance(ssl_connection2.ssl_client, SslClient):
+        if not isinstance(ssl_connection2.ssl_client, SslClient_OpenSSL_1_1_1):
             raise RuntimeError("Should never happen")
 
         ssl_connection2.ssl_client.set_session(session)

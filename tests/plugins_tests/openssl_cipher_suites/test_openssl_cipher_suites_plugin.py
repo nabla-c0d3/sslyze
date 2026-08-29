@@ -5,8 +5,8 @@ from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo
 
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.plugins.openssl_cipher_suites.implementation import (
-    Sslv20ScanImplementation,
     CipherSuitesScanResult,
+    Sslv20ScanImplementation,
     Sslv30ScanImplementation,
     Tlsv10ScanImplementation,
     Tlsv11ScanImplementation,
@@ -14,11 +14,10 @@ from sslyze.plugins.openssl_cipher_suites.implementation import (
     Tlsv13ScanImplementation,
 )
 from sslyze.plugins.openssl_cipher_suites.json_output import CipherSuitesScanResultAsJson
-
-from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
+from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import LegacyOpenSslServer, ModernOpenSslServer, ClientAuthConfigEnum
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
 
 
 # Tests for the legacy cipher suite preference test, which was removed and will be turned into a full-fledged plugin
@@ -128,6 +127,8 @@ class TestCipherSuitesPluginWithOnlineServer:
             "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
             "TLS_RSA_WITH_AES_128_CBC_SHA",
             "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
         }
         assert expected_ciphers == {
             accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
@@ -176,6 +177,8 @@ class TestCipherSuitesPluginWithOnlineServer:
             "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
             "TLS_RSA_WITH_AES_128_CBC_SHA",
             "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
         }
         assert expected_ciphers == {
             accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
@@ -211,6 +214,10 @@ class TestCipherSuitesPluginWithOnlineServer:
             "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
             "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
             "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
         }
         assert expected_ciphers == {
             accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites

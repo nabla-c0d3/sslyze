@@ -1,25 +1,25 @@
 from dataclasses import dataclass
 from ipaddress import ip_address
 from pathlib import Path
-from typing import Optional, List, Dict, Tuple, Union
 
-import nassl
+from cryptography.x509 import DNSName, IPAddress
+from nassl.errors import OpenSSLError
+from nassl.openssl_1_1_1._nassl import OCSP_RESPONSE
 
 from sslyze.errors import TlsHandshakeFailed
 from sslyze.plugins.certificate_info._cert_chain_analyzer import (
-    CertificateDeploymentAnalyzer,
     CertificateDeploymentAnalysisResult,
+    CertificateDeploymentAnalyzer,
 )
-from cryptography.x509 import DNSName, IPAddress
 from sslyze.plugins.certificate_info._cli_connector import _CertificateInfoCliConnector
-from sslyze.plugins.certificate_info._get_cert_chain import get_certificate_chain, ArgumentsToGetCertificateChain
+from sslyze.plugins.certificate_info._get_cert_chain import ArgumentsToGetCertificateChain, get_certificate_chain
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.plugins.plugin_base import (
-    ScanCommandImplementation,
-    ScanJob,
-    ScanCommandResult,
     ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanJob,
     ScanJobResult,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
@@ -58,11 +58,11 @@ class CertificateInfoScanResult(ScanCommandResult):
     """
 
     hostname_used_for_server_name_indication: str
-    certificate_deployments: List[CertificateDeploymentAnalysisResult]
-    certificate_deployment_with_sni_disabled: Optional[CertificateDeploymentAnalysisResult]
+    certificate_deployments: list[CertificateDeploymentAnalysisResult]
+    certificate_deployment_with_sni_disabled: CertificateDeploymentAnalysisResult | None
 
 
-_ListofPemCertificatesAndOptionalOcspResponse = Tuple[List[str], Optional[nassl._nassl.OCSP_RESPONSE]]
+_ListofPemCertificatesAndOptionalOcspResponse = tuple[list[str], OCSP_RESPONSE | None]
 
 
 class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoScanResult, None]):
@@ -72,13 +72,13 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[CertificateInfoExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: CertificateInfoExtraArgument | None = None
+    ) -> list[ScanJob]:
         custom_ca_file = extra_arguments.custom_ca_file if extra_arguments else None
 
         # Try to retrieve different certificates from the server by having SSLyze's TLS handshake look like different
         # kinds of clients
-        call_arguments: List[ArgumentsToGetCertificateChain] = []
+        call_arguments: list[ArgumentsToGetCertificateChain] = []
         if server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value:
             # Get the default certificate chain sent to clients using TLS 1.3
             call_arguments.append((server_info, custom_ca_file, TlsVersionEnum.TLS_1_3, None, True))
@@ -107,17 +107,17 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> CertificateInfoScanResult:
         if len(scan_job_results) != cls._EXPECTED_SCAN_JOB_RESULTS_COUNT:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
         # Process the results
         # Leaf certificate => certificate chain, OCSP response, was_sni_used
-        all_configured_certificate_chains: Dict[str, _ListofPemCertificatesAndOptionalOcspResponse] = {}
-        all_handshake_failed_exceptions: List[Exception] = []
+        all_configured_certificate_chains: dict[str, _ListofPemCertificatesAndOptionalOcspResponse] = {}
+        all_handshake_failed_exceptions: list[Exception] = []
         custom_ca_file = None
-        non_sni_chain_and_ocsp_response: Optional[_ListofPemCertificatesAndOptionalOcspResponse] = None
+        non_sni_chain_and_ocsp_response: _ListofPemCertificatesAndOptionalOcspResponse | None = None
         server_did_not_send_a_certificate = False
         for completed_job in scan_job_results:
             try:
@@ -129,7 +129,7 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
                 # or when connectivity is bad
                 all_handshake_failed_exceptions.append(exc)
 
-            except nassl._nassl.OpenSSLError as exc:
+            except OpenSSLError as exc:
                 if "unrecognized name" in exc.args[0]:
                     # Can happen when trying to connect without SNI
                     all_handshake_failed_exceptions.append(exc)
@@ -171,7 +171,7 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
             all_trust_stores.append(TrustStore(custom_ca_file, "Supplied CA file", "N/A"))
 
         # Figure out the server's subject (ie. hostname or IP) to use for certificate validation
-        subject_to_use_for_validation: Union[IPAddress, DNSName]
+        subject_to_use_for_validation: IPAddress | DNSName
         if server_info.network_configuration.tls_server_name_indication == server_info.server_location.ip_address:
             # We don't know the server's hostname as only an IP address was supplied to sslyze
             if not server_info.server_location.ip_address:
@@ -182,7 +182,7 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
             subject_to_use_for_validation = DNSName(server_info.network_configuration.tls_server_name_indication)
 
         # Check the SNI-disabled certificate deployment
-        sni_disabled_analysis_result: Optional[CertificateDeploymentAnalysisResult]
+        sni_disabled_analysis_result: CertificateDeploymentAnalysisResult | None
         if not non_sni_chain_and_ocsp_response:
             sni_disabled_analysis_result = None
         else:
@@ -196,7 +196,7 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
             sni_disabled_analysis_result = sni_disabled_deployment_analyzer.perform()
 
         # Check all SNI-enabled certificate deployments
-        all_sni_enabled_deployments: List[CertificateDeploymentAnalysisResult] = []
+        all_sni_enabled_deployments: list[CertificateDeploymentAnalysisResult] = []
         for received_chain_as_pem, ocsp_response in all_configured_certificate_chains.values():
             deployment_analyzer = CertificateDeploymentAnalyzer(
                 server_subject=subject_to_use_for_validation,

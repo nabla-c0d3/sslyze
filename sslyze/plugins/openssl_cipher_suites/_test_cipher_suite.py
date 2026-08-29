@@ -1,10 +1,12 @@
 from dataclasses import dataclass
-from typing import Optional, Union
 
+from nassl.base_ssl_client import ClientCertificateRequested
 from nassl.ephemeral_key_info import EphemeralKeyInfo
-from nassl.legacy_ssl_client import LegacySslClient
-from nassl.ssl_client import ClientCertificateRequested, SslClient, BaseSslClient
+from nassl.errors import OpenSSLError
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
+from nassl.openssl_4_0_0.ssl_client import SslClient_OpenSSL_4_0_0
 
+from sslyze.connection_helpers.tls_connection import NoCiphersAvailableBugInSSlyze
 from sslyze.errors import (
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
@@ -12,7 +14,6 @@ from sslyze.errors import (
 )
 from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuite
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
-from sslyze.plugins.openssl_cipher_suites._tls12_workaround import WorkaroundForTls12ForCipherSuites
 
 
 @dataclass(frozen=True)
@@ -23,7 +24,7 @@ class CipherSuiteAcceptedByServer:
     """
 
     cipher_suite: CipherSuite
-    ephemeral_key: Optional[EphemeralKeyInfo]
+    ephemeral_key: EphemeralKeyInfo | None
 
 
 @dataclass(frozen=True)
@@ -34,23 +35,33 @@ class CipherSuiteRejectedByServer:
 
 def connect_with_cipher_suite(
     server_connectivity_info: ServerConnectivityInfo, tls_version: TlsVersionEnum, cipher_suite: CipherSuite
-) -> Union[CipherSuiteAcceptedByServer, CipherSuiteRejectedByServer]:
-    """Initiates a SSL handshake with the server using the SSL version and the cipher suite specified."""
-    requires_legacy_openssl = True
-    if tls_version == TlsVersionEnum.TLS_1_2:
-        # For TLS 1.2, we need to pick the right version of OpenSSL depending on which cipher suite
-        requires_legacy_openssl = WorkaroundForTls12ForCipherSuites.requires_legacy_openssl(cipher_suite.openssl_name)
-    elif tls_version == TlsVersionEnum.TLS_1_3:
-        requires_legacy_openssl = False
-
+) -> CipherSuiteAcceptedByServer | CipherSuiteRejectedByServer:
+    """Initiates a TLS handshake with the server using the TLS version and the cipher suite specified."""
     ssl_connection = server_connectivity_info.get_preconfigured_tls_connection(
-        override_tls_version=tls_version, should_use_legacy_openssl=requires_legacy_openssl
+        override_tls_version=tls_version, openssl_version=cipher_suite.supported_by_openssl_version
     )
-    _set_cipher_suite_string(tls_version, cipher_suite.openssl_name, ssl_connection.ssl_client)
 
+    # Set the cipher suite to test
+    if tls_version == TlsVersionEnum.TLS_1_3:
+        if not isinstance(ssl_connection.ssl_client, (SslClient_OpenSSL_1_1_1, SslClient_OpenSSL_4_0_0)):
+            raise RuntimeError("Should never happen")
+
+        # OpenSSL provides a dedicated method for setting TLS 1.3 cipher suites
+        ssl_connection.ssl_client.set_ciphersuites(cipher_suite.openssl_name)
+    else:
+        try:
+            ssl_connection.ssl_client.set_cipher_list(cipher_suite.openssl_name)
+        except OpenSSLError as e:
+            openssl_error_message = e.args[0]
+            if "no cipher match" in openssl_error_message:
+                # This error is raised when the cipher suite specified is not supported by the version of OpenSSL used
+                raise NoCiphersAvailableBugInSSlyze()
+
+            raise
+
+    # Perform the TLS handshake
     ephemeral_key = None
     try:
-        # Perform the SSL handshake
         ssl_connection.connect()
         ephemeral_key = ssl_connection.ssl_client.get_ephemeral_key()
 
@@ -62,7 +73,6 @@ def connect_with_cipher_suite(
     except ClientCertificateRequested:
         # When the handshake failed due to ClientCertificateRequested
         ephemeral_key = ssl_connection.ssl_client.get_ephemeral_key()
-        pass
 
     except ServerRejectedTlsHandshake as e:
         return CipherSuiteRejectedByServer(cipher_suite=cipher_suite, error_message=e.error_message)
@@ -77,18 +87,3 @@ def connect_with_cipher_suite(
         ssl_connection.close()
 
     return CipherSuiteAcceptedByServer(cipher_suite=cipher_suite, ephemeral_key=ephemeral_key)
-
-
-def _set_cipher_suite_string(tls_version: TlsVersionEnum, cipher_suite_str: str, ssl_client: BaseSslClient) -> None:
-    # Only enable the cipher suite to test; not trivial anymore since OpenSSL 1.1.1 and TLS 1.3
-    if isinstance(ssl_client, SslClient):
-        # With the modern OpenSSL client we have to manage TLS 1.3-specific cipher functions
-        if tls_version == TlsVersionEnum.TLS_1_3:
-            ssl_client.set_ciphersuites(cipher_suite_str)  # TLS 1.3 method
-        else:
-            ssl_client.set_cipher_list(cipher_suite_str)  # Legacy method
-    elif isinstance(ssl_client, LegacySslClient):
-        # With the legacy OpenSSL client, nothing special to do
-        ssl_client.set_cipher_list(cipher_suite_str)
-    else:
-        raise RuntimeError("Should never happen")

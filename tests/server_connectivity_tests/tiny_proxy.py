@@ -12,13 +12,12 @@ Ported to Python 3 and modified for sslyze by @nabla_c0d3.
 
 __version__ = "0.3.0"
 
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse, urlunparse
-from socketserver import ThreadingMixIn
-
-import select
 import logging
+import select
 import socket
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from socketserver import ThreadingMixIn
+from urllib.parse import urlparse, urlunparse
 
 
 class ProxyHandler(BaseHTTPRequestHandler):
@@ -29,7 +28,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
     rbufsize = 0  # self.rfile Be unbuffered
 
     def handle(self):
-        (ip, port) = self.client_address
+        (ip, _) = self.client_address
         if hasattr(self, "allowed_clients") and ip not in self.allowed_clients:
             self.raw_requestline = self.rfile.readline()
             if self.parse_request():
@@ -40,16 +39,16 @@ class ProxyHandler(BaseHTTPRequestHandler):
     def _connect_to(self, netloc, soc):
         i = netloc.find(":")
         if i >= 0:
-            host_port = netloc[:i], int(netloc[i + 1 :])  # noqa: E203
+            host_port = netloc[:i], int(netloc[i + 1 :])
         else:
             host_port = netloc, 80
-        logging.warning("Connecting to {}".format(host_port))
+        logging.warning(f"Connecting to {host_port}")  # noqa
         try:
             soc.connect(host_port)
-        except socket.error as arg:
+        except OSError as arg:
             try:
                 msg = arg[1]
-            except Exception:
+            except Exception:  # noqa
                 msg = arg
             self.send_error(404, msg)
             return 0
@@ -66,30 +65,30 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 self.wfile.write(response.encode("ascii"))
                 self._read_write(soc, 300)
         finally:
-            logging.warning("Finished do_CONNECT()")
+            logging.warning("Finished do_CONNECT()")  # noqa
             soc.close()
             self.connection.close()
 
     def do_GET(self):
         (scm, netloc, path, params, query, fragment) = urlparse(self.path, "http")
         if scm != "http" or fragment or not netloc:
-            self.send_error(400, "bad url %s" % self.path)
+            self.send_error(400, "bad url %s" % self.path)  # noqa
             return
         soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             if self._connect_to(netloc, soc):
                 self.log_request()
                 soc.send(
-                    "%s %s %s\r\n" % (self.command, urlunparse(("", "", path, params, query, "")), self.request_version)
+                    "%s %s %s\r\n" % (self.command, urlunparse(("", "", path, params, query, "")), self.request_version)  # noqa
                 )
                 self.headers["Connection"] = "close"
                 del self.headers["Proxy-Connection"]
                 for key_val in self.headers.items():
-                    soc.send("%s: %s\r\n" % key_val)
+                    soc.send("%s: %s\r\n" % key_val)  # noqa
                 soc.send("\r\n")
                 self._read_write(soc)
         finally:
-            logging.warning("Finished do_GET()")
+            logging.warning("Finished do_GET()")  # noqa
             soc.close()
             self.connection.close()
 
@@ -113,7 +112,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                         out.send(data)
                         count = 0
             else:
-                logging.warning("Idle")
+                logging.warning("Idle")  # noqa
             if count == max_idling:
                 break
 

@@ -1,16 +1,14 @@
+import logging
 import shlex
-
 import subprocess
+import time
+import typing
 from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
 from platform import architecture
 from sys import platform
-
-import logging
-import time
 from threading import Thread
-from typing import Optional, List, IO
 
 
 class NotOnLinux64Error(EnvironmentError):
@@ -29,7 +27,7 @@ class _OpenSslServerIOManager:
     """Thread to log all output from s_server and reply to incoming connections."""
 
     def __init__(
-        self, s_server_stdout: IO[bytes], s_server_stdin: IO[bytes], should_reply_to_http_requests: bool
+        self, s_server_stdout: typing.IO[bytes], s_server_stdin: typing.IO[bytes], should_reply_to_http_requests: bool
     ) -> None:
         self._s_server_stdout = s_server_stdout
         self._s_server_stdin = s_server_stdin
@@ -40,7 +38,7 @@ class _OpenSslServerIOManager:
             while True:
                 s_server_out = self._s_server_stdout.readline()
                 if s_server_out:
-                    logging.warning(f"s_server output: {s_server_out}")
+                    logging.warning(f"s_server output: {s_server_out}")  # noqa: LOG015
 
                     if b"ACCEPT" in s_server_out:
                         # The s_server process is ready to receive connections
@@ -51,11 +49,10 @@ class _OpenSslServerIOManager:
                         self._s_server_stdin.write(b"Hey there")
                         self._s_server_stdin.flush()
 
-                    if self._should_reply_to_http_requests:
-                        if b"Connection: close\r\n" in s_server_out:
-                            # We "Connection: close" to detect an HTTP request being sent and we return an HTTP response
-                            self._s_server_stdin.write(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
-                            self._s_server_stdin.flush()
+                    if self._should_reply_to_http_requests and b"Connection: close\r\n" in s_server_out:
+                        # We "Connection: close" to detect an HTTP request being sent and we return an HTTP response
+                        self._s_server_stdin.write(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+                        self._s_server_stdin.flush()
                 else:
                     break
 
@@ -78,7 +75,7 @@ _DEFAULT_SERVER_KEY_PATH = Path(__file__).parent.absolute() / "server-rsa-key.pe
 class _OpenSslServer(ABC):
     """A wrapper around OpenSSL's s_server CLI."""
 
-    _AVAILABLE_LOCAL_PORTS = set(range(8110, 8150))
+    _AVAILABLE_LOCAL_PORTS: typing.ClassVar = set(range(8110, 8150))
 
     _S_SERVER_CMD = (
         "{openssl} s_server -cert {server_cert} -key {server_key} -accept {port}"
@@ -111,11 +108,7 @@ class _OpenSslServer(ABC):
 
     @staticmethod
     def is_platform_supported() -> bool:
-        if platform not in ["linux", "linux2"]:
-            return False
-        if architecture()[0] != "64bit":
-            return False
-        return True
+        return (platform in ["linux", "linux2"]) and (architecture()[0] == "64bit")
 
     def __init__(
         self,
@@ -124,9 +117,9 @@ class _OpenSslServer(ABC):
         server_key_path: Path,
         client_auth_config: ClientAuthConfigEnum,
         should_enable_server_cipher_preference: bool,
-        openssl_cipher_string: Optional[str],
+        openssl_cipher_string: str | None,
         should_reply_to_http_requests: bool = True,
-        extra_openssl_args: Optional[List[str]] = None,
+        extra_openssl_args: list[str] | None = None,
     ) -> None:
         if not self.is_platform_supported():
             raise NotOnLinux64Error()
@@ -157,7 +150,7 @@ class _OpenSslServer(ABC):
         )
 
     def __enter__(self):
-        logging.warning(f'Running s_server: "{self._command_line}"')
+        logging.warning(f'Running s_server: "{self._command_line}"')  # noqa: LOG015
         args = shlex.split(self._command_line)
         try:
             self._process = subprocess.Popen(
@@ -175,19 +168,19 @@ class _OpenSslServer(ABC):
                     raise RuntimeError("Could not start s_server")
 
         except Exception as e:
-            logging.warning(f"Error while starting s_server: {e}")
+            logging.warning(f"Error while starting s_server: {e}")  # noqa: LOG015
             self._terminate_process()
             raise
 
         return self
 
     def __exit__(self, *args):
-        logging.warning("Exiting s_server context")
+        logging.warning("Exiting s_server context")  # noqa: LOG015
         self._terminate_process()
         return False
 
     def _terminate_process(self) -> None:
-        logging.warning("Shutting down s_server")
+        logging.warning("Shutting down s_server")  # noqa: LOG015
         if self._server_io_manager:
             self._server_io_manager.close()
         self._server_io_manager = None
@@ -211,8 +204,8 @@ class LegacyOpenSslServer(_OpenSslServer):
         server_key_path: Path = _DEFAULT_SERVER_KEY_PATH,
         client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
         should_enable_server_cipher_preference: bool = False,
-        openssl_cipher_string: Optional[str] = None,
-        require_server_name_indication_value: Optional[str] = None,
+        openssl_cipher_string: str | None = None,
+        require_server_name_indication_value: str | None = None,
     ) -> None:
         extra_args = []
         if require_server_name_indication_value:
@@ -271,10 +264,10 @@ class ModernOpenSslServer(_OpenSslServer):
         server_key_path: Path = _DEFAULT_SERVER_KEY_PATH,
         client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
         should_enable_server_cipher_preference: bool = False,
-        openssl_cipher_string: Optional[str] = None,
+        openssl_cipher_string: str | None = None,
         should_reply_to_http_requests: bool = True,
-        max_early_data: Optional[int] = None,
-        groups: Optional[str] = None,
+        max_early_data: int | None = None,
+        groups: str | None = None,
     ) -> None:
         extra_args = []
         if groups:

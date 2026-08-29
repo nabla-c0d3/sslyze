@@ -1,22 +1,21 @@
 import pytest
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.base_ssl_client import ClientCertificateRequested
 
 from sslyze import TlsResumptionSupportEnum
 from sslyze.plugins.session_resumption.implementation import (
+    SessionResumptionSupportExtraArgument,
     SessionResumptionSupportImplementation,
     SessionResumptionSupportScanResult,
-    SessionResumptionSupportExtraArgument,
 )
 from sslyze.plugins.session_resumption.json_output import SessionResumptionSupportScanResultAsJson
-
 from sslyze.server_setting import (
-    ServerNetworkLocation,
-    ServerNetworkConfiguration,
     ClientAuthenticationCredentials,
+    ServerNetworkConfiguration,
+    ServerNetworkLocation,
 )
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, LegacyOpenSslServer
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
 
 
 class TestSessionResumptionSupport:

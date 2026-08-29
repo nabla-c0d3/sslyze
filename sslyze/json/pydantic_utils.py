@@ -1,6 +1,4 @@
-from typing import Any
-from typing import Annotated
-
+from typing import Annotated, Any
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict
 

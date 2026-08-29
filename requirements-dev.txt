@@ -1,7 +1,7 @@
 mypy==2.3
 ruff==0.16.0
 invoke>=2,<3
-pytest>=8,<9
+pytest==9.1
 sphinx
 sphinx-rtd-theme
 twine>=4,<5

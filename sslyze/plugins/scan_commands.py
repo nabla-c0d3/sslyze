@@ -5,6 +5,7 @@ from sslyze.plugins.certificate_info.implementation import CertificateInfoImplem
 from sslyze.plugins.compression_plugin import CompressionImplementation
 from sslyze.plugins.early_data_plugin import EarlyDataImplementation
 from sslyze.plugins.ems_extension_plugin import EmsExtensionImplementation
+from sslyze.plugins.encrypted_client_hello_plugin import EncryptedClientHelloImplementation
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvImplementation
 from sslyze.plugins.heartbleed_plugin import HeartbleedImplementation
 from sslyze.plugins.http_headers_plugin import HttpHeadersImplementation
@@ -45,6 +46,7 @@ class ScanCommand(str, Enum):
     HTTP_HEADERS = "http_headers"
     TLS_EXTENDED_MASTER_SECRET = "tls_extended_master_secret"
     SUPPORTED_GROUPS = "supported_groups"
+    ENCRYPTED_CLIENT_HELLO = "encrypted_client_hello"
 
 
 class ScanCommandsRepository:
@@ -76,4 +78,5 @@ _IMPLEMENTATION_CLASSES: dict[ScanCommand, type["ScanCommandImplementation"]] = 
     ScanCommand.HTTP_HEADERS: HttpHeadersImplementation,
     ScanCommand.TLS_EXTENDED_MASTER_SECRET: EmsExtensionImplementation,
     ScanCommand.SUPPORTED_GROUPS: SupportedGroupsImplementation,
+    ScanCommand.ENCRYPTED_CLIENT_HELLO: EncryptedClientHelloImplementation,
 }

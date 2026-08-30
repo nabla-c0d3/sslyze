@@ -249,11 +249,12 @@ class ModernOpenSslServer(_OpenSslServer):
 
     @classmethod
     def get_verify_argument(cls, client_auth_config: ClientAuthConfigEnum) -> str:
-        # The verify argument has subtly changed in OpenSSL 1.1.1
+        # Starting with OpenSSL 1.1.1, -verify/-Verify only take a depth integer; the CA path must be passed
+        # separately via -CAfile
         options = {
             ClientAuthConfigEnum.DISABLED: "",
-            ClientAuthConfigEnum.OPTIONAL: f"-verify 1 {cls._CLIENT_CA_PATH}",
-            ClientAuthConfigEnum.REQUIRED: f"-Verify 1 {cls._CLIENT_CA_PATH}",
+            ClientAuthConfigEnum.OPTIONAL: f"-verify 1 -CAfile {cls._CLIENT_CA_PATH}",
+            ClientAuthConfigEnum.REQUIRED: f"-Verify 1 -CAfile {cls._CLIENT_CA_PATH}",
         }
         return options[client_auth_config]
 
@@ -286,3 +287,35 @@ class ModernOpenSslServer(_OpenSslServer):
             server_key_path=server_key_path,
             should_reply_to_http_requests=should_reply_to_http_requests,
         )
+
+
+class S_Server_OpenSSL_4_0_0(ModernOpenSslServer):
+    # Generated using: openssl ech -public_name localhost -out ech-config.pem
+    ECH_CONFIG_PATH = Path(__file__).parent.absolute() / "ech-config.pem"
+
+    @classmethod
+    def get_openssl_path(cls) -> Path:
+        # TODO(AD)
+        raise NotImplementedError("TODO: add the openssl-4-0-0-linux64 binary")
+
+    def __init__(
+        self,
+        *,
+        server_certificate_path: Path = _DEFAULT_SERVER_CERTIFICATE_PATH,
+        server_key_path: Path = _DEFAULT_SERVER_KEY_PATH,
+        client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
+        should_enable_server_cipher_preference: bool = False,
+        openssl_cipher_string: str | None = None,
+        should_reply_to_http_requests: bool = True,
+        enable_ech: bool = False,
+    ) -> None:
+        super().__init__(
+            server_certificate_path=server_certificate_path,
+            server_key_path=server_key_path,
+            client_auth_config=client_auth_config,
+            should_enable_server_cipher_preference=should_enable_server_cipher_preference,
+            openssl_cipher_string=openssl_cipher_string,
+            should_reply_to_http_requests=should_reply_to_http_requests,
+        )
+        if enable_ech:
+            self._command_line += f" -ech_key {self.ECH_CONFIG_PATH}"

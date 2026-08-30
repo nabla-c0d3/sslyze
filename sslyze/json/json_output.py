@@ -23,6 +23,7 @@ from sslyze.plugins.certificate_info.json_output import (
 from sslyze.plugins.compression_plugin import CompressionScanAttemptAsJson
 from sslyze.plugins.early_data_plugin import EarlyDataScanAttemptAsJson
 from sslyze.plugins.ems_extension_plugin import EmsExtensionScanAttemptAsJson
+from sslyze.plugins.encrypted_client_hello_plugin import EncryptedClientHelloScanAttemptAsJson
 from sslyze.plugins.fallback_scsv_plugin import FallbackScsvScanAttemptAsJson
 from sslyze.plugins.heartbleed_plugin import HeartbleedScanAttemptAsJson
 from sslyze.plugins.http_headers_plugin import HttpHeadersScanAttemptAsJson
@@ -64,6 +65,7 @@ class AllScanCommandsAttemptsAsJson(BaseModelWithOrmModeAndForbid):
     http_headers: HttpHeadersScanAttemptAsJson
     tls_extended_master_secret: EmsExtensionScanAttemptAsJson
     supported_groups: SupportedGroupsScanAttemptAsJson
+    encrypted_client_hello: EncryptedClientHelloScanAttemptAsJson
 
     @model_validator(mode="before")
     @classmethod

@@ -120,6 +120,7 @@ SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: set[ScanCommand] = {
     ScanCommand.CERTIFICATE_INFO,
     ScanCommand.SUPPORTED_GROUPS,
     ScanCommand.TLS_EXTENDED_MASTER_SECRET,
+    ScanCommand.SUPPORTED_GROUPS,  # For elliptic curves
     # ScanCommand.HTTP_HEADERS,  # Disabled for now; see below
 }
 
@@ -201,12 +202,15 @@ def _check_tls_curves(
     tls_config: TlsConfigurationAsJson,
 ) -> dict[str, str]:
     issues_with_tls_curves = {}
+    # Starting with the 6.0 config, the tls_curves requirement may contain PQ groups as well (which are not EC groups)
+    #  so we also add them here
+    supported_curves_and_pq_goups: set[str] = set()
     if supported_groups_result.supported_elliptic_curve_groups:
-        supported_curves = set(supported_groups_result.supported_elliptic_curve_groups)
-    else:
-        supported_curves = set()
+        supported_curves_and_pq_goups.update([grp for grp in supported_groups_result.supported_elliptic_curve_groups])
+    if supported_groups_result.supported_post_quantum_groups:
+        supported_curves_and_pq_goups.update([grp for grp in supported_groups_result.supported_post_quantum_groups])
 
-    tls_curves_difference = supported_curves - tls_config.tls_curves
+    tls_curves_difference = supported_curves_and_pq_goups - tls_config.tls_curves
     if tls_curves_difference:
         issues_with_tls_curves["tls_curves"] = (
             f"TLS curves {tls_curves_difference} are supported, but should be rejected."

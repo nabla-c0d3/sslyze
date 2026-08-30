@@ -10,7 +10,7 @@ from sslyze.server_connectivity import ClientAuthRequirementEnum, ServerTlsProbi
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.factories import ServerConnectivityInfoFactory
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import LegacyOpenSslServer, ModernOpenSslServer
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
 
 
 class TestSupportedGroupsPluginWithOnlineServer:
@@ -175,3 +175,31 @@ class TestSupportedGroupsPluginWithLocalServer:
         # And the CLI output explains that ECDH is not supported
         cli_output = SupportedGroupsImplementation.cli_connector_cls.result_to_console_output(result)
         assert any("ECDH" in line for line in cli_output)
+
+    def test_client_certificate_requested(self) -> None:
+        # Given a server that requires client authentication
+        with ModernOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+
+            # And sslyze does NOT provide a client certificate
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+            assert server_info.tls_probing_result.client_auth_requirement == ClientAuthRequirementEnum.REQUIRED
+
+            # When scanning for supported groups, it still succeeds despite the missing client certificate
+            result: SupportedGroupsScanResult = SupportedGroupsImplementation.scan_server(server_info)
+
+        # And Elliptic Curve groups are still correctly detected: the key exchange completes before the server
+        # asks for (and sslyze fails to provide) a client certificate
+        assert result.supports_elliptic_curve_key_exchange
+        assert result.supported_elliptic_curve_groups
+        assert result.rejected_elliptic_curve_groups is not None
+
+        # And a CLI output can be generated
+        cli_output = SupportedGroupsImplementation.cli_connector_cls.result_to_console_output(result)
+        assert cli_output
+
+        # And the result can be converted to JSON
+        result_as_json = SupportedGroupsScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json

@@ -284,8 +284,8 @@ class SupportedGroupsImplementation(ScanCommandImplementation[SupportedGroupsSca
         rejected_elliptic_curve_groups: list[str] | None
         does_server_support_ec = server_info.tls_probing_result.supports_ecdh_key_exchange
         if does_server_support_ec:
-            supported_elliptic_curve_groups = [r.group for r in all_ec_grp_results if r.was_accepted_by_server]
-            rejected_elliptic_curve_groups = [r.group for r in all_ec_grp_results if not r.was_accepted_by_server]
+            supported_elliptic_curve_groups = [r.group.value for r in all_ec_grp_results if r.was_accepted_by_server]
+            rejected_elliptic_curve_groups = [r.group.value for r in all_ec_grp_results if not r.was_accepted_by_server]
         else:
             supported_elliptic_curve_groups = None
             rejected_elliptic_curve_groups = None
@@ -296,8 +296,8 @@ class SupportedGroupsImplementation(ScanCommandImplementation[SupportedGroupsSca
             server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value
         )
         if does_server_support_tls_1_3:
-            supported_post_quantum_groups = [r.group for r in all_pq_grp_results if r.was_accepted_by_server]
-            rejected_post_quantum_groups = [r.group for r in all_pq_grp_results if not r.was_accepted_by_server]
+            supported_post_quantum_groups = [r.group.value for r in all_pq_grp_results if r.was_accepted_by_server]
+            rejected_post_quantum_groups = [r.group.value for r in all_pq_grp_results if not r.was_accepted_by_server]
         else:
             supported_post_quantum_groups = None
             rejected_post_quantum_groups = None
@@ -306,8 +306,10 @@ class SupportedGroupsImplementation(ScanCommandImplementation[SupportedGroupsSca
             supported_elliptic_curve_groups=supported_elliptic_curve_groups,
             rejected_elliptic_curve_groups=rejected_elliptic_curve_groups,
             supports_elliptic_curve_key_exchange=bool(supported_elliptic_curve_groups),
-            supported_finite_field_dh_groups=[r.group for r in all_ffdh_grp_results if r.was_accepted_by_server],
-            rejected_finite_field_dh_groups=[r.group for r in all_ffdh_grp_results if not r.was_accepted_by_server],
+            supported_finite_field_dh_groups=[r.group.value for r in all_ffdh_grp_results if r.was_accepted_by_server],
+            rejected_finite_field_dh_groups=[
+                r.group.value for r in all_ffdh_grp_results if not r.was_accepted_by_server
+            ],
             supported_post_quantum_groups=supported_post_quantum_groups,
             rejected_post_quantum_groups=rejected_post_quantum_groups,
             supports_post_quantum_key_exchange=bool(supported_post_quantum_groups),

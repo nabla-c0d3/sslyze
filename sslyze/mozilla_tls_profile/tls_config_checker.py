@@ -121,6 +121,7 @@ SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: set[ScanCommand] = {
     ScanCommand.SUPPORTED_GROUPS,
     ScanCommand.TLS_EXTENDED_MASTER_SECRET,
     ScanCommand.SUPPORTED_GROUPS,  # For elliptic curves
+    ScanCommand.ENCRYPTED_CLIENT_HELLO,  # Not part of the Mozilla config, but we want to run this by default
     # ScanCommand.HTTP_HEADERS,  # Disabled for now; see below
 }
 

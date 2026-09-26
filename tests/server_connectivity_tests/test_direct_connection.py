@@ -2,18 +2,17 @@ import socket
 
 import pytest
 
-from sslyze.json.json_output import _ServerTlsProbingResultAsJson
-from tests.openssl_server import LegacyOpenSslServer
-
-from sslyze.server_connectivity import TlsVersionEnum, check_connectivity_to_server
-from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
 from sslyze.errors import (
+    ConnectionToServerFailed,
     ConnectionToServerTimedOut,
     ServerRejectedConnection,
     ServerTlsConfigurationNotSupported,
-    ConnectionToServerFailed,
 )
+from sslyze.json.json_output import _ServerTlsProbingResultAsJson
+from sslyze.server_connectivity import TlsVersionEnum, check_connectivity_to_server
+from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 from tests.markers import can_only_run_on_linux_64
+from tests.openssl_server import LegacyOpenSslServer
 
 
 def is_ipv6_available() -> bool:
@@ -22,7 +21,7 @@ def is_ipv6_available() -> bool:
     try:
         s.connect(("2607:f8b0:4005:804::2004", 443))
         has_ipv6 = True
-    except Exception:
+    except Exception:  # noqa
         pass
     finally:
         s.close()

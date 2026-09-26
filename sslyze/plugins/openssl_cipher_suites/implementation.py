@@ -1,26 +1,23 @@
-from operator import attrgetter
-
 from dataclasses import dataclass
+from operator import attrgetter
+from typing import ClassVar
 
 from sslyze.connection_helpers.tls_connection import NoCiphersAvailableBugInSSlyze
 from sslyze.plugins.openssl_cipher_suites._cli_connector import _CipherSuitesCliConnector
 from sslyze.plugins.openssl_cipher_suites._test_cipher_suite import (
-    connect_with_cipher_suite,
-    CipherSuiteRejectedByServer,
     CipherSuiteAcceptedByServer,
+    CipherSuiteRejectedByServer,
+    connect_with_cipher_suite,
 )
-from sslyze.plugins.openssl_cipher_suites.cipher_suites import CipherSuitesRepository
+from sslyze.plugins.openssl_cipher_suites.cipher_suites import retrieve_all_available_cipher_suites
 from sslyze.plugins.plugin_base import (
+    ScanCommandExtraArgument,
     ScanCommandImplementation,
     ScanCommandResult,
-    ScanJob,
-    ScanCommandExtraArgument,
     ScanCommandWrongUsageError,
+    ScanJob,
     ScanJobResult,
 )
-from typing import ClassVar, Optional
-from typing import List
-
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
@@ -35,13 +32,13 @@ class CipherSuitesScanResult(ScanCommandResult):
     """
 
     tls_version_used: TlsVersionEnum
-    accepted_cipher_suites: List[CipherSuiteAcceptedByServer]
-    rejected_cipher_suites: List[CipherSuiteRejectedByServer]
+    accepted_cipher_suites: list[CipherSuiteAcceptedByServer]
+    rejected_cipher_suites: list[CipherSuiteRejectedByServer]
 
     @property
     def is_tls_version_supported(self) -> bool:
         """Is the SSL/TLS version used to connect the server supported by it?"""
-        return True if self.accepted_cipher_suites else False
+        return bool(self.accepted_cipher_suites)
 
 
 class _Sslv20CliConnector(_CipherSuitesCliConnector):
@@ -86,13 +83,13 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
         # Run one job per cipher suite to test for
-        all_cipher_suites_to_test = CipherSuitesRepository.get_all_cipher_suites(cls._tls_version)
+        all_cipher_suites_to_test = retrieve_all_available_cipher_suites(cls._tls_version)
         scan_jobs = [
             ScanJob(
                 function_to_call=connect_with_cipher_suite,
@@ -104,9 +101,9 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> CipherSuitesScanResult:
-        expected_scan_jobs_count = len(CipherSuitesRepository.get_all_cipher_suites(cls._tls_version))
+        expected_scan_jobs_count = len(retrieve_all_available_cipher_suites(cls._tls_version))
         if len(scan_job_results) != expected_scan_jobs_count:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
@@ -126,7 +123,7 @@ class _CipherSuitesScanImplementation(ScanCommandImplementation[CipherSuitesScan
             elif isinstance(cipher_suite_result, CipherSuiteRejectedByServer):
                 rejected_cipher_suites.append(cipher_suite_result)
             else:
-                raise ValueError("Should never happen")
+                raise TypeError("Should never happen")
 
         # Sort all the lists
         accepted_cipher_suites.sort(key=attrgetter("cipher_suite.name"), reverse=True)

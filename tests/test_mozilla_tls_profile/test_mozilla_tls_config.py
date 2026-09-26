@@ -1,14 +1,13 @@
 import pytest
 
-from sslyze import Scanner, ServerScanRequest, ServerNetworkLocation
+from sslyze import Scanner, ServerNetworkLocation, ServerScanRequest
 from sslyze.mozilla_tls_profile.tls_config_checker import (
-    check_server_against_tls_configuration,
     MozillaTlsConfiguration,
-    TlsConfigurationEnum,
     ServerNotCompliantWithTlsConfiguration,
     ServerScanResultIncomplete,
+    TlsConfigurationEnum,
+    check_server_against_tls_configuration,
 )
-
 from tests.factories import ServerScanResultFactory
 
 
@@ -17,8 +16,7 @@ from tests.factories import ServerScanResultFactory
 def server_scan_result_for_google():
     scanner = Scanner()
     scanner.queue_scans([ServerScanRequest(server_location=ServerNetworkLocation(hostname="google.com"))])
-    for server_scan_result in scanner.get_results():
-        yield server_scan_result
+    yield from scanner.get_results()
 
 
 class TestMozillaTlsConfigurationChecker:

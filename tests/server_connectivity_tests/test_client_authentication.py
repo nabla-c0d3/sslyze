@@ -2,9 +2,9 @@ import pytest
 
 from sslyze.json.json_output import _ServerTlsProbingResultAsJson
 from sslyze.server_connectivity import ClientAuthRequirementEnum, check_connectivity_to_server
-from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
+from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import ModernOpenSslServer, ClientAuthConfigEnum, LegacyOpenSslServer
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
 
 
 class TestClientAuthentication:

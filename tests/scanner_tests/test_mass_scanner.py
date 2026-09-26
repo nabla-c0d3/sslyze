@@ -1,31 +1,29 @@
 import threading
 from pathlib import Path
 from queue import Queue
-from typing import Optional, List
 from unittest import mock
 
 from sslyze import (
+    CertificateInfoExtraArgument,
     ScanCommand,
+    ScanCommandAttemptStatusEnum,
+    ScanCommandErrorReasonEnum,
+    ScanCommandsExtraArguments,
     ServerConnectivityStatusEnum,
     ServerScanStatusEnum,
-    ScanCommandAttemptStatusEnum,
-    ScanCommandsExtraArguments,
-    CertificateInfoExtraArgument,
-    ScanCommandErrorReasonEnum,
 )
 from sslyze.errors import TlsHandshakeTimedOut
 from sslyze.plugins.plugin_base import (
-    ScanCommandImplementation,
     ScanCommandExtraArgument,
-    ScanJob,
+    ScanCommandImplementation,
     ScanCommandResult,
+    ScanJob,
     ScanJobResult,
 )
 from sslyze.plugins.scan_commands import ScanCommandsRepository
 from sslyze.scanner._mass_scanner import MassScannerProducerThread, NoMoreServerScanRequestsSentinel
 from sslyze.server_connectivity import ServerConnectivityInfo
 from tests.factories import ServerScanRequestFactory, ServerTlsProbingResultFactory
-
 from tests.scanner_tests.conftest import MockPluginScanResult
 
 
@@ -156,8 +154,8 @@ class TestMassScannerProducerThread:
         class PluginImplThatCrashesWhenCreatingJobs(ScanCommandImplementation):
             @classmethod
             def scan_jobs_for_scan_command(
-                cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-            ) -> List[ScanJob]:
+                cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+            ) -> list[ScanJob]:
                 raise KeyError("Some unexpected error when generating scan jobs")
 
         with mock.patch.object(
@@ -210,8 +208,8 @@ class TestMassScannerProducerThread:
 
             @classmethod
             def scan_jobs_for_scan_command(
-                cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-            ) -> List[ScanJob]:
+                cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+            ) -> list[ScanJob]:
                 scan_jobs = [
                     ScanJob(function_to_call=cls._scan_job_work_function, function_arguments=["test"]) for _ in range(5)
                 ]
@@ -219,7 +217,7 @@ class TestMassScannerProducerThread:
 
             @classmethod
             def result_for_completed_scan_jobs(
-                cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+                cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
             ) -> ScanCommandResult:
                 raise KeyError("Some unexpected error when processing scan jobs")
 
@@ -277,13 +275,13 @@ class TestMassScannerProducerThread:
 
             @classmethod
             def scan_jobs_for_scan_command(
-                cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-            ) -> List[ScanJob]:
+                cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+            ) -> list[ScanJob]:
                 return [ScanJob(function_to_call=cls._scan_job_work_function, function_arguments=["test"])]
 
             @classmethod
             def result_for_completed_scan_jobs(
-                cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+                cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
             ) -> ScanCommandResult:
                 for completed_job in scan_job_results:
                     # This will trigger the exception from _scan_job_work_function()
@@ -361,15 +359,15 @@ class TestMassScannerProducerThread:
 
             @classmethod
             def scan_jobs_for_scan_command(
-                cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-            ) -> List[ScanJob]:
+                cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+            ) -> list[ScanJob]:
                 return [
                     ScanJob(function_to_call=cls._job_work_function, function_arguments=["test"]) for _ in range(10)
                 ]
 
             @classmethod
             def result_for_completed_scan_jobs(
-                cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+                cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
             ) -> ScanCommandResult:
                 for completed_job in scan_job_results:
                     completed_job.get_result()

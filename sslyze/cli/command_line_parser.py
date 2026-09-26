@@ -1,36 +1,33 @@
-import pydantic
-from dataclasses import dataclass
 from argparse import ArgumentParser
+from dataclasses import dataclass
 from pathlib import Path
 
-from nassl.ssl_client import OpenSslFileTypeEnum
-from typing import Set, List, Optional, Dict
-from typing import Tuple
+import pydantic
+from nassl.base_ssl_client import OpenSslFileTypeEnum
 
 from sslyze.cli.server_string_parser import (
-    InvalidServerStringError,
     CommandLineServerStringParser,
+    InvalidServerStringError,
 )
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
 from sslyze.mozilla_tls_profile.tls_config_checker import (
-    TlsConfigurationAsJson,
-    MozillaTlsConfiguration,
-    TlsConfigurationEnum,
     SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER,
+    MozillaTlsConfiguration,
+    TlsConfigurationAsJson,
+    TlsConfigurationEnum,
 )
 from sslyze.plugins import plugin_base
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.plugins.plugin_base import OptParseCliOption
 from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
 from sslyze.scanner.models import ScanCommandsExtraArguments
-
 from sslyze.server_setting import (
+    ClientAuthenticationCredentials,
     HttpProxySettings,
-    ServerNetworkLocation,
-    ServerNetworkConfiguration,
     InvalidServerNetworkConfigurationError,
     ServerHostnameCouldNotBeResolved,
-    ClientAuthenticationCredentials,
+    ServerNetworkConfiguration,
+    ServerNetworkLocation,
 )
 
 
@@ -51,25 +48,25 @@ class TrustStoresUpdateCompleted(CommandLineParsingError):
 class ParsedCommandLine:
     """The result of parsing a command line used to launch sslyze."""
 
-    invalid_servers: List[InvalidServerStringError]
+    invalid_servers: list[InvalidServerStringError]
 
     # Servers to scan
-    servers_to_scans: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]]
-    scan_commands: Set[ScanCommand]
+    servers_to_scans: list[tuple[ServerNetworkLocation, ServerNetworkConfiguration]]
+    scan_commands: set[ScanCommand]
     scan_commands_extra_arguments: ScanCommandsExtraArguments
 
     # Output settings
-    json_path_out: Optional[Path]
+    json_path_out: Path | None
     should_print_json_to_console: bool
     should_disable_console_output: bool
 
     # Network settings
-    per_server_concurrent_connections_limit: Optional[int]
-    concurrent_server_scans_limit: Optional[int]
+    per_server_concurrent_connections_limit: int | None
+    concurrent_server_scans_limit: int | None
 
     # Check the server against a specific TLS configuration
-    tls_config_to_check_against_as_enum: Optional[TlsConfigurationEnum]  # None if shouldn't be run
-    tls_config_to_check_against: Optional[TlsConfigurationAsJson]
+    tls_config_to_check_against_as_enum: TlsConfigurationEnum | None  # None if shouldn't be run
+    tls_config_to_check_against: TlsConfigurationAsJson | None
 
 
 _STARTTLS_PROTOCOL_DICT = {
@@ -137,16 +134,13 @@ class CommandLineParser:
         if args_command_list.targets_in:
             try:  # Read targets from a file
                 with open(args_command_list.targets_in) as f:
-                    for target in f.readlines():
-                        if target.strip():  # Ignore empty lines
-                            if not target.startswith("#"):  # Ignore comment lines
-                                args_target_list.append(target.strip())
-            except IOError:
+                    for target in f:
+                        if target.strip() and not target.startswith("#"):  # Ignore empty lines and comment lines
+                            args_target_list.append(target.strip())
+            except OSError:
                 raise CommandLineParsingError(f"Can't read targets from input file '{args_command_list.targets_in}'")
 
-        for target in args_command_list.target:
-            args_target_list.append(target)
-
+        args_target_list = list(args_command_list.target)
         if not args_target_list:
             raise CommandLineParsingError("No targets to scan.")
 
@@ -156,8 +150,8 @@ class CommandLineParser:
             )
 
         # Determine the TLS configuration to check against
-        tls_config_to_check_against_as_enum: Optional[TlsConfigurationEnum] = None
-        tls_config_to_check_against: Optional[TlsConfigurationAsJson] = None
+        tls_config_to_check_against_as_enum: TlsConfigurationEnum | None = None
+        tls_config_to_check_against: TlsConfigurationAsJson | None = None
         if args_command_list.custom_tls_config:
             # A custom TLS config was supplied
             tls_config_to_check_against_as_enum = TlsConfigurationEnum.CUSTOM
@@ -213,7 +207,7 @@ class CommandLineParser:
 
         # Handle JSON settings
         should_print_json_to_console = False
-        json_path_out: Optional[Path] = None
+        json_path_out: Path | None = None
         if args_command_list.json_file:
             if args_command_list.json_file == "-":
                 if args_command_list.quiet:
@@ -243,7 +237,7 @@ class CommandLineParser:
                     key_type=key_type,
                 )
             except ValueError as e:
-                raise CommandLineParsingError("Invalid client authentication settings: {}.".format(e.args[0]))
+                raise CommandLineParsingError(f"Invalid client authentication settings: {e.args[0]}.")
 
         # HTTP CONNECT proxy
         http_proxy_settings = None
@@ -251,11 +245,11 @@ class CommandLineParser:
             try:
                 http_proxy_settings = HttpProxySettings.from_url(args_command_list.https_tunnel)
             except ValueError as e:
-                raise CommandLineParsingError("Invalid proxy URL for --https_tunnel: {}.".format(e.args[0]))
+                raise CommandLineParsingError(f"Invalid proxy URL for --https_tunnel: {e.args[0]}.")
 
         # Create the server location objects for each specified servers
-        good_servers: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]] = []
-        invalid_server_strings: List[InvalidServerStringError] = []
+        good_servers: list[tuple[ServerNetworkLocation, ServerNetworkConfiguration]] = []
+        invalid_server_strings: list[InvalidServerStringError] = []
         for server_string in args_target_list:
             try:
                 # Parse the string supplied via the CLI for this server
@@ -308,7 +302,7 @@ class CommandLineParser:
 
             # Figure out extra network config for this server
             # Opportunistic TLS
-            opportunistic_tls: Optional[ProtocolWithOpportunisticTlsEnum] = None
+            opportunistic_tls: ProtocolWithOpportunisticTlsEnum | None = None
             if args_command_list.starttls:
                 if args_command_list.starttls == "auto":
                     # Special value to auto-derive the protocol from the port number
@@ -343,8 +337,8 @@ class CommandLineParser:
             per_server_concurrent_connections_limit = 2
 
         # Figure out the scan commands that are enabled
-        scan_commands: Set[ScanCommand] = set()
-        scan_commands_extra_arguments_dict: Dict[ScanCommand, plugin_base.ScanCommandExtraArgument] = {}
+        scan_commands: set[ScanCommand] = set()
+        scan_commands_extra_arguments_dict: dict[ScanCommand, plugin_base.ScanCommandExtraArgument] = {}
         for scan_command in ScanCommandsRepository.get_all_scan_commands():
             cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
             (
@@ -402,7 +396,7 @@ class CommandLineParser:
             "--keyform",
             metavar="KEY_FORMAT",
             choices=["DER", "PEM"],
-            help="Client private key format. DER or PEM " "(default).",
+            help="Client private key format. DER or PEM (default).",
             dest="keyform",
             default="PEM",
         )
@@ -498,7 +492,7 @@ class CommandLineParser:
         )
 
     @staticmethod
-    def _get_plugin_scan_commands() -> List[OptParseCliOption]:
+    def _get_plugin_scan_commands() -> list[OptParseCliOption]:
         """Retrieve the list of command line options implemented by the plugins currently available."""
         scan_commands_options = []
         for scan_command in ScanCommandsRepository.get_all_scan_commands():

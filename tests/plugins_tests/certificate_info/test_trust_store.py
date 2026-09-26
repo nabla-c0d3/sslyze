@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from ipaddress import ip_address
+
+from cryptography.x509 import DNSName, IPAddress
 
 from sslyze import TrustStore
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
-from cryptography.x509 import DNSName, IPAddress
-
 
 GOOGLE_DOT_COM_CERT_CHAIN_ON_11_2022 = [
     # www.google.com
@@ -120,7 +120,7 @@ class TestTrustStore:
         server_subject = DNSName("www.google.com")
 
         # And at the time of the verification, the certificate chain is expected to be valid
-        validation_time = datetime(year=2022, month=11, day=6)
+        validation_time = datetime(year=2022, month=11, day=6, tzinfo=timezone.utc)
 
         # When running the verification, it succeeds
         result = trust_store.verify_certificate_chain(certificate_chain_as_pem, server_subject, validation_time)
@@ -137,7 +137,7 @@ class TestTrustStore:
         server_subject = DNSName("www.google.com")
 
         # And at the time of the verification, the certificate chain is expected to be INVALID
-        validation_time = datetime(year=2030, month=1, day=1)
+        validation_time = datetime(year=2030, month=1, day=1, tzinfo=timezone.utc)
 
         # When running the verification, it succeeds
         result = trust_store.verify_certificate_chain(certificate_chain_as_pem, server_subject, validation_time)
@@ -156,7 +156,7 @@ class TestTrustStore:
         certificate_chain_as_pem = GOOGLE_DOT_COM_CERT_CHAIN_ON_11_2022
 
         # And at the time of the verification, the certificate chain is expected to be valid
-        validation_time = datetime(year=2022, month=11, day=6)
+        validation_time = datetime(year=2022, month=11, day=6, tzinfo=timezone.utc)
 
         # But the certificate is for a different hostname
         server_subject = DNSName("notgoogle.com")
@@ -178,7 +178,7 @@ class TestTrustStore:
         certificate_chain_as_pem = GOOGLE_DOT_COM_CERT_CHAIN_ON_11_2022
 
         # And at the time of the verification, the certificate chain is expected to be valid
-        validation_time = datetime(year=2022, month=11, day=6)
+        validation_time = datetime(year=2022, month=11, day=6, tzinfo=timezone.utc)
 
         # But the certificate is for a different server, actually an IP address
         server_subject = IPAddress(ip_address("2a00:1450:4007:80d::200e"))

@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional
+
 from pydantic import BaseModel, ConfigDict
 
 from sslyze.scanner.scan_command_attempt import ScanCommandAttemptStatusEnum, ScanCommandErrorReasonEnum
@@ -13,5 +13,5 @@ class ScanCommandAttemptAsJson(BaseModel, ABC):
     )
 
     status: ScanCommandAttemptStatusEnum
-    error_reason: Optional[ScanCommandErrorReasonEnum]
-    error_trace: Optional[str]
+    error_reason: ScanCommandErrorReasonEnum | None
+    error_trace: str | None

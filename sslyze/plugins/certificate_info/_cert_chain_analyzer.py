@@ -1,25 +1,25 @@
 from dataclasses import dataclass
-
-from typing import Optional, List, Union, cast
+from typing import cast
 
 import cryptography
+import nassl.ocsp_response
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import (
+    Certificate,
+    DNSName,
     ExtensionNotFound,
     ExtensionOID,
-    Certificate,
-    load_pem_x509_certificate,
-    TLSFeature,
-    DNSName,
     IPAddress,
+    TLSFeature,
+    load_pem_x509_certificate,
 )
-from cryptography.x509.ocsp import load_der_ocsp_response, OCSPResponseStatus, OCSPResponse
-import nassl.ocsp_response
+from cryptography.x509.ocsp import OCSPResponse, OCSPResponseStatus, load_der_ocsp_response
+from nassl.openssl_1_1_1._nassl import OCSP_RESPONSE
 
 from sslyze.plugins.certificate_info._symantec import SymantecDistructTester
-from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore, PathValidationResult
+from sslyze.plugins.certificate_info.trust_stores.trust_store import PathValidationResult, TrustStore
 
 
 @dataclass(frozen=True)
@@ -66,22 +66,22 @@ class CertificateDeploymentAnalysisResult:
 
     """
 
-    received_certificate_chain: List[Certificate]
+    received_certificate_chain: list[Certificate]
     leaf_certificate_has_must_staple_extension: bool
     leaf_certificate_is_ev: bool
-    leaf_certificate_signed_certificate_timestamps_count: Optional[int]
-    received_chain_contains_anchor_certificate: Optional[bool]
-    received_chain_has_valid_order: Optional[bool]
+    leaf_certificate_signed_certificate_timestamps_count: int | None
+    received_chain_contains_anchor_certificate: bool | None
+    received_chain_has_valid_order: bool | None
 
-    path_validation_results: List[PathValidationResult]
-    verified_chain_has_sha1_signature: Optional[bool]
-    verified_chain_has_legacy_symantec_anchor: Optional[bool]
+    path_validation_results: list[PathValidationResult]
+    verified_chain_has_sha1_signature: bool | None
+    verified_chain_has_legacy_symantec_anchor: bool | None
 
-    ocsp_response: Optional[OCSPResponse]
-    ocsp_response_is_trusted: Optional[bool]
+    ocsp_response: OCSPResponse | None
+    ocsp_response_is_trusted: bool | None
 
     @property
-    def verified_certificate_chain(self) -> Optional[List[Certificate]]:
+    def verified_certificate_chain(self) -> list[Certificate] | None:
         """Get one of the verified certificate chains if one was successfully built using any of the trust stores."""
         for path_result in self.path_validation_results:
             if path_result.was_validation_successful:
@@ -89,7 +89,7 @@ class CertificateDeploymentAnalysisResult:
         return None
 
     @property
-    def verified_certificate_chain_as_pem(self) -> Optional[List[str]]:
+    def verified_certificate_chain_as_pem(self) -> list[str] | None:
         if self.verified_certificate_chain is None:
             return None
 
@@ -99,7 +99,7 @@ class CertificateDeploymentAnalysisResult:
         return pem_certs
 
     @property
-    def received_certificate_chain_as_pem(self) -> List[str]:
+    def received_certificate_chain_as_pem(self) -> list[str]:
         pem_certs = []
         for certificate in self.received_certificate_chain:
             pem_certs.append(certificate.public_bytes(Encoding.PEM).decode("ascii"))
@@ -114,10 +114,10 @@ class CertificateDeploymentAnalyzer:
 
     def __init__(
         self,
-        server_subject: Union[IPAddress, DNSName],
-        server_certificate_chain_as_pem: List[str],
-        server_ocsp_response: Optional[nassl._nassl.OCSP_RESPONSE],
-        trust_stores_for_validation: List[TrustStore],
+        server_subject: IPAddress | DNSName,
+        server_certificate_chain_as_pem: list[str],
+        server_ocsp_response: OCSP_RESPONSE | None,
+        trust_stores_for_validation: list[TrustStore],
     ) -> None:
         self.server_subject = server_subject
         self.server_certificate_chain_as_pem = server_certificate_chain_as_pem
@@ -144,7 +144,7 @@ class CertificateDeploymentAnalyzer:
             pass
 
         # Received chain order
-        is_chain_order_valid: Optional[bool] = True
+        is_chain_order_valid: bool | None = True
         previous_issuer = None
         for index, cert in enumerate(received_certificate_chain):
             try:
@@ -154,11 +154,9 @@ class CertificateDeploymentAnalyzer:
                 is_chain_order_valid = None
                 break
 
-            if index > 0:
-                # Compare the current subject with the previous issuer in the chain
-                if current_subject != previous_issuer:
-                    is_chain_order_valid = False
-                    break
+            if index > 0 and current_subject != previous_issuer:
+                is_chain_order_valid = False
+                break
             try:
                 previous_issuer = cert.issuer
             except KeyError:
@@ -179,7 +177,7 @@ class CertificateDeploymentAnalyzer:
             is_leaf_certificate_ev = trust_store.is_certificate_extended_validation(leaf_cert)
 
         # Check for Signed Timestamps
-        number_of_scts: Optional[int] = 0
+        number_of_scts: int | None = 0
         try:
             # Look for the x509 extension
             sct_ext = leaf_cert.extensions.get_extension_for_oid(ExtensionOID.PRECERT_SIGNED_CERTIFICATE_TIMESTAMPS)
@@ -237,7 +235,7 @@ class CertificateDeploymentAnalyzer:
         verified_chain_has_legacy_symantec_anchor = None
         if verified_certificate_chain:
             symantec_distrust_timeline = SymantecDistructTester.get_distrust_timeline(verified_certificate_chain)
-            verified_chain_has_legacy_symantec_anchor = True if symantec_distrust_timeline else False
+            verified_chain_has_legacy_symantec_anchor = bool(symantec_distrust_timeline)
 
         # Check the OCSP response if there is one
         is_ocsp_response_trusted = None

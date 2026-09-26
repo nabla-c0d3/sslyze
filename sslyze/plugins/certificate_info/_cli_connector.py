@@ -1,6 +1,6 @@
 import binascii
 from pathlib import Path
-from typing import List, Union, Dict, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
@@ -14,12 +14,13 @@ from sslyze.plugins.certificate_info._certificate_utils import (
     get_common_names,
     parse_subject_alternative_name_extension,
 )
-
-from sslyze.plugins.plugin_base import ScanCommandCliConnector, OptParseCliOption
+from sslyze.plugins.plugin_base import OptParseCliOption, ScanCommandCliConnector
 
 if TYPE_CHECKING:
-    from sslyze.plugins.certificate_info.implementation import CertificateInfoScanResult
-    from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument  # noqa: F401
+    from sslyze.plugins.certificate_info.implementation import (
+        CertificateInfoExtraArgument,
+        CertificateInfoScanResult,
+    )
 
 
 class _CertificateInfoCliConnector(
@@ -29,7 +30,7 @@ class _CertificateInfoCliConnector(
     _cli_description = "Retrieve and analyze a server's certificate(s) to verify its validity."
 
     @classmethod
-    def get_cli_options(cls) -> List[OptParseCliOption]:
+    def get_cli_options(cls) -> list[OptParseCliOption]:
         scan_command_option = super().get_cli_options()
         scan_command_option.append(
             OptParseCliOption(
@@ -43,10 +44,10 @@ class _CertificateInfoCliConnector(
 
     @classmethod
     def find_cli_options_in_command_line(
-        cls, parsed_command_line: Dict[str, Union[None, bool, str]]
-    ) -> Tuple[bool, Optional["CertificateInfoExtraArgument"]]:
+        cls, parsed_command_line: dict[str, None | bool | str]
+    ) -> tuple[bool, Optional["CertificateInfoExtraArgument"]]:
         # Avoid circular imports
-        from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument  # noqa: F811
+        from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument
 
         # Check if --certinfo was used
         is_scan_cmd_enabled, _ = super().find_cli_options_in_command_line(parsed_command_line)
@@ -68,7 +69,7 @@ class _CertificateInfoCliConnector(
     NO_VERIFIED_CHAIN_ERROR_TXT = "ERROR - Could not build verified chain (certificate untrusted?)"
 
     @classmethod
-    def result_to_console_output(cls, result: "CertificateInfoScanResult") -> List[str]:
+    def result_to_console_output(cls, result: "CertificateInfoScanResult") -> list[str]:
         result_as_txt = [cls._format_title("Certificates Information")]
 
         # SNI
@@ -109,8 +110,8 @@ class _CertificateInfoCliConnector(
 
     @classmethod
     def _cert_deployment_to_console_output(
-        cls, index: Optional[int], cert_deployment: CertificateDeploymentAnalysisResult, was_sni_disabled: bool
-    ) -> List[str]:
+        cls, index: int | None, cert_deployment: CertificateDeploymentAnalysisResult, was_sni_disabled: bool
+    ) -> list[str]:
         leaf_certificate = cert_deployment.received_certificate_chain[0]
         if was_sni_disabled:
             deployment_as_txt = [cls._format_subtitle("Certificate Chain with SNI disabled - can be ignored")]
@@ -158,7 +159,7 @@ class _CertificateInfoCliConnector(
         deployment_as_txt.append(cls._format_field("Symantec 2018 Deprecation:", symantec_str))
 
         # Print the Common Names within the received certificate chain
-        cns_in_received_chain: List[str] = [
+        cns_in_received_chain: list[str] = [
             _get_subject_as_short_text(cert) for cert in cert_deployment.received_certificate_chain
         ]
         deployment_as_txt.append(cls._format_field("Received Chain:", " --> ".join(cns_in_received_chain)))
@@ -218,9 +219,9 @@ class _CertificateInfoCliConnector(
         elif scts_count == 0:
             sct_txt = "NOT SUPPORTED - Extension not found"
         elif scts_count < 3:
-            sct_txt = "WARNING - Only {} SCTs included but Google recommends 3 or more".format(str(scts_count))
+            sct_txt = f"WARNING - Only {scts_count!s} SCTs included but Google recommends 3 or more"
         else:
-            sct_txt = "OK - {} SCTs included".format(str(scts_count))
+            sct_txt = f"OK - {scts_count!s} SCTs included"
         deployment_as_txt.append(cls._format_field("Certificate Transparency:", sct_txt))
 
         # OCSP stapling
@@ -234,9 +235,7 @@ class _CertificateInfoCliConnector(
                 ocsp_resp_txt = [
                     cls._format_field(
                         "",
-                        "ERROR - OCSP response status is not successful: {}".format(
-                            cert_deployment.ocsp_response.response_status.name
-                        ),
+                        f"ERROR - OCSP response status is not successful: {cert_deployment.ocsp_response.response_status.name}",
                     )
                 ]
             else:
@@ -287,7 +286,7 @@ class _CertificateInfoCliConnector(
         return deployment_as_txt
 
     @classmethod
-    def _get_basic_certificate_text(cls, certificate: Certificate) -> List[str]:
+    def _get_basic_certificate_text(cls, certificate: Certificate) -> list[str]:
         text_output = [
             cls._format_field(
                 "SHA1 Fingerprint:", binascii.hexlify(certificate.fingerprint(hashes.SHA1())).decode("ascii")

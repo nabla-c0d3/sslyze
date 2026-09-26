@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 from unittest import mock
 
@@ -25,7 +25,7 @@ class TestMain:
         command_line = ["sslyze", "--quiet", "--compression", "invalid.server.testests"]
 
         # When running the CLI, it succeeds
-        with mock.patch.object(sys, "argv", command_line):
+        with mock.patch.object(sys, "argv", command_line):  # noqa: SIM117
             # And the CLI exited early because there is no actual server to scan
             with pytest.raises(SystemExit):
                 main()
@@ -35,9 +35,8 @@ class TestMain:
         command_line = ["sslyze", "--json_out=-", "--compression", "www.google.com"]
 
         # When running the CLI, it succeeds
-        with mock.patch.object(sys, "argv", command_line):
-            with pytest.raises(SystemExit):
-                main()
+        with mock.patch.object(sys, "argv", command_line), pytest.raises(SystemExit):
+            main()
 
         # And the JSON output was printed to the console
         json_output = capsys.readouterr().out

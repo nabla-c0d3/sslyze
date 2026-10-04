@@ -4,10 +4,11 @@ import pytest
 from cryptography.x509.ocsp import OCSPResponseStatus
 
 from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArgument, CertificateInfoImplementation
-from sslyze.server_setting import ServerNetworkLocation
+from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
+from tests.python_tls_server import PythonTlsServer
 from tests.server_connectivity_tests.test_direct_connection import is_ipv6_available
 
 
@@ -250,3 +251,22 @@ class TestCertificateInfoPlugin:
 
             # And no certificate deployments are returned
             assert len(plugin_result.certificate_deployments) == 0
+
+    def test_sni_sent_has_non_unicode_characters(self):
+        # Given a server reachable by supplying an SNI containing non-ASCII characters
+        server_hostname = "测试.example"
+        with PythonTlsServer(
+            # And the server's certificate used for this test do not matter
+            server_certificate_path=Path(__file__).parent.absolute() / "server-ed25519-cert.pem",
+            server_key_path=Path(__file__).parent.absolute() / "server-ed25519-key.pem",
+        ) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, port=server.port, ip_address=server.ip_address
+            )
+
+            # And SSLyze is configured to send the SNI with the non-ASCII hostname
+            network_config = ServerNetworkConfiguration(tls_server_name_indication=server_hostname)
+            server_info = check_connectivity_to_server_and_return_info(server_location, network_config)
+
+            # When running the scan, it succeeds
+            CertificateInfoImplementation.scan_server(server_info)

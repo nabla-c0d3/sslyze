@@ -179,7 +179,10 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
 
             subject_to_use_for_validation = IPAddress(ip_address(server_info.server_location.ip_address))
         else:
-            subject_to_use_for_validation = DNSName(server_info.network_configuration.tls_server_name_indication)
+            subject_to_use_for_validation = DNSName(
+                # Handle non-ASCII hostnames (such as "测试.example") by converting them to IDNA format
+                server_info.network_configuration.tls_server_name_indication.encode("idna").decode()
+            )
 
         # Check the SNI-disabled certificate deployment
         sni_disabled_analysis_result: CertificateDeploymentAnalysisResult | None

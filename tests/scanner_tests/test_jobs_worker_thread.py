@@ -31,7 +31,7 @@ class TestJobsWorkerThread:
         )
         job3 = QueuedScanJob(
             parent_server_scan_request_uuid=uuid4(),
-            for_scan_command=ScanCommand.ELLIPTIC_CURVES,
+            for_scan_command=ScanCommand.SESSION_RESUMPTION,
             function_to_call=function_to_call_good,
             function_arguments=[6, "www"],
         )

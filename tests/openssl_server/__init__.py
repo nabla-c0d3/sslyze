@@ -195,7 +195,7 @@ class _OpenSslServer(ABC):
 
 
 class LegacyOpenSslServer(_OpenSslServer):
-    """A wrapper around the OpenSSL 1.0.0e s_server binary."""
+    """A wrapper around the OpenSSL 1.0.2 s_server binary."""
 
     def __init__(
         self,
@@ -228,7 +228,7 @@ class LegacyOpenSslServer(_OpenSslServer):
 
     @classmethod
     def get_openssl_path(cls) -> Path:
-        return Path(__file__).parent.absolute() / "openssl-1-0-0e-linux64"
+        return Path(__file__).parent.absolute() / "openssl-1-0-2-linux64"
 
     @classmethod
     def get_verify_argument(cls, client_auth_config: ClientAuthConfigEnum) -> str:

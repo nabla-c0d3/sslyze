@@ -3,6 +3,8 @@ import ssl
 from pathlib import Path
 from threading import Thread
 
+from tests.openssl_server import DEFAULT_SERVER_CERTIFICATE_PATH, DEFAULT_SERVER_KEY_PATH
+
 
 class PythonTlsServer:
     """A basic TLS server built on Python's ssl module.
@@ -10,7 +12,12 @@ class PythonTlsServer:
     Unlike the s_server binaries in tests.openssl_server, it runs on all platforms (including Windows). This was built because the s_server binaries can be buggy and unpredictable on Windows.
     """
 
-    def __init__(self, *, server_certificate_path: Path, server_key_path: Path) -> None:
+    def __init__(
+        self,
+        *,
+        server_certificate_path: Path = DEFAULT_SERVER_CERTIFICATE_PATH,
+        server_key_path: Path = DEFAULT_SERVER_KEY_PATH,
+    ) -> None:
         self.hostname = "localhost"
         self.ip_address = "127.0.0.1"
         self.port = 0  # Set when the server starts

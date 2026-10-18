@@ -68,8 +68,13 @@ class _OpenSslServerIOManager:
         # self.thread.join()
 
 
-_DEFAULT_SERVER_CERTIFICATE_PATH = Path(__file__).parent.absolute() / "server-rsa-cert.pem"
-_DEFAULT_SERVER_KEY_PATH = Path(__file__).parent.absolute() / "server-rsa-key.pem"
+_CERTS_FOLDER = Path(__file__).parent.absolute() / ".." / "server_certificates"
+assert _CERTS_FOLDER.exists()
+
+DEFAULT_SERVER_CERTIFICATE_PATH = _CERTS_FOLDER / "rsa" / "server-rsa-cert.pem"
+DEFAULT_SERVER_KEY_PATH = _CERTS_FOLDER / "rsa" / "server-rsa-key.pem"
+
+_CLIENT_PEM_FOLDER = _CERTS_FOLDER / "client"
 
 
 class _OpenSslServer(ABC):
@@ -83,18 +88,18 @@ class _OpenSslServer(ABC):
     )
 
     # Client authentication - files generated using https://gist.github.com/nabla-c0d3/c2c5799a84a4867e5cbae42a5c43f89a
-    _CLIENT_CA_PATH = Path(__file__).parent.absolute() / "client-ca.pem"
+    _CLIENT_CA_PATH = _CLIENT_PEM_FOLDER / "client-ca.pem"
 
     # A special message clients can send to get a reply from s_server
     HELLO_MSG = b"Hello\r\n"
 
     @classmethod
     def get_client_certificate_path(cls) -> Path:
-        return Path(__file__).parent.absolute() / "client-cert.pem"
+        return _CLIENT_PEM_FOLDER / "client-cert.pem"
 
     @classmethod
     def get_client_key_path(cls) -> Path:
-        return Path(__file__).parent.absolute() / "client-key.pem"
+        return _CLIENT_PEM_FOLDER / "client-key.pem"
 
     @classmethod
     @abstractmethod
@@ -200,8 +205,8 @@ class LegacyOpenSslServer(_OpenSslServer):
     def __init__(
         self,
         *,
-        server_certificate_path: Path = _DEFAULT_SERVER_CERTIFICATE_PATH,
-        server_key_path: Path = _DEFAULT_SERVER_KEY_PATH,
+        server_certificate_path: Path = DEFAULT_SERVER_CERTIFICATE_PATH,
+        server_key_path: Path = DEFAULT_SERVER_KEY_PATH,
         client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
         should_enable_server_cipher_preference: bool = False,
         openssl_cipher_string: str | None = None,
@@ -261,8 +266,8 @@ class ModernOpenSslServer(_OpenSslServer):
     def __init__(
         self,
         *,
-        server_certificate_path: Path = _DEFAULT_SERVER_CERTIFICATE_PATH,
-        server_key_path: Path = _DEFAULT_SERVER_KEY_PATH,
+        server_certificate_path: Path = DEFAULT_SERVER_CERTIFICATE_PATH,
+        server_key_path: Path = DEFAULT_SERVER_KEY_PATH,
         client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
         should_enable_server_cipher_preference: bool = False,
         openssl_cipher_string: str | None = None,
@@ -300,8 +305,8 @@ class S_Server_OpenSSL_4_0_0(ModernOpenSslServer):
     def __init__(
         self,
         *,
-        server_certificate_path: Path = _DEFAULT_SERVER_CERTIFICATE_PATH,
-        server_key_path: Path = _DEFAULT_SERVER_KEY_PATH,
+        server_certificate_path: Path = DEFAULT_SERVER_CERTIFICATE_PATH,
+        server_key_path: Path = DEFAULT_SERVER_KEY_PATH,
         client_auth_config: ClientAuthConfigEnum = ClientAuthConfigEnum.DISABLED,
         should_enable_server_cipher_preference: bool = False,
         openssl_cipher_string: str | None = None,

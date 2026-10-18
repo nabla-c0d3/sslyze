@@ -38,9 +38,10 @@ class TestCertificateAlgorithms:
     @can_only_run_on_linux_64
     def test_ed25519_certificate(self):
         # Given a server that is configured with an ED25519 certificate
+        certificates_path = Path(__file__).parent / ".." / ".." / "server_certificates" / "ed25519"
         with ModernOpenSslServer(
-            server_certificate_path=Path(__file__).parent.absolute() / "server-ed25519-cert.pem",
-            server_key_path=Path(__file__).parent.absolute() / "server-ed25519-key.pem",
+            server_certificate_path=certificates_path / "server-ed25519-cert.pem",
+            server_key_path=certificates_path / "server-ed25519-key.pem",
         ) as server:
             server_location = ServerNetworkLocation(
                 hostname=server.hostname, port=server.port, ip_address=server.ip_address

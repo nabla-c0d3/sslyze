@@ -30,7 +30,7 @@ class TestCertificateInfoPlugin:
         server_info = check_connectivity_to_server_and_return_info(server_location)
 
         # And a valid path to a custom CA file
-        ca_file_path = Path(__file__).parent / ".." / ".." / "certificates" / "wildcard-self-signed.pem"
+        ca_file_path = Path(__file__).parent / "certificates" / "wildcard-self-signed.pem"
 
         # When running the scan with the custom CA file enabled
         plugin_result = CertificateInfoImplementation.scan_server(
@@ -256,11 +256,7 @@ class TestCertificateInfoPlugin:
     def test_sni_sent_has_non_unicode_characters(self):
         # Given a server reachable by supplying an SNI containing non-ASCII characters
         server_hostname = "测试.example"
-        with PythonTlsServer(
-            # And the server's certificate used for this test does not matter
-            server_certificate_path=Path(__file__).parent.absolute() / "server-ed25519-cert.pem",
-            server_key_path=Path(__file__).parent.absolute() / "server-ed25519-key.pem",
-        ) as server:
+        with PythonTlsServer() as server:
             server_location = ServerNetworkLocation(
                 hostname=server.hostname, port=server.port, ip_address=server.ip_address
             )

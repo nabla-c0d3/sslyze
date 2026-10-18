@@ -252,11 +252,12 @@ class TestCertificateInfoPlugin:
             # And no certificate deployments are returned
             assert len(plugin_result.certificate_deployments) == 0
 
+    # Test for the --certinfo crash in https://github.com/nabla-c0d3/sslyze/issues/732
     def test_sni_sent_has_non_unicode_characters(self):
         # Given a server reachable by supplying an SNI containing non-ASCII characters
         server_hostname = "测试.example"
         with PythonTlsServer(
-            # And the server's certificate used for this test do not matter
+            # And the server's certificate used for this test does not matter
             server_certificate_path=Path(__file__).parent.absolute() / "server-ed25519-cert.pem",
             server_key_path=Path(__file__).parent.absolute() / "server-ed25519-key.pem",
         ) as server:

@@ -37,8 +37,9 @@ class TestEncryptedClientHelloPluginWithOnlineServer:
         # And the server is also reported as responding to GREASE ECH
         assert result.is_grease_supported
 
-        # And the published ECHConfigList is reported as well-formed
+        # And the published ECHConfigList is reported as well-formed and up to date
         assert not result.is_ech_config_malformed
+        assert not result.is_ech_config_outdated
 
         # And a CLI output can be generated
         cli_output = EncryptedClientHelloImplementation.cli_connector_cls.result_to_console_output(result)
@@ -203,6 +204,7 @@ class TestEncryptedClientHelloPluginWithLocalServer:
         assert result.is_ech_supported
         assert result.ech_inner_sni == server.hostname
         assert not result.is_ech_config_malformed
+        assert not result.is_ech_config_outdated
 
         # And a CLI output can be generated
         cli_output = EncryptedClientHelloImplementation.cli_connector_cls.result_to_console_output(result)
@@ -240,9 +242,12 @@ class TestEncryptedClientHelloPluginWithLocalServer:
         assert result.ech_inner_sni == server.hostname
         assert not result.is_ech_config_malformed
 
-        # And a CLI output can be generated
+        # And the published ECHConfigList is reported as outdated
+        assert result.is_ech_config_outdated
+
+        # And a CLI output can be generated, calling out the outdated ECHConfigList
         cli_output = EncryptedClientHelloImplementation.cli_connector_cls.result_to_console_output(result)
-        assert any("Server supports ECH" in line for line in cli_output)
+        assert any("published via DNS is outdated" in line for line in cli_output)
 
         # And the result can be converted to JSON
         result_as_json = EncryptedClientHelloScanResultAsJson.model_validate(result).model_dump_json()

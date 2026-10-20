@@ -39,11 +39,12 @@ class EncryptedClientHelloScanResult(ScanCommandResult):
     """The result of testing a server for Encrypted Client Hello (ECH) support.
 
     Attributes:
-        is_ech_supported: True if the server genuinely supports ECH: sslyze completed a TLS handshake using the
-            server's own published ECHConfigList and the inner (encrypted) ClientHello was decrypted and processed
-            by the server. False if the server publishes an ECHConfigList but it does not lead to a working ECH
-            handshake, ie. a decoy/placeholder configuration. None if the server's DNS record does not advertise
-            ECH, so ECH support could not be tested.
+        is_ech_supported: True if the server genuinely supports ECH: sslyze completed a TLS handshake in which the
+            inner (encrypted) ClientHello was decrypted and processed by the server, using either the server's
+            published ECHConfigList or, if the server rejected it, the retry configs that the server sent back (see
+            is_ech_config_outdated). False if the server publishes an ECHConfigList but it does not lead to a working
+            ECH handshake, even with the server's retry configs, ie. a decoy/placeholder configuration. None if the
+            server's DNS record does not advertise ECH, so ECH support could not be tested.
         ech_inner_sni: The SNI value that was protected/encrypted by ECH, when is_ech_supported is True.
         ech_outer_sni: The SNI value that remained visible in cleartext, when is_ech_supported is True.
         ech_config_list_from_dns: The raw ECHConfigList bytes published in the server's DNS HTTPS/SVCB record's
@@ -51,6 +52,9 @@ class EncryptedClientHelloScanResult(ScanCommandResult):
         is_ech_config_malformed: True if the server's DNS record publishes an ECHConfigList that could not even be
             parsed (invalid encoding, unknown/bad KEM or version, etc.), which usually points to a misconfigured DNS
             entry rather than a deliberate decoy/placeholder configuration.
+        is_ech_config_outdated: True if the server rejected the ECHConfigList published in its DNS record but ECH
+            worked when sslyze retried with the ECHConfigList that the server sent back (its retry configs), which
+            usually means that the DNS record is out of date.
         is_grease_supported: True if the server responded to a GREASE (decoy) Encrypted Client Hello with a set of
             ECH retry configs, which indicates that the server implements ECH at the TLS protocol level, even when
             it does not (yet) advertise a working ECHConfigList via DNS.
@@ -62,6 +66,7 @@ class EncryptedClientHelloScanResult(ScanCommandResult):
 
     ech_config_list_from_dns: bytes | None
     is_ech_config_malformed: bool
+    is_ech_config_outdated: bool
 
     is_grease_supported: bool
 
@@ -73,6 +78,7 @@ class EncryptedClientHelloScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
     ech_config_list_from_dns: Base64StrFromBytes | None
     is_ech_config_malformed: bool
+    is_ech_config_outdated: bool
 
     is_grease_supported: bool
 
@@ -100,7 +106,9 @@ class _EncryptedClientHelloCliConnector(ScanCommandCliConnector[EncryptedClientH
                 "NOT SUPPORTED - Server does not publish an ECHConfigList via DNS (HTTPS/SVCB record)."
             )
         else:
-            if result.is_ech_supported:
+            if result.is_ech_supported and result.is_ech_config_outdated:
+                real_ech_support_txt = "OK - Server supports ECH, but the ECHConfigList published via DNS is outdated; ECH worked using the server's retry configs."
+            elif result.is_ech_supported:
                 real_ech_support_txt = "OK - Server supports ECH and publishes a valid ECHConfigList."
             else:
                 if result.is_ech_config_malformed:
@@ -161,6 +169,7 @@ class EncryptedClientHelloImplementation(ScanCommandImplementation[EncryptedClie
                 ech_outer_sni=None,
                 is_grease_supported=False,
                 is_ech_config_malformed=False,
+                is_ech_config_outdated=False,
             )
 
         # Process the actual results
@@ -183,6 +192,7 @@ class EncryptedClientHelloImplementation(ScanCommandImplementation[EncryptedClie
             ech_outer_sni=real_ech_result.outer_sni,
             is_grease_supported=grease_ech_result.is_grease_ech_supported,
             is_ech_config_malformed=real_ech_result.is_ech_config_malformed,
+            is_ech_config_outdated=real_ech_result.is_ech_config_outdated,
         )
 
 
@@ -193,6 +203,7 @@ class _RealEchTestResult:
     inner_sni: str | None
     outer_sni: str | None
     is_ech_config_malformed: bool
+    is_ech_config_outdated: bool
 
 
 @dataclass(frozen=True)
@@ -277,16 +288,19 @@ def _test_real_ech(server_info: ServerConnectivityInfo) -> _RealEchTestResult:
             inner_sni=None,
             outer_sni=None,
             is_ech_config_malformed=False,
+            is_ech_config_outdated=False,
         )
 
     status, inner_sni, outer_sni, retry_config, is_ech_config_malformed = _do_ech_handshake(
         server_info, ech_config_list
     )
 
+    is_ech_config_outdated = False
     if status in _ECH_RETRYABLE_STATUSES and retry_config:
         # The published ECHConfigList was rejected but the server supplied a fresh one to retry with; a real ECH
         # client would retry once, so do the same to avoid a false negative because of a stale DNS cache
         status, inner_sni, outer_sni, _, _ = _do_ech_handshake(server_info, retry_config)
+        is_ech_config_outdated = status in _ECH_SUCCESS_STATUSES
 
     return _RealEchTestResult(
         ech_config_list=ech_config_list,
@@ -294,6 +308,7 @@ def _test_real_ech(server_info: ServerConnectivityInfo) -> _RealEchTestResult:
         inner_sni=inner_sni,
         outer_sni=outer_sni,
         is_ech_config_malformed=is_ech_config_malformed,
+        is_ech_config_outdated=is_ech_config_outdated,
     )
 
 

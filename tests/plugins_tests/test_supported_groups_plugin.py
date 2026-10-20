@@ -122,9 +122,9 @@ class TestSupportedGroupsPluginWithLocalServer:
             # When scanning for supported groups, it succeeds
             result: SupportedGroupsScanResult = SupportedGroupsImplementation.scan_server(server_info)
 
-        # And exactly the configured curves were detected as supported
+        # And exactly the configured curves were detected as supported, with their OpenSSL 4 group names
         assert result.supported_elliptic_curve_groups is not None
-        assert set(server_curves) == set(result.supported_elliptic_curve_groups)
+        assert {curve.lower() for curve in server_curves} == set(result.supported_elliptic_curve_groups)
 
     def test_tls_1_3_not_supported(self) -> None:
         # Given a server that only supports up to TLS 1.2 (no TLS 1.3)

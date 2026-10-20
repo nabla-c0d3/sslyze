@@ -211,6 +211,7 @@ class LegacyOpenSslServer(_OpenSslServer):
         should_enable_server_cipher_preference: bool = False,
         openssl_cipher_string: str | None = None,
         require_server_name_indication_value: str | None = None,
+        should_disable_tls_1_1: bool = False,
     ) -> None:
         extra_args = []
         if require_server_name_indication_value:
@@ -221,6 +222,8 @@ class LegacyOpenSslServer(_OpenSslServer):
                 f"-cert2 {server_certificate_path}",
                 f"-key2 {server_key_path}",
             ]
+        if should_disable_tls_1_1:
+            extra_args.append("-no_tls1_1")
 
         super().__init__(
             client_auth_config=client_auth_config,

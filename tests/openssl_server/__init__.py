@@ -296,7 +296,7 @@ class ModernOpenSslServer(_OpenSslServer):
 
 class S_Server_OpenSSL_4_0_0(ModernOpenSslServer):
     # Generated using: openssl ech -public_name localhost -out ech-config.pem
-    ECH_CONFIG_PATH = Path(__file__).parent.absolute() / "ech-config.pem"
+    ECH_CONFIG_PATH = _CERTS_FOLDER / "ech-config.pem"
 
     @classmethod
     def get_openssl_path(cls) -> Path:

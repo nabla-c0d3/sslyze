@@ -56,14 +56,19 @@ def check_connectivity_to_server(
     # Try to complete an SSL handshake to figure out the SSL/TLS version and cipher supported by the server
     tls_detection_result: _TlsVersionDetectionResult | None = None
 
-    # Fist try TLS 1.3
-    try:
-        tls_detection_result = _detect_support_for_tls_1_3(
-            server_location=server_location,
-            network_config=network_configuration,
-        )
-    except _TlsVersionNotSupported:
-        pass
+    # First try TLS 1.3, with the OpenSSL 1.1.1 client and then with the OpenSSL 4.0.0 client; the latter is needed for
+    # servers that only accept post-quantum/hybrid groups (such as X25519MLKEM768), which the 1.1.1 client cannot offer
+    for openssl_version in [OpenSslVersionEnum.OPENSSL_1_1_1, OpenSslVersionEnum.OPENSSL_4_0_0]:
+        try:
+            tls_detection_result = _detect_support_for_tls_1_3(
+                server_location=server_location,
+                network_config=network_configuration,
+                openssl_version=openssl_version,
+            )
+            break
+        except _TlsVersionNotSupported:
+            # Try the next OpenSSL client
+            pass
 
     # If TLS 1.3 is not supported, try lower versions of SSL/TLS
     if tls_detection_result is None:
@@ -219,12 +224,14 @@ class _TlsVersionNotSupported(Exception):
 def _detect_support_for_tls_1_3(
     server_location: ServerNetworkLocation,
     network_config: ServerNetworkConfiguration,
+    openssl_version: OpenSslVersionEnum,
 ) -> _TlsVersionDetectionResult:
     ssl_connection = SslConnection(
         server_location=server_location,
         network_configuration=network_config,
         tls_version=TlsVersionEnum.TLS_1_3,
         should_ignore_client_auth=False,
+        openssl_version=openssl_version,
     )
 
     try:

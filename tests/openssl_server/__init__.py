@@ -312,6 +312,7 @@ class S_Server_OpenSSL_4_0_0(ModernOpenSslServer):
         openssl_cipher_string: str | None = None,
         should_reply_to_http_requests: bool = True,
         enable_ech: bool = False,
+        groups: str | None = None,
     ) -> None:
         super().__init__(
             server_certificate_path=server_certificate_path,
@@ -320,6 +321,7 @@ class S_Server_OpenSSL_4_0_0(ModernOpenSslServer):
             should_enable_server_cipher_preference=should_enable_server_cipher_preference,
             openssl_cipher_string=openssl_cipher_string,
             should_reply_to_http_requests=should_reply_to_http_requests,
+            groups=groups,
         )
         if enable_ech:
             self._command_line += f" -ech_key {self.ECH_CONFIG_PATH}"

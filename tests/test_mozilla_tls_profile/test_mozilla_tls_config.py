@@ -1,4 +1,5 @@
 import pytest
+from nassl.ephemeral_key_info import OpenSslGroupNameEnum
 
 from sslyze import Scanner, ServerNetworkLocation, ServerScanRequest
 from sslyze.mozilla_tls_profile.tls_config_checker import (
@@ -130,6 +131,21 @@ class TestMozillaTlsConfigurationChecker:
             check_server_against_tls_configuration(
                 server_scan_result=server_scan_result_for_google, tls_config_to_check_against=tls_config
             )
+
+    @pytest.mark.parametrize(
+        "tls_configuration_enum",
+        [
+            TlsConfigurationEnum.MOZILLA_MODERN,
+            TlsConfigurationEnum.MOZILLA_INTERMEDIATE,
+            TlsConfigurationEnum.MOZILLA_OLD,
+        ],
+    )
+    def test_tls_curves_use_the_group_names_returned_by_the_plugin(self, tls_configuration_enum):
+        # Given a Mozilla TLS config
+        tls_config = MozillaTlsConfiguration.get(tls_configuration_enum)
+
+        # Then its TLS curves use the same names as the supported groups plugin, so that they can be compared
+        assert tls_config.tls_curves <= {group.value for group in OpenSslGroupNameEnum}
 
     def test_incomplete_scan_result(self):
         # Given a scan result that does not contain all the information needed by the Mozilla checker

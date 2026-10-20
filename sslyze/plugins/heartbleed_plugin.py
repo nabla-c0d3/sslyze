@@ -20,6 +20,7 @@ from sslyze.plugins.plugin_base import (
     ScanJob,
     ScanJobResult,
 )
+from sslyze.plugins.robot._robot_tester import get_tls_version_for_tls_parser
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
@@ -138,12 +139,13 @@ def _do_handshake_with_heartbleed(self):  # type: ignore
 
     # Build the heartbleed payload - based on
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
+    tls_parser_tls_version = get_tls_version_for_tls_parser(self._ssl_version)
     payload = TlsHeartbeatRequestRecord.from_parameters(
-        tls_version=tls_parser.record_protocol.TlsVersionEnum[self._ssl_version.name], heartbeat_data=b"\x01" * 16381
+        tls_version=tls_parser_tls_version, heartbeat_data=b"\x01" * 16381
     ).to_bytes()
 
     payload += TlsHeartbeatRequestRecord.from_parameters(
-        tls_parser.record_protocol.TlsVersionEnum[self._ssl_version.name], heartbeat_data=b"\x01\x00\x00"
+        tls_parser_tls_version, heartbeat_data=b"\x01\x00\x00"
     ).to_bytes()
 
     # Send the payload

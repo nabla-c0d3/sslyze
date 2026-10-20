@@ -244,7 +244,19 @@ def _do_ech_handshake(
         retry_config = ssl_connection.ssl_client.get_ech_retry_config()
 
     except (ServerRejectedTlsHandshake, TlsHandshakeTimedOut, OpenSSLError):
-        return OpenSslEchStatusEnum.FAILED, None, None, None, False
+        # When the server rejects the ECHConfigList and sends retry configs, OpenSSL aborts the handshake with an
+        # "ech required" error; the retry configs are still available on the connection
+        try:
+            retry_config = ssl_connection.ssl_client.get_ech_retry_config()
+        except OpenSSLError:
+            retry_config = None
+        if not retry_config:
+            # Don't call get_ech_status() here: when ECH failed without retry configs, it leaves an error in OpenSSL's
+            # error queue, which makes close() raise
+            return OpenSslEchStatusEnum.FAILED, None, None, None, False
+
+        status, _, _ = ssl_connection.ssl_client.get_ech_status()
+        return status, None, None, retry_config, False
 
     else:
         status, inner_sni, outer_sni = ssl_connection.ssl_client.get_ech_status()

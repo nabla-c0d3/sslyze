@@ -7,7 +7,7 @@ from nassl.openssl_4_0_0.ssl_client import SslClient_OpenSSL_4_0_0
 from nassl.tls_version_enum import TlsVersionEnum
 
 from sslyze.connection_helpers.tls_connection import OpenSslVersionEnum
-from sslyze.errors import ServerRejectedTlsHandshake, TlsHandshakeTimedOut
+from sslyze.errors import ServerRejectedTlsHandshake, ServerTlsConfigurationNotSupported, TlsHandshakeTimedOut
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
@@ -344,6 +344,11 @@ def _test_pq_or_ffdh_group(
         negotiated_group = _get_negotiated_group(ssl_connection.ssl_client)
 
     except (ServerRejectedTlsHandshake, TlsHandshakeTimedOut):
+        negotiated_group = None
+
+    except ServerTlsConfigurationNotSupported:
+        # The server sent DH parameters that are too weak for OpenSSL (DH key too small), so it did not use the
+        # requested FFDH group
         negotiated_group = None
 
     finally:

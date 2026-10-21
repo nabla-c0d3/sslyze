@@ -48,14 +48,17 @@
         "session_resumption": {
           "$ref": "#/$defs/SessionResumptionSupportScanAttemptAsJson"
         },
-        "elliptic_curves": {
-          "$ref": "#/$defs/SupportedEllipticCurvesScanAttemptAsJson"
-        },
         "http_headers": {
           "$ref": "#/$defs/HttpHeadersScanAttemptAsJson"
         },
         "tls_extended_master_secret": {
           "$ref": "#/$defs/EmsExtensionScanAttemptAsJson"
+        },
+        "supported_groups": {
+          "$ref": "#/$defs/SupportedGroupsScanAttemptAsJson"
+        },
+        "encrypted_client_hello": {
+          "$ref": "#/$defs/EncryptedClientHelloScanAttemptAsJson"
         }
       },
       "required": [
@@ -74,9 +77,10 @@
         "robot",
         "session_renegotiation",
         "session_resumption",
-        "elliptic_curves",
         "http_headers",
-        "tls_extended_master_secret"
+        "tls_extended_master_secret",
+        "supported_groups",
+        "encrypted_client_hello"
       ],
       "title": "AllScanCommandsAttemptsAsJson",
       "type": "object"
@@ -442,6 +446,126 @@
         "supports_ems_extension"
       ],
       "title": "EmsExtensionScanResultAsJson",
+      "type": "object"
+    },
+    "EncryptedClientHelloScanAttemptAsJson": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/ScanCommandAttemptStatusEnum"
+        },
+        "error_reason": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScanCommandErrorReasonEnum"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_trace": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error Trace"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EncryptedClientHelloScanResultAsJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "error_reason",
+        "error_trace",
+        "result"
+      ],
+      "title": "EncryptedClientHelloScanAttemptAsJson",
+      "type": "object"
+    },
+    "EncryptedClientHelloScanResultAsJson": {
+      "additionalProperties": false,
+      "description": "The result of testing a server for Encrypted Client Hello (ECH) support.\n\nAttributes:\n    is_ech_supported: True if the server genuinely supports ECH: sslyze completed a TLS handshake in which the\n        inner (encrypted) ClientHello was decrypted and processed by the server, using either the server's\n        published ECHConfigList or, if the server rejected it, the retry configs that the server sent back (see\n        is_ech_config_outdated). False if the server publishes an ECHConfigList but it does not lead to a working\n        ECH handshake, even with the server's retry configs, ie. a decoy/placeholder configuration. None if the\n        server's DNS record does not advertise ECH, so ECH support could not be tested.\n    ech_inner_sni: The SNI value that was protected/encrypted by ECH, when is_ech_supported is True.\n    ech_outer_sni: The SNI value that remained visible in cleartext, when is_ech_supported is True.\n    ech_config_list_from_dns: The raw ECHConfigList bytes published in the server's DNS HTTPS/SVCB record's\n        \"ech\" SvcParam, or None if the server's DNS record does not advertise ECH.\n    is_ech_config_malformed: True if the server's DNS record publishes an ECHConfigList that could not even be\n        parsed (invalid encoding, unknown/bad KEM or version, etc.), which usually points to a misconfigured DNS\n        entry rather than a deliberate decoy/placeholder configuration.\n    is_ech_config_outdated: True if the server rejected the ECHConfigList published in its DNS record but ECH\n        worked when sslyze retried with the ECHConfigList that the server sent back (its retry configs), which\n        usually means that the DNS record is out of date.\n    is_grease_supported: True if the server responded to a GREASE (decoy) Encrypted Client Hello with a set of\n        ECH retry configs, which indicates that the server implements ECH at the TLS protocol level, even when\n        it does not (yet) advertise a working ECHConfigList via DNS.",
+      "properties": {
+        "is_ech_supported": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Is Ech Supported"
+        },
+        "ech_inner_sni": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ech Inner Sni"
+        },
+        "ech_outer_sni": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ech Outer Sni"
+        },
+        "ech_config_list_from_dns": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ech Config List From Dns"
+        },
+        "is_ech_config_malformed": {
+          "title": "Is Ech Config Malformed",
+          "type": "boolean"
+        },
+        "is_ech_config_outdated": {
+          "title": "Is Ech Config Outdated",
+          "type": "boolean"
+        },
+        "is_grease_supported": {
+          "title": "Is Grease Supported",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "is_ech_supported",
+        "ech_inner_sni",
+        "ech_outer_sni",
+        "ech_config_list_from_dns",
+        "is_ech_config_malformed",
+        "is_ech_config_outdated",
+        "is_grease_supported"
+      ],
+      "title": "EncryptedClientHelloScanResultAsJson",
       "type": "object"
     },
     "FallbackScsvScanAttemptAsJson": {
@@ -1088,7 +1212,7 @@
       "title": "SessionResumptionSupportScanResultAsJson",
       "type": "object"
     },
-    "SupportedEllipticCurvesScanAttemptAsJson": {
+    "SupportedGroupsScanAttemptAsJson": {
       "additionalProperties": false,
       "properties": {
         "status": {
@@ -1118,7 +1242,7 @@
         "result": {
           "anyOf": [
             {
-              "$ref": "#/$defs/SupportedEllipticCurvesScanResultAsJson"
+              "$ref": "#/$defs/SupportedGroupsScanResultAsJson"
             },
             {
               "type": "null"
@@ -1132,35 +1256,64 @@
         "error_trace",
         "result"
       ],
-      "title": "SupportedEllipticCurvesScanAttemptAsJson",
+      "title": "SupportedGroupsScanAttemptAsJson",
       "type": "object"
     },
-    "SupportedEllipticCurvesScanResultAsJson": {
-      "description": "The result of testing a server for supported elliptic curves.\n\nAttributes:\n    supports_ecdh_key_exchange: True if the server supports at least one cipher suite with an ECDH key exchange.\n    supported_curves: A list of `EllipticCurve` that were accepted by the server or `None` if the server does not\n        support ECDH cipher suites.\n    rejected_curves: A list of `EllipticCurve` that were rejected by the server or `None` if the server does not\n        support ECDH cipher suites.",
+    "SupportedGroupsScanResultAsJson": {
+      "additionalProperties": false,
+      "description": "The result of testing a server for Supported Groups.\nAttributes:\n    supported_elliptic_curve_groups: A list of Elliptic Curve groups that were accepted by the server, or None\n        if the server does not support any cipher suite with an ECDH key exchange.\n    rejected_elliptic_curve_groups: A list of Elliptic Curve groups that were rejected by the server, or None\n        if the server does not support any cipher suite with an ECDH key exchange.\n    supports_elliptic_curve_key_exchange: True if at least one Elliptic Curve group was accepted by the server.\n    supported_finite_field_dh_groups: A list of Finite Field DH groups that were accepted by the server.\n    rejected_finite_field_dh_groups: A list of Finite Field DH groups that were rejected by the server.\n    supported_post_quantum_groups: A list of Post Quantum groups (hybrid and non-hybrid) that were accepted by\n        the server, or None if the server does not support TLS 1.3 (PQ groups require TLS 1.3).\n    rejected_post_quantum_groups: A list of Post Quantum groups that were rejected by the server, or None if\n        the server does not support TLS 1.3 (PQ groups require TLS 1.3).\n    supports_post_quantum_key_exchange: True if the server accepted at least one PQ/hybrid group.",
       "properties": {
-        "supports_ecdh_key_exchange": {
-          "title": "Supports Ecdh Key Exchange",
+        "supported_elliptic_curve_groups": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Supported Elliptic Curve Groups"
+        },
+        "rejected_elliptic_curve_groups": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rejected Elliptic Curve Groups"
+        },
+        "supports_elliptic_curve_key_exchange": {
+          "title": "Supports Elliptic Curve Key Exchange",
           "type": "boolean"
         },
-        "supported_curves": {
-          "anyOf": [
-            {
-              "items": {
-                "$ref": "#/$defs/_EllipticCurveAsJson"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Supported Curves"
+        "supported_finite_field_dh_groups": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supported Finite Field Dh Groups",
+          "type": "array"
         },
-        "rejected_curves": {
+        "rejected_finite_field_dh_groups": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Rejected Finite Field Dh Groups",
+          "type": "array"
+        },
+        "supported_post_quantum_groups": {
           "anyOf": [
             {
               "items": {
-                "$ref": "#/$defs/_EllipticCurveAsJson"
+                "type": "string"
               },
               "type": "array"
             },
@@ -1168,15 +1321,38 @@
               "type": "null"
             }
           ],
-          "title": "Rejected Curves"
+          "title": "Supported Post Quantum Groups"
+        },
+        "rejected_post_quantum_groups": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rejected Post Quantum Groups"
+        },
+        "supports_post_quantum_key_exchange": {
+          "title": "Supports Post Quantum Key Exchange",
+          "type": "boolean"
         }
       },
       "required": [
-        "supports_ecdh_key_exchange",
-        "supported_curves",
-        "rejected_curves"
+        "supported_elliptic_curve_groups",
+        "rejected_elliptic_curve_groups",
+        "supports_elliptic_curve_key_exchange",
+        "supported_finite_field_dh_groups",
+        "rejected_finite_field_dh_groups",
+        "supported_post_quantum_groups",
+        "rejected_post_quantum_groups",
+        "supports_post_quantum_key_exchange"
       ],
-      "title": "SupportedEllipticCurvesScanResultAsJson",
+      "title": "SupportedGroupsScanResultAsJson",
       "type": "object"
     },
     "TlsResumptionSupportEnum": {
@@ -1505,25 +1681,6 @@
         "key_type"
       ],
       "title": "_ClientAuthenticationCredentialsAsJson",
-      "type": "object"
-    },
-    "_EllipticCurveAsJson": {
-      "description": "A specific elliptic curve.\n\nAttributes:\n    name: The ANSI X9.62 name if available, otherwise the SECG name.\n    openssl_nid: The OpenSSL NID_XXX value valid for OpenSslEvpPkeyEnum.EC (obj_mac.h).",
-      "properties": {
-        "name": {
-          "title": "Name",
-          "type": "string"
-        },
-        "openssl_nid": {
-          "title": "Openssl Nid",
-          "type": "integer"
-        }
-      },
-      "required": [
-        "name",
-        "openssl_nid"
-      ],
-      "title": "_EllipticCurveAsJson",
       "type": "object"
     },
     "_EphemeralKeyInfoAsJson": {
@@ -2208,7 +2365,7 @@
       "type": "string"
     },
     "sslyze_version": {
-      "default": "6.3.0",
+      "default": "6.3.1",
       "title": "Sslyze Version",
       "type": "string"
     },

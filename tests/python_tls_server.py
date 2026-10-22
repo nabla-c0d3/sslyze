@@ -17,11 +17,13 @@ class PythonTlsServer:
         *,
         server_certificate_path: Path = DEFAULT_SERVER_CERTIFICATE_PATH,
         server_key_path: Path = DEFAULT_SERVER_KEY_PATH,
+        should_do_smtp_starttls: bool = False,
     ) -> None:
         self.hostname = "localhost"
         self.ip_address = "127.0.0.1"
         self.port = 0  # Set when the server starts
 
+        self._should_do_smtp_starttls = should_do_smtp_starttls
         self._ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         self._ssl_context.load_cert_chain(server_certificate_path, server_key_path)
         self._listening_socket: socket.socket | None = None
@@ -55,12 +57,41 @@ class PythonTlsServer:
     def _handle_connection(self, client_socket: socket.socket) -> None:
         client_socket.settimeout(5)
         try:
+            if self._should_do_smtp_starttls:
+                self._do_smtp_starttls(client_socket)
             with self._ssl_context.wrap_socket(client_socket, server_side=True) as tls_socket:
                 # Keep the connection open until the client closes it
                 while tls_socket.recv(1024):
                     pass
-        except (OSError, ssl.SSLError):
+        except (OSError, ssl.SSLError, _SmtpCommandRejectedError):
             # Most of the connections sent by SSLyze are expected to fail (unsupported cipher suites, etc.)
             pass
         finally:
             client_socket.close()
+
+    def _do_smtp_starttls(self, client_socket: socket.socket) -> None:
+        """Behave like a minimal SMTP server (RFC 5321 and RFC 3207) until the client sends STARTTLS.
+
+        Only EHLO then STARTTLS is accepted; any other command gets a 5xx reply and the connection is closed.
+        """
+        # The client sends nothing after STARTTLS until it gets the 220 reply, so the reader cannot consume TLS data
+        with client_socket.makefile("rb") as reader:
+            client_socket.sendall(b"220 localhost ESMTP\r\n")
+
+            command = reader.readline()
+            if not command.upper().startswith(b"EHLO "):
+                client_socket.sendall(b"503 5.5.1 Send EHLO first\r\n")
+                raise _SmtpCommandRejectedError(command)
+            client_socket.sendall(
+                b"250-localhost\r\n250-PIPELINING\r\n250-SIZE 35882577\r\n250-8BITMIME\r\n250 STARTTLS\r\n"
+            )
+
+            command = reader.readline()
+            if command.upper().rstrip(b"\r\n") != b"STARTTLS":
+                client_socket.sendall(b"530 5.7.0 Must issue a STARTTLS command first\r\n")
+                raise _SmtpCommandRejectedError(command)
+            client_socket.sendall(b"220 2.0.0 Ready to start TLS\r\n")
+
+
+class _SmtpCommandRejectedError(Exception):
+    """The client sent an SMTP command that the server does not accept."""

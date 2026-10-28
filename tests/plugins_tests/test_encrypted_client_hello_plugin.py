@@ -181,7 +181,7 @@ def _get_local_ech_config_list() -> bytes:
 
 @can_only_run_on_linux_64
 class TestEncryptedClientHelloPluginWithLocalServer:
-    def test_client_certificate_requested_lol(self) -> None:
+    def test_client_certificate_requested(self) -> None:
         # Given a server that supports ECH and requires client authentication
         with S_Server_OpenSSL_4_0_0(client_auth_config=ClientAuthConfigEnum.REQUIRED, enable_ech=True) as server:
             # And sslyze does NOT provide a client certificate

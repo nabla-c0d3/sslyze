@@ -10,7 +10,7 @@ from sslyze.server_connectivity import ClientAuthRequirementEnum, ServerTlsProbi
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.factories import ServerConnectivityInfoFactory
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer, S_Server_OpenSSL_4_0_0
 
 
 class TestSupportedGroupsPluginWithOnlineServer:
@@ -125,6 +125,27 @@ class TestSupportedGroupsPluginWithLocalServer:
         # And exactly the configured curves were detected as supported, with their OpenSSL 4 group names
         assert result.supported_elliptic_curve_groups is not None
         assert {curve.lower() for curve in server_curves} == set(result.supported_elliptic_curve_groups)
+
+    def test_brainpool_tls_1_3_groups_supported(self) -> None:
+        # Given a TLS 1.3 server that supports the brainpool groups specific to TLS 1.3
+        brainpool_tls_1_3_groups = [
+            OpenSslGroupNameEnum.brainpoolP256r1tls13.value,
+            OpenSslGroupNameEnum.brainpoolP384r1tls13.value,
+            OpenSslGroupNameEnum.brainpoolP512r1tls13.value,
+        ]
+        # And x25519, so that the connectivity check succeeds
+        with S_Server_OpenSSL_4_0_0(groups=":".join(["x25519", *brainpool_tls_1_3_groups])) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+
+            # When scanning for supported groups, it succeeds
+            result: SupportedGroupsScanResult = SupportedGroupsImplementation.scan_server(server_info)
+
+        # And the brainpool TLS 1.3 groups were detected as supported
+        assert result.supported_elliptic_curve_groups is not None
+        assert set(brainpool_tls_1_3_groups).issubset(result.supported_elliptic_curve_groups)
 
     def test_tls_1_3_not_supported(self) -> None:
         # Given a server that only supports up to TLS 1.2 (no TLS 1.3)

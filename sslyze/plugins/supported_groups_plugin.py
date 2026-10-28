@@ -406,7 +406,6 @@ def _test_ec_group(
         assert negotiated_group == curve_group, (
             f"Should never happen: group should be {curve_group} but got {negotiated_group}"
         )
-        assert negotiated_ephemeral_key.curve_name == curve_group, "Should never happen"
         was_accepted_by_server = True
     else:
         was_accepted_by_server = False

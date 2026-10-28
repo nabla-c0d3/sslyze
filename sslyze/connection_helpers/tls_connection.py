@@ -112,6 +112,8 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "insufficient security": "TLS error: insufficient security",
     "block type is not 01": "TLS error: block type is not 01",  # Actually an RSA error
     "wrong ssl version": "TLS error: wrong SSL version",
+    # Returned by OpenSSL 1.1.1 and later when the server replied with a TLS version the client did not enable
+    "unsupported protocol": "TLS error: unsupported protocol",
     "digest check failed": "TLS error: digest check failed",
     "sslv3 alert handshake failure": "TLS alert: handshake failure",
     "tls alert handshake failure": "TLS alert: handshake failure",

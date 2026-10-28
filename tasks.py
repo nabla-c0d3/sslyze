@@ -3,7 +3,7 @@ from pathlib import Path
 from sys import platform
 from invoke.context import Context
 from invoke.tasks import task
-from sslyze import __version__
+from sslyze.__version__ import __version__
 
 root_path = Path(__file__).parent.absolute()
 
@@ -54,9 +54,10 @@ def release(ctx: Context) -> None:
     gen_doc(ctx)
 
     # Upload to Pypi
-    ctx.run("python setup.py sdist")
+    ctx.run("python -m build")
     sdist_path = root_path / "dist" / f"sslyze-{__version__}.tar.gz"
-    ctx.run(f"twine upload {sdist_path}")
+    wheel_path = root_path / "dist" / f"sslyze-{__version__}-py3-none-any.whl"
+    ctx.run(f"twine upload {sdist_path} {wheel_path}")
 
 
 @task

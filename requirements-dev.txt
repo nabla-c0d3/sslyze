@@ -1,10 +1,11 @@
+build
 mypy==1.14
 ruff==0.8.4
 invoke>=2,<3
 pytest>=8,<9
 sphinx
 sphinx-rtd-theme
-twine>=4,<5
+twine>=6,<7
 sphinx-autodoc-typehints
 pytest-cov
 faker

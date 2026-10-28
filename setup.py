@@ -97,7 +97,7 @@ setup(
     # Dependencies
     install_requires=[
         "nassl>=7.0,<8",
-        "cryptography>=43,<47",
+        "cryptography>=43,<51",
         "tls-parser>=2,<3",
         "pydantic>=2.3,<3",
         "dnspython>=2.3,<3",

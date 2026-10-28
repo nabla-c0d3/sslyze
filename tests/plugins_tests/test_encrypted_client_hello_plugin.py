@@ -37,8 +37,9 @@ class TestEncryptedClientHelloPluginWithOnlineServer:
         # And the server is also reported as responding to GREASE ECH
         assert result.is_grease_supported
 
-        # And the published ECHConfigList is reported as well-formed
+        # And the published ECHConfigList is reported as well-formed and up to date
         assert not result.is_ech_config_malformed
+        assert not result.is_ech_config_outdated
 
         # And a CLI output can be generated
         cli_output = EncryptedClientHelloImplementation.cli_connector_cls.result_to_console_output(result)
@@ -203,10 +204,50 @@ class TestEncryptedClientHelloPluginWithLocalServer:
         assert result.is_ech_supported
         assert result.ech_inner_sni == server.hostname
         assert not result.is_ech_config_malformed
+        assert not result.is_ech_config_outdated
 
         # And a CLI output can be generated
         cli_output = EncryptedClientHelloImplementation.cli_connector_cls.result_to_console_output(result)
         assert any("Server supports ECH" in line for line in cli_output)
+
+        # And the result can be converted to JSON
+        result_as_json = EncryptedClientHelloScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
+
+    def test_outdated_ech_config_uses_retry_config(self) -> None:
+        # Given a server that supports ECH
+        with S_Server_OpenSSL_4_0_0(enable_ech=True) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+
+            # And an outdated ECHConfigList that the server no longer has the key for, as if it was still published in
+            # the server's DNS record; generated using: openssl ech -public_name localhost
+            outdated_ech_config_list = b64decode(
+                "ADz+DQA4/QAgACCnakqvu1+oFWkUBWWGtvqsndlLiCKeX2AxE9PJzz7JewAEAAEAAQAJbG9jYWxob3N0AAA="
+            )
+            assert outdated_ech_config_list != _get_local_ech_config_list()
+            with mock.patch(
+                "sslyze.plugins.encrypted_client_hello_plugin._fetch_ech_config_list_from_dns",
+                return_value=outdated_ech_config_list,
+            ):
+                # When scanning for ECH support, it succeeds
+                result: EncryptedClientHelloScanResult = EncryptedClientHelloImplementation.scan_server(server_info)
+
+        # And the server is reported as genuinely supporting ECH, because sslyze retried with the ECHConfigList that
+        # the server sent back after rejecting the outdated one
+        assert result.ech_config_list_from_dns == outdated_ech_config_list
+        assert result.is_ech_supported
+        assert result.ech_inner_sni == server.hostname
+        assert not result.is_ech_config_malformed
+
+        # And the published ECHConfigList is reported as outdated
+        assert result.is_ech_config_outdated
+
+        # And a CLI output can be generated, calling out the outdated ECHConfigList
+        cli_output = EncryptedClientHelloImplementation.cli_connector_cls.result_to_console_output(result)
+        assert any("published via DNS is outdated" in line for line in cli_output)
 
         # And the result can be converted to JSON
         result_as_json = EncryptedClientHelloScanResultAsJson.model_validate(result).model_dump_json()

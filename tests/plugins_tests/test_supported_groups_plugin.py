@@ -147,6 +147,25 @@ class TestSupportedGroupsPluginWithLocalServer:
         assert result.supported_elliptic_curve_groups is not None
         assert set(brainpool_tls_1_3_groups).issubset(result.supported_elliptic_curve_groups)
 
+    def test_only_post_quantum_group_supported(self) -> None:
+        # Given a server that only accepts a post-quantum/hybrid group, which the OpenSSL 1.1.1 client cannot offer
+        with S_Server_OpenSSL_4_0_0(groups="X25519MLKEM768") as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+
+            # When testing connectivity, it succeeds
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+            assert server_info.tls_probing_result.highest_tls_version_supported == TlsVersionEnum.TLS_1_3
+
+            # And when scanning for supported groups, it succeeds
+            result: SupportedGroupsScanResult = SupportedGroupsImplementation.scan_server(server_info)
+
+        # And only the post-quantum/hybrid group was detected as supported
+        assert result.supported_post_quantum_groups == [OpenSslGroupNameEnum.X25519MLKEM768.value]
+        assert not result.supported_elliptic_curve_groups
+        assert not result.supported_finite_field_dh_groups
+
     def test_tls_1_3_not_supported(self) -> None:
         # Given a server that only supports up to TLS 1.2 (no TLS 1.3)
         with LegacyOpenSslServer() as server:

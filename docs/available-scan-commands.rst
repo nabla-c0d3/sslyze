@@ -63,16 +63,27 @@ Result class
    :members:
    :undoc-members:
 
-Supported Elliptic Curves
-*************************
+Supported Groups
+****************
 
-**ScanCommand.ELLIPTIC_CURVES**: Test a server for supported elliptic curves.
+**ScanCommand.SUPPORTED_GROUPS**: Test a server for supported key exchange groups: Elliptic Curve, Finite Field DH,
+and Post-Quantum/Hybrid groups.
 
 Result class
 ============
 
-.. autoclass:: SupportedEllipticCurvesScanResult
-.. autoclass:: EllipticCurve
+.. autoclass:: SupportedGroupsScanResult
+
+Encrypted Client Hello
+**********************
+
+**ScanCommand.ENCRYPTED_CLIENT_HELLO**: Test a server for Encrypted Client Hello (ECH) support, using the ECHConfigList
+published in the server's DNS HTTPS record.
+
+Result class
+============
+
+.. autoclass:: EncryptedClientHelloScanResult
 
 ROBOT
 *****

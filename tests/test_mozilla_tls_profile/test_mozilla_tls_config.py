@@ -93,6 +93,9 @@ class TestMozillaTlsConfigurationChecker:
                     server_scan_result=server_scan_result, tls_config_to_check_against=tls_config
                 )
 
+    @pytest.mark.skip(
+        "Server is not compliant; rework this test when working on https://github.com/nabla-c0d3/sslyze/issues/725"
+    )
     def test_solo_cert_deployment_compliant_with_old(self):
         # Given the scan results for a server that is compliant with the "old" Mozilla config
         scanner = Scanner()

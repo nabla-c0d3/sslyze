@@ -31,9 +31,12 @@ class _MozillaCiphersAsJson(pydantic.BaseModel):
 
 # ANSI X9.62 name (used by the Mozilla TLS profiles) -> SECG name
 # Based on https://www.rfc-editor.org/rfc/rfc8422.html#appendix-A
+# X25519 and X448 have no SECG name: use the OpenSSL name, which is what the supported groups plugin returns
 _MOZILLA_CURVE_NAME_TO_SECG_CURVE_NAME = {
     "prime256v1": "secp256r1",
     "prime192v1": "secp192r1",
+    "X25519": "x25519",
+    "X448": "x448",
 }
 
 

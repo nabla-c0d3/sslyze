@@ -211,6 +211,7 @@ class LegacyOpenSslServer(_OpenSslServer):
         should_enable_server_cipher_preference: bool = False,
         openssl_cipher_string: str | None = None,
         require_server_name_indication_value: str | None = None,
+        should_disable_tls_1_1: bool = False,
     ) -> None:
         extra_args = []
         if require_server_name_indication_value:
@@ -221,6 +222,8 @@ class LegacyOpenSslServer(_OpenSslServer):
                 f"-cert2 {server_certificate_path}",
                 f"-key2 {server_key_path}",
             ]
+        if should_disable_tls_1_1:
+            extra_args.append("-no_tls1_1")
 
         super().__init__(
             client_auth_config=client_auth_config,
@@ -296,7 +299,7 @@ class ModernOpenSslServer(_OpenSslServer):
 
 class S_Server_OpenSSL_4_0_0(ModernOpenSslServer):
     # Generated using: openssl ech -public_name localhost -out ech-config.pem
-    ECH_CONFIG_PATH = Path(__file__).parent.absolute() / "ech-config.pem"
+    ECH_CONFIG_PATH = _CERTS_FOLDER / "ech-config.pem"
 
     @classmethod
     def get_openssl_path(cls) -> Path:
@@ -312,6 +315,7 @@ class S_Server_OpenSSL_4_0_0(ModernOpenSslServer):
         openssl_cipher_string: str | None = None,
         should_reply_to_http_requests: bool = True,
         enable_ech: bool = False,
+        groups: str | None = None,
     ) -> None:
         super().__init__(
             server_certificate_path=server_certificate_path,
@@ -320,6 +324,7 @@ class S_Server_OpenSSL_4_0_0(ModernOpenSslServer):
             should_enable_server_cipher_preference=should_enable_server_cipher_preference,
             openssl_cipher_string=openssl_cipher_string,
             should_reply_to_http_requests=should_reply_to_http_requests,
+            groups=groups,
         )
         if enable_ech:
             self._command_line += f" -ech_key {self.ECH_CONFIG_PATH}"

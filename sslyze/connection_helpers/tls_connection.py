@@ -112,6 +112,8 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "insufficient security": "TLS error: insufficient security",
     "block type is not 01": "TLS error: block type is not 01",  # Actually an RSA error
     "wrong ssl version": "TLS error: wrong SSL version",
+    # Returned by OpenSSL 1.1.1 and later when the server replied with a TLS version the client did not enable
+    "unsupported protocol": "TLS error: unsupported protocol",
     "digest check failed": "TLS error: digest check failed",
     "sslv3 alert handshake failure": "TLS alert: handshake failure",
     "tls alert handshake failure": "TLS alert: handshake failure",
@@ -132,6 +134,10 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
     "wrong certificate type": "Server returned wrong certificate type",
     "invalid encoding": "TLS error: Invalid encoding",
     "certificate unknown": "TLS alert: certificate unknown",
+    # Some servers intermittently send invalid or unexpected data during the handshake
+    # https://github.com/nabla-c0d3/sslyze/issues/717
+    "ssl3_read_bytes:unexpected message": "TLS error: unexpected message",
+    "ssl3_read_bytes:invalid alert": "TLS error: invalid alert",
 }
 
 

@@ -406,6 +406,21 @@ class TestCipherSuitesPluginWithLocalServer:
         assert len(result.accepted_cipher_suites) == 43
         assert result.rejected_cipher_suites
 
+    def test_tlsv1_1_disabled(self) -> None:
+        # Given a server to scan that does NOT support TLS 1.1 but supports TLS 1.0, so it replies with TLS 1.0
+        with LegacyOpenSslServer(should_disable_tls_1_1=True) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Tlsv11ScanImplementation.scan_server(server_info)
+
+        # And the result confirms that TLS 1.1 is not supported
+        assert not result.accepted_cipher_suites
+        assert result.rejected_cipher_suites
+
     def test_succeeds_when_client_auth_failed_tls_1_2(self) -> None:
         # Given a TLS 1.2 server that requires client authentication
         with LegacyOpenSslServer(client_auth_config=ClientAuthConfigEnum.REQUIRED) as server:

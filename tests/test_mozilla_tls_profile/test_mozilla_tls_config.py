@@ -145,7 +145,7 @@ class TestMozillaTlsConfigurationChecker:
         tls_config = MozillaTlsConfiguration.get(tls_configuration_enum)
 
         # Then its TLS curves use the same names as the supported groups plugin, so that they can be compared
-        assert tls_config.tls_curves <= {group.value for group in OpenSslGroupNameEnum}
+        assert tls_config.tls_curves <= {group for group in OpenSslGroupNameEnum}
 
     def test_incomplete_scan_result(self):
         # Given a scan result that does not contain all the information needed by the Mozilla checker

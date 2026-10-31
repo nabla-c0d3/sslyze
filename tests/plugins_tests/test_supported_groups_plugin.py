@@ -30,7 +30,7 @@ class TestSupportedGroupsPluginWithOnlineServer:
         # And the server is reported as supporting Post-Quantum/hybrid key exchange
         assert result.supports_post_quantum_key_exchange
         assert result.supported_post_quantum_groups is not None
-        assert OpenSslGroupNameEnum.X25519MLKEM768.value in result.supported_post_quantum_groups
+        assert OpenSslGroupNameEnum.X25519MLKEM768 in result.supported_post_quantum_groups
         assert result.rejected_post_quantum_groups is not None
 
         # And Finite Field DH groups were tested as well
@@ -129,9 +129,9 @@ class TestSupportedGroupsPluginWithLocalServer:
     def test_brainpool_tls_1_3_groups_supported(self) -> None:
         # Given a TLS 1.3 server that supports the brainpool groups specific to TLS 1.3
         brainpool_tls_1_3_groups = [
-            OpenSslGroupNameEnum.brainpoolP256r1tls13.value,
-            OpenSslGroupNameEnum.brainpoolP384r1tls13.value,
-            OpenSslGroupNameEnum.brainpoolP512r1tls13.value,
+            OpenSslGroupNameEnum.brainpoolP256r1tls13,
+            OpenSslGroupNameEnum.brainpoolP384r1tls13,
+            OpenSslGroupNameEnum.brainpoolP512r1tls13,
         ]
         # And x25519, so that the connectivity check succeeds
         with S_Server_OpenSSL_4_0_0(groups=":".join(["x25519", *brainpool_tls_1_3_groups])) as server:

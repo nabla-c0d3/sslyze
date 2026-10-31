@@ -41,16 +41,16 @@ class SupportedGroupsScanResult(ScanCommandResult):
     """
 
     # TLS 1.2 or 1.3
-    supported_elliptic_curve_groups: list[str] | None
-    rejected_elliptic_curve_groups: list[str] | None
+    supported_elliptic_curve_groups: list[OpenSslGroupNameEnum] | None
+    rejected_elliptic_curve_groups: list[OpenSslGroupNameEnum] | None
     supports_elliptic_curve_key_exchange: bool
 
-    supported_finite_field_dh_groups: list[str]
-    rejected_finite_field_dh_groups: list[str]
+    supported_finite_field_dh_groups: list[OpenSslGroupNameEnum]
+    rejected_finite_field_dh_groups: list[OpenSslGroupNameEnum]
 
     # TLS 1.3 only
-    supported_post_quantum_groups: list[str] | None
-    rejected_post_quantum_groups: list[str] | None
+    supported_post_quantum_groups: list[OpenSslGroupNameEnum] | None
+    rejected_post_quantum_groups: list[OpenSslGroupNameEnum] | None
     supports_post_quantum_key_exchange: bool
 
     def __post_init__(self) -> None:
@@ -69,15 +69,15 @@ class SupportedGroupsScanResult(ScanCommandResult):
 
 
 class SupportedGroupsScanResultAsJson(BaseModelWithOrmModeAndForbid):
-    supported_elliptic_curve_groups: list[str] | None
-    rejected_elliptic_curve_groups: list[str] | None
+    supported_elliptic_curve_groups: list[OpenSslGroupNameEnum] | None
+    rejected_elliptic_curve_groups: list[OpenSslGroupNameEnum] | None
     supports_elliptic_curve_key_exchange: bool
 
-    supported_finite_field_dh_groups: list[str]
-    rejected_finite_field_dh_groups: list[str]
+    supported_finite_field_dh_groups: list[OpenSslGroupNameEnum]
+    rejected_finite_field_dh_groups: list[OpenSslGroupNameEnum]
 
-    supported_post_quantum_groups: list[str] | None
-    rejected_post_quantum_groups: list[str] | None
+    supported_post_quantum_groups: list[OpenSslGroupNameEnum] | None
+    rejected_post_quantum_groups: list[OpenSslGroupNameEnum] | None
     supports_post_quantum_key_exchange: bool
 
 
@@ -96,7 +96,7 @@ class _SupportedGroupsCliConnector(ScanCommandCliConnector[SupportedGroupsScanRe
     )
 
     @staticmethod
-    def _groups_to_text(groups: list[str]) -> str:
+    def _groups_to_text(groups: list[OpenSslGroupNameEnum]) -> str:
         return ", ".join(groups) if groups else "None"
 
     @classmethod
@@ -280,24 +280,24 @@ class SupportedGroupsImplementation(ScanCommandImplementation[SupportedGroupsSca
             if r.group.get_type() in (OpenSslGroupTypeEnum.POST_QUANTUM, OpenSslGroupTypeEnum.POST_QUANTUM_HYBRID)
         ]
 
-        supported_elliptic_curve_groups: list[str] | None
-        rejected_elliptic_curve_groups: list[str] | None
+        supported_elliptic_curve_groups: list[OpenSslGroupNameEnum] | None
+        rejected_elliptic_curve_groups: list[OpenSslGroupNameEnum] | None
         does_server_support_ec = server_info.tls_probing_result.supports_ecdh_key_exchange
         if does_server_support_ec:
-            supported_elliptic_curve_groups = [r.group.value for r in all_ec_grp_results if r.was_accepted_by_server]
-            rejected_elliptic_curve_groups = [r.group.value for r in all_ec_grp_results if not r.was_accepted_by_server]
+            supported_elliptic_curve_groups = [r.group for r in all_ec_grp_results if r.was_accepted_by_server]
+            rejected_elliptic_curve_groups = [r.group for r in all_ec_grp_results if not r.was_accepted_by_server]
         else:
             supported_elliptic_curve_groups = None
             rejected_elliptic_curve_groups = None
 
-        supported_post_quantum_groups: list[str] | None
-        rejected_post_quantum_groups: list[str] | None
+        supported_post_quantum_groups: list[OpenSslGroupNameEnum] | None
+        rejected_post_quantum_groups: list[OpenSslGroupNameEnum] | None
         does_server_support_tls_1_3 = (
             server_info.tls_probing_result.highest_tls_version_supported.value >= TlsVersionEnum.TLS_1_3.value
         )
         if does_server_support_tls_1_3:
-            supported_post_quantum_groups = [r.group.value for r in all_pq_grp_results if r.was_accepted_by_server]
-            rejected_post_quantum_groups = [r.group.value for r in all_pq_grp_results if not r.was_accepted_by_server]
+            supported_post_quantum_groups = [r.group for r in all_pq_grp_results if r.was_accepted_by_server]
+            rejected_post_quantum_groups = [r.group for r in all_pq_grp_results if not r.was_accepted_by_server]
         else:
             supported_post_quantum_groups = None
             rejected_post_quantum_groups = None
@@ -306,10 +306,8 @@ class SupportedGroupsImplementation(ScanCommandImplementation[SupportedGroupsSca
             supported_elliptic_curve_groups=supported_elliptic_curve_groups,
             rejected_elliptic_curve_groups=rejected_elliptic_curve_groups,
             supports_elliptic_curve_key_exchange=bool(supported_elliptic_curve_groups),
-            supported_finite_field_dh_groups=[r.group.value for r in all_ffdh_grp_results if r.was_accepted_by_server],
-            rejected_finite_field_dh_groups=[
-                r.group.value for r in all_ffdh_grp_results if not r.was_accepted_by_server
-            ],
+            supported_finite_field_dh_groups=[r.group for r in all_ffdh_grp_results if r.was_accepted_by_server],
+            rejected_finite_field_dh_groups=[r.group for r in all_ffdh_grp_results if not r.was_accepted_by_server],
             supported_post_quantum_groups=supported_post_quantum_groups,
             rejected_post_quantum_groups=rejected_post_quantum_groups,
             supports_post_quantum_key_exchange=bool(supported_post_quantum_groups),

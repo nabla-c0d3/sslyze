@@ -9,7 +9,7 @@ from tests.openssl_server import DEFAULT_SERVER_CERTIFICATE_PATH, DEFAULT_SERVER
 class PythonTlsServer:
     """A basic TLS server built on Python's ssl module.
 
-    Unlike the s_server binaries in tests.openssl_server, it runs on all platforms (including Windows). This was built because the s_server binaries can be buggy and unpredictable on Windows.
+    Unlike the s_server binaries in tests.openssl_server, it runs on all platforms (including Windows). This was built to rely less on the s_server binaries for testing, as they can be buggy and unpredictable on Windows.
     """
 
     def __init__(

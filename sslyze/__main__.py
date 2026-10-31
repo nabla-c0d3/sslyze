@@ -1,3 +1,4 @@
+import io
 import sys
 from datetime import datetime, timezone
 from typing import TextIO
@@ -21,7 +22,20 @@ from sslyze.mozilla_tls_profile.tls_config_checker import (
 )
 
 
+def _configure_console_output_encoding() -> None:
+    """Ensure printing non-ASCII text (such as certificate names) to the console never crashes.
+
+    Needed for the frozen Windows executable, whose stdout uses cp1252 as the encoding.
+    See also https://github.com/nabla-c0d3/sslyze/issues/724.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+
+
 def main() -> None:
+    _configure_console_output_encoding()
+
     # Parse the supplied command line
     date_scans_started = datetime.now(timezone.utc)
     sslyze_parser = CommandLineParser(__version__)

@@ -1,3 +1,4 @@
+import io
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -9,6 +10,7 @@ from sslyze import SslyzeOutputAsJson
 from sslyze.__main__ import main
 from sslyze.cli.command_line_parser import CommandLineParser, CommandLineParsingError
 from sslyze.mozilla_tls_profile.tls_config_checker import TlsConfigurationEnum
+from tests.python_tls_server import PythonTlsServer
 
 
 class TestMain:
@@ -45,6 +47,33 @@ class TestMain:
         # And the JSON output has the expected format
         parsed_output = SslyzeOutputAsJson.model_validate_json(json_output)
         assert parsed_output
+
+    # Test for the crash in https://github.com/nabla-c0d3/sslyze/issues/724
+    @pytest.mark.skipif(sys.platform != "win32", reason="only relevant on Windows")
+    def test_console_output_with_non_ascii_certificate_name_on_windows(self):
+        # Given a server with a certificate whose name contains characters that cp1252 can't encode
+        certificates_path = Path(__file__).parent / "server_certificates" / "unicode-cn"
+        with PythonTlsServer(
+            server_certificate_path=certificates_path / "unicode-cn-self-signed-cert.pem",
+            server_key_path=certificates_path / "unicode-cn-self-signed-key.pem",
+        ) as server:
+            #
+            # And a command line to scan it and check it against Mozilla's TLS configuration
+            command_line = [
+                "sslyze",
+                "--mozilla_config=intermediate",
+                f"{server.hostname}:{server.port}{{{server.ip_address}}}",
+            ]
+            with mock.patch.object(sys, "argv", command_line):
+                #
+                # And stdout uses a legacy encoding - as is the case with the frozen Windows executable
+                legacy_stdout = io.TextIOWrapper(io.BytesIO(), encoding="cp1252", errors="strict")
+                with mock.patch.object(sys, "stdout", legacy_stdout):  # noqa: SIM117
+                    #
+                    # When running the CLI, it does not crash with a UnicodeEncodeError;
+                    with pytest.raises(SystemExit):
+                        # A SystemExit is raised because the server does not comply with the expected TLS configuration
+                        main()
 
     def test_command_line_has_valid_custom_tls_config_file(self):
         # Given a valid custom TLS configuration file

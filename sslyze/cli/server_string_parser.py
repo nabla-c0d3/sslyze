@@ -1,6 +1,5 @@
 import socket
 from dataclasses import dataclass
-from typing import Tuple, Optional
 
 
 @dataclass(frozen=True)
@@ -19,7 +18,7 @@ class CommandLineServerStringParser:
     SERVER_STRING_ERROR_BAD_PORT = "Not a valid host:port"
 
     @classmethod
-    def parse_server_string(cls, server_str: str) -> Tuple[str, Optional[str], Optional[int]]:
+    def parse_server_string(cls, server_str: str) -> tuple[str, str | None, int | None]:
         # Extract ip from target
         ip = None
         if "{" in server_str and "}" in server_str:
@@ -45,7 +44,7 @@ class CommandLineServerStringParser:
         return host, ip, port
 
     @classmethod
-    def _parse_ipv4_server_string(cls, server_str: str) -> Tuple[str, Optional[int]]:
+    def _parse_ipv4_server_string(cls, server_str: str) -> tuple[str, int | None]:
         host = server_str
         port = None
         if ":" in server_str:
@@ -58,7 +57,7 @@ class CommandLineServerStringParser:
         return host, port
 
     @classmethod
-    def _parse_ipv6_server_string(cls, server_str: str) -> Tuple[str, Optional[int]]:
+    def _parse_ipv6_server_string(cls, server_str: str) -> tuple[str, int | None]:
         if not socket.has_ipv6:
             raise InvalidServerStringError(
                 server_string=server_str, error_message="IPv6 is not supported on this platform"

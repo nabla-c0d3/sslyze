@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # sslyze documentation build configuration file, created by
 # sphinx-quickstart on Sun Jan 15 12:41:02 2017.
@@ -18,14 +17,11 @@
 #
 import os
 import sys
-from typing import List
-
 
 # Add sslyze to the path
 sys.path.insert(0, os.path.abspath(".."))
 
-from sslyze import __version__  # noqa: E402
-
+from sslyze import __version__
 
 # -- General configuration ------------------------------------------------
 
@@ -100,7 +96,7 @@ html_theme = "alabaster"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path: List[str] = []
+html_static_path: list[str] = []
 
 
 # -- Options for HTMLHelp output ------------------------------------------

@@ -1,22 +1,22 @@
 from unittest import mock
 
 from sslyze import (
-    Scanner,
-    ServerScanRequest,
-    ServerScanStatusEnum,
-    ServerScanResult,
-    ServerTlsProbingResult,
-    ServerNetworkLocation,
     ScanCommand,
     ScanCommandAttemptStatusEnum,
     ScanCommandErrorReasonEnum,
+    Scanner,
+    ServerNetworkLocation,
+    ServerScanRequest,
+    ServerScanResult,
+    ServerScanStatusEnum,
+    ServerTlsProbingResult,
 )
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.scanner import _mass_connectivity_tester
 from sslyze.scanner.scanner_observer import ScannerObserver
 from tests.factories import ServerScanRequestFactory, ServerTlsProbingResultFactory
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import LegacyOpenSslServer, ClientAuthConfigEnum
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer
 
 
 class _MockScannerObserver(ScannerObserver):
@@ -62,9 +62,7 @@ class TestScanner:
             assert scanner._has_started_work
 
             # It succeeds
-            all_scan_results = []
-            for result in scanner.get_results():
-                all_scan_results.append(result)
+            all_scan_results = list(scanner.get_results())
 
         # And the right results were returned
         assert len(all_scan_results) == len(all_scan_requests)
@@ -95,9 +93,7 @@ class TestScanner:
             scanner.queue_scans([scan_request])
 
             # It succeeds
-            all_scan_results = []
-            for result in scanner.get_results():
-                all_scan_results.append(result)
+            all_scan_results = list(scanner.get_results())
 
         # And the right result was returned
         assert len(all_scan_results) == 1
@@ -129,9 +125,7 @@ class TestScanner:
             scanner.queue_scans([scan_request])
 
             # It succeeds
-            all_results = []
-            for result in scanner.get_results():
-                all_results.append(result)
+            all_results = list(scanner.get_results())
 
         # And the right result was returned
         assert len(all_results) == 1

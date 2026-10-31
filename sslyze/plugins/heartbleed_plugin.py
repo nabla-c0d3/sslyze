@@ -1,28 +1,26 @@
-import socket
 import types
 from dataclasses import dataclass
-from typing import List, Optional
 
-from nassl._nassl import WantReadError
-
-from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
-from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
-from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
-    ScanCommandImplementation,
-    ScanJob,
-    ScanCommandExtraArgument,
-    ScanCommandWrongUsageError,
-    ScanCommandCliConnector,
-    ScanJobResult,
-)
+import tls_parser.record_protocol
+from nassl.errors import WantReadError
 from tls_parser.alert_protocol import TlsAlertRecord
 from tls_parser.exceptions import NotEnoughData, UnknownTlsVersionByte
 from tls_parser.handshake_protocol import TlsHandshakeRecord, TlsHandshakeTypeByte
 from tls_parser.heartbeat_protocol import TlsHeartbeatRequestRecord
 from tls_parser.parser import TlsRecordParser
-import tls_parser.record_protocol
 
+from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
+from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
+from sslyze.plugins.plugin_base import (
+    ScanCommandCliConnector,
+    ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanCommandWrongUsageError,
+    ScanJob,
+    ScanJobResult,
+)
+from sslyze.plugins.robot._robot_tester import get_tls_version_for_tls_parser
 from sslyze.server_connectivity import ServerConnectivityInfo, TlsVersionEnum
 
 
@@ -42,7 +40,7 @@ class HeartbleedScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class HeartbleedScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[HeartbleedScanResultAsJson]
+    result: HeartbleedScanResultAsJson | None
 
 
 class _HeartbleedCliConnector(ScanCommandCliConnector[HeartbleedScanResult, None]):
@@ -50,7 +48,7 @@ class _HeartbleedCliConnector(ScanCommandCliConnector[HeartbleedScanResult, None
     _cli_description = "Test a server for the OpenSSL Heartbleed vulnerability."
 
     @classmethod
-    def result_to_console_output(cls, result: HeartbleedScanResult) -> List[str]:
+    def result_to_console_output(cls, result: HeartbleedScanResult) -> list[str]:
         result_as_txt = [cls._format_title("OpenSSL Heartbleed")]
         heartbleed_txt = (
             "VULNERABLE - Server is vulnerable to Heartbleed"
@@ -68,8 +66,8 @@ class HeartbleedImplementation(ScanCommandImplementation[HeartbleedScanResult, N
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
@@ -77,7 +75,7 @@ class HeartbleedImplementation(ScanCommandImplementation[HeartbleedScanResult, N
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> HeartbleedScanResult:
         if len(scan_job_results) != 1:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
@@ -141,12 +139,13 @@ def _do_handshake_with_heartbleed(self):  # type: ignore
 
     # Build the heartbleed payload - based on
     # https://blog.mozilla.org/security/2014/04/12/testing-for-heartbleed-vulnerability-without-exploiting-the-server/
+    tls_parser_tls_version = get_tls_version_for_tls_parser(self._ssl_version)
     payload = TlsHeartbeatRequestRecord.from_parameters(
-        tls_version=tls_parser.record_protocol.TlsVersionEnum[self._ssl_version.name], heartbeat_data=b"\x01" * 16381
+        tls_version=tls_parser_tls_version, heartbeat_data=b"\x01" * 16381
     ).to_bytes()
 
     payload += TlsHeartbeatRequestRecord.from_parameters(
-        tls_parser.record_protocol.TlsVersionEnum[self._ssl_version.name], heartbeat_data=b"\x01\x00\x00"
+        tls_parser_tls_version, heartbeat_data=b"\x01\x00\x00"
     ).to_bytes()
 
     # Send the payload
@@ -173,7 +172,7 @@ def _do_handshake_with_heartbleed(self):  # type: ignore
             # Try to get more data
             try:
                 raw_ssl_bytes = self._sock.recv(16381)
-            except socket.error:
+            except OSError:
                 # Server closed the connection as soon as it received the Heartbleed payload
                 raise _NotVulnerableToHeartbleed()
 
@@ -195,7 +194,7 @@ def _do_handshake_with_heartbleed(self):  # type: ignore
             # Server returned a TLS alert
             break
         else:
-            raise ValueError("Unknown record? Type {}".format(tls_record.header.type))
+            raise TypeError(f"Unknown record? Type {tls_record.header.type}")
 
     is_vulnerable_to_heartbleed = False
     if did_receive_hello_done:
@@ -206,7 +205,7 @@ def _do_handshake_with_heartbleed(self):  # type: ignore
         else:
             try:
                 raw_ssl_bytes = self._sock.recv(16381)
-            except socket.error:
+            except OSError:
                 # Server closed the connection after receiving the heartbleed payload
                 raise _NotVulnerableToHeartbleed()
 

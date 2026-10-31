@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from sslyze import ServerScanRequest, ServerTlsProbingResult, ServerScanResult
+from sslyze import ServerScanRequest, ServerScanResult, ServerTlsProbingResult
 from sslyze.errors import ConnectionToServerFailed
 
 

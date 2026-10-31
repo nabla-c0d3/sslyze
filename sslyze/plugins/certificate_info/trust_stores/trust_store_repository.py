@@ -1,19 +1,17 @@
-import tarfile
+import inspect
 import shutil
+import sys
+import tarfile
 from enum import Enum
+from os.path import realpath
 from pathlib import Path
 from tempfile import mkdtemp
-
+from typing import ClassVar
 from urllib.request import urlretrieve
-
-import inspect
-import sys
-from os.path import realpath
 
 from cryptography.x509 import ObjectIdentifier
 
 from sslyze.plugins.certificate_info.trust_stores.trust_store import TrustStore
-from typing import List
 
 
 class TrustStoreEnum(Enum):
@@ -47,7 +45,7 @@ class TrustStoresRepository:
 
     _DEFAULT_REPOSITORY = None  # Singleton we use to avoid parsing the trust stores over and over
 
-    _STORE_PRETTY_NAMES = {
+    _STORE_PRETTY_NAMES: ClassVar = {
         TrustStoreEnum.APPLE: "Apple",
         TrustStoreEnum.GOOGLE_AOSP: "Android",
         TrustStoreEnum.MICROSOFT_WINDOWS: "Windows",
@@ -85,7 +83,7 @@ class TrustStoresRepository:
 
         self._available_stores = available_stores
 
-    def get_all_stores(self) -> List[TrustStore]:
+    def get_all_stores(self) -> list[TrustStore]:
         return list(self._available_stores.values())
 
     def get_main_store(self) -> TrustStore:
@@ -115,7 +113,8 @@ class TrustStoresRepository:
 
             # Extract the archive
             extract_path = temp_path / "extracted"
-            tarfile.open(archive_path).extractall(extract_path)
+            with tarfile.open(archive_path) as tar:
+                tar.extractall(extract_path)
 
             # Copy the files to SSLyze and overwrite the existing stores
             shutil.rmtree(cls._DEFAULT_TRUST_STORES_PATH)

@@ -1,15 +1,14 @@
 from dataclasses import dataclass
-from typing import Optional, List, Tuple
 from unittest import mock
 
 import pytest
 
 from sslyze.plugins.plugin_base import (
-    ScanCommandImplementation,
     ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
     ScanJob,
     ScanJobResult,
-    ScanCommandResult,
 )
 from sslyze.plugins.scan_commands import ScanCommandsRepository
 from sslyze.server_connectivity import ServerConnectivityInfo
@@ -17,7 +16,7 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 
 @dataclass(frozen=True)
 class MockPluginScanResult(ScanCommandResult):
-    results_field: List[str]
+    results_field: list[str]
     did_receive_extra_arguments: bool = False
 
 
@@ -27,8 +26,8 @@ class _MockPluginImplementation(ScanCommandImplementation):
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         # Create a bunch of "do nothing" jobs to imitate a real plugin
         did_receive_extra_arguments = extra_arguments is not None
         scan_jobs = [
@@ -42,7 +41,7 @@ class _MockPluginImplementation(ScanCommandImplementation):
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> ScanCommandResult:
         if len(scan_job_results) != cls._scan_jobs_count:
             raise AssertionError("Did not receive all the scan jobs that needed to be completed")
@@ -55,7 +54,7 @@ class _MockPluginImplementation(ScanCommandImplementation):
         return cls.result_cls(results_field=results_field, did_receive_extra_arguments=did_receive_extra_arguments)
 
     @staticmethod
-    def _scan_job_work_function(arg1: str, arg2: int, did_receive_extra_arguments: bool) -> Tuple[str, bool]:
+    def _scan_job_work_function(arg1: str, arg2: int, did_receive_extra_arguments: bool) -> tuple[str, bool]:
         return f"{arg1}-{arg2}-did nothing", did_receive_extra_arguments
 
 

@@ -1,6 +1,6 @@
-from typing import List, TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
-from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo, DhEphemeralKeyInfo
+from nassl.ephemeral_key_info import DhEphemeralKeyInfo, EcDhEphemeralKeyInfo
 
 from sslyze.plugins.openssl_cipher_suites._test_cipher_suite import CipherSuiteAcceptedByServer
 from sslyze.plugins.plugin_base import ScanCommandCliConnector
@@ -14,7 +14,7 @@ class _CipherSuitesCliConnector(ScanCommandCliConnector["CipherSuitesScanResult"
     _title_in_output: ClassVar[str]
 
     @classmethod
-    def result_to_console_output(cls, result: "CipherSuitesScanResult") -> List[str]:
+    def result_to_console_output(cls, result: "CipherSuitesScanResult") -> list[str]:
         result_as_txt = [cls._format_title(cls._title_in_output)]
 
         cipher_suites_count = len(result.accepted_cipher_suites) + len(result.rejected_cipher_suites)

@@ -1,21 +1,11 @@
 import queue
 import threading
-from typing import Tuple, Union, List, Callable
+from collections.abc import Callable
+from typing import TypeAlias
 
 from sslyze import ServerScanRequest, ServerTlsProbingResult
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.server_connectivity import check_connectivity_to_server
-
-try:
-    # Python 3.10+
-    from typing import TypeAlias  # type: ignore
-except ImportError:
-    # Python 3.9 and before
-    from typing_extensions import TypeAlias  # type: ignore
-
-
-_ServerConnectivityTestingResult = Union[ServerTlsProbingResult, ConnectionToServerFailed]
-
 
 ServerConnectivityTestCompletedCallback = Callable[[ServerScanRequest, ServerTlsProbingResult], None]
 ServerConnectivityTestErrorCallback = Callable[[ServerScanRequest, ConnectionToServerFailed], None]
@@ -25,9 +15,9 @@ class _NoMoreWorkSentinel:
     pass
 
 
-_ScanRequestsQueueType: TypeAlias = "queue.Queue[Union[_NoMoreWorkSentinel, ServerScanRequest]]"
+_ScanRequestsQueueType: TypeAlias = "queue.Queue[_NoMoreWorkSentinel | ServerScanRequest]"
 _ResultsQueueType: TypeAlias = (
-    "queue.Queue[Union[_NoMoreWorkSentinel, Tuple[ServerScanRequest, _ServerConnectivityTestingResult]]]"
+    "queue.Queue[_NoMoreWorkSentinel | tuple[ServerScanRequest, ServerTlsProbingResult | ConnectionToServerFailed]]"
 )
 
 
@@ -49,7 +39,7 @@ class MassConnectivityTester:
         ]
         self.has_started_work = False
 
-    def start_work(self, server_scan_requests: List[ServerScanRequest]) -> None:
+    def start_work(self, server_scan_requests: list[ServerScanRequest]) -> None:
         assert not self.has_started_work
         self.has_started_work = True
 

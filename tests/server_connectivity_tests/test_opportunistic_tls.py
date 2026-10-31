@@ -1,10 +1,10 @@
 import pytest
 
+from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
+from sslyze.errors import ServerRejectedOpportunisticTlsNegotiation
 from sslyze.json.json_output import _ServerTlsProbingResultAsJson
 from sslyze.server_connectivity import check_connectivity_to_server
-from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
-from sslyze.errors import ServerRejectedOpportunisticTlsNegotiation
-from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
+from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 
 
 class TestOpportunisticTls:

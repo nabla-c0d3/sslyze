@@ -1,25 +1,25 @@
 from dataclasses import dataclass
 from hashlib import sha256
-from typing import List, cast
+from typing import cast
 
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.x509 import (
-    ExtensionOID,
-    DNSName,
-    ExtensionNotFound,
-    NameOID,
-    DuplicateExtension,
-    IPAddress,
     Certificate,
-    SubjectAlternativeName,
+    DNSName,
+    DuplicateExtension,
+    ExtensionNotFound,
+    ExtensionOID,
+    IPAddress,
     Name,
+    NameOID,
+    SubjectAlternativeName,
 )
 
 
 @dataclass(frozen=True)
 class SubjectAlternativeNameExtension:
-    dns_names: List[str]
-    ip_addresses: List[str]
+    dns_names: list[str]
+    ip_addresses: list[str]
 
 
 def parse_subject_alternative_name_extension(certificate: Certificate) -> SubjectAlternativeNameExtension:
@@ -47,7 +47,7 @@ def parse_subject_alternative_name_extension(certificate: Certificate) -> Subjec
     return SubjectAlternativeNameExtension(dns_names=dns_names, ip_addresses=ip_addresses)
 
 
-def get_common_names(name_field: Name) -> List[str]:
+def get_common_names(name_field: Name) -> list[str]:
     return [cn.value for cn in name_field.get_attributes_for_oid(NameOID.COMMON_NAME)]  # type: ignore
 
 

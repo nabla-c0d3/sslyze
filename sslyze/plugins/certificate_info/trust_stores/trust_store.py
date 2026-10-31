@@ -1,14 +1,19 @@
-from dataclasses import dataclass
 import datetime
+from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
-from cryptography.x509 import Certificate
-from cryptography.x509 import ExtensionNotFound, CertificatePolicies
-from cryptography.x509 import ObjectIdentifier
-from cryptography.x509 import ExtensionOID
-from typing import List, Union, cast
-from typing import Optional
-from cryptography.x509 import load_pem_x509_certificates, DNSName, IPAddress, load_pem_x509_certificate
+from cryptography.x509 import (
+    Certificate,
+    CertificatePolicies,
+    DNSName,
+    ExtensionNotFound,
+    ExtensionOID,
+    IPAddress,
+    ObjectIdentifier,
+    load_pem_x509_certificate,
+    load_pem_x509_certificates,
+)
 from cryptography.x509.verification import PolicyBuilder, Store, VerificationError
 
 
@@ -29,12 +34,12 @@ class PathValidationResult:
     """
 
     trust_store: "TrustStore"
-    verified_certificate_chain: Optional[List[Certificate]]
-    validation_error: Optional[str]
+    verified_certificate_chain: list[Certificate] | None
+    validation_error: str | None
 
     @property
     def was_validation_successful(self) -> bool:
-        return True if self.verified_certificate_chain else False
+        return bool(self.verified_certificate_chain)
 
 
 class TrustStore:
@@ -46,7 +51,7 @@ class TrustStore:
         version: The human-readable version or date of the trust store (such as "09/2016").
     """
 
-    def __init__(self, path: Path, name: str, version: str, ev_oids: Optional[List[ObjectIdentifier]] = None) -> None:
+    def __init__(self, path: Path, name: str, version: str, ev_oids: list[ObjectIdentifier] | None = None) -> None:
         self.path = path
         self.name = name
         self.version = version
@@ -57,7 +62,7 @@ class TrustStore:
     def is_certificate_extended_validation(self, certificate: Certificate) -> bool:
         """Is the supplied server certificate EV?"""
         if not self.ev_oids:
-            raise ValueError("No EV OIDs supplied for {} store - cannot detect EV certificates".format(self.name))
+            raise ValueError(f"No EV OIDs supplied for {self.name} store - cannot detect EV certificates")
 
         try:
             cert_policies_ext = certificate.extensions.get_extension_for_oid(ExtensionOID.CERTIFICATE_POLICIES)
@@ -72,9 +77,9 @@ class TrustStore:
 
     def verify_certificate_chain(
         self,
-        certificate_chain_as_pem: List[str],
-        server_subject: Union[IPAddress, DNSName],
-        validation_time: Optional[datetime.datetime] = None,
+        certificate_chain_as_pem: list[str],
+        server_subject: IPAddress | DNSName,
+        validation_time: datetime.datetime | None = None,
     ) -> PathValidationResult:
         final_validation_time = validation_time or datetime.datetime.now(datetime.timezone.utc)
         builder = PolicyBuilder().store(self._x509_store)

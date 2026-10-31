@@ -1,9 +1,9 @@
-from sslyze import Scanner, ServerScanRequest, ServerNetworkLocation
+from sslyze import Scanner, ServerNetworkLocation, ServerScanRequest
 from sslyze.mozilla_tls_profile.tls_config_checker import (
+    ServerNotCompliantWithTlsConfiguration,
     TlsConfigurationAsJson,
     _MozillaCiphersAsJson,
     check_server_against_tls_configuration,
-    ServerNotCompliantWithTlsConfiguration,
 )
 
 

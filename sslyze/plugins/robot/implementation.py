@@ -1,24 +1,22 @@
 from dataclasses import dataclass
-from typing import Optional, List, Dict
 
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
 from sslyze.plugins.plugin_base import (
-    ScanCommandResult,
-    ScanCommandImplementation,
-    ScanCommandExtraArgument,
-    ScanJob,
-    ScanCommandWrongUsageError,
     ScanCommandCliConnector,
+    ScanCommandExtraArgument,
+    ScanCommandImplementation,
+    ScanCommandResult,
+    ScanCommandWrongUsageError,
+    ScanJob,
     ScanJobResult,
 )
-
 from sslyze.plugins.robot._robot_tester import (
-    RobotScanResultEnum,
-    test_robot,
-    ServerDoesNotSupportRsa,
     RobotPmsPaddingPayloadEnum,
+    RobotScanResultEnum,
     RobotServerResponsesAnalyzer,
+    ServerDoesNotSupportRsa,
+    test_robot,
 )
 from sslyze.server_connectivity import ServerConnectivityInfo
 
@@ -39,7 +37,7 @@ class RobotScanResultAsJson(BaseModelWithOrmModeAndForbid):
 
 
 class RobotScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[RobotScanResultAsJson]
+    result: RobotScanResultAsJson | None
 
 
 class _RobotCliConnector(ScanCommandCliConnector[RobotScanResult, None]):
@@ -47,7 +45,7 @@ class _RobotCliConnector(ScanCommandCliConnector[RobotScanResult, None]):
     _cli_description = "Test a server for the ROBOT vulnerability."
 
     @classmethod
-    def result_to_console_output(cls, result: RobotScanResult) -> List[str]:
+    def result_to_console_output(cls, result: RobotScanResult) -> list[str]:
         result_as_txt = [cls._format_title("ROBOT Attack")]
 
         if result.robot_result == RobotScanResultEnum.VULNERABLE_STRONG_ORACLE:
@@ -75,8 +73,8 @@ class RobotImplementation(ScanCommandImplementation[RobotScanResult, None]):
 
     @classmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: ServerConnectivityInfo, extra_arguments: Optional[ScanCommandExtraArgument] = None
-    ) -> List[ScanJob]:
+        cls, server_info: ServerConnectivityInfo, extra_arguments: ScanCommandExtraArgument | None = None
+    ) -> list[ScanJob]:
         if extra_arguments:
             raise ScanCommandWrongUsageError("This plugin does not take extra arguments")
 
@@ -87,12 +85,12 @@ class RobotImplementation(ScanCommandImplementation[RobotScanResult, None]):
 
     @classmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: ServerConnectivityInfo, scan_job_results: List[ScanJobResult]
+        cls, server_info: ServerConnectivityInfo, scan_job_results: list[ScanJobResult]
     ) -> RobotScanResult:
         if len(scan_job_results) != cls._TEST_ATTEMPTS_NB:
             raise RuntimeError(f"Unexpected number of scan jobs received: {scan_job_results}")
 
-        combined_server_responses: Dict[RobotPmsPaddingPayloadEnum, List[str]] = {
+        combined_server_responses: dict[RobotPmsPaddingPayloadEnum, list[str]] = {
             payload_enum: [] for payload_enum in RobotPmsPaddingPayloadEnum
         }
         for future in scan_job_results:

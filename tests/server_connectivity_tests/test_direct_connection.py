@@ -1,28 +1,31 @@
+import functools
 import socket
 
 import pytest
 
-from sslyze.json.json_output import _ServerTlsProbingResultAsJson
-from tests.openssl_server import LegacyOpenSslServer
-
-from sslyze.server_connectivity import TlsVersionEnum, check_connectivity_to_server
-from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
 from sslyze.errors import (
+    ConnectionToServerFailed,
     ConnectionToServerTimedOut,
     ServerRejectedConnection,
     ServerTlsConfigurationNotSupported,
-    ConnectionToServerFailed,
 )
+from sslyze.json.json_output import _ServerTlsProbingResultAsJson
+from sslyze.server_connectivity import TlsVersionEnum, check_connectivity_to_server
+from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 from tests.markers import can_only_run_on_linux_64
+from tests.openssl_server import LegacyOpenSslServer
 
 
+@functools.cache
 def is_ipv6_available() -> bool:
+    # Short timeout so tests don't hang when IPv6 is broken; cached so the check only runs once
     has_ipv6 = False
     s = socket.socket(socket.AF_INET6)
+    s.settimeout(3)
     try:
         s.connect(("2607:f8b0:4005:804::2004", 443))
         has_ipv6 = True
-    except Exception:
+    except Exception:  # noqa
         pass
     finally:
         s.close()
@@ -121,8 +124,10 @@ class TestServerConnectivityTester:
         # And it detected that only TLS 1.3 is supported
         assert tls_probing_result.highest_tls_version_supported == TlsVersionEnum.TLS_1_3
 
-    @pytest.mark.skipif(not is_ipv6_available(), reason="IPv6 not available")
     def test_ipv6(self):
+        if not is_ipv6_available():
+            pytest.skip("IPv6 not available")
+
         # Given a server accessible via IPv6
         server_location = ServerNetworkLocation(
             hostname="www.google.com", port=443, ip_address="2607:f8b0:4005:804::2004"

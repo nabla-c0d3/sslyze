@@ -1,21 +1,19 @@
-import socket
+from dataclasses import dataclass
 from enum import Enum, unique
 from pathlib import Path
-from typing import Optional
 
-from dataclasses import dataclass
+from nassl.base_ssl_client import ClientCertificateRequested, TlsVersionEnum
+from nassl.errors import OpenSSLError
+from nassl.openssl_1_1_1.ssl_client import SslClient_OpenSSL_1_1_1
 
-from nassl import _nassl
-from nassl.ssl_client import ClientCertificateRequested, SslClient
-
-from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
+from sslyze.connection_helpers.tls_connection import _HANDSHAKE_REJECTED_TLS_ERRORS, OpenSslVersionEnum, SslConnection
 from sslyze.errors import (
+    ConnectionToServerFailed,
     ServerRejectedTlsHandshake,
     ServerTlsConfigurationNotSupported,
     TlsHandshakeFailed,
-    ConnectionToServerFailed,
 )
-from sslyze.connection_helpers.tls_connection import SslConnection, _HANDSHAKE_REJECTED_TLS_ERRORS
+from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 
 
 @unique
@@ -25,17 +23,6 @@ class ClientAuthRequirementEnum(str, Enum):
     DISABLED = "DISABLED"
     OPTIONAL = "OPTIONAL"
     REQUIRED = "REQUIRED"
-
-
-@unique
-class TlsVersionEnum(Enum):
-    # WARNING: It has to be ordered and to match the values of nassl's OpenSslVersionEnum
-    SSL_2_0 = 1
-    SSL_3_0 = 2
-    TLS_1_0 = 3
-    TLS_1_1 = 4
-    TLS_1_2 = 5
-    TLS_1_3 = 6
 
 
 @dataclass(frozen=True)
@@ -67,7 +54,7 @@ def check_connectivity_to_server(
         ServerConnectivityError: If the server was not reachable or an SSL/TLS handshake could not be completed.
     """
     # Try to complete an SSL handshake to figure out the SSL/TLS version and cipher supported by the server
-    tls_detection_result: Optional[_TlsVersionDetectionResult] = None
+    tls_detection_result: _TlsVersionDetectionResult | None = None
 
     # Fist try TLS 1.3
     try:
@@ -165,9 +152,9 @@ class ServerConnectivityInfo:
 
     def get_preconfigured_tls_connection(
         self,
-        override_tls_version: Optional[TlsVersionEnum] = None,
-        ca_certificates_path: Optional[Path] = None,
-        should_use_legacy_openssl: Optional[bool] = None,
+        override_tls_version: TlsVersionEnum | None = None,
+        ca_certificates_path: Path | None = None,
+        openssl_version: OpenSslVersionEnum | None = None,
         should_enable_server_name_indication: bool = True,
     ) -> SslConnection:
         """Get an SSLConnection instance with the right SSL configuration for successfully connecting to the server.
@@ -175,7 +162,7 @@ class ServerConnectivityInfo:
         Used by all plugins to connect to the server and run scans.
         """
         final_ssl_version = self.tls_probing_result.highest_tls_version_supported
-        final_openssl_cipher_string: Optional[str]
+        final_openssl_cipher_string: str | None
         final_openssl_cipher_string = self.tls_probing_result.cipher_suite_supported
         if override_tls_version is not None:
             # Caller wants to override the TLS version to use for this connection
@@ -183,7 +170,7 @@ class ServerConnectivityInfo:
             # Then we don't know which cipher suite is supported by the server for this ssl version
             final_openssl_cipher_string = None
 
-        if should_use_legacy_openssl is not None:
+        if openssl_version is not None:
             final_openssl_cipher_string = None
 
         if self.network_configuration.tls_client_auth_credentials is not None:
@@ -203,13 +190,13 @@ class ServerConnectivityInfo:
             tls_version=final_ssl_version,
             should_ignore_client_auth=should_ignore_client_auth,
             ca_certificates_path=ca_certificates_path,
-            should_use_legacy_openssl=should_use_legacy_openssl,
+            openssl_version=openssl_version,
             should_enable_server_name_indication=should_enable_server_name_indication,
         )
         if final_openssl_cipher_string:
             if final_ssl_version == TlsVersionEnum.TLS_1_3:
                 # OpenSSL uses a different API for TLS 1.3
-                if not isinstance(ssl_connection.ssl_client, SslClient):
+                if not isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1):
                     raise RuntimeError("Should never happen")
                 ssl_connection.ssl_client.set_ciphersuites(final_openssl_cipher_string)
             else:
@@ -258,7 +245,7 @@ def _detect_support_for_tls_1_3(
     except TlsHandshakeFailed:
         pass
 
-    except (OSError, _nassl.OpenSSLError) as e:
+    except (OSError, OpenSSLError) as e:
         # If these errors get propagated here, it means they're not part of the known/normal errors that
         # can happen when trying to connect to a server and defined in tls_connection.py
         # Hence we re-raise these as "unknown" connection errors; might be caused by bad connectivity to
@@ -322,7 +309,7 @@ def _detect_support_for_tls_1_2_or_below(
             # Try the next cipher list
             pass
 
-        except (OSError, _nassl.OpenSSLError) as e:
+        except (OSError, OpenSSLError) as e:
             # If these errors get propagated here, it means they're not part of the known/normal errors that
             # can happen when trying to connect to a server and defined in tls_connection.py
             # Hence we re-raise these as "unknown" connection errors; might be caused by bad connectivity to
@@ -365,19 +352,19 @@ def _detect_client_auth_requirement_with_tls_1_3(
     except (ClientCertificateRequested, ServerRejectedTlsHandshake):
         client_auth_requirement = ClientAuthRequirementEnum.REQUIRED
 
-    except socket.timeout:
+    except TimeoutError:
         # The timeout is triggered when calling read() because the server has client auth optional and is waiting for
         # more data from us the client
         client_auth_requirement = ClientAuthRequirementEnum.OPTIONAL
 
-    except _nassl.OpenSSLError as e:
+    except OpenSSLError as e:
         # Here we re-use some of the rejection handling logic already implemented in SslConnection.connect()
         # This is because the call to read(1) in the try block might trigger similar errors as connect()
         # https://github.com/nabla-c0d3/sslyze/issues/562
         # TODO(AD): Find a way to unify exception handling between the two calls
         openssl_error_message = e.args[0]
         is_known_server_rejection_error = False
-        for error_msg in _HANDSHAKE_REJECTED_TLS_ERRORS.keys():
+        for error_msg in _HANDSHAKE_REJECTED_TLS_ERRORS:
             if error_msg in openssl_error_message:
                 is_known_server_rejection_error = True
                 break
@@ -439,7 +426,7 @@ def _detect_ecdh_support(
     tls_version: TlsVersionEnum,
 ) -> bool:
     if tls_version.value < TlsVersionEnum.TLS_1_2.value:
-        # Retrieving ECDH information is only implemented in the modern nassl.SslClient, which is TLS 1.2+
+        # Retrieving ECDH information is only implemented in the OpenSSL 1.1.1+ nassl client, which is TLS 1.2+
         return False
 
     is_ecdh_key_exchange_supported = False
@@ -447,13 +434,10 @@ def _detect_ecdh_support(
         server_location=server_location,
         network_configuration=network_config,
         tls_version=tls_version,
-        should_use_legacy_openssl=False,
+        openssl_version=OpenSslVersionEnum.OPENSSL_1_1_1,
         should_ignore_client_auth=True,
     )
-    if not isinstance(ssl_connection.ssl_client, SslClient):
-        raise RuntimeError(
-            "Should never happen: specified should_use_legacy_openssl=False but didn't get the modern" " SSL client"
-        )
+    assert isinstance(ssl_connection.ssl_client, SslClient_OpenSSL_1_1_1), "Should never happen"
 
     # Set the right elliptic curve cipher suites
     enable_ecdh_cipher_suites(tls_version, ssl_connection.ssl_client)
@@ -470,7 +454,7 @@ def _detect_ecdh_support(
     return is_ecdh_key_exchange_supported
 
 
-def enable_ecdh_cipher_suites(tls_version: TlsVersionEnum, ssl_client: SslClient) -> None:
+def enable_ecdh_cipher_suites(tls_version: TlsVersionEnum, ssl_client: SslClient_OpenSSL_1_1_1) -> None:
     """Set the elliptic curve cipher suites."""
     if tls_version == TlsVersionEnum.TLS_1_3:
         # Cipher suites source: https://tools.ietf.org/html/rfc8446#appendix-B.4

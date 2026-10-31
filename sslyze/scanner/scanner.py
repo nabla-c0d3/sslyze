@@ -1,6 +1,6 @@
 import queue
+from collections.abc import Generator, Sequence
 from traceback import TracebackException
-from typing import List, Optional, Generator, Sequence
 
 from sslyze import ServerTlsProbingResult
 from sslyze.errors import ConnectionToServerFailed
@@ -12,22 +12,20 @@ from sslyze.scanner._mass_scanner import (
     ServerScanResultsQueueType,
 )
 from sslyze.scanner.models import (
+    ServerConnectivityStatusEnum,
     ServerScanRequest,
     ServerScanResult,
-    ServerConnectivityStatusEnum,
     ServerScanStatusEnum,
 )
-
-
 from sslyze.scanner.scanner_observer import ScannerObserver
 
 
 class Scanner:
     def __init__(
         self,
-        per_server_concurrent_connections_limit: Optional[int] = None,
-        concurrent_server_scans_limit: Optional[int] = None,
-        observers: Optional[Sequence[ScannerObserver]] = None,
+        per_server_concurrent_connections_limit: int | None = None,
+        concurrent_server_scans_limit: int | None = None,
+        observers: Sequence[ScannerObserver] | None = None,
     ):
         self._observers: Sequence[ScannerObserver]
         if observers is None:
@@ -50,7 +48,7 @@ class Scanner:
 
         self._connectivity_tester = MassConnectivityTester(self._concurrent_server_scans_count)
 
-    def queue_scans(self, server_scan_requests: List[ServerScanRequest]) -> None:
+    def queue_scans(self, server_scan_requests: list[ServerScanRequest]) -> None:
         if self._has_started_work:
             raise ValueError("Already submitted scan requests")
 

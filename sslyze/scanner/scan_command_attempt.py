@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from traceback import TracebackException
-from typing import Generic, Optional, TypeVar
-
+from typing import Generic, TypeVar
 
 # These are in a separate file to avoid cyclic imports
 _ScanCommandResultTypeVar = TypeVar("_ScanCommandResultTypeVar")
@@ -36,8 +35,8 @@ class ScanCommandAttempt(Generic[_ScanCommandResultTypeVar]):
     status: ScanCommandAttemptStatusEnum
 
     # Set if status == ERROR
-    error_reason: Optional[ScanCommandErrorReasonEnum]
-    error_trace: Optional[TracebackException]
+    error_reason: ScanCommandErrorReasonEnum | None
+    error_trace: TracebackException | None
 
     # Set if status == COMPLETED
-    result: Optional[_ScanCommandResultTypeVar]
+    result: _ScanCommandResultTypeVar | None

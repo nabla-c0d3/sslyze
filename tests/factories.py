@@ -1,32 +1,31 @@
 from traceback import TracebackException
-from typing import Optional, Set, Dict
 from uuid import uuid4
 
 from faker import Faker
 from faker.providers import internet
 
-from sslyze.cli.server_string_parser import InvalidServerStringError
+from sslyze import ScanCommandAttemptStatusEnum, ScanCommandsExtraArguments, ServerScanRequest, ServerScanResult
 from sslyze.cli.command_line_parser import ParsedCommandLine
+from sslyze.cli.server_string_parser import InvalidServerStringError
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.scan_commands import ScanCommand
-from sslyze import ServerScanResult, ScanCommandsExtraArguments, ServerScanRequest, ScanCommandAttemptStatusEnum
 from sslyze.scanner.models import (
     AllScanCommandsAttempts,
-    get_scan_command_attempt_cls,
     ServerConnectivityStatusEnum,
     ServerScanStatusEnum,
+    get_scan_command_attempt_cls,
 )
 from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
 from sslyze.server_connectivity import (
+    ClientAuthRequirementEnum,
     ServerConnectivityInfo,
     ServerTlsProbingResult,
-    ClientAuthRequirementEnum,
     TlsVersionEnum,
 )
 from sslyze.server_setting import (
+    HttpProxySettings,
     ServerNetworkConfiguration,
     ServerNetworkLocation,
-    HttpProxySettings,
 )
 
 fake = Faker()
@@ -52,8 +51,8 @@ class ServerNetworkLocationViaHttpProxyFactory:
 class ServerConnectivityInfoFactory:
     @staticmethod
     def create(
-        server_location: Optional[ServerNetworkLocation] = None,
-        tls_probing_result: Optional[ServerTlsProbingResult] = None,
+        server_location: ServerNetworkLocation | None = None,
+        tls_probing_result: ServerTlsProbingResult | None = None,
     ) -> ServerConnectivityInfo:
         if server_location:
             final_server_location = server_location
@@ -117,8 +116,8 @@ class ConnectionToServerFailedFactory:
 
 class AllScanCommandsAttemptsFactory:
     @staticmethod
-    def create(all_scan_command_attempts: Optional[Dict[str, ScanCommandAttempt]] = None):
-        final_all_scan_command_attempts: Dict[str, ScanCommandAttempt] = {}
+    def create(all_scan_command_attempts: dict[str, ScanCommandAttempt] | None = None):
+        final_all_scan_command_attempts: dict[str, ScanCommandAttempt] = {}
         if all_scan_command_attempts:
             final_all_scan_command_attempts.update(all_scan_command_attempts)
 
@@ -139,9 +138,9 @@ class AllScanCommandsAttemptsFactory:
 class ServerScanResultFactory:
     @staticmethod
     def create(
-        server_location: Optional[ServerNetworkLocation] = None,
+        server_location: ServerNetworkLocation | None = None,
         scan_status: ServerScanStatusEnum = ServerScanStatusEnum.COMPLETED,
-        scan_result: Optional[AllScanCommandsAttempts] = None,
+        scan_result: AllScanCommandsAttempts | None = None,
     ) -> ServerScanResult:
         final_server_location: ServerNetworkLocation
         if server_location is None:
@@ -151,7 +150,7 @@ class ServerScanResultFactory:
 
         network_configuration = ServerNetworkConfiguration.default_for_server_location(final_server_location)
 
-        connectivity_result: Optional[ServerTlsProbingResult]
+        connectivity_result: ServerTlsProbingResult | None
         if scan_status == ServerScanStatusEnum.COMPLETED:
             connectivity_status = ServerConnectivityStatusEnum.COMPLETED
             connectivity_error_trace = None
@@ -195,11 +194,11 @@ class TracebackExceptionFactory:
 class ServerScanRequestFactory:
     @staticmethod
     def create(
-        server_location: Optional[ServerNetworkLocation] = None,
-        scan_commands: Optional[Set[ScanCommand]] = None,
-        scan_commands_extra_arguments: Optional[ScanCommandsExtraArguments] = None,
+        server_location: ServerNetworkLocation | None = None,
+        scan_commands: set[ScanCommand] | None = None,
+        scan_commands_extra_arguments: ScanCommandsExtraArguments | None = None,
     ) -> ServerScanRequest:
-        final_server_location: Optional[ServerNetworkLocation]
+        final_server_location: ServerNetworkLocation | None
         if server_location is None:
             final_server_location = ServerNetworkLocationViaDirectConnectionFactory.create()
         else:

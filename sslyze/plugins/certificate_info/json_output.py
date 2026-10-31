@@ -1,21 +1,19 @@
 from base64 import b64encode
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Optional
-
-from pydantic import BaseModel, model_validator
-
+from typing import Any
 
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509 import NameAttribute, ObjectIdentifier, Name, Certificate, ocsp
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
+from cryptography.x509 import Certificate, Name, NameAttribute, ObjectIdentifier, ocsp
+from pydantic import BaseModel, model_validator
 
 from sslyze import (
+    CertificateDeploymentAnalysisResult,
     CertificateInfoExtraArgument,
     CertificateInfoScanResult,
-    CertificateDeploymentAnalysisResult,
     PathValidationResult,
     TrustStore,
 )
@@ -37,16 +35,16 @@ CertificateInfoExtraArgumentAsJson.__doc__ = CertificateInfoExtraArgument.__doc_
 
 class _PublicKeyAsJson(BaseModelWithOrmMode):
     algorithm: str
-    key_size: Optional[int]  # None for Ed25519PublicKey and Ed448PublicKey
+    key_size: int | None  # None for Ed25519PublicKey and Ed448PublicKey
 
     # Only set if the algorithm is RSA
-    rsa_e: Optional[int]
-    rsa_n: Optional[int]
+    rsa_e: int | None
+    rsa_n: int | None
 
     # Only set if the algorithm is Elliptic Curve
-    ec_curve_name: Optional[str]
-    ec_x: Optional[int]
-    ec_y: Optional[int]
+    ec_curve_name: str | None
+    ec_x: int | None
+    ec_y: int | None
 
     @model_validator(mode="before")
     @classmethod
@@ -61,17 +59,17 @@ class _PublicKeyAsJson(BaseModelWithOrmMode):
         except AttributeError:
             public_key_size = None
 
-        return dict(
-            algorithm=public_key.__class__.__name__,
-            key_size=public_key_size,
+        return {
+            "algorithm": public_key.__class__.__name__,
+            "key_size": public_key_size,
             # EC-only fields
-            ec_curve_name=public_key.curve.name if isinstance(public_key, EllipticCurvePublicKey) else None,
-            ec_x=public_key.public_numbers().x if isinstance(public_key, EllipticCurvePublicKey) else None,
-            ec_y=public_key.public_numbers().y if isinstance(public_key, EllipticCurvePublicKey) else None,
+            "ec_curve_name": public_key.curve.name if isinstance(public_key, EllipticCurvePublicKey) else None,
+            "ec_x": public_key.public_numbers().x if isinstance(public_key, EllipticCurvePublicKey) else None,
+            "ec_y": public_key.public_numbers().y if isinstance(public_key, EllipticCurvePublicKey) else None,
             # RSA-only fields
-            rsa_e=public_key.public_numbers().e if isinstance(public_key, RSAPublicKey) else None,
-            rsa_n=public_key.public_numbers().n if isinstance(public_key, RSAPublicKey) else None,
-        )
+            "rsa_e": public_key.public_numbers().e if isinstance(public_key, RSAPublicKey) else None,
+            "rsa_n": public_key.public_numbers().n if isinstance(public_key, RSAPublicKey) else None,
+        }
 
 
 class _ObjectIdentifierAsJson(BaseModelWithOrmMode):
@@ -85,10 +83,10 @@ class _ObjectIdentifierAsJson(BaseModelWithOrmMode):
             return data
 
         oid: ObjectIdentifier = data
-        return dict(
-            name=oid._name,  # type: ignore
-            dotted_string=oid.dotted_string,
-        )
+        return {
+            "name": oid._name,  # type: ignore
+            "dotted_string": oid.dotted_string,
+        }
 
 
 class _NameAttributeAsJson(BaseModelWithOrmMode):
@@ -103,16 +101,16 @@ class _NameAttributeAsJson(BaseModelWithOrmMode):
             return data
 
         name_attribute: NameAttribute = data
-        return dict(
-            oid=name_attribute.oid,
-            value=name_attribute.value if isinstance(name_attribute.value, str) else str(name_attribute.value),
-            rfc4514_string=name_attribute.rfc4514_string(),
-        )
+        return {
+            "oid": name_attribute.oid,
+            "value": name_attribute.value if isinstance(name_attribute.value, str) else str(name_attribute.value),
+            "rfc4514_string": name_attribute.rfc4514_string(),
+        }
 
 
 class _X509NameAsJson(BaseModelWithOrmMode):
     rfc4514_string: str
-    attributes: List[_NameAttributeAsJson]
+    attributes: list[_NameAttributeAsJson]
 
     @model_validator(mode="before")
     @classmethod
@@ -121,12 +119,12 @@ class _X509NameAsJson(BaseModelWithOrmMode):
             return data
 
         name: Name = data
-        return dict(rfc4514_string=name.rfc4514_string(), attributes=[attr for attr in name])
+        return {"rfc4514_string": name.rfc4514_string(), "attributes": [attr for attr in name]}
 
 
 class _SubjAltNameAsJson(BaseModel):
-    dns_names: List[str]
-    ip_addresses: List[str] = []
+    dns_names: list[str]
+    ip_addresses: list[str] = []
 
 
 class _HashAlgorithmAsJson(BaseModelWithOrmMode):
@@ -147,13 +145,13 @@ class _CertificateAsJson(BaseModelWithOrmMode):
 
     # The signature_hash_algorithm can be None if signature did not use separate hash (ED25519, ED448)
     # https://cryptography.io/en/latest/x509/reference/#cryptography.x509.Certificate.signature_hash_algorithm
-    signature_hash_algorithm: Optional[_HashAlgorithmAsJson]
+    signature_hash_algorithm: _HashAlgorithmAsJson | None
     signature_algorithm_oid: _ObjectIdentifierAsJson
 
     # We may get garbage/invalid certificates that do not have a subject or an issuer, hence they can be None
     # https://github.com/nabla-c0d3/sslyze/issues/403
-    subject: Optional[_X509NameAsJson]
-    issuer: Optional[_X509NameAsJson]
+    subject: _X509NameAsJson | None
+    issuer: _X509NameAsJson | None
 
     public_key: _PublicKeyAsJson
 
@@ -167,13 +165,13 @@ class _CertificateAsJson(BaseModelWithOrmMode):
 
         # We may get garbage/invalid certificates so we need to handle ValueErrors.
         # See https://github.com/nabla-c0d3/sslyze/issues/403 for more information
-        subject_field: Optional[Name]
+        subject_field: Name | None
         try:
             subject_field = certificate.subject
         except ValueError:
             subject_field = None
 
-        issuer_field: Optional[Name]
+        issuer_field: Name | None
         try:
             issuer_field = certificate.issuer
         except ValueError:
@@ -181,37 +179,37 @@ class _CertificateAsJson(BaseModelWithOrmMode):
 
         subj_alt_name_ext = parse_subject_alternative_name_extension(certificate)
 
-        return dict(
-            as_pem=certificate.public_bytes(Encoding.PEM).decode("ascii"),
-            hpkp_pin=b64encode(get_public_key_sha256(certificate)).decode("ascii"),
-            fingerprint_sha1=b64encode(certificate.fingerprint(hashes.SHA1())).decode("ascii"),
-            fingerprint_sha256=b64encode(certificate.fingerprint(hashes.SHA256())).decode("ascii"),
-            serial_number=certificate.serial_number,
-            not_valid_before=certificate.not_valid_before_utc,
-            not_valid_after=certificate.not_valid_after_utc,
-            subject_alternative_name=_SubjAltNameAsJson(
+        return {
+            "as_pem": certificate.public_bytes(Encoding.PEM).decode("ascii"),
+            "hpkp_pin": b64encode(get_public_key_sha256(certificate)).decode("ascii"),
+            "fingerprint_sha1": b64encode(certificate.fingerprint(hashes.SHA1())).decode("ascii"),
+            "fingerprint_sha256": b64encode(certificate.fingerprint(hashes.SHA256())).decode("ascii"),
+            "serial_number": certificate.serial_number,
+            "not_valid_before": certificate.not_valid_before_utc,
+            "not_valid_after": certificate.not_valid_after_utc,
+            "subject_alternative_name": _SubjAltNameAsJson(
                 dns_names=subj_alt_name_ext.dns_names,
                 ip_addresses=subj_alt_name_ext.ip_addresses,
             ),
-            signature_hash_algorithm=certificate.signature_hash_algorithm,
-            signature_algorithm_oid=certificate.signature_algorithm_oid,
-            subject=subject_field,
-            issuer=issuer_field,
-            public_key=certificate.public_key(),
-        )
+            "signature_hash_algorithm": certificate.signature_hash_algorithm,
+            "signature_algorithm_oid": certificate.signature_algorithm_oid,
+            "subject": subject_field,
+            "issuer": issuer_field,
+            "public_key": certificate.public_key(),
+        }
 
 
 class _OcspResponseAsJson(BaseModelWithOrmMode):
     response_status: StrFromEnumValueName
 
-    certificate_status: Optional[StrFromEnumValueName]
-    revocation_time: Optional[datetime]
+    certificate_status: StrFromEnumValueName | None
+    revocation_time: datetime | None
 
-    produced_at: Optional[datetime]
-    this_update: Optional[datetime]
-    next_update: Optional[datetime]
+    produced_at: datetime | None
+    this_update: datetime | None
+    next_update: datetime | None
 
-    serial_number: Optional[int]
+    serial_number: int | None
 
     @model_validator(mode="before")
     @classmethod
@@ -221,31 +219,31 @@ class _OcspResponseAsJson(BaseModelWithOrmMode):
 
         response_status = ocsp_response.response_status.name
         if ocsp_response.response_status != ocsp.OCSPResponseStatus.SUCCESSFUL:
-            return dict(
-                response_status=response_status,
-                certificate_status=None,
-                revocation_time=None,
-                produced_at=None,
-                this_update=None,
-                next_update=None,
-                serial_number=None,
-            )
-        return dict(
-            response_status=response_status,
-            certificate_status=ocsp_response.certificate_status,
-            revocation_time=ocsp_response.revocation_time_utc,
-            produced_at=ocsp_response.produced_at_utc,
-            this_update=ocsp_response.this_update_utc,
-            next_update=ocsp_response.next_update_utc,
-            serial_number=ocsp_response.serial_number,
-        )
+            return {
+                "response_status": response_status,
+                "certificate_status": None,
+                "revocation_time": None,
+                "produced_at": None,
+                "this_update": None,
+                "next_update": None,
+                "serial_number": None,
+            }
+        return {
+            "response_status": response_status,
+            "certificate_status": ocsp_response.certificate_status,
+            "revocation_time": ocsp_response.revocation_time_utc,
+            "produced_at": ocsp_response.produced_at_utc,
+            "this_update": ocsp_response.this_update_utc,
+            "next_update": ocsp_response.next_update_utc,
+            "serial_number": ocsp_response.serial_number,
+        }
 
 
 class _TrustStoreAsJson(BaseModelWithOrmMode):
     path: Path
     name: str
     version: str
-    ev_oids: Optional[List[_ObjectIdentifierAsJson]]
+    ev_oids: list[_ObjectIdentifierAsJson] | None
 
 
 assert TrustStore.__doc__
@@ -254,8 +252,8 @@ _TrustStoreAsJson.__doc__ = TrustStore.__doc__
 
 class _PathValidationResultAsJson(BaseModelWithOrmMode):
     trust_store: _TrustStoreAsJson
-    verified_certificate_chain: Optional[List[_CertificateAsJson]]
-    validation_error: Optional[str]
+    verified_certificate_chain: list[_CertificateAsJson] | None
+    validation_error: str | None
     was_validation_successful: bool
 
 
@@ -264,21 +262,21 @@ _PathValidationResultAsJson.__doc__ = PathValidationResult.__doc__
 
 
 class _CertificateDeploymentAnalysisResultAsJson(BaseModelWithOrmMode):
-    received_certificate_chain: List[_CertificateAsJson]
+    received_certificate_chain: list[_CertificateAsJson]
     leaf_certificate_has_must_staple_extension: bool
     leaf_certificate_is_ev: bool
-    leaf_certificate_signed_certificate_timestamps_count: Optional[int]
-    received_chain_contains_anchor_certificate: Optional[bool]
-    received_chain_has_valid_order: Optional[bool]
+    leaf_certificate_signed_certificate_timestamps_count: int | None
+    received_chain_contains_anchor_certificate: bool | None
+    received_chain_has_valid_order: bool | None
 
-    path_validation_results: List[_PathValidationResultAsJson]
-    verified_chain_has_sha1_signature: Optional[bool]
-    verified_chain_has_legacy_symantec_anchor: Optional[bool]
+    path_validation_results: list[_PathValidationResultAsJson]
+    verified_chain_has_sha1_signature: bool | None
+    verified_chain_has_legacy_symantec_anchor: bool | None
 
-    ocsp_response: Optional[_OcspResponseAsJson]
-    ocsp_response_is_trusted: Optional[bool]
+    ocsp_response: _OcspResponseAsJson | None
+    ocsp_response_is_trusted: bool | None
 
-    verified_certificate_chain: Optional[List[_CertificateAsJson]]
+    verified_certificate_chain: list[_CertificateAsJson] | None
 
 
 assert CertificateDeploymentAnalysisResult.__doc__
@@ -287,10 +285,10 @@ _CertificateDeploymentAnalysisResultAsJson.__doc__ = CertificateDeploymentAnalys
 
 class CertificateInfoScanResultAsJson(BaseModelWithOrmMode):
     hostname_used_for_server_name_indication: str
-    certificate_deployments: List[_CertificateDeploymentAnalysisResultAsJson]
+    certificate_deployments: list[_CertificateDeploymentAnalysisResultAsJson]
 
     # Default argument for backward compatibility as this field was added in v6.2.0
-    certificate_deployment_with_sni_disabled: Optional[_CertificateDeploymentAnalysisResultAsJson] = None
+    certificate_deployment_with_sni_disabled: _CertificateDeploymentAnalysisResultAsJson | None = None
 
 
 assert CertificateInfoScanResult.__doc__
@@ -298,4 +296,4 @@ CertificateInfoScanResultAsJson.__doc__ = CertificateInfoScanResult.__doc__
 
 
 class CertificateInfoScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[CertificateInfoScanResultAsJson]
+    result: CertificateInfoScanResultAsJson | None

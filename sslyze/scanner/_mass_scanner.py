@@ -1,36 +1,34 @@
+import queue
 import threading
 from dataclasses import dataclass, fields
-import queue
 from time import sleep
 from traceback import TracebackException
-from typing import Dict, List, Tuple, Union
+from typing import TypeAlias
 from uuid import UUID
 
-from nassl.ssl_client import ClientCertificateRequested
+from nassl.base_ssl_client import ClientCertificateRequested
 
-from sslyze import ServerTlsProbingResult, ScanCommandAttemptStatusEnum, ScanCommandErrorReasonEnum
-from sslyze.errors import ConnectionToServerTimedOut, TlsHandshakeTimedOut, ServerRejectedTlsHandshake
+from sslyze import ScanCommandAttemptStatusEnum, ScanCommandErrorReasonEnum, ServerTlsProbingResult
+from sslyze.errors import ConnectionToServerTimedOut, ServerRejectedTlsHandshake, TlsHandshakeTimedOut
 from sslyze.plugins.plugin_base import ScanCommandWrongUsageError, ScanJob, ScanJobResult
-from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
+from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
 from sslyze.scanner._jobs_worker_thread import (
-    WorkerThreadNoMoreJobsSentinel,
     CompletedScanJob,
-    QueuedScanJob,
     JobsWorkerThread,
+    QueuedScanJob,
     WorkerQueueType,
+    WorkerThreadNoMoreJobsSentinel,
 )
 from sslyze.scanner.models import (
+    AllScanCommandsAttempts,
+    ServerConnectivityStatusEnum,
     ServerScanRequest,
     ServerScanResult,
-    ServerConnectivityStatusEnum,
     ServerScanStatusEnum,
-    AllScanCommandsAttempts,
     get_scan_command_attempt_cls,
 )
 from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
 from sslyze.server_connectivity import ServerConnectivityInfo
-
-from typing import TypeAlias
 
 
 @dataclass(frozen=True)
@@ -38,9 +36,9 @@ class _OngoingServerScan:
     server_scan_request: ServerScanRequest
     server_connectivity_result: ServerTlsProbingResult
     assigned_queue: queue.Queue
-    scan_command_errors_during_queuing: Dict[ScanCommand, ScanCommandAttempt]
+    scan_command_errors_during_queuing: dict[ScanCommand, ScanCommandAttempt]
     queued_scan_jobs_count: int
-    completed_scan_jobs: List[CompletedScanJob]  # Populated as the scan is getting completed
+    completed_scan_jobs: list[CompletedScanJob]  # Populated as the scan is getting completed
 
     @property
     def is_completed(self) -> bool:
@@ -52,9 +50,9 @@ class NoMoreServerScanRequestsSentinel:
 
 
 ServerScanRequestsQueueType: TypeAlias = (
-    "queue.Queue[Union[NoMoreServerScanRequestsSentinel, Tuple[ServerScanRequest, ServerTlsProbingResult]]]"
+    "queue.Queue[NoMoreServerScanRequestsSentinel | tuple[ServerScanRequest, ServerTlsProbingResult]]"
 )
-ServerScanResultsQueueType: TypeAlias = "queue.Queue[Union[NoMoreServerScanRequestsSentinel, ServerScanResult]]"
+ServerScanResultsQueueType: TypeAlias = "queue.Queue[NoMoreServerScanRequestsSentinel | ServerScanResult]"
 
 
 class MassScannerProducerThread(threading.Thread):
@@ -80,7 +78,7 @@ class MassScannerProducerThread(threading.Thread):
 
         # Create internal threads and queues for dispatching jobs
         self._completed_jobs_queue: queue.Queue[CompletedScanJob] = queue.Queue()
-        self._all_worker_queues: List[WorkerQueueType] = [queue.Queue() for _ in range(concurrent_server_scans_count)]
+        self._all_worker_queues: list[WorkerQueueType] = [queue.Queue() for _ in range(concurrent_server_scans_count)]
         self._worker_threads_per_queues_count = per_server_concurrent_connections_count
         self._all_worker_threads = []
         for worker_queue in self._all_worker_queues:
@@ -94,7 +92,7 @@ class MassScannerProducerThread(threading.Thread):
             worker_thread.start()
 
     def run(self) -> None:
-        all_ongoing_server_scans: Dict[UUID, _OngoingServerScan] = {}
+        all_ongoing_server_scans: dict[UUID, _OngoingServerScan] = {}
 
         # Start the first batch of scans; dispatch one server scan per available queue
         has_retrieved_all_server_scan_requests = False
@@ -211,9 +209,9 @@ def _queue_server_scan(
 def _generate_scan_jobs_for_server_scan(
     server_scan_request: ServerScanRequest,
     server_connectivity_result: ServerTlsProbingResult,
-) -> Tuple[Dict[ScanCommand, List[ScanJob]], Dict[ScanCommand, ScanCommandAttempt]]:
-    all_scan_jobs_per_scan_cmd: Dict[ScanCommand, List[ScanJob]] = {}
-    scan_command_errors_during_queuing: Dict[ScanCommand, ScanCommandAttempt] = {}
+) -> tuple[dict[ScanCommand, list[ScanJob]], dict[ScanCommand, ScanCommandAttempt]]:
+    all_scan_jobs_per_scan_cmd: dict[ScanCommand, list[ScanJob]] = {}
+    scan_command_errors_during_queuing: dict[ScanCommand, ScanCommandAttempt] = {}
     for scan_cmd in server_scan_request.scan_commands:
         implementation_cls = ScanCommandsRepository.get_implementation_cls(scan_cmd)
         scan_cmd_extra_args = getattr(server_scan_request.scan_commands_extra_arguments, scan_cmd, None)
@@ -239,7 +237,7 @@ def _generate_scan_jobs_for_server_scan(
                 result=None,
             )
             scan_command_errors_during_queuing[scan_cmd] = errored_attempt
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             scan_command_attempt_cls = get_scan_command_attempt_cls(scan_cmd)
             errored_attempt = scan_command_attempt_cls(
                 status=ScanCommandAttemptStatusEnum.ERROR,
@@ -253,10 +251,10 @@ def _generate_scan_jobs_for_server_scan(
 
 
 def _generate_result_for_completed_server_scan(completed_scan: _OngoingServerScan) -> ServerScanResult:
-    all_scan_command_attempts: Dict[ScanCommand, ScanCommandAttempt] = {}
+    all_scan_command_attempts: dict[ScanCommand, ScanCommandAttempt] = {}
 
     # Group all the completed jobs per scan command
-    scan_cmd_to_completed_jobs: Dict[ScanCommand, List[CompletedScanJob]] = {
+    scan_cmd_to_completed_jobs: dict[ScanCommand, list[CompletedScanJob]] = {
         scan_cmd: [] for scan_cmd in completed_scan.server_scan_request.scan_commands
     }
     for completed_job in completed_scan.completed_scan_jobs:
@@ -301,7 +299,7 @@ def _generate_result_for_completed_server_scan(completed_scan: _OngoingServerSca
                 error_trace=TracebackException.from_exception(e),
                 result=None,
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             scan_cmd_attempt = scan_command_attempt_cls(
                 status=ScanCommandAttemptStatusEnum.ERROR,
                 error_reason=ScanCommandErrorReasonEnum.BUG_IN_SSLYZE,

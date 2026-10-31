@@ -1,27 +1,31 @@
 from dataclasses import fields
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TextIO, Optional
+from typing import TextIO
 
-from sslyze import __version__, ServerScanRequest, ScanCommandAttemptStatusEnum, ScanCommandErrorReasonEnum
+from sslyze import (
+    ScanCommandAttemptStatusEnum,
+    ScanCommandErrorReasonEnum,
+    ServerScanRequest,
+    ServerScanResult,
+    __version__,
+)
 from sslyze.cli.command_line_parser import ParsedCommandLine
-
 from sslyze.errors import ConnectionToServerFailed
 from sslyze.plugins.plugin_base import ScanCommandWrongUsageError
-from sslyze.plugins.scan_commands import ScanCommandsRepository, ScanCommand
-from sslyze import ServerScanResult
+from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
 from sslyze.scanner.models import ServerScanStatusEnum
 from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
 from sslyze.scanner.scanner_observer import ScannerObserver
 from sslyze.server_connectivity import ClientAuthRequirementEnum, ServerTlsProbingResult
 from sslyze.server_setting import (
-    ServerNetworkLocation,
     ConnectionTypeEnum,
+    ServerNetworkLocation,
 )
 
 
 class ObserverToGenerateConsoleOutput(ScannerObserver):
-    def __init__(self, file_to: TextIO, json_path_out: Optional[Path] = None) -> None:
+    def __init__(self, file_to: TextIO, json_path_out: Path | None = None) -> None:
         self._file_to = file_to
         self._date_scans_started = datetime.now(timezone.utc)
 
@@ -39,8 +43,7 @@ class ObserverToGenerateConsoleOutput(ScannerObserver):
 
         for bad_server_str in parsed_command_line.invalid_servers:
             self._file_to.write(
-                f"   {bad_server_str.server_string:<35} => ERROR: {bad_server_str.error_message};"
-                f" discarding scan.\n"
+                f"   {bad_server_str.server_string:<35} => ERROR: {bad_server_str.error_message}; discarding scan.\n"
             )
 
     def server_connectivity_test_error(
@@ -114,8 +117,8 @@ def _server_location_to_network_route(server_location: ServerNetworkLocation) ->
     if server_location.connection_type == ConnectionTypeEnum.VIA_HTTP_PROXY:
         # We do not know the server's IP address if going through a proxy
         assert server_location.http_proxy_settings
-        network_route = "HTTP proxy at {}:{}".format(
-            server_location.http_proxy_settings.hostname, server_location.http_proxy_settings.port
+        network_route = (
+            f"HTTP proxy at {server_location.http_proxy_settings.hostname}:{server_location.http_proxy_settings.port}"
         )
     elif server_location.connection_type == ConnectionTypeEnum.DIRECT:
         assert server_location.ip_address

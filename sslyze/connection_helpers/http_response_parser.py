@@ -1,8 +1,9 @@
+from collections.abc import Callable
+from http.client import HTTPResponse
 from io import BytesIO
 from socket import socket
-from typing import Callable
-from http.client import HTTPResponse
-from nassl.ssl_client import BaseSslClient
+
+from nassl.base_ssl_client import BaseSslClient
 
 
 class _FakeSocket(BytesIO):

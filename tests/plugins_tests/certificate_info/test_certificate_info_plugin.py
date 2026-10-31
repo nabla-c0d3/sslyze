@@ -179,8 +179,10 @@ class TestCertificateInfoPlugin:
         # And multiple certificates were detected
         assert len(plugin_result.certificate_deployments) > 1
 
-    @pytest.mark.skipif(not is_ipv6_available(), reason="IPv6 not available")
     def test_ipv6_server_string(self):
+        if not is_ipv6_available():
+            pytest.skip("IPv6 not available")
+
         # Test for https://github.com/nabla-c0d3/sslyze/issues/675
         # Given a server to scan for which SSLyze only received an IPv6 address
         server_location = ServerNetworkLocation("2a00:1450:4007:80d::200e", 443, ip_address="2a00:1450:4007:80d::200e")

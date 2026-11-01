@@ -65,6 +65,21 @@ class CertificateInfoScanResult(ScanCommandResult):
 _ListofPemCertificatesAndOptionalOcspResponse = Tuple[List[str], Optional[nassl._nassl.OCSP_RESPONSE]]
 
 
+def _server_subject_for_certificate_validation(tls_server_name_indication: str) -> Union[IPAddress, DNSName]:
+    """Build the subject to validate the server's certificate against, from the configured SNI.
+
+    An IP address literal must be validated as an IP address, even when the target's resolved IP is written
+    differently (eg. an expanded IPv6 address). A DNS name may include a single trailing root dot, which
+    cryptography rejects, so that one dot is removed for validation only.
+    """
+    try:
+        return IPAddress(ip_address(tls_server_name_indication))
+    except ValueError:
+        pass
+
+    return DNSName(tls_server_name_indication.removesuffix("."))
+
+
 class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoScanResult, None]):
     """Retrieve and analyze a server's certificate(s) to verify its validity."""
 
@@ -171,15 +186,9 @@ class CertificateInfoImplementation(ScanCommandImplementation[CertificateInfoSca
             all_trust_stores.append(TrustStore(custom_ca_file, "Supplied CA file", "N/A"))
 
         # Figure out the server's subject (ie. hostname or IP) to use for certificate validation
-        subject_to_use_for_validation: Union[IPAddress, DNSName]
-        if server_info.network_configuration.tls_server_name_indication == server_info.server_location.ip_address:
-            # We don't know the server's hostname as only an IP address was supplied to sslyze
-            if not server_info.server_location.ip_address:
-                raise ValueError("Should never happen as it means the tls_server_name_indication would be None")
-
-            subject_to_use_for_validation = IPAddress(ip_address(server_info.server_location.ip_address))
-        else:
-            subject_to_use_for_validation = DNSName(server_info.network_configuration.tls_server_name_indication)
+        subject_to_use_for_validation = _server_subject_for_certificate_validation(
+            server_info.network_configuration.tls_server_name_indication
+        )
 
         # Check the SNI-disabled certificate deployment
         sni_disabled_analysis_result: Optional[CertificateDeploymentAnalysisResult]

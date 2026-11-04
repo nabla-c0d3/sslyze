@@ -17,8 +17,8 @@ Key features
 
 * Focus on speed and reliability: SSLyze is a battle-tested tool that is used to reliably scan **hundreds of thousands**
 of servers every day.
-* Easy to operationalize: SSLyze can be directly run from CI/CD, in order to continuously check a server against 
-Mozilla's recommended TLS configurations.
+* Easy to operationalize: SSLyze can be directly run from CI/CD, in order to continuously check a server against the
+TLS configurations recommended by [TLSRef](https://docs.tlsref.org/server-side-tls.html).
 * Fully documented [Python API](https://nabla-c0d3.github.io/sslyze/documentation/) to run scans directly from any
 Python application, such as a function deployed to AWS Lambda.
 * Support for scanning non-HTTP servers including SMTP, XMPP, LDAP, POP, IMAP, RDP, Postgres and FTP servers.
@@ -55,34 +55,35 @@ Full documentation for SSLyze's Python API is [available here][documentation].
 Usage as a CI/CD step
 ---------------------
 
-By default, SSLyze will check the server's scan results against Mozilla's recommended ["intermediate" TLS
-configuration](https://wiki.mozilla.org/Security/Server_Side_TLS), and will return a non-zero exit code if the server
-is not compliant. 
+By default, SSLyze will check the server's scan results against the ["intermediate" TLS
+configuration](https://docs.tlsref.org/server-side-tls.html) recommended by TLSRef, and will return a non-zero exit code
+if the server is not compliant.
 
 ```
 $ python -m sslyze mozilla.com
 ```
 ```
-Checking results against Mozilla's "intermediate" configuration. See https://ssl-config.mozilla.org/ for more details.
+Checking results against the TLSRef "intermediate" configuration. See https://docs.tlsref.org/server-side-tls.html for more details.
 
 mozilla.com:443: OK - Compliant.
 ```
 
-The Mozilla configuration to check against can be configured via `--mozilla_config={old, intermediate, modern}`:
+The TLSRef configuration to check against can be selected with `--tls_config={intermediate, modern}`:
 ```
-$ python -m sslyze --mozilla_config=modern mozilla.com
+$ python -m sslyze --tls_config=modern mozilla.com
 ```
 ```
-Checking results against Mozilla's "modern" configuration. See https://ssl-config.mozilla.org/ for more details.
+Checking results against the TLSRef "modern" configuration. See https://docs.tlsref.org/server-side-tls.html for more details.
 
 mozilla.com:443: FAILED - Not compliant.
     * certificate_types: Deployed certificate types are {'rsa'}, should have at least one of {'ecdsa'}.
-    * certificate_signatures: Deployed certificate signatures are {'sha256WithRSAEncryption'}, should have at least one of {'ecdsa-with-SHA512', 'ecdsa-with-SHA256', 'ecdsa-with-SHA384'}.
+    * certificate_signatures: Deployed certificate signatures are {'sha256WithRSAEncryption'}, should have at least one of {'ecdsa-with-SHA384', 'ecdsa-with-SHA512', 'ecdsa-with-SHA256'}.
     * tls_versions: TLS versions {'TLSv1.2'} are supported, but should be rejected.
-    * ciphers: Cipher suites {'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384', 'TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256'} are supported, but should be rejected.
+    * ciphers: Cipher suites {'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384', 'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256', 'TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256'} are supported, but should be rejected.
 ```
 
-Alternatively, you can check against your own custom TLS configuration by providing a JSON file that follows Mozilla's TLS configuration format:
+Alternatively, you can check against your own custom TLS configuration by providing a JSON file that follows the
+[TLSRef](https://docs.tlsref.org/server-side-tls.html) TLS configuration format:
 
 ```
 $ python -m sslyze --custom_tls_config custom_tls_config_example.json mozilla.com

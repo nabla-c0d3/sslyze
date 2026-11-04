@@ -115,9 +115,7 @@ def main() -> None:
     print()
     print(title)
     if not parsed_command_line.tls_config_to_check_against_as_enum:
-        print(
-            "    Disabled; use --mozilla_config={old, intermediate, modern} or --custom_tls_config=path/to/profile.json.\n"
-        )
+        print("    Disabled; use --tls_config={intermediate, modern} or --custom_tls_config=path/to/profile.json.\n")
     else:
         assert parsed_command_line.tls_config_to_check_against, "Should always be set"
 
@@ -126,8 +124,8 @@ def main() -> None:
         else:
             config_name = parsed_command_line.tls_config_to_check_against_as_enum.value
             print(
-                f'    Checking results against Mozilla\'s "{config_name}"'
-                f" configuration. See https://ssl-config.mozilla.org/ for more details.\n"
+                f'    Checking results against the TLSRef "{config_name}"'
+                f" configuration. See https://docs.tlsref.org/server-side-tls.html for more details.\n"
             )
 
         for server_scan_result in all_server_scan_results:

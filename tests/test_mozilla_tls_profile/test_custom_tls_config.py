@@ -8,6 +8,17 @@ from sslyze.mozilla_tls_profile.tls_config_checker import (
 
 
 class TestCustomTlsConfigurationChecker:
+    def test_custom_config_ciphers_without_caddy_and_go(self):
+        # Given ciphers in the TLSRef 6.0 format, which has no "caddy" and "go" lists
+        ciphers_as_json = {
+            "iana": ["TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"],
+            "openssl": ["ECDHE-RSA-AES128-GCM-SHA256"],
+        }
+
+        # When parsing them, it succeeds
+        ciphers = _MozillaCiphersAsJson.model_validate(ciphers_as_json)
+        assert ciphers.iana == {"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"}
+
     def test_custom_config_compliance_checking_noncompliant_server(self):
         # Given a custom TLS configuration
         lenient_config = TlsConfigurationAsJson(

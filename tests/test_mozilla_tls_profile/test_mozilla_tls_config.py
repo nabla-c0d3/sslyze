@@ -22,30 +22,6 @@ def server_scan_result_for_google():
 
 class TestMozillaTlsConfigurationChecker:
     @pytest.mark.skip("Server needs to be updated; check https://github.com/chromium/badssl.com/issues/483")
-    def test_badssl_compliant_with_old(self):
-        # Given the scan results for a server that is compliant with the "old" Mozilla config
-        scanner = Scanner()
-        scanner.queue_scans(
-            [ServerScanRequest(server_location=ServerNetworkLocation(hostname="mozilla-old.badssl.com"))]
-        )
-        server_scan_result = next(scanner.get_results())
-
-        # When checking if the server is compliant with the Mozilla "old" TLS config
-        # It succeeds and the server is returned as compliant
-        tls_config = MozillaTlsConfiguration.get(TlsConfigurationEnum.MOZILLA_OLD)
-        check_server_against_tls_configuration(
-            server_scan_result=server_scan_result, tls_config_to_check_against=tls_config
-        )
-
-        # And the server is returned as NOT compliant for the other Mozilla configs
-        for mozilla_config_enum in [TlsConfigurationEnum.MOZILLA_INTERMEDIATE, TlsConfigurationEnum.MOZILLA_MODERN]:
-            tls_config = MozillaTlsConfiguration.get(mozilla_config_enum)
-            with pytest.raises(ServerNotCompliantWithTlsConfiguration):
-                check_server_against_tls_configuration(
-                    server_scan_result=server_scan_result, tls_config_to_check_against=tls_config
-                )
-
-    @pytest.mark.skip("Server needs to be updated; check https://github.com/chromium/badssl.com/issues/483")
     def test_badssl_compliant_with_intermediate(self):
         # Given the scan results for a server that is compliant with the "intermediate" Mozilla config
         scanner = Scanner()
@@ -62,7 +38,7 @@ class TestMozillaTlsConfigurationChecker:
         )
 
         # And the server is returned as NOT compliant for the other Mozilla configs
-        for mozilla_config in [TlsConfigurationEnum.MOZILLA_OLD, TlsConfigurationEnum.MOZILLA_MODERN]:
+        for mozilla_config in [TlsConfigurationEnum.MOZILLA_MODERN]:
             tls_config = MozillaTlsConfiguration.get(mozilla_config)
             with pytest.raises(ServerNotCompliantWithTlsConfiguration):
                 check_server_against_tls_configuration(
@@ -86,32 +62,12 @@ class TestMozillaTlsConfigurationChecker:
         )
 
         # And the server is returned as NOT compliant for the other Mozilla configs
-        for mozilla_config in [TlsConfigurationEnum.MOZILLA_OLD, TlsConfigurationEnum.MOZILLA_INTERMEDIATE]:
+        for mozilla_config in [TlsConfigurationEnum.MOZILLA_INTERMEDIATE]:
             tls_config = MozillaTlsConfiguration.get(mozilla_config)
             with pytest.raises(ServerNotCompliantWithTlsConfiguration):
                 check_server_against_tls_configuration(
                     server_scan_result=server_scan_result, tls_config_to_check_against=tls_config
                 )
-
-    @pytest.mark.skip(
-        "Server is not compliant; rework this test when working on https://github.com/nabla-c0d3/sslyze/issues/725"
-    )
-    def test_solo_cert_deployment_compliant_with_old(self):
-        # Given the scan results for a server that is compliant with the "old" Mozilla config
-        scanner = Scanner()
-        scanner.queue_scans([ServerScanRequest(server_location=ServerNetworkLocation(hostname="www.mozilla.com"))])
-        server_scan_result = next(scanner.get_results())
-
-        # When checking if the server is compliant with the Mozilla "old" TLS config
-        # It succeeds and the server is returned as compliant
-        tls_config = MozillaTlsConfiguration.get(TlsConfigurationEnum.MOZILLA_OLD)
-        check_server_against_tls_configuration(
-            server_scan_result=server_scan_result, tls_config_to_check_against=tls_config
-        )
-
-    def test_multi_certs_deployment_compliant_with_old(self):
-        # TODO(AD): Implement this test
-        pass
 
     def test_multi_certs_deployment_not_compliant_with_intermediate(self, server_scan_result_for_google):
         # Give the scan results for google.com which has multiple leaf certificates
@@ -140,7 +96,6 @@ class TestMozillaTlsConfigurationChecker:
         [
             TlsConfigurationEnum.MOZILLA_MODERN,
             TlsConfigurationEnum.MOZILLA_INTERMEDIATE,
-            TlsConfigurationEnum.MOZILLA_OLD,
         ],
     )
     def test_tls_curves_use_the_group_names_returned_by_the_plugin(self, tls_configuration_enum):
@@ -149,6 +104,14 @@ class TestMozillaTlsConfigurationChecker:
 
         # Then its TLS curves use the same names as the supported groups plugin, so that they can be compared
         assert tls_config.tls_curves <= {group for group in OpenSslGroupNameEnum}
+
+    def test_intermediate_allows_x25519mlkem768(self):
+        # Given the bundled "intermediate" TLS config
+        tls_config = MozillaTlsConfiguration.get(TlsConfigurationEnum.MOZILLA_INTERMEDIATE)
+
+        # Then it allows X25519MLKEM768, so that servers that support it are not reported as non-compliant
+        # https://github.com/nabla-c0d3/sslyze/issues/725
+        assert OpenSslGroupNameEnum.X25519MLKEM768.value in tls_config.tls_curves
 
     def test_incomplete_scan_result(self):
         # Given a scan result that does not contain all the information needed by the Mozilla checker

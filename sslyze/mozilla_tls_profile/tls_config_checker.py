@@ -23,8 +23,9 @@ from sslyze.plugins.supported_groups_plugin import SupportedGroupsScanResult
 
 
 class _MozillaCiphersAsJson(pydantic.BaseModel):
-    caddy: set[str]
-    go: set[str]
+    # Removed in TLSRef 6.0; still accepted for custom configurations in the older Mozilla format
+    caddy: set[str] = set()
+    go: set[str] = set()
     iana: set[str]
     openssl: set[str]
 
@@ -74,7 +75,6 @@ class TlsConfigurationAsJson(pydantic.BaseModel):
 class _AllMozillaTlsConfigurationsAsJson(pydantic.BaseModel):
     modern: TlsConfigurationAsJson
     intermediate: TlsConfigurationAsJson
-    old: TlsConfigurationAsJson
 
 
 class _MozillaTlsProfileAsJson(pydantic.BaseModel):
@@ -86,7 +86,6 @@ class _MozillaTlsProfileAsJson(pydantic.BaseModel):
 class TlsConfigurationEnum(str, Enum):
     MOZILLA_MODERN = "modern"
     MOZILLA_INTERMEDIATE = "intermediate"
-    MOZILLA_OLD = "old"
     CUSTOM = "custom"
 
 
@@ -130,7 +129,7 @@ SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: set[ScanCommand] = {
 
 
 class MozillaTlsConfiguration:
-    _JSON_PROFILE_PATH = Path(__file__).parent.absolute() / "5.7.json"
+    _JSON_PROFILE_PATH = Path(__file__).parent.absolute() / "6.0.json"
 
     @classmethod
     def get(cls, tls_configuration_enum: TlsConfigurationEnum) -> TlsConfigurationAsJson:

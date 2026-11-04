@@ -61,7 +61,7 @@ class TestMain:
             # And a command line to scan it and check it against Mozilla's TLS configuration
             command_line = [
                 "sslyze",
-                "--mozilla_config=intermediate",
+                "--tls_config=intermediate",
                 f"{server.hostname}:{server.port}{{{server.ip_address}}}",
             ]
             with mock.patch.object(sys, "argv", command_line):
@@ -105,4 +105,57 @@ class TestMain:
 
             # Then the invalid JSON file is rejected
             with pytest.raises(CommandLineParsingError, match="Could not parse"):
+                parser.parse_command_line()
+
+    @pytest.mark.parametrize(
+        ("tls_config_option", "expected_tls_config_enum"),
+        [
+            ("modern", TlsConfigurationEnum.MOZILLA_MODERN),
+            ("intermediate", TlsConfigurationEnum.MOZILLA_INTERMEDIATE),
+        ],
+    )
+    def test_command_line_has_tls_config(self, tls_config_option, expected_tls_config_enum):
+        # Given a command line that specifies --tls_config
+        command_line = ["sslyze", f"--tls_config={tls_config_option}", "www.example.com"]
+
+        # When parsing it
+        with mock.patch.object(sys, "argv", command_line):
+            parsed_command_line = CommandLineParser("test").parse_command_line()
+
+        # Then the corresponding TLS configuration is selected
+        assert parsed_command_line.tls_config_to_check_against_as_enum == expected_tls_config_enum
+        assert parsed_command_line.tls_config_to_check_against
+
+    def test_command_line_has_tls_config_disabled(self):
+        # Given a command line that disables the TLS configuration check
+        command_line = ["sslyze", "--tls_config=disable", "www.example.com"]
+
+        # When parsing it
+        with mock.patch.object(sys, "argv", command_line):
+            parsed_command_line = CommandLineParser("test").parse_command_line()
+
+        # Then no TLS configuration is selected
+        assert parsed_command_line.tls_config_to_check_against_as_enum is None
+        assert parsed_command_line.tls_config_to_check_against is None
+
+    @pytest.mark.parametrize("removed_option", ["--tls_config=old", "--mozilla_config=intermediate"])
+    def test_command_line_has_removed_tls_config_option(self, removed_option):
+        # Given a command line that uses an option removed in 7.0.0 (https://github.com/nabla-c0d3/sslyze/issues/725)
+        command_line = ["sslyze", removed_option, "www.example.com"]
+
+        # When parsing it, argparse rejects the option
+        with mock.patch.object(sys, "argv", command_line):
+            parser = CommandLineParser("test")
+            with pytest.raises(SystemExit):
+                parser.parse_command_line()
+
+    def test_command_line_has_tls_config_and_custom_tls_config(self):
+        # Given a command line that specifies both --tls_config and --custom_tls_config
+        custom_config_path = Path(__file__).parent.parent / "custom_tls_config_example.json"
+        command_line = ["sslyze", "--tls_config=modern", "--custom_tls_config", str(custom_config_path), "example.com"]
+
+        # When parsing it, it fails
+        with mock.patch.object(sys, "argv", command_line):
+            parser = CommandLineParser("test")
+            with pytest.raises(CommandLineParsingError, match="Cannot use --custom_tls_config and --tls_config"):
                 parser.parse_command_line()

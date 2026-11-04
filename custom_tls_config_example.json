@@ -47,7 +47,7 @@
             "ECDHE-RSA-CHACHA20-POLY1305"
         ]
     },
-    "tls_curves": ["X25519", "prime256v1", "secp384r1"],
+    "tls_curves": ["X25519MLKEM768", "X25519", "prime256v1", "secp384r1"],
     "rsa_key_size": 2048,
     "dh_param_size": 2048,
     "ecdh_param_size": 256,

@@ -210,9 +210,11 @@ def _check_tls_curves(
     #  so we also add them here
     supported_curves_and_pq_goups: set[str] = set()
     if supported_groups_result.supported_elliptic_curve_groups:
-        supported_curves_and_pq_goups.update([grp for grp in supported_groups_result.supported_elliptic_curve_groups])
+        supported_curves_and_pq_goups.update(
+            grp.value for grp in supported_groups_result.supported_elliptic_curve_groups
+        )
     if supported_groups_result.supported_post_quantum_groups:
-        supported_curves_and_pq_goups.update([grp for grp in supported_groups_result.supported_post_quantum_groups])
+        supported_curves_and_pq_goups.update(grp.value for grp in supported_groups_result.supported_post_quantum_groups)
 
     tls_curves_difference = supported_curves_and_pq_goups - tls_config.tls_curves
     if tls_curves_difference:

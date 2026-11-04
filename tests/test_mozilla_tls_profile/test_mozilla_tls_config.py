@@ -7,8 +7,10 @@ from sslyze.mozilla_tls_profile.tls_config_checker import (
     ServerNotCompliantWithTlsConfiguration,
     ServerScanResultIncomplete,
     TlsConfigurationEnum,
+    _check_tls_curves,
     check_server_against_tls_configuration,
 )
+from sslyze.plugins.supported_groups_plugin import SupportedGroupsScanResult
 from tests.factories import ServerScanResultFactory
 
 
@@ -161,3 +163,31 @@ class TestMozillaTlsConfigurationChecker:
             check_server_against_tls_configuration(
                 server_scan_result=server_scan_result, tls_config_to_check_against=tls_config
             )
+
+    def test_tls_curves_issue_shows_group_names(self):
+        # Given a TLS config that only allows x25519
+        tls_config = MozillaTlsConfiguration.get(TlsConfigurationEnum.MOZILLA_MODERN).model_copy(
+            update={"tls_curves": {"x25519"}}
+        )
+
+        # And a server that also accepts an EC group and a PQ group that the config does not allow
+        supported_groups_result = SupportedGroupsScanResult(
+            supported_elliptic_curve_groups=[OpenSslGroupNameEnum.x25519, OpenSslGroupNameEnum.secp521r1],
+            rejected_elliptic_curve_groups=[],
+            supports_elliptic_curve_key_exchange=True,
+            supported_finite_field_dh_groups=[],
+            rejected_finite_field_dh_groups=[],
+            supported_post_quantum_groups=[OpenSslGroupNameEnum.X25519MLKEM768],
+            rejected_post_quantum_groups=[],
+            supports_post_quantum_key_exchange=True,
+        )
+
+        # When checking the TLS curves
+        issues = _check_tls_curves(supported_groups_result, tls_config)
+
+        # Then the issue names the groups, and not the enum members
+        issue = issues["tls_curves"]
+        assert "'secp521r1'" in issue
+        assert "'X25519MLKEM768'" in issue
+        assert "'x25519'" not in issue
+        assert "OpenSslGroupNameEnum" not in issue

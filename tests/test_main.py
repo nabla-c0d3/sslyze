@@ -9,7 +9,7 @@ import pytest
 from sslyze import SslyzeOutputAsJson
 from sslyze.__main__ import main
 from sslyze.cli.command_line_parser import CommandLineParser, CommandLineParsingError
-from sslyze.mozilla_tls_profile.tls_config_checker import TlsConfigurationEnum
+from sslyze.tls_config_checker.tls_config_checker import TlsConfigurationEnum
 from tests.python_tls_server import PythonTlsServer
 
 
@@ -58,7 +58,7 @@ class TestMain:
             server_key_path=certificates_path / "unicode-cn-self-signed-key.pem",
         ) as server:
             #
-            # And a command line to scan it and check it against Mozilla's TLS configuration
+            # And a command line to scan it and check it against the TLSRef configuration
             command_line = [
                 "sslyze",
                 "--tls_config=intermediate",
@@ -110,8 +110,8 @@ class TestMain:
     @pytest.mark.parametrize(
         ("tls_config_option", "expected_tls_config_enum"),
         [
-            ("modern", TlsConfigurationEnum.MOZILLA_MODERN),
-            ("intermediate", TlsConfigurationEnum.MOZILLA_INTERMEDIATE),
+            ("modern", TlsConfigurationEnum.MODERN),
+            ("intermediate", TlsConfigurationEnum.INTERMEDIATE),
         ],
     )
     def test_command_line_has_tls_config(self, tls_config_option, expected_tls_config_enum):

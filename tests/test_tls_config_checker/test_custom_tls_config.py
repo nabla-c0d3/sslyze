@@ -1,8 +1,8 @@
 from sslyze import Scanner, ServerNetworkLocation, ServerScanRequest
-from sslyze.mozilla_tls_profile.tls_config_checker import (
+from sslyze.tls_config_checker.tls_config_checker import (
     ServerNotCompliantWithTlsConfiguration,
     TlsConfigurationAsJson,
-    _MozillaCiphersAsJson,
+    _CiphersAsJson,
     check_server_against_tls_configuration,
 )
 
@@ -16,7 +16,7 @@ class TestCustomTlsConfigurationChecker:
         }
 
         # When parsing them, it succeeds
-        ciphers = _MozillaCiphersAsJson.model_validate(ciphers_as_json)
+        ciphers = _CiphersAsJson.model_validate(ciphers_as_json)
         assert ciphers.iana == {"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"}
 
     def test_custom_config_compliance_checking_noncompliant_server(self):
@@ -34,7 +34,7 @@ class TestCustomTlsConfigurationChecker:
                 "sha512WithRSAEncryption",
             },
             ciphersuites={"TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256", "TLS_AES_128_GCM_SHA256"},
-            ciphers=_MozillaCiphersAsJson(
+            ciphers=_CiphersAsJson(
                 caddy={
                     "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
                     "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",

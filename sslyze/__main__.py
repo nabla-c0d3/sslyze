@@ -14,7 +14,7 @@ from sslyze.__version__ import __version__
 from sslyze.cli.command_line_parser import CommandLineParser, CommandLineParsingError
 from sslyze.cli.console_output import ObserverToGenerateConsoleOutput
 from sslyze.json.json_output import InvalidServerStringAsJson
-from sslyze.mozilla_tls_profile.tls_config_checker import (
+from sslyze.tls_config_checker.tls_config_checker import (
     ServerNotCompliantWithTlsConfiguration,
     ServerScanResultIncomplete,
     TlsConfigurationEnum,

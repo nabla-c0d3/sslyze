@@ -10,12 +10,6 @@ from sslyze.cli.server_string_parser import (
     InvalidServerStringError,
 )
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
-from sslyze.mozilla_tls_profile.tls_config_checker import (
-    SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER,
-    MozillaTlsConfiguration,
-    TlsConfigurationAsJson,
-    TlsConfigurationEnum,
-)
 from sslyze.plugins import plugin_base
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.plugins.plugin_base import OptParseCliOption
@@ -28,6 +22,12 @@ from sslyze.server_setting import (
     ServerHostnameCouldNotBeResolved,
     ServerNetworkConfiguration,
     ServerNetworkLocation,
+)
+from sslyze.tls_config_checker.tls_config_checker import (
+    SCAN_COMMANDS_NEEDED_BY_TLS_CONFIG_CHECKER,
+    TlsConfiguration,
+    TlsConfigurationAsJson,
+    TlsConfigurationEnum,
 )
 
 
@@ -168,8 +168,8 @@ class CommandLineParser:
         elif args_command_list.tls_config:
             # A TLSRef config was specified
             tls_config_map = {
-                "modern": TlsConfigurationEnum.MOZILLA_MODERN,
-                "intermediate": TlsConfigurationEnum.MOZILLA_INTERMEDIATE,
+                "modern": TlsConfigurationEnum.MODERN,
+                "intermediate": TlsConfigurationEnum.INTERMEDIATE,
                 "disable": None,  # Disable the TLS configuration check
             }
             try:
@@ -179,7 +179,7 @@ class CommandLineParser:
 
             if tls_config_to_check_against_as_enum is not None:
                 # Load the corresponding TLSRef configuration
-                tls_config_to_check_against = MozillaTlsConfiguration.get(tls_config_to_check_against_as_enum)
+                tls_config_to_check_against = TlsConfiguration.get(tls_config_to_check_against_as_enum)
 
         else:
             # Handle the case when no value was specified: run --tls_config=intermediate by default
@@ -195,12 +195,12 @@ class CommandLineParser:
             # If the user did not specify any scan commands, run the default scan commands
             #  and check the result against the TLSRef intermediate configuration
             if not did_user_enable_some_scan_commands:
-                tls_config_to_check_against_as_enum = TlsConfigurationEnum.MOZILLA_INTERMEDIATE
-                tls_config_to_check_against = MozillaTlsConfiguration.get(tls_config_to_check_against_as_enum)
+                tls_config_to_check_against_as_enum = TlsConfigurationEnum.INTERMEDIATE
+                tls_config_to_check_against = TlsConfiguration.get(tls_config_to_check_against_as_enum)
 
         # Enable the commands needed by TLS configuration checking
         if tls_config_to_check_against_as_enum:
-            for scan_cmd in SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER:
+            for scan_cmd in SCAN_COMMANDS_NEEDED_BY_TLS_CONFIG_CHECKER:
                 cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_cmd).cli_connector_cls
                 setattr(args_command_list, cli_connector_cls._cli_option, True)
 

@@ -9,6 +9,7 @@ from sslyze.plugins.http_headers_plugin import (
     HttpHeadersScanResult,
     HttpHeadersScanResultAsJson,
     _detect_http_redirection,
+    _parse_hsts_header_from_http_response,
 )
 from sslyze.server_setting import (
     ClientAuthenticationCredentials,
@@ -212,3 +213,95 @@ class TestHttpRedirection:
 
         # No new location is returned
         assert next_location_path is None
+
+
+class TestHstsHeaderParsing:
+    def test_lowercase_directives(self) -> None:
+        # Given an HTTP response with an HSTS header that spells every directive in lowercase
+        http_response = _MockHttpResponse(
+            status=200,
+            _headers={"strict-transport-security": "max-age=31536000; includesubdomains; preload"},
+        )
+
+        # When it gets parsed
+        hsts_header = _parse_hsts_header_from_http_response(http_response)
+
+        # Every directive is detected
+        assert hsts_header
+        assert hsts_header.max_age == 31536000
+        assert hsts_header.include_subdomains
+        assert hsts_header.preload
+
+    def test_uppercase_directives(self) -> None:
+        # Given an HTTP response with an HSTS header that spells every directive in uppercase
+        http_response = _MockHttpResponse(
+            status=200,
+            _headers={"strict-transport-security": "MAX-AGE=31536000; INCLUDESUBDOMAINS; PRELOAD"},
+        )
+
+        # When it gets parsed
+        hsts_header = _parse_hsts_header_from_http_response(http_response)
+
+        # Every directive is still detected, as directive names are case-insensitive
+        assert hsts_header
+        assert hsts_header.max_age == 31536000
+        assert hsts_header.include_subdomains
+        assert hsts_header.preload
+
+    def test_whitespace_around_equal_sign(self) -> None:
+        # Given an HTTP response with an HSTS header that has whitespace around the max-age equal sign
+        http_response = _MockHttpResponse(
+            status=200,
+            _headers={"strict-transport-security": "max-age = 31536000"},
+        )
+
+        # When it gets parsed, it succeeds
+        hsts_header = _parse_hsts_header_from_http_response(http_response)
+
+        # And the max age is detected
+        assert hsts_header
+        assert hsts_header.max_age == 31536000
+
+    def test_quoted_max_age(self) -> None:
+        # Given an HTTP response with an HSTS header whose max-age value is quoted
+        http_response = _MockHttpResponse(
+            status=200,
+            _headers={"strict-transport-security": 'max-age="31536000"'},
+        )
+
+        # When it gets parsed, it succeeds
+        hsts_header = _parse_hsts_header_from_http_response(http_response)
+
+        # And the max age is detected
+        assert hsts_header
+        assert hsts_header.max_age == 31536000
+
+    def test_max_age_value_is_not_a_number(self) -> None:
+        # Given an HTTP response with an HSTS header whose max-age value is not a number
+        http_response = _MockHttpResponse(
+            status=200,
+            _headers={"strict-transport-security": "max-age=forever; includeSubDomains"},
+        )
+
+        # When it gets parsed, it does not crash
+        hsts_header = _parse_hsts_header_from_http_response(http_response)
+
+        # And the max age is left unset while the other directives are still detected
+        assert hsts_header
+        assert hsts_header.max_age is None
+        assert hsts_header.include_subdomains
+
+    def test_unrecognized_directive(self) -> None:
+        # Given an HTTP response with an HSTS header that contains a directive sslyze does not know about
+        http_response = _MockHttpResponse(
+            status=200,
+            _headers={"strict-transport-security": "max-age=31536000; includeSubDomain"},
+        )
+
+        # When it gets parsed, it does not crash
+        hsts_header = _parse_hsts_header_from_http_response(http_response)
+
+        # And the recognized directives are still detected
+        assert hsts_header
+        assert hsts_header.max_age == 31536000
+        assert not hsts_header.include_subdomains

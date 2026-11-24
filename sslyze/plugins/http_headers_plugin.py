@@ -296,12 +296,21 @@ def _parse_hsts_header_from_http_response(response: HTTPResponse) -> StrictTrans
             # Empty space at the end of the header
             continue
 
-        if "max-age" in hsts_directive:
-            max_age = int(hsts_directive.split("max-age=")[1].strip())
-        elif "includesubdomains" in hsts_directive.lower():
+        # Directive names are case-insensitive, whitespace is allowed around the "=" and the value can be quoted
+        # https://www.rfc-editor.org/rfc/rfc6797.html#section-6.1
+        directive_name, _, directive_value = hsts_directive.partition("=")
+        directive_name = directive_name.strip().lower()
+        directive_value = directive_value.strip().strip('"')
+
+        if directive_name == "max-age":
+            try:
+                max_age = int(directive_value)
+            except ValueError:
+                _logger.warning(f"Unexpected max-age value in HSTS header: {directive_value!r}")
+        elif directive_name == "includesubdomains":
             # Some websites have a different case for IncludeSubDomains
             include_subdomains = True
-        elif "preload" in hsts_directive:
+        elif directive_name == "preload":
             preload = True
         else:
             _logger.warning(f"Unexpected value in HSTS header: {hsts_directive!r}")

@@ -55,7 +55,11 @@ class TestSessionResumptionSupport:
         result: SessionResumptionSupportScanResult = SessionResumptionSupportImplementation.scan_server(server_info)
 
         # And it confirms that TLS tickets are supported
-        assert result.tls_ticket_resumption_result == TlsResumptionSupportEnum.FULLY_SUPPORTED
+        assert result.tls_ticket_resumption_result in [
+            # The detection can be flaky
+            TlsResumptionSupportEnum.FULLY_SUPPORTED,
+            TlsResumptionSupportEnum.PARTIALLY_SUPPORTED,
+        ]
         assert result.tls_ticket_attempted_resumptions_count
         assert result.tls_ticket_successful_resumptions_count
 

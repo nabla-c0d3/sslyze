@@ -18,7 +18,7 @@ from sslyze.plugins.openssl_cipher_suites.json_output import CipherSuitesScanRes
 from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
+from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer, S_Server_OpenSSL_4_0_0
 from tests.python_tls_server import PythonTlsServer
 
 
@@ -344,6 +344,22 @@ class TestCipherSuitesPluginWithLocalServer:
             result: CipherSuitesScanResult = Tlsv13ScanImplementation.scan_server(server_info)
 
         assert result.accepted_cipher_suites
+
+    def test_tls_1_3_cipher_suites_with_only_post_quantum_group_supported(self) -> None:
+        # Given a TLS 1.3 server that supports a post-quantum/hybrid group
+        with S_Server_OpenSSL_4_0_0(groups="X25519MLKEM768", should_only_support_tls_1_3=True) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Tlsv13ScanImplementation.scan_server(server_info)
+
+        # And the cipher suites enabled by default in OpenSSL were detected as accepted
+        assert {"TLS_CHACHA20_POLY1305_SHA256", "TLS_AES_256_GCM_SHA384", "TLS_AES_128_GCM_SHA256"} == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
 
     def test_null_cipher_suites(self) -> None:
         # Given a server to scan that supports NULL cipher suites

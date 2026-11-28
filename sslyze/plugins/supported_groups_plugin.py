@@ -145,7 +145,21 @@ class _SupportedGroupsCliConnector(ScanCommandCliConnector[SupportedGroupsScanRe
         result_as_txt.append("")
 
         # Output for EC groups
-        if result.supported_elliptic_curve_groups is None:
+        if not result.supported_elliptic_curve_groups and result.supports_post_quantum_key_exchange:
+            # Not supporting EC groups is not an issue when the server supports PQ/hybrid key exchange instead
+            result_as_txt.append(
+                cls._format_field(
+                    "Elliptic Curve Key Exchange:",
+                    "OK - Not supported, but the server supports Post-Quantum/hybrid key exchange instead.",
+                )
+            )
+            if result.rejected_elliptic_curve_groups:
+                result_as_txt.append(
+                    cls._format_field(
+                        "Rejected Elliptic Curve groups:", cls._groups_to_text(result.rejected_elliptic_curve_groups)
+                    )
+                )
+        elif result.supported_elliptic_curve_groups is None:
             result_as_txt.append(
                 cls._format_field(
                     "Elliptic Curve Key Exchange:",

@@ -6,7 +6,11 @@ from sslyze.plugins.supported_groups_plugin import (
     SupportedGroupsScanResult,
     SupportedGroupsScanResultAsJson,
 )
-from sslyze.server_connectivity import ClientAuthRequirementEnum, ServerTlsProbingResult, TlsVersionEnum
+from sslyze.server_connectivity import (
+    ClientAuthRequirementEnum,
+    ServerTlsProbingResult,
+    TlsVersionEnum,
+)
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.factories import ServerConnectivityInfoFactory
 from tests.markers import can_only_run_on_linux_64
@@ -196,6 +200,29 @@ class TestSupportedGroupsPluginWithLocalServer:
         # And the CLI output explains that ECDH is not supported
         cli_output = SupportedGroupsImplementation.cli_connector_cls.result_to_console_output(result)
         assert any("ECDH" in line for line in cli_output)
+
+    def test_only_post_quantum_group_supported(self) -> None:
+        # Given a TLS 1.3 server that only accepts a post-quantum/hybrid group
+        with S_Server_OpenSSL_4_0_0(groups="X25519MLKEM768", should_only_support_tls_1_3=True) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+
+            # When scanning for supported groups, it succeeds
+            result: SupportedGroupsScanResult = SupportedGroupsImplementation.scan_server(server_info)
+
+        # And only the post-quantum/hybrid group was detected as supported
+        assert result.supported_post_quantum_groups == [OpenSslGroupNameEnum.X25519MLKEM768]
+        assert not result.supports_elliptic_curve_key_exchange
+        assert not result.supported_finite_field_dh_groups
+
+        # And the CLI output does not report the lack of Elliptic Curve groups as a problem
+        cli_output = SupportedGroupsImplementation.cli_connector_cls.result_to_console_output(result)
+        ec_lines = [line for line in cli_output if "Elliptic Curve Key Exchange:" in line]
+        assert len(ec_lines) == 1
+        assert "VULNERABLE" not in ec_lines[0]
+        assert "OK" in ec_lines[0]
 
     def test_client_certificate_requested(self) -> None:
         # Given a server that requires client authentication

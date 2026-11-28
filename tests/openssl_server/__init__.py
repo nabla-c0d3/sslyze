@@ -316,6 +316,7 @@ class S_Server_OpenSSL_4_0_0(ModernOpenSslServer):
         should_reply_to_http_requests: bool = True,
         enable_ech: bool = False,
         groups: str | None = None,
+        should_only_support_tls_1_3: bool = False,
     ) -> None:
         super().__init__(
             server_certificate_path=server_certificate_path,
@@ -328,3 +329,7 @@ class S_Server_OpenSSL_4_0_0(ModernOpenSslServer):
         )
         if enable_ech:
             self._command_line += f" -ech_key {self.ECH_CONFIG_PATH}"
+        if should_only_support_tls_1_3:
+            # Needed for example to get a server that only accepts post-quantum/hybrid groups, as restricting the groups
+            # does not prevent TLS 1.2 handshakes with a DHE or RSA key exchange
+            self._command_line += " -tls1_3"

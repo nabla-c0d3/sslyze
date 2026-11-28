@@ -141,6 +141,14 @@ _HANDSHAKE_REJECTED_TLS_ERRORS = {
 }
 
 
+# The groups offered by the OpenSSL 4.0.0 client for TLS 1.3: the groups of the OpenSSL 1.1.1 client plus X25519MLKEM768,
+# with key shares (the "*" prefix) for X25519MLKEM768 and X25519
+# The OpenSSL 4.0.0 default groups are not used as some servers fail the handshake after sending a HelloRetryRequest
+# for one of them (SecP256r1MLKEM768), and sending only an X25519 key share makes some servers send a HelloRetryRequest
+# for X25519MLKEM768 and then reject early data
+_TLS_1_3_GROUPS_FOR_OPENSSL_4_0_0 = "*X25519MLKEM768:*x25519:secp256r1:x448:secp521r1:secp384r1"
+
+
 class NoCiphersAvailableBugInSSlyze(Exception):
     """Should never happen."""
 
@@ -167,7 +175,11 @@ class SslConnection:
         # Auto-select the OpenSSL version based on the TLS version if not specified
         final_openssl_version: OpenSslVersionEnum
         if openssl_version is None:
-            if tls_version in [TlsVersionEnum.TLS_1_2, TlsVersionEnum.TLS_1_3]:
+            if tls_version == TlsVersionEnum.TLS_1_3:
+                # The OpenSSL 4.0.0 client is needed for servers that only accept post-quantum/hybrid groups (such as
+                # X25519MLKEM768), which the OpenSSL 1.1.1 client cannot offer
+                final_openssl_version = OpenSslVersionEnum.OPENSSL_4_0_0
+            elif tls_version == TlsVersionEnum.TLS_1_2:
                 final_openssl_version = OpenSslVersionEnum.OPENSSL_1_1_1
             else:
                 final_openssl_version = OpenSslVersionEnum.OPENSSL_1_0_2
@@ -218,6 +230,11 @@ class SslConnection:
         # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=665452
         if tls_version != TlsVersionEnum.TLS_1_3:
             self.ssl_client.set_cipher_list("HIGH:MEDIUM:-aNULL:-eNULL:-3DES:-SRP:-PSK:-CAMELLIA")
+
+        if tls_version == TlsVersionEnum.TLS_1_3 and isinstance(self.ssl_client, SslClient_OpenSSL_4_0_0):
+            # SslClient_OpenSSL_4_0_0.set_groups_list() cannot mark the groups to send key shares for
+            # TODO(AD) : Add this capability to nassl
+            self.ssl_client._ssl.set1_groups_list(_TLS_1_3_GROUPS_FOR_OPENSSL_4_0_0)
 
         # Add Server Name Indication, which is not available in SSL 2.0
         if should_enable_server_name_indication and tls_version != TlsVersionEnum.SSL_2_0:

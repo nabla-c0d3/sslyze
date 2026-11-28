@@ -56,7 +56,7 @@ def check_connectivity_to_server(
     # Try to complete an SSL handshake to figure out the SSL/TLS version and cipher supported by the server
     tls_detection_result: _TlsVersionDetectionResult | None = None
 
-    # Fist try TLS 1.3
+    # First try TLS 1.3
     try:
         tls_detection_result = _detect_support_for_tls_1_3(
             server_location=server_location,

@@ -10,10 +10,10 @@ from sslyze.errors import (
     ServerTlsConfigurationNotSupported,
 )
 from sslyze.json.json_output import _ServerTlsProbingResultAsJson
-from sslyze.server_connectivity import TlsVersionEnum, check_connectivity_to_server
+from sslyze.server_connectivity import ClientAuthRequirementEnum, TlsVersionEnum, check_connectivity_to_server
 from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 from tests.markers import can_only_run_on_linux_64
-from tests.openssl_server import LegacyOpenSslServer
+from tests.openssl_server import LegacyOpenSslServer, S_Server_OpenSSL_4_0_0
 
 
 @functools.cache
@@ -203,3 +203,26 @@ class TestServerConnectivityTester:
                     server_location=server_location,
                     network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
                 )
+
+    @can_only_run_on_linux_64
+    def test_server_only_supports_post_quantum_group_lol(self) -> None:
+        # Given a TLS 1.3 server that only accepts a post-quantum/hybrid group
+        with S_Server_OpenSSL_4_0_0(groups="X25519MLKEM768", should_only_support_tls_1_3=True) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+
+            # When testing connectivity against it
+            tls_probing_result = check_connectivity_to_server(
+                server_location=server_location,
+                network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
+            )
+
+        # It succeeds and detects TLS 1.3 support
+        assert tls_probing_result.highest_tls_version_supported == TlsVersionEnum.TLS_1_3
+        assert tls_probing_result.cipher_suite_supported
+        assert tls_probing_result.client_auth_requirement == ClientAuthRequirementEnum.DISABLED
+
+        # And the result can be converted to JSON
+        tls_probing_result_as_json = _ServerTlsProbingResultAsJson.model_validate(tls_probing_result)
+        assert tls_probing_result_as_json.model_dump_json()

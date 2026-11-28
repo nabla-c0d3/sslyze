@@ -74,10 +74,10 @@ def retrieve_all_available_cipher_suites(tls_version: TlsVersionEnum) -> set[Cip
         client_4_0_0_ciphers = client_4_0_0.get_cipher_list()
 
     elif tls_version == TlsVersionEnum.TLS_1_3:
-        # For TLS 1.3 we just hardcode OpenSSL 1.1.1
+        # For TLS 1.3 we just hardcode OpenSSL 4.0.0, which is also the default client for TLS 1.3
         client_1_0_2_ciphers = []
-        client_1_1_1_ciphers = _TLS_1_3_CIPHER_SUITES
-        client_4_0_0_ciphers = []
+        client_1_1_1_ciphers = []
+        client_4_0_0_ciphers = _TLS_1_3_CIPHER_SUITES
     else:
         raise ValueError(f"Unsupported TLS version: {tls_version}")
 

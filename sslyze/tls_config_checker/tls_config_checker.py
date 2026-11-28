@@ -1,89 +1,91 @@
 import json
 from enum import Enum
 from pathlib import Path
-from typing import Annotated, Optional, Set, Dict
+from typing import Annotated
 
 import pydantic
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
-from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo, DhEphemeralKeyInfo
+from nassl.ephemeral_key_info import DhEphemeralKeyInfo, EcDhEphemeralKeyInfo
 
 from sslyze import (
-    ServerScanResult,
-    ServerScanStatusEnum,
-    ScanCommand,
-    ScanCommandAttemptStatusEnum,
-    CertificateInfoScanResult,
     AllScanCommandsAttempts,
+    CertificateInfoScanResult,
     CipherSuitesScanResult,
     RobotScanResultEnum,
-    SupportedEllipticCurvesScanResult,
+    ScanCommand,
+    ScanCommandAttemptStatusEnum,
+    ServerScanResult,
+    ServerScanStatusEnum,
 )
 from sslyze.plugins.http_headers_plugin import HttpHeadersScanResult
+from sslyze.plugins.supported_groups_plugin import SupportedGroupsScanResult
 
 
-class _MozillaCiphersAsJson(pydantic.BaseModel):
-    caddy: Set[str]
-    go: Set[str]
-    iana: Set[str]
-    openssl: Set[str]
+class _CiphersAsJson(pydantic.BaseModel):
+    # Removed in TLSRef 6.0; still accepted for custom configurations in the older Mozilla format
+    caddy: set[str] = set()
+    go: set[str] = set()
+    iana: set[str]
+    openssl: set[str]
 
 
-# ANSI X9.62 name (used by the Mozilla TLS profiles) -> SECG name
+# ANSI X9.62 name (used by the TLSRef profiles) -> SECG name
 # Based on https://www.rfc-editor.org/rfc/rfc8422.html#appendix-A
-_MOZILLA_CURVE_NAME_TO_SECG_CURVE_NAME = {
+# X25519 and X448 have no SECG name: use the OpenSSL name, which is what the supported groups plugin returns
+_ANSI_CURVE_NAME_TO_SECG_CURVE_NAME = {
     "prime256v1": "secp256r1",
     "prime192v1": "secp192r1",
+    "X25519": "x25519",
+    "X448": "x448",
 }
 
 
-def _convert_mozilla_curve_name_to_secg_name(mozilla_curves: Set[str]) -> Set[str]:
-    # Some curves use the ANSI X9.62 name in the Mozilla TLS profiles; convert the names to SECG names
-    mozilla_curves_secg_names = set()
-    for curve_name in mozilla_curves:
+def _convert_curve_names_to_secg_names(curves: set[str]) -> set[str]:
+    # Some curves use the ANSI X9.62 name in the TLSRef profiles; convert the names to SECG names
+    curves_secg_names = set()
+    for curve_name in curves:
         try:
-            final_curve_name = _MOZILLA_CURVE_NAME_TO_SECG_CURVE_NAME[curve_name]
+            final_curve_name = _ANSI_CURVE_NAME_TO_SECG_CURVE_NAME[curve_name]
         except KeyError:
             final_curve_name = curve_name
-        mozilla_curves_secg_names.add(final_curve_name)
+        curves_secg_names.add(final_curve_name)
 
-    return mozilla_curves_secg_names
+    return curves_secg_names
 
 
 class TlsConfigurationAsJson(pydantic.BaseModel):
-    certificate_curves: Annotated[Set[str], pydantic.AfterValidator(_convert_mozilla_curve_name_to_secg_name)]
-    certificate_signatures: Set[str]
-    certificate_types: Set[str]
-    ciphersuites: Set[str]
-    ciphers: _MozillaCiphersAsJson
-    dh_param_size: Optional[int]
+    certificate_curves: Annotated[set[str], pydantic.AfterValidator(_convert_curve_names_to_secg_names)]
+    certificate_signatures: set[str]
+    certificate_types: set[str]
+    ciphersuites: set[str]
+    ciphers: _CiphersAsJson
+    dh_param_size: int | None
     ecdh_param_size: int
     hsts_min_age: int
     maximum_certificate_lifespan: int
     ocsp_staple: bool
     recommended_certificate_lifespan: int
-    rsa_key_size: Optional[int]
+    rsa_key_size: int | None
     server_preferred_order: bool
-    tls_curves: Annotated[Set[str], pydantic.AfterValidator(_convert_mozilla_curve_name_to_secg_name)]
-    tls_versions: Set[str]
+    tls_curves: Annotated[set[str], pydantic.AfterValidator(_convert_curve_names_to_secg_names)]
+    tls_versions: set[str]
 
 
-class _AllMozillaTlsConfigurationsAsJson(pydantic.BaseModel):
+class _AllTlsConfigurationsAsJson(pydantic.BaseModel):
     modern: TlsConfigurationAsJson
     intermediate: TlsConfigurationAsJson
-    old: TlsConfigurationAsJson
 
 
-class _MozillaTlsProfileAsJson(pydantic.BaseModel):
+class _TlsProfileAsJson(pydantic.BaseModel):
     version: float
     href: str
-    configurations: _AllMozillaTlsConfigurationsAsJson
+    configurations: _AllTlsConfigurationsAsJson
 
 
 class TlsConfigurationEnum(str, Enum):
-    MOZILLA_MODERN = "modern"
-    MOZILLA_INTERMEDIATE = "intermediate"
-    MOZILLA_OLD = "old"
+    MODERN = "modern"
+    INTERMEDIATE = "intermediate"
     CUSTOM = "custom"
 
 
@@ -91,7 +93,7 @@ class ServerNotCompliantWithTlsConfiguration(Exception):
     def __init__(
         self,
         tls_configuration: TlsConfigurationAsJson,
-        issues: Dict[str, str],
+        issues: dict[str, str],
     ):
         self.tls_configuration = tls_configuration
         self.issues = issues
@@ -101,10 +103,10 @@ class ServerNotCompliantWithTlsConfiguration(Exception):
 
 
 class ServerScanResultIncomplete(Exception):
-    """The server scan result does not have enough information to check it against Mozilla's configuration."""
+    """The server scan result does not have enough information to check it against the TLS configuration."""
 
 
-SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: Set[ScanCommand] = {
+SCAN_COMMANDS_NEEDED_BY_TLS_CONFIG_CHECKER: set[ScanCommand] = {
     ScanCommand.SSL_2_0_CIPHER_SUITES,
     ScanCommand.SSL_3_0_CIPHER_SUITES,
     ScanCommand.TLS_1_0_CIPHER_SUITES,
@@ -118,19 +120,21 @@ SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER: Set[ScanCommand] = {
     ScanCommand.TLS_COMPRESSION,
     ScanCommand.SESSION_RENEGOTIATION,
     ScanCommand.CERTIFICATE_INFO,
-    ScanCommand.ELLIPTIC_CURVES,
+    ScanCommand.SUPPORTED_GROUPS,
     ScanCommand.TLS_EXTENDED_MASTER_SECRET,
+    ScanCommand.SUPPORTED_GROUPS,  # For elliptic curves
+    ScanCommand.ENCRYPTED_CLIENT_HELLO,  # Not part of the TLSRef config, but we want to run this by default
     # ScanCommand.HTTP_HEADERS,  # Disabled for now; see below
 }
 
 
-class MozillaTlsConfiguration:
-    _JSON_PROFILE_PATH = Path(__file__).parent.absolute() / "5.7.json"
+class TlsConfiguration:
+    _JSON_PROFILE_PATH = Path(__file__).parent.absolute() / "6.0.json"
 
     @classmethod
     def get(cls, tls_configuration_enum: TlsConfigurationEnum) -> TlsConfigurationAsJson:
         json_profile_as_str = cls._JSON_PROFILE_PATH.read_text()
-        parsed_profile = _MozillaTlsProfileAsJson(**json.loads(json_profile_as_str))
+        parsed_profile = _TlsProfileAsJson(**json.loads(json_profile_as_str))
         tls_config = getattr(parsed_profile.configurations, tls_configuration_enum.value)
         return tls_config
 
@@ -144,13 +148,13 @@ def check_server_against_tls_configuration(
         raise ServerScanResultIncomplete("The server scan was not completed.")
 
     # Ensure all the scan command we need were run successfully
-    for scan_command in SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER:
+    for scan_command in SCAN_COMMANDS_NEEDED_BY_TLS_CONFIG_CHECKER:
         scan_cmd_attempt = getattr(server_scan_result.scan_result, scan_command.value)
         if scan_cmd_attempt.status != ScanCommandAttemptStatusEnum.COMPLETED:
             raise ServerScanResultIncomplete(f"The {scan_command.value} result is missing.")
 
     # Now look for issues
-    all_issues: Dict[str, str] = {}
+    all_issues: dict[str, str] = {}
 
     # Checks on the certificate
     assert server_scan_result.scan_result
@@ -169,10 +173,10 @@ def check_server_against_tls_configuration(
     )
     all_issues.update(issues_with_tls_ciphers)
 
-    # Checks on the TLS curves
-    assert server_scan_result.scan_result.elliptic_curves.result
+    # Checks on the TLS elliptic curves
+    assert server_scan_result.scan_result.supported_groups.result
     issues_with_tls_curves = _check_tls_curves(
-        server_scan_result.scan_result.elliptic_curves.result,
+        server_scan_result.scan_result.supported_groups.result,
         tls_config_to_check_against,
     )
     all_issues.update(issues_with_tls_curves)
@@ -181,12 +185,12 @@ def check_server_against_tls_configuration(
     issues_with_tls_vulns = _check_tls_vulnerabilities(server_scan_result.scan_result)
     all_issues.update(issues_with_tls_vulns)
 
-    # TODO(AD): Re-enable this check. Right now nobody follows the recommendation of the Mozilla profile
+    # TODO(AD): Re-enable this check. Right now nobody follows the recommendation of the TLSRef profile
     # to have an HSTS max-age of 63072000 seconds (2 years).
     # Check the HSTS header
     # assert server_scan_result.scan_result.http_headers
     # assert server_scan_result.scan_result.http_headers.result
-    # issue_with_hsts = _check_http_headers(server_scan_result.scan_result.http_headers.result, mozilla_config)
+    # issue_with_hsts = _check_http_headers(server_scan_result.scan_result.http_headers.result, tls_config_to_check_against)
     # all_issues.update(issue_with_hsts)
 
     if all_issues:
@@ -197,16 +201,23 @@ def check_server_against_tls_configuration(
 
 
 def _check_tls_curves(
-    tls_curves_result: SupportedEllipticCurvesScanResult,
+    supported_groups_result: SupportedGroupsScanResult,
     tls_config: TlsConfigurationAsJson,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     issues_with_tls_curves = {}
-    if tls_curves_result.supported_curves:
-        supported_curves = {curve.name for curve in tls_curves_result.supported_curves}
-    else:
-        supported_curves = set()
+    # Starting with the 6.0 config, the tls_curves requirement may contain PQ groups as well (which are not EC groups)
+    #  so we also add them here
+    supported_curves_and_pq_goups: set[str] = set()
+    if supported_groups_result.supported_elliptic_curve_groups:
+        supported_curves_and_pq_goups.update(
+            [grp.value for grp in supported_groups_result.supported_elliptic_curve_groups]
+        )
+    if supported_groups_result.supported_post_quantum_groups:
+        supported_curves_and_pq_goups.update(
+            [grp.value for grp in supported_groups_result.supported_post_quantum_groups]
+        )
 
-    tls_curves_difference = supported_curves - tls_config.tls_curves
+    tls_curves_difference = supported_curves_and_pq_goups - tls_config.tls_curves
     if tls_curves_difference:
         issues_with_tls_curves["tls_curves"] = (
             f"TLS curves {tls_curves_difference} are supported, but should be rejected."
@@ -215,7 +226,7 @@ def _check_tls_curves(
     return issues_with_tls_curves
 
 
-def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str, str]:
+def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> dict[str, str]:
     issues_with_tls_vulns = {}
     assert scan_result.tls_compression.result
     if scan_result.tls_compression.result.supports_compression:
@@ -259,7 +270,7 @@ def _check_tls_vulnerabilities(scan_result: AllScanCommandsAttempts) -> Dict[str
 def _check_tls_versions_and_ciphers(
     scan_result: AllScanCommandsAttempts,
     tls_config: TlsConfigurationAsJson,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     # First parse the results related to TLS versions and ciphers
     tls_versions_supported = set()
     cipher_suites_supported = set()
@@ -321,8 +332,7 @@ def _check_tls_versions_and_ciphers(
 
     if tls_config.dh_param_size and smallest_dh_param_size < tls_config.dh_param_size:
         issues_with_tls_ciphers["dh_param_size"] = (
-            f"DH parameter size is {smallest_dh_param_size},"
-            f" should be superior or equal to {tls_config.dh_param_size}."
+            f"DH parameter size is {smallest_dh_param_size}, should be superior or equal to {tls_config.dh_param_size}."
         )
 
     return issues_with_tls_ciphers
@@ -331,7 +341,7 @@ def _check_tls_versions_and_ciphers(
 def _check_certificates(
     cert_info_result: CertificateInfoScanResult,
     tls_config: TlsConfigurationAsJson,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     issues_with_certificates = {}
     deployed_key_algorithms = set()
     deployed_signature_algorithms = set()
@@ -349,8 +359,7 @@ def _check_certificates(
             deployed_key_algorithms.add("ecdsa")
             if public_key.curve.name not in tls_config.certificate_curves:
                 issues_with_certificates["certificate_curves"] = (
-                    f"Certificate curve is {public_key.curve.name},"
-                    f" should be one of {tls_config.certificate_curves}."
+                    f"Certificate curve is {public_key.curve.name}, should be one of {tls_config.certificate_curves}."
                 )
 
         elif isinstance(public_key, RSAPublicKey):
@@ -373,11 +382,11 @@ def _check_certificates(
                 f" should be less than {tls_config.maximum_certificate_lifespan}."
             )
 
-    # TODO(AD): It's unclear whether the Mozilla profile/configs takes into accounts servers with multiple leaf certs
+    # TODO(AD): It's unclear whether the TLSRef profile/configs take into accounts servers with multiple leaf certs
     #  What follows is my personal guess as to how it should work for multi-certs deployments...
 
     # Validate the public key algorithms
-    # At least one of the Mozilla cert types should have been detected in the server's cert deployments
+    # At least one of the TLSRef cert types should have been detected in the server's cert deployments
     found_cert_type = False
     for key_algorithm in tls_config.certificate_types:
         if key_algorithm in deployed_key_algorithms:
@@ -401,7 +410,7 @@ def _check_certificates(
             f" should have at least one of {tls_config.certificate_signatures}."
         )
 
-    # TODO(AD): Maybe add check for ocsp_staple but that one seems optional in https://ssl-config.mozilla.org/
+    # TODO(AD): Maybe add a check for ocsp_staple
 
     return issues_with_certificates
 
@@ -409,7 +418,7 @@ def _check_certificates(
 def _check_http_headers(
     http_headers_result: HttpHeadersScanResult,
     tls_config: TlsConfigurationAsJson,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     issues_with_http_headers = {}
 
     if not http_headers_result.strict_transport_security_header:

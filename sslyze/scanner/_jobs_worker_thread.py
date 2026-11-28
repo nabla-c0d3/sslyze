@@ -1,13 +1,11 @@
-import threading
-from dataclasses import dataclass
 import queue
-from typing import Optional, Any, Callable, Sequence, Union
+import threading
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+from typing import Any, TypeAlias
 from uuid import UUID
 
 from sslyze.plugins.scan_commands import ScanCommand
-
-
-from typing import TypeAlias
 
 
 @dataclass(frozen=True)
@@ -15,8 +13,8 @@ class CompletedScanJob:
     parent_server_scan_request_uuid: UUID
     for_scan_command: ScanCommand
 
-    return_value: Optional[Any]
-    exception: Optional[Exception]
+    return_value: Any | None
+    exception: Exception | None
 
 
 @dataclass(frozen=True)
@@ -32,7 +30,7 @@ class WorkerThreadNoMoreJobsSentinel:
     pass
 
 
-WorkerQueueType: TypeAlias = "queue.Queue[Union[WorkerThreadNoMoreJobsSentinel, QueuedScanJob]]"
+WorkerQueueType: TypeAlias = "queue.Queue[WorkerThreadNoMoreJobsSentinel | QueuedScanJob]"
 
 
 class JobsWorkerThread(threading.Thread):
@@ -60,7 +58,7 @@ class JobsWorkerThread(threading.Thread):
                         exception=None,
                     )
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 self._completed_jobs_queue_out.put(
                     CompletedScanJob(
                         parent_server_scan_request_uuid=job_to_complete.parent_server_scan_request_uuid,

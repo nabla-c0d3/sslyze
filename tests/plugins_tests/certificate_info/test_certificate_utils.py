@@ -5,12 +5,12 @@ from cryptography.x509 import load_pem_x509_certificate
 
 from sslyze.plugins.certificate_info._certificate_utils import (
     get_common_names,
-    parse_subject_alternative_name_extension,
     get_public_key_sha256,
+    parse_subject_alternative_name_extension,
 )
 from sslyze.plugins.certificate_info._cli_connector import _get_name_as_short_text
 
-leaf_path = Path(__file__).absolute().parent / ".." / ".." / "certificates" / "github.com.pem"
+leaf_path = Path(__file__).absolute().parent / "certificates" / "github.com.pem"
 leaf_pem = leaf_path.read_bytes()
 certificate = load_pem_x509_certificate(leaf_pem, default_backend())
 

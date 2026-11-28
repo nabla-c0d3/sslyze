@@ -3,11 +3,7 @@ htmlcov/
 .pytest_cache/
 .vscode
 
-# Pipenv
-.venv
-.venv311
-.venvln
-
+uv.lock
 
 *.py[cod]
 

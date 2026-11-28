@@ -1,28 +1,31 @@
+import functools
 import socket
 
 import pytest
 
-from sslyze.json.json_output import _ServerTlsProbingResultAsJson
-from tests.openssl_server import LegacyOpenSslServer
-
-from sslyze.server_connectivity import TlsVersionEnum, check_connectivity_to_server
-from sslyze.server_setting import ServerNetworkLocation, ServerNetworkConfiguration
 from sslyze.errors import (
+    ConnectionToServerFailed,
     ConnectionToServerTimedOut,
     ServerRejectedConnection,
     ServerTlsConfigurationNotSupported,
-    ConnectionToServerFailed,
 )
+from sslyze.json.json_output import _ServerTlsProbingResultAsJson
+from sslyze.server_connectivity import ClientAuthRequirementEnum, TlsVersionEnum, check_connectivity_to_server
+from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocation
 from tests.markers import can_only_run_on_linux_64
+from tests.openssl_server import LegacyOpenSslServer, S_Server_OpenSSL_4_0_0
 
 
+@functools.cache
 def is_ipv6_available() -> bool:
+    # Short timeout so tests don't hang when IPv6 is broken; cached so the check only runs once
     has_ipv6 = False
     s = socket.socket(socket.AF_INET6)
+    s.settimeout(3)
     try:
         s.connect(("2607:f8b0:4005:804::2004", 443))
         has_ipv6 = True
-    except Exception:
+    except Exception:  # noqa
         pass
     finally:
         s.close()
@@ -121,8 +124,10 @@ class TestServerConnectivityTester:
         # And it detected that only TLS 1.3 is supported
         assert tls_probing_result.highest_tls_version_supported == TlsVersionEnum.TLS_1_3
 
-    @pytest.mark.skipif(not is_ipv6_available(), reason="IPv6 not available")
     def test_ipv6(self):
+        if not is_ipv6_available():
+            pytest.skip("IPv6 not available")
+
         # Given a server accessible via IPv6
         server_location = ServerNetworkLocation(
             hostname="www.google.com", port=443, ip_address="2607:f8b0:4005:804::2004"
@@ -198,3 +203,26 @@ class TestServerConnectivityTester:
                     server_location=server_location,
                     network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
                 )
+
+    @can_only_run_on_linux_64
+    def test_server_only_supports_post_quantum_group_lol(self) -> None:
+        # Given a TLS 1.3 server that only accepts a post-quantum/hybrid group
+        with S_Server_OpenSSL_4_0_0(groups="X25519MLKEM768", should_only_support_tls_1_3=True) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+
+            # When testing connectivity against it
+            tls_probing_result = check_connectivity_to_server(
+                server_location=server_location,
+                network_configuration=ServerNetworkConfiguration.default_for_server_location(server_location),
+            )
+
+        # It succeeds and detects TLS 1.3 support
+        assert tls_probing_result.highest_tls_version_supported == TlsVersionEnum.TLS_1_3
+        assert tls_probing_result.cipher_suite_supported
+        assert tls_probing_result.client_auth_requirement == ClientAuthRequirementEnum.DISABLED
+
+        # And the result can be converted to JSON
+        tls_probing_result_as_json = _ServerTlsProbingResultAsJson.model_validate(tls_probing_result)
+        assert tls_probing_result_as_json.model_dump_json()

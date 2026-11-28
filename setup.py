@@ -1,7 +1,6 @@
 import sys
-from os import path, listdir
+from os import listdir, path
 from pathlib import Path
-from typing import List, Tuple, Dict
 
 from setuptools import find_packages
 
@@ -10,8 +9,7 @@ root_path = Path(__file__).parent.absolute()
 
 # For cx_freeze builds, we need a special setup() function
 if len(sys.argv) > 1 and sys.argv[1] == "build_exe":
-    from cx_Freeze import setup
-    from cx_Freeze import Executable
+    from cx_Freeze import Executable, setup
 else:
     from setuptools import setup
 
@@ -26,14 +24,14 @@ def get_long_description() -> str:
     return path_to_readme.read_text()
 
 
-def get_project_info() -> Dict[str, str]:
-    project_info: Dict[str, str] = {}
+def get_project_info() -> dict[str, str]:
+    project_info: dict[str, str] = {}
     project_info_path = root_path / "sslyze" / "__version__.py"
-    exec(project_info_path.read_text(), project_info)
+    exec(project_info_path.read_text(), project_info)  # noqa: S102
     return project_info
 
 
-def get_include_files() -> List[Tuple[str, str]]:
+def get_include_files() -> list[tuple[str, str]]:
     """ "Get the list of non-Python files to package when doing a cx_freeze build."""
     non_python_files = []
 
@@ -45,9 +43,9 @@ def get_include_files() -> List[Tuple[str, str]]:
             filename = path.basename(file)
             non_python_files.append((file, path.join("pem_files", filename)))
 
-    # The Mozilla profile
-    mozilla_profile_path = root_path / "sslyze" / "mozilla_tls_profile" / "5.7.json"
-    non_python_files.append((str(mozilla_profile_path), mozilla_profile_path.name))
+    # The TLSRef profile
+    tls_profile_path = root_path / "sslyze" / "tls_config_checker" / "6.0.json"
+    non_python_files.append((str(tls_profile_path), tls_profile_path.name))
     return non_python_files
 
 
@@ -62,7 +60,7 @@ setup(
     author=project_info["__author__"],
     author_email=project_info["__author_email__"],
     license=project_info["__license__"],
-    python_requires=">=3.10",
+    python_requires=">=3.11",
     # Pypi metadata
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
@@ -72,11 +70,11 @@ setup(
         "Intended Audience :: System Administrators",
         "Natural Language :: French",
         "License :: OSI Approved :: GNU Affero General Public License v3",
-        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3.14",
+        "Programming Language :: Python :: 3.15",
         "Topic :: System :: Networking",
         "Topic :: System :: Monitoring",
         "Topic :: System :: Networking :: Monitoring",
@@ -93,15 +91,16 @@ setup(
     package_data={
         "sslyze": ["py.typed"],
         "sslyze.plugins.certificate_info.trust_stores": ["pem_files/*.pem", "pem_files/*.yaml"],
-        "sslyze.mozilla_tls_profile": ["5.7.json"],
+        "sslyze.tls_config_checker": ["6.0.json"],
     },
     entry_points={"console_scripts": ["sslyze = sslyze.__main__:main"]},
     # Dependencies
     install_requires=[
-        "nassl>=5.4,<6",
+        "nassl>=7.0,<8",
         "cryptography>=43,<51",
         "tls-parser>=2,<3",
         "pydantic>=2.3,<3",
+        "dnspython>=2.3,<3",
     ],
     # cx_freeze info for Windows builds with Python embedded
     options={"build_exe": {"packages": ["cffi", "cryptography"], "include_files": get_include_files()}},

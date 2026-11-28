@@ -2,15 +2,15 @@ import threading
 
 import pytest
 
-from sslyze.json.json_output import _ServerTlsProbingResultAsJson
-from sslyze.server_connectivity import check_connectivity_to_server
-from sslyze.server_setting import ServerNetworkLocation, HttpProxySettings, ServerNetworkConfiguration
 from sslyze.errors import (
-    ConnectionToHttpProxyTimedOut,
     ConnectionToHttpProxyFailed,
+    ConnectionToHttpProxyTimedOut,
     HttpProxyRejectedConnection,
 )
-from tests.server_connectivity_tests.tiny_proxy import ThreadingHTTPServer, ProxyHandler
+from sslyze.json.json_output import _ServerTlsProbingResultAsJson
+from sslyze.server_connectivity import check_connectivity_to_server
+from sslyze.server_setting import HttpProxySettings, ServerNetworkConfiguration, ServerNetworkLocation
+from tests.server_connectivity_tests.tiny_proxy import ProxyHandler, ThreadingHTTPServer
 
 
 class TestServerConnectivityTesterWithProxy:

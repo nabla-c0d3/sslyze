@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sslyze import SessionResumptionSupportExtraArgument, SessionResumptionSupportScanResult, TlsResumptionSupportEnum
 from sslyze.json.pydantic_utils import BaseModelWithOrmModeAndForbid
 from sslyze.json.scan_attempt_json import ScanCommandAttemptAsJson
@@ -28,4 +26,4 @@ SessionResumptionSupportScanResultAsJson.__doc__ = SessionResumptionSupportScanR
 
 
 class SessionResumptionSupportScanAttemptAsJson(ScanCommandAttemptAsJson):
-    result: Optional[SessionResumptionSupportScanResultAsJson]
+    result: SessionResumptionSupportScanResultAsJson | None

@@ -1,16 +1,15 @@
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List
 
 from sslyze import (
-    Scanner,
-    ServerScanRequest,
-    SslyzeOutputAsJson,
-    ServerNetworkLocation,
     ScanCommandAttemptStatusEnum,
-    ServerScanStatusEnum,
+    Scanner,
+    ServerNetworkLocation,
+    ServerScanRequest,
     ServerScanResult,
     ServerScanResultAsJson,
+    ServerScanStatusEnum,
+    SslyzeOutputAsJson,
 )
 from sslyze.errors import ServerHostnameCouldNotBeResolved
 from sslyze.scanner.scan_command_attempt import ScanCommandAttempt
@@ -113,7 +112,7 @@ def main() -> None:
 
 def example_json_result_output(
     json_file_out: Path,
-    all_server_scan_results: List[ServerScanResult],
+    all_server_scan_results: list[ServerScanResult],
     date_scans_started: datetime,
     date_scans_completed: datetime,
 ) -> None:
@@ -152,7 +151,7 @@ def example_json_result_parsing(results_as_json_file: Path) -> None:
             assert certinfo_result
             for cert_deployment in certinfo_result.certificate_deployments:
                 print(f"    SHA1 of leaf certificate: {cert_deployment.received_certificate_chain[0].fingerprint_sha1}")
-            print("")
+            print()
 
 
 if __name__ == "__main__":

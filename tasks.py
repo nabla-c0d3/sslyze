@@ -1,8 +1,10 @@
 import json
 from pathlib import Path
 from sys import platform
+
 from invoke.context import Context
 from invoke.tasks import task
+
 from sslyze import __version__
 
 root_path = Path(__file__).parent.absolute()
@@ -15,15 +17,9 @@ def test(ctx: Context) -> None:
 
 @task
 def lint(ctx: Context) -> None:
-    ctx.run("ruff format . --check")
-    ctx.run("ruff check .")
-    ctx.run("mypy .")
-
-
-@task
-def autoformat(ctx: Context) -> None:
     ctx.run("ruff format .")
     ctx.run("ruff check . --fix")
+    ctx.run("mypy .")
 
 
 @task
@@ -62,7 +58,7 @@ def release(ctx: Context) -> None:
 @task
 def build_exe(ctx: Context) -> None:
     if platform != "win32":
-        raise EnvironmentError("Can only be used on Windows")
+        raise OSError("Can only be used on Windows")
     # WARNING(AD): This does not work well within a pipenv and the system's Python should be used
     ctx.run("python setup.py build_exe")
 

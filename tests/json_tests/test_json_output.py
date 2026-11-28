@@ -1,14 +1,14 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sslyze.json.json_output import SslyzeOutputAsJson, ServerScanResultAsJson
+from sslyze import ScanCommandAttemptStatusEnum, ScanCommandErrorReasonEnum, ServerScanStatusEnum
+from sslyze.json.json_output import ServerScanResultAsJson, SslyzeOutputAsJson
 from sslyze.plugins.compression_plugin import CompressionScanResult
-from sslyze import ScanCommandErrorReasonEnum, ServerScanStatusEnum, ScanCommandAttemptStatusEnum
 from sslyze.scanner.models import CompressionScanAttempt
 from tests.factories import (
+    AllScanCommandsAttemptsFactory,
     ServerScanResultFactory,
     TracebackExceptionFactory,
-    AllScanCommandsAttemptsFactory,
 )
 
 

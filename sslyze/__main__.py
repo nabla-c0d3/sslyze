@@ -1,28 +1,41 @@
+import io
 import sys
 from datetime import datetime, timezone
-from typing import Optional, TextIO
-
-from sslyze.cli.console_output import ObserverToGenerateConsoleOutput
-from sslyze.__version__ import __version__
-from sslyze.cli.command_line_parser import CommandLineParsingError, CommandLineParser
+from typing import TextIO
 
 from sslyze import (
     Scanner,
-    ServerScanRequest,
-    SslyzeOutputAsJson,
-    ServerScanResultAsJson,
     ServerConnectivityStatusEnum,
+    ServerScanRequest,
+    ServerScanResultAsJson,
+    SslyzeOutputAsJson,
 )
+from sslyze.__version__ import __version__
+from sslyze.cli.command_line_parser import CommandLineParser, CommandLineParsingError
+from sslyze.cli.console_output import ObserverToGenerateConsoleOutput
 from sslyze.json.json_output import InvalidServerStringAsJson
-from sslyze.mozilla_tls_profile.tls_config_checker import (
-    check_server_against_tls_configuration,
+from sslyze.tls_config_checker.tls_config_checker import (
     ServerNotCompliantWithTlsConfiguration,
     ServerScanResultIncomplete,
     TlsConfigurationEnum,
+    check_server_against_tls_configuration,
 )
 
 
+def _configure_console_output_encoding() -> None:
+    """Ensure printing non-ASCII text (such as certificate names) to the console never crashes.
+
+    Needed for the frozen Windows executable, whose stdout uses cp1252 as the encoding.
+    See also https://github.com/nabla-c0d3/sslyze/issues/724.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+
+
 def main() -> None:
+    _configure_console_output_encoding()
+
     # Parse the supplied command line
     date_scans_started = datetime.now(timezone.utc)
     sslyze_parser = CommandLineParser(__version__)
@@ -64,12 +77,11 @@ def main() -> None:
     all_server_scan_results = []
     if all_server_scan_requests:
         sslyze_scanner.queue_scans(all_server_scan_requests)
-        for result in sslyze_scanner.get_results():
-            # Results are actually displayed by the observer; here we just store them
-            all_server_scan_results.append(result)
+        # Results are actually displayed by the observer; here we just store them
+        all_server_scan_results = list(sslyze_scanner.get_results())
 
     # Write results to a JSON file if needed
-    json_file_out: Optional[TextIO] = None
+    json_file_out: TextIO | None = None
     if parsed_command_line.should_print_json_to_console:
         json_file_out = sys.stdout
     elif parsed_command_line.json_path_out:
@@ -103,9 +115,7 @@ def main() -> None:
     print()
     print(title)
     if not parsed_command_line.tls_config_to_check_against_as_enum:
-        print(
-            "    Disabled; use --mozilla_config={old, intermediate, modern} or --custom_tls_config=path/to/profile.json.\n"
-        )
+        print("    Disabled; use --tls_config={intermediate, modern} or --custom_tls_config=path/to/profile.json.\n")
     else:
         assert parsed_command_line.tls_config_to_check_against, "Should always be set"
 
@@ -114,8 +124,8 @@ def main() -> None:
         else:
             config_name = parsed_command_line.tls_config_to_check_against_as_enum.value
             print(
-                f'    Checking results against Mozilla\'s "{config_name}"'
-                f" configuration. See https://ssl-config.mozilla.org/ for more details.\n"
+                f'    Checking results against the TLSRef "{config_name}"'
+                f" configuration. See https://docs.tlsref.org/server-side-tls.html for more details.\n"
             )
 
         for server_scan_result in all_server_scan_results:

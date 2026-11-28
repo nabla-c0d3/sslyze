@@ -1,36 +1,33 @@
-import pydantic
-from dataclasses import dataclass
 from argparse import ArgumentParser
+from dataclasses import dataclass
 from pathlib import Path
 
-from nassl.ssl_client import OpenSslFileTypeEnum
-from typing import Set, List, Optional, Dict
-from typing import Tuple
+import pydantic
+from nassl.base_ssl_client import OpenSslFileTypeEnum
 
 from sslyze.cli.server_string_parser import (
-    InvalidServerStringError,
     CommandLineServerStringParser,
+    InvalidServerStringError,
 )
 from sslyze.connection_helpers.opportunistic_tls_helpers import ProtocolWithOpportunisticTlsEnum
-from sslyze.mozilla_tls_profile.tls_config_checker import (
-    TlsConfigurationAsJson,
-    MozillaTlsConfiguration,
-    TlsConfigurationEnum,
-    SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER,
-)
 from sslyze.plugins import plugin_base
 from sslyze.plugins.certificate_info.trust_stores.trust_store_repository import TrustStoresRepository
 from sslyze.plugins.plugin_base import OptParseCliOption
 from sslyze.plugins.scan_commands import ScanCommand, ScanCommandsRepository
 from sslyze.scanner.models import ScanCommandsExtraArguments
-
 from sslyze.server_setting import (
+    ClientAuthenticationCredentials,
     HttpProxySettings,
-    ServerNetworkLocation,
-    ServerNetworkConfiguration,
     InvalidServerNetworkConfigurationError,
     ServerHostnameCouldNotBeResolved,
-    ClientAuthenticationCredentials,
+    ServerNetworkConfiguration,
+    ServerNetworkLocation,
+)
+from sslyze.tls_config_checker.tls_config_checker import (
+    SCAN_COMMANDS_NEEDED_BY_TLS_CONFIG_CHECKER,
+    TlsConfiguration,
+    TlsConfigurationAsJson,
+    TlsConfigurationEnum,
 )
 
 
@@ -51,25 +48,25 @@ class TrustStoresUpdateCompleted(CommandLineParsingError):
 class ParsedCommandLine:
     """The result of parsing a command line used to launch sslyze."""
 
-    invalid_servers: List[InvalidServerStringError]
+    invalid_servers: list[InvalidServerStringError]
 
     # Servers to scan
-    servers_to_scans: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]]
-    scan_commands: Set[ScanCommand]
+    servers_to_scans: list[tuple[ServerNetworkLocation, ServerNetworkConfiguration]]
+    scan_commands: set[ScanCommand]
     scan_commands_extra_arguments: ScanCommandsExtraArguments
 
     # Output settings
-    json_path_out: Optional[Path]
+    json_path_out: Path | None
     should_print_json_to_console: bool
     should_disable_console_output: bool
 
     # Network settings
-    per_server_concurrent_connections_limit: Optional[int]
-    concurrent_server_scans_limit: Optional[int]
+    per_server_concurrent_connections_limit: int | None
+    concurrent_server_scans_limit: int | None
 
     # Check the server against a specific TLS configuration
-    tls_config_to_check_against_as_enum: Optional[TlsConfigurationEnum]  # None if shouldn't be run
-    tls_config_to_check_against: Optional[TlsConfigurationAsJson]
+    tls_config_to_check_against_as_enum: TlsConfigurationEnum | None  # None if shouldn't be run
+    tls_config_to_check_against: TlsConfigurationAsJson | None
 
 
 _STARTTLS_PROTOCOL_DICT = {
@@ -105,20 +102,20 @@ class CommandLineParser:
         # Add custom TLS profile option
         self._parser.add_argument(
             "--custom_tls_config",
-            help="Path to a JSON file containing a specific TLS configuration to check the server against, following Mozilla's format. Cannot be used with --mozilla_config.",
+            help="Path to a JSON file containing a specific TLS configuration to check the server against, following the TLSRef format (https://docs.tlsref.org/server-side-tls.html). Cannot be used with --tls_config.",
             dest="custom_tls_config",
             type=str,
             default=None,
         )
 
         self._parser.add_argument(
-            "--mozilla_config",
+            "--tls_config",
             action="store",
-            dest="mozilla_config",
-            choices=["modern", "intermediate", "old", "disable"],
+            dest="tls_config",
+            choices=["modern", "intermediate", "disable"],
             help="Shortcut to queue various scan commands needed to check the server's TLS configurations against one"
-            ' of Mozilla\'s recommended TLS configurations. Set to "intermediate" by default. Use "disable" to disable'
-            " this check.",
+            " of the TLS configurations recommended by TLSRef (https://docs.tlsref.org/server-side-tls.html). Set to"
+            ' "intermediate" by default. Use "disable" to disable this check.',
         )
 
         self._parser.add_argument(dest="target", default=[], nargs="*", help="The list of servers to scan.")
@@ -137,27 +134,24 @@ class CommandLineParser:
         if args_command_list.targets_in:
             try:  # Read targets from a file
                 with open(args_command_list.targets_in) as f:
-                    for target in f.readlines():
-                        if target.strip():  # Ignore empty lines
-                            if not target.startswith("#"):  # Ignore comment lines
-                                args_target_list.append(target.strip())
-            except IOError:
+                    for target in f:
+                        if target.strip() and not target.startswith("#"):  # Ignore empty lines and comment lines
+                            args_target_list.append(target.strip())
+            except OSError:
                 raise CommandLineParsingError(f"Can't read targets from input file '{args_command_list.targets_in}'")
 
-        for target in args_command_list.target:
-            args_target_list.append(target)
-
+        args_target_list = list(args_command_list.target)
         if not args_target_list:
             raise CommandLineParsingError("No targets to scan.")
 
-        if args_command_list.custom_tls_config and args_command_list.mozilla_config:
+        if args_command_list.custom_tls_config and args_command_list.tls_config:
             raise CommandLineParsingError(
-                "Cannot use --custom_tls_config and --mozilla_config. Please specify one of the two."
+                "Cannot use --custom_tls_config and --tls_config. Please specify one of the two."
             )
 
         # Determine the TLS configuration to check against
-        tls_config_to_check_against_as_enum: Optional[TlsConfigurationEnum] = None
-        tls_config_to_check_against: Optional[TlsConfigurationAsJson] = None
+        tls_config_to_check_against_as_enum: TlsConfigurationEnum | None = None
+        tls_config_to_check_against: TlsConfigurationAsJson | None = None
         if args_command_list.custom_tls_config:
             # A custom TLS config was supplied
             tls_config_to_check_against_as_enum = TlsConfigurationEnum.CUSTOM
@@ -171,25 +165,24 @@ class CommandLineParser:
             except pydantic.ValidationError:
                 raise CommandLineParsingError(f"Could not parse custom TLS configuration file '{json_tls_config_path}'")
 
-        elif args_command_list.mozilla_config:
-            # A Mozilla config was specified
-            mozilla_config_map = {
-                "modern": TlsConfigurationEnum.MOZILLA_MODERN,
-                "intermediate": TlsConfigurationEnum.MOZILLA_INTERMEDIATE,
-                "old": TlsConfigurationEnum.MOZILLA_OLD,
-                "disable": None,  # Disable the Mozilla TLS configuration check
+        elif args_command_list.tls_config:
+            # A TLSRef config was specified
+            tls_config_map = {
+                "modern": TlsConfigurationEnum.MODERN,
+                "intermediate": TlsConfigurationEnum.INTERMEDIATE,
+                "disable": None,  # Disable the TLS configuration check
             }
             try:
-                tls_config_to_check_against_as_enum = mozilla_config_map[args_command_list.mozilla_config]
+                tls_config_to_check_against_as_enum = tls_config_map[args_command_list.tls_config]
             except KeyError:
-                raise CommandLineParsingError(f"Unknown value for --mozilla_config: {args_command_list.mozilla_config}")
+                raise CommandLineParsingError(f"Unknown value for --tls_config: {args_command_list.tls_config}")
 
             if tls_config_to_check_against_as_enum is not None:
-                # Load the corresponding Mozilla TLS configuration
-                tls_config_to_check_against = MozillaTlsConfiguration.get(tls_config_to_check_against_as_enum)
+                # Load the corresponding TLSRef configuration
+                tls_config_to_check_against = TlsConfiguration.get(tls_config_to_check_against_as_enum)
 
         else:
-            # Handle the case when no value was specified: run --mozilla-config=intermediate by default
+            # Handle the case when no value was specified: run --tls_config=intermediate by default
             # First check if the user was specific about which scan commands to run
             did_user_enable_some_scan_commands = False
             for scan_command in ScanCommandsRepository.get_all_scan_commands():
@@ -200,20 +193,20 @@ class CommandLineParser:
                     break
 
             # If the user did not specify any scan commands, run the default scan commands
-            #  and check the result against the Mozilla intermediate configuration
+            #  and check the result against the TLSRef intermediate configuration
             if not did_user_enable_some_scan_commands:
-                tls_config_to_check_against_as_enum = TlsConfigurationEnum.MOZILLA_INTERMEDIATE
-                tls_config_to_check_against = MozillaTlsConfiguration.get(tls_config_to_check_against_as_enum)
+                tls_config_to_check_against_as_enum = TlsConfigurationEnum.INTERMEDIATE
+                tls_config_to_check_against = TlsConfiguration.get(tls_config_to_check_against_as_enum)
 
         # Enable the commands needed by TLS configuration checking
         if tls_config_to_check_against_as_enum:
-            for scan_cmd in SCAN_COMMANDS_NEEDED_BY_MOZILLA_CHECKER:
+            for scan_cmd in SCAN_COMMANDS_NEEDED_BY_TLS_CONFIG_CHECKER:
                 cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_cmd).cli_connector_cls
                 setattr(args_command_list, cli_connector_cls._cli_option, True)
 
         # Handle JSON settings
         should_print_json_to_console = False
-        json_path_out: Optional[Path] = None
+        json_path_out: Path | None = None
         if args_command_list.json_file:
             if args_command_list.json_file == "-":
                 if args_command_list.quiet:
@@ -243,7 +236,7 @@ class CommandLineParser:
                     key_type=key_type,
                 )
             except ValueError as e:
-                raise CommandLineParsingError("Invalid client authentication settings: {}.".format(e.args[0]))
+                raise CommandLineParsingError(f"Invalid client authentication settings: {e.args[0]}.")
 
         # HTTP CONNECT proxy
         http_proxy_settings = None
@@ -251,11 +244,11 @@ class CommandLineParser:
             try:
                 http_proxy_settings = HttpProxySettings.from_url(args_command_list.https_tunnel)
             except ValueError as e:
-                raise CommandLineParsingError("Invalid proxy URL for --https_tunnel: {}.".format(e.args[0]))
+                raise CommandLineParsingError(f"Invalid proxy URL for --https_tunnel: {e.args[0]}.")
 
         # Create the server location objects for each specified servers
-        good_servers: List[Tuple[ServerNetworkLocation, ServerNetworkConfiguration]] = []
-        invalid_server_strings: List[InvalidServerStringError] = []
+        good_servers: list[tuple[ServerNetworkLocation, ServerNetworkConfiguration]] = []
+        invalid_server_strings: list[InvalidServerStringError] = []
         for server_string in args_target_list:
             try:
                 # Parse the string supplied via the CLI for this server
@@ -308,7 +301,7 @@ class CommandLineParser:
 
             # Figure out extra network config for this server
             # Opportunistic TLS
-            opportunistic_tls: Optional[ProtocolWithOpportunisticTlsEnum] = None
+            opportunistic_tls: ProtocolWithOpportunisticTlsEnum | None = None
             if args_command_list.starttls:
                 if args_command_list.starttls == "auto":
                     # Special value to auto-derive the protocol from the port number
@@ -343,8 +336,8 @@ class CommandLineParser:
             per_server_concurrent_connections_limit = 2
 
         # Figure out the scan commands that are enabled
-        scan_commands: Set[ScanCommand] = set()
-        scan_commands_extra_arguments_dict: Dict[ScanCommand, plugin_base.ScanCommandExtraArgument] = {}
+        scan_commands: set[ScanCommand] = set()
+        scan_commands_extra_arguments_dict: dict[ScanCommand, plugin_base.ScanCommandExtraArgument] = {}
         for scan_command in ScanCommandsRepository.get_all_scan_commands():
             cli_connector_cls = ScanCommandsRepository.get_implementation_cls(scan_command).cli_connector_cls
             (
@@ -402,7 +395,7 @@ class CommandLineParser:
             "--keyform",
             metavar="KEY_FORMAT",
             choices=["DER", "PEM"],
-            help="Client private key format. DER or PEM " "(default).",
+            help="Client private key format. DER or PEM (default).",
             dest="keyform",
             default="PEM",
         )
@@ -498,7 +491,7 @@ class CommandLineParser:
         )
 
     @staticmethod
-    def _get_plugin_scan_commands() -> List[OptParseCliOption]:
+    def _get_plugin_scan_commands() -> list[OptParseCliOption]:
         """Retrieve the list of command line options implemented by the plugins currently available."""
         scan_commands_options = []
         for scan_command in ScanCommandsRepository.get_all_scan_commands():

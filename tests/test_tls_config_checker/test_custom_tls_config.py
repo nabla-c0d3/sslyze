@@ -1,13 +1,24 @@
-from sslyze import Scanner, ServerScanRequest, ServerNetworkLocation
-from sslyze.mozilla_tls_profile.tls_config_checker import (
-    TlsConfigurationAsJson,
-    _MozillaCiphersAsJson,
-    check_server_against_tls_configuration,
+from sslyze import Scanner, ServerNetworkLocation, ServerScanRequest
+from sslyze.tls_config_checker.tls_config_checker import (
     ServerNotCompliantWithTlsConfiguration,
+    TlsConfigurationAsJson,
+    _CiphersAsJson,
+    check_server_against_tls_configuration,
 )
 
 
 class TestCustomTlsConfigurationChecker:
+    def test_custom_config_ciphers_without_caddy_and_go(self):
+        # Given ciphers in the TLSRef 6.0 format, which has no "caddy" and "go" lists
+        ciphers_as_json = {
+            "iana": ["TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"],
+            "openssl": ["ECDHE-RSA-AES128-GCM-SHA256"],
+        }
+
+        # When parsing them, it succeeds
+        ciphers = _CiphersAsJson.model_validate(ciphers_as_json)
+        assert ciphers.iana == {"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"}
+
     def test_custom_config_compliance_checking_noncompliant_server(self):
         # Given a custom TLS configuration
         lenient_config = TlsConfigurationAsJson(
@@ -23,7 +34,7 @@ class TestCustomTlsConfigurationChecker:
                 "sha512WithRSAEncryption",
             },
             ciphersuites={"TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256", "TLS_AES_128_GCM_SHA256"},
-            ciphers=_MozillaCiphersAsJson(
+            ciphers=_CiphersAsJson(
                 caddy={
                     "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
                     "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",

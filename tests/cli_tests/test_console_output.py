@@ -1,19 +1,19 @@
 from io import StringIO
 
+from sslyze import ScanCommandAttemptStatusEnum, ScanCommandErrorReasonEnum
 from sslyze.cli.console_output import ObserverToGenerateConsoleOutput
 from sslyze.plugins.compression_plugin import CompressionScanResult
-from sslyze import ScanCommandErrorReasonEnum, ScanCommandAttemptStatusEnum
 from sslyze.scanner.models import CompressionScanAttempt
 from sslyze.server_connectivity import ClientAuthRequirementEnum
 from tests.factories import (
-    ServerScanResultFactory,
-    TracebackExceptionFactory,
-    ServerNetworkLocationViaHttpProxyFactory,
-    ParsedCommandLineFactory,
-    ConnectionToServerFailedFactory,
-    ServerScanRequestFactory,
-    ServerTlsProbingResultFactory,
     AllScanCommandsAttemptsFactory,
+    ConnectionToServerFailedFactory,
+    ParsedCommandLineFactory,
+    ServerNetworkLocationViaHttpProxyFactory,
+    ServerScanRequestFactory,
+    ServerScanResultFactory,
+    ServerTlsProbingResultFactory,
+    TracebackExceptionFactory,
 )
 
 

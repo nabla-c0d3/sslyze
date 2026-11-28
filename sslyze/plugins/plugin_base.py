@@ -1,24 +1,15 @@
 """Main abstract plugin classes from which all the plugins should inherit."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor
-
 from dataclasses import dataclass
-
 from typing import (
-    List,
-    Callable,
-    Any,
-    Optional,
     TYPE_CHECKING,
-    Tuple,
+    Any,
     ClassVar,
-    Dict,
-    Type,
-    Union,
-    TypeVar,
     Generic,
-    Sequence,
+    TypeVar,
 )
 
 if TYPE_CHECKING:
@@ -36,8 +27,6 @@ class ScanCommandExtraArgument(ABC):
 class ScanCommandWrongUsageError(Exception):
     """Raised when the configuration or arguments passed to complete a scan command are wrong."""
 
-    pass
-
 
 @dataclass(frozen=True)
 class ScanJob:
@@ -52,8 +41,8 @@ class ScanJob:
 
 @dataclass(frozen=True)
 class ScanJobResult:
-    _return_value: Optional[Any]
-    _exception: Optional[Exception]
+    _return_value: Any | None
+    _exception: Exception | None
 
     def get_result(self) -> Any:
         if self._exception:
@@ -63,38 +52,36 @@ class ScanJobResult:
 
 
 _ScanCommandResultTypeVar = TypeVar("_ScanCommandResultTypeVar", bound=ScanCommandResult)
-_ScanCommandExtraArgumentTypeVar = TypeVar("_ScanCommandExtraArgumentTypeVar", bound=Optional[ScanCommandExtraArgument])
+_ScanCommandExtraArgumentTypeVar = TypeVar("_ScanCommandExtraArgumentTypeVar", bound=ScanCommandExtraArgument | None)
 
 
 class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandExtraArgumentTypeVar]):
     """Describes everything needed to run a specific scan command."""
 
     # Contains all the logic for making the scan command available via the CLI
-    cli_connector_cls: ClassVar[Type["ScanCommandCliConnector"]]
+    cli_connector_cls: ClassVar[type["ScanCommandCliConnector"]]
 
     @classmethod
     @abstractmethod
     def scan_jobs_for_scan_command(
-        cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[_ScanCommandExtraArgumentTypeVar] = None
-    ) -> List[ScanJob]:
+        cls, server_info: "ServerConnectivityInfo", extra_arguments: _ScanCommandExtraArgumentTypeVar | None = None
+    ) -> list[ScanJob]:
         """Transform a scan command to run into smaller scan jobs to be run concurrently.
 
         To ensure reliability of the scans, each job should use at most one network connection to the server that is
         being scanned.
         """
-        pass
 
     @classmethod
     @abstractmethod
     def result_for_completed_scan_jobs(
-        cls, server_info: "ServerConnectivityInfo", scan_job_results: List[ScanJobResult]
+        cls, server_info: "ServerConnectivityInfo", scan_job_results: list[ScanJobResult]
     ) -> _ScanCommandResultTypeVar:
         """Transform the individual scan job results for a given scan command into a scan command result."""
-        pass
 
     @classmethod
     def scan_server(
-        cls, server_info: "ServerConnectivityInfo", extra_arguments: Optional[_ScanCommandExtraArgumentTypeVar] = None
+        cls, server_info: "ServerConnectivityInfo", extra_arguments: _ScanCommandExtraArgumentTypeVar | None = None
     ) -> _ScanCommandResultTypeVar:
         """Utility method to run a scan command directly.
 
@@ -109,7 +96,7 @@ class ScanCommandImplementation(Generic[_ScanCommandResultTypeVar, _ScanCommandE
             future = thread_pool.submit(job.function_to_call, *job.function_arguments)
             try:
                 job_result = ScanJobResult(_return_value=future.result(), _exception=None)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 job_result = ScanJobResult(_return_value=None, _exception=e)
             all_job_results.append(job_result)
 
@@ -131,7 +118,7 @@ class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExt
     _cli_description: ClassVar[str]
 
     @classmethod
-    def get_cli_options(cls) -> List[OptParseCliOption]:
+    def get_cli_options(cls) -> list[OptParseCliOption]:
         """Return the CLI option(s) relevant to the scan command."""
         # Subclasses can add command line options for extra arguments here; by default scan commands don't have
         # extra arguments
@@ -139,12 +126,12 @@ class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExt
 
     @classmethod
     def find_cli_options_in_command_line(
-        cls, parsed_command_line: Dict[str, Union[None, bool, str]]
-    ) -> Tuple[bool, Optional[_ScanCommandExtraArgumentTypeVar]]:
+        cls, parsed_command_line: dict[str, None | bool | str]
+    ) -> tuple[bool, _ScanCommandExtraArgumentTypeVar | None]:
         """Check a parsed command line to see if the CLI option for the scan command was enabled."""
         try:
             option = parsed_command_line[cls._cli_option]
-            is_scan_cmd_enabled = True if option else False
+            is_scan_cmd_enabled = bool(option)
         except KeyError:
             is_scan_cmd_enabled = False
 
@@ -153,19 +140,18 @@ class ScanCommandCliConnector(Generic[_ScanCommandResultTypeVar, _ScanCommandExt
 
     @classmethod
     @abstractmethod
-    def result_to_console_output(cls, result: _ScanCommandResultTypeVar) -> List[str]:
+    def result_to_console_output(cls, result: _ScanCommandResultTypeVar) -> list[str]:
         """Transform the result of the scan command into lines of text to be printed by the CLI."""
-        pass
 
     # Common formatting methods to have a consistent console output
     @staticmethod
     def _format_title(title: str) -> str:
-        return " * {0}:".format(title)
+        return f" * {title}:"
 
     @staticmethod
     def _format_subtitle(subtitle: str) -> str:
-        return "     {0}".format(subtitle)
+        return f"     {subtitle}"
 
     @staticmethod
     def _format_field(title: str, value: str = "") -> str:
-        return "       {0:<35}{1}".format(title, value)
+        return f"       {title:<35}{value}"

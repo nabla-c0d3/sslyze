@@ -43,9 +43,9 @@ def get_include_files() -> list[tuple[str, str]]:
             filename = path.basename(file)
             non_python_files.append((file, path.join("pem_files", filename)))
 
-    # The Mozilla profile
-    mozilla_profile_path = root_path / "sslyze" / "mozilla_tls_profile" / "5.7.json"
-    non_python_files.append((str(mozilla_profile_path), mozilla_profile_path.name))
+    # The TLSRef profile
+    tls_profile_path = root_path / "sslyze" / "tls_config_checker" / "6.0.json"
+    non_python_files.append((str(tls_profile_path), tls_profile_path.name))
     return non_python_files
 
 
@@ -91,7 +91,7 @@ setup(
     package_data={
         "sslyze": ["py.typed"],
         "sslyze.plugins.certificate_info.trust_stores": ["pem_files/*.pem", "pem_files/*.yaml"],
-        "sslyze.mozilla_tls_profile": ["5.7.json"],
+        "sslyze.tls_config_checker": ["6.0.json"],
     },
     entry_points={"console_scripts": ["sslyze = sslyze.__main__:main"]},
     # Dependencies

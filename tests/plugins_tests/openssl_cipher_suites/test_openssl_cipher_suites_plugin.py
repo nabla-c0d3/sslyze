@@ -1,4 +1,5 @@
 import random
+from pathlib import Path
 
 import pytest
 from nassl.ephemeral_key_info import EcDhEphemeralKeyInfo
@@ -18,6 +19,7 @@ from sslyze.server_setting import ServerNetworkConfiguration, ServerNetworkLocat
 from tests.connectivity_utils import check_connectivity_to_server_and_return_info
 from tests.markers import can_only_run_on_linux_64
 from tests.openssl_server import ClientAuthConfigEnum, LegacyOpenSslServer, ModernOpenSslServer
+from tests.python_tls_server import PythonTlsServer
 
 
 # Tests for the legacy cipher suite preference test, which was removed and will be turned into a full-fledged plugin
@@ -230,112 +232,6 @@ class TestCipherSuitesPluginWithOnlineServer:
         result_as_json = CipherSuitesScanResultAsJson.model_validate(result).model_dump_json()
         assert result_as_json
 
-    def test_null_cipher_suites(self) -> None:
-        # Given a server to scan that supports NULL cipher suites
-        server_location = ServerNetworkLocation("null.badssl.com", 443)
-        server_info = check_connectivity_to_server_and_return_info(server_location)
-
-        # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
-
-        # And the NULL/Anon cipher suites were detected
-        expected_ciphers = {
-            "TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
-            "TLS_DH_anon_WITH_AES_256_CBC_SHA256",
-            "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA",
-            "TLS_DH_anon_WITH_AES_256_GCM_SHA384",
-            "TLS_DH_anon_WITH_AES_256_CBC_SHA",
-            "TLS_ECDH_anon_WITH_AES_128_CBC_SHA",
-            "TLS_DH_anon_WITH_AES_128_CBC_SHA256",
-            "TLS_DH_anon_WITH_AES_128_CBC_SHA",
-            "TLS_DH_anon_WITH_AES_128_GCM_SHA256",
-            "TLS_DH_anon_WITH_SEED_CBC_SHA",
-            "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA",
-            "TLS_ECDHE_RSA_WITH_NULL_SHA",
-            "TLS_ECDH_anon_WITH_NULL_SHA",
-            "TLS_RSA_WITH_NULL_SHA256",
-            "TLS_RSA_WITH_NULL_SHA",
-        }
-        assert expected_ciphers == {
-            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
-        }
-
-        # And a CLI output can be generated
-        assert Tlsv12ScanImplementation.cli_connector_cls.result_to_console_output(result)
-
-        # And the result can be converted to JSON
-        result_as_json = CipherSuitesScanResultAsJson.model_validate(result).model_dump_json()
-        assert result_as_json
-
-    def test_rc4_cipher_suites(self) -> None:
-        # Given a server to scan that supports RC4 cipher suites
-        server_location = ServerNetworkLocation("rc4.badssl.com", 443)
-        server_info = check_connectivity_to_server_and_return_info(server_location)
-
-        # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
-
-        # And the RC4 cipher suites were detected
-        assert {"TLS_ECDHE_RSA_WITH_RC4_128_SHA", "TLS_RSA_WITH_RC4_128_SHA"} == {
-            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
-        }
-
-        # And a CLI output can be generated
-        assert Tlsv12ScanImplementation.cli_connector_cls.result_to_console_output(result)
-
-        # And the result can be converted to JSON
-        result_as_json = CipherSuitesScanResultAsJson.model_validate(result).model_dump_json()
-        assert result_as_json
-
-    def test_ecdsa_cipher_suites(self) -> None:
-        # Given a server to scan that supports ECDSA cipher suites
-        server_location = ServerNetworkLocation("ecc256.badssl.com", 443)
-        server_info = check_connectivity_to_server_and_return_info(server_location)
-
-        # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
-
-        # And the RC4 cipher suites were detected
-        expected_ciphers = {
-            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
-            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
-            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
-            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
-            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
-            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
-            "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
-        }
-        assert expected_ciphers == {
-            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
-        }
-
-        # And a CLI output can be generated
-        assert Tlsv12ScanImplementation.cli_connector_cls.result_to_console_output(result)
-
-        # And the result can be converted to JSON
-        result_as_json = CipherSuitesScanResultAsJson.model_validate(result).model_dump_json()
-        assert result_as_json
-
-    def test_smtp(self) -> None:
-        # Given an SMTP server to scan
-        hostname = "smtp.gmail.com"
-        server_location = ServerNetworkLocation(hostname, 587)
-        network_configuration = ServerNetworkConfiguration(
-            tls_server_name_indication=hostname, tls_opportunistic_encryption=ProtocolWithOpportunisticTlsEnum.SMTP
-        )
-        server_info = check_connectivity_to_server_and_return_info(server_location, network_configuration)
-
-        # When scanning for cipher suites, it succeeds
-        result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
-        assert result.accepted_cipher_suites
-
-        # And a CLI output can be generated
-        assert Tlsv12ScanImplementation.cli_connector_cls.result_to_console_output(result)
-
-        # And the result can be converted to JSON
-        result_as_json = CipherSuitesScanResultAsJson.model_validate(result).model_dump_json()
-        assert result_as_json
-
     def test_tls_1_3_cipher_suites(self) -> None:
         # Given a server to scan that supports TLS 1.3
         server_location = ServerNetworkLocation("www.cloudflare.com", 443)
@@ -448,3 +344,136 @@ class TestCipherSuitesPluginWithLocalServer:
             result: CipherSuitesScanResult = Tlsv13ScanImplementation.scan_server(server_info)
 
         assert result.accepted_cipher_suites
+
+    def test_null_cipher_suites(self) -> None:
+        # Given a server to scan that supports NULL cipher suites
+        with LegacyOpenSslServer(
+            openssl_cipher_string="AECDH-AES256-SHA:ADH-AES256-GCM-SHA384:ADH-AES256-SHA256:ADH-AES256-SHA"
+            ":ADH-CAMELLIA256-SHA:AECDH-AES128-SHA:ADH-AES128-GCM-SHA256:ADH-AES128-SHA256:ADH-AES128-SHA"
+            ":ADH-SEED-SHA:ADH-CAMELLIA128-SHA:ECDHE-RSA-NULL-SHA:AECDH-NULL-SHA:NULL-SHA256:NULL-SHA"
+        ) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
+
+        # And the NULL/Anon cipher suites were detected
+        expected_ciphers = {
+            "TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
+            "TLS_DH_anon_WITH_AES_256_CBC_SHA256",
+            "TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA",
+            "TLS_DH_anon_WITH_AES_256_GCM_SHA384",
+            "TLS_DH_anon_WITH_AES_256_CBC_SHA",
+            "TLS_ECDH_anon_WITH_AES_128_CBC_SHA",
+            "TLS_DH_anon_WITH_AES_128_CBC_SHA256",
+            "TLS_DH_anon_WITH_AES_128_CBC_SHA",
+            "TLS_DH_anon_WITH_AES_128_GCM_SHA256",
+            "TLS_DH_anon_WITH_SEED_CBC_SHA",
+            "TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA",
+            "TLS_ECDHE_RSA_WITH_NULL_SHA",
+            "TLS_ECDH_anon_WITH_NULL_SHA",
+            "TLS_RSA_WITH_NULL_SHA256",
+            "TLS_RSA_WITH_NULL_SHA",
+        }
+        assert expected_ciphers == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
+
+        # And a CLI output can be generated
+        assert Tlsv12ScanImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = CipherSuitesScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
+
+    def test_rc4_cipher_suites(self) -> None:
+        # Given a server to scan that supports RC4 cipher suites
+        with LegacyOpenSslServer(openssl_cipher_string="ECDHE-RSA-RC4-SHA:RC4-SHA") as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
+
+        # And the RC4 cipher suites were detected
+        assert {"TLS_ECDHE_RSA_WITH_RC4_128_SHA", "TLS_RSA_WITH_RC4_128_SHA"} == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
+
+        # And a CLI output can be generated
+        assert Tlsv12ScanImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = CipherSuitesScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
+
+    def test_ecdsa_cipher_suites(self) -> None:
+        # Given a server to scan that supports ECDSA cipher suites
+        certificates_path = Path(__file__).parent / ".." / ".." / "server_certificates" / "ecdsa"
+        with LegacyOpenSslServer(
+            server_certificate_path=certificates_path / "server-ecdsa-cert.pem",
+            server_key_path=certificates_path / "server-ecdsa-key.pem",
+            openssl_cipher_string="ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256"
+            ":ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA"
+            ":ECDHE-ECDSA-DES-CBC3-SHA",
+        ) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location)
+
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
+
+        # And the ECDSA cipher suites were detected
+        expected_ciphers = {
+            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+        }
+        assert expected_ciphers == {
+            accepted_cipher.cipher_suite.name for accepted_cipher in result.accepted_cipher_suites
+        }
+
+        # And a CLI output can be generated
+        assert Tlsv12ScanImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = CipherSuitesScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json
+
+
+# PythonTlsServer runs on all platforms
+class TestCipherSuitesPluginWithPythonTlsServer:
+    def test_smtp(self) -> None:
+        # Given an SMTP server to scan
+        with PythonTlsServer(should_do_smtp_starttls=True) as server:
+            server_location = ServerNetworkLocation(
+                hostname=server.hostname, ip_address=server.ip_address, port=server.port
+            )
+            network_configuration = ServerNetworkConfiguration(
+                tls_server_name_indication=server.hostname,
+                tls_opportunistic_encryption=ProtocolWithOpportunisticTlsEnum.SMTP,
+            )
+            server_info = check_connectivity_to_server_and_return_info(server_location, network_configuration)
+
+            # When scanning for cipher suites, it succeeds
+            result: CipherSuitesScanResult = Tlsv12ScanImplementation.scan_server(server_info)
+
+        assert result.accepted_cipher_suites
+
+        # And a CLI output can be generated
+        assert Tlsv12ScanImplementation.cli_connector_cls.result_to_console_output(result)
+
+        # And the result can be converted to JSON
+        result_as_json = CipherSuitesScanResultAsJson.model_validate(result).model_dump_json()
+        assert result_as_json

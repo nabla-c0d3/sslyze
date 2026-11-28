@@ -1,5 +1,5 @@
 __title__ = "SSLyze"
-__version__ = "6.3.1"
+__version__ = "7.0.0"
 __description__ = "Fast and powerful SSL/TLS scanning library."
 __author__ = "Alban Diquet"
 __author_email__ = "nabla.c0d3@gmail.com"

@@ -1,8 +1,8 @@
 platform: MOZILLA_NSS
 version: null
 url: https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-date_fetched: 2026-10-25
-trusted_certificates_count: 118
+date_fetched: 2026-11-22
+trusted_certificates_count: 113
 trusted_certificates:
 - subject_name: AC RAIZ FNMT-RCM
   fingerprint: ebc5570c29018c4d67b1aa127baf12f703b4611ebc17b7dab5573894179b93fa
@@ -32,10 +32,6 @@ trusted_certificates:
   fingerprint: f3896f88fe7c0a882766a7fa6ad2749fb57a7f3e98fb769c1fa7b09c2c44d5ae
 - subject_name: BJCA Global Root CA2
   fingerprint: 574df6931e278039667b720afdc1600fc27eb66dd3092979fb73856487212882
-- subject_name: Buypass Class 2 Root CA
-  fingerprint: 9a114025197c5bb95d94e63d55cd43790847b646b23cdf11ada4a00eff15fb48
-- subject_name: Buypass Class 3 Root CA
-  fingerprint: edf7ebbca27a2a384d387b7d4010c666e2edb4843e4c29b4ae1d5b9332e6b24d
 - subject_name: CA Disig Root R2
   fingerprint: e23d4a036d7b70e9f595b1422079d2b91edfbb1fb651a0633eaa8a9dc5f80703
 - subject_name: CFCA EV ROOT
@@ -48,8 +44,6 @@ trusted_certificates:
   fingerprint: b4585f22e4ac756a4e8612a1361c5d9d031a93fd84febb778fa3068b0fc42dc2
 - subject_name: Certainly Root R1
   fingerprint: 77b82cd8644c4305f7acc5cb156b45675004033d51c60c6202a8e0c33467d3a0
-- subject_name: Certigna Root CA
-  fingerprint: d48d3d23eedb50a459e55197601c27774b9d7b18c94d5a059511a10250b93168
 - subject_name: Certum EC-384 CA
   fingerprint: 6b328085625318aa50d173c98d8bda09d57e27413d114cf787a0f5d06c030cf6
 - subject_name: Certum Trusted Network CA
@@ -146,12 +140,8 @@ trusted_certificates:
   fingerprint: 6b9c08e86eb0f767cfad65cd98b62149e5494a67f5845e7bd1ed019f27b86bd6
 - subject_name: OISTE WISeKey Global Root GC CA
   fingerprint: 8560f91c3624daba9570b5fea0dbe36ff11a8323be9486854fb3f34a5571198d
-- subject_name: QuoVadis Root CA 1 G3
-  fingerprint: 8a866fd1b276b57e578e921c65828a2bed58e9f2f288054134b7f1f4bfc9cc74
 - subject_name: QuoVadis Root CA 2 G3
   fingerprint: 8fe4fb0af93a4d0d67db0bebb23e37c71bf325dcbcdd240ea04daf58b47e1840
-- subject_name: QuoVadis Root CA 3 G3
-  fingerprint: 88ef81de202eb018452e43f864725cea5fbd1fc2d9d205730709c5d8b8690f46
 - subject_name: SECOM TLS ECC Root CA 2024
   fingerprint: 6ab2ab75f51cb4f4f0156203fbf6f646232f514be059f62833308b82b4d72db1
 - subject_name: SECOM TLS RSA Root CA 2024

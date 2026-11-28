@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Appendix: Scan Commands &#8212; SSLyze 6.3.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=686e5160" />
+    <title>Appendix: Scan Commands &#8212; SSLyze 7.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
-    <script src="_static/documentation_options.js?v=80ea5fc2"></script>
-    <script src="_static/doctools.js?v=9bcbadda"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/documentation_options.js?v=efe5be6f"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Exporting and processing scan results in JSON" href="json-output.html" />
@@ -33,7 +33,7 @@
           <div class="body" role="main">
             
   <section id="appendix-scan-commands">
-<h1><a class="toc-backref" href="#id17" role="doc-backlink">Appendix: Scan Commands</a><a class="headerlink" href="#appendix-scan-commands" title="Link to this heading">¶</a></h1>
+<h1><a class="toc-backref" href="#id18" role="doc-backlink">Appendix: Scan Commands</a><a class="headerlink" href="#appendix-scan-commands" title="Link to this heading">¶</a></h1>
 <p>Every type of TLS check that SSLyze can run against a server (supported cipher suites, session renegotiation, etc.) is
 represented by a <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code>, which, when run against a server, will return a specific result.</p>
 <p>This page lists all the <code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code> and their corresponding results available in the current release of SSLyze.</p>
@@ -41,21 +41,22 @@ represented by a <code class="docutils literal notranslate"><span class="pre">Sc
 <nav class="contents" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#appendix-scan-commands" id="id17">Appendix: Scan Commands</a></p>
+<li><p><a class="reference internal" href="#appendix-scan-commands" id="id18">Appendix: Scan Commands</a></p>
 <ul>
-<li><p><a class="reference internal" href="#certificate-information" id="id18">Certificate Information</a></p></li>
-<li><p><a class="reference internal" href="#cipher-suites" id="id19">Cipher Suites</a></p></li>
-<li><p><a class="reference internal" href="#supported-elliptic-curves" id="id20">Supported Elliptic Curves</a></p></li>
-<li><p><a class="reference internal" href="#robot" id="id21">ROBOT</a></p></li>
-<li><p><a class="reference internal" href="#session-resumption-support" id="id22">Session Resumption Support</a></p></li>
-<li><p><a class="reference internal" href="#crime" id="id23">CRIME</a></p></li>
-<li><p><a class="reference internal" href="#tls-1-3-early-data" id="id24">TLS 1.3 Early Data</a></p></li>
-<li><p><a class="reference internal" href="#downgrade-prevention" id="id25">Downgrade Prevention</a></p></li>
-<li><p><a class="reference internal" href="#heartbleed" id="id26">Heartbleed</a></p></li>
-<li><p><a class="reference internal" href="#http-security-headers" id="id27">HTTP Security Headers</a></p></li>
-<li><p><a class="reference internal" href="#openssl-ccs-injection" id="id28">OpenSSL CCS Injection</a></p></li>
-<li><p><a class="reference internal" href="#insecure-renegotiation" id="id29">Insecure Renegotiation</a></p></li>
-<li><p><a class="reference internal" href="#extended-master-secret" id="id30">Extended Master Secret</a></p></li>
+<li><p><a class="reference internal" href="#certificate-information" id="id19">Certificate Information</a></p></li>
+<li><p><a class="reference internal" href="#cipher-suites" id="id20">Cipher Suites</a></p></li>
+<li><p><a class="reference internal" href="#supported-groups" id="id21">Supported Groups</a></p></li>
+<li><p><a class="reference internal" href="#encrypted-client-hello" id="id22">Encrypted Client Hello</a></p></li>
+<li><p><a class="reference internal" href="#robot" id="id23">ROBOT</a></p></li>
+<li><p><a class="reference internal" href="#session-resumption-support" id="id24">Session Resumption Support</a></p></li>
+<li><p><a class="reference internal" href="#crime" id="id25">CRIME</a></p></li>
+<li><p><a class="reference internal" href="#tls-1-3-early-data" id="id26">TLS 1.3 Early Data</a></p></li>
+<li><p><a class="reference internal" href="#downgrade-prevention" id="id27">Downgrade Prevention</a></p></li>
+<li><p><a class="reference internal" href="#heartbleed" id="id28">Heartbleed</a></p></li>
+<li><p><a class="reference internal" href="#http-security-headers" id="id29">HTTP Security Headers</a></p></li>
+<li><p><a class="reference internal" href="#openssl-ccs-injection" id="id30">OpenSSL CCS Injection</a></p></li>
+<li><p><a class="reference internal" href="#insecure-renegotiation" id="id31">Insecure Renegotiation</a></p></li>
+<li><p><a class="reference internal" href="#extended-master-secret" id="id32">Extended Master Secret</a></p></li>
 </ul>
 </li>
 </ul>
@@ -63,108 +64,113 @@ represented by a <code class="docutils literal notranslate"><span class="pre">Sc
 <p>The following scan commands are available in the current version of SSLyze:</p>
 <dl class="py class" id="module-sslyze">
 <dt class="sig sig-object py" id="sslyze.ScanCommand">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ScanCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ScanCommand" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">ScanCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.ScanCommand" title="Link to this definition">¶</a></dt>
 <dd><dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.CERTIFICATE_INFO">
-<span class="sig-name descname"><span class="pre">CERTIFICATE_INFO</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'certificate_info'</span></em><a class="headerlink" href="#sslyze.ScanCommand.CERTIFICATE_INFO" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">CERTIFICATE_INFO</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'certificate_info'</span></span><a class="headerlink" href="#sslyze.ScanCommand.CERTIFICATE_INFO" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.SESSION_RESUMPTION">
-<span class="sig-name descname"><span class="pre">SESSION_RESUMPTION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'session_resumption'</span></em><a class="headerlink" href="#sslyze.ScanCommand.SESSION_RESUMPTION" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">SESSION_RESUMPTION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'session_resumption'</span></span><a class="headerlink" href="#sslyze.ScanCommand.SESSION_RESUMPTION" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.SSL_2_0_CIPHER_SUITES">
-<span class="sig-name descname"><span class="pre">SSL_2_0_CIPHER_SUITES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ssl_2_0_cipher_suites'</span></em><a class="headerlink" href="#sslyze.ScanCommand.SSL_2_0_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">SSL_2_0_CIPHER_SUITES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ssl_2_0_cipher_suites'</span></span><a class="headerlink" href="#sslyze.ScanCommand.SSL_2_0_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.SSL_3_0_CIPHER_SUITES">
-<span class="sig-name descname"><span class="pre">SSL_3_0_CIPHER_SUITES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ssl_3_0_cipher_suites'</span></em><a class="headerlink" href="#sslyze.ScanCommand.SSL_3_0_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">SSL_3_0_CIPHER_SUITES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ssl_3_0_cipher_suites'</span></span><a class="headerlink" href="#sslyze.ScanCommand.SSL_3_0_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.TLS_1_0_CIPHER_SUITES">
-<span class="sig-name descname"><span class="pre">TLS_1_0_CIPHER_SUITES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_1_0_cipher_suites'</span></em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_0_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_1_0_CIPHER_SUITES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_1_0_cipher_suites'</span></span><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_0_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.TLS_1_1_CIPHER_SUITES">
-<span class="sig-name descname"><span class="pre">TLS_1_1_CIPHER_SUITES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_1_1_cipher_suites'</span></em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_1_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_1_1_CIPHER_SUITES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_1_1_cipher_suites'</span></span><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_1_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.TLS_1_2_CIPHER_SUITES">
-<span class="sig-name descname"><span class="pre">TLS_1_2_CIPHER_SUITES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_1_2_cipher_suites'</span></em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_2_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_1_2_CIPHER_SUITES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_1_2_cipher_suites'</span></span><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_2_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.TLS_1_3_CIPHER_SUITES">
-<span class="sig-name descname"><span class="pre">TLS_1_3_CIPHER_SUITES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_1_3_cipher_suites'</span></em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_3_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_1_3_CIPHER_SUITES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_1_3_cipher_suites'</span></span><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_3_CIPHER_SUITES" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.TLS_COMPRESSION">
-<span class="sig-name descname"><span class="pre">TLS_COMPRESSION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_compression'</span></em><a class="headerlink" href="#sslyze.ScanCommand.TLS_COMPRESSION" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_COMPRESSION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_compression'</span></span><a class="headerlink" href="#sslyze.ScanCommand.TLS_COMPRESSION" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.TLS_1_3_EARLY_DATA">
-<span class="sig-name descname"><span class="pre">TLS_1_3_EARLY_DATA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_1_3_early_data'</span></em><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_3_EARLY_DATA" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_1_3_EARLY_DATA</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_1_3_early_data'</span></span><a class="headerlink" href="#sslyze.ScanCommand.TLS_1_3_EARLY_DATA" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.OPENSSL_CCS_INJECTION">
-<span class="sig-name descname"><span class="pre">OPENSSL_CCS_INJECTION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'openssl_ccs_injection'</span></em><a class="headerlink" href="#sslyze.ScanCommand.OPENSSL_CCS_INJECTION" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">OPENSSL_CCS_INJECTION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'openssl_ccs_injection'</span></span><a class="headerlink" href="#sslyze.ScanCommand.OPENSSL_CCS_INJECTION" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.TLS_FALLBACK_SCSV">
-<span class="sig-name descname"><span class="pre">TLS_FALLBACK_SCSV</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_fallback_scsv'</span></em><a class="headerlink" href="#sslyze.ScanCommand.TLS_FALLBACK_SCSV" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_FALLBACK_SCSV</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_fallback_scsv'</span></span><a class="headerlink" href="#sslyze.ScanCommand.TLS_FALLBACK_SCSV" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.HEARTBLEED">
-<span class="sig-name descname"><span class="pre">HEARTBLEED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'heartbleed'</span></em><a class="headerlink" href="#sslyze.ScanCommand.HEARTBLEED" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">HEARTBLEED</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'heartbleed'</span></span><a class="headerlink" href="#sslyze.ScanCommand.HEARTBLEED" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.ROBOT">
-<span class="sig-name descname"><span class="pre">ROBOT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'robot'</span></em><a class="headerlink" href="#sslyze.ScanCommand.ROBOT" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">ROBOT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'robot'</span></span><a class="headerlink" href="#sslyze.ScanCommand.ROBOT" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.SESSION_RENEGOTIATION">
-<span class="sig-name descname"><span class="pre">SESSION_RENEGOTIATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'session_renegotiation'</span></em><a class="headerlink" href="#sslyze.ScanCommand.SESSION_RENEGOTIATION" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">SESSION_RENEGOTIATION</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'session_renegotiation'</span></span><a class="headerlink" href="#sslyze.ScanCommand.SESSION_RENEGOTIATION" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.HTTP_HEADERS">
-<span class="sig-name descname"><span class="pre">HTTP_HEADERS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'http_headers'</span></em><a class="headerlink" href="#sslyze.ScanCommand.HTTP_HEADERS" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="sslyze.ScanCommand.ELLIPTIC_CURVES">
-<span class="sig-name descname"><span class="pre">ELLIPTIC_CURVES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'elliptic_curves'</span></em><a class="headerlink" href="#sslyze.ScanCommand.ELLIPTIC_CURVES" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">HTTP_HEADERS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'http_headers'</span></span><a class="headerlink" href="#sslyze.ScanCommand.HTTP_HEADERS" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.ScanCommand.TLS_EXTENDED_MASTER_SECRET">
-<span class="sig-name descname"><span class="pre">TLS_EXTENDED_MASTER_SECRET</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_extended_master_secret'</span></em><a class="headerlink" href="#sslyze.ScanCommand.TLS_EXTENDED_MASTER_SECRET" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_EXTENDED_MASTER_SECRET</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tls_extended_master_secret'</span></span><a class="headerlink" href="#sslyze.ScanCommand.TLS_EXTENDED_MASTER_SECRET" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.ScanCommand.SUPPORTED_GROUPS">
+<span class="sig-name descname"><span class="pre">SUPPORTED_GROUPS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'supported_groups'</span></span><a class="headerlink" href="#sslyze.ScanCommand.SUPPORTED_GROUPS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.ScanCommand.ENCRYPTED_CLIENT_HELLO">
+<span class="sig-name descname"><span class="pre">ENCRYPTED_CLIENT_HELLO</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'encrypted_client_hello'</span></span><a class="headerlink" href="#sslyze.ScanCommand.ENCRYPTED_CLIENT_HELLO" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <p>The next sections describe the result class that corresponds to each scan command.</p>
 <section id="certificate-information">
-<h2><a class="toc-backref" href="#id18" role="doc-backlink">Certificate Information</a><a class="headerlink" href="#certificate-information" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Certificate Information</a><a class="headerlink" href="#certificate-information" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.CERTIFICATE_INFO</strong>: Retrieve and analyze a server’s certificate(s) to verify its validity.</p>
 <section id="optional-arguments">
 <h3>Optional arguments<a class="headerlink" href="#optional-arguments" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.CertificateInfoExtraArgument">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CertificateInfoExtraArgument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_ca_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CertificateInfoExtraArgument" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CertificateInfoExtraArgument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_ca_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CertificateInfoExtraArgument" title="Link to this definition">¶</a></dt>
 <dd><p>Additional configuration for running the certificate_info scan command.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.CertificateInfoExtraArgument.custom_ca_file">
@@ -185,7 +191,7 @@ PEM-formatted root certificates.</p>
 <h3>Result class<a class="headerlink" href="#result-class" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.CertificateInfoScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CertificateInfoScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname_used_for_server_name_indication</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">certificate_deployments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">certificate_deployment_with_sni_disabled</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CertificateInfoScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CertificateInfoScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostname_used_for_server_name_indication</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">certificate_deployments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">certificate_deployment_with_sni_disabled</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CertificateInfoScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of retrieving and analyzing a server’s certificates to verify their validity.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.CertificateInfoScanResult.hostname_used_for_server_name_indication">
@@ -215,8 +221,8 @@ Most clients always enable SNI when connecting to a server so this certificate d
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>hostname_used_for_server_name_indication</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>)</p></li>
-<li><p><strong>certificate_deployments</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#sslyze.CertificateDeploymentAnalysisResult" title="sslyze.plugins.certificate_info._cert_chain_analyzer.CertificateDeploymentAnalysisResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">CertificateDeploymentAnalysisResult</span></code></a>]</span>)</p></li>
-<li><p><strong>certificate_deployment_with_sni_disabled</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.CertificateDeploymentAnalysisResult" title="sslyze.plugins.certificate_info._cert_chain_analyzer.CertificateDeploymentAnalysisResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">CertificateDeploymentAnalysisResult</span></code></a>]</span>)</p></li>
+<li><p><strong>certificate_deployments</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#sslyze.CertificateDeploymentAnalysisResult" title="sslyze.plugins.certificate_info._cert_chain_analyzer.CertificateDeploymentAnalysisResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">CertificateDeploymentAnalysisResult</span></code></a>]</span>)</p></li>
+<li><p><strong>certificate_deployment_with_sni_disabled</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#sslyze.CertificateDeploymentAnalysisResult" title="sslyze.plugins.certificate_info._cert_chain_analyzer.CertificateDeploymentAnalysisResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">CertificateDeploymentAnalysisResult</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -224,7 +230,7 @@ Most clients always enable SNI when connecting to a server so this certificate d
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.CertificateDeploymentAnalysisResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CertificateDeploymentAnalysisResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">received_certificate_chain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_has_must_staple_extension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_is_ev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_signed_certificate_timestamps_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">received_chain_contains_anchor_certificate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">received_chain_has_valid_order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_validation_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_chain_has_sha1_signature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_chain_has_legacy_symantec_anchor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocsp_response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocsp_response_is_trusted</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CertificateDeploymentAnalysisResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CertificateDeploymentAnalysisResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">received_certificate_chain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_has_must_staple_extension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_is_ev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_certificate_signed_certificate_timestamps_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">received_chain_contains_anchor_certificate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">received_chain_has_valid_order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_validation_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_chain_has_sha1_signature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_chain_has_legacy_symantec_anchor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocsp_response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocsp_response_is_trusted</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CertificateDeploymentAnalysisResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of analyzing a server’s certificate to verify its validity.</p>
 <p>Any certificate available within the fields that follow is parsed as a <code class="docutils literal notranslate"><span class="pre">Certificate</span></code> object using the cryptography
 module; documentation is available at
@@ -326,17 +332,17 @@ available at
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>received_certificate_chain</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Certificate</span></code>]</span>)</p></li>
+<li><p><strong>received_certificate_chain</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Certificate</span></code>]</span>)</p></li>
 <li><p><strong>leaf_certificate_has_must_staple_extension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
 <li><p><strong>leaf_certificate_is_ev</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
-<li><p><strong>leaf_certificate_signed_certificate_timestamps_count</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>)</p></li>
-<li><p><strong>received_chain_contains_anchor_certificate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span>)</p></li>
-<li><p><strong>received_chain_has_valid_order</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span>)</p></li>
-<li><p><strong>path_validation_results</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#sslyze.PathValidationResult" title="sslyze.plugins.certificate_info.trust_stores.trust_store.PathValidationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathValidationResult</span></code></a>]</span>)</p></li>
-<li><p><strong>verified_chain_has_sha1_signature</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span>)</p></li>
-<li><p><strong>verified_chain_has_legacy_symantec_anchor</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span>)</p></li>
-<li><p><strong>ocsp_response</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OCSPResponse</span></code>]</span>)</p></li>
-<li><p><strong>ocsp_response_is_trusted</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span>)</p></li>
+<li><p><strong>leaf_certificate_signed_certificate_timestamps_count</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>received_chain_contains_anchor_certificate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>received_chain_has_valid_order</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>path_validation_results</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#sslyze.PathValidationResult" title="sslyze.plugins.certificate_info.trust_stores.trust_store.PathValidationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathValidationResult</span></code></a>]</span>)</p></li>
+<li><p><strong>verified_chain_has_sha1_signature</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>verified_chain_has_legacy_symantec_anchor</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>ocsp_response</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">OCSPResponse</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>ocsp_response_is_trusted</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -344,7 +350,7 @@ available at
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.PathValidationResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">PathValidationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trust_store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_certificate_chain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_error</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.PathValidationResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">PathValidationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trust_store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verified_certificate_chain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_error</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.PathValidationResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of trying to validate a server’s certificate chain using a specific trust store.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.PathValidationResult.trust_store">
@@ -379,8 +385,8 @@ successful.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>trust_store</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#sslyze.TrustStore" title="sslyze.plugins.certificate_info.trust_stores.trust_store.TrustStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrustStore</span></code></a></span>)</p></li>
-<li><p><strong>verified_certificate_chain</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Certificate</span></code>]]</span>)</p></li>
-<li><p><strong>validation_error</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>)</p></li>
+<li><p><strong>verified_certificate_chain</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Certificate</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>validation_error</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -388,7 +394,7 @@ successful.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.TrustStore">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">TrustStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_oids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.TrustStore" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">TrustStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_oids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.TrustStore" title="Link to this definition">¶</a></dt>
 <dd><p>A set of root certificates to be used for certificate validation.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.TrustStore.path">
@@ -414,7 +420,7 @@ successful.</p>
 <li><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>)</p></li>
 <li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>)</p></li>
 <li><p><strong>version</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>)</p></li>
-<li><p><strong>ev_oids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectIdentifier</span></code>]]</span>)</p></li>
+<li><p><strong>ev_oids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectIdentifier</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -438,9 +444,9 @@ successful.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>certificate_chain_as_pem</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>)</p></li>
-<li><p><strong>server_subject</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">IPAddress</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">DNSName</span></code>]</span>)</p></li>
-<li><p><strong>validation_time</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code>]</span>)</p></li>
+<li><p><strong>certificate_chain_as_pem</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>)</p></li>
+<li><p><strong>server_subject</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">IPAddress</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">DNSName</span></code></span>)</p></li>
+<li><p><strong>validation_time</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -454,7 +460,7 @@ successful.</p>
 </section>
 </section>
 <section id="cipher-suites">
-<h2><a class="toc-backref" href="#id19" role="doc-backlink">Cipher Suites</a><a class="headerlink" href="#cipher-suites" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id20" role="doc-backlink">Cipher Suites</a><a class="headerlink" href="#cipher-suites" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.SSL_2_0_CIPHER_SUITES</strong>: Test a server for SSL 2.0 support.
 <strong>ScanCommand.SSL_3_0_CIPHER_SUITES</strong>: Test a server for SSL 3.0 support.
 <strong>ScanCommand.TLS_1_0_CIPHER_SUITES</strong>: Test a server for TLS 1.0 support.
@@ -465,7 +471,7 @@ successful.</p>
 <h3>Result class<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.CipherSuitesScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CipherSuitesScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tls_version_used</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accepted_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected_cipher_suites</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CipherSuitesScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CipherSuitesScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tls_version_used</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accepted_cipher_suites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected_cipher_suites</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CipherSuitesScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for cipher suites with a specific version of SSL/TLS.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.CipherSuitesScanResult.tls_version_used">
@@ -488,9 +494,9 @@ successful.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>tls_version_used</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#sslyze.TlsVersionEnum" title="sslyze.server_connectivity.TlsVersionEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">TlsVersionEnum</span></code></a></span>)</p></li>
-<li><p><strong>accepted_cipher_suites</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#sslyze.CipherSuiteAcceptedByServer" title="sslyze.plugins.openssl_cipher_suites._test_cipher_suite.CipherSuiteAcceptedByServer"><code class="xref py py-class docutils literal notranslate"><span class="pre">CipherSuiteAcceptedByServer</span></code></a>]</span>)</p></li>
-<li><p><strong>rejected_cipher_suites</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#sslyze.CipherSuiteRejectedByServer" title="sslyze.plugins.openssl_cipher_suites._test_cipher_suite.CipherSuiteRejectedByServer"><code class="xref py py-class docutils literal notranslate"><span class="pre">CipherSuiteRejectedByServer</span></code></a>]</span>)</p></li>
+<li><p><strong>tls_version_used</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#sslyze.TlsVersionEnum" title="nassl.tls_version_enum.TlsVersionEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">TlsVersionEnum</span></code></a></span>)</p></li>
+<li><p><strong>accepted_cipher_suites</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#sslyze.CipherSuiteAcceptedByServer" title="sslyze.plugins.openssl_cipher_suites._test_cipher_suite.CipherSuiteAcceptedByServer"><code class="xref py py-class docutils literal notranslate"><span class="pre">CipherSuiteAcceptedByServer</span></code></a>]</span>)</p></li>
+<li><p><strong>rejected_cipher_suites</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#sslyze.CipherSuiteRejectedByServer" title="sslyze.plugins.openssl_cipher_suites._test_cipher_suite.CipherSuiteRejectedByServer"><code class="xref py py-class docutils literal notranslate"><span class="pre">CipherSuiteRejectedByServer</span></code></a>]</span>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -498,7 +504,7 @@ successful.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.CipherSuiteRejectedByServer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CipherSuiteRejectedByServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cipher_suite</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CipherSuiteRejectedByServer" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CipherSuiteRejectedByServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cipher_suite</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CipherSuiteRejectedByServer" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -511,7 +517,7 @@ successful.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.CipherSuiteAcceptedByServer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CipherSuiteAcceptedByServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cipher_suite</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ephemeral_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CipherSuiteAcceptedByServer" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CipherSuiteAcceptedByServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cipher_suite</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ephemeral_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CipherSuiteAcceptedByServer" title="Link to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>ephemeral_key: The ephemeral key negotiated with the server when using (EC) DH cipher suites. None if the cipher</dt><dd><p>suite does not use ephemeral keys or if the ephemeral key could not be retrieved.</p>
 </dd>
@@ -520,7 +526,7 @@ successful.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cipher_suite</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#sslyze.CipherSuite" title="sslyze.plugins.openssl_cipher_suites.cipher_suites.CipherSuite"><code class="xref py py-class docutils literal notranslate"><span class="pre">CipherSuite</span></code></a></span>)</p></li>
-<li><p><strong>ephemeral_key</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.EphemeralKeyInfo" title="nassl.ephemeral_key_info.EphemeralKeyInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">EphemeralKeyInfo</span></code></a>]</span>)</p></li>
+<li><p><strong>ephemeral_key</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#sslyze.EphemeralKeyInfo" title="nassl.ephemeral_key_info.EphemeralKeyInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">EphemeralKeyInfo</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -528,7 +534,7 @@ successful.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.EphemeralKeyInfo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">EphemeralKeyInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_bytes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.EphemeralKeyInfo" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">EphemeralKeyInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_bytes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.EphemeralKeyInfo" title="Link to this definition">¶</a></dt>
 <dd><p>Common fields shared by all kinds of TLS key exchanges.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -543,7 +549,7 @@ successful.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.CipherSuite">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CipherSuite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_anonymous</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">openssl_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CipherSuite" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CipherSuite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_anonymous</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">openssl_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supported_by_openssl_version</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CipherSuite" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -551,6 +557,7 @@ successful.</p>
 <li><p><strong>is_anonymous</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
 <li><p><strong>key_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>)</p></li>
 <li><p><strong>openssl_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>)</p></li>
+<li><p><strong>supported_by_openssl_version</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpenSslVersionEnum</span></code></span>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -558,102 +565,193 @@ successful.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.TlsVersionEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">TlsVersionEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.TlsVersionEnum" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">TlsVersionEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.TlsVersionEnum" title="Link to this definition">¶</a></dt>
 <dd><dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.TlsVersionEnum.SSL_2_0">
-<span class="sig-name descname"><span class="pre">SSL_2_0</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#sslyze.TlsVersionEnum.SSL_2_0" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">SSL_2_0</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#sslyze.TlsVersionEnum.SSL_2_0" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.TlsVersionEnum.SSL_3_0">
-<span class="sig-name descname"><span class="pre">SSL_3_0</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#sslyze.TlsVersionEnum.SSL_3_0" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">SSL_3_0</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#sslyze.TlsVersionEnum.SSL_3_0" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.TlsVersionEnum.TLS_1_0">
-<span class="sig-name descname"><span class="pre">TLS_1_0</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#sslyze.TlsVersionEnum.TLS_1_0" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_1_0</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#sslyze.TlsVersionEnum.TLS_1_0" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.TlsVersionEnum.TLS_1_1">
-<span class="sig-name descname"><span class="pre">TLS_1_1</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#sslyze.TlsVersionEnum.TLS_1_1" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_1_1</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></span><a class="headerlink" href="#sslyze.TlsVersionEnum.TLS_1_1" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.TlsVersionEnum.TLS_1_2">
-<span class="sig-name descname"><span class="pre">TLS_1_2</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#sslyze.TlsVersionEnum.TLS_1_2" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_1_2</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#sslyze.TlsVersionEnum.TLS_1_2" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.TlsVersionEnum.TLS_1_3">
-<span class="sig-name descname"><span class="pre">TLS_1_3</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#sslyze.TlsVersionEnum.TLS_1_3" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TLS_1_3</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></span><a class="headerlink" href="#sslyze.TlsVersionEnum.TLS_1_3" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 </section>
 </section>
-<section id="supported-elliptic-curves">
-<h2><a class="toc-backref" href="#id20" role="doc-backlink">Supported Elliptic Curves</a><a class="headerlink" href="#supported-elliptic-curves" title="Link to this heading">¶</a></h2>
-<p><strong>ScanCommand.ELLIPTIC_CURVES</strong>: Test a server for supported elliptic curves.</p>
+<section id="supported-groups">
+<h2><a class="toc-backref" href="#id21" role="doc-backlink">Supported Groups</a><a class="headerlink" href="#supported-groups" title="Link to this heading">¶</a></h2>
+<p><strong>ScanCommand.SUPPORTED_GROUPS</strong>: Test a server for supported key exchange groups: Elliptic Curve, Finite Field DH,
+and Post-Quantum/Hybrid groups.</p>
 <section id="id2">
 <h3>Result class<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <dl class="py class">
-<dt class="sig sig-object py" id="sslyze.SupportedEllipticCurvesScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">SupportedEllipticCurvesScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_ecdh_key_exchange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supported_curves</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected_curves</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SupportedEllipticCurvesScanResult" title="Link to this definition">¶</a></dt>
-<dd><p>The result of testing a server for supported elliptic curves.</p>
+<dt class="sig sig-object py" id="sslyze.SupportedGroupsScanResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">SupportedGroupsScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supported_elliptic_curve_groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected_elliptic_curve_groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supports_elliptic_curve_key_exchange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supported_finite_field_dh_groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected_finite_field_dh_groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supported_post_quantum_groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rejected_post_quantum_groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supports_post_quantum_key_exchange</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SupportedGroupsScanResult" title="Link to this definition">¶</a></dt>
+<dd><p>The result of testing a server for Supported Groups.
+.. attribute:: supported_elliptic_curve_groups</p>
+<blockquote>
+<div><p>A list of Elliptic Curve groups that were accepted by the server, or None
+if the server does not support any cipher suite with an ECDH key exchange.</p>
+</div></blockquote>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sslyze.SupportedEllipticCurvesScanResult.supports_ecdh_key_exchange">
-<span class="sig-name descname"><span class="pre">supports_ecdh_key_exchange</span></span><a class="headerlink" href="#sslyze.SupportedEllipticCurvesScanResult.supports_ecdh_key_exchange" title="Link to this definition">¶</a></dt>
-<dd><p>True if the server supports at least one cipher suite with an ECDH key exchange.</p>
+<dt class="sig sig-object py" id="sslyze.SupportedGroupsScanResult.rejected_elliptic_curve_groups">
+<span class="sig-name descname"><span class="pre">rejected_elliptic_curve_groups</span></span><a class="headerlink" href="#sslyze.SupportedGroupsScanResult.rejected_elliptic_curve_groups" title="Link to this definition">¶</a></dt>
+<dd><p>A list of Elliptic Curve groups that were rejected by the server, or None
+if the server does not support any cipher suite with an ECDH key exchange.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sslyze.SupportedEllipticCurvesScanResult.supported_curves">
-<span class="sig-name descname"><span class="pre">supported_curves</span></span><a class="headerlink" href="#sslyze.SupportedEllipticCurvesScanResult.supported_curves" title="Link to this definition">¶</a></dt>
-<dd><p>A list of <cite>EllipticCurve</cite> that were accepted by the server or <cite>None</cite> if the server does not
-support ECDH cipher suites.</p>
+<dt class="sig sig-object py" id="sslyze.SupportedGroupsScanResult.supports_elliptic_curve_key_exchange">
+<span class="sig-name descname"><span class="pre">supports_elliptic_curve_key_exchange</span></span><a class="headerlink" href="#sslyze.SupportedGroupsScanResult.supports_elliptic_curve_key_exchange" title="Link to this definition">¶</a></dt>
+<dd><p>True if at least one Elliptic Curve group was accepted by the server.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sslyze.SupportedEllipticCurvesScanResult.rejected_curves">
-<span class="sig-name descname"><span class="pre">rejected_curves</span></span><a class="headerlink" href="#sslyze.SupportedEllipticCurvesScanResult.rejected_curves" title="Link to this definition">¶</a></dt>
-<dd><p>A list of <cite>EllipticCurve</cite> that were rejected by the server or <cite>None</cite> if the server does not
-support ECDH cipher suites.</p>
+<dt class="sig sig-object py" id="sslyze.SupportedGroupsScanResult.supported_finite_field_dh_groups">
+<span class="sig-name descname"><span class="pre">supported_finite_field_dh_groups</span></span><a class="headerlink" href="#sslyze.SupportedGroupsScanResult.supported_finite_field_dh_groups" title="Link to this definition">¶</a></dt>
+<dd><p>A list of Finite Field DH groups that were accepted by the server.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.SupportedGroupsScanResult.rejected_finite_field_dh_groups">
+<span class="sig-name descname"><span class="pre">rejected_finite_field_dh_groups</span></span><a class="headerlink" href="#sslyze.SupportedGroupsScanResult.rejected_finite_field_dh_groups" title="Link to this definition">¶</a></dt>
+<dd><p>A list of Finite Field DH groups that were rejected by the server.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.SupportedGroupsScanResult.supported_post_quantum_groups">
+<span class="sig-name descname"><span class="pre">supported_post_quantum_groups</span></span><a class="headerlink" href="#sslyze.SupportedGroupsScanResult.supported_post_quantum_groups" title="Link to this definition">¶</a></dt>
+<dd><p>A list of Post Quantum groups (hybrid and non-hybrid) that were accepted by
+the server, or None if the server does not support TLS 1.3 (PQ groups require TLS 1.3).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.SupportedGroupsScanResult.rejected_post_quantum_groups">
+<span class="sig-name descname"><span class="pre">rejected_post_quantum_groups</span></span><a class="headerlink" href="#sslyze.SupportedGroupsScanResult.rejected_post_quantum_groups" title="Link to this definition">¶</a></dt>
+<dd><p>A list of Post Quantum groups that were rejected by the server, or None if
+the server does not support TLS 1.3 (PQ groups require TLS 1.3).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.SupportedGroupsScanResult.supports_post_quantum_key_exchange">
+<span class="sig-name descname"><span class="pre">supports_post_quantum_key_exchange</span></span><a class="headerlink" href="#sslyze.SupportedGroupsScanResult.supports_post_quantum_key_exchange" title="Link to this definition">¶</a></dt>
+<dd><p>True if the server accepted at least one PQ/hybrid group.</p>
 </dd></dl>
 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>supports_ecdh_key_exchange</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
-<li><p><strong>supported_curves</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#sslyze.EllipticCurve" title="sslyze.plugins.elliptic_curves_plugin.EllipticCurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">EllipticCurve</span></code></a>]]</span>)</p></li>
-<li><p><strong>rejected_curves</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#sslyze.EllipticCurve" title="sslyze.plugins.elliptic_curves_plugin.EllipticCurve"><code class="xref py py-class docutils literal notranslate"><span class="pre">EllipticCurve</span></code></a>]]</span>)</p></li>
+<li><p><strong>supported_elliptic_curve_groups</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OpenSslGroupNameEnum</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>rejected_elliptic_curve_groups</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OpenSslGroupNameEnum</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>supports_elliptic_curve_key_exchange</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
+<li><p><strong>supported_finite_field_dh_groups</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OpenSslGroupNameEnum</span></code>]</span>)</p></li>
+<li><p><strong>rejected_finite_field_dh_groups</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OpenSslGroupNameEnum</span></code>]</span>)</p></li>
+<li><p><strong>supported_post_quantum_groups</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OpenSslGroupNameEnum</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>rejected_post_quantum_groups</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">OpenSslGroupNameEnum</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>supports_post_quantum_key_exchange</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
+</section>
+</section>
+<section id="encrypted-client-hello">
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Encrypted Client Hello</a><a class="headerlink" href="#encrypted-client-hello" title="Link to this heading">¶</a></h2>
+<p><strong>ScanCommand.ENCRYPTED_CLIENT_HELLO</strong>: Test a server for Encrypted Client Hello (ECH) support, using the ECHConfigList
+published in the server’s DNS HTTPS record.</p>
+<section id="id3">
+<h3>Result class<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <dl class="py class">
-<dt class="sig sig-object py" id="sslyze.EllipticCurve">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">EllipticCurve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">openssl_nid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.EllipticCurve" title="Link to this definition">¶</a></dt>
-<dd><p>A specific elliptic curve.</p>
+<dt class="sig sig-object py" id="sslyze.EncryptedClientHelloScanResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">EncryptedClientHelloScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_ech_supported</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ech_inner_sni</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ech_outer_sni</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ech_config_list_from_dns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_ech_config_malformed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_ech_config_outdated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_grease_supported</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.EncryptedClientHelloScanResult" title="Link to this definition">¶</a></dt>
+<dd><p>The result of testing a server for Encrypted Client Hello (ECH) support.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sslyze.EllipticCurve.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#sslyze.EllipticCurve.name" title="Link to this definition">¶</a></dt>
-<dd><p>The ANSI X9.62 name if available, otherwise the SECG name.</p>
+<dt class="sig sig-object py" id="sslyze.EncryptedClientHelloScanResult.is_ech_supported">
+<span class="sig-name descname"><span class="pre">is_ech_supported</span></span><a class="headerlink" href="#sslyze.EncryptedClientHelloScanResult.is_ech_supported" title="Link to this definition">¶</a></dt>
+<dd><p>True if the server genuinely supports ECH: sslyze completed a TLS handshake in which the
+inner (encrypted) ClientHello was decrypted and processed by the server, using either the server’s
+published ECHConfigList or, if the server rejected it, the retry configs that the server sent back (see
+is_ech_config_outdated). False if the server publishes an ECHConfigList but it does not lead to a working
+ECH handshake, even with the server’s retry configs, ie. a decoy/placeholder configuration. None if the
+server’s DNS record does not advertise ECH, so ECH support could not be tested.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sslyze.EllipticCurve.openssl_nid">
-<span class="sig-name descname"><span class="pre">openssl_nid</span></span><a class="headerlink" href="#sslyze.EllipticCurve.openssl_nid" title="Link to this definition">¶</a></dt>
-<dd><p>The OpenSSL NID_XXX value valid for OpenSslEvpPkeyEnum.EC (obj_mac.h).</p>
+<dt class="sig sig-object py" id="sslyze.EncryptedClientHelloScanResult.ech_inner_sni">
+<span class="sig-name descname"><span class="pre">ech_inner_sni</span></span><a class="headerlink" href="#sslyze.EncryptedClientHelloScanResult.ech_inner_sni" title="Link to this definition">¶</a></dt>
+<dd><p>The SNI value that was protected/encrypted by ECH, when is_ech_supported is True.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.EncryptedClientHelloScanResult.ech_outer_sni">
+<span class="sig-name descname"><span class="pre">ech_outer_sni</span></span><a class="headerlink" href="#sslyze.EncryptedClientHelloScanResult.ech_outer_sni" title="Link to this definition">¶</a></dt>
+<dd><p>The SNI value that remained visible in cleartext, when is_ech_supported is True.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.EncryptedClientHelloScanResult.ech_config_list_from_dns">
+<span class="sig-name descname"><span class="pre">ech_config_list_from_dns</span></span><a class="headerlink" href="#sslyze.EncryptedClientHelloScanResult.ech_config_list_from_dns" title="Link to this definition">¶</a></dt>
+<dd><p>The raw ECHConfigList bytes published in the server’s DNS HTTPS/SVCB record’s
+“ech” SvcParam, or None if the server’s DNS record does not advertise ECH.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.EncryptedClientHelloScanResult.is_ech_config_malformed">
+<span class="sig-name descname"><span class="pre">is_ech_config_malformed</span></span><a class="headerlink" href="#sslyze.EncryptedClientHelloScanResult.is_ech_config_malformed" title="Link to this definition">¶</a></dt>
+<dd><p>True if the server’s DNS record publishes an ECHConfigList that could not even be
+parsed (invalid encoding, unknown/bad KEM or version, etc.), which usually points to a misconfigured DNS
+entry rather than a deliberate decoy/placeholder configuration.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.EncryptedClientHelloScanResult.is_ech_config_outdated">
+<span class="sig-name descname"><span class="pre">is_ech_config_outdated</span></span><a class="headerlink" href="#sslyze.EncryptedClientHelloScanResult.is_ech_config_outdated" title="Link to this definition">¶</a></dt>
+<dd><p>True if the server rejected the ECHConfigList published in its DNS record but ECH
+worked when sslyze retried with the ECHConfigList that the server sent back (its retry configs), which
+usually means that the DNS record is out of date.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sslyze.EncryptedClientHelloScanResult.is_grease_supported">
+<span class="sig-name descname"><span class="pre">is_grease_supported</span></span><a class="headerlink" href="#sslyze.EncryptedClientHelloScanResult.is_grease_supported" title="Link to this definition">¶</a></dt>
+<dd><p>True if the server responded to a GREASE (decoy) Encrypted Client Hello with a set of
+ECH retry configs, which indicates that the server implements ECH at the TLS protocol level, even when
+it does not (yet) advertise a working ECHConfigList via DNS.</p>
 </dd></dl>
 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>)</p></li>
-<li><p><strong>openssl_nid</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>)</p></li>
+<li><p><strong>is_ech_supported</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>ech_inner_sni</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>ech_outer_sni</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>ech_config_list_from_dns</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>is_ech_config_malformed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
+<li><p><strong>is_ech_config_outdated</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
+<li><p><strong>is_grease_supported</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -662,13 +760,13 @@ support ECDH cipher suites.</p>
 </section>
 </section>
 <section id="robot">
-<h2><a class="toc-backref" href="#id21" role="doc-backlink">ROBOT</a><a class="headerlink" href="#robot" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id23" role="doc-backlink">ROBOT</a><a class="headerlink" href="#robot" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.ROBOT</strong>: Test a server for the ROBOT vulnerability.</p>
-<section id="id3">
-<h3>Result class<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Result class<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.RobotScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">RobotScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot_result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.RobotScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">RobotScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot_result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.RobotScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for the ROBOT vulnerability.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.RobotScanResult.result">
@@ -685,7 +783,7 @@ support ECDH cipher suites.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.RobotScanResultEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">RobotScanResultEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.RobotScanResultEnum" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">RobotScanResultEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.RobotScanResultEnum" title="Link to this definition">¶</a></dt>
 <dd><p>The result of attempting exploit the ROBOT issue on the server.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.RobotScanResultEnum.VULNERABLE_WEAK_ORACLE">
@@ -719,27 +817,27 @@ support ECDH cipher suites.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">VULNERABLE_WEAK_ORACLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'VULNERABLE_WEAK_ORACLE'</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id4">
-<span class="sig-name descname"><span class="pre">VULNERABLE_STRONG_ORACLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'VULNERABLE_STRONG_ORACLE'</span></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">VULNERABLE_WEAK_ORACLE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'VULNERABLE_WEAK_ORACLE'</span></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id5">
-<span class="sig-name descname"><span class="pre">NOT_VULNERABLE_NO_ORACLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NOT_VULNERABLE_NO_ORACLE'</span></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">VULNERABLE_STRONG_ORACLE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'VULNERABLE_STRONG_ORACLE'</span></span><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id6">
-<span class="sig-name descname"><span class="pre">NOT_VULNERABLE_RSA_NOT_SUPPORTED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NOT_VULNERABLE_RSA_NOT_SUPPORTED'</span></em><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">NOT_VULNERABLE_NO_ORACLE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NOT_VULNERABLE_NO_ORACLE'</span></span><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id7">
-<span class="sig-name descname"><span class="pre">UNKNOWN_INCONSISTENT_RESULTS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'UNKNOWN_INCONSISTENT_RESULTS'</span></em><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">NOT_VULNERABLE_RSA_NOT_SUPPORTED</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NOT_VULNERABLE_RSA_NOT_SUPPORTED'</span></span><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">UNKNOWN_INCONSISTENT_RESULTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'UNKNOWN_INCONSISTENT_RESULTS'</span></span><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -747,13 +845,13 @@ support ECDH cipher suites.</p>
 </section>
 </section>
 <section id="session-resumption-support">
-<h2><a class="toc-backref" href="#id22" role="doc-backlink">Session Resumption Support</a><a class="headerlink" href="#session-resumption-support" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id24" role="doc-backlink">Session Resumption Support</a><a class="headerlink" href="#session-resumption-support" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.SESSION_RESUMPTION</strong>: Test a server for TLS 1.2 session resumption support using session IDs and TLS tickets.</p>
-<section id="id8">
-<h3>Result class<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<section id="id9">
+<h3>Result class<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.TlsResumptionSupportEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">TlsResumptionSupportEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.TlsResumptionSupportEnum" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">TlsResumptionSupportEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.TlsResumptionSupportEnum" title="Link to this definition">¶</a></dt>
 <dd><p>The result of attempting to resume TLS sessions with the server.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.TlsResumptionSupportEnum.FULLY_SUPPORTED">
@@ -784,7 +882,7 @@ resumption.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.SessionResumptionSupportExtraArgument">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">SessionResumptionSupportExtraArgument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_resumptions_to_attempt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SessionResumptionSupportExtraArgument" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">SessionResumptionSupportExtraArgument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_resumptions_to_attempt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SessionResumptionSupportExtraArgument" title="Link to this definition">¶</a></dt>
 <dd><p>Additional configuration for running the SESSION_RESUMPTION scan command.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.SessionResumptionSupportExtraArgument.number_of_resumptions_to_attempt">
@@ -803,7 +901,7 @@ get a more accurate measure of how often session resumption succeeds or fails wi
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.SessionResumptionSupportScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">SessionResumptionSupportScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id_resumption_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id_attempted_resumptions_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id_successful_resumptions_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_ticket_resumption_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_ticket_attempted_resumptions_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_ticket_successful_resumptions_count</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SessionResumptionSupportScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">SessionResumptionSupportScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id_resumption_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id_attempted_resumptions_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id_successful_resumptions_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_ticket_resumption_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_ticket_attempted_resumptions_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tls_ticket_successful_resumptions_count</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SessionResumptionSupportScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for TLS 1.2 session resumption support, using Session IDs and TLS tickets.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.SessionResumptionSupportScanResult.session_id_resumption_result">
@@ -858,13 +956,13 @@ get a more accurate measure of how often session resumption succeeds or fails wi
 </section>
 </section>
 <section id="crime">
-<h2><a class="toc-backref" href="#id23" role="doc-backlink">CRIME</a><a class="headerlink" href="#crime" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id25" role="doc-backlink">CRIME</a><a class="headerlink" href="#crime" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.TLS_COMPRESSION</strong>: Test a server for TLS compression support, which can be leveraged to perform a CRIME attack.</p>
-<section id="id9">
-<h3>Result class<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
+<section id="id10">
+<h3>Result class<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.CompressionScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CompressionScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_compression</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CompressionScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">CompressionScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_compression</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.CompressionScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for TLS compression support.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.CompressionScanResult.supports_compression">
@@ -882,13 +980,13 @@ get a more accurate measure of how often session resumption succeeds or fails wi
 </section>
 </section>
 <section id="tls-1-3-early-data">
-<h2><a class="toc-backref" href="#id24" role="doc-backlink">TLS 1.3 Early Data</a><a class="headerlink" href="#tls-1-3-early-data" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id26" role="doc-backlink">TLS 1.3 Early Data</a><a class="headerlink" href="#tls-1-3-early-data" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.TLS_1_3_EARLY_DATA</strong>: Test the server(s) for TLS 1.3 early data support.</p>
-<section id="id10">
-<h3>Result class<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
+<section id="id11">
+<h3>Result class<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.EarlyDataScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">EarlyDataScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_early_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.EarlyDataScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">EarlyDataScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_early_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.EarlyDataScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for TLS 1.3 early data support.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.EarlyDataScanResult.supports_early_data">
@@ -906,13 +1004,13 @@ get a more accurate measure of how often session resumption succeeds or fails wi
 </section>
 </section>
 <section id="downgrade-prevention">
-<h2><a class="toc-backref" href="#id25" role="doc-backlink">Downgrade Prevention</a><a class="headerlink" href="#downgrade-prevention" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id27" role="doc-backlink">Downgrade Prevention</a><a class="headerlink" href="#downgrade-prevention" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.TLS_FALLBACK_SCSV</strong>: Test a server for the TLS_FALLBACK_SCSV mechanism to prevent downgrade attacks.</p>
-<section id="id11">
-<h3>Result class<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h3>
+<section id="id12">
+<h3>Result class<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.FallbackScsvScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">FallbackScsvScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_fallback_scsv</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.FallbackScsvScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">FallbackScsvScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_fallback_scsv</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.FallbackScsvScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for the TLS_FALLBACK_SCSV mechanism to prevent downgrade attacks.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.FallbackScsvScanResult.supports_fallback_scsv">
@@ -930,13 +1028,13 @@ get a more accurate measure of how often session resumption succeeds or fails wi
 </section>
 </section>
 <section id="heartbleed">
-<h2><a class="toc-backref" href="#id26" role="doc-backlink">Heartbleed</a><a class="headerlink" href="#heartbleed" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id28" role="doc-backlink">Heartbleed</a><a class="headerlink" href="#heartbleed" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.HEARTBLEED</strong>: Test a server for the OpenSSL Heartbleed vulnerability.</p>
-<section id="id12">
-<h3>Result class<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
+<section id="id13">
+<h3>Result class<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.HeartbleedScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">HeartbleedScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_vulnerable_to_heartbleed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.HeartbleedScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">HeartbleedScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_vulnerable_to_heartbleed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.HeartbleedScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for the OpenSSL Heartbleed vulnerability.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.HeartbleedScanResult.is_vulnerable_to_heartbleed">
@@ -954,13 +1052,13 @@ get a more accurate measure of how often session resumption succeeds or fails wi
 </section>
 </section>
 <section id="http-security-headers">
-<h2><a class="toc-backref" href="#id27" role="doc-backlink">HTTP Security Headers</a><a class="headerlink" href="#http-security-headers" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id29" role="doc-backlink">HTTP Security Headers</a><a class="headerlink" href="#http-security-headers" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.HTTP_HEADERS</strong>: Test a server for the presence of security-related HTTP headers.</p>
-<section id="id13">
-<h3>Result class<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h3>
+<section id="id14">
+<h3>Result class<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.HttpHeadersScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">HttpHeadersScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">http_request_sent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_error_trace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_path_redirected_to</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_transport_security_header</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.HttpHeadersScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">HttpHeadersScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">http_request_sent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_error_trace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_path_redirected_to</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_transport_security_header</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.HttpHeadersScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for the presence of security-related HTTP headers.</p>
 <p>Each HTTP header described below will be <code class="docutils literal notranslate"><span class="pre">None</span></code> if the server did not return a valid HTTP response, or if the
 server returned an HTTP response without the HTTP header.</p>
@@ -993,9 +1091,9 @@ all the subsequent fields will be <code class="docutils literal notranslate"><sp
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>http_request_sent</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>)</p></li>
-<li><p><strong>http_error_trace</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code>]</span>)</p></li>
-<li><p><strong>http_path_redirected_to</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>)</p></li>
-<li><p><strong>strict_transport_security_header</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#sslyze.StrictTransportSecurityHeader" title="sslyze.plugins.http_headers_plugin.StrictTransportSecurityHeader"><code class="xref py py-class docutils literal notranslate"><span class="pre">StrictTransportSecurityHeader</span></code></a>]</span>)</p></li>
+<li><p><strong>http_error_trace</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>http_path_redirected_to</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>strict_transport_security_header</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#sslyze.StrictTransportSecurityHeader" title="sslyze.plugins.http_headers_plugin.StrictTransportSecurityHeader"><code class="xref py py-class docutils literal notranslate"><span class="pre">StrictTransportSecurityHeader</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -1003,7 +1101,7 @@ all the subsequent fields will be <code class="docutils literal notranslate"><sp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.StrictTransportSecurityHeader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">StrictTransportSecurityHeader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_age</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_subdomains</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.StrictTransportSecurityHeader" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">StrictTransportSecurityHeader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_age</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_subdomains</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.StrictTransportSecurityHeader" title="Link to this definition">¶</a></dt>
 <dd><p>A Strict-Transport-Security header parsed from a server’s HTTP response.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.StrictTransportSecurityHeader.preload">
@@ -1026,7 +1124,7 @@ all the subsequent fields will be <code class="docutils literal notranslate"><sp
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>max_age</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>)</p></li>
+<li><p><strong>max_age</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
 <li><p><strong>preload</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
 <li><p><strong>include_subdomains</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
 </ul>
@@ -1037,13 +1135,13 @@ all the subsequent fields will be <code class="docutils literal notranslate"><sp
 </section>
 </section>
 <section id="openssl-ccs-injection">
-<h2><a class="toc-backref" href="#id28" role="doc-backlink">OpenSSL CCS Injection</a><a class="headerlink" href="#openssl-ccs-injection" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id30" role="doc-backlink">OpenSSL CCS Injection</a><a class="headerlink" href="#openssl-ccs-injection" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.OPENSSL_CCS_INJECTION</strong>: Test a server for the OpenSSL CCS Injection vulnerability (CVE-2014-0224).</p>
-<section id="id14">
-<h3>Result class<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h3>
+<section id="id15">
+<h3>Result class<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.OpenSslCcsInjectionScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">OpenSslCcsInjectionScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_vulnerable_to_ccs_injection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.OpenSslCcsInjectionScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">OpenSslCcsInjectionScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_vulnerable_to_ccs_injection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.OpenSslCcsInjectionScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for the OpenSSL CCS Injection vulnerability (CVE-2014-0224).</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.OpenSslCcsInjectionScanResult.is_vulnerable_to_ccs_injection">
@@ -1061,13 +1159,13 @@ all the subsequent fields will be <code class="docutils literal notranslate"><sp
 </section>
 </section>
 <section id="insecure-renegotiation">
-<h2><a class="toc-backref" href="#id29" role="doc-backlink">Insecure Renegotiation</a><a class="headerlink" href="#insecure-renegotiation" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id31" role="doc-backlink">Insecure Renegotiation</a><a class="headerlink" href="#insecure-renegotiation" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.SESSION_RENEGOTIATION</strong>: Test a server for insecure TLS renegotiation and client-initiated renegotiation.</p>
-<section id="id15">
-<h3>Result class<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h3>
+<section id="id16">
+<h3>Result class<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.SessionRenegotiationScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">SessionRenegotiationScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_secure_renegotiation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_vulnerable_to_client_renegotiation_dos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_renegotiations_success_count</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SessionRenegotiationScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">SessionRenegotiationScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_secure_renegotiation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_vulnerable_to_client_renegotiation_dos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_renegotiations_success_count</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.SessionRenegotiationScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for insecure TLS renegotiation and client-initiated renegotiation.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.SessionRenegotiationScanResult.accepts_client_renegotiation">
@@ -1101,13 +1199,13 @@ all the subsequent fields will be <code class="docutils literal notranslate"><sp
 </section>
 </section>
 <section id="extended-master-secret">
-<h2><a class="toc-backref" href="#id30" role="doc-backlink">Extended Master Secret</a><a class="headerlink" href="#extended-master-secret" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id32" role="doc-backlink">Extended Master Secret</a><a class="headerlink" href="#extended-master-secret" title="Link to this heading">¶</a></h2>
 <p><strong>ScanCommand.TLS_EXTENDED_MASTER_SECRET</strong>: Test a server for TLS Extended Master Secret extension support.</p>
-<section id="id16">
-<h3>Result class<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h3>
+<section id="id17">
+<h3>Result class<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="sslyze.EmsExtensionScanResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">EmsExtensionScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_ems_extension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.EmsExtensionScanResult" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">sslyze.</span></span><span class="sig-name descname"><span class="pre">EmsExtensionScanResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">supports_ems_extension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sslyze.EmsExtensionScanResult" title="Link to this definition">¶</a></dt>
 <dd><p>The result of testing a server for TLS Extended Master Secret extension support.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sslyze.EmsExtensionScanResult.supports_ems_extension">
@@ -1163,7 +1261,8 @@ all the subsequent fields will be <code class="docutils literal notranslate"><sp
 <li class="toctree-l2"><a class="reference internal" href="#sslyze.ScanCommand"><code class="docutils literal notranslate"><span class="pre">ScanCommand</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#certificate-information">Certificate Information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cipher-suites">Cipher Suites</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#supported-elliptic-curves">Supported Elliptic Curves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-groups">Supported Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#encrypted-client-hello">Encrypted Client Hello</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#robot">ROBOT</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#session-resumption-support">Session Resumption Support</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#crime">CRIME</a></li>
@@ -1202,7 +1301,7 @@ all the subsequent fields will be <code class="docutils literal notranslate"><sp
       &#169;Copyright 2026 Alban Diquet.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
